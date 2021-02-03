@@ -4,6 +4,8 @@
 #define REAPERAPI_IMPLEMENT
 #include <reaper_plugin_functions.h>
 
+#include <imgui/imgui.h>
+
 #define API_FUNC(name) { reinterpret_cast<void **>(&name), #name }
 
 static bool loadAPI(void *(*getFunc)(const char *))
@@ -45,6 +47,8 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
   else if(rec->caller_version != REAPER_PLUGIN_VERSION
       || !loadAPI(rec->GetFunc) || isAlreadyLoaded())
     return 0;
+
+  IMGUI_CHECKVERSION();
 
   Window::s_instance = instance;
   API::registerAll();

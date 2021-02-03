@@ -45,7 +45,9 @@ R"(Return whether the user has requested closing the window.)",
 });
 
 DEFINE_API(void, UpdateWindow, ((ImGui_Window *, window)),
-R"(Render a frame to the window. This must be called at every global timer cycle.)",
+R"(Render a frame to the window. This must be called at every global timer cycle.
+
+Perform all draw + update calls one window at a time for best performance.)",
 {
   CHECK_WINDOW(window);
   window->enterFrame();

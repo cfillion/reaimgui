@@ -4,8 +4,8 @@ add_library(${PROJECT_NAME} SHARED
   api.cpp
   api_imgui.cpp
   api_window.cpp
-  context.cpp
   main.cpp
+  watchdog.cpp
   window.cpp
 )
 
@@ -43,7 +43,7 @@ else()
 endif()
 
 if(APPLE)
-  target_sources(${PROJECT_NAME} PRIVATE context_metal.mm window_metal.mm)
+  target_sources(${PROJECT_NAME} PRIVATE window_metal.mm)
 
   find_library(QUARTZCORE_LIB QuartzCore)
   target_link_libraries(${PROJECT_NAME} ${QUARTZCORE_LIB})

@@ -1,41 +1,73 @@
 #include "window.hpp"
 
-#include "context_metal.hpp"
-
 #include <tuple>
 
 #include <AppKit/AppKit.h>
+#include <Metal/Metal.h>
 #include <QuartzCore/QuartzCore.h>
 
 #include <imgui/backends/imgui_impl_metal.h>
 #include <imgui/backends/imgui_impl_osx.h>
 
-struct Window::Impl {
+struct MetalSharedState {
+  MetalSharedState();
+  ~MetalSharedState();
+
+  id<MTLDevice> device;
+  id<MTLCommandQueue> commandQueue;
+  MTLRenderPassDescriptor *renderPass;
+};
+
+static std::weak_ptr<MetalSharedState> g_shared;
+
+struct Window::PlatformDetails {
+  std::shared_ptr<MetalSharedState> shared;
   CAMetalLayer *layer;
+
+  // per-frame
   id<MTLCommandBuffer> commandBuffer;
   id<MTLRenderCommandEncoder> renderEncoder;
   id<CAMetalDrawable> drawable;
 };
 
+MetalSharedState::MetalSharedState()
+{
+  device = MTLCreateSystemDefaultDevice();
+  assert(device);
+
+  commandQueue = [device newCommandQueue];
+  renderPass = [MTLRenderPassDescriptor new];
+
+  ImGui_ImplOSX_Init();
+  ImGui_ImplMetal_Init(device);
+}
+
+MetalSharedState::~MetalSharedState()
+{
+  ImGui_ImplMetal_Shutdown();
+  ImGui_ImplOSX_Shutdown();
+}
+
 void Window::platformInit()
 {
-  m_p = new Impl;
+  assert(!m_p);
+  m_p = new PlatformDetails;
 
-  Context_Metal *context { dynamic_cast<Context_Metal *>(m_context.get()) };
-
-  NSView *view { (__bridge NSView *)m_handle };
-  NSWindow *nativeWindow { [view window] };
+  if(g_shared.expired())
+    g_shared = m_p->shared = std::make_shared<MetalSharedState>();
+  else
+    m_p->shared = g_shared.lock();
 
   m_p->layer = [CAMetalLayer layer];
-  m_p->layer.maximumDrawableCount = 2;
-  m_p->layer.device = context->device();
+  m_p->layer.device = m_p->shared->device;
   m_p->layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
   m_p->layer.opaque = NO;
 
-  nativeWindow.contentView.layer = m_p->layer;
-  nativeWindow.contentView.wantsLayer = YES;
-  [nativeWindow setOpaque:NO];
-  [nativeWindow setBackgroundColor:[NSColor clearColor]];
+  NSView *view { (__bridge NSView *)m_handle };
+  view.wantsLayer = YES;
+  view.layer = m_p->layer;
+  [[view window] setOpaque:NO];
+  [[view window] setBackgroundColor:[NSColor clearColor]];
 }
 
 void Window::platformTeardown()
@@ -53,20 +85,19 @@ void Window::platformBeginFrame()
   if(!m_p->drawable)
     return;
 
-  Context_Metal *context { dynamic_cast<Context_Metal *>(m_context.get()) };
-  m_p->commandBuffer = [context->commandQueue() commandBuffer];
+  m_p->commandBuffer = [m_p->shared->commandQueue commandBuffer];
 
-  MTLRenderPassDescriptor *renderPass { context->renderPass() };
-  renderPass.colorAttachments[0].clearColor = std::apply(MTLClearColorMake,
-  m_clearColor);
-  renderPass.colorAttachments[0].texture = m_p->drawable.texture;
-  renderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
-  renderPass.colorAttachments[0].storeAction = MTLStoreActionStore;
+  auto *colorAttachment { m_p->shared->renderPass.colorAttachments[0] };
+  colorAttachment.clearColor = std::apply(MTLClearColorMake, m_clearColor);
+  colorAttachment.texture = m_p->drawable.texture;
+  colorAttachment.loadAction = MTLLoadActionClear;
+  colorAttachment.storeAction = MTLStoreActionStore;
 
-  m_p->renderEncoder = [m_p->commandBuffer renderCommandEncoderWithDescriptor:renderPass];
+  m_p->renderEncoder = [m_p->commandBuffer
+  renderCommandEncoderWithDescriptor:m_p->shared->renderPass];
   [m_p->renderEncoder pushDebugGroup:@"ReaImGui"];
 
-  ImGui_ImplMetal_NewFrame(renderPass);
+  ImGui_ImplMetal_NewFrame(m_p->shared->renderPass);
   ImGui_ImplOSX_NewFrame(view);
 }
 
@@ -85,4 +116,6 @@ void Window::platformEndFrame(ImDrawData *drawData)
     [m_p->commandBuffer presentDrawable:m_p->drawable];
     [m_p->commandBuffer commit];
   }
+
+  m_p->drawable = nil; // tell ARC it can release it now
 }

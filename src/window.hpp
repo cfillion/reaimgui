@@ -6,10 +6,10 @@
 #include <tuple>
 #include <WDL/wdltypes.h>
 
-class Context;
-class Frame;
-
+class Watchdog;
 struct ImDrawData;
+struct ImFontAtlas;
+struct ImGuiContext;
 
 class Window {
 public:
@@ -33,18 +33,22 @@ public:
 
 private:
   static WDL_DLGRET proc(HWND, UINT, WPARAM, LPARAM);
-  struct Impl;
+  struct PlatformDetails;
 
+  void setupContext();
   void platformInit();
   void platformBeginFrame();
   void platformEndFrame(ImDrawData *);
   void platformTeardown();
 
   HWND m_handle;
-  std::shared_ptr<Context> m_context;
-  bool m_keepAlive, m_closeReq;
+  bool m_keepAlive, m_inFrame, m_closeReq;
   std::tuple<float, float, float, float> m_clearColor;
-  Impl *m_p;
+
+  ImGuiContext *m_ctx;
+  PlatformDetails *m_p;
+  std::shared_ptr<Watchdog> m_watchdog;
+  std::shared_ptr<ImFontAtlas> m_fontAtlas;
 };
 
 #endif
