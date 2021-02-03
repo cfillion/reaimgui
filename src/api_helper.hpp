@@ -3,9 +3,9 @@
 
 #include "api.hpp"
 
-#include <tuple>
-
 #include <boost/preprocessor.hpp>
+#include <reaper_plugin_functions.h>
+#include <tuple>
 
 template<typename T>
 struct ReaScriptAPI;
@@ -68,6 +68,12 @@ void *InvokeReaScriptAPI(void **argv, int argc)
       BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME, args) "\0"                     \
       help                                                                      \
     ))                                                                          \
+  }
+
+#define CHECK_WINDOW(win, ...)                            \
+  if(!Window::exists(win)) {                              \
+    ReaScriptError("ReaImGui: Invalid window reference"); \
+    return __VA_ARGS__;                                   \
   }
 
 #endif

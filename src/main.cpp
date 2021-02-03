@@ -14,6 +14,8 @@ static bool loadAPI(void *(*getFunc)(const char *))
     API_FUNC(plugin_getapi),
     API_FUNC(plugin_register),
     API_FUNC(GetMainHwnd),
+    API_FUNC(GetColorThemeStruct),
+    API_FUNC(ReaScriptError),
     API_FUNC(ShowMessageBox),
   };
 

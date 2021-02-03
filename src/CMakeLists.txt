@@ -2,16 +2,18 @@ include(CheckCXXCompilerFlag)
 
 add_library(${PROJECT_NAME} SHARED
   api.cpp
+  api_imgui.cpp
   api_window.cpp
+  context.cpp
   main.cpp
   window.cpp
-  heartbeat.cpp
 )
 
-target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_SOURCE_DIR}/vendor ${CMAKE_SOURCE_DIR}/vendor/reaper-sdk/sdk
+  ${CMAKE_SOURCE_DIR}/vendor/WDL
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -40,11 +42,18 @@ else()
   endif()
 endif()
 
+if(APPLE)
+  target_sources(${PROJECT_NAME} PRIVATE context_metal.mm window_metal.mm)
+
+  find_library(QUARTZCORE_LIB QuartzCore)
+  target_link_libraries(${PROJECT_NAME} ${QUARTZCORE_LIB})
+endif()
+
 find_package(Boost REQUIRED)
 target_link_libraries(${PROJECT_NAME} Boost::headers)
 
-find_package(Threads REQUIRED)
-target_link_libraries(${PROJECT_NAME} Threads::Threads)
+find_package(ImGui REQUIRED)
+target_link_libraries(${PROJECT_NAME} ImGui::ImGui)
 
 if(NOT WIN32)
   find_package(SWELL REQUIRED)
