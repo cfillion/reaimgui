@@ -138,6 +138,9 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
         selectedRange:(NSRange)selectedRange
      replacementRange:(NSRange)replacementRange
 {
+#if !__has_feature(objc_arc)
+  [m_markedText release];
+#endif
   if([string isKindOfClass:[NSAttributedString class]])
     m_markedText = [[NSMutableAttributedString alloc] initWithAttributedString:string];
   else

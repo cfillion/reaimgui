@@ -10,6 +10,9 @@
 
 #include <imgui/backends/imgui_impl_metal.h>
 
+static_assert(__has_feature(objc_arc),
+  "This file must be built with automatic reference counting enabled.");
+
 struct MetalSharedState {
   MetalSharedState();
   ~MetalSharedState();
