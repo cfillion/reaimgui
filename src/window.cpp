@@ -29,7 +29,7 @@ WDL_DLGRET Window::proc(HWND handle, const UINT msg,
   };
 
   if(!self)
-    return false;
+    return 0;
 
   switch(msg) {
   case WM_CLOSE:
@@ -56,7 +56,17 @@ WDL_DLGRET Window::proc(HWND handle, const UINT msg,
     self->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
     break;
   case WM_SETCURSOR:
-    return true;
+    return 1;
+  case WM_KEYDOWN:
+  case WM_SYSKEYDOWN:
+    if(wParam < 256)
+      self->keyInput(wParam, true);
+    return -1;
+  case WM_KEYUP:
+  case WM_SYSKEYUP:
+    if(wParam < 256)
+      self->keyInput(wParam, false);
+    return -1;
   }
 
   return DefWindowProc(handle, msg, wParam, lParam);
@@ -123,6 +133,29 @@ void Window::setupContext()
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendPlatformName = "reaper_imgui";
 
+  io.KeyMap[ImGuiKey_Tab] = VK_TAB;
+  io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
+  io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
+  io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
+  io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
+  io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
+  io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
+  io.KeyMap[ImGuiKey_Home] = VK_HOME;
+  io.KeyMap[ImGuiKey_End] = VK_END;
+  io.KeyMap[ImGuiKey_Insert] = VK_INSERT;
+  io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
+  io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
+  io.KeyMap[ImGuiKey_Space] = VK_SPACE;
+  io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
+  io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+  io.KeyMap[ImGuiKey_KeyPadEnter] = VK_RETURN;
+  io.KeyMap[ImGuiKey_A] = 'A';
+  io.KeyMap[ImGuiKey_C] = 'C';
+  io.KeyMap[ImGuiKey_V] = 'V';
+  io.KeyMap[ImGuiKey_X] = 'X';
+  io.KeyMap[ImGuiKey_Y] = 'Y';
+  io.KeyMap[ImGuiKey_Z] = 'Z';
+
   int themeSize;
   ColorTheme *theme { static_cast<ColorTheme *>(GetColorThemeStruct(&themeSize)) };
   if(static_cast<size_t>(themeSize) >= sizeof(ColorTheme))
@@ -153,6 +186,7 @@ void Window::enterFrame()
   platformBeginFrame();
   updateMouseDown();
   updateMousePos();
+  updateKeyMods();
   ImGui::NewFrame();
 }
 
@@ -325,4 +359,32 @@ void Window::mouseWheel(const UINT msg, const short delta)
   ImGuiIO &io { ImGui::GetIO() };
   float &wheel { msg == WM_MOUSEHWHEEL ? io.MouseWheelH : io.MouseWheel };
   wheel += static_cast<float>(delta) / static_cast<float>(WHEEL_DELTA);
+}
+
+void Window::updateKeyMods()
+{
+  // this is only called from enterFrame, the context is already set
+  // ImGui::SetCurrentContext(m_ctx);
+
+  constexpr int down { 0x8000 };
+
+  ImGuiIO &io { ImGui::GetIO() };
+  io.KeyCtrl  = GetAsyncKeyState(VK_CONTROL) & down;
+  io.KeyShift = GetAsyncKeyState(VK_SHIFT)   & down;
+  io.KeyAlt   = GetAsyncKeyState(VK_MENU)    & down;
+  io.KeySuper = GetAsyncKeyState(VK_LWIN)    & down;
+}
+
+void Window::keyInput(const uint8_t key, const bool down)
+{
+  ImGui::SetCurrentContext(m_ctx);
+  ImGuiIO &io { ImGui::GetIO() };
+  io.KeysDown[key] = down;
+}
+
+void Window::charInput(const unsigned int c)
+{
+  ImGui::SetCurrentContext(m_ctx);
+  ImGuiIO &io { ImGui::GetIO() };
+  io.AddInputCharacter(c);
 }

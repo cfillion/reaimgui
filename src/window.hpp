@@ -52,6 +52,9 @@ private:
   void updateMouseDown();
   void updateMousePos();
   void mouseWheel(UINT msg, short delta);
+  void updateKeyMods();
+  void keyInput(uint8_t key, bool down);
+  void charInput(unsigned int);
 
   void platformInit();
   void platformBeginFrame();
