@@ -1,9 +1,12 @@
 #ifndef REAIMGUI_WINDOW_HPP
 #define REAIMGUI_WINDOW_HPP
 
+#include <array>
 #include <memory>
-#include <reaper_plugin.h>
 #include <tuple>
+
+#include <imgui/imgui.h>
+#include <reaper_plugin.h>
 #include <WDL/wdltypes.h>
 
 class Watchdog;
@@ -33,9 +36,23 @@ public:
 
 private:
   static WDL_DLGRET proc(HWND, UINT, WPARAM, LPARAM);
+
   struct PlatformDetails;
 
+  enum ButtonState {
+    Down       = 1<<0,
+    DownUnread = 1<<1,
+  };
+
   void setupContext();
+  void updateCursor();
+  bool anyMouseDown() const;
+  void mouseDown(UINT msg);
+  void mouseUp(UINT msg);
+  void updateMouseDown();
+  void updateMousePos();
+  void mouseWheel(UINT msg, short delta);
+
   void platformInit();
   void platformBeginFrame();
   void platformEndFrame(ImDrawData *);
@@ -44,6 +61,7 @@ private:
   HWND m_handle;
   bool m_keepAlive, m_inFrame, m_closeReq;
   std::tuple<float, float, float, float> m_clearColor;
+  std::array<char, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
 
   ImGuiContext *m_ctx;
   PlatformDetails *m_p;

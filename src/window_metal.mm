@@ -7,7 +7,6 @@
 #include <QuartzCore/QuartzCore.h>
 
 #include <imgui/backends/imgui_impl_metal.h>
-#include <imgui/backends/imgui_impl_osx.h>
 
 struct MetalSharedState {
   MetalSharedState();
@@ -25,6 +24,7 @@ struct Window::PlatformDetails {
   CAMetalLayer *layer;
 
   // per-frame
+  CFAbsoluteTime lastTime {};
   id<MTLCommandBuffer> commandBuffer;
   id<MTLRenderCommandEncoder> renderEncoder;
   id<CAMetalDrawable> drawable;
@@ -38,14 +38,12 @@ MetalSharedState::MetalSharedState()
   commandQueue = [device newCommandQueue];
   renderPass = [MTLRenderPassDescriptor new];
 
-  ImGui_ImplOSX_Init();
   ImGui_ImplMetal_Init(device);
 }
 
 MetalSharedState::~MetalSharedState()
 {
   ImGui_ImplMetal_Shutdown();
-  ImGui_ImplOSX_Shutdown();
 }
 
 void Window::platformInit()
@@ -63,6 +61,10 @@ void Window::platformInit()
   m_p->layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
   m_p->layer.opaque = NO;
 
+  // greatly reduces the latency from presentDrawable
+  // m_p->layer.maximumDrawableCount = 2;
+  // m_p->layer.displaySyncEnabled = false;
+
   NSView *view { (__bridge NSView *)m_handle };
   view.wantsLayer = YES;
   view.layer = m_p->layer;
@@ -77,15 +79,25 @@ void Window::platformTeardown()
 
 void Window::platformBeginFrame()
 {
-  NSView *view { (__bridge NSView *)m_handle };
-  m_p->layer.drawableSize = view.frame.size;
-
+  // returns nil if no drawable is ready after a 1 second timeout
   m_p->drawable = [m_p->layer nextDrawable];
 
   if(!m_p->drawable)
     return;
 
-  m_p->commandBuffer = [m_p->shared->commandQueue commandBuffer];
+  NSView *view { (__bridge NSView *)m_handle };
+  m_p->layer.drawableSize = view.bounds.size;
+
+  ImGuiIO &io { ImGui::GetIO() };
+  const float dpi { static_cast<float>([view.window backingScaleFactor]) };
+  io.DisplaySize = ImVec2(view.bounds.size.width, view.bounds.size.height);
+  io.DisplayFramebufferScale = ImVec2(dpi, dpi);
+
+  if(!m_p->lastTime)
+    m_p->lastTime = CFAbsoluteTimeGetCurrent();
+  const CFAbsoluteTime now { CFAbsoluteTimeGetCurrent() };
+  io.DeltaTime = static_cast<float>(now - m_p->lastTime);
+  m_p->lastTime = now;
 
   auto *colorAttachment { m_p->shared->renderPass.colorAttachments[0] };
   colorAttachment.clearColor = std::apply(MTLClearColorMake, m_clearColor);
@@ -93,12 +105,11 @@ void Window::platformBeginFrame()
   colorAttachment.loadAction = MTLLoadActionClear;
   colorAttachment.storeAction = MTLStoreActionStore;
 
-  m_p->renderEncoder = [m_p->commandBuffer
-  renderCommandEncoderWithDescriptor:m_p->shared->renderPass];
-  [m_p->renderEncoder pushDebugGroup:@"ReaImGui"];
+  m_p->commandBuffer = [m_p->shared->commandQueue commandBuffer];
+  m_p->renderEncoder = [m_p->commandBuffer renderCommandEncoderWithDescriptor:m_p->shared->renderPass];
+  [m_p->renderEncoder pushDebugGroup:@"reaper_imgui"];
 
   ImGui_ImplMetal_NewFrame(m_p->shared->renderPass);
-  ImGui_ImplOSX_NewFrame(view);
 }
 
 void Window::platformEndFrame(ImDrawData *drawData)
@@ -113,8 +124,9 @@ void Window::platformEndFrame(ImDrawData *drawData)
   [m_p->renderEncoder endEncoding];
 
   if(drawData) {
-    [m_p->commandBuffer presentDrawable:m_p->drawable];
+    // [m_p->commandBuffer presentDrawable:m_p->drawable];
     [m_p->commandBuffer commit];
+    [m_p->drawable present]; // much faster than commandBuffer::presentDrawable
   }
 
   m_p->drawable = nil; // tell ARC it can release it now

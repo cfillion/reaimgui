@@ -2,7 +2,6 @@
 
 #include "watchdog.hpp"
 
-#include <imgui/imgui.h>
 #include <reaper_colortheme.h>
 #include <reaper_plugin_functions.h>
 #include <unordered_set>
@@ -11,6 +10,11 @@ static std::unordered_set<Window *> g_windows;
 static std::weak_ptr<ImFontAtlas> g_fontAtlas;
 
 REAPER_PLUGIN_HINSTANCE Window::s_instance;
+
+#ifdef _WDL_SWELL_H_
+#  define GET_WHEEL_DELTA_WPARAM GET_Y_LPARAM
+#  define WHEEL_DELTA 60.0f
+#endif
 
 enum SwellDialogResFlags {
   ForceNonChild = 0x400000 | 0x8, // allows not using a resource id
@@ -34,6 +38,25 @@ WDL_DLGRET Window::proc(HWND handle, const UINT msg,
   case WM_DESTROY:
     delete self;
     break;
+  case WM_LBUTTONDOWN:
+  case WM_MBUTTONDOWN:
+  case WM_RBUTTONDOWN:
+    self->mouseDown(msg);
+    break;
+  case WM_LBUTTONUP:
+  case WM_MBUTTONUP:
+  case WM_RBUTTONUP:
+    self->mouseUp(msg);
+    break;
+  case WM_MOUSEMOVE:
+    self->updateCursor();
+    break;
+  case WM_MOUSEWHEEL:
+  case WM_MOUSEHWHEEL:
+    self->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
+    break;
+  case WM_SETCURSOR:
+    return true;
   }
 
   return DefWindowProc(handle, msg, wParam, lParam);
@@ -67,14 +90,13 @@ Window::Window(const char *title,
     const int x, const int y, const int w, const int h)
   : m_keepAlive { true }, m_inFrame { false }, m_closeReq { false },
     m_clearColor { std::make_tuple(0.0f, 0.0f, 0.0f, 1.0f) },
-    m_p { nullptr }, m_watchdog { Watchdog::get() }
+    m_mouseDown {}, m_p { nullptr }, m_watchdog { Watchdog::get() }
 {
   g_windows.emplace(this);
 
-  m_handle = CreateDialogParam(s_instance,
+  m_handle = CreateDialog(s_instance,
     MAKEINTRESOURCE(ForceNonChild | Resizable),
-    GetMainHwnd(),
-    proc, reinterpret_cast<LPARAM>(this));
+    GetMainHwnd(), proc);
 
   SetWindowLongPtr(m_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
   SetWindowText(m_handle, title);
@@ -98,6 +120,8 @@ void Window::setupContext()
 
   ImGuiIO &io { ImGui::GetIO() };
   io.IniFilename = nullptr;
+  io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+  io.BackendPlatformName = "reaper_imgui";
 
   int themeSize;
   ColorTheme *theme { static_cast<ColorTheme *>(GetColorThemeStruct(&themeSize)) };
@@ -127,6 +151,8 @@ void Window::enterFrame()
 
   m_inFrame = true;
   platformBeginFrame();
+  updateMouseDown();
+  updateMousePos();
   ImGui::NewFrame();
 }
 
@@ -174,4 +200,129 @@ void Window::setClearColor(const unsigned int rgba)
     a = rgba;
 
   m_clearColor = std::make_tuple(r / 255.f, g / 255.f, b / 255.f, a / 255.f);
+}
+
+void Window::updateCursor()
+{
+  ImGui::SetCurrentContext(m_ctx);
+
+  static HCURSOR nativeCursors[ImGuiMouseCursor_COUNT] {
+    LoadCursor(nullptr, IDC_ARROW),
+    LoadCursor(nullptr, IDC_IBEAM),
+    LoadCursor(nullptr, IDC_SIZEALL),
+    LoadCursor(nullptr, IDC_SIZENS),
+    LoadCursor(nullptr, IDC_SIZEWE),
+    LoadCursor(nullptr, IDC_SIZENESW),
+    LoadCursor(nullptr, IDC_SIZENWSE),
+    LoadCursor(nullptr, IDC_HAND),
+    LoadCursor(nullptr, IDC_NO),
+  };
+
+  // TODO
+  // io.MouseDrawCursor (ImGui-drawn cursor)
+  // ImGuiConfigFlags_NoMouseCursorChange
+  // SetCursor(nullptr) does not hide the cursor with SWELL
+
+  const ImGuiMouseCursor imguiCursor { ImGui::GetMouseCursor() };
+  const bool hidden { imguiCursor == ImGuiMouseCursor_None };
+  SetCursor(hidden ? nullptr : nativeCursors[imguiCursor]);
+}
+
+bool Window::anyMouseDown() const
+{
+  for(auto state : m_mouseDown) {
+    if(state & Down)
+      return true;
+  }
+
+  return false;
+}
+
+void Window::mouseDown(const UINT msg)
+{
+  size_t btn;
+
+  switch(msg) {
+  case WM_LBUTTONDOWN:
+    btn = ImGuiMouseButton_Left;
+    break;
+  case WM_MBUTTONDOWN:
+    btn = ImGuiMouseButton_Middle;
+    break;
+  case WM_RBUTTONDOWN:
+    btn = ImGuiMouseButton_Right;
+    break;
+  default:
+    return;
+  }
+
+  if(!anyMouseDown() && GetCapture() == nullptr)
+    SetCapture(m_handle);
+
+  m_mouseDown[btn] = Down | DownUnread;
+}
+
+void Window::mouseUp(const UINT msg)
+{
+  size_t btn;
+
+  switch(msg) {
+  case WM_LBUTTONUP:
+    btn = ImGuiMouseButton_Left;
+    break;
+  case WM_MBUTTONUP:
+    btn = ImGuiMouseButton_Middle;
+    break;
+  case WM_RBUTTONUP:
+    btn = ImGuiMouseButton_Right;
+    break;
+  default:
+    return;
+  }
+
+  // keep DownUnread set to catch clicks shorted than one frame
+  m_mouseDown[ImGuiMouseButton_Left] &= ~Down;
+
+  if(!anyMouseDown() && GetCapture() == m_handle)
+    ReleaseCapture();
+}
+
+void Window::updateMouseDown()
+{
+  // this is only called from enterFrame, the context is already set
+  // ImGui::SetCurrentContext(m_ctx);
+
+  ImGuiIO &io { ImGui::GetIO() };
+
+  size_t i {};
+  for(auto &state : m_mouseDown) {
+    io.MouseDown[i++] = (state & DownUnread) || (state & Down);
+    state &= ~DownUnread;
+  }
+}
+
+void Window::updateMousePos()
+{
+  // this is only called from enterFrame, the context is already set
+  // ImGui::SetCurrentContext(m_ctx);
+
+  POINT p;
+  GetCursorPos(&p);
+  const HWND targetWindow { WindowFromPoint(p) };
+  ScreenToClient(m_handle, &p);
+
+  ImGuiIO &io { ImGui::GetIO() };
+
+  if(targetWindow == m_handle)
+    io.MousePos = ImVec2(static_cast<float>(p.x), static_cast<float>(p.y));
+  else
+    io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+}
+
+void Window::mouseWheel(const UINT msg, const short delta)
+{
+  ImGui::SetCurrentContext(m_ctx);
+  ImGuiIO &io { ImGui::GetIO() };
+  float &wheel { msg == WM_MOUSEHWHEEL ? io.MouseWheelH : io.MouseWheel };
+  wheel += static_cast<float>(delta) / static_cast<float>(WHEEL_DELTA);
 }
