@@ -1,12 +1,15 @@
 #include "window.hpp"
 
-#include <tuple>
-
 #include <AppKit/AppKit.h>
 #include <Metal/Metal.h>
 #include <QuartzCore/QuartzCore.h>
 
 #include <imgui/backends/imgui_impl_metal.h>
+#include <swell/swell.h>
+
+#include "textinput.mm"
+
+constexpr int SWELL_ENABLED_NO_FOCUS { -1000 };
 
 struct MetalSharedState {
   MetalSharedState();
@@ -22,6 +25,7 @@ static std::weak_ptr<MetalSharedState> g_shared;
 struct Window::PlatformDetails {
   std::shared_ptr<MetalSharedState> shared;
   CAMetalLayer *layer;
+  TextInput *textInput;
 
   // per-frame
   CFAbsoluteTime lastTime {};
@@ -68,8 +72,17 @@ void Window::platformInit()
   NSView *view { (__bridge NSView *)m_handle };
   view.wantsLayer = YES;
   view.layer = m_p->layer;
+
+  // enable transparency
   [[view window] setOpaque:NO];
   [[view window] setBackgroundColor:[NSColor clearColor]];
+
+  m_p->textInput = [[TextInput alloc] initWithWindow:this];
+  [view addSubview:m_p->textInput];
+  [[view window] makeFirstResponder:m_p->textInput];
+
+  // prevent the window from overwriting the first responder on focus
+  EnableWindow(m_handle, SWELL_ENABLED_NO_FOCUS);
 }
 
 void Window::platformTeardown()

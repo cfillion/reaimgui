@@ -34,6 +34,8 @@ public:
   void endFrame(bool render);
   void close();
 
+  void charInput(unsigned int);
+
 private:
   static WDL_DLGRET proc(HWND, UINT, WPARAM, LPARAM);
 
@@ -54,7 +56,6 @@ private:
   void mouseWheel(UINT msg, short delta);
   void updateKeyMods();
   void keyInput(uint8_t key, bool down);
-  void charInput(unsigned int);
 
   void platformInit();
   void platformBeginFrame();

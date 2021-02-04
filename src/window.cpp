@@ -380,11 +380,15 @@ void Window::keyInput(const uint8_t key, const bool down)
   ImGui::SetCurrentContext(m_ctx);
   ImGuiIO &io { ImGui::GetIO() };
   io.KeysDown[key] = down;
+  printf("%d %d\n", key, down);
 }
 
-void Window::charInput(const unsigned int c)
+void Window::charInput(const unsigned int codepoint)
 {
+  if(codepoint < 32 || (codepoint > 126 && codepoint < 160))
+    return;
+
   ImGui::SetCurrentContext(m_ctx);
   ImGuiIO &io { ImGui::GetIO() };
-  io.AddInputCharacter(c);
+  io.AddInputCharacter(codepoint);
 }
