@@ -41,6 +41,7 @@ public:
 
 private:
   static WDL_DLGRET proc(HWND, UINT, WPARAM, LPARAM);
+  static int translateAccel(MSG *, accelerator_register_t *);
 
   struct PlatformDetails;
 
@@ -60,12 +61,14 @@ private:
   void platformInit();
   void platformBeginFrame();
   void platformEndFrame(ImDrawData *);
+  void platformTranslateAccel(MSG *);
   void platformTeardown();
 
   HWND m_handle;
   bool m_keepAlive, m_inFrame, m_closeReq;
   std::tuple<float, float, float, float> m_clearColor;
   std::array<char, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
+  accelerator_register_t m_accel;
 
   ImGuiContext *m_ctx;
   PlatformDetails *m_p;

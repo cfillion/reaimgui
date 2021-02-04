@@ -162,3 +162,9 @@ void Window::platformEndFrame(ImDrawData *drawData)
 
   m_p->drawable = nil; // tell ARC it can release it now
 }
+
+void Window::platformTranslateAccel(MSG *)
+{
+  NSView *view { (__bridge NSView *)m_handle };
+  [[view window] sendEvent:[NSApp currentEvent]];
+}

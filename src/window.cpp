@@ -74,6 +74,18 @@ WDL_DLGRET Window::proc(HWND handle, const UINT msg,
   return DefWindowProc(handle, msg, wParam, lParam);
 }
 
+int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
+{
+  enum { NotOurWindow = 0, EatKeystroke = 1 };
+
+  Window *self { static_cast<Window *>(accel->user) };
+  if(self->handle() != msg->hwnd && !IsChild(self->handle(), msg->hwnd))
+    return NotOurWindow;
+
+  self->platformTranslateAccel(msg);
+  return EatKeystroke;
+}
+
 bool Window::exists(Window *win)
 {
   return g_windows.count(win) > 0;
@@ -101,8 +113,9 @@ void Window::heartbeat()
 Window::Window(const char *title,
     const int x, const int y, const int w, const int h)
   : m_keepAlive { true }, m_inFrame { false }, m_closeReq { false },
-    m_clearColor { std::make_tuple(0.0f, 0.0f, 0.0f, 1.0f) },
-    m_mouseDown {}, m_p { nullptr }, m_watchdog { Watchdog::get() }
+    m_clearColor { std::make_tuple(0.0f, 0.0f, 0.0f, 1.0f) }, m_mouseDown {},
+    m_accel { &Window::translateAccel, true, this },
+    m_p { nullptr }, m_watchdog { Watchdog::get() }
 {
   g_windows.emplace(this);
 
@@ -114,6 +127,8 @@ Window::Window(const char *title,
   SetWindowText(m_handle, title);
   SetWindowPos(m_handle, HWND_TOP, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
   ShowWindow(m_handle, SW_SHOW);
+
+  plugin_register("accelerator", &m_accel);
 
   setupContext();
   platformInit();
@@ -169,6 +184,8 @@ void Window::setupContext()
 Window::~Window()
 {
   ImGui::SetCurrentContext(m_ctx);
+
+  plugin_register("-accelerator", &m_accel);
 
   if(m_inFrame)
     endFrame(false);
