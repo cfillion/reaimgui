@@ -42,6 +42,11 @@ MetalSharedState::MetalSharedState()
   renderPass = [MTLRenderPassDescriptor new];
 
   ImGui_ImplMetal_Init(device);
+
+  // Temprarily enable repeat character input
+  // WARNING: this is application-wide!
+  NSUserDefaults *defaults { [NSUserDefaults standardUserDefaults] };
+  [defaults registerDefaults:@{@"ApplePressAndHoldEnabled":@NO}];
 }
 
 MetalSharedState::~MetalSharedState()
