@@ -13,7 +13,7 @@ REAPER_PLUGIN_HINSTANCE Window::s_instance;
 
 #ifdef _WDL_SWELL_H_
 #  define GET_WHEEL_DELTA_WPARAM GET_Y_LPARAM
-#  define WHEEL_DELTA 60.0f
+constexpr float WHEEL_DELTA { 60.0f };
 #endif
 
 enum SwellDialogResFlags {
@@ -38,6 +38,16 @@ WDL_DLGRET Window::proc(HWND handle, const UINT msg,
   case WM_DESTROY:
     delete self;
     break;
+  case WM_MOUSEMOVE:
+    self->updateCursor();
+    break;
+  case WM_MOUSEWHEEL:
+  case WM_MOUSEHWHEEL:
+    self->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
+    break;
+  case WM_SETCURSOR:
+    return 1;
+#ifndef __APPLE__ // these are handled by InputView, bypassing SWELL
   case WM_LBUTTONDOWN:
   case WM_MBUTTONDOWN:
   case WM_RBUTTONDOWN:
@@ -48,15 +58,6 @@ WDL_DLGRET Window::proc(HWND handle, const UINT msg,
   case WM_RBUTTONUP:
     self->mouseUp(msg);
     break;
-  case WM_MOUSEMOVE:
-    self->updateCursor();
-    break;
-  case WM_MOUSEWHEEL:
-  case WM_MOUSEHWHEEL:
-    self->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
-    break;
-  case WM_SETCURSOR:
-    return 1;
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
     if(wParam < 256)
@@ -67,6 +68,7 @@ WDL_DLGRET Window::proc(HWND handle, const UINT msg,
     if(wParam < 256)
       self->keyInput(wParam, false);
     return -1;
+#endif // __APPLE__
   }
 
   return DefWindowProc(handle, msg, wParam, lParam);
@@ -133,28 +135,30 @@ void Window::setupContext()
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendPlatformName = "reaper_imgui";
 
-  io.KeyMap[ImGuiKey_Tab] = VK_TAB;
-  io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;
-  io.KeyMap[ImGuiKey_RightArrow] = VK_RIGHT;
-  io.KeyMap[ImGuiKey_UpArrow] = VK_UP;
-  io.KeyMap[ImGuiKey_DownArrow] = VK_DOWN;
-  io.KeyMap[ImGuiKey_PageUp] = VK_PRIOR;
-  io.KeyMap[ImGuiKey_PageDown] = VK_NEXT;
-  io.KeyMap[ImGuiKey_Home] = VK_HOME;
-  io.KeyMap[ImGuiKey_End] = VK_END;
-  io.KeyMap[ImGuiKey_Insert] = VK_INSERT;
-  io.KeyMap[ImGuiKey_Delete] = VK_DELETE;
-  io.KeyMap[ImGuiKey_Backspace] = VK_BACK;
-  io.KeyMap[ImGuiKey_Space] = VK_SPACE;
-  io.KeyMap[ImGuiKey_Enter] = VK_RETURN;
-  io.KeyMap[ImGuiKey_Escape] = VK_ESCAPE;
+#ifndef __APPLE__
+  io.KeyMap[ImGuiKey_Tab]         = VK_TAB;
+  io.KeyMap[ImGuiKey_LeftArrow]   = VK_LEFT;
+  io.KeyMap[ImGuiKey_RightArrow]  = VK_RIGHT;
+  io.KeyMap[ImGuiKey_UpArrow]     = VK_UP;
+  io.KeyMap[ImGuiKey_DownArrow]   = VK_DOWN;
+  io.KeyMap[ImGuiKey_PageUp]      = VK_PRIOR;
+  io.KeyMap[ImGuiKey_PageDown]    = VK_NEXT;
+  io.KeyMap[ImGuiKey_Home]        = VK_HOME;
+  io.KeyMap[ImGuiKey_End]         = VK_END;
+  io.KeyMap[ImGuiKey_Insert]      = VK_INSERT;
+  io.KeyMap[ImGuiKey_Delete]      = VK_DELETE;
+  io.KeyMap[ImGuiKey_Backspace]   = VK_BACK;
+  io.KeyMap[ImGuiKey_Space]       = VK_SPACE;
+  io.KeyMap[ImGuiKey_Enter]       = VK_RETURN;
+  io.KeyMap[ImGuiKey_Escape]      = VK_ESCAPE;
   io.KeyMap[ImGuiKey_KeyPadEnter] = VK_RETURN;
-  io.KeyMap[ImGuiKey_A] = 'A';
-  io.KeyMap[ImGuiKey_C] = 'C';
-  io.KeyMap[ImGuiKey_V] = 'V';
-  io.KeyMap[ImGuiKey_X] = 'X';
-  io.KeyMap[ImGuiKey_Y] = 'Y';
-  io.KeyMap[ImGuiKey_Z] = 'Z';
+  io.KeyMap[ImGuiKey_A]           = 'A';
+  io.KeyMap[ImGuiKey_C]           = 'C';
+  io.KeyMap[ImGuiKey_V]           = 'V';
+  io.KeyMap[ImGuiKey_X]           = 'X';
+  io.KeyMap[ImGuiKey_Y]           = 'Y';
+  io.KeyMap[ImGuiKey_Z]           = 'Z';
+#endif
 
   int themeSize;
   ColorTheme *theme { static_cast<ColorTheme *>(GetColorThemeStruct(&themeSize)) };
@@ -290,8 +294,10 @@ void Window::mouseDown(const UINT msg)
     return;
   }
 
+#ifndef __APPLE__
   if(!anyMouseDown() && GetCapture() == nullptr)
     SetCapture(m_handle);
+#endif
 
   m_mouseDown[btn] = Down | DownUnread;
 }
@@ -315,10 +321,12 @@ void Window::mouseUp(const UINT msg)
   }
 
   // keep DownUnread set to catch clicks shorted than one frame
-  m_mouseDown[ImGuiMouseButton_Left] &= ~Down;
+  m_mouseDown[btn] &= ~Down;
 
+#ifndef __APPLE__
   if(!anyMouseDown() && GetCapture() == m_handle)
     ReleaseCapture();
+#endif
 }
 
 void Window::updateMouseDown()
@@ -342,12 +350,19 @@ void Window::updateMousePos()
 
   POINT p;
   GetCursorPos(&p);
-  const HWND targetWindow { WindowFromPoint(p) };
+  const HWND targetView { WindowFromPoint(p) };
   ScreenToClient(m_handle, &p);
 
   ImGuiIO &io { ImGui::GetIO() };
 
-  if(targetWindow == m_handle || GetCapture() == m_handle)
+#ifdef __APPLE__
+  // Our InputView overlays SWELL's NSView.
+  // Capturing is not used as macOS sends mouse up events from outside of the
+  // frame when the mouse down event occured within.
+  if(IsChild(m_handle, targetView) || anyMouseDown())
+#else
+  if(targetView == m_handle || GetCapture() == m_handle)
+#endif
     io.MousePos = ImVec2(static_cast<float>(p.x), static_cast<float>(p.y));
   else
     io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
@@ -380,7 +395,6 @@ void Window::keyInput(const uint8_t key, const bool down)
   ImGui::SetCurrentContext(m_ctx);
   ImGuiIO &io { ImGui::GetIO() };
   io.KeysDown[key] = down;
-  printf("%d %d\n", key, down);
 }
 
 void Window::charInput(const unsigned int codepoint)

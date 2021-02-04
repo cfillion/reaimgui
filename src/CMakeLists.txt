@@ -43,7 +43,7 @@ else()
 endif()
 
 if(APPLE)
-  target_sources(${PROJECT_NAME} PRIVATE window_metal.mm)
+  target_sources(${PROJECT_NAME} PRIVATE inputview.mm window_metal.mm)
 
   find_library(QUARTZCORE_LIB QuartzCore)
   target_link_libraries(${PROJECT_NAME} ${QUARTZCORE_LIB})

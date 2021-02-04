@@ -1,15 +1,14 @@
+#define CreateEvent SWELL_CreateEvent
 #include "window.hpp"
+#undef CreateEvent
 
-#include <AppKit/AppKit.h>
+#include "inputview.hpp"
+
+#include <Carbon/Carbon.h>
 #include <Metal/Metal.h>
 #include <QuartzCore/QuartzCore.h>
 
 #include <imgui/backends/imgui_impl_metal.h>
-#include <swell/swell.h>
-
-#include "textinput.mm"
-
-constexpr int SWELL_ENABLED_NO_FOCUS { -1000 };
 
 struct MetalSharedState {
   MetalSharedState();
@@ -25,7 +24,7 @@ static std::weak_ptr<MetalSharedState> g_shared;
 struct Window::PlatformDetails {
   std::shared_ptr<MetalSharedState> shared;
   CAMetalLayer *layer;
-  TextInput *textInput;
+  InputView *inputView;
 
   // per-frame
   CFAbsoluteTime lastTime {};
@@ -77,12 +76,31 @@ void Window::platformInit()
   [[view window] setOpaque:NO];
   [[view window] setBackgroundColor:[NSColor clearColor]];
 
-  m_p->textInput = [[TextInput alloc] initWithWindow:this];
-  [view addSubview:m_p->textInput];
-  [[view window] makeFirstResponder:m_p->textInput];
+  m_p->inputView = [[InputView alloc] initWithWindow:this parent:view];
 
-  // prevent the window from overwriting the first responder on focus
-  EnableWindow(m_handle, SWELL_ENABLED_NO_FOCUS);
+  ImGuiIO &io { ImGui::GetIO() };
+  io.KeyMap[ImGuiKey_Tab]         = kVK_Tab;
+  io.KeyMap[ImGuiKey_LeftArrow]   = kVK_LeftArrow;
+  io.KeyMap[ImGuiKey_RightArrow]  = kVK_RightArrow;
+  io.KeyMap[ImGuiKey_UpArrow]     = kVK_UpArrow;
+  io.KeyMap[ImGuiKey_DownArrow]   = kVK_DownArrow;
+  io.KeyMap[ImGuiKey_PageUp]      = kVK_PageUp;
+  io.KeyMap[ImGuiKey_PageDown]    = kVK_PageDown;
+  io.KeyMap[ImGuiKey_Home]        = kVK_Home;
+  io.KeyMap[ImGuiKey_End]         = kVK_End;
+  io.KeyMap[ImGuiKey_Insert]      = kVK_Help;
+  io.KeyMap[ImGuiKey_Delete]      = kVK_ForwardDelete;
+  io.KeyMap[ImGuiKey_Backspace]   = kVK_Delete;
+  io.KeyMap[ImGuiKey_Space]       = kVK_Space;
+  io.KeyMap[ImGuiKey_Enter]       = kVK_Return;
+  io.KeyMap[ImGuiKey_Escape]      = kVK_Escape;
+  io.KeyMap[ImGuiKey_KeyPadEnter] = kVK_Return;
+  io.KeyMap[ImGuiKey_A]           = kVK_ANSI_A;
+  io.KeyMap[ImGuiKey_C]           = kVK_ANSI_C;
+  io.KeyMap[ImGuiKey_V]           = kVK_ANSI_V;
+  io.KeyMap[ImGuiKey_X]           = kVK_ANSI_X;
+  io.KeyMap[ImGuiKey_Y]           = kVK_ANSI_Y;
+  io.KeyMap[ImGuiKey_Z]           = kVK_ANSI_Z;
 }
 
 void Window::platformTeardown()

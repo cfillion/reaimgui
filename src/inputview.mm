@@ -1,29 +1,88 @@
-// vi: ft=objcpp
+#include "inputview.hpp"
 
-@interface TextInput : NSView<NSTextInputClient>
+#include "window.hpp"
+
+constexpr NSRange kEmptyRange { NSNotFound, 0 };
+
+@implementation InputView
 {
   NSMutableAttributedString *m_markedText;
   Window *m_window;
 }
-@end
 
-constexpr NSRange kEmptyRange { NSNotFound, 0 };
-
-@implementation TextInput
 - (instancetype)initWithWindow:(Window *)window
+                        parent:(NSView *)parent
 {
-  self = [super init];
+  self = [super initWithFrame:parent.frame];
   m_window = window;
+
+  // Fill the window to receive mouse click events
+  self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
+  parent.autoresizesSubviews = YES;
+  [parent addSubview:self];
+  [[parent window] makeFirstResponder:self];
+
   return self;
+}
+
+- (BOOL)resignFirstResponder
+{
+  // Always retain focus.
+  // For some reason pressing the Enter key leads to REAPER invoking SetFocus
+  // on something else (the window perhaps?).
+  //
+  // This breaks receiving mouse input from SWELL.
+  return NO;
+}
+
+- (void)mouseDown:(NSEvent *)event
+{
+  m_window->mouseDown(WM_LBUTTONDOWN);
+}
+
+- (void)mouseUp:(NSEvent *)event
+{
+  m_window->mouseUp(WM_LBUTTONUP);
+}
+
+- (void)rightMouseDown:(NSEvent *)event
+{
+  m_window->mouseDown(WM_RBUTTONDOWN);
+}
+
+- (void)rightMouseUp:(NSEvent *)event
+{
+  m_window->mouseUp(WM_RBUTTONUP);
+}
+
+- (void)otherMouseDown:(NSEvent *)event
+{
+  m_window->mouseDown(WM_MBUTTONDOWN);
+}
+
+- (void)otherMouseUp:(NSEvent *)event
+{
+  m_window->mouseUp(WM_MBUTTONUP);
 }
 
 - (void)keyDown:(NSEvent *)event
 {
-  [self interpretKeyEvents:[NSArray arrayWithObject:event]];
-  [super keyDown:event];
+  // Send key to the system input manager. It will reply by sending insertText.
+  [self interpretKeyEvents:@[event]];
+
+  // SWELL keyboard events report different key codes depending on the
+  // modifiers. This is undesirable because it would lead to stuck keys:
+  // Shift down, 4 down (keycode for $), Shift up, 4 up (oops, keycode for 4!).
+  m_window->keyInput([event keyCode], true);
 }
 
-// extracted from GLFW (zlib license) with minimal changes
+- (void)keyUp:(NSEvent *)event
+{
+  m_window->keyInput([event keyCode], false);
+}
+
+// Implement NSTextInputClient for IME-aware text input
+// Extracted from GLFW (zlib license) with minimal changes
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange
 {
   const NSEvent *event { [NSApp currentEvent] };

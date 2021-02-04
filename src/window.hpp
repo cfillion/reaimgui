@@ -34,6 +34,9 @@ public:
   void endFrame(bool render);
   void close();
 
+  void mouseDown(UINT msg);
+  void mouseUp(UINT msg);
+  void keyInput(uint8_t key, bool down);
   void charInput(unsigned int);
 
 private:
@@ -49,13 +52,10 @@ private:
   void setupContext();
   void updateCursor();
   bool anyMouseDown() const;
-  void mouseDown(UINT msg);
-  void mouseUp(UINT msg);
   void updateMouseDown();
   void updateMousePos();
   void mouseWheel(UINT msg, short delta);
   void updateKeyMods();
-  void keyInput(uint8_t key, bool down);
 
   void platformInit();
   void platformBeginFrame();
