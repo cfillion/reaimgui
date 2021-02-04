@@ -313,7 +313,7 @@ void Window::updateMousePos()
 
   ImGuiIO &io { ImGui::GetIO() };
 
-  if(targetWindow == m_handle)
+  if(targetWindow == m_handle || GetCapture() == m_handle)
     io.MousePos = ImVec2(static_cast<float>(p.x), static_cast<float>(p.y));
   else
     io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
