@@ -4,7 +4,7 @@
 
 #include <imgui/imgui.h>
 
-DEFINE_API(void, FooBar, ((Window *, window)),
+DEFINE_API(void, FooBar, ((Window*, window)),
 R"()",
 {
   CHECK_WINDOW(window);

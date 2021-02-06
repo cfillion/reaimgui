@@ -30,7 +30,7 @@ add_library(imgui
 )
 
 target_compile_features(imgui PRIVATE cxx_std_17)
-
+target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 target_include_directories(imgui PUBLIC ${ImGui_INCLUDE_DIR})
 
 if(APPLE)

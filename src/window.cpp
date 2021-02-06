@@ -2,6 +2,7 @@
 
 #include "watchdog.hpp"
 
+#include <imgui/imgui_internal.h>
 #include <reaper_colortheme.h>
 #include <reaper_plugin_functions.h>
 #include <unordered_set>
@@ -20,6 +21,19 @@ enum SwellDialogResFlags {
   ForceNonChild = 0x400000 | 0x8, // allows not using a resource id
   Resizable = 1,
 };
+
+static void reportRecovery(void *, const char *fmt, ...)
+{
+  char msg[1024];
+
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(msg, sizeof(msg), fmt, args);
+  va_end(args);
+
+  ReaScriptError(msg);
+  fprintf(stderr, "ReaImGUI Warning: %s\n", msg);
+}
 
 WDL_DLGRET Window::proc(HWND handle, const UINT msg,
   const WPARAM wParam, const LPARAM lParam)
@@ -214,6 +228,7 @@ void Window::enterFrame()
 void Window::endFrame(const bool render)
 {
   ImGui::SetCurrentContext(m_ctx);
+  ImGui::ErrorCheckEndFrameRecover(reportRecovery);
 
   ImDrawData *drawData {};
 

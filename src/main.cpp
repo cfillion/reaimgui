@@ -6,19 +6,20 @@
 
 #include <imgui/imgui.h>
 
-#define API_FUNC(name) { reinterpret_cast<void **>(&name), #name }
+#define IMPORT(name) { reinterpret_cast<void **>(&name), #name }
 
 static bool loadAPI(void *(*getFunc)(const char *))
 {
   struct ApiImport { void **ptr; const char *name; };
 
   const ApiImport funcs[] {
-    API_FUNC(plugin_getapi),
-    API_FUNC(plugin_register),
-    API_FUNC(GetMainHwnd),
-    API_FUNC(GetColorThemeStruct),
-    API_FUNC(ReaScriptError),
-    API_FUNC(ShowMessageBox),
+    IMPORT(plugin_getapi),
+    IMPORT(plugin_register),
+    IMPORT(GetMainHwnd),
+    IMPORT(GetColorThemeStruct),
+    IMPORT(ReaScriptError),
+    IMPORT(ShowMessageBox),
+    IMPORT(realloc_cmd_ptr),
   };
 
   for(const ApiImport &func : funcs) {

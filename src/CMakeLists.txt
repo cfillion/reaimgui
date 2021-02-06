@@ -2,8 +2,23 @@ include(CheckCXXCompilerFlag)
 
 add_library(${PROJECT_NAME} SHARED
   api.cpp
-  api_imgui.cpp
-  api_window.cpp
+  api_context.cpp
+  api_enums.cpp
+  api_imgui.cpp # TODO delete
+  api_input.cpp
+  api_item.cpp
+  api_layout.cpp
+  api_sliders.cpp
+  api_menus.cpp
+  api_params.cpp
+  api_plots.cpp
+  api_style.cpp
+  api_tables.cpp
+  api_text.cpp
+  api_tooltips.cpp
+  api_trees.cpp
+  api_widgets.cpp
+  api_windows.cpp
   main.cpp
   watchdog.cpp
   window.cpp
