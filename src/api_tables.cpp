@@ -30,13 +30,14 @@ The typical call flow is:
 - 5. Call EndTable())",
 {
   USE_WINDOW(window, false);
+
   return ImGui::BeginTable(strId, column,
-    VALUE_OR(flagsInOptional, 0),
+    valueOr(flagsInOptional, 0),
     ImVec2(
-      VALUE_OR(outerWidthInOptional, 0.0),
-      VALUE_OR(outerHeightInOptional, 0.0)
+      valueOr(outerWidthInOptional, 0.0),
+      valueOr(outerHeightInOptional, 0.0)
     ),
-    VALUE_OR(innerWidthInOptional, 0.0)
+    valueOr(innerWidthInOptional, 0.0)
   );
 });
 

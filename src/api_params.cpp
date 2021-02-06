@@ -50,7 +50,7 @@ DEFINE_API(void, PushTextWrapPos, ((Window*,window))
 "Push word-wrapping position for Text*() commands. < 0.0f: no wrapping; 0.0f: wrap to end of window (or column); > 0.0f: wrap at 'wrap_pos_x' position in window local space",
 {
   USE_WINDOW(window);
-  ImGui::PushTextWrapPos(VALUE_OR(wrapLocalPosXInOptional, 0.0));
+  ImGui::PushTextWrapPos(valueOr(wrapLocalPosXInOptional, 0.0));
 });
 
 DEFINE_API(void, PopTextWrapPos, ((Window*,window)),

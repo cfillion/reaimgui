@@ -1,5 +1,6 @@
 #include "window.hpp"
 
+#include "colors.hpp"
 #include "watchdog.hpp"
 
 #include <imgui/imgui_internal.h>
@@ -253,23 +254,13 @@ void Window::close()
 unsigned int Window::clearColor() const
 {
   const auto [r, g, b, a] { m_clearColor };
-
-  return
-    (static_cast<unsigned int>(a * 0xFF)      ) |
-    (static_cast<unsigned int>(b * 0xFF) << 8 ) |
-    (static_cast<unsigned int>(g * 0xFF) << 16) |
-    (static_cast<unsigned int>(r * 0xFF) << 24);
+  return Color::pack(r, g, b, &a);
 }
 
 void Window::setClearColor(const unsigned int rgba)
 {
-  const uint8_t
-    r = rgba >> 24,
-    g = rgba >> 16,
-    b = rgba >> 8,
-    a = rgba;
-
-  m_clearColor = std::make_tuple(r / 255.f, g / 255.f, b / 255.f, a / 255.f);
+  auto &[r, g, b, a] { m_clearColor };
+  Color::unpack(rgba, r, g, b, &a);
 }
 
 void Window::updateCursor()

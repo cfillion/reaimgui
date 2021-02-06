@@ -6,7 +6,7 @@ DEFINE_API(bool, IsItemHovered, ((Window*,window))((int*,flagsInOptional)),
 "Is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGuiHoveredFlags for more options.",
 {
   USE_WINDOW(window, false);
-  return ImGui::IsItemHovered(VALUE_OR(flagsInOptional, 0));
+  return ImGui::IsItemHovered(valueOr(flagsInOptional, 0));
 });
 // IMGUI_API bool          IsItemActive();                                                     // is the last item active? (e.g. button being held, text field being edited. This will continuously return true while holding mouse button on an item. Items that don't interact will always return false)
 // IMGUI_API bool          IsItemFocused();                                                    // is the last item focused for keyboard/gamepad navigation?

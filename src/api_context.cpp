@@ -30,7 +30,7 @@ R"(Close and free the resources used by a window.)",
   ctx->close();
 });
 
-DEFINE_API(void *, GetContextHwnd, ((ImGui_Context*, ctx)),
+DEFINE_API(void *, GetNativeHwnd, ((ImGui_Context*, ctx)),
 R"(Return the native handle for the window.)",
 {
   CHECK_WINDOW(ctx, nullptr);

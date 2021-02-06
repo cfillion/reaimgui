@@ -29,7 +29,7 @@ DEFINE_API(bool, InputText, ((Window*,window))
 {
   USE_WINDOW(window, false);
 
-  ImGuiInputTextFlags flags { VALUE_OR(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeInputTextFlags(flags);
   flags |= ImGuiInputTextFlags_CallbackResize;
 
@@ -46,12 +46,11 @@ DEFINE_API(bool, InputTextWithHint, ((Window*,window))
 {
   USE_WINDOW(window, false);
 
-  ImGuiInputTextFlags flags { VALUE_OR(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeInputTextFlags(flags);
   flags |= ImGuiInputTextFlags_CallbackResize;
 
-  return ImGui::InputTextWithHint(label, hint,
-    bufOutNeedBig, bufOutNeedBig_sz,
+  return ImGui::InputTextWithHint(label, hint, bufOutNeedBig, bufOutNeedBig_sz,
     flags, &inputTextCallback, nullptr);
 });
 
@@ -62,13 +61,11 @@ DEFINE_API(bool, InputInt, ((Window*,window))((const char*,label))
 {
   USE_WINDOW(window, false);
 
-  ImGuiInputTextFlags flags { VALUE_OR(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeInputTextFlags(flags);
 
   return ImGui::InputInt(label, valueInOut,
-    VALUE_OR(stepInOptional, 1),
-    VALUE_OR(stepFastInOptional, 100),
-    flags);
+    valueOr(stepInOptional, 1), valueOr(stepFastInOptional, 100), flags);
 });
 
 DEFINE_API(bool, InputDouble, ((Window*,window))((const char*,label))
@@ -77,15 +74,14 @@ DEFINE_API(bool, InputDouble, ((Window*,window))((const char*,label))
 "'step' defaults to 1, 'stepFast' defaults to 100",
 {
   USE_WINDOW(window, false);
+  nullIfEmpty(formatInOptional);
 
-  ImGuiInputTextFlags flags { VALUE_OR(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeInputTextFlags(flags);
 
   return ImGui::InputDouble(label, valueInOut,
-    VALUE_OR(stepInOptional, 1),
-    VALUE_OR(stepFastInOptional, 100),
-    NULL_IF_EMPTY(formatInOptional),
-    flags);
+    valueOr(stepInOptional, 1.0), valueOr(stepFastInOptional, 100.0),
+    formatInOptional, flags);
 });
 
 // IMGUI_API bool          InputScalar(const char* label, ImGuiDataType data_type, void* p_data, const void* p_step = NULL, const void* p_step_fast = NULL, const char* format = NULL, ImGuiInputTextFlags flags = 0);
@@ -97,13 +93,12 @@ DEFINE_API(bool, InputDoubleN, ((Window*,window))((const char*,label))
 "",
 {
   USE_WINDOW(window, false);
+  nullIfEmpty(formatInOptional);
 
-  ImGuiInputTextFlags flags { VALUE_OR(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeInputTextFlags(flags);
 
   return ImGui::InputScalarN(label, ImGuiDataType_Double,
-    values->data, values->size,
-    stepInOptional, stepFastInOptional,
-    NULL_IF_EMPTY(formatInOptional),
-    flags);
+    values->data, values->size, stepInOptional, stepFastInOptional,
+    formatInOptional, flags);
 });

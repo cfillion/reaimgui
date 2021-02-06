@@ -20,16 +20,15 @@ R"(- CTRL+Click on any drag box to turn them into an input box. Manually input v
 - We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.)",
 {
   USE_WINDOW(window, false);
+  nullIfEmpty(formatInOptional);
 
-  ImGuiSliderFlags flags { VALUE_OR(flagsInOptional, 0) };
+  ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeSliderFlags(flags);
 
   return ImGui::DragInt(label, valueInOut,
-    VALUE_OR(valueSpeedInOptional, 1.0),
-    VALUE_OR(valueMinInOptional, 0),
-    VALUE_OR(valueMaxInOptional, 0),
-    NULL_IF_EMPTY(formatInOptional),
-    flags
+    valueOr(valueSpeedInOptional, 1.0),
+    valueOr(valueMinInOptional, 0.0), valueOr(valueMaxInOptional, 0.0),
+    formatInOptional, flags
   );
 });
     // IMGUI_API bool          DragInt2(const char* label, int v[2], float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%d", ImGuiSliderFlags flags = 0);
@@ -44,15 +43,15 @@ DEFINE_API(bool, DragDouble, ((Window*,window))
 "",
 {
   USE_WINDOW(window, false);
+  nullIfEmpty(formatInOptional);
 
-  ImGuiSliderFlags flags { VALUE_OR(flagsInOptional, 0) };
+  ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeSliderFlags(flags);
 
   return ImGui::DragScalar(label, ImGuiDataType_Double,
-    valueInOut, VALUE_OR(valueSpeedInOptional, 1.0),
+    valueInOut, valueOr(valueSpeedInOptional, 1.0),
     valueMinInOptional, valueMaxInOptional,
-    NULL_IF_EMPTY(formatInOptional),
-    flags
+    formatInOptional, flags
   );
 });
 
@@ -65,14 +64,13 @@ DEFINE_API(bool, SliderInt, ((Window*,window))
 "'format' is '%d' by default.",
 {
   USE_WINDOW(window, false);
+  nullIfEmpty(formatInOptional);
 
-  ImGuiSliderFlags flags { VALUE_OR(flagsInOptional, 0) };
+  ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeSliderFlags(flags);
 
   return ImGui::SliderInt(label, valueInOut, valueMin, valueMax,
-    NULL_IF_EMPTY(formatInOptional) ? formatInOptional : "%d",
-    flags
-  );
+    formatInOptional ? formatInOptional : "%d", flags);
 });
 
 
@@ -82,15 +80,14 @@ DEFINE_API(bool, SliderDouble, ((Window*,window))
 "'format' is '%f' by default.",
 {
   USE_WINDOW(window, false);
+  nullIfEmpty(formatInOptional);
 
-  ImGuiSliderFlags flags { VALUE_OR(flagsInOptional, 0) };
+  ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeSliderFlags(flags);
 
   return ImGui::SliderScalar(label, ImGuiDataType_Double,
     valueInOut, &valueMin, &valueMax,
-    NULL_IF_EMPTY(formatInOptional) ? formatInOptional : "%f",
-    flags
-  );
+    formatInOptional ? formatInOptional : "%f", flags);
 });
 
     // IMGUI_API bool          SliderFloat(const char* label, float* v, float v_min, float v_max, const char* format = "%.3f", ImGuiSliderFlags flags = 0);     // adjust format to decorate the value with a prefix or a suffix for in-slider labels or unit display.

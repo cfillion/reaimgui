@@ -14,10 +14,8 @@ R"(Call between widgets or groups to layout them horizontally. X position given 
 'offsetFromStartX' defaults to 0.0, 'spacing' defaults to -1.0.)",
 {
   USE_WINDOW(window);
-  ImGui::SameLine(
-    VALUE_OR(offsetFromStartXInOptional, 0.0),
-    VALUE_OR(spacingInOptional, -1.0)
-  );
+  ImGui::SameLine(valueOr(offsetFromStartXInOptional, 0.0),
+    valueOr(spacingInOptional, -1.0));
 });
 
 DEFINE_API(void, NewLine, ((Window*,window)),
@@ -46,7 +44,7 @@ DEFINE_API(void, Indent, ((Window*,window))((double*,indentWidthInOptional)),
 "Move content position toward the right, by 'indentWidth', or style.IndentSpacing if 'indentWidth' <= 0",
 {
   USE_WINDOW(window);
-  ImGui::Indent(VALUE_OR(indentWidthInOptional, 0.0));
+  ImGui::Indent(valueOr(indentWidthInOptional, 0.0));
 });
 
 // TODO style
@@ -54,7 +52,7 @@ DEFINE_API(void, Unindent, ((Window*,window))((double*,indentWidthInOptional)),
 "Move content position back to the left, by 'indentWidth', or style.IndentSpacing if 'indentWidth' <= 0",
 {
   USE_WINDOW(window);
-  ImGui::Unindent(VALUE_OR(indentWidthInOptional, 0.0));
+  ImGui::Unindent(valueOr(indentWidthInOptional, 0.0));
 });
 
     // IMGUI_API void          BeginGroup();                                                   // lock horizontal starting position

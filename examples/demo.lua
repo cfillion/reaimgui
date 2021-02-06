@@ -409,6 +409,7 @@ widgets = {
     check   = true,
     radio   = 0,
     counter = 0,
+    curitem = 0,
     str0    = 'Hello, world!',
     str1    = '',
     i0      = 123,
@@ -422,6 +423,9 @@ widgets = {
     d4      = 0.123,
     d5      = 0.0,
     elem    = 1,
+    col1    = 0xff0033,  -- 0xRRGGBB
+    col2    = 0x66b2007f,-- 0xRRGGBBAA
+    listcur = 0,
   },
 }
 
@@ -505,17 +509,14 @@ function demo.ShowDemoWindowWidgets()
 
     r.ImGui_LabelText(ctx, 'label', 'Value');
 
---         {
---             // Using the _simplified_ one-liner Combo() api here
---             // See "Combo" section for examples of how to use the more complete BeginCombo()/EndCombo() api.
---             const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIIIIII", "JJJJ", "KKKKKKK" };
---             static int item_current = 0;
---             r.ImGui_Combo("combo", &item_current, items, IM_ARRAYSIZE(items));
---             r.ImGui_SameLine(); HelpMarker(
---                 "Refer to the \"Combo\" section below for an explanation of the full BeginCombo/EndCombo API, "
---                 "and demonstration of various flags.\n");
---         }
---
+    -- Using the _simplified_ one-liner Combo() api here
+    -- See "Combo" section for examples of how to use the more complete BeginCombo()/EndCombo() api.
+    local items = "AAAA\31BBBB\31CCCC\31DDDD\31EEEE\31FFFF\31GGGG\31HHHH\31IIIIIII\31JJJJ\31KKKKKKK\31"
+    rv,widgets.basic.curitem = r.ImGui_Combo(ctx, 'combo', widgets.basic.curitem, items)
+    r.ImGui_SameLine(ctx); demo.HelpMarker(
+      'Refer to the "Combo" section below for an explanation of the full BeginCombo/EndCombo API, ' ..
+      'and demonstration of various flags.\n')
+
     rv,widgets.basic.str0 = r.ImGui_InputText(ctx, 'input text', widgets.basic.str0);
     r.ImGui_SameLine(ctx); demo.HelpMarker(
       'USER:\n' ..
@@ -570,39 +571,33 @@ function demo.ShowDemoWindowWidgets()
     rv,widgets.basic.elem = r.ImGui_SliderInt(ctx, 'slider enum', widgets.basic.elem, 1, #elements, current_elem);
     r.ImGui_SameLine(ctx); demo.HelpMarker('Using the format string parameter to display a name instead of the underlying integer.')
 
---         {
---             static float col1[3] = { 1.0f, 0.0f, 0.2f };
---             static float col2[4] = { 0.4f, 0.7f, 0.0f, 0.5f };
---             r.ImGui_ColorEdit3("color 1", col1);
---             r.ImGui_SameLine(); HelpMarker(
---                 "Click on the color square to open a color picker.\n"
---                 "Click and hold to use drag and drop.\n"
---                 "Right-click on the color square to show options.\n"
---                 "CTRL+click on individual component to input value.\n");
---
---             r.ImGui_ColorEdit4("color 2", col2);
---         }
---
---         {
---             // List box
---             const char* items[] = { "Apple", "Banana", "Cherry", "Kiwi", "Mango", "Orange", "Pineapple", "Strawberry", "Watermelon" };
---             static int item_current = 1;
---             r.ImGui_ListBox("listbox\n(single select)", &item_current, items, IM_ARRAYSIZE(items), 4);
---
---             //static int listbox_item_current2 = 2;
---             //r.ImGui_SetNextItemWidth(-1);
---             //r.ImGui_ListBox("##listbox2", &listbox_item_current2, listbox_items, IM_ARRAYSIZE(listbox_items), 4);
---         }
---
+    foo = widgets.basic.col1
+    rv,widgets.basic.col1 = r.ImGui_ColorEdit(ctx, 'color 1', widgets.basic.col1, r.ImGui_ColorEditFlags_NoAlpha())
+    r.ImGui_SameLine(ctx); demo.HelpMarker(
+    'Click on the color square to open a color picker.\n' ..
+    'Click and hold to use drag and drop.\n' ..
+    'Right-click on the color square to show options.\n' ..
+    'CTRL+click on individual component to input value.\n')
+
+    rv, widgets.basic.col2 = r.ImGui_ColorEdit(ctx, 'color 2', widgets.basic.col2)
+
+    -- List box
+    local items = "Apple\31Banana\31Cherry\31Kiwi\31Mango\31Orange\31Pineapple\31Strawberry\31Watermelon\31"
+    rv,widgets.basic.listcur = r.ImGui_ListBox(ctx, 'listbox\n(single select)', widgets.basic.listcur, items, 4);
+
+    -- //static int listbox_item_current2 = 2;
+    -- //ImGui::SetNextItemWidth(-1);
+    -- //ImGui::ListBox("##listbox2", &listbox_item_current2, listbox_items, IM_ARRAYSIZE(listbox_items), 4);
+
     r.ImGui_TreePop(ctx);
   end
---
+
 --     // Testing ImGuiOnceUponAFrame helper.
 --     //static ImGuiOnceUponAFrame once;
 --     //for (int i = 0; i < 5; i++)
 --     //    if (once)
 --     //        r.ImGui_Text("This will be displayed only once.");
---
+
 --     if (r.ImGui_TreeNode("Trees"))
 --     {
 --         if (r.ImGui_TreeNode("Basic trees"))

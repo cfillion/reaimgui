@@ -6,9 +6,9 @@ R"(Most widgets return true when the value has been changed or when pressed/sele
 You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.)",
 {
   USE_WINDOW(window, false);
-  return ImGui::Button(label, ImVec2(
-    VALUE_OR(widthInOptional, 0.0), VALUE_OR(heightInOptional, 0.0)
-  ));
+
+  return ImGui::Button(label,
+    ImVec2(valueOr(widthInOptional, 0.0), valueOr(heightInOptional, 0.0)));
 });
 
 // IMGUI_API bool          SmallButton(const char* label);                                 // button with FramePadding=(0,0) to easily embed within text
@@ -35,7 +35,7 @@ DEFINE_API(bool, Checkbox, ((Window*, window))
 });
 
 DEFINE_API(bool, CheckboxFlags, ((Window*,window))
-((const char*,label))((unsigned int*,flagsInOut))((unsigned int,flagsValue)),
+((const char*,label))((int*,flagsInOut))((int,flagsValue)), // unsigned int* is broken in REAPER
 "",
 {
   USE_WINDOW(window, false);

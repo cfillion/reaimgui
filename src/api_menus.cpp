@@ -2,9 +2,8 @@
 
 #include <imgui/imgui.h>
 
-// TODO flag
 DEFINE_API(bool, BeginMenuBar, ((Window*, window)),
-R"(Append to menu-bar of current window (requires ImGuiWindowFlags_MenuBar flag set on parent window). See ImGui_EndMenuBar.)",
+R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag set on parent window). See ImGui_EndMenuBar.)",
 {
   USE_WINDOW(window, false);
   return ImGui::BeginMenuBar();
@@ -38,11 +37,11 @@ R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_
 'enabled' is true by default.)",
 {
   USE_WINDOW(window, false);
-  return ImGui::BeginMenu(label, VALUE_OR(enabledInOptional, true));
+  return ImGui::BeginMenu(label, valueOr(enabledInOptional, true));
 });
 
 DEFINE_API(void, EndMenu, ((Window*, window)),
-R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BegiMenu.)",
+R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BeginMenu.)",
 {
   USE_WINDOW(window);
   ImGui::EndMenu();
@@ -57,5 +56,5 @@ R"(Return true when activated. Shortcuts are displayed for convenience but not p
 {
   USE_WINDOW(window, false);
   return ImGui::MenuItem(label, shortcutInOptional, selectedInOptional,
-    VALUE_OR(enabledInOptional, true));
+    valueOr(enabledInOptional, true));
 });

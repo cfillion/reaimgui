@@ -9,6 +9,7 @@ add_library(${PROJECT_NAME} SHARED
   api_item.cpp
   api_layout.cpp
   api_sliders.cpp
+  api_colors.cpp
   api_menus.cpp
   api_params.cpp
   api_plots.cpp
@@ -18,6 +19,7 @@ add_library(${PROJECT_NAME} SHARED
   api_tooltips.cpp
   api_trees.cpp
   api_widgets.cpp
+  api_lists.cpp
   api_windows.cpp
   main.cpp
   watchdog.cpp

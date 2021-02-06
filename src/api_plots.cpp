@@ -15,14 +15,12 @@ DEFINE_API(void, PlotLines, ((Window*,window))
 "",
 {
   USE_WINDOW(window);
+  nullIfEmpty(overlayTextInOptional);
+
   ImGui::PlotLines(label, &getArrayValue, values->data, values->size,
-    VALUE_OR(valuesOffsetInOptional, 0),
-    NULL_IF_EMPTY(overlayTextInOptional),
-    VALUE_OR(scaleMinInOptional, FLT_MAX), VALUE_OR(scaleMaxInOptional, FLT_MAX),
-    ImVec2(
-      VALUE_OR(graphWidthInOptional, 0.0), VALUE_OR(graphHeightInOptional, 0.0)
-    )
-  );
+    valueOr(valuesOffsetInOptional, 0), overlayTextInOptional,
+    valueOr(scaleMinInOptional, FLT_MAX), valueOr(scaleMaxInOptional, FLT_MAX),
+    ImVec2(valueOr(graphWidthInOptional, 0.0), valueOr(graphHeightInOptional, 0.0)));
 });
 
 DEFINE_API(void, PlotHistogram, ((Window*,window))
@@ -33,12 +31,9 @@ DEFINE_API(void, PlotHistogram, ((Window*,window))
 "",
 {
   USE_WINDOW(window);
+
   ImGui::PlotHistogram(label, &getArrayValue, values->data, values->size,
-    VALUE_OR(valuesOffsetInOptional, 0),
-    overlayTextInOptional,
-    VALUE_OR(scaleMinInOptional, FLT_MAX), VALUE_OR(scaleMaxInOptional, FLT_MAX),
-    ImVec2(
-      VALUE_OR(graphWidthInOptional, 0.0), VALUE_OR(graphHeightInOptional, 0.0)
-    )
-  );
+    valueOr(valuesOffsetInOptional, 0), overlayTextInOptional,
+    valueOr(scaleMinInOptional, FLT_MAX), valueOr(scaleMaxInOptional, FLT_MAX),
+    ImVec2(valueOr(graphWidthInOptional, 0.0), valueOr(graphHeightInOptional, 0.0)));
 });

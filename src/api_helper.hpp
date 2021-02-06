@@ -2,10 +2,8 @@
 #define REAIMGUI_API_HELPER_HPP
 
 #include "api.hpp"
-#include "window.hpp"
 
 #include <boost/preprocessor.hpp>
-#include <reaper_plugin_functions.h>
 #include <tuple>
 
 template<typename T>
@@ -83,6 +81,9 @@ void *InvokeReaScriptAPI(void **argv, int argc)
     ))                                                                          \
   }
 
+#include "window.hpp"
+#include <reaper_plugin_functions.h>
+
 #define CHECK_WINDOW(win, ...)                            \
   if(!Window::exists(win)) {                              \
     ReaScriptError("ReaImGui: Invalid window reference"); \
@@ -93,15 +94,23 @@ void *InvokeReaScriptAPI(void **argv, int argc)
   CHECK_WINDOW(win, __VA_ARGS__);    \
   window->enterFrame();
 
-#define VALUE_OR(param, fallback) (param ? *param : fallback)
-
-// const char *foobarInOptional from REAPER cannot be null
-#define NULL_IF_EMPTY(string) (string && !strlen(string) ? nullptr : string)
-
 // https://forum.cockos.com/showthread.php?t=211620
 struct reaper_array {
   unsigned int size, alloc;
   double data[];
 };
+
+template<typename T, typename Y>
+inline T valueOr(const T *ptr, const Y fallback)
+{
+  return ptr ? *ptr : fallback;
+}
+
+// const char *foobarInOptional from REAPER is never null no matter what
+inline void nullIfEmpty(const char *&string)
+{
+  if(string && !strlen(string))
+    string = nullptr;
+}
 
 #endif

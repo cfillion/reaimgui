@@ -15,7 +15,7 @@ R"(Push window to the stack and start appending to it. See ImGui_End.
 - Note that the bottom of window stack always contains a window called "Debug".)",
 {
   USE_WINDOW(window, false);
-  ImGuiWindowFlags flags { VALUE_OR(windowFlagsInOptional, 0) };
+  ImGuiWindowFlags flags { valueOr(windowFlagsInOptional, 0) };
   flags |= ImGuiWindowFlags_NoSavedSettings;
   return ImGui::Begin(name, openInOptional, flags);
 });
