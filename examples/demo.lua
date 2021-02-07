@@ -427,6 +427,17 @@ widgets = {
     col2    = 0x66b2007f,-- 0xRRGGBBAA
     listcur = 0,
   },
+  trees = {
+    base_flags = r.ImGui_TreeNodeFlags_OpenOnArrow() |
+                 r.ImGui_TreeNodeFlags_OpenOnDoubleClick() |
+                 r.ImGui_TreeNodeFlags_SpanAvailWidth(),
+    align_label_with_current_x_position = false,
+    test_drag_and_drop = false,
+    selection_mask = 1 << 2,
+  },
+  cheads = {
+    closable_group = true,
+  }
 }
 
 local tooltip_curve = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 })
@@ -582,7 +593,7 @@ function demo.ShowDemoWindowWidgets()
     rv, widgets.basic.col2 = r.ImGui_ColorEdit(ctx, 'color 2', widgets.basic.col2)
 
     -- List box
-    local items = "Apple\31Banana\31Cherry\31Kiwi\31Mango\31Orange\31Pineapple\31Strawberry\31Watermelon\31"
+    local items = 'Apple\31Banana\31Cherry\31Kiwi\31Mango\31Orange\31Pineapple\31Strawberry\31Watermelon\31'
     rv,widgets.basic.listcur = r.ImGui_ListBox(ctx, 'listbox\n(single select)', widgets.basic.listcur, items, 4);
 
     -- //static int listbox_item_current2 = 2;
@@ -598,147 +609,139 @@ function demo.ShowDemoWindowWidgets()
 --     //    if (once)
 --     //        r.ImGui_Text("This will be displayed only once.");
 
---     if (r.ImGui_TreeNode("Trees"))
---     {
---         if (r.ImGui_TreeNode("Basic trees"))
---         {
---             for (int i = 0; i < 5; i++)
---             {
---                 // Use SetNextItemOpen() so set the default state of a node to be open. We could
---                 // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
---                 if (i == 0)
---                     r.ImGui_SetNextItemOpen(true, ImGuiCond_Once);
---
---                 if (r.ImGui_TreeNode((void*)(intptr_t)i, "Child %d", i))
---                 {
---                     r.ImGui_Text("blah blah");
---                     r.ImGui_SameLine();
---                     if (r.ImGui_SmallButton("button")) {}
---                     r.ImGui_TreePop();
---                 }
---             }
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Advanced, with Selectable nodes"))
---         {
---             HelpMarker(
---                 "This is a more typical looking tree with selectable nodes.\n"
---                 "Click to select, CTRL+Click to toggle, click on arrows or double-click to open.");
---             static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
---             static bool align_label_with_current_x_position = false;
---             static bool test_drag_and_drop = false;
---             r.ImGui_CheckboxFlags("ImGuiTreeNodeFlags_OpenOnArrow",       &base_flags, ImGuiTreeNodeFlags_OpenOnArrow);
---             r.ImGui_CheckboxFlags("ImGuiTreeNodeFlags_OpenOnDoubleClick", &base_flags, ImGuiTreeNodeFlags_OpenOnDoubleClick);
---             r.ImGui_CheckboxFlags("ImGuiTreeNodeFlags_SpanAvailWidth",    &base_flags, ImGuiTreeNodeFlags_SpanAvailWidth); r.ImGui_SameLine(); HelpMarker("Extend hit area to all available width instead of allowing more items to be laid out after the node.");
---             r.ImGui_CheckboxFlags("ImGuiTreeNodeFlags_SpanFullWidth",     &base_flags, ImGuiTreeNodeFlags_SpanFullWidth);
---             r.ImGui_Checkbox("Align label with current X position", &align_label_with_current_x_position);
---             r.ImGui_Checkbox("Test tree node as drag source", &test_drag_and_drop);
---             r.ImGui_Text("Hello!");
---             if (align_label_with_current_x_position)
---                 r.ImGui_Unindent(r.ImGui_GetTreeNodeToLabelSpacing());
---
---             // 'selection_mask' is dumb representation of what may be user-side selection state.
---             //  You may retain selection state inside or outside your objects in whatever format you see fit.
---             // 'node_clicked' is temporary storage of what node we have clicked to process selection at the end
---             /// of the loop. May be a pointer to your own node type, etc.
---             static int selection_mask = (1 << 2);
---             int node_clicked = -1;
---             for (int i = 0; i < 6; i++)
---             {
---                 // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
---                 ImGuiTreeNodeFlags node_flags = base_flags;
---                 const bool is_selected = (selection_mask & (1 << i)) != 0;
---                 if (is_selected)
---                     node_flags |= ImGuiTreeNodeFlags_Selected;
---                 if (i < 3)
---                 {
---                     // Items 0..2 are Tree Node
---                     bool node_open = r.ImGui_TreeNodeEx((void*)(intptr_t)i, node_flags, "Selectable Node %d", i);
---                     if (r.ImGui_IsItemClicked())
---                         node_clicked = i;
---                     if (test_drag_and_drop && r.ImGui_BeginDragDropSource())
---                     {
---                         r.ImGui_SetDragDropPayload("_TREENODE", NULL, 0);
---                         r.ImGui_Text("This is a drag and drop source");
---                         r.ImGui_EndDragDropSource();
---                     }
---                     if (node_open)
---                     {
---                         r.ImGui_BulletText("Blah blah\nBlah Blah");
---                         r.ImGui_TreePop();
---                     }
---                 }
---                 else
---                 {
---                     // Items 3..5 are Tree Leaves
---                     // The only reason we use TreeNode at all is to allow selection of the leaf. Otherwise we can
---                     // use BulletText() or advance the cursor by GetTreeNodeToLabelSpacing() and call Text().
---                     node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
---                     r.ImGui_TreeNodeEx((void*)(intptr_t)i, node_flags, "Selectable Leaf %d", i);
---                     if (r.ImGui_IsItemClicked())
---                         node_clicked = i;
---                     if (test_drag_and_drop && r.ImGui_BeginDragDropSource())
---                     {
---                         r.ImGui_SetDragDropPayload("_TREENODE", NULL, 0);
---                         r.ImGui_Text("This is a drag and drop source");
---                         r.ImGui_EndDragDropSource();
---                     }
---                 }
---             }
---             if (node_clicked != -1)
---             {
---                 // Update selection state
---                 // (process outside of tree loop to avoid visual inconsistencies during the clicking frame)
---                 if (r.ImGui_GetIO().KeyCtrl)
---                     selection_mask ^= (1 << node_clicked);          // CTRL+click to toggle
---                 else //if (!(selection_mask & (1 << node_clicked))) // Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
---                     selection_mask = (1 << node_clicked);           // Click to single-select
---             }
---             if (align_label_with_current_x_position)
---                 r.ImGui_Indent(r.ImGui_GetTreeNodeToLabelSpacing());
---             r.ImGui_TreePop();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Collapsing Headers"))
---     {
---         static bool closable_group = true;
---         r.ImGui_Checkbox("Show 2nd header", &closable_group);
---         if (r.ImGui_CollapsingHeader("Header", ImGuiTreeNodeFlags_None))
---         {
---             r.ImGui_Text("IsItemHovered: %d", r.ImGui_IsItemHovered());
---             for (int i = 0; i < 5; i++)
---                 r.ImGui_Text("Some content %d", i);
---         }
---         if (r.ImGui_CollapsingHeader("Header with a close button", &closable_group))
---         {
---             r.ImGui_Text("IsItemHovered: %d", r.ImGui_IsItemHovered());
---             for (int i = 0; i < 5; i++)
---                 r.ImGui_Text("More content %d", i);
---         }
---         /*
---         if (r.ImGui_CollapsingHeader("Header with a bullet", ImGuiTreeNodeFlags_Bullet))
---             r.ImGui_Text("IsItemHovered: %d", r.ImGui_IsItemHovered());
---         */
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Bullets"))
---     {
---         r.ImGui_BulletText("Bullet point 1");
---         r.ImGui_BulletText("Bullet point 2\nOn multiple lines");
---         if (r.ImGui_TreeNode("Tree node"))
---         {
---             r.ImGui_BulletText("Another bullet point");
---             r.ImGui_TreePop();
---         }
---         r.ImGui_Bullet(); r.ImGui_Text("Bullet point 3 (two calls)");
---         r.ImGui_Bullet(); r.ImGui_SmallButton("Button");
---         r.ImGui_TreePop();
---     }
---
+  if r.ImGui_TreeNode(ctx, 'Trees') then
+    if r.ImGui_TreeNode(ctx, 'Basic trees') then
+      for i = 0, 4 do
+        -- Use SetNextItemOpen() so set the default state of a node to be open. We could
+        -- also use TreeNodeEx() with the ImGui_TreeNodeFlags_DefaultOpen flag to achieve the same thing!
+        if i == 0 then
+          r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once())
+        end
+
+        if r.ImGui_TreeNodeEx(ctx, i, ('Child %d'):format(i)) then
+          r.ImGui_Text(ctx, 'blah blah')
+          r.ImGui_SameLine(ctx)
+          if r.ImGui_SmallButton(ctx, 'button') then end
+          r.ImGui_TreePop(ctx)
+        end
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Advanced, with Selectable nodes') then
+      demo.HelpMarker(
+        'This is a more typical looking tree with selectable nodes.\n' ..
+        'Click to select, CTRL+Click to toggle, click on arrows or double-click to open.')
+      rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnArrow',       widgets.trees.base_flags, r.ImGui_TreeNodeFlags_OpenOnArrow())
+      rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnDoubleClick', widgets.trees.base_flags, r.ImGui_TreeNodeFlags_OpenOnDoubleClick())
+      rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_SpanAvailWidth',    widgets.trees.base_flags, r.ImGui_TreeNodeFlags_SpanAvailWidth()); r.ImGui_SameLine(ctx); demo.HelpMarker('Extend hit area to all available width instead of allowing more items to be laid out after the node.')
+      rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTreeNodeFlags_SpanFullWidth', widgets.trees.base_flags, r.ImGui_TreeNodeFlags_SpanFullWidth());
+      rv,widgets.trees.align_label_with_current_x_position = r.ImGui_Checkbox(ctx, "Align label with current X position", widgets.trees.align_label_with_current_x_position);
+      rv,widgets.trees.test_drag_and_drop = r.ImGui_Checkbox(ctx, "Test tree node as drag source", widgets.trees.test_drag_and_drop);
+      r.ImGui_Text(ctx, 'Hello!')
+      if widgets.trees.align_label_with_current_x_position then
+        r.ImGui_Unindent(ctx, r.ImGui_GetTreeNodeToLabelSpacing(ctx))
+      end
+
+      -- 'selection_mask' is dumb representation of what may be user-side selection state.
+      --  You may retain selection state inside or outside your objects in whatever format you see fit.
+      -- 'node_clicked' is temporary storage of what node we have clicked to process selection at the end
+      -- of the loop. May be a pointer to your own node type, etc.
+      local node_clicked = -1
+
+      for i = 0, 5 do
+        -- Disable the default "open on single-click behavior" + set Selected flag according to our selection.
+        local node_flags = widgets.trees.base_flags
+        local is_selected = (widgets.trees.selection_mask & (1 << i)) ~= 0
+        if is_selected then
+          node_flags = node_flags | r.ImGui_TreeNodeFlags_Selected()
+        end
+        if i < 3 then
+          -- Items 0..2 are Tree Node
+          local node_open = r.ImGui_TreeNodeEx(ctx, i, ('Selectable Node %d'):format(i), node_flags)
+          if r.ImGui_IsItemClicked(ctx) then
+            node_clicked = i
+          end
+          if widgets.trees.test_drag_and_drop and r.ImGui_BeginDragDropSource(ctx) then
+            r.ImGui_SetDragDropPayload(ctx, '_TREENODE', nil, 0)
+            r.ImGui_Text(ctx, 'This is a drag and drop source')
+            r.ImGui_EndDragDropSource(ctx)
+          end
+          if node_open then
+            r.ImGui_BulletText(ctx, 'Blah blah\nBlah Blah')
+            r.ImGui_TreePop(ctx)
+          end
+        else
+          -- Items 3..5 are Tree Leaves
+          -- The only reason we use TreeNode at all is to allow selection of the leaf. Otherwise we can
+          -- use BulletText() or advance the cursor by GetTreeNodeToLabelSpacing() and call Text().
+          node_flags = node_flags | r.ImGui_TreeNodeFlags_Leaf() | r.ImGui_TreeNodeFlags_NoTreePushOnOpen() -- | r.ImGui_TreeNodeFlags_Bullet()
+          r.ImGui_TreeNodeEx(ctx, i, ('Selectable Leaf %d'):format(i), node_flags)
+          if r.ImGui_IsItemClicked(ctx) then
+            node_clicked = i
+          end
+          if widgets.trees.test_drag_and_drop and r.ImGui_BeginDragDropSource(ctx) then
+            r.ImGui_SetDragDropPayload(ctx, '_TREENODE', nil, 0)
+            r.ImGui_Text(ctx, 'This is a drag and drop source')
+            r.ImGui_EndDragDropSource(ctx)
+          end
+        end
+      end
+
+      if node_clicked ~= -1 then
+        -- Update selection state
+        -- (process outside of tree loop to avoid visual inconsistencies during the clicking frame)
+        -- if r.ImGui_GetIO().KeyCtrl then TODO
+        --   widgets.trees.selection_mask ^= (1 << node_clicked)           -- CTRL+click to toggle
+        if false then
+        else-- if (widgets.trees.selection_mask & (1 << node_clicked)) == 0 -- Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
+          widgets.trees.selection_mask = (1 << node_clicked)              -- Click to single-select
+        end
+      end
+
+      if widgets.trees.align_label_with_current_x_position then
+        r.ImGui_Indent(ctx, r.ImGui_GetTreeNodeToLabelSpacing(ctx))
+      end
+
+      r.ImGui_TreePop(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Collapsing Headers') then
+    rv,widgets.cheads.closable_group = r.ImGui_Checkbox(ctx, 'Show 2nd header', widgets.cheads.closable_group)
+
+    if r.ImGui_CollapsingHeader(ctx, 'Header', nil, r.ImGui_TreeNodeFlags_None()) then
+      r.ImGui_Text(ctx, ('IsItemHovered: %s'):format(r.ImGui_IsItemHovered(ctx)))
+      for i = 0, 4 do
+        r.ImGui_Text(ctx, ('Some content %s'):format(i))
+      end
+    end
+
+    rv,widgets.cheads.closable_group = r.ImGui_CollapsingHeader(ctx, 'Header with a close button', widgets.cheads.closable_group)
+    if rv then
+      r.ImGui_Text(ctx, ('IsItemHovered: %s'):format(r.ImGui_IsItemHovered(ctx)))
+      for i = 0, 4 do
+        r.ImGui_Text(ctx, ('More content %d'):format(i))
+      end
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Bullets') then
+    r.ImGui_BulletText(ctx, 'Bullet point 1')
+    r.ImGui_BulletText(ctx, 'Bullet point 2\nOn multiple lines')
+    if r.ImGui_TreeNode(ctx, 'Tree node') then
+      r.ImGui_BulletText(ctx, 'Another bullet point')
+      r.ImGui_TreePop(ctx)
+    end
+    r.ImGui_Bullet(ctx); r.ImGui_Text(ctx, 'Bullet point 3 (two calls)')
+    r.ImGui_Bullet(ctx); r.ImGui_SmallButton(ctx, 'Button')
+    r.ImGui_TreePop(ctx)
+  end
+
 --     if (r.ImGui_TreeNode("Text"))
 --     {
 --         if (r.ImGui_TreeNode("Colorful Text"))

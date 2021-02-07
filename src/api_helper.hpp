@@ -60,6 +60,9 @@ void *InvokeReaScriptAPI(void **argv, int argc)
   return ReaScriptAPI<decltype(fn)>::applyVarArg(fn, argv, argc);
 }
 
+// int* fooInOptional -> can be null, input and output (but not visible in the Lua return list)
+// int* fooInOutOptional -> cannot be null, input and output (visible in the Lua return list)
+
 #define ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
 #define ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
 

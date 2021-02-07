@@ -4,16 +4,33 @@
   DEFINE_API(int, name, (()), doc, { return ImGui##name; })
 
 // typedef int ImGuiCol;               // -> enum ImGuiCol_             // Enum: A color identifier for styling
-// typedef int ImGuiCond;              // -> enum ImGuiCond_            // Enum: A condition for many Set*() functions
+
+// ImGuiCond
+// Enumeration for ImGui::SetWindow***(), SetNextWindow***(), SetNextItem***() functions
+// Represent a condition.
+// Important: Treat as a regular enum! Do NOT combine multiple values using binary operators! All the functions above treat 0 as a shortcut to ImGuiCond_Always.
+DEFINE_ENUM(Cond_Always, "No condition (always set the variable)");
+DEFINE_ENUM(Cond_Once, "Set the variable once per runtime session (only the first call will succeed)");
+DEFINE_ENUM(Cond_FirstUseEver, "Set the variable if the object/window has no persistently saved data (no entry in .ini file)");
+DEFINE_ENUM(Cond_Appearing, "Set the variable if the object/window is appearing after being hidden/inactive (or the first time)");
+
 // typedef int ImGuiDataType;          // -> enum ImGuiDataType_        // Enum: A primary data type
+
+// ImGuiDir
 DEFINE_ENUM(Dir_None,  "A cardinal direction");
 DEFINE_ENUM(Dir_Left,  "A cardinal direction");
 DEFINE_ENUM(Dir_Right, "A cardinal direction");
 DEFINE_ENUM(Dir_Up,    "A cardinal direction");
 DEFINE_ENUM(Dir_Down,  "A cardinal direction");
+
 // typedef int ImGuiKey;               // -> enum ImGuiKey_             // Enum: A key identifier (ImGui-side enum)
 // typedef int ImGuiNavInput;          // -> enum ImGuiNavInput_        // Enum: An input identifier for navigation
-// typedef int ImGuiMouseButton;       // -> enum ImGuiMouseButton_     // Enum: A mouse button identifier (0=left, 1=right, 2=middle)
+// ImGuiMouseButton
+// Enum: A mouse button identifier (0=left, 1=right, 2=middle)
+DEFINE_ENUM(MouseButton_Left, "");
+DEFINE_ENUM(MouseButton_Right, "");
+DEFINE_ENUM(MouseButton_Middle, "");
+
 // typedef int ImGuiMouseCursor;       // -> enum ImGuiMouseCursor_     // Enum: A mouse cursor identifier
 // typedef int ImGuiSortDirection;     // -> enum ImGuiSortDirection_   // Enum: A sorting direction (ascending or descending)
 // typedef int ImGuiStyleVar;          // -> enum ImGuiStyleVar_        // Enum: A variable identifier for styling
@@ -102,8 +119,26 @@ DEFINE_ENUM(SliderFlags_NoInput,         "Disable CTRL+Click or Enter key allowi
 // typedef int ImGuiTableFlags;        // -> enum ImGuiTableFlags_      // Flags: For BeginTable()
 // typedef int ImGuiTableColumnFlags;  // -> enum ImGuiTableColumnFlags_// Flags: For TableSetupColumn()
 // typedef int ImGuiTableRowFlags;     // -> enum ImGuiTableRowFlags_   // Flags: For TableNextRow()
-// typedef int ImGuiTreeNodeFlags;     // -> enum ImGuiTreeNodeFlags_   // Flags: for TreeNode(), TreeNodeEx(), CollapsingHeader()
-// typedef int ImGuiWindowFlags;       // -> enum ImGuiWindowFlags_     // Flags: for Begin(), BeginChild()
+
+// ImGuiTreeNodeFlags
+// Flags for TreeNode(), TreeNodeEx(), CollapsingHeader()
+DEFINE_ENUM(TreeNodeFlags_None,                 "");
+DEFINE_ENUM(TreeNodeFlags_Selected,             "Draw as selected");
+DEFINE_ENUM(TreeNodeFlags_Framed,               "Draw frame with background (e.g. for CollapsingHeader)");
+DEFINE_ENUM(TreeNodeFlags_AllowItemOverlap,     "Hit testing to allow subsequent widgets to overlap this one");
+DEFINE_ENUM(TreeNodeFlags_NoTreePushOnOpen,     "Don't do a TreePush() when open (e.g. for CollapsingHeader) = no extra indent nor pushing on ID stack");
+DEFINE_ENUM(TreeNodeFlags_NoAutoOpenOnLog,      "Don't automatically and temporarily open node when Logging is active (by default logging will automatically open tree nodes)");
+DEFINE_ENUM(TreeNodeFlags_DefaultOpen,          "Default node to be open");
+DEFINE_ENUM(TreeNodeFlags_OpenOnDoubleClick,    "Need double-click to open node");
+DEFINE_ENUM(TreeNodeFlags_OpenOnArrow,          "Only open when clicking on the arrow part. If ImGuiTreeNodeFlags_OpenOnDoubleClick is also set, single-click arrow or double-click all box to open.");
+DEFINE_ENUM(TreeNodeFlags_Leaf,                 "No collapsing, no arrow (use as a convenience for leaf nodes).");
+DEFINE_ENUM(TreeNodeFlags_Bullet,               "Display a bullet instead of arrow");
+DEFINE_ENUM(TreeNodeFlags_FramePadding,         "Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding().");
+DEFINE_ENUM(TreeNodeFlags_SpanAvailWidth,       "Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line. In the future we may refactor the hit system to be front-to-back, allowing natural overlaps and then this can become the default.");
+DEFINE_ENUM(TreeNodeFlags_SpanFullWidth,        "Extend hit box to the left-most and right-most edges (bypass the indented area).");
+// DEFINE_ENUM(TreeNodeFlags_NavLeftJumpsBackHere, "(WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)");
+// DEFINE_ENUM(TreeNodeFlags_NoScrollOnOpen        "FIXME: TODO: Disable automatic scroll on TreePop() if node got just open and contents is not visible")
+// DEFINE_ENUM(ImGuiTreeNodeFlags_CollapsingHeader,"");
 
 // ImGuiWindowFlags
 // for Begin(), BeginChild()

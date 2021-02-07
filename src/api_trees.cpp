@@ -25,10 +25,16 @@ DEFINE_API(void, TreePop, ((Window*, window)),
   USE_WINDOW(window);
   ImGui::TreePop();
 });
-// IMGUI_API float         GetTreeNodeToLabelSpacing();                                        // horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode
 
-DEFINE_API(bool, CollapsingHeader, ((Window*, window))
-((const char*, label))((bool*, visibleInOptional))((int*, flagsInOptional)),
+DEFINE_API(double, GetTreeNodeToLabelSpacing, ((Window*,window)),
+"Horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode",
+{
+  USE_WINDOW(window, 0.0);
+  return ImGui::GetTreeNodeToLabelSpacing();
+});
+
+DEFINE_API(bool, CollapsingHeader, ((Window*,window))
+((const char*, label))((bool*,visibleInOptional))((int*,flagsInOptional)),
 R"(If returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
 
 When 'visible' is provided: if 'true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if 'false' don't display the header.)",
@@ -37,4 +43,12 @@ When 'visible' is provided: if 'true' display an additional small close button o
   return ImGui::CollapsingHeader(label, visibleInOptional, valueOr(flagsInOptional, 0));
 });
 
-// IMGUI_API void          SetNextItemOpen(bool is_open, ImGuiCond cond = 0);                  // set next TreeNode/CollapsingHeader open state.
+DEFINE_API(void, SetNextItemOpen, ((Window*,window))
+((bool,isOpen))((int*,condInOptional)),
+R"(Set next TreeNode/CollapsingHeader open state. Can also be done with the ImGui_TreeNodeFlags_DefaultOpen flag.
+
+'cond' is ImGui_Cond_Always by default.)",
+{
+  USE_WINDOW(window);
+  ImGui::SetNextItemOpen(isOpen, valueOr(condInOptional, ImGuiCond_Always));
+});

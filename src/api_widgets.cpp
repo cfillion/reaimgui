@@ -11,8 +11,14 @@ You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemH
     ImVec2(valueOr(widthInOptional, 0.0), valueOr(heightInOptional, 0.0)));
 });
 
-// IMGUI_API bool          SmallButton(const char* label);                                 // button with FramePadding=(0,0) to easily embed within text
+DEFINE_API(bool, SmallButton, ((Window*,window))((const char*,label)),
+"button with FramePadding=(0,0) to easily embed within text",
+{
+  USE_WINDOW(window, false);
+  return ImGui::SmallButton(label);
+});
 // IMGUI_API bool          InvisibleButton(const char* str_id, const ImVec2& size, ImGuiButtonFlags flags = 0); // flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.)
+
 DEFINE_API(bool, ArrowButton, ((Window*,window))
 ((const char*,str_id))((int,dir)),
 "Square button with an arrow shape",
@@ -59,4 +65,10 @@ DEFINE_API(bool, RadioButtonEx, ((Window*,window))
 });
 
 // IMGUI_API void          ProgressBar(float fraction, const ImVec2& size_arg = ImVec2(-FLT_MIN, 0), const char* overlay = NULL);
-// IMGUI_API void          Bullet();                                                       // draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses
+
+DEFINE_API(void, Bullet, ((Window*,window)),
+"Draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses.",
+{
+  USE_WINDOW(window);
+  ImGui::Bullet();
+});
