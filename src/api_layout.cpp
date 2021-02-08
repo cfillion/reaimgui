@@ -1,5 +1,7 @@
 #include "api_helper.hpp"
 
+#undef SetCursorPos // comes from SWELL, TODO remove reaper_plugin_functions.h include from api_helper
+
 DEFINE_API(void, Separator, ((Window*,window)),
 "Separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.",
 {
@@ -57,22 +59,58 @@ DEFINE_API(void, Unindent, ((Window*,window))((double*,indentWidthInOptional)),
 
     // IMGUI_API void          BeginGroup();                                                   // lock horizontal starting position
     // IMGUI_API void          EndGroup();                                                     // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
-    // IMGUI_API ImVec2        GetCursorPos();                                                 // cursor position in window coordinates (relative to window position)
-    // IMGUI_API float         GetCursorPosX();                                                //   (some functions are using window-relative coordinates, such as: GetCursorPos, GetCursorStartPos, GetContentRegionMax, GetWindowContentRegion* etc.
-    // IMGUI_API float         GetCursorPosY();                                                //    other functions such as GetCursorScreenPos or everything in ImDrawList::
-    // IMGUI_API void          SetCursorPos(const ImVec2& local_pos);                          //    are using the main, absolute coordinate system.
-    // IMGUI_API void          SetCursorPosX(float local_x);                                   //    GetWindowPos() + GetCursorPos() == GetCursorScreenPos() etc.)
-    // IMGUI_API void          SetCursorPosY(float local_y);                                   //
+
+DEFINE_API(void, GetCursorPos, ((Window*,window))
+((double*,xOut))((double*,yOut)),
+"Cursor position in window",
+{
+  USE_WINDOW(window);
+  const ImVec2 &pos { ImGui::GetCursorPos() };
+  if(xOut) *xOut = pos.x;
+  if(yOut) *yOut = pos.y;
+});
+
+DEFINE_API(void, SetCursorPos, ((Window*,window))
+((double,x))((double,y)),
+"Cursor position in window",
+{
+  USE_WINDOW(window);
+  ImGui::SetCursorPos(ImVec2(x, y));
+});
+
     // IMGUI_API ImVec2        GetCursorStartPos();                                            // initial cursor position in window coordinates
-    // IMGUI_API ImVec2        GetCursorScreenPos();                                           // cursor position in absolute screen coordinates [0..io.DisplaySize] (useful to work with ImDrawList API)
-    // IMGUI_API void          SetCursorScreenPos(const ImVec2& pos);                          // cursor position in absolute screen coordinates [0..io.DisplaySize]
+
+DEFINE_API(void, GetCursorScreenPos, ((Window*,window))
+((double*,xOut))((double*,yOut)),
+"Cursor position in absolute screen coordinates [0..io.DisplaySize] (useful to work with ImDrawList API)",
+{
+  USE_WINDOW(window);
+  const ImVec2 &pos { ImGui::GetCursorScreenPos() };
+  if(xOut) *xOut = pos.x;
+  if(yOut) *yOut = pos.y;
+});
+
+DEFINE_API(void, SetCursorScreenPos, ((Window*,window))
+((double,x))((double,y)),
+"Cursor position in absolute screen coordinates [0..io.DisplaySize]",
+{
+  USE_WINDOW(window);
+  ImGui::SetCursorScreenPos(ImVec2(x, y));
+});
+
 DEFINE_API(void, AlignTextToFramePadding, ((Window*,window)),
 "Vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)",
 {
   USE_WINDOW(window);
   ImGui::AlignTextToFramePadding();
 });
-    // IMGUI_API float         GetTextLineHeight();                                            // ~ FontSize
+
+DEFINE_API(double, GetTextLineHeight, ((Window*,window)),
+"Same as ImGui_GetFontSize",
+{
+  USE_WINDOW(window, 0.0);
+  return ImGui::GetTextLineHeight();
+});
     // IMGUI_API float         GetTextLineHeightWithSpacing();                                 // ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
     // IMGUI_API float         GetFrameHeight();                                               // ~ FontSize + style.FramePadding.y * 2
     // IMGUI_API float         GetFrameHeightWithSpacing();                                    // ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)

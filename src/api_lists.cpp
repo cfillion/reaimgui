@@ -40,10 +40,14 @@ static std::vector<const char *> nullSeparatedToVector(const char *list)
 // Widgets: Combo Box
 DEFINE_API(bool, BeginCombo, ((Window*,window))((const char*,label))
 ((const char*,previewValue))((int*,flagsInOptional)),
-"The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() items.",
+R"(The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() items.
+
+Default values: flags = ImGui_ComboFlags_None)",
 {
   USE_WINDOW(window, false);
-  return false; // TODO
+
+  return ImGui::BeginCombo(label, previewValue,
+    valueOr(flagsInOptional, ImGuiComboFlags_None));
 });
 
 DEFINE_API(void, EndCombo, ((Window*,window)),
@@ -53,8 +57,8 @@ DEFINE_API(void, EndCombo, ((Window*,window)),
   ImGui::EndCombo();
 });
 
-DEFINE_API(bool, Combo, ((Window*,window))((const char*,label))
-((int*,currentItemInOut))((char*,items))
+DEFINE_API(bool, Combo, ((Window*,window))
+((const char*,label))((int*,currentItemInOut))((char*,items))
 ((int*,popupMaxHeightInItemsInOptional)),
 R"(Helper over BeginCombo()/EndCombo() for convenience purpose. Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
 

@@ -72,3 +72,20 @@ DEFINE_API(void, Bullet, ((Window*,window)),
   USE_WINDOW(window);
   ImGui::Bullet();
 });
+
+DEFINE_API(bool, Selectable, ((Window*,window))
+((const char*,label))((bool*,selectedInOutOptional))
+((int*,flagsInOptional))((double*,widthInOptional))((double*,heightInOptional)),
+R"(A selectable highlights when hovered, and can display another color when selected.
+Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
+
+Default values: flags = ImGui_SelectableFlags_None, width = 0.0, height = 0.0)",
+{
+  USE_WINDOW(window, false);
+
+  bool selectedOmitted {};
+  bool *selected { selectedInOutOptional ? selectedInOutOptional : &selectedOmitted };
+  return ImGui::Selectable(label, selected,
+    valueOr(flagsInOptional, ImGuiSelectableFlags_None),
+    ImVec2(valueOr(widthInOptional, 0.0), valueOr(heightInOptional, 0.0)));
+});

@@ -29,7 +29,55 @@ R"(Is the last item clicked? (e.g. button/node just clicked on) == IsMouseClicke
 // IMGUI_API bool          IsAnyItemHovered();                                                 // is any item hovered?
 // IMGUI_API bool          IsAnyItemActive();                                                  // is any item active?
 // IMGUI_API bool          IsAnyItemFocused();                                                 // is any item focused?
-// IMGUI_API ImVec2        GetItemRectMin();                                                   // get upper-left bounding rectangle of the last item (screen space)
-// IMGUI_API ImVec2        GetItemRectMax();                                                   // get lower-right bounding rectangle of the last item (screen space)
-// IMGUI_API ImVec2        GetItemRectSize();                                                  // get size of last item
-// IMGUI_API void          SetItemAllowOverlap();                                              // allow last item to be overlapped by a subsequent item. sometimes useful with invisible buttons, selectables, etc. to catch unused area.
+
+DEFINE_API(void, GetItemRectMin, ((Window*,window))
+((double*,xOut))((double*,yOut)),
+"Get upper-left bounding rectangle of the last item (screen space)",
+{
+  USE_WINDOW(window);
+  const ImVec2 &rect { ImGui::GetItemRectMin() };
+  if(xOut) *xOut = rect.x;
+  if(yOut) *yOut = rect.y;
+});
+
+DEFINE_API(void, GetItemRectMax, ((Window*,window))
+((double*,xOut))((double*,yOut)),
+"Get lower-right bounding rectangle of the last item (screen space)",
+{
+  USE_WINDOW(window);
+  const ImVec2 &rect { ImGui::GetItemRectMax() };
+  if(xOut) *xOut = rect.x;
+  if(yOut) *yOut = rect.y;
+});
+
+DEFINE_API(void, GetItemRectSize, ((Window*,window))
+((double*,wOut))((double*,hOut)),
+"Get size of last item",
+{
+  USE_WINDOW(window);
+  const ImVec2 &rect { ImGui::GetItemRectSize() };
+  if(wOut) *wOut = rect.x;
+  if(hOut) *hOut = rect.y;
+});
+
+// IMGUI_API void          SetItemAllowOverlap(); // allow last item to be overlapped by a subsequent item. sometimes useful with invisible buttons, selectables, etc. to catch unused area.
+
+// Focus, Activation
+DEFINE_API(void, SetItemDefaultFocus, ((Window*,window)),
+R"~(Make last item the default focused item of a window.
+
+Prefer using "SetItemDefaultFocus()" over "if (IsWindowAppearing()) SetScrollHereY()" when applicable to signify "this is the default item")~",
+{
+  USE_WINDOW(window);
+  ImGui::SetItemDefaultFocus();
+});
+
+DEFINE_API(void, SetKeyboardFocusHere, ((Window*,window))
+((int*,offsetInOptional)),
+R"(Focus keyboard on the next widget. Use positive 'offset' to access sub components of a multiple component widget. Use -1 to access previous widget.
+
+Default values: offset = 0)",
+{
+  USE_WINDOW(window);
+  ImGui::SetKeyboardFocusHere(valueOr(offsetInOptional, 0));
+});

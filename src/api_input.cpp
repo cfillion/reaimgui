@@ -36,6 +36,25 @@ DEFINE_API(bool, InputText, ((Window*,window))
   return ImGui::InputText(label, bufOutNeedBig, bufOutNeedBig_sz,
     flags, &inputTextCallback, nullptr);
 });
+
+DEFINE_API(bool, InputTextMultiline, ((Window*,window))
+((const char*,label))((char*,bufOutNeedBig))((int,bufOutNeedBig_sz))
+((double*,widthInOptional))((double*,heightInOptional))
+((int*,flagsInOptional)),
+"Default values: width = 0, height = 0, flags = ImGui_InputTextFlags_None",
+{
+  USE_WINDOW(window, false)
+
+  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
+  sanitizeInputTextFlags(flags);
+  flags |= ImGuiInputTextFlags_CallbackResize;
+
+  return ImGui::InputTextMultiline(label, bufOutNeedBig, bufOutNeedBig_sz,
+    ImVec2(valueOr(widthInOptional, 0.0), valueOr(heightInOptional, 0.0)),
+    valueOr(flagsInOptional, ImGuiInputTextFlags_None),
+    &inputTextCallback, nullptr);
+});
+
 // IMGUI_API bool          InputTextMultiline(const char* label, char* buf, size_t buf_size, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = NULL, void* user_data = NULL);
 
 DEFINE_API(bool, InputTextWithHint, ((Window*,window))

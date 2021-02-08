@@ -71,3 +71,19 @@ See GetClearColor.)",
   CHECK_WINDOW(ctx);
   ctx->setClearColor(rgba);
 });
+
+DEFINE_API(double, GetTime, ((ImGui_Context*,ctx)),
+"Get global imgui time. Incremented every frame.",
+{
+  USE_WINDOW(ctx, 0.0);
+  return ImGui::GetTime();
+});
+
+// TODO: remove this
+DEFINE_API(void, FooBar, ((Window*, window)),
+R"()",
+{
+  CHECK_WINDOW(window);
+  window->enterFrame();
+  ImGui::ShowDemoWindow();
+});

@@ -1,9 +1,9 @@
 #include "api_helper.hpp"
 
-DEFINE_API(bool, BeginTable, ((Window*, window))
-((const char*, strId))((int, column))((int*, flagsInOptional))
-((double*, outerWidthInOptional))((double*, outerHeightInOptional))
-((double*, innerWidthInOptional)),
+DEFINE_API(bool, BeginTable, ((Window*,window))
+((const char*,strId))((int, column))((int*,flagsInOptional))
+((double*,outerWidthInOptional))((double*,outerHeightInOptional))
+((double*,innerWidthInOptional)),
 R"([BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!
 - Full-featured replacement for old Columns API.
 - See Demo->Tables for demo code.
@@ -41,15 +41,25 @@ The typical call flow is:
   );
 });
 
-DEFINE_API(void, EndTable, ((Window*, window)),
+DEFINE_API(void, EndTable, ((Window*,window)),
 "Only call EndTable() if BeginTable() returns true!",
 {
   USE_WINDOW(window);
   ImGui::EndTable();
 });
-    // IMGUI_API void          TableNextRow(ImGuiTableRowFlags row_flags = 0, float min_row_height = 0.0f); // append into the first cell of a new row.
 
-DEFINE_API(bool, TableNextColumn, ((Window*, window)),
+DEFINE_API(void, TableNextRow, ((Window*,window))
+((int*,rowFlagsInOptional))((double*,minRowHeightInOptional)),
+R"(Append into the first cell of a new row.
+
+Default values: rowFlags = ImGui_TableRowFlags_None, minRowHeight = 0.0)",
+{
+  USE_WINDOW(window);
+  ImGui::TableNextRow(valueOr(rowFlagsInOptional, ImGuiTableRowFlags_None),
+    valueOr(minRowHeightInOptional, 0.0));
+});
+
+DEFINE_API(bool, TableNextColumn, ((Window*,window)),
 "Append into the next column (or first column of next row if currently in last column). Return true when column is visible.",
 {
   USE_WINDOW(window, false);

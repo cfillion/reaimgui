@@ -22,6 +22,23 @@ namespace Color {
     g    = (col >> (8 * i++) & 0xFF) / 255.f;
     r    = (col >> (8 * i++) & 0xFF) / 255.f;
   }
+
+  inline void unpack(const unsigned int col, ImVec4 &out, const bool alpha = true)
+  {
+    unpack(col, out.x, out.y, out.z, alpha ? &out.w : nullptr);
+
+    if(!alpha)
+      out.w = 1.0f;
+  }
+
+  inline unsigned int rgba2abgr(const unsigned int rgba)
+  {
+    return
+      (rgba >> 24 & 0x000000FF) | // red
+      (rgba >> 8  & 0x0000FF00) | // green
+      (rgba << 8  & 0x00FF0000) | // blue
+      (rgba << 24 & 0xFF000000) ; // alpha
+  }
 };
 
 #endif

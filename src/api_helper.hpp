@@ -87,15 +87,15 @@ void *InvokeReaScriptAPI(void **argv, int argc)
 #include "window.hpp"
 #include <reaper_plugin_functions.h>
 
-#define CHECK_WINDOW(win, ...)                            \
-  if(!Window::exists(win)) {                              \
-    ReaScriptError("ReaImGui: Invalid window reference"); \
-    return __VA_ARGS__;                                   \
+#define CHECK_WINDOW(ctx, ...)                             \
+  if(!Window::exists(ctx)) {                               \
+    ReaScriptError("ReaImGui: Invalid context reference"); \
+    return __VA_ARGS__;                                    \
   }
 
-#define USE_WINDOW(win, ...) \
-  CHECK_WINDOW(win, __VA_ARGS__);    \
-  window->enterFrame();
+#define USE_WINDOW(ctx, ...) \
+  CHECK_WINDOW(ctx, __VA_ARGS__);    \
+  ctx->enterFrame();
 
 // https://forum.cockos.com/showthread.php?t=211620
 struct reaper_array {

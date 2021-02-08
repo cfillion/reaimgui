@@ -39,7 +39,7 @@ Index of this file:
 demo = { open = true }
 
 local r = reaper
-local ctx = r.ImGui_CreateContext('ImGui Demo', 300, 300, 900, 700)
+local ctx = r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 740)
 
 function demo.loop()
   if r.ImGui_IsCloseRequested(ctx) then
@@ -197,11 +197,10 @@ function demo.ShowDemoWindow(open)
   local p_open, new_open = open
   if demo.no_close          then p_open = nil end -- Don't pass our bool* to Begin
 
-  -- TODO
   -- We specify a default position/size in case there's no data in the .ini file.
   -- We only do it to make the demo applications a little more welcoming, but typically this isn't required.
-  -- r.ImGui_SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
-  -- r.ImGui_SetNextWindowSize(ImVec2(550, 680), ImGuiCond_FirstUseEver);
+  r.ImGui_SetNextWindowPos(ctx, 20, 20, r.ImGui_Cond_FirstUseEver());
+  r.ImGui_SetNextWindowSize(ctx, 550, 680, r.ImGui_Cond_FirstUseEver());
 
   -- Main body of the Demo window starts here.
   rv, new_open = r.ImGui_Begin(ctx, 'Dear ImGui Demo', p_open, window_flags)
@@ -373,7 +372,7 @@ function demo.ShowDemoWindow(open)
 --             r.ImGui_TreePop();
 --         }
 --     }
---
+
   if r.ImGui_CollapsingHeader(ctx, 'Window options') then
     if r.ImGui_BeginTable(ctx, 'split', 3) then
       r.ImGui_TableNextColumn(ctx); rv,demo.no_titlebar       = r.ImGui_Checkbox(ctx, 'No titlebar', demo.no_titlebar)
@@ -437,7 +436,53 @@ widgets = {
   },
   cheads = {
     closable_group = true,
-  }
+  },
+  text = {
+    wrap_width = 200.0,
+    utf8 = '日本語',
+  },
+  combos = {
+    flags = r.ImGui_ComboFlags_None(),
+    current_item1 = 1,
+    current_item2 = 0,
+    current_item3 = -1,
+  },
+  selectables = {
+    basic    = { false, false, false, false, false },
+    single   = -1,
+    multiple = { false, false, false, false, false },
+    sameline = { false, false, false },
+    columns  = { false, false, false, false, false, false, false, false, false, false },
+    grid     = {
+      { true,  false, false, false },
+      { false, true,  false, false },
+      { false, false, true,  false },
+      { false, false, false, true  },
+    },
+    align    = {
+      { true,  false, true  },
+      { false, true , false },
+      { true,  false, true  },
+    },
+  },
+  text = {
+    multiline = {
+      text = [[/*
+ The Pentium F00F bug, shorthand for F0 0F C7 C8,
+ the hexadecimal encoding of one offending instruction,
+ more formally, the invalid operand with locked CMPXCHG8B
+ instruction bug, is a design flaw in the majority of
+ Intel Pentium, Pentium MMX, and Pentium OverDrive
+ processors (all in the P5 microarchitecture).
+*/\n\n"
+label:\n"
+	lock cmpxchg8b eax
+]],
+    },
+    flags = r.ImGui_InputTextFlags_AllowTabInput(),
+    buf = { '', '', '', '', '' },
+    password = 'hunter2',
+  },
 }
 
 local tooltip_curve = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 })
@@ -742,77 +787,73 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_TreePop(ctx)
   end
 
---     if (r.ImGui_TreeNode("Text"))
---     {
---         if (r.ImGui_TreeNode("Colorful Text"))
---         {
---             // Using shortcut. You can use PushStyleColor()/PopStyleColor() for more flexibility.
---             r.ImGui_TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), "Pink");
---             r.ImGui_TextColored(ImVec4(1.0f, 1.0f, 0.0f, 1.0f), "Yellow");
---             r.ImGui_TextDisabled("Disabled");
---             r.ImGui_SameLine(); HelpMarker("The TextDisabled color is stored in ImGuiStyle.");
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Word Wrapping"))
---         {
---             // Using shortcut. You can use PushTextWrapPos()/PopTextWrapPos() for more flexibility.
---             r.ImGui_TextWrapped(
---                 "This text should automatically wrap on the edge of the window. The current implementation "
---                 "for text wrapping follows simple rules suitable for English and possibly other languages.");
---             r.ImGui_Spacing();
---
---             static float wrap_width = 200.0f;
---             r.ImGui_SliderFloat("Wrap width", &wrap_width, -20, 600, "%.0f");
---
+  if r.ImGui_TreeNode(ctx, 'Text') then
+    if r.ImGui_TreeNode(ctx, 'Colorful Text') then
+      -- Using shortcut. You can use PushStyleColor()/PopStyleColor() for more flexibility.
+      r.ImGui_TextColored(ctx, 0xFF00FFFF, 'Pink')
+      r.ImGui_TextColored(ctx, 0xFFFF00FF, 'Yellow')
+      r.ImGui_TextDisabled(ctx, 'Disabled');
+      r.ImGui_SameLine(ctx); demo.HelpMarker('The TextDisabled color is stored in ImGuiStyle.') -- TODO style
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Word Wrapping') then
+      -- Using shortcut. You can use PushTextWrapPos()/PopTextWrapPos() for more flexibility.
+      r.ImGui_TextWrapped(ctx,
+        'This text should automatically wrap on the edge of the window. The current implementation ' ..
+        'for text wrapping follows simple rules suitable for English and possibly other languages.')
+      r.ImGui_Spacing(ctx)
+
+      rv,widgets.text.wrap_width = r.ImGui_SliderDouble(ctx,'Wrap width', widgets.text.wrap_width, -20, 600, '%.0f')
+
 --             ImDrawList* draw_list = r.ImGui_GetWindowDrawList();
---             for (int n = 0; n < 2; n++)
---             {
---                 r.ImGui_Text("Test paragraph %d:", n);
---                 ImVec2 pos = r.ImGui_GetCursorScreenPos();
---                 ImVec2 marker_min = ImVec2(pos.x + wrap_width, pos.y);
---                 ImVec2 marker_max = ImVec2(pos.x + wrap_width + 10, pos.y + r.ImGui_GetTextLineHeight());
---                 r.ImGui_PushTextWrapPos(r.ImGui_GetCursorPos().x + wrap_width);
---                 if (n == 0)
---                     r.ImGui_Text("The lazy dog is a good dog. This paragraph should fit within %.0f pixels. Testing a 1 character word. The quick brown fox jumps over the lazy dog.", wrap_width);
---                 else
---                     r.ImGui_Text("aaaaaaaa bbbbbbbb, c cccccccc,dddddddd. d eeeeeeee   ffffffff. gggggggg!hhhhhhhh");
---
---                 // Draw actual text bounding box, following by marker of our expected limit (should not overlap!)
---                 draw_list->AddRect(r.ImGui_GetItemRectMin(), r.ImGui_GetItemRectMax(), IM_COL32(255, 255, 0, 255));
---                 draw_list->AddRectFilled(marker_min, marker_max, IM_COL32(255, 0, 255, 255));
---                 r.ImGui_PopTextWrapPos();
---             }
---
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("UTF-8 Text"))
---         {
---             // UTF-8 test with Japanese characters
---             // (Needs a suitable font? Try "Google Noto" or "Arial Unicode". See docs/FONTS.md for details.)
---             // - From C++11 you can use the u8"my text" syntax to encode literal strings as UTF-8
---             // - For earlier compiler, you may be able to encode your sources as UTF-8 (e.g. in Visual Studio, you
---             //   can save your source files as 'UTF-8 without signature').
---             // - FOR THIS DEMO FILE ONLY, BECAUSE WE WANT TO SUPPORT OLD COMPILERS, WE ARE *NOT* INCLUDING RAW UTF-8
---             //   CHARACTERS IN THIS SOURCE FILE. Instead we are encoding a few strings with hexadecimal constants.
---             //   Don't do this in your application! Please use u8"text in any language" in your application!
---             // Note that characters values are preserved even by InputText() if the font cannot be displayed,
---             // so you can safely copy & paste garbled characters into another application.
---             r.ImGui_TextWrapped(
---                 "CJK text will only appears if the font was loaded with the appropriate CJK character ranges. "
---                 "Call io.Font->AddFontFromFileTTF() manually to load extra character ranges. "
---                 "Read docs/FONTS.md for details.");
---             r.ImGui_Text("Hiragana: \xe3\x81\x8b\xe3\x81\x8d\xe3\x81\x8f\xe3\x81\x91\xe3\x81\x93 (kakikukeko)"); // Normally we would use u8"blah blah" with the proper characters directly in the string.
---             r.ImGui_Text("Kanjis: \xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e (nihongo)");
---             static char buf[32] = "\xe6\x97\xa5\xe6\x9c\xac\xe8\xaa\x9e";
---             //static char buf[32] = u8"NIHONGO"; // <- this is how you would write it with C++11, using real kanjis
---             r.ImGui_InputText("UTF-8 input", buf, IM_ARRAYSIZE(buf));
---             r.ImGui_TreePop();
---         }
---         r.ImGui_TreePop();
---     }
---
+      for n = 0, 1 do
+        r.ImGui_Text(ctx, ('Test paragraph %d:'):format(n))
+
+        local screen_x, screen_y = r.ImGui_GetCursorScreenPos(ctx)
+        local marker_min_x, marker_min_y = screen_x + widgets.text.wrap_width, screen_y
+        local marker_max_x, marker_max_y = screen_x + widgets.text.wrap_width + 10, screen_y + r.ImGui_GetTextLineHeight(ctx)
+
+        local window_x, window_y = r.ImGui_GetCursorPos(ctx)
+        r.ImGui_PushTextWrapPos(ctx, window_x + widgets.text.wrap_width)
+
+        if n == 0 then
+          r.ImGui_Text(ctx, ('The lazy dog is a good dog. This paragraph should fit within %.0f pixels. Testing a 1 character word. The quick brown fox jumps over the lazy dog.'):format(widgets.text.wrap_width))
+        else
+          r.ImGui_Text(ctx, 'aaaaaaaa bbbbbbbb, c cccccccc,dddddddd. d eeeeeeee   ffffffff. gggggggg!hhhhhhhh')
+        end
+
+        -- Draw actual text bounding box, following by marker of our expected limit (should not overlap!)
+        local text_min_x, text_min_y = r.ImGui_GetItemRectMin(ctx)
+        local text_max_x, text_max_y = r.ImGui_GetItemRectMax(ctx)
+        r.ImGui_DrawList_AddRect(ctx, text_min_x, text_min_y, text_max_x, text_max_y, 0xFFFF00FF)
+        r.ImGui_DrawList_AddRectFilled(ctx, marker_min_x, marker_min_y, marker_max_x, marker_max_y, 0xFF00FFFF)
+
+        r.ImGui_PopTextWrapPos(ctx)
+      end
+
+      r.ImGui_TreePop(ctx)
+    end
+
+    -- Not supported by the default built-in font
+    -- if r.ImGui_TreeNode(ctx, 'UTF-8 Text') then
+    --   -- UTF-8 test with Japanese characters
+    --   -- (Needs a suitable font? Try "Google Noto" or "Arial Unicode". See docs/FONTS.md for details.)
+    --   -- so you can safely copy & paste garbled characters into another application.
+    --   r.ImGui_TextWrapped(ctx,
+    --     'CJK text will only appears if the font was loaded with the appropriate CJK character ranges. ' ..
+    --     'Call io.Font->AddFontFromFileTTF() manually to load extra character ranges. ' ..
+    --     'Read docs/FONTS.md for details.')
+    --   r.ImGui_Text(ctx, 'Hiragana: かきくけこ (kakikukeko)')
+    --   r.ImGui_Text(ctx, 'Kanjis: 日本語 (nihongo)')
+    --   rv,widgets.text.utf8 = r.ImGui_InputText(ctx, 'UTF-8 input', widgets.text.utf8)
+    --
+    --   r.ImGui_TreePop(ctx)
+    -- end
+
+    r.ImGui_TreePop(ctx)
+  end
+
 --     if (r.ImGui_TreeNode("Images"))
 --     {
 --         ImGuiIO& io = r.ImGui_GetIO();
@@ -886,266 +927,236 @@ function demo.ShowDemoWindowWidgets()
 --         r.ImGui_Text("Pressed %d times.", pressed_count);
 --         r.ImGui_TreePop();
 --     }
---
---     if (r.ImGui_TreeNode("Combo"))
---     {
---         // Expose flags as checkbox for the demo
---         static ImGuiComboFlags flags = 0;
---         r.ImGui_CheckboxFlags("ImGuiComboFlags_PopupAlignLeft", &flags, ImGuiComboFlags_PopupAlignLeft);
---         r.ImGui_SameLine(); HelpMarker("Only makes a difference if the popup is larger than the combo");
---         if (r.ImGui_CheckboxFlags("ImGuiComboFlags_NoArrowButton", &flags, ImGuiComboFlags_NoArrowButton))
---             flags &= ~ImGuiComboFlags_NoPreview;     // Clear the other flag, as we cannot combine both
---         if (r.ImGui_CheckboxFlags("ImGuiComboFlags_NoPreview", &flags, ImGuiComboFlags_NoPreview))
---             flags &= ~ImGuiComboFlags_NoArrowButton; // Clear the other flag, as we cannot combine both
---
---         // Using the generic BeginCombo() API, you have full control over how to display the combo contents.
---         // (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
---         // stored in the object itself, etc.)
---         const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" };
---         static int item_current_idx = 0;                    // Here our selection data is an index.
---         const char* combo_label = items[item_current_idx];  // Label to preview before opening the combo (technically it could be anything)
---         if (r.ImGui_BeginCombo("combo 1", combo_label, flags))
---         {
---             for (int n = 0; n < IM_ARRAYSIZE(items); n++)
---             {
---                 const bool is_selected = (item_current_idx == n);
---                 if (r.ImGui_Selectable(items[n], is_selected))
---                     item_current_idx = n;
---
---                 // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
---                 if (is_selected)
---                     r.ImGui_SetItemDefaultFocus();
---             }
---             r.ImGui_EndCombo();
---         }
---
---         // Simplified one-liner Combo() API, using values packed in a single constant string
---         static int item_current_2 = 0;
---         r.ImGui_Combo("combo 2 (one-liner)", &item_current_2, "aaaa\0bbbb\0cccc\0dddd\0eeee\0\0");
---
---         // Simplified one-liner Combo() using an array of const char*
---         static int item_current_3 = -1; // If the selection isn't within 0..count, Combo won't display a preview
---         r.ImGui_Combo("combo 3 (array)", &item_current_3, items, IM_ARRAYSIZE(items));
---
+
+  if r.ImGui_TreeNode(ctx, 'Combo') then
+    rv,widgets.combos.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiComboFlags_PopupAlignLeft', widgets.combos.flags, r.ImGui_ComboFlags_PopupAlignLeft())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Only makes a difference if the popup is larger than the combo')
+
+    rv,widgets.combos.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiComboFlags_NoArrowButton', widgets.combos.flags, r.ImGui_ComboFlags_NoArrowButton())
+    if rv then
+      widgets.combos.flags = widgets.combos.flags & ~r.ImGui_ComboFlags_NoPreview() -- Clear the other flag, as we cannot combine both
+    end
+
+    rv,widgets.combos.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiComboFlags_NoPreview', widgets.combos.flags, r.ImGui_ComboFlags_NoPreview())
+    if rv then
+      widgets.combos.flags = widgets.combos.flags & ~r.ImGui_ComboFlags_NoArrowButton() -- Clear the other flag, as we cannot combine both
+    end
+
+    -- Using the generic BeginCombo() API, you have full control over how to display the combo contents.
+    -- (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
+    -- stored in the object itself, etc.)
+    local combo_items = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" }
+    local combo_label = combo_items[widgets.combos.current_item1] -- Label to preview before opening the combo (technically it could be anything)
+    if r.ImGui_BeginCombo(ctx, 'combo 1', combo_label, widgets.combos.flags) then
+      for i,v in ipairs(combo_items) do
+        local is_selected = widgets.combos.current_item1 == i
+        if r.ImGui_Selectable(ctx, combo_items[i], is_selected) then
+          widgets.combos.current_item1 = i
+        end
+
+        -- Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+        if is_selected then
+          r.ImGui_SetItemDefaultFocus(ctx)
+        end
+      end
+      r.ImGui_EndCombo(ctx)
+    end
+
+    -- Simplified one-liner Combo() API, using values packed in a single constant string
+    combo_items = 'aaaa\31bbbb\31cccc\31dddd\31eeee\31'
+    rv,widgets.combos.current_item2 = r.ImGui_Combo(ctx, 'combo 2 (one-liner)', widgets.combos.current_item2, combo_items)
+
+    -- Simplified one-liner Combo() using an array of const char*
+    -- If the selection isn't within 0..count, Combo won't display a preview
+    rv,widgets.combos.current_item3 = r.ImGui_Combo(ctx, 'combo 3 (out of range)', widgets.combos.current_item3, combo_items)
+
 --         // Simplified one-liner Combo() using an accessor function
 --         struct Funcs { static bool ItemGetter(void* data, int n, const char** out_str) { *out_str = ((const char**)data)[n]; return true; } };
 --         static int item_current_4 = 0;
 --         r.ImGui_Combo("combo 4 (function)", &item_current_4, &Funcs::ItemGetter, items, IM_ARRAYSIZE(items));
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Selectables"))
---     {
---         // Selectable() has 2 overloads:
---         // - The one taking "bool selected" as a read-only selection information.
---         //   When Selectable() has been clicked it returns true and you can alter selection state accordingly.
---         // - The one taking "bool* p_selected" as a read-write selection information (convenient in some cases)
---         // The earlier is more flexible, as in real application your selection may be stored in many different ways
---         // and not necessarily inside a bool value (e.g. in flags within objects, as an external list, etc).
---         if (r.ImGui_TreeNode("Basic"))
---         {
---             static bool selection[5] = { false, true, false, false, false };
---             r.ImGui_Selectable("1. I am selectable", &selection[0]);
---             r.ImGui_Selectable("2. I am selectable", &selection[1]);
---             r.ImGui_Text("3. I am not selectable");
---             r.ImGui_Selectable("4. I am selectable", &selection[3]);
---             if (r.ImGui_Selectable("5. I am double clickable", selection[4], ImGuiSelectableFlags_AllowDoubleClick))
---                 if (r.ImGui_IsMouseDoubleClicked(0))
---                     selection[4] = !selection[4];
---             r.ImGui_TreePop();
---         }
---         if (r.ImGui_TreeNode("Selection State: Single Selection"))
---         {
---             static int selected = -1;
---             for (int n = 0; n < 5; n++)
---             {
---                 char buf[32];
---                 sprintf(buf, "Object %d", n);
---                 if (r.ImGui_Selectable(buf, selected == n))
---                     selected = n;
---             }
---             r.ImGui_TreePop();
---         }
---         if (r.ImGui_TreeNode("Selection State: Multiple Selection"))
---         {
---             HelpMarker("Hold CTRL and click to select multiple items.");
---             static bool selection[5] = { false, false, false, false, false };
---             for (int n = 0; n < 5; n++)
---             {
---                 char buf[32];
---                 sprintf(buf, "Object %d", n);
---                 if (r.ImGui_Selectable(buf, selection[n]))
---                 {
---                     if (!r.ImGui_GetIO().KeyCtrl)    // Clear selection when CTRL is not held
---                         memset(selection, 0, sizeof(selection));
---                     selection[n] ^= 1;
---                 }
---             }
---             r.ImGui_TreePop();
---         }
---         if (r.ImGui_TreeNode("Rendering more text into the same line"))
---         {
---             // Using the Selectable() override that takes "bool* p_selected" parameter,
---             // this function toggle your bool value automatically.
---             static bool selected[3] = { false, false, false };
---             r.ImGui_Selectable("main.c",    &selected[0]); r.ImGui_SameLine(300); r.ImGui_Text(" 2,345 bytes");
---             r.ImGui_Selectable("Hello.cpp", &selected[1]); r.ImGui_SameLine(300); r.ImGui_Text("12,345 bytes");
---             r.ImGui_Selectable("Hello.h",   &selected[2]); r.ImGui_SameLine(300); r.ImGui_Text(" 2,345 bytes");
---             r.ImGui_TreePop();
---         }
---         if (r.ImGui_TreeNode("In columns"))
---         {
---             static bool selected[10] = {};
---
---             if (r.ImGui_BeginTable("split1", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
---             {
---                 for (int i = 0; i < 10; i++)
---                 {
---                     char label[32];
---                     sprintf(label, "Item %d", i);
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Selectable(label, &selected[i]); // FIXME-TABLE: Selection overlap
---                 }
---                 r.ImGui_EndTable();
---             }
---             r.ImGui_Separator();
---             if (r.ImGui_BeginTable("split2", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
---             {
---                 for (int i = 0; i < 10; i++)
---                 {
---                     char label[32];
---                     sprintf(label, "Item %d", i);
---                     r.ImGui_TableNextRow();
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Selectable(label, &selected[i], ImGuiSelectableFlags_SpanAllColumns);
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("Some other contents");
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("123456");
---                 }
---                 r.ImGui_EndTable();
---             }
---             r.ImGui_TreePop();
---         }
---         if (r.ImGui_TreeNode("Grid"))
---         {
---             static char selected[4][4] = { { 1, 0, 0, 0 }, { 0, 1, 0, 0 }, { 0, 0, 1, 0 }, { 0, 0, 0, 1 } };
---
---             // Add in a bit of silly fun...
---             const float time = (float)r.ImGui_GetTime();
---             const bool winning_state = memchr(selected, 0, sizeof(selected)) == NULL; // If all cells are selected...
---             if (winning_state)
---                 r.ImGui_PushStyleVar(ImGuiStyleVar_SelectableTextAlign, ImVec2(0.5f + 0.5f * cosf(time * 2.0f), 0.5f + 0.5f * sinf(time * 3.0f)));
---
---             for (int y = 0; y < 4; y++)
---                 for (int x = 0; x < 4; x++)
---                 {
---                     if (x > 0)
---                         r.ImGui_SameLine();
---                     r.ImGui_PushID(y * 4 + x);
---                     if (r.ImGui_Selectable("Sailor", selected[y][x] != 0, 0, ImVec2(50, 50)))
---                     {
---                         // Toggle clicked cell + toggle neighbors
---                         selected[y][x] ^= 1;
---                         if (x > 0) { selected[y][x - 1] ^= 1; }
---                         if (x < 3) { selected[y][x + 1] ^= 1; }
---                         if (y > 0) { selected[y - 1][x] ^= 1; }
---                         if (y < 3) { selected[y + 1][x] ^= 1; }
---                     }
---                     r.ImGui_PopID();
---                 }
---
---             if (winning_state)
---                 r.ImGui_PopStyleVar();
---             r.ImGui_TreePop();
---         }
---         if (r.ImGui_TreeNode("Alignment"))
---         {
---             HelpMarker(
---                 "By default, Selectables uses style.SelectableTextAlign but it can be overridden on a per-item "
---                 "basis using PushStyleVar(). You'll probably want to always keep your default situation to "
---                 "left-align otherwise it becomes difficult to layout multiple items on a same line");
---             static bool selected[3 * 3] = { true, false, true, false, true, false, true, false, true };
---             for (int y = 0; y < 3; y++)
---             {
---                 for (int x = 0; x < 3; x++)
---                 {
---                     ImVec2 alignment = ImVec2((float)x / 2.0f, (float)y / 2.0f);
---                     char name[32];
---                     sprintf(name, "(%.1f,%.1f)", alignment.x, alignment.y);
---                     if (x > 0) r.ImGui_SameLine();
---                     r.ImGui_PushStyleVar(ImGuiStyleVar_SelectableTextAlign, alignment);
---                     r.ImGui_Selectable(name, &selected[3 * y + x], ImGuiSelectableFlags_None, ImVec2(80, 80));
---                     r.ImGui_PopStyleVar();
---                 }
---             }
---             r.ImGui_TreePop();
---         }
---         r.ImGui_TreePop();
---     }
---
---     // To wire InputText() with std::string or any other custom string type,
---     // see the "Text Input > Resize Callback" section of this demo, and the misc/cpp/imgui_stdlib.h file.
---     if (r.ImGui_TreeNode("Text Input"))
---     {
---         if (r.ImGui_TreeNode("Multi-line Text Input"))
---         {
---             // Note: we are using a fixed-sized buffer for simplicity here. See ImGuiInputTextFlags_CallbackResize
---             // and the code in misc/cpp/imgui_stdlib.h for how to setup InputText() for dynamically resizing strings.
---             static char text[1024 * 16] =
---                 "/*\n"
---                 " The Pentium F00F bug, shorthand for F0 0F C7 C8,\n"
---                 " the hexadecimal encoding of one offending instruction,\n"
---                 " more formally, the invalid operand with locked CMPXCHG8B\n"
---                 " instruction bug, is a design flaw in the majority of\n"
---                 " Intel Pentium, Pentium MMX, and Pentium OverDrive\n"
---                 " processors (all in the P5 microarchitecture).\n"
---                 "*/\n\n"
---                 "label:\n"
---                 "\tlock cmpxchg8b eax\n";
---
---             static ImGuiInputTextFlags flags = ImGuiInputTextFlags_AllowTabInput;
---             HelpMarker("You can use the ImGuiInputTextFlags_CallbackResize facility if you need to wire InputTextMultiline() to a dynamic string type. See misc/cpp/imgui_stdlib.h for an example. (This is not demonstrated in imgui_demo.cpp because we don't want to include <string> in here)");
---             r.ImGui_CheckboxFlags("ImGuiInputTextFlags_ReadOnly", &flags, ImGuiInputTextFlags_ReadOnly);
---             r.ImGui_CheckboxFlags("ImGuiInputTextFlags_AllowTabInput", &flags, ImGuiInputTextFlags_AllowTabInput);
---             r.ImGui_CheckboxFlags("ImGuiInputTextFlags_CtrlEnterForNewLine", &flags, ImGuiInputTextFlags_CtrlEnterForNewLine);
---             r.ImGui_InputTextMultiline("##source", text, IM_ARRAYSIZE(text), ImVec2(-FLT_MIN, r.ImGui_GetTextLineHeight() * 16), flags);
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Filtered Text Input"))
---         {
---             struct TextFilters
---             {
---                 // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
---                 static int FilterImGuiLetters(ImGuiInputTextCallbackData* data)
---                 {
---                     if (data->EventChar < 256 && strchr("imgui", (char)data->EventChar))
---                         return 0;
---                     return 1;
---                 }
---             };
---
---             static char buf1[64] = ""; r.ImGui_InputText("default",     buf1, 64);
---             static char buf2[64] = ""; r.ImGui_InputText("decimal",     buf2, 64, ImGuiInputTextFlags_CharsDecimal);
---             static char buf3[64] = ""; r.ImGui_InputText("hexadecimal", buf3, 64, ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
---             static char buf4[64] = ""; r.ImGui_InputText("uppercase",   buf4, 64, ImGuiInputTextFlags_CharsUppercase);
---             static char buf5[64] = ""; r.ImGui_InputText("no blank",    buf5, 64, ImGuiInputTextFlags_CharsNoBlank);
---             static char buf6[64] = ""; r.ImGui_InputText("\"imgui\" letters", buf6, 64, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters);
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Password Input"))
---         {
---             static char password[64] = "password123";
---             r.ImGui_InputText("password", password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
---             r.ImGui_SameLine(); HelpMarker("Display all characters as '*'.\nDisable clipboard cut and copy.\nDisable logging.\n");
---             r.ImGui_InputTextWithHint("password (w/ hint)", "<password>", password, IM_ARRAYSIZE(password), ImGuiInputTextFlags_Password);
---             r.ImGui_InputText("password (clear)", password, IM_ARRAYSIZE(password));
---             r.ImGui_TreePop();
---         }
---
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Selectables') then
+    -- Selectable() has 2 overloads:
+    -- - The one taking "bool selected" as a read-only selection information.
+    --   When Selectable() has been clicked it returns true and you can alter selection state accordingly.
+    -- - The one taking "bool* p_selected" as a read-write selection information (convenient in some cases)
+    -- The earlier is more flexible, as in real application your selection may be stored in many different ways
+    -- and not necessarily inside a bool value (e.g. in flags within objects, as an external list, etc).
+    if r.ImGui_TreeNode(ctx, 'Basic') then
+      rv,widgets.selectables.basic[1] = r.ImGui_Selectable(ctx, '1. I am selectable', widgets.selectables.basic[1])
+      rv,widgets.selectables.basic[2] = r.ImGui_Selectable(ctx, '2. I am selectable', widgets.selectables.basic[2])
+      r.ImGui_Text(ctx, '3. I am not selectable')
+      rv,widgets.selectables.basic[4] = r.ImGui_Selectable(ctx, '4. I am selectable', widgets.selectables.basic[4])
+      if r.ImGui_Selectable(ctx, '5. I am double clickable', widgets.selectables.basic[5], r.ImGui_SelectableFlags_AllowDoubleClick()) then
+        if r.ImGui_IsMouseDoubleClicked(ctx, 0) then
+          widgets.selectables.basic[5] = not widgets.selectables.basic[5]
+        end
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Selection State: Single Selection') then
+      for i = 0, 4 do
+        if r.ImGui_Selectable(ctx, ('Object %d'):format(i), widgets.selectables.single == i) then
+          widgets.selectables.single = i
+        end
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Selection State: Multiple Selection') then
+      demo.HelpMarker('Hold CTRL and click to select multiple items.')
+      for i,sel in ipairs(widgets.selectables.multiple) do
+        if r.ImGui_Selectable(ctx, ('Object %d'):format(i-1), sel) then
+          -- if not r.ImGui_GetIO().KeyCtrl then -- Clear selection when CTRL is not held TODO
+          --   for j = 1, #multiple do
+          --     widgets.selectables.multiple[j] = false
+          --   end
+          -- end
+          widgets.selectables.multiple[i] = not sel
+        end
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Rendering more text into the same line') then
+      rv,widgets.selectables.sameline[1] = r.ImGui_Selectable(ctx, 'main.c',    widgets.selectables.sameline[1]); r.ImGui_SameLine(ctx, 300); r.ImGui_Text(ctx, ' 2,345 bytes')
+      rv,widgets.selectables.sameline[2] = r.ImGui_Selectable(ctx, 'Hello.cpp', widgets.selectables.sameline[2]); r.ImGui_SameLine(ctx, 300); r.ImGui_Text(ctx, '12,345 bytes')
+      rv,widgets.selectables.sameline[3] = r.ImGui_Selectable(ctx, 'Hello.h',   widgets.selectables.sameline[3]); r.ImGui_SameLine(ctx, 300); r.ImGui_Text(ctx, ' 2,345 bytes')
+      r.ImGui_TreePop(ctx)
+    end
+    if r.ImGui_TreeNode(ctx, 'In columns') then
+      if r.ImGui_BeginTable(ctx, 'split1', 3, r.ImGui_TableFlags_Resizable()) then-- | r.ImGui_TableFlags_NoSavedSettings())
+        for i,sel in ipairs(widgets.selectables.columns) do
+          r.ImGui_TableNextColumn(ctx)
+          rv,widgets.selectables.columns[i] = r.ImGui_Selectable(ctx, ('Item %d'):format(i-1), sel);
+        end
+        r.ImGui_EndTable(ctx)
+      end
+      r.ImGui_Separator(ctx)
+      if r.ImGui_BeginTable(ctx, 'split2', 3, r.ImGui_TableFlags_Resizable()) then-- | r.ImGui_TableFlags_NoSavedSettings())
+        for i,sel in ipairs(widgets.selectables.columns) do
+          r.ImGui_TableNextRow(ctx)
+          r.ImGui_TableNextColumn(ctx)
+          rv,widgets.selectables.columns[i] = r.ImGui_Selectable(ctx, ('Item %d'):format(i-1), sel, r.ImGui_SelectableFlags_SpanAllColumns());
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, 'Some other contents');
+          r.ImGui_TableNextColumn(ctx);
+          r.ImGui_Text(ctx, '123456');
+        end
+        r.ImGui_EndTable(ctx)
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    -- Add in a bit of silly fun...
+    if r.ImGui_TreeNode(ctx, 'Grid') then
+      local winning_state = true -- If all cells are selected...
+      for ri,row in ipairs(widgets.selectables.grid) do
+        for ci,sel in ipairs(row) do
+          if not sel then
+            winning_state = false
+            break
+          end
+        end
+      end
+      if winning_state then
+        local time = r.ImGui_GetTime(ctx)
+        r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_SelectableTextAlign(),
+          0.5 + 0.5 * math.cos(time * 2.0), 0.5 + 0.5 * math.sin(time * 3.0))
+      end
+
+      for ri,row in ipairs(widgets.selectables.grid) do
+        for ci,col in ipairs(row) do
+          if ci > 1 then
+            r.ImGui_SameLine(ctx)
+          end
+          r.ImGui_PushID(ctx, ri * #widgets.selectables.grid + ci);
+          if r.ImGui_Selectable(ctx, 'Sailor', col, 0, 50, 50) then
+            -- Toggle clicked cell + toggle neighbors
+            row[ci] = not row[ci]
+            if ci > 1 then row[ci - 1] = not row[ci - 1]; end
+            if ci < 4 then row[ci + 1] = not row[ci + 1]; end
+            if ri > 1 then widgets.selectables.grid[ri - 1][ci] = not widgets.selectables.grid[ri - 1][ci]; end
+            if ri < 4 then widgets.selectables.grid[ri + 1][ci] = not widgets.selectables.grid[ri + 1][ci]; end
+          end
+          r.ImGui_PopID(ctx);
+        end
+      end
+
+      if winning_state then
+        r.ImGui_PopStyleVar(ctx)
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Alignment') then
+      demo.HelpMarker(
+        'By default, Selectables uses style.SelectableTextAlign but it can be overridden on a per-item ' ..
+        "basis using PushStyleVar(). You'll probably want to always keep your default situation to " ..
+        'left-align otherwise it becomes difficult to layout multiple items on a same line')
+
+      for y = 1, 3 do
+        for x = 1, 3 do
+          local align_x, align_y = (x-1) / 2.0, (y-1) / 2.0
+          local name = ('(%.1f,%.1f)'):format(align_x, align_y)
+          if x > 1 then r.ImGui_SameLine(ctx); end
+          r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_SelectableTextAlign(), align_x, align_y)
+          local row = widgets.selectables.align[y]
+          rv,row[x] = r.ImGui_Selectable(ctx, name, row[x], r.ImGui_SelectableFlags_None(), 80, 80)
+          r.ImGui_PopStyleVar(ctx)
+        end
+      end
+
+      r.ImGui_TreePop(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Text Input') then
+    if r.ImGui_TreeNode(ctx, 'Multi-line Text Input') then
+      rv,widgets.text.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_ReadOnly', widgets.text.multiline.flags, r.ImGui_InputTextFlags_ReadOnly());
+      rv,widgets.text.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_AllowTabInput', widgets.text.multiline.flags, r.ImGui_InputTextFlags_AllowTabInput());
+      rv,widgets.text.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_CtrlEnterForNewLine', widgets.text.multiline.flags, r.ImGui_InputTextFlags_CtrlEnterForNewLine());
+      rv,widgets.text.multiline.text = r.ImGui_InputTextMultiline(ctx, '##source', widgets.text.multiline.text, -1, r.ImGui_GetTextLineHeight(ctx) * 16, widgets.text.multiline.flags)
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Filtered Text Input') then
+      -- TODO
+      -- struct TextFilters
+      -- {
+      --     // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
+      --     static int FilterImGuiLetters(ImGuiInputTextCallbackData* data)
+      --     {
+      --         if (data->EventChar < 256 && strchr("imgui", (char)data->EventChar))
+      --             return 0;
+      --         return 1;
+      --     }
+      -- };
+
+      rv,widgets.text.buf[1] = r.ImGui_InputText(ctx, 'default',     widgets.text.buf[1]);
+      rv,widgets.text.buf[2] = r.ImGui_InputText(ctx, 'decimal',     widgets.text.buf[2], r.ImGui_InputTextFlags_CharsDecimal())
+      rv,widgets.text.buf[3] = r.ImGui_InputText(ctx, 'hexadecimal', widgets.text.buf[3], r.ImGui_InputTextFlags_CharsHexadecimal() | r.ImGui_InputTextFlags_CharsUppercase())
+      rv,widgets.text.buf[4] = r.ImGui_InputText(ctx, 'uppercase',   widgets.text.buf[4], r.ImGui_InputTextFlags_CharsUppercase())
+      rv,widgets.text.buf[5] = r.ImGui_InputText(ctx, 'no blank',    widgets.text.buf[5], r.ImGui_InputTextFlags_CharsNoBlank())
+      -- static char buf6[64] = ""; r.ImGui_InputText("\"imgui\" letters", buf6, 64, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters);
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Password Input') then
+      rv,widgets.text.password = r.ImGui_InputText(ctx, 'password', widgets.text.password, r.ImGui_InputTextFlags_Password())
+      r.ImGui_SameLine(ctx); demo.HelpMarker("Display all characters as '*'.\nDisable clipboard cut and copy.\nDisable logging.\n");
+      rv,widgets.text.password = r.ImGui_InputTextWithHint(ctx, 'password (w/ hint)', '<password>', widgets.text.password, r.ImGui_InputTextFlags_Password());
+      rv,widgets.text.password = r.ImGui_InputText(ctx, 'password (clear)', widgets.text.password)
+      r.ImGui_TreePop(ctx)
+    end
+
+-- TODO
 --         if (r.ImGui_TreeNode("Completion, History, Edit Callbacks"))
 --         {
 --             struct Funcs
@@ -1205,7 +1216,7 @@ function demo.ShowDemoWindowWidgets()
 --         if (r.ImGui_TreeNode("Resize Callback"))
 --         {
 --             // To wire InputText() with std::string or any other custom string type,
---             // you can use the ImGuiInputTextFlags_CallbackResize flag + create a custom r.ImGui_InputText() wrapper
+--             // you can use the ImGuiInputTextFlags_CallbackResize flag + create a custom ImGui_InputText() wrapper
 --             // using your preferred type. See misc/cpp/imgui_stdlib.h for an implementation of this using std::string.
 --             HelpMarker(
 --                 "Using ImGuiInputTextFlags_CallbackResize to wire your custom string type to InputText().\n\n"
@@ -1224,8 +1235,8 @@ function demo.ShowDemoWindowWidgets()
 --                     return 0;
 --                 }
 --
---                 // Note: Because r.ImGui_ is a namespace you would typically add your own function into the namespace.
---                 // For example, you code may declare a function 'r.ImGui_InputText(const char* label, MyString* my_str)'
+--                 // Note: Because ImGui_ is a namespace you would typically add your own function into the namespace.
+--                 // For example, you code may declare a function 'ImGui_InputText(const char* label, MyString* my_str)'
 --                 static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0)
 --                 {
 --                     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
@@ -1243,39 +1254,31 @@ function demo.ShowDemoWindowWidgets()
 --             r.ImGui_Text("Data: %p\nSize: %d\nCapacity: %d", (void*)my_str.begin(), my_str.size(), my_str.capacity());
 --             r.ImGui_TreePop();
 --         }
---
---         r.ImGui_TreePop();
---     }
---
---     // Tabs
---     if (r.ImGui_TreeNode("Tabs"))
---     {
---         if (r.ImGui_TreeNode("Basic"))
---         {
---             ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
---             if (r.ImGui_BeginTabBar("MyTabBar", tab_bar_flags))
---             {
---                 if (r.ImGui_BeginTabItem("Avocado"))
---                 {
---                     r.ImGui_Text("This is the Avocado tab!\nblah blah blah blah blah");
---                     r.ImGui_EndTabItem();
---                 }
---                 if (r.ImGui_BeginTabItem("Broccoli"))
---                 {
---                     r.ImGui_Text("This is the Broccoli tab!\nblah blah blah blah blah");
---                     r.ImGui_EndTabItem();
---                 }
---                 if (r.ImGui_BeginTabItem("Cucumber"))
---                 {
---                     r.ImGui_Text("This is the Cucumber tab!\nblah blah blah blah blah");
---                     r.ImGui_EndTabItem();
---                 }
---                 r.ImGui_EndTabBar();
---             }
---             r.ImGui_Separator();
---             r.ImGui_TreePop();
---         }
---
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Tabs') then
+    if r.ImGui_TreeNode(ctx, 'Basic') then
+      if r.ImGui_BeginTabBar(ctx, 'MyTabBar', r.ImGui_TabBarFlags_None()) then
+        if r.ImGui_BeginTabItem(ctx, 'Avocado') then
+          r.ImGui_Text(ctx, 'This is the Avocado tab!\nblah blah blah blah blah')
+          r.ImGui_EndTabItem(ctx)
+        end
+        if r.ImGui_BeginTabItem(ctx, 'Broccoli') then
+          r.ImGui_Text(ctx, 'This is the Broccoli tab!\nblah blah blah blah blah')
+          r.ImGui_EndTabItem(ctx)
+        end
+        if r.ImGui_BeginTabItem(ctx, 'Cucumber') then
+          r.ImGui_Text(ctx, 'This is the Cucumber tab!\nblah blah blah blah blah')
+          r.ImGui_EndTabItem(ctx)
+        end
+        r.ImGui_EndTabBar(ctx)
+      end
+      r.ImGui_Separator(ctx)
+      r.ImGui_TreePop(ctx)
+    end
+
 --         if (r.ImGui_TreeNode("Advanced & Close Button"))
 --         {
 --             // Expose a couple of the available flags. In most cases you may just call BeginTabBar() with no flags (0).
@@ -1383,8 +1386,8 @@ function demo.ShowDemoWindowWidgets()
 --             r.ImGui_Separator();
 --             r.ImGui_TreePop();
 --         }
---         r.ImGui_TreePop();
---     }
+        r.ImGui_TreePop(ctx)
+      end
 --
 --     // Plot/Graph widgets are not very good.
 --     // Consider writing your own, or using a third-party one, see:

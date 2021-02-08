@@ -5,18 +5,20 @@ add_library(${PROJECT_NAME} SHARED
   api_colors.cpp
   api_context.cpp
   api_dragndrop.cpp
+  api_draw.cpp
   api_enums.cpp
-  api_imgui.cpp # TODO delete
   api_input.cpp
   api_item.cpp
   api_layout.cpp
   api_lists.cpp
   api_menus.cpp
-  api_params.cpp
+  api_mouse.cpp
   api_plots.cpp
   api_sliders.cpp
+  api_stack.cpp
   api_style.cpp
   api_tables.cpp
+  api_tabs.cpp
   api_text.cpp
   api_tooltips.cpp
   api_trees.cpp

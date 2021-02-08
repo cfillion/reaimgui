@@ -26,3 +26,30 @@ R"(Pop window from the stack. See ImGui_Begin.)",
   USE_WINDOW(window);
   ImGui::End();
 });
+DEFINE_API(void, SetNextWindowPos, ((Window*,window))
+((double,x))((double,y))((int*,condInOptional))
+((double*,pivotXInOptional))((double*,pivotYInOptional)),
+R"(Set next window position. Call before Begin(). Use pivot=(0.5f,0.5f) to center on given point, etc.
+
+Default values: cond = ImGui_Cond_Always, pivotX = 0.0, pivotY = 0.0)",
+{
+  USE_WINDOW(window);
+  ImGui::SetNextWindowPos(ImVec2(x, y), valueOr(condInOptional, ImGuiCond_Always),
+    ImVec2(valueOr(pivotXInOptional, 0.0), valueOr(pivotYInOptional, 0.0)));
+});
+
+DEFINE_API(void, SetNextWindowSize, ((Window*,window))
+((double,x))((double,y))((int*,condInOptional)),
+R"(Set next window size. set axis to 0.0f to force an auto-fit on this axis. Call before Begin().
+
+Default values: cond = ImGui_Cond_Always)",
+{
+  USE_WINDOW(window);
+  ImGui::SetNextWindowSize(ImVec2(x, y), valueOr(condInOptional, ImGuiCond_Always));
+});
+
+// DEFINE_API(void, SetNextWindowSizeConstraints(const ImVec2& size_min, const ImVec2& size_max, ImGuiSizeCallback custom_callback = NULL, void* custom_callback_data = NULL); // set next window size limits. use -1,-1 on either X/Y axis to preserve the current size. Sizes will be rounded down. Use callback to apply non-trivial programmatic constraints.
+// DEFINE_API(void, SetNextWindowContentSize(const ImVec2& size);                               // set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0f to leave it automatic. call before Begin()
+// DEFINE_API(void, SetNextWindowCollapsed(bool collapsed, ImGuiCond cond = 0);                 // set next window collapsed state. call before Begin()
+// DEFINE_API(void, SetNextWindowFocus();                                                       // set next window to be focused / top-most. call before Begin()
+// DEFINE_API(void, SetNextWindowBgAlpha(float alpha);                                          // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
