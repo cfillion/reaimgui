@@ -483,10 +483,45 @@ label:\n"
     buf = { '', '', '', '', '' },
     password = 'hunter2',
   },
+  tabs = {
+    flags1  = r.ImGui_TabBarFlags_Reorderable(),
+    opened  = { true, true, true, true },
+    flags2  = r.ImGui_TabBarFlags_AutoSelectNewTabs() |
+              r.ImGui_TabBarFlags_Reorderable() |
+              r.ImGui_TabBarFlags_FittingPolicyResizeDown(),
+    active  = { 1, 2, 3 },
+    next_id = 4,
+    show_leading_button  = true,
+    show_trailing_button = true,
+  },
+  plots = {
+    animate = true,
+    plot1 = {
+      offset       = 1,
+      refresh_time = 0.0,
+      phase        = 0.0,
+    },
+    plot2 = {
+      func = 0,
+      size = 70,
+      fill = true,
+    },
+    progress     = 0.0,
+    progress_dir = 1,
+  },
 }
 
 local tooltip_curve = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 })
 local vec4a         = reaper.new_array({ 0.10, 0.20, 0.30, 0.44 })
+local frame_times   = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 })
+local PLOT1_SIZE    = 90
+local plot1         = reaper.new_array(PLOT1_SIZE)
+plot1.clear()
+local plot2         = reaper.new_array(1)
+local plot2_funcs   = {
+  function(i) return math.sin(i * 0.1) end, -- sin
+  function(i) return (i & 1) == 1 and 1.0 or -1.0 end, --saw
+}
 
 function demo.ShowDemoWindowWidgets()
   if not r.ImGui_CollapsingHeader(ctx, 'Widgets') then
@@ -1259,6 +1294,9 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Tabs') then
+    local fittingPolicyMask = r.ImGui_TabBarFlags_FittingPolicyResizeDown() |
+                              r.ImGui_TabBarFlags_FittingPolicyScroll()
+
     if r.ImGui_TreeNode(ctx, 'Basic') then
       if r.ImGui_BeginTabBar(ctx, 'MyTabBar', r.ImGui_TabBarFlags_None()) then
         if r.ImGui_BeginTabItem(ctx, 'Avocado') then
@@ -1279,198 +1317,189 @@ function demo.ShowDemoWindowWidgets()
       r.ImGui_TreePop(ctx)
     end
 
---         if (r.ImGui_TreeNode("Advanced & Close Button"))
---         {
---             // Expose a couple of the available flags. In most cases you may just call BeginTabBar() with no flags (0).
---             static ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_Reorderable;
---             r.ImGui_CheckboxFlags("ImGuiTabBarFlags_Reorderable", &tab_bar_flags, ImGuiTabBarFlags_Reorderable);
---             r.ImGui_CheckboxFlags("ImGuiTabBarFlags_AutoSelectNewTabs", &tab_bar_flags, ImGuiTabBarFlags_AutoSelectNewTabs);
---             r.ImGui_CheckboxFlags("ImGuiTabBarFlags_TabListPopupButton", &tab_bar_flags, ImGuiTabBarFlags_TabListPopupButton);
---             r.ImGui_CheckboxFlags("ImGuiTabBarFlags_NoCloseWithMiddleMouseButton", &tab_bar_flags, ImGuiTabBarFlags_NoCloseWithMiddleMouseButton);
---             if ((tab_bar_flags & ImGuiTabBarFlags_FittingPolicyMask_) == 0)
---                 tab_bar_flags |= ImGuiTabBarFlags_FittingPolicyDefault_;
---             if (r.ImGui_CheckboxFlags("ImGuiTabBarFlags_FittingPolicyResizeDown", &tab_bar_flags, ImGuiTabBarFlags_FittingPolicyResizeDown))
---                 tab_bar_flags &= ~(ImGuiTabBarFlags_FittingPolicyMask_ ^ ImGuiTabBarFlags_FittingPolicyResizeDown);
---             if (r.ImGui_CheckboxFlags("ImGuiTabBarFlags_FittingPolicyScroll", &tab_bar_flags, ImGuiTabBarFlags_FittingPolicyScroll))
---                 tab_bar_flags &= ~(ImGuiTabBarFlags_FittingPolicyMask_ ^ ImGuiTabBarFlags_FittingPolicyScroll);
---
---             // Tab Bar
---             const char* names[4] = { "Artichoke", "Beetroot", "Celery", "Daikon" };
---             static bool opened[4] = { true, true, true, true }; // Persistent user state
---             for (int n = 0; n < IM_ARRAYSIZE(opened); n++)
---             {
---                 if (n > 0) { r.ImGui_SameLine(); }
---                 r.ImGui_Checkbox(names[n], &opened[n]);
---             }
---
---             // Passing a bool* to BeginTabItem() is similar to passing one to Begin():
---             // the underlying bool will be set to false when the tab is closed.
---             if (r.ImGui_BeginTabBar("MyTabBar", tab_bar_flags))
---             {
---                 for (int n = 0; n < IM_ARRAYSIZE(opened); n++)
---                     if (opened[n] && r.ImGui_BeginTabItem(names[n], &opened[n], ImGuiTabItemFlags_None))
---                     {
---                         r.ImGui_Text("This is the %s tab!", names[n]);
---                         if (n & 1)
---                             r.ImGui_Text("I am an odd tab.");
---                         r.ImGui_EndTabItem();
---                     }
---                 r.ImGui_EndTabBar();
---             }
---             r.ImGui_Separator();
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("TabItemButton & Leading/Trailing flags"))
---         {
---             static ImVector<int> active_tabs;
---             static int next_tab_id = 0;
---             if (next_tab_id == 0) // Initialize with some default tabs
---                 for (int i = 0; i < 3; i++)
---                     active_tabs.push_back(next_tab_id++);
---
---             // TabItemButton() and Leading/Trailing flags are distinct features which we will demo together.
---             // (It is possible to submit regular tabs with Leading/Trailing flags, or TabItemButton tabs without Leading/Trailing flags...
---             // but they tend to make more sense together)
---             static bool show_leading_button = true;
---             static bool show_trailing_button = true;
---             r.ImGui_Checkbox("Show Leading TabItemButton()", &show_leading_button);
---             r.ImGui_Checkbox("Show Trailing TabItemButton()", &show_trailing_button);
---
---             // Expose some other flags which are useful to showcase how they interact with Leading/Trailing tabs
---             static ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_FittingPolicyResizeDown;
---             r.ImGui_CheckboxFlags("ImGuiTabBarFlags_TabListPopupButton", &tab_bar_flags, ImGuiTabBarFlags_TabListPopupButton);
---             if (r.ImGui_CheckboxFlags("ImGuiTabBarFlags_FittingPolicyResizeDown", &tab_bar_flags, ImGuiTabBarFlags_FittingPolicyResizeDown))
---                 tab_bar_flags &= ~(ImGuiTabBarFlags_FittingPolicyMask_ ^ ImGuiTabBarFlags_FittingPolicyResizeDown);
---             if (r.ImGui_CheckboxFlags("ImGuiTabBarFlags_FittingPolicyScroll", &tab_bar_flags, ImGuiTabBarFlags_FittingPolicyScroll))
---                 tab_bar_flags &= ~(ImGuiTabBarFlags_FittingPolicyMask_ ^ ImGuiTabBarFlags_FittingPolicyScroll);
---
---             if (r.ImGui_BeginTabBar("MyTabBar", tab_bar_flags))
---             {
---                 // Demo a Leading TabItemButton(): click the "?" button to open a menu
---                 if (show_leading_button)
---                     if (r.ImGui_TabItemButton("?", ImGuiTabItemFlags_Leading | ImGuiTabItemFlags_NoTooltip))
---                         r.ImGui_OpenPopup("MyHelpMenu");
---                 if (r.ImGui_BeginPopup("MyHelpMenu"))
---                 {
---                     r.ImGui_Selectable("Hello!");
---                     r.ImGui_EndPopup();
---                 }
---
---                 // Demo Trailing Tabs: click the "+" button to add a new tab (in your app you may want to use a font icon instead of the "+")
---                 // Note that we submit it before the regular tabs, but because of the ImGuiTabItemFlags_Trailing flag it will always appear at the end.
---                 if (show_trailing_button)
---                     if (r.ImGui_TabItemButton("+", ImGuiTabItemFlags_Trailing | ImGuiTabItemFlags_NoTooltip))
---                         active_tabs.push_back(next_tab_id++); // Add new tab
---
---                 // Submit our regular tabs
---                 for (int n = 0; n < active_tabs.Size; )
---                 {
---                     bool open = true;
---                     char name[16];
---                     snprintf(name, IM_ARRAYSIZE(name), "%04d", active_tabs[n]);
---                     if (r.ImGui_BeginTabItem(name, &open, ImGuiTabItemFlags_None))
---                     {
---                         r.ImGui_Text("This is the %s tab!", name);
---                         r.ImGui_EndTabItem();
---                     }
---
---                     if (!open)
---                         active_tabs.erase(active_tabs.Data + n);
---                     else
---                         n++;
---                 }
---
---                 r.ImGui_EndTabBar();
---             }
---             r.ImGui_Separator();
---             r.ImGui_TreePop();
---         }
-        r.ImGui_TreePop(ctx)
+    if r.ImGui_TreeNode(ctx, 'Advanced & Close Button') then
+      -- Expose a couple of the available flags. In most cases you may just call BeginTabBar() with no flags (0).
+      rv,widgets.tabs.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_Reorderable', widgets.tabs.flags1, r.ImGui_TabBarFlags_Reorderable())
+      rv,widgets.tabs.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_AutoSelectNewTabs', widgets.tabs.flags1, r.ImGui_TabBarFlags_AutoSelectNewTabs())
+      rv,widgets.tabs.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_TabListPopupButton', widgets.tabs.flags1, r.ImGui_TabBarFlags_TabListPopupButton())
+      rv,widgets.tabs.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_NoCloseWithMiddleMouseButton', widgets.tabs.flags1, r.ImGui_TabBarFlags_NoCloseWithMiddleMouseButton())
+
+      if widgets.tabs.flags1 & fittingPolicyMask == 0 then
+        widgets.tabs.flags1 = widgets.tabs.flags1 | r.ImGui_TabBarFlags_FittingPolicyResizeDown() -- was FittingPolicyDefault_
       end
---
---     // Plot/Graph widgets are not very good.
---     // Consider writing your own, or using a third-party one, see:
---     // - ImPlot https://github.com/epezent/implot
---     // - others https://github.com/ocornut/imgui/wiki/Useful-Widgets
---     if (r.ImGui_TreeNode("Plots Widgets"))
---     {
---         static bool animate = true;
---         r.ImGui_Checkbox("Animate", &animate);
---
---         static float arr[] = { 0.6f, 0.1f, 1.0f, 0.5f, 0.92f, 0.1f, 0.2f };
---         r.ImGui_PlotLines("Frame Times", arr, IM_ARRAYSIZE(arr));
---
---         // Fill an array of contiguous float values to plot
---         // Tip: If your float aren't contiguous but part of a structure, you can pass a pointer to your first float
---         // and the sizeof() of your structure in the "stride" parameter.
---         static float values[90] = {};
---         static int values_offset = 0;
---         static double refresh_time = 0.0;
---         if (!animate || refresh_time == 0.0)
---             refresh_time = r.ImGui_GetTime();
---         while (refresh_time < r.ImGui_GetTime()) // Create data at fixed 60 Hz rate for the demo
---         {
---             static float phase = 0.0f;
---             values[values_offset] = cosf(phase);
---             values_offset = (values_offset + 1) % IM_ARRAYSIZE(values);
---             phase += 0.10f * values_offset;
---             refresh_time += 1.0f / 60.0f;
---         }
---
---         // Plots can display overlay texts
---         // (in this example, we will display an average value)
---         {
---             float average = 0.0f;
---             for (int n = 0; n < IM_ARRAYSIZE(values); n++)
---                 average += values[n];
---             average /= (float)IM_ARRAYSIZE(values);
---             char overlay[32];
---             sprintf(overlay, "avg %f", average);
---             r.ImGui_PlotLines("Lines", values, IM_ARRAYSIZE(values), values_offset, overlay, -1.0f, 1.0f, ImVec2(0, 80.0f));
---         }
---         r.ImGui_PlotHistogram("Histogram", arr, IM_ARRAYSIZE(arr), 0, NULL, 0.0f, 1.0f, ImVec2(0, 80.0f));
---
---         // Use functions to generate output
---         // FIXME: This is rather awkward because current plot API only pass in indices.
---         // We probably want an API passing floats and user provide sample rate/count.
---         struct Funcs
---         {
---             static float Sin(void*, int i) { return sinf(i * 0.1f); }
---             static float Saw(void*, int i) { return (i & 1) ? 1.0f : -1.0f; }
---         };
---         static int func_type = 0, display_count = 70;
---         r.ImGui_Separator();
---         r.ImGui_SetNextItemWidth(100);
---         r.ImGui_Combo("func", &func_type, "Sin\0Saw\0");
---         r.ImGui_SameLine();
---         r.ImGui_SliderInt("Sample count", &display_count, 1, 400);
---         float (*func)(void*, int) = (func_type == 0) ? Funcs::Sin : Funcs::Saw;
---         r.ImGui_PlotLines("Lines", func, NULL, display_count, 0, NULL, -1.0f, 1.0f, ImVec2(0, 80));
---         r.ImGui_PlotHistogram("Histogram", func, NULL, display_count, 0, NULL, -1.0f, 1.0f, ImVec2(0, 80));
---         r.ImGui_Separator();
---
---         // Animate a simple progress bar
---         static float progress = 0.0f, progress_dir = 1.0f;
---         if (animate)
---         {
---             progress += progress_dir * 0.4f * r.ImGui_GetIO().DeltaTime;
---             if (progress >= +1.1f) { progress = +1.1f; progress_dir *= -1.0f; }
---             if (progress <= -0.1f) { progress = -0.1f; progress_dir *= -1.0f; }
---         }
---
---         // Typically we would use ImVec2(-1.0f,0.0f) or ImVec2(-FLT_MIN,0.0f) to use all available width,
---         // or ImVec2(width,0.0f) for a specified width. ImVec2(0.0f,0.0f) uses ItemWidth.
---         r.ImGui_ProgressBar(progress, ImVec2(0.0f, 0.0f));
---         r.ImGui_SameLine(0.0f, r.ImGui_GetStyle().ItemInnerSpacing.x);
---         r.ImGui_Text("Progress Bar");
---
---         float progress_saturated = IM_CLAMP(progress, 0.0f, 1.0f);
---         char buf[32];
---         sprintf(buf, "%d/%d", (int)(progress_saturated * 1753), 1753);
---         r.ImGui_ProgressBar(progress, ImVec2(0.f, 0.f), buf);
---         r.ImGui_TreePop();
---     }
+      if r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyResizeDown', widgets.tabs.flags1, r.ImGui_TabBarFlags_FittingPolicyResizeDown()) then
+        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fittingPolicyMask | r.ImGui_TabBarFlags_FittingPolicyResizeDown()
+      end
+      if r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyScroll', widgets.tabs.flags1, r.ImGui_TabBarFlags_FittingPolicyScroll()) then
+        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fittingPolicyMask | r.ImGui_TabBarFlags_FittingPolicyScroll()
+      end
+
+      -- Tab Bar
+      local names = { 'Artichoke', 'Beetroot', 'Celery', 'Daikon' }
+      for n,opened in ipairs(widgets.tabs.opened) do
+        if n > 1 then r.ImGui_SameLine(ctx); end
+        rv,widgets.tabs.opened[n] = r.ImGui_Checkbox(ctx, names[n], opened)
+      end
+
+      -- Passing a bool* to BeginTabItem() is similar to passing one to Begin():
+      -- the underlying bool will be set to false when the tab is closed.
+      if r.ImGui_BeginTabBar(ctx, 'MyTabBar', widgets.tabs.flags1) then
+        for n,opened in ipairs(widgets.tabs.opened) do
+          if opened then
+            rv,widgets.tabs.opened[n] = r.ImGui_BeginTabItem(ctx, names[n], opened, r.ImGui_TabItemFlags_None())
+            if rv then
+              r.ImGui_Text(ctx, ('This is the %s tab!'):format(names[n]))
+              if n & 1 then
+                r.ImGui_Text(ctx, 'I am an odd tab.')
+              end
+              r.ImGui_EndTabItem(ctx)
+            end
+          end
+        end
+        r.ImGui_EndTabBar(ctx)
+      end
+      r.ImGui_Separator(ctx)
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'TabItemButton & Leading/Trailing flags') then
+      -- TabItemButton() and Leading/Trailing flags are distinct features which we will demo together.
+      -- (It is possible to submit regular tabs with Leading/Trailing flags, or TabItemButton tabs without Leading/Trailing flags...
+      -- but they tend to make more sense together)
+      rv,widgets.tabs.show_leading_button = r.ImGui_Checkbox(ctx, 'Show Leading TabItemButton()', widgets.tabs.show_leading_button)
+      rv,widgets.tabs.show_trailing_button = r.ImGui_Checkbox(ctx, 'Show Trailing TabItemButton()', widgets.tabs.show_trailing_button)
+
+      -- Expose some other flags which are useful to showcase how they interact with Leading/Trailing tabs
+      rv,widgets.tabs.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_TabListPopupButton', widgets.tabs.flags2, r.ImGui_TabBarFlags_TabListPopupButton())
+      if r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyResizeDown', widgets.tabs.flags2, r.ImGui_TabBarFlags_FittingPolicyResizeDown()) then
+        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fittingPolicyMask | r.ImGui_TabBarFlags_FittingPolicyResizeDown()
+      end
+      if r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyScroll', widgets.tabs.flags2, r.ImGui_TabBarFlags_FittingPolicyScroll()) then
+        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fittingPolicyMask | r.ImGui_TabBarFlags_FittingPolicyScroll()
+      end
+
+      if r.ImGui_BeginTabBar(ctx, 'MyTabBar', widgets.tabs.flags2) then
+        -- Demo a Leading TabItemButton(): click the '?' button to open a menu
+        if widgets.tabs.show_leading_button then
+          if r.ImGui_TabItemButton(ctx, '?', r.ImGui_TabItemFlags_Leading() | r.ImGui_TabItemFlags_NoTooltip()) then
+            r.ImGui_OpenPopup(ctx, 'MyHelpMenu')
+          end
+        end
+        if r.ImGui_BeginPopup(ctx, 'MyHelpMenu') then
+          r.ImGui_Selectable(ctx, 'Hello!')
+          r.ImGui_EndPopup(ctx)
+        end
+
+        -- Demo Trailing Tabs: click the "+" button to add a new tab (in your app you may want to use a font icon instead of the "+")
+        -- Note that we submit it before the regular tabs, but because of the ImGuiTabItemFlags_Trailing flag it will always appear at the end.
+        if widgets.tabs.show_trailing_button then
+          if r.ImGui_TabItemButton(ctx, '+', r.ImGui_TabItemFlags_Trailing() | r.ImGui_TabItemFlags_NoTooltip()) then
+            -- add new tab
+            table.insert(widgets.tabs.active, widgets.tabs.next_id)
+            widgets.tabs.next_id = widgets.tabs.next_id + 1
+          end
+        end
+
+        -- Submit our regular tabs
+        local n = 1
+        while n <= #widgets.tabs.active do
+          local open = true
+          local name = ('%04d'):format(widgets.tabs.active[n]-1)
+          rv,open = r.ImGui_BeginTabItem(ctx, name, open, r.ImGui_TabItemFlags_None())
+          if rv then
+            r.ImGui_Text(ctx, ('This is the %s tab!'):format(name))
+            r.ImGui_EndTabItem(ctx)
+          end
+
+          if not open then
+            table.remove(widgets.tabs.active, n)
+          else
+            n = n + 1
+          end
+        end
+
+        r.ImGui_EndTabBar(ctx)
+      end
+      r.ImGui_Separator(ctx)
+      r.ImGui_TreePop(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Plots Widgets') then
+    rv,widgets.plots.animate = r.ImGui_Checkbox(ctx, 'Animate', widgets.plots.animate)
+
+    r.ImGui_PlotLines(ctx, 'Frame Times', frame_times)
+
+    -- Fill an array of contiguous float values to plot
+    if not widgets.plots.animate or widgets.plots.plot1.refresh_time == 0.0 then
+      widgets.plots.plot1.refresh_time = r.ImGui_GetTime(ctx)
+    end
+    while widgets.plots.plot1.refresh_time < r.ImGui_GetTime(ctx) do -- Create data at fixed 60 Hz rate for the demo
+      plot1[widgets.plots.plot1.offset] = math.cos(widgets.plots.plot1.phase)
+      widgets.plots.plot1.offset = (widgets.plots.plot1.offset % PLOT1_SIZE) + 1
+      widgets.plots.plot1.phase = widgets.plots.plot1.phase + (0.10 * widgets.plots.plot1.offset)
+      widgets.plots.plot1.refresh_time = widgets.plots.plot1.refresh_time + (1.0 / 60.0)
+    end
+
+    -- Plots can display overlay texts
+    -- (in this example, we will display an average value)
+    local average = 0.0
+    for n = 1, PLOT1_SIZE do
+      average = average + plot1[n]
+    end
+    average = average / PLOT1_SIZE
+
+    local overlay = ('avg %f'):format(average)
+    r.ImGui_PlotLines(ctx, 'Lines', plot1, widgets.plots.plot1.offset - 1, overlay, -1.0, 1.0, 0, 80.0)
+
+    r.ImGui_PlotHistogram(ctx, 'Histogram', frame_times, 0, nil, 0.0, 1.0, 0, 80.0)
+    r.ImGui_Separator(ctx)
+
+    r.ImGui_SetNextItemWidth(ctx, 100)
+    rv,widgets.plots.plot2.func = r.ImGui_Combo(ctx, 'func', widgets.plots.plot2.func, 'Sin\31Saw\31')
+    local funcChanged = rv
+    r.ImGui_SameLine(ctx)
+    rv,widgets.plots.plot2.size = r.ImGui_SliderInt(ctx, 'Sample count', widgets.plots.plot2.size, 1, 400)
+
+    -- Use functions to generate output
+    if funcChanged or rv or widgets.plots.plot2.fill then
+      widgets.plots.plot2.fill = false -- fill the first time
+      plot2 = reaper.new_array(widgets.plots.plot2.size)
+      for n = 1, widgets.plots.plot2.size do
+        plot2[n] = plot2_funcs[widgets.plots.plot2.func + 1](n - 1)
+      end
+    end
+
+    r.ImGui_PlotLines(ctx, 'Lines', plot2, 0, nil, -1.0, 1.0, 0, 80)
+    r.ImGui_PlotHistogram(ctx, 'Histogram', plot2, 0, nil, -1.0, 1.0, 0, 80)
+    r.ImGui_Separator(ctx)
+
+    -- Animate a simple progress bar
+    -- if widgets.plots.animate then
+    --   widgets.plots.progress = widgets.plots.progress +
+    --     (widgets.plots.progress_dir * 0.4f * r.ImGui_GetDeltaTime())
+    --   if widgets.plots.progress >= +1.1 then
+    --     widgets.plots.progress = +1.1
+    --     widgets.plots.progress_dir = widgets.plots.progress_dir * -1
+    --   elseif widgets.plots.progress <= -0.1 then
+    --     widgets.plots.progress = -0.1
+    --     widgets.plots.progress_dir = widgets.plots.progress_dir * -1
+    --   end
+    -- end
+    --
+    -- -- Typically we would use (-1.0f,0.0f) or (-FLT_MIN,0.0f) to use all available width,
+    -- -- or (width,0.0f) for a specified width. (0.0f,0.0f) uses ItemWidth.
+    -- r.ImGui_ProgressBar(ctx, progress, 0.0, 0.0)
+    -- r.ImGui_SameLine(0.0, r.ImGui_GetStyle().ItemInnerSpacing.x)
+    -- r.ImGui_Text(ctx, 'Progress Bar')
+    --
+    -- local progress_saturated = demo.clamp(progress, 0.0, 1.0);
+    -- local buf = ("%d/%d"):format(progress_saturated * 1753, 1753)
+    -- r.ImGui_ProgressBar(progress, 0.0, 0.0, buf);
+
+    r.ImGui_TreePop(ctx)
+  end
 --
 --     if (r.ImGui_TreeNode("Color/Picker Widgets"))
 --     {

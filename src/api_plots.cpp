@@ -2,7 +2,7 @@
 
 static float getArrayValue(void *data, const int index)
 {
-  const double value { static_cast<reaper_array *>(data)->data[index] };
+  const double value { static_cast<double *>(data)[index] };
   return static_cast<float>(value);
 }
 

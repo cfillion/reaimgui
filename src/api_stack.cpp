@@ -129,7 +129,13 @@ DEFINE_API(void, PopButtonRepeat, ((Window*,window)),
 // Parameters stacks (current window)
 // IMGUI_API void          PushItemWidth(float item_width);                                // push width of items for common large "item+label" widgets. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side). 0.0f = default to ~2/3 of windows width,
 // IMGUI_API void          PopItemWidth();
-// IMGUI_API void          SetNextItemWidth(float item_width);                             // set width of the _next_ common large "item+label" widget. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side)
+DEFINE_API(void, SetNextItemWidth, ((Window*,window))
+((double,itemWidth)),
+R"(Set width of the _next_ common large "item+label" widget. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side))",
+{
+  USE_WINDOW(window);
+  ImGui::SetNextItemWidth(itemWidth);
+});
 // IMGUI_API float         CalcItemWidth();                                                // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
 
 DEFINE_API(void, PushTextWrapPos, ((Window*,window))
