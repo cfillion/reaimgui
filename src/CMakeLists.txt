@@ -1,4 +1,4 @@
-include(CheckCXXCompilerFlag)
+include(CheckCompilerFlag)
 
 add_library(${PROJECT_NAME} SHARED
   api.cpp
@@ -57,7 +57,7 @@ else()
   )
 
   # Clang 11
-  check_cxx_compiler_flag(-Wnon-c-typedef-for-linkage HAVE_NON_C_TYPEDEF_FOR_LINKAGE)
+  check_compiler_flag(CXX -Wnon-c-typedef-for-linkage HAVE_NON_C_TYPEDEF_FOR_LINKAGE)
   if(HAVE_NON_C_TYPEDEF_FOR_LINKAGE)
     target_compile_options(${PROJECT_NAME} PUBLIC -Wno-non-c-typedef-for-linkage)
   endif()
