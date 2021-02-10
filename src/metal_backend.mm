@@ -87,7 +87,6 @@ MetalBackend::MetalBackend(Context *ctx)
   m_layer = [CAMetalLayer layer];
   m_layer.device = m_shared->device;
   m_layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-  m_layer.opaque = NO;
 
   // greatly reduces the latency from presentDrawable
   // m_layer.maximumDrawableCount = 2;
@@ -95,10 +94,6 @@ MetalBackend::MetalBackend(Context *ctx)
 
   m_view.wantsLayer = YES;
   m_view.layer = m_layer;
-
-  // enable transparency
-  // [[view window] setOpaque:NO];
-  // [[view window] setBackgroundColor:[NSColor clearColor]];
 
   m_inputView = [[InputView alloc] initWithContext:ctx parent:m_view];
 
