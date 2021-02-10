@@ -7,7 +7,7 @@ static void sanitizeSliderFlags(ImGuiSliderFlags &flags)
 }
 
 // Widgets: Drag Sliders
-DEFINE_API(bool, DragInt, ((Window*,window))
+DEFINE_API(bool, DragInt, ((ImGui_Context*,ctx))
 ((const char*,label))((int*,valueInOut))((double*,valueSpeedInOptional))
 ((double*,valueMinInOptional))((double*,valueMaxInOptional))
 ((const char*,formatInOptional))((int*,flagsInOptional)),
@@ -19,7 +19,7 @@ R"(- CTRL+Click on any drag box to turn them into an input box. Manually input v
 - Use v_max = FLT_MAX / INT_MAX etc to avoid clamping to a maximum, same with v_min = -FLT_MAX / INT_MIN to avoid clamping to a minimum.
 - We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.)",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   nullIfEmpty(formatInOptional);
 
   ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
@@ -36,13 +36,13 @@ R"(- CTRL+Click on any drag box to turn them into an input box. Manually input v
     // IMGUI_API bool          DragInt4(const char* label, int v[4], float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%d", ImGuiSliderFlags flags = 0);
     // IMGUI_API bool          DragIntRange2(const char* label, int* v_current_min, int* v_current_max, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%d", const char* format_max = NULL, ImGuiSliderFlags flags = 0);
 
-DEFINE_API(bool, DragDouble, ((Window*,window))
+DEFINE_API(bool, DragDouble, ((ImGui_Context*,ctx))
 ((const char*,label))((double*,valueInOut))((double*,valueSpeedInOptional))
 ((double*,valueMinInOptional))((double*,valueMaxInOptional))
 ((const char*,formatInOptional))((int*,flagsInOptional)),
 "",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   nullIfEmpty(formatInOptional);
 
   ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
@@ -58,12 +58,12 @@ DEFINE_API(bool, DragDouble, ((Window*,window))
     // IMGUI_API bool          DragScalar(const char* label, ImGuiDataType data_type, void* p_data, float v_speed, const void* p_min = NULL, const void* p_max = NULL, const char* format = NULL, ImGuiSliderFlags flags = 0);
     // IMGUI_API bool          DragScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, float v_speed, const void* p_min = NULL, const void* p_max = NULL, const char* format = NULL, ImGuiSliderFlags flags = 0);
 
-DEFINE_API(bool, SliderInt, ((Window*,window))
+DEFINE_API(bool, SliderInt, ((ImGui_Context*,ctx))
 ((const char*,label))((int*,valueInOut))((int,valueMin))((int,valueMax))
 ((const char*,formatInOptional))((int*,flagsInOptional)),
 "'format' is '%d' by default.",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   nullIfEmpty(formatInOptional);
 
   ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
@@ -74,12 +74,12 @@ DEFINE_API(bool, SliderInt, ((Window*,window))
 });
 
 
-DEFINE_API(bool, SliderDouble, ((Window*,window))
+DEFINE_API(bool, SliderDouble, ((ImGui_Context*,ctx))
 ((const char*,label))((double*,valueInOut))((double,valueMin))((double,valueMax))
 ((const char*,formatInOptional))((int*,flagsInOptional)),
 "'format' is '%f' by default.",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   nullIfEmpty(formatInOptional);
 
   ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };

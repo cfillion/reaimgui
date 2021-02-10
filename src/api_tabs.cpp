@@ -1,48 +1,48 @@
 #include "api_helper.hpp"
 
-DEFINE_API(bool, BeginTabBar, ((Window*,window))
+DEFINE_API(bool, BeginTabBar, ((ImGui_Context*,ctx))
 ((const char*,str_id))((int*,flagsInOptional)),
 R"(Create and append into a TabBar.
 
 Default values: flags = ImGui_TabBarFlags_None)",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   return ImGui::BeginTabBar(str_id, valueOr(flagsInOptional, ImGuiTabBarFlags_None));
 });
 
-DEFINE_API(void, EndTabBar, ((Window*,window)),
+DEFINE_API(void, EndTabBar, ((ImGui_Context*,ctx)),
 "Only call EndTabBar() if BeginTabBar() returns true!",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImGui::EndTabBar();
 });
 
-DEFINE_API(bool, BeginTabItem, ((Window*,window))
+DEFINE_API(bool, BeginTabItem, ((ImGui_Context*,ctx))
 ((const char*,label))((bool*,openInOptional))((int*,flagsInOptional)),
 R"(Create a Tab. Returns true if the Tab is selected.
 
 Default values: flags = ImGui_TabItemFlags_None
 'open' is read/write.)",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   return ImGui::BeginTabItem(label, openInOptional,
     valueOr(flagsInOptional, ImGuiTabItemFlags_None));
 });
 
-DEFINE_API(void, EndTabItem, ((Window*,window)),
+DEFINE_API(void, EndTabItem, ((ImGui_Context*,ctx)),
 "Only call EndTabItem() if BeginTabItem() returns true!",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImGui::EndTabItem();
 });
 
-DEFINE_API(bool, TabItemButton, ((Window*,window))
+DEFINE_API(bool, TabItemButton, ((ImGui_Context*,ctx))
 ((const char*,label))((int*,flagsInOptional)),
 R"(Create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
 
 Default values: flags = ImGui_TabItemFlags_None)",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   return ImGui::TabItemButton(label,
     valueOr(flagsInOptional, ImGuiTabItemFlags_None));
 });

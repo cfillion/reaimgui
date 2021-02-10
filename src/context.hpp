@@ -1,5 +1,5 @@
-#ifndef REAIMGUI_WINDOW_HPP
-#define REAIMGUI_WINDOW_HPP
+#ifndef REAIMGUI_CONTEXT_HPP
+#define REAIMGUI_CONTEXT_HPP
 
 #include <array>
 #include <memory>
@@ -9,21 +9,21 @@
 #include <reaper_plugin.h>
 #include <WDL/wdltypes.h>
 
+class Backend;
 class Watchdog;
-struct ImDrawData;
 struct ImFontAtlas;
 struct ImGuiContext;
 
-class Window {
+class Context {
 public:
   static REAPER_PLUGIN_HINSTANCE s_instance;
-  static bool exists(Window *);
+  static bool exists(Context *);
   static size_t count();
   static void heartbeat();
 
-  Window(const char *title, int x, int y, int w, int h);
-  Window(const Window &) = delete;
-  ~Window();
+  Context(const char *title, int x, int y, int w, int h);
+  Context(const Context &) = delete;
+  ~Context();
 
   HWND handle() const { return m_handle; }
   bool isCloseRequested() const { return m_closeReq; }
@@ -43,14 +43,14 @@ private:
   static WDL_DLGRET proc(HWND, UINT, WPARAM, LPARAM);
   static int translateAccel(MSG *, accelerator_register_t *);
 
-  struct PlatformDetails;
-
   enum ButtonState {
     Down       = 1<<0,
     DownUnread = 1<<1,
   };
 
-  void setupContext();
+  void setupImGui();
+  void beginFrame();
+  void updateFrameInfo();
   void updateCursor();
   bool anyMouseDown() const;
   void updateMouseDown();
@@ -58,20 +58,14 @@ private:
   void mouseWheel(UINT msg, short delta);
   void updateKeyMods();
 
-  void platformInit();
-  void platformBeginFrame();
-  void platformEndFrame(ImDrawData *);
-  void platformTranslateAccel(MSG *);
-  void platformTeardown();
-
   HWND m_handle;
   bool m_keepAlive, m_inFrame, m_closeReq;
   std::tuple<float, float, float, float> m_clearColor;
   std::array<char, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   accelerator_register_t m_accel;
 
-  ImGuiContext *m_ctx;
-  PlatformDetails *m_p;
+  ImGuiContext *m_imgui;
+  std::unique_ptr<Backend> m_backend;
   std::shared_ptr<Watchdog> m_watchdog;
   std::shared_ptr<ImFontAtlas> m_fontAtlas;
 };

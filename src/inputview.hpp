@@ -3,11 +3,11 @@
 
 #include <AppKit/AppKit.h>
 
-class Window;
+class Context;
 
 @interface InputView : NSView<NSTextInputClient>
-- (instancetype)initWithWindow:(Window *)window
-                        parent:(NSView *)parent;
+- (instancetype)initWithContext:(Context *)context
+                         parent:(NSView *)parent;
 - (BOOL)resignFirstResponder;
 
 - (void)mouseDown:(NSEvent *)event;

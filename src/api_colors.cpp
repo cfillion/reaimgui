@@ -1,6 +1,6 @@
 #include "api_helper.hpp"
 
-#include "colors.hpp"
+#include "color.hpp"
 
 static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 {
@@ -8,12 +8,12 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 }
 
 // Widgets: Color Editor/Picker
-DEFINE_API(bool, ColorEdit, ((Window*,window))
+DEFINE_API(bool, ColorEdit, ((ImGui_Context*,ctx))
 ((const char*,label))((int*,colorInOut)) // the ReaScript analyzer doesn't like unsigned int*
 ((int*,flagsInOptional)),
 "tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
 
   ImGuiColorEditFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeColorEditFlags(flags);

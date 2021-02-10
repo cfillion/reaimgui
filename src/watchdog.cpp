@@ -1,6 +1,6 @@
 #include "watchdog.hpp"
 
-#include "window.hpp"
+#include "context.hpp"
 
 #include <reaper_plugin_functions.h>
 
@@ -28,5 +28,5 @@ Watchdog::~Watchdog()
 
 void Watchdog::timerTick()
 {
-  Window::heartbeat();
+  Context::heartbeat();
 }

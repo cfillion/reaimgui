@@ -1,6 +1,6 @@
 #include "api_helper.hpp"
 
-DEFINE_API(bool, BeginTable, ((Window*,window))
+DEFINE_API(bool, BeginTable, ((ImGui_Context*,ctx))
 ((const char*,strId))((int, column))((int*,flagsInOptional))
 ((double*,outerWidthInOptional))((double*,outerHeightInOptional))
 ((double*,innerWidthInOptional)),
@@ -29,7 +29,7 @@ The typical call flow is:
        --------------------------------------------------------------------------------------------------------
 - 5. Call EndTable())",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
 
   return ImGui::BeginTable(strId, column,
     valueOr(flagsInOptional, 0),
@@ -41,28 +41,28 @@ The typical call flow is:
   );
 });
 
-DEFINE_API(void, EndTable, ((Window*,window)),
+DEFINE_API(void, EndTable, ((ImGui_Context*,ctx)),
 "Only call EndTable() if BeginTable() returns true!",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImGui::EndTable();
 });
 
-DEFINE_API(void, TableNextRow, ((Window*,window))
+DEFINE_API(void, TableNextRow, ((ImGui_Context*,ctx))
 ((int*,rowFlagsInOptional))((double*,minRowHeightInOptional)),
 R"(Append into the first cell of a new row.
 
 Default values: rowFlags = ImGui_TableRowFlags_None, minRowHeight = 0.0)",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImGui::TableNextRow(valueOr(rowFlagsInOptional, ImGuiTableRowFlags_None),
     valueOr(minRowHeightInOptional, 0.0));
 });
 
-DEFINE_API(bool, TableNextColumn, ((Window*,window)),
+DEFINE_API(bool, TableNextColumn, ((ImGui_Context*,ctx)),
 "Append into the next column (or first column of next row if currently in last column). Return true when column is visible.",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   return ImGui::TableNextColumn();
 });
 

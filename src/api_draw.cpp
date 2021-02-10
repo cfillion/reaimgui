@@ -1,6 +1,6 @@
 #include "api_helper.hpp"
 
-#include "colors.hpp"
+#include "color.hpp"
 
     // Primitives
     // - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
@@ -9,25 +9,25 @@
     //   In future versions we will use textures to provide cheaper and higher-quality circles.
     //   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
     // IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1.0f);
-DEFINE_API(void, DrawList_AddRect, ((Window*,window))
+DEFINE_API(void, DrawList_AddRect, ((ImGui_Context*,ctx))
 ((double,fromX))((double,fromY))((double,toX))((double,toY))((int,colorRGBA))
 ((double*,roundingInOptional))((int*,roundingCornersInOptional))
 ((double*,thicknessInOptional)),
 "Default values: rounding = 0.0, roundingCorners = ImGui_DrawCornerFlags_All, thickness = 1.0",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImDrawList *drawList { ImGui::GetWindowDrawList() };
   drawList->AddRect(ImVec2(fromX, fromY), ImVec2(toX, toY), Color::rgba2abgr(colorRGBA),
     valueOr(roundingInOptional, 0.0), valueOr(roundingCornersInOptional, ImDrawCornerFlags_All),
     valueOr(thicknessInOptional, 1.0));
 });
 
-DEFINE_API(void, DrawList_AddRectFilled, ((Window*,window))
+DEFINE_API(void, DrawList_AddRectFilled, ((ImGui_Context*,ctx))
 ((double,fromX))((double,fromY))((double,toX))((double,toY))((int,colorRGBA))
 ((double*,roundingInOptional))((int*,roundingCornersInOptional)),
 "Default values: rounding = 0.0, roundingCorners = ImGui_DrawCornerFlags_All, thickness = 1.0",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImDrawList *drawList { ImGui::GetWindowDrawList() };
   drawList->AddRectFilled(ImVec2(fromX, fromY), ImVec2(toX, toY), Color::rgba2abgr(colorRGBA),
     valueOr(roundingInOptional, 0.0), valueOr(roundingCornersInOptional, ImDrawCornerFlags_All));

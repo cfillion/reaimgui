@@ -1,6 +1,7 @@
-#include "window.hpp"
+#include "context.hpp"
 
-#include "colors.hpp"
+#include "color.hpp"
+#include "backend.hpp"
 #include "watchdog.hpp"
 
 #include <imgui/imgui_internal.h>
@@ -8,10 +9,10 @@
 #include <reaper_plugin_functions.h>
 #include <unordered_set>
 
-static std::unordered_set<Window *> g_windows;
+static std::unordered_set<Context *> g_windows;
 static std::weak_ptr<ImFontAtlas> g_fontAtlas;
 
-REAPER_PLUGIN_HINSTANCE Window::s_instance;
+REAPER_PLUGIN_HINSTANCE Context::s_instance;
 
 #ifdef _WDL_SWELL_H_
 #  define GET_WHEEL_DELTA_WPARAM GET_Y_LPARAM
@@ -36,11 +37,11 @@ static void reportRecovery(void *, const char *fmt, ...)
   fprintf(stderr, "ReaImGUI Warning: %s\n", msg);
 }
 
-WDL_DLGRET Window::proc(HWND handle, const UINT msg,
+WDL_DLGRET Context::proc(HWND handle, const UINT msg,
   const WPARAM wParam, const LPARAM lParam)
 {
-  Window *self {
-    reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA))
+  Context *self {
+    reinterpret_cast<Context *>(GetWindowLongPtr(handle, GWLP_USERDATA))
   };
 
   if(!self)
@@ -89,34 +90,35 @@ WDL_DLGRET Window::proc(HWND handle, const UINT msg,
   return DefWindowProc(handle, msg, wParam, lParam);
 }
 
-int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
+int Context::translateAccel(MSG *msg, accelerator_register_t *accel)
 {
   enum { NotOurWindow = 0, EatKeystroke = 1 };
 
-  Window *self { static_cast<Window *>(accel->user) };
+  Context *self { static_cast<Context *>(accel->user) };
   if(self->handle() != msg->hwnd && !IsChild(self->handle(), msg->hwnd))
     return NotOurWindow;
 
-  self->platformTranslateAccel(msg);
+  self->m_backend->translateAccel(msg);
+
   return EatKeystroke;
 }
 
-bool Window::exists(Window *win)
+bool Context::exists(Context *win)
 {
   return g_windows.count(win) > 0;
 }
 
-size_t Window::count()
+size_t Context::count()
 {
   return g_windows.size();
 }
 
-void Window::heartbeat()
+void Context::heartbeat()
 {
   auto it = g_windows.begin();
 
   while(it != g_windows.end()) {
-    Window *win = *it++;
+    Context *win = *it++;
 
     if(win->m_keepAlive)
       win->m_keepAlive = false;
@@ -125,12 +127,12 @@ void Window::heartbeat()
   }
 }
 
-Window::Window(const char *title,
+Context::Context(const char *title,
     const int x, const int y, const int w, const int h)
   : m_keepAlive { true }, m_inFrame { false }, m_closeReq { false },
     m_clearColor { std::make_tuple(0.0f, 0.0f, 0.0f, 1.0f) }, m_mouseDown {},
-    m_accel { &Window::translateAccel, true, this },
-    m_p { nullptr }, m_watchdog { Watchdog::get() }
+    m_accel { &Context::translateAccel, true, this },
+    m_watchdog { Watchdog::get() }
 {
   g_windows.emplace(this);
 
@@ -145,19 +147,19 @@ Window::Window(const char *title,
 
   plugin_register("accelerator", &m_accel);
 
-  setupContext();
-  platformInit();
+  setupImGui();
+  m_backend = Backend::create(this);
 }
 
-void Window::setupContext()
+void Context::setupImGui()
 {
   if(g_fontAtlas.expired())
     g_fontAtlas = m_fontAtlas = std::make_shared<ImFontAtlas>();
   else
     m_fontAtlas = g_fontAtlas.lock();
 
-  m_ctx = ImGui::CreateContext(m_fontAtlas.get());
-  ImGui::SetCurrentContext(m_ctx);
+  m_imgui = ImGui::CreateContext(m_fontAtlas.get());
+  ImGui::SetCurrentContext(m_imgui);
   ImGui::StyleColorsDark();
 
   ImGuiIO &io { ImGui::GetIO() };
@@ -196,39 +198,45 @@ void Window::setupContext()
     setClearColor((theme->main_bg << 8) | 0xff);
 }
 
-Window::~Window()
+Context::~Context()
 {
-  ImGui::SetCurrentContext(m_ctx);
+  ImGui::SetCurrentContext(m_imgui);
 
   plugin_register("-accelerator", &m_accel);
 
   if(m_inFrame)
     endFrame(false);
 
-  platformTeardown();
+  m_backend.reset(); // destroy the backend before ImGui
   ImGui::DestroyContext();
 
   g_windows.erase(this);
 }
 
-void Window::enterFrame()
+void Context::beginFrame()
 {
-  ImGui::SetCurrentContext(m_ctx);
-
-  if(m_inFrame)
-    return;
+  assert(!m_inFrame);
 
   m_inFrame = true;
-  platformBeginFrame();
+  updateFrameInfo(); // before calling the backend
+  m_backend->beginFrame();
   updateMouseDown();
   updateMousePos();
   updateKeyMods();
   ImGui::NewFrame();
 }
 
-void Window::endFrame(const bool render)
+void Context::enterFrame()
 {
-  ImGui::SetCurrentContext(m_ctx);
+  ImGui::SetCurrentContext(m_imgui);
+
+  if(!m_inFrame)
+    beginFrame();
+}
+
+void Context::endFrame(const bool render)
+{
+  ImGui::SetCurrentContext(m_imgui);
   ImGui::ErrorCheckEndFrameRecover(reportRecovery);
 
   ImDrawData *drawData {};
@@ -243,29 +251,43 @@ void Window::endFrame(const bool render)
   m_inFrame = false;
   m_keepAlive = true;
 
-  platformEndFrame(drawData);
+  m_backend->endFrame(drawData);
 }
 
-void Window::close()
+void Context::close()
 {
   DestroyWindow(m_handle);
 }
 
-unsigned int Window::clearColor() const
+unsigned int Context::clearColor() const
 {
   const auto [r, g, b, a] { m_clearColor };
   return Color::pack(r, g, b, &a);
 }
 
-void Window::setClearColor(const unsigned int rgba)
+void Context::setClearColor(const unsigned int rgba)
 {
   auto &[r, g, b, a] { m_clearColor };
   Color::unpack(rgba, r, g, b, &a);
 }
 
-void Window::updateCursor()
+void Context::updateFrameInfo()
 {
-  ImGui::SetCurrentContext(m_ctx);
+  ImGuiIO &io { ImGui::GetIO() };
+
+  RECT rect;
+  GetClientRect(m_handle, &rect);
+  io.DisplaySize = ImVec2(rect.right - rect.left, rect.bottom - rect.top);
+
+  const float scale { m_backend->scaleFactor() };
+  io.DisplayFramebufferScale = ImVec2{scale, scale};
+
+  io.DeltaTime = m_backend->deltaTime();
+}
+
+void Context::updateCursor()
+{
+  ImGui::SetCurrentContext(m_imgui);
 
   static HCURSOR nativeCursors[ImGuiMouseCursor_COUNT] {
     LoadCursor(nullptr, IDC_ARROW),
@@ -289,7 +311,7 @@ void Window::updateCursor()
   SetCursor(hidden ? nullptr : nativeCursors[imguiCursor]);
 }
 
-bool Window::anyMouseDown() const
+bool Context::anyMouseDown() const
 {
   for(auto state : m_mouseDown) {
     if(state & Down)
@@ -299,7 +321,7 @@ bool Window::anyMouseDown() const
   return false;
 }
 
-void Window::mouseDown(const UINT msg)
+void Context::mouseDown(const UINT msg)
 {
   size_t btn;
 
@@ -325,7 +347,7 @@ void Window::mouseDown(const UINT msg)
   m_mouseDown[btn] = Down | DownUnread;
 }
 
-void Window::mouseUp(const UINT msg)
+void Context::mouseUp(const UINT msg)
 {
   size_t btn;
 
@@ -352,10 +374,10 @@ void Window::mouseUp(const UINT msg)
 #endif
 }
 
-void Window::updateMouseDown()
+void Context::updateMouseDown()
 {
   // this is only called from enterFrame, the context is already set
-  // ImGui::SetCurrentContext(m_ctx);
+  // ImGui::SetCurrentContext(m_imgui);
 
   ImGuiIO &io { ImGui::GetIO() };
 
@@ -366,10 +388,10 @@ void Window::updateMouseDown()
   }
 }
 
-void Window::updateMousePos()
+void Context::updateMousePos()
 {
   // this is only called from enterFrame, the context is already set
-  // ImGui::SetCurrentContext(m_ctx);
+  // ImGui::SetCurrentContext(m_imgui);
 
   POINT p;
   GetCursorPos(&p);
@@ -391,18 +413,18 @@ void Window::updateMousePos()
     io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
 }
 
-void Window::mouseWheel(const UINT msg, const short delta)
+void Context::mouseWheel(const UINT msg, const short delta)
 {
-  ImGui::SetCurrentContext(m_ctx);
+  ImGui::SetCurrentContext(m_imgui);
   ImGuiIO &io { ImGui::GetIO() };
   float &wheel { msg == WM_MOUSEHWHEEL ? io.MouseWheelH : io.MouseWheel };
   wheel += static_cast<float>(delta) / static_cast<float>(WHEEL_DELTA);
 }
 
-void Window::updateKeyMods()
+void Context::updateKeyMods()
 {
   // this is only called from enterFrame, the context is already set
-  // ImGui::SetCurrentContext(m_ctx);
+  // ImGui::SetCurrentContext(m_imgui);
 
   constexpr int down { 0x8000 };
 
@@ -413,19 +435,19 @@ void Window::updateKeyMods()
   io.KeySuper = GetAsyncKeyState(VK_LWIN)    & down;
 }
 
-void Window::keyInput(const uint8_t key, const bool down)
+void Context::keyInput(const uint8_t key, const bool down)
 {
-  ImGui::SetCurrentContext(m_ctx);
+  ImGui::SetCurrentContext(m_imgui);
   ImGuiIO &io { ImGui::GetIO() };
   io.KeysDown[key] = down;
 }
 
-void Window::charInput(const unsigned int codepoint)
+void Context::charInput(const unsigned int codepoint)
 {
   if(codepoint < 32 || (codepoint > 126 && codepoint < 160))
     return;
 
-  ImGui::SetCurrentContext(m_ctx);
+  ImGui::SetCurrentContext(m_imgui);
   ImGuiIO &io { ImGui::GetIO() };
   io.AddInputCharacter(codepoint);
 }

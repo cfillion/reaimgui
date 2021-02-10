@@ -38,33 +38,33 @@ static std::vector<const char *> nullSeparatedToVector(const char *list)
 }
 
 // Widgets: Combo Box
-DEFINE_API(bool, BeginCombo, ((Window*,window))((const char*,label))
+DEFINE_API(bool, BeginCombo, ((ImGui_Context*,ctx))((const char*,label))
 ((const char*,previewValue))((int*,flagsInOptional)),
 R"(The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() items.
 
 Default values: flags = ImGui_ComboFlags_None)",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
 
   return ImGui::BeginCombo(label, previewValue,
     valueOr(flagsInOptional, ImGuiComboFlags_None));
 });
 
-DEFINE_API(void, EndCombo, ((Window*,window)),
+DEFINE_API(void, EndCombo, ((ImGui_Context*,ctx)),
 "Only call EndCombo() if BeginCombo() returns true!",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImGui::EndCombo();
 });
 
-DEFINE_API(bool, Combo, ((Window*,window))
+DEFINE_API(bool, Combo, ((ImGui_Context*,ctx))
 ((const char*,label))((int*,currentItemInOut))((char*,items))
 ((int*,popupMaxHeightInItemsInOptional)),
 R"(Helper over BeginCombo()/EndCombo() for convenience purpose. Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
 
 'popupMaxHeightInItems' defaults to -1.)",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   NULL_SEPARATED_LIST(items, false);
 
   return ImGui::Combo(label, currentItemInOut, items,
@@ -72,13 +72,13 @@ R"(Helper over BeginCombo()/EndCombo() for convenience purpose. Use \31 (ASCII U
 });
 
 // Widgets: List Boxes
-DEFINE_API(bool, ListBox, ((Window*,window))((const char*,label))
+DEFINE_API(bool, ListBox, ((ImGui_Context*,ctx))((const char*,label))
 ((int*,currentItemInOut))((char*,items))((int*,heightInItemsInOptional)),
 R"(Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
 
 'heightInItems' defaults to -1.)",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   NULL_SEPARATED_LIST(items, false);
 
   const auto &strings { nullSeparatedToVector(items) };

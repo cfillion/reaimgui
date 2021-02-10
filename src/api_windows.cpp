@@ -4,7 +4,7 @@
 
 // Cannot name 'open' as 'openInOutOptional' (and have it listed in the docs as
 // a return value) because REAPER would always make it non-null.
-DEFINE_API(bool, Begin, ((Window*, window))
+DEFINE_API(bool, Begin, ((ImGui_Context*,ctx))
 ((const char*, name))((bool*, openInOptional))((int*, windowFlagsInOptional)),
 R"(Push window to the stack and start appending to it. See ImGui_End.
 
@@ -14,37 +14,37 @@ R"(Push window to the stack and start appending to it. See ImGui_End.
   [Important: due to legacy reason, this is inconsistent with most other functions such as BeginMenu/EndMenu, BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding BeginXXX function returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
 - Note that the bottom of window stack always contains a window called "Debug".)",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   ImGuiWindowFlags flags { valueOr(windowFlagsInOptional, 0) };
   flags |= ImGuiWindowFlags_NoSavedSettings;
   return ImGui::Begin(name, openInOptional, flags);
 });
 
-DEFINE_API(void, End, ((Window*, window)),
+DEFINE_API(void, End, ((ImGui_Context*,ctx)),
 R"(Pop window from the stack. See ImGui_Begin.)",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImGui::End();
 });
-DEFINE_API(void, SetNextWindowPos, ((Window*,window))
+DEFINE_API(void, SetNextWindowPos, ((ImGui_Context*,ctx))
 ((double,x))((double,y))((int*,condInOptional))
 ((double*,pivotXInOptional))((double*,pivotYInOptional)),
 R"(Set next window position. Call before Begin(). Use pivot=(0.5f,0.5f) to center on given point, etc.
 
 Default values: cond = ImGui_Cond_Always, pivotX = 0.0, pivotY = 0.0)",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImGui::SetNextWindowPos(ImVec2(x, y), valueOr(condInOptional, ImGuiCond_Always),
     ImVec2(valueOr(pivotXInOptional, 0.0), valueOr(pivotYInOptional, 0.0)));
 });
 
-DEFINE_API(void, SetNextWindowSize, ((Window*,window))
+DEFINE_API(void, SetNextWindowSize, ((ImGui_Context*,ctx))
 ((double,x))((double,y))((int*,condInOptional)),
 R"(Set next window size. set axis to 0.0f to force an auto-fit on this axis. Call before Begin().
 
 Default values: cond = ImGui_Cond_Always)",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   ImGui::SetNextWindowSize(ImVec2(x, y), valueOr(condInOptional, ImGuiCond_Always));
 });
 

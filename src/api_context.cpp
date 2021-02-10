@@ -1,46 +1,42 @@
 #include "api_helper.hpp"
 
-#include "window.hpp"
-
-using ImGui_Context = Window;
-
 constexpr size_t MAX_INSTANCES { 99 };
 
 DEFINE_API(ImGui_Context*, CreateContext,
 ((const char*, title))((int, x))((int, y))((int, w))((int, h)),
 R"(Create a new window. Call ImGui_UpdateWindow at every timer cycle until destroyed to keep the window active.)",
 {
-  if(Window::count() >= MAX_INSTANCES)
+  if(Context::count() >= MAX_INSTANCES)
     return nullptr;
 
-  Window *ctx { new Window(title, x, y, w, h) };
+  Context *ctx { new Context(title, x, y, w, h) };
   return ctx;
 });
 
 DEFINE_API(bool, IsContextValid, ((ImGui_Context*, ctx)),
 R"(Return whether the window is still open.)",
 {
-  return Window::exists(ctx);
+  return Context::exists(ctx);
 });
 
 DEFINE_API(void, DestroyContext, ((ImGui_Context*, ctx)),
 R"(Close and free the resources used by a window.)",
 {
-  CHECK_WINDOW(ctx);
+  CHECK_CONTEXT(ctx);
   ctx->close();
 });
 
 DEFINE_API(void *, GetNativeHwnd, ((ImGui_Context*, ctx)),
 R"(Return the native handle for the window.)",
 {
-  CHECK_WINDOW(ctx, nullptr);
+  CHECK_CONTEXT(ctx, nullptr);
   return ctx->handle();
 });
 
 DEFINE_API(bool, IsCloseRequested, ((ImGui_Context*, ctx)),
 R"(Return whether the user has requested closing the window.)",
 {
-  CHECK_WINDOW(ctx, false);
+  CHECK_CONTEXT(ctx, false);
   return ctx->isCloseRequested();
 });
 
@@ -49,7 +45,7 @@ R"(Render a frame to the window. This must be called at every global timer cycle
 
 Perform all draw + update calls one window at a time for best performance.)",
 {
-  CHECK_WINDOW(ctx);
+  CHECK_CONTEXT(ctx);
   ctx->enterFrame();
   ctx->endFrame(true);
 });
@@ -59,7 +55,7 @@ R"(Return the current clear color of the window (0xRRGGBBAA).
 
 See SetWindowClearColor.)",
 {
-  CHECK_WINDOW(ctx, 0);
+  CHECK_CONTEXT(ctx, 0);
   return ctx->clearColor();
 });
 
@@ -68,22 +64,22 @@ R"(Set the current clear color of the window (0xRRGGBBAA). The default is 0x0000
 
 See GetClearColor.)",
 {
-  CHECK_WINDOW(ctx);
+  CHECK_CONTEXT(ctx);
   ctx->setClearColor(rgba);
 });
 
 DEFINE_API(double, GetTime, ((ImGui_Context*,ctx)),
 "Get global imgui time. Incremented every frame.",
 {
-  USE_WINDOW(ctx, 0.0);
+  ENTER_CONTEXT(ctx, 0.0);
   return ImGui::GetTime();
 });
 
 // TODO: remove this
-DEFINE_API(void, FooBar, ((Window*, window)),
+DEFINE_API(void, FooBar, ((ImGui_Context*,ctx)),
 R"()",
 {
-  CHECK_WINDOW(window);
-  window->enterFrame();
+  CHECK_CONTEXT(ctx);
+  ctx->enterFrame();
   ImGui::ShowDemoWindow();
 });

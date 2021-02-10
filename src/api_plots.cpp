@@ -7,14 +7,14 @@ static float getArrayValue(void *data, const int index)
 }
 
 // Widgets: Data Plotting
-DEFINE_API(void, PlotLines, ((Window*,window))
+DEFINE_API(void, PlotLines, ((ImGui_Context*,ctx))
 ((const char*,label))((reaper_array*,values))((int*,valuesOffsetInOptional))
 ((const char*,overlayTextInOptional))
 ((double*,scaleMinInOptional))((double*,scaleMaxInOptional))
 ((double*,graphWidthInOptional))((double*,graphHeightInOptional)),
 "",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
   nullIfEmpty(overlayTextInOptional);
 
   ImGui::PlotLines(label, &getArrayValue, values->data, values->size,
@@ -23,14 +23,14 @@ DEFINE_API(void, PlotLines, ((Window*,window))
     ImVec2(valueOr(graphWidthInOptional, 0.0), valueOr(graphHeightInOptional, 0.0)));
 });
 
-DEFINE_API(void, PlotHistogram, ((Window*,window))
+DEFINE_API(void, PlotHistogram, ((ImGui_Context*,ctx))
 ((const char*,label))((reaper_array*,values))((int*,valuesOffsetInOptional))
 ((const char*,overlayTextInOptional))
 ((double*,scaleMinInOptional))((double*,scaleMaxInOptional))
 ((double*,graphWidthInOptional))((double*,graphHeightInOptional)),
 "",
 {
-  USE_WINDOW(window);
+  ENTER_CONTEXT(ctx);
 
   ImGui::PlotHistogram(label, &getArrayValue, values->data, values->size,
     valueOr(valuesOffsetInOptional, 0), overlayTextInOptional,

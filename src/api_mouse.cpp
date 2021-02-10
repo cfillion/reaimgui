@@ -7,11 +7,11 @@
 // IMGUI_API bool          IsMouseDown(ImGuiMouseButton button);                               // is mouse button held?
 // IMGUI_API bool          IsMouseClicked(ImGuiMouseButton button, bool repeat = false);       // did mouse button clicked? (went from !Down to Down)
 // IMGUI_API bool          IsMouseReleased(ImGuiMouseButton button);                           // did mouse button released? (went from Down to !Down)
-DEFINE_API(bool, IsMouseDoubleClicked, ((Window*,window))
+DEFINE_API(bool, IsMouseDoubleClicked, ((ImGui_Context*,ctx))
 ((int,button)),
 "Did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   return ImGui::IsMouseDoubleClicked(button);
 });
 // IMGUI_API bool          IsMouseHoveringRect(const ImVec2& r_min, const ImVec2& r_max, bool clip = true);// is mouse hovering given bounding rect (in screen space). clipped by current clipping settings, but disregarding of other consideration of focus/window ordering/popup-block.

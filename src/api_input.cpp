@@ -22,12 +22,12 @@ static void sanitizeInputTextFlags(ImGuiInputTextFlags &flags)
 }
 
 // Widgets: Input with Keyboard
-DEFINE_API(bool, InputText, ((Window*,window))
+DEFINE_API(bool, InputText, ((ImGui_Context*,ctx))
 ((const char*,label))((char*,bufOutNeedBig))((int,bufOutNeedBig_sz))
 ((int*,flagsInOptional)),
 "",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
 
   ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeInputTextFlags(flags);
@@ -37,13 +37,13 @@ DEFINE_API(bool, InputText, ((Window*,window))
     flags, &inputTextCallback, nullptr);
 });
 
-DEFINE_API(bool, InputTextMultiline, ((Window*,window))
+DEFINE_API(bool, InputTextMultiline, ((ImGui_Context*,ctx))
 ((const char*,label))((char*,bufOutNeedBig))((int,bufOutNeedBig_sz))
 ((double*,widthInOptional))((double*,heightInOptional))
 ((int*,flagsInOptional)),
 "Default values: width = 0, height = 0, flags = ImGui_InputTextFlags_None",
 {
-  USE_WINDOW(window, false)
+  ENTER_CONTEXT(ctx, false)
 
   ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeInputTextFlags(flags);
@@ -57,13 +57,13 @@ DEFINE_API(bool, InputTextMultiline, ((Window*,window))
 
 // IMGUI_API bool          InputTextMultiline(const char* label, char* buf, size_t buf_size, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = NULL, void* user_data = NULL);
 
-DEFINE_API(bool, InputTextWithHint, ((Window*,window))
+DEFINE_API(bool, InputTextWithHint, ((ImGui_Context*,ctx))
 ((const char*,label))((const char*,hint))
 ((char*,bufOutNeedBig))((int,bufOutNeedBig_sz))
 ((int*,flagsInOptional)),
 "",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
 
   ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeInputTextFlags(flags);
@@ -73,12 +73,12 @@ DEFINE_API(bool, InputTextWithHint, ((Window*,window))
     flags, &inputTextCallback, nullptr);
 });
 
-DEFINE_API(bool, InputInt, ((Window*,window))((const char*,label))
+DEFINE_API(bool, InputInt, ((ImGui_Context*,ctx))((const char*,label))
 ((int*,valueInOut))((int*,stepInOptional))((int*,stepFastInOptional))
 ((int*,flagsInOptional)),
 "'step' defaults to 1, 'stepFast' defaults to 100",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
 
   ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeInputTextFlags(flags);
@@ -87,12 +87,12 @@ DEFINE_API(bool, InputInt, ((Window*,window))((const char*,label))
     valueOr(stepInOptional, 1), valueOr(stepFastInOptional, 100), flags);
 });
 
-DEFINE_API(bool, InputDouble, ((Window*,window))((const char*,label))
+DEFINE_API(bool, InputDouble, ((ImGui_Context*,ctx))((const char*,label))
 ((double*,valueInOut))((double*,stepInOptional))((double*,stepFastInOptional))
 ((const char*,formatInOptional))((int*,flagsInOptional)),
 "'step' defaults to 1, 'stepFast' defaults to 100",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   nullIfEmpty(formatInOptional);
 
   ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
@@ -106,12 +106,12 @@ DEFINE_API(bool, InputDouble, ((Window*,window))((const char*,label))
 // IMGUI_API bool          InputScalar(const char* label, ImGuiDataType data_type, void* p_data, const void* p_step = NULL, const void* p_step_fast = NULL, const char* format = NULL, ImGuiInputTextFlags flags = 0);
 // IMGUI_API bool          InputScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, const void* p_step = NULL, const void* p_step_fast = NULL, const char* format = NULL, ImGuiInputTextFlags flags = 0);
 
-DEFINE_API(bool, InputDoubleN, ((Window*,window))((const char*,label))
+DEFINE_API(bool, InputDoubleN, ((ImGui_Context*,ctx))((const char*,label))
 ((reaper_array*,values))((double*,stepInOptional))((double*,stepFastInOptional))
 ((const char*,formatInOptional))((int*,flagsInOptional)),
 "",
 {
-  USE_WINDOW(window, false);
+  ENTER_CONTEXT(ctx, false);
   nullIfEmpty(formatInOptional);
 
   ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };

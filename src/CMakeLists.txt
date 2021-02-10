@@ -25,9 +25,9 @@ add_library(${PROJECT_NAME} SHARED
   api_trees.cpp
   api_widgets.cpp
   api_windows.cpp
+  context.cpp
   main.cpp
   watchdog.cpp
-  window.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
@@ -64,7 +64,7 @@ else()
 endif()
 
 if(APPLE)
-  target_sources(${PROJECT_NAME} PRIVATE inputview.mm window_metal.mm)
+  target_sources(${PROJECT_NAME} PRIVATE inputview.mm metal_backend.mm)
 
   find_library(QUARTZCORE_LIB QuartzCore)
   target_link_libraries(${PROJECT_NAME} ${QUARTZCORE_LIB})

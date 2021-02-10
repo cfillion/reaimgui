@@ -1,20 +1,20 @@
 #include "inputview.hpp"
 
-#include "window.hpp"
+#include "context.hpp"
 
 constexpr NSRange kEmptyRange { NSNotFound, 0 };
 
 @implementation InputView
 {
   NSMutableAttributedString *m_markedText;
-  Window *m_window;
+  Context *m_context;
 }
 
-- (instancetype)initWithWindow:(Window *)window
-                        parent:(NSView *)parent
+- (instancetype)initWithContext:(Context *)context
+                         parent:(NSView *)parent
 {
   self = [super initWithFrame:parent.frame];
-  m_window = window;
+  m_context = context;
 
   // Fill the window to receive mouse click events
   self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
@@ -37,32 +37,32 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
 
 - (void)mouseDown:(NSEvent *)event
 {
-  m_window->mouseDown(WM_LBUTTONDOWN);
+  m_context->mouseDown(WM_LBUTTONDOWN);
 }
 
 - (void)mouseUp:(NSEvent *)event
 {
-  m_window->mouseUp(WM_LBUTTONUP);
+  m_context->mouseUp(WM_LBUTTONUP);
 }
 
 - (void)rightMouseDown:(NSEvent *)event
 {
-  m_window->mouseDown(WM_RBUTTONDOWN);
+  m_context->mouseDown(WM_RBUTTONDOWN);
 }
 
 - (void)rightMouseUp:(NSEvent *)event
 {
-  m_window->mouseUp(WM_RBUTTONUP);
+  m_context->mouseUp(WM_RBUTTONUP);
 }
 
 - (void)otherMouseDown:(NSEvent *)event
 {
-  m_window->mouseDown(WM_MBUTTONDOWN);
+  m_context->mouseDown(WM_MBUTTONDOWN);
 }
 
 - (void)otherMouseUp:(NSEvent *)event
 {
-  m_window->mouseUp(WM_MBUTTONUP);
+  m_context->mouseUp(WM_MBUTTONUP);
 }
 
 - (void)keyDown:(NSEvent *)event
@@ -73,12 +73,12 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
   // SWELL keyboard events report different key codes depending on the
   // modifiers. This is undesirable because it would lead to stuck keys:
   // Shift down, 4 down (keycode for $), Shift up, 4 up (oops, keycode for 4!).
-  m_window->keyInput([event keyCode], true);
+  m_context->keyInput([event keyCode], true);
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-  m_window->keyInput([event keyCode], false);
+  m_context->keyInput([event keyCode], false);
 }
 
 // Implement NSTextInputClient for IME-aware text input
@@ -112,7 +112,7 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
     else if(codepoint >= 0xf700 && codepoint <= 0xf7ff)
       continue; // unicode private range
 
-    m_window->charInput(codepoint);
+    m_context->charInput(codepoint);
   }
 }
 

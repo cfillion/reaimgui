@@ -70,31 +70,33 @@ void *InvokeReaScriptAPI(void **argv, int argc)
 #define DOCARGS(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
 
-#define DEFINE_API(type, name, args, help, ...)                                 \
-  static type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _, args)) __VA_ARGS__ \
-                                                                                \
-  static API API_reg_##name { #name,                                            \
-    reinterpret_cast<void *>(&API_##name),                                      \
-    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>),                 \
-    reinterpret_cast<void *>(const_cast<char *>(                                \
-      #type "\0"                                                                \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE, args) "\0"                     \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME, args) "\0"                     \
-      help                                                                      \
-    ))                                                                          \
+#define DEFINE_API(type, name, args, help, ...)                          \
+  type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _, args)) __VA_ARGS__ \
+                                                                         \
+  static API API_reg_##name { #name,                                     \
+    reinterpret_cast<void *>(&API_##name),                               \
+    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>),          \
+    reinterpret_cast<void *>(const_cast<char *>(                         \
+      #type "\0"                                                         \
+      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE, args) "\0"              \
+      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME, args) "\0"              \
+      help                                                               \
+    ))                                                                   \
   }
 
-#include "window.hpp"
+#include "context.hpp"
 #include <reaper_plugin_functions.h>
 
-#define CHECK_WINDOW(ctx, ...)                             \
-  if(!Window::exists(ctx)) {                               \
+using ImGui_Context = Context;
+
+#define CHECK_CONTEXT(ctx, ...)                            \
+  if(!Context::exists(ctx)) {                              \
     ReaScriptError("ReaImGui: Invalid context reference"); \
     return __VA_ARGS__;                                    \
   }
 
-#define USE_WINDOW(ctx, ...) \
-  CHECK_WINDOW(ctx, __VA_ARGS__);    \
+#define ENTER_CONTEXT(ctx, ...)    \
+  CHECK_CONTEXT(ctx, __VA_ARGS__); \
   ctx->enterFrame();
 
 // https://forum.cockos.com/showthread.php?t=211620
