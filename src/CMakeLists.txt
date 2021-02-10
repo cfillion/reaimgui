@@ -1,4 +1,6 @@
 include(CheckCompilerFlag)
+include(CheckLinkerFlag)
+include(FindPkgConfig)
 
 add_library(${PROJECT_NAME} SHARED
   api.cpp
@@ -62,6 +64,12 @@ else()
   if(HAVE_NON_C_TYPEDEF_FOR_LINKAGE)
     target_compile_options(${PROJECT_NAME} PUBLIC -Wno-non-c-typedef-for-linkage)
   endif()
+
+  # GCC
+  check_linker_flag(CXX -Wl,--no-undefined HAVE_NO_UNDEFINED)
+  if(HAVE_NO_UNDEFINED)
+    target_link_options(${PROJECT_NAME} PRIVATE -Wl,--no-undefined)
+  endif()
 endif()
 
 if(APPLE)
@@ -69,6 +77,13 @@ if(APPLE)
 
   find_library(QUARTZCORE_LIB QuartzCore)
   target_link_libraries(${PROJECT_NAME} ${QUARTZCORE_LIB})
+elseif(WIN32)
+else()
+  target_sources(${PROJECT_NAME} PRIVATE gdk_backend.cpp)
+
+  pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
+  pkg_search_module(GDK REQUIRED IMPORTED_TARGET gdk-3.0)
+  target_link_libraries(${PROJECT_NAME} PkgConfig::Epoxy PkgConfig::GDK)
 endif()
 
 find_package(Boost REQUIRED)

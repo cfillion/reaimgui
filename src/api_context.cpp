@@ -1,5 +1,7 @@
 #include "api_helper.hpp"
 
+#include <stdexcept>
+
 constexpr size_t MAX_INSTANCES { 99 };
 
 DEFINE_API(ImGui_Context*, CreateContext,
@@ -9,7 +11,15 @@ R"(Create a new window. Call ImGui_UpdateWindow at every timer cycle until destr
   if(Context::count() >= MAX_INSTANCES)
     return nullptr;
 
-  Context *ctx { new Context(title, x, y, w, h) };
+  Context *ctx {};
+  try {
+    ctx = new Context(title, x, y, w, h);
+  }
+  catch(const std::runtime_error &e) {
+    char msg[1024];
+    snprintf(msg, sizeof(msg), "ReaImGui: failed to create context: %s", e.what());
+    ReaScriptError(msg);
+  }
   return ctx;
 });
 

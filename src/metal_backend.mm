@@ -52,6 +52,7 @@ public:
   ~MetalBackend() override;
 
   void beginFrame() override;
+  void enterFrame() override {}
   void endFrame(ImDrawData *) override;
   float deltaTime() override;
   float scaleFactor() const override;

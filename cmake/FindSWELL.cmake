@@ -2,9 +2,11 @@ if(SWELL_FOUND)
   return()
 endif()
 
+find_package(WDL REQUIRED)
+
 find_path(SWELL_INCLUDE_DIR
   NAMES swell/swell.h
-  PATHS ${CMAKE_SOURCE_DIR}/vendor/WDL/WDL
+  PATHS ${WDL_DIR}
   NO_DEFAULT_PATH
 )
 mark_as_advanced(SWELL_INCLUDE_DIR)
@@ -24,5 +26,6 @@ endif()
 
 target_compile_definitions(swell PUBLIC  SWELL_PROVIDED_BY_APP)
 target_include_directories(swell INTERFACE ${SWELL_INCLUDE_DIR})
+target_link_libraries(swell PUBLIC WDL::WDL)
 
 add_library(SWELL::swell ALIAS swell)

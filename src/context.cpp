@@ -6,6 +6,7 @@
 #include <imgui/imgui_internal.h>
 #include <reaper_colortheme.h>
 #include <reaper_plugin_functions.h>
+#include <stdexcept>
 #include <unordered_set>
 
 static std::unordered_set<Context *> g_windows;
@@ -73,6 +74,8 @@ WDL_DLGRET Context::proc(HWND handle, const UINT msg,
   case WM_RBUTTONUP:
     self->mouseUp(msg);
     break;
+#endif // __APPLE__
+#ifdef _WIN32
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
     if(wParam < 256)
@@ -83,7 +86,7 @@ WDL_DLGRET Context::proc(HWND handle, const UINT msg,
     if(wParam < 256)
       self->keyInput(wParam, false);
     return -1;
-#endif // __APPLE__
+#endif // _WIN32
   }
 
   return DefWindowProc(handle, msg, wParam, lParam);
@@ -133,21 +136,28 @@ Context::Context(const char *title,
     m_accel { &Context::translateAccel, true, this },
     m_watchdog { Watchdog::get() }
 {
-  g_windows.emplace(this);
-
   m_handle = CreateDialog(s_instance,
     MAKEINTRESOURCE(ForceNonChild | Resizable),
     GetMainHwnd(), proc);
 
-  SetWindowLongPtr(m_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
   SetWindowText(m_handle, title);
   SetWindowPos(m_handle, HWND_TOP, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
   ShowWindow(m_handle, SW_SHOW);
 
-  plugin_register("accelerator", &m_accel);
-
   setupImGui();
-  m_backend = Backend::create(this);
+
+  try {
+    m_backend = Backend::create(this);
+  }
+  catch(const std::runtime_error &) {
+    ImGui::DestroyContext();
+    DestroyWindow(m_handle);
+    throw;
+  }
+
+  SetWindowLongPtr(m_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+  plugin_register("accelerator", &m_accel);
+  g_windows.emplace(this);
 }
 
 void Context::setupImGui()
@@ -231,6 +241,8 @@ void Context::enterFrame()
 
   if(!m_inFrame)
     beginFrame();
+
+  m_backend->enterFrame();
 }
 
 void Context::endFrame(const bool render)
