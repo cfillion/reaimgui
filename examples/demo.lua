@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.81)
 
 --[[
 Index of this file:
@@ -20,8 +20,9 @@ Index of this file:
 // [SECTION] Example App: Long Text / ShowExampleAppLongText()
 // [SECTION] Example App: Auto Resize / ShowExampleAppAutoResize()
 // [SECTION] Example App: Constrained Resize / ShowExampleAppConstrainedResize()
-// [SECTION] Example App: Simple Overlay / ShowExampleAppSimpleOverlay()
-// [SECTION] Example App: Manipulating Window Titles / ShowExampleAppWindowTitles()
+// [SECTION] Example App: Simple overlay / ShowExampleAppSimpleOverlay()
+// [SECTION] Example App: Fullscreen window / ShowExampleAppFullscreen()
+// [SECTION] Example App: Manipulating window titles / ShowExampleAppWindowTitles()
 // [SECTION] Example App: Custom Rendering using ImDrawList API / ShowExampleAppCustomRendering()
 // [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
 
@@ -134,6 +135,7 @@ show_app = {
   auto_resize        = false,
   constrained_resize = false,
   simple_overlay     = false,
+  fullscreen         = false,
   window_titles      = false,
   custom_rendering   = false,
 
@@ -171,6 +173,7 @@ function demo.ShowDemoWindow(open)
   if show_app.auto_resize        then show_app.auto_resize        = ShowExampleAppAutoResize()        end
   if show_app.constrained_resize then show_app.constrained_resize = ShowExampleAppConstrainedResize() end
   if show_app.simple_overlay     then show_app.simple_overlay     = ShowExampleAppSimpleOverlay()     end
+  if show_app.fullscreen         then show_app.fullscreen         = ShowExampleAppFullscreen()        end
   if show_app.window_titles      then show_app.window_titles      = ShowExampleAppWindowTitles()      end
   if show_app.custom_rendering   then show_app.custom_rendering   = ShowExampleAppCustomRendering()   end
 
@@ -199,6 +202,8 @@ function demo.ShowDemoWindow(open)
 
   -- We specify a default position/size in case there's no data in the .ini file.
   -- We only do it to make the demo applications a little more welcoming, but typically this isn't required.
+  -- v1.81 TODO const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+  -- ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 20), ImGuiCond_FirstUseEver);
   r.ImGui_SetNextWindowPos(ctx, 20, 20, r.ImGui_Cond_FirstUseEver());
   r.ImGui_SetNextWindowSize(ctx, 550, 680, r.ImGui_Cond_FirstUseEver());
 
@@ -245,6 +250,8 @@ function demo.ShowDemoWindow(open)
         r.ImGui_MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize)
       rv,show_app.simple_overlay =
         r.ImGui_MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay)
+      rv,show_app.fullscreen =
+        r.ImGui_MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen)
       rv,show_app.window_titles =
         r.ImGui_MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
       rv,show_app.custom_rendering =
@@ -601,12 +608,12 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_LabelText(ctx, 'label', 'Value');
 
     -- Using the _simplified_ one-liner Combo() api here
-    -- See "Combo" section for examples of how to use the more complete BeginCombo()/EndCombo() api.
+    -- See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
     local items = "AAAA\31BBBB\31CCCC\31DDDD\31EEEE\31FFFF\31GGGG\31HHHH\31IIIIIII\31JJJJ\31KKKKKKK\31"
     rv,widgets.basic.curitem = r.ImGui_Combo(ctx, 'combo', widgets.basic.curitem, items)
     r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'Refer to the "Combo" section below for an explanation of the full BeginCombo/EndCombo API, ' ..
-      'and demonstration of various flags.\n')
+      'Using the simplified one-liner Combo API here.\n' ..
+      'Refer to the "Combo" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.')
 
     rv,widgets.basic.str0 = r.ImGui_InputText(ctx, 'input text', widgets.basic.str0);
     r.ImGui_SameLine(ctx); demo.HelpMarker(
@@ -660,25 +667,33 @@ function demo.ShowDemoWindowWidgets()
     local elements = { 'Fire', 'Earth', 'Air', 'Water' }
     local current_elem = elements[widgets.basic.elem] or 'Unknown'
     rv,widgets.basic.elem = r.ImGui_SliderInt(ctx, 'slider enum', widgets.basic.elem, 1, #elements, current_elem);
-    r.ImGui_SameLine(ctx); demo.HelpMarker('Using the format string parameter to display a name instead of the underlying integer.')
+    r.ImGui_SameLine(ctx);
+    demo.HelpMarker(
+      'Using the format string parameter to display a name instead \z
+       of the underlying integer.'
+    )
 
     foo = widgets.basic.col1
     rv,widgets.basic.col1 = r.ImGui_ColorEdit(ctx, 'color 1', widgets.basic.col1, r.ImGui_ColorEditFlags_NoAlpha())
     r.ImGui_SameLine(ctx); demo.HelpMarker(
-    'Click on the color square to open a color picker.\n' ..
-    'Click and hold to use drag and drop.\n' ..
-    'Right-click on the color square to show options.\n' ..
-    'CTRL+click on individual component to input value.\n')
+      'Click on the color square to open a color picker.\n\z
+       Click and hold to use drag and drop.\n\z
+       Right-click on the color square to show options.\n\z
+       CTRL+click on individual component to input value.'
+    )
 
     rv, widgets.basic.col2 = r.ImGui_ColorEdit(ctx, 'color 2', widgets.basic.col2)
 
-    -- List box
+    -- Using the _simplified_ one-liner ListBox() api here
+    -- See "List boxes" section for examples of how to use the more flexible BeginListBox()/EndListBox() api.
     local items = 'Apple\31Banana\31Cherry\31Kiwi\31Mango\31Orange\31Pineapple\31Strawberry\31Watermelon\31'
     rv,widgets.basic.listcur = r.ImGui_ListBox(ctx, 'listbox\n(single select)', widgets.basic.listcur, items, 4);
-
-    -- //static int listbox_item_current2 = 2;
-    -- //ImGui::SetNextItemWidth(-1);
-    -- //ImGui::ListBox("##listbox2", &listbox_item_current2, listbox_items, IM_ARRAYSIZE(listbox_items), 4);
+    r.ImGui_SameLine(ctx);
+    demo.HelpMarker(
+      'Using the simplified one-liner ListBox API here.\n\z
+       Refer to the "List boxes" section below for an explanation of how to use\z
+       the more flexible and general BeginListBox/EndListBox API.'
+    )
 
     r.ImGui_TreePop(ctx);
   end
@@ -1012,6 +1027,49 @@ function demo.ShowDemoWindowWidgets()
 
     r.ImGui_TreePop(ctx)
   end
+
+  -- TODO!
+  -- if (ImGui::TreeNode("List boxes"))
+  -- {
+  --     // Using the generic BeginListBox() API, you have full control over how to display the combo contents.
+  --     // (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
+  --     // stored in the object itself, etc.)
+  --     const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" };
+  --     static int item_current_idx = 0; // Here we store our selection data as an index.
+  --     if (ImGui::BeginListBox("listbox 1"))
+  --     {
+  --         for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+  --         {
+  --             const bool is_selected = (item_current_idx == n);
+  --             if (ImGui::Selectable(items[n], is_selected))
+  --                 item_current_idx = n;
+  --
+  --             // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+  --             if (is_selected)
+  --                 ImGui::SetItemDefaultFocus();
+  --         }
+  --         ImGui::EndListBox();
+  --     }
+  --
+  --     // Custom size: use all width, 5 items tall
+  --     ImGui::Text("Full-width:");
+  --     if (ImGui::BeginListBox("##listbox 2", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
+  --     {
+  --         for (int n = 0; n < IM_ARRAYSIZE(items); n++)
+  --         {
+  --             const bool is_selected = (item_current_idx == n);
+  --             if (ImGui::Selectable(items[n], is_selected))
+  --                 item_current_idx = n;
+  --
+  --             // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+  --             if (is_selected)
+  --                 ImGui::SetItemDefaultFocus();
+  --         }
+  --         ImGui::EndListBox();
+  --     }
+  --
+  --     ImGui::TreePop();
+  -- }
 
   if r.ImGui_TreeNode(ctx, 'Selectables') then
     -- Selectable() has 2 overloads:
@@ -2482,11 +2540,11 @@ end
 --         r.ImGui_Button("LEVERAGE\nBUZZWORD", size);
 --         r.ImGui_SameLine();
 --
---         if (r.ImGui_ListBoxHeader("List", size))
+--         if (r.ImGui_BeginListBox("List", size))
 --         {
 --             r.ImGui_Selectable("Selected", true);
 --             r.ImGui_Selectable("Not Selected", false);
---             r.ImGui_ListBoxFooter();
+--             r.ImGui_EndListBox();
 --         }
 --
 --         r.ImGui_TreePop();
@@ -3071,7 +3129,7 @@ end
 --         {
 --             if (r.ImGui_Selectable("Set to zero")) value = 0.0f;
 --             if (r.ImGui_Selectable("Set to PI")) value = 3.1415f;
---             r.ImGui_SetNextItemWidth(-1);
+--             r.ImGui_SetNextItemWidth(-1); // -FLT_MIN in v1.81?
 --             r.ImGui_DragFloat("##Value", &value, 0.1f, 0.0f, 0.0f);
 --             r.ImGui_EndPopup();
 --         }
@@ -3111,7 +3169,8 @@ end
 --             r.ImGui_OpenPopup("Delete?");
 --
 --         // Always center this window when appearing
---         ImVec2 center(r.ImGui_GetIO().DisplaySize.x * 0.5f, r.ImGui_GetIO().DisplaySize.y * 0.5f);
+--         //v1.80 ImVec2 center(r.ImGui_GetIO().DisplaySize.x * 0.5f, r.ImGui_GetIO().DisplaySize.y * 0.5f);
+--         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
 --         r.ImGui_SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 --
 --         if (r.ImGui_BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
@@ -4174,7 +4233,7 @@ end
 --             r.ImGui_TableHeadersRow();
 --
 --             r.ImGui_TableNextColumn();
---             r.ImGui_Text("A0 Cell 0");
+--             r.ImGui_Text("A0 Row 0");
 --             {
 --                 float rows_height = TEXT_BASE_HEIGHT * 2;
 --                 if (r.ImGui_BeginTable("table_nested2", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
@@ -4185,21 +4244,21 @@ end
 --
 --                     r.ImGui_TableNextRow(ImGuiTableRowFlags_None, rows_height);
 --                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("B0 Cell 0");
+--                     r.ImGui_Text("B0 Row 0");
 --                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("B0 Cell 1");
+--                     r.ImGui_Text("B0 Row 1");
 --                     r.ImGui_TableNextRow(ImGuiTableRowFlags_None, rows_height);
 --                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("B1 Cell 0");
+--                     r.ImGui_Text("B1 Row 0");
 --                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("B1 Cell 1");
+--                     r.ImGui_Text("B1 Row 1");
 --
 --                     r.ImGui_EndTable();
 --                 }
 --             }
---             r.ImGui_TableNextColumn(); r.ImGui_Text("A0 Cell 1");
---             r.ImGui_TableNextColumn(); r.ImGui_Text("A1 Cell 0");
---             r.ImGui_TableNextColumn(); r.ImGui_Text("A1 Cell 1");
+--             r.ImGui_TableNextColumn(); r.ImGui_Text("A0 Row 1");
+--             r.ImGui_TableNextColumn(); r.ImGui_Text("A1 Row 0");
+--             r.ImGui_TableNextColumn(); r.ImGui_Text("A1 Row 1");
 --             r.ImGui_EndTable();
 --         }
 --         r.ImGui_TreePop();
@@ -6856,23 +6915,34 @@ end
 -- }
 --
 -- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Simple Overlay / ShowExampleAppSimpleOverlay()
+-- // [SECTION] Example App: Simple overlay / ShowExampleAppSimpleOverlay()
 -- //-----------------------------------------------------------------------------
 --
 -- // Demonstrate creating a simple static window with no decoration
 -- // + a context-menu to choose which corner of the screen to use.
 -- static void ShowExampleAppSimpleOverlay(bool* p_open)
 -- {
---     const float DISTANCE = 10.0f;
+--     const float PAD = 10.0f;
 --     static int corner = 0;
 --     ImGuiIO& io = r.ImGui_GetIO();
 --     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
 --     if (corner != -1)
 --     {
---         window_flags |= ImGuiWindowFlags_NoMove;
---         ImVec2 window_pos = ImVec2((corner & 1) ? io.DisplaySize.x - DISTANCE : DISTANCE, (corner & 2) ? io.DisplaySize.y - DISTANCE : DISTANCE);
---         ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
---         r.ImGui_SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+--         // v1.80 window_flags |= ImGuiWindowFlags_NoMove;
+--         // v1.80 ImVec2 window_pos = ImVec2((corner & 1) ? io.DisplaySize.x - DISTANCE : DISTANCE, (corner & 2) ? io.DisplaySize.y - DISTANCE : DISTANCE);
+--         // v1.80 ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
+--         // v1.80 r.ImGui_SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+--
+        -- const ImGuiViewport* viewport = ImGui::GetMainViewport();
+        -- ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+        -- ImVec2 work_size = viewport->WorkSize;
+        -- ImVec2 window_pos, window_pos_pivot;
+        -- window_pos.x = (corner & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
+        -- window_pos.y = (corner & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
+        -- window_pos_pivot.x = (corner & 1) ? 1.0f : 0.0f;
+        -- window_pos_pivot.y = (corner & 2) ? 1.0f : 0.0f;
+        -- ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+        -- window_flags |= ImGuiWindowFlags_NoMove;
 --     }
 --     r.ImGui_SetNextWindowBgAlpha(0.35f); // Transparent background
 --     if (r.ImGui_Begin("Example: Simple overlay", p_open, window_flags))
@@ -6898,7 +6968,43 @@ end
 -- }
 --
 -- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Manipulating Window Titles / ShowExampleAppWindowTitles()
+-- // [SECTION] Example App: Fullscreen window / ShowExampleAppFullscreen()
+-- //-----------------------------------------------------------------------------
+--
+-- // Demonstrate creating a window covering the entire screen/viewport
+-- static void ShowExampleAppFullscreen(bool* p_open)
+-- {
+--     static bool use_work_area = true;
+--     static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
+--
+--     // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
+--     // Based on your use case you may want one of the other.
+--     const ImGuiViewport* viewport = ImGui::GetMainViewport();
+--     ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
+--     ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
+--
+--     if (ImGui::Begin("Example: Fullscreen window", p_open, flags))
+--     {
+--         ImGui::Checkbox("Use work area instead of main area", &use_work_area);
+--         ImGui::SameLine();
+--         HelpMarker("Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.");
+--
+--         ImGui::CheckboxFlags("ImGuiWindowFlags_NoBackground", &flags, ImGuiWindowFlags_NoBackground);
+--         ImGui::CheckboxFlags("ImGuiWindowFlags_NoDecoration", &flags, ImGuiWindowFlags_NoDecoration);
+--         ImGui::Indent();
+--         ImGui::CheckboxFlags("ImGuiWindowFlags_NoTitleBar", &flags, ImGuiWindowFlags_NoTitleBar);
+--         ImGui::CheckboxFlags("ImGuiWindowFlags_NoCollapse", &flags, ImGuiWindowFlags_NoCollapse);
+--         ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
+--         ImGui::Unindent();
+--
+--         if (p_open && ImGui::Button("Close this window"))
+--             *p_open = false;
+--     }
+--     ImGui::End();
+-- }
+--
+-- //-----------------------------------------------------------------------------
+-- // [SECTION] Example App: Manipulating window titles / ShowExampleAppWindowTitles()
 -- //-----------------------------------------------------------------------------
 --
 -- // Demonstrate using "##" and "###" in identifiers to manipulate ID generation.
@@ -6906,16 +7012,19 @@ end
 -- // Read FAQ section "How can I have multiple widgets with the same label?" for details.
 -- static void ShowExampleAppWindowTitles(bool*)
 -- {
+--     const ImGuiViewport* viewport = ImGui::GetMainViewport();
+--     const ImVec2 base_pos = viewport->Pos;
+--
 --     // By default, Windows are uniquely identified by their title.
 --     // You can use the "##" and "###" markers to manipulate the display/ID.
 --
 --     // Using "##" to display same title but have unique identifier.
---     r.ImGui_SetNextWindowPos(ImVec2(100, 100), ImGuiCond_FirstUseEver);
+--      ImGui::SetNextWindowPos(ImVec2(base_pos.x + 100, base_pos.y + 100), ImGuiCond_FirstUseEver);
 --     r.ImGui_Begin("Same title as another window##1");
 --     r.ImGui_Text("This is window 1.\nMy title is the same as window 2, but my identifier is unique.");
 --     r.ImGui_End();
 --
---     r.ImGui_SetNextWindowPos(ImVec2(100, 200), ImGuiCond_FirstUseEver);
+--     ImGui::SetNextWindowPos(ImVec2(base_pos.x + 100, base_pos.y + 200), ImGuiCond_FirstUseEver);
 --     r.ImGui_Begin("Same title as another window##2");
 --     r.ImGui_Text("This is window 2.\nMy title is the same as window 1, but my identifier is unique.");
 --     r.ImGui_End();
@@ -6923,7 +7032,7 @@ end
 --     // Using "###" to display a changing title but keep a static identifier "AnimatedTitle"
 --     char buf[128];
 --     sprintf(buf, "Animated title %c %d###AnimatedTitle", "|/-\\"[(int)(r.ImGui_GetTime() / 0.25f) & 3], r.ImGui_GetFrameCount());
---     r.ImGui_SetNextWindowPos(ImVec2(100, 300), ImGuiCond_FirstUseEver);
+--     ImGui::SetNextWindowPos(ImVec2(base_pos.x + 100, base_pos.y + 300), ImGuiCond_FirstUseEver);
 --     r.ImGui_Begin(buf);
 --     r.ImGui_Text("This window has a changing title.");
 --     r.ImGui_End();
@@ -6986,7 +7095,7 @@ end
 --             static bool curve_segments_override = false;
 --             static int curve_segments_override_v = 8;
 --             static ImVec4 colf = ImVec4(1.0f, 1.0f, 0.4f, 1.0f);
---             r.ImGui_DragFloat("Size", &sz, 0.2f, 2.0f, 72.0f, "%.0f");
+--             ImGui::DragFloat("Size", &sz, 0.2f, 2.0f, 100.0f, "%.0f");
 --             r.ImGui_DragFloat("Thickness", &thickness, 0.05f, 1.0f, 8.0f, "%.02f");
 --             r.ImGui_SliderInt("N-gon sides", &ngon_sides, 3, 12);
 --             r.ImGui_Checkbox("##circlesegmentoverride", &circle_segments_override);
@@ -7003,6 +7112,7 @@ end
 --             const ImDrawCornerFlags corners_none = 0;
 --             const ImDrawCornerFlags corners_all = ImDrawCornerFlags_All;
 --             const ImDrawCornerFlags corners_tl_br = ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_BotRight;
+--             const float rounding = sz / 5.0f;
 --             const int circle_segments = circle_segments_override ? circle_segments_override_v : 0;
 --             const int curve_segments = curve_segments_override ? curve_segments_override_v : 0;
 --             float x = p.x + 4.0f;
@@ -7014,8 +7124,8 @@ end
 --                 draw_list->AddNgon(ImVec2(x + sz*0.5f, y + sz*0.5f), sz*0.5f, col, ngon_sides, th);                 x += sz + spacing;  // N-gon
 --                 draw_list->AddCircle(ImVec2(x + sz*0.5f, y + sz*0.5f), sz*0.5f, col, circle_segments, th);          x += sz + spacing;  // Circle
 --                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, 0.0f,  corners_none, th);             x += sz + spacing;  // Square
---                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, 10.0f, corners_all, th);              x += sz + spacing;  // Square with all rounded corners
---                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, 10.0f, corners_tl_br, th);            x += sz + spacing;  // Square with two rounded corners
+--                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, rounding, corners_all, th);           x += sz + spacing;  // Square with all rounded corners
+--                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, rounding, corners_tl_br, th);         x += sz + spacing;  // Square with two rounded corners
 --                 draw_list->AddTriangle(ImVec2(x+sz*0.5f,y), ImVec2(x+sz, y+sz-0.5f), ImVec2(x, y+sz-0.5f), col, th);x += sz + spacing;  // Triangle
 --                 //draw_list->AddTriangle(ImVec2(x+sz*0.2f,y), ImVec2(x, y+sz-0.5f), ImVec2(x+sz*0.4f, y+sz-0.5f), col, th);x+= sz*0.4f + spacing; // Thin triangle
 --                 draw_list->AddLine(ImVec2(x, y), ImVec2(x + sz, y), col, th);                                       x += sz + spacing;  // Horizontal line (note: drawing a filled rectangle will be faster!)
@@ -7400,19 +7510,20 @@ end
 --         {
 --             if (!r.ImGui_IsPopupOpen("Save?"))
 --                 r.ImGui_OpenPopup("Save?");
---             if (r.ImGui_BeginPopupModal("Save?"))
+--             if (ImGui::BeginPopupModal("Save?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 --             {
 --                 r.ImGui_Text("Save change to the following items?");
---                 r.ImGui_SetNextItemWidth(-1.0f);
---                 if (r.ImGui_ListBoxHeader("##", close_queue_unsaved_documents, 6))
+--                 float item_height = ImGui::GetTextLineHeightWithSpacing();
+--                 if (ImGui::BeginChildFrame(ImGui::GetID("frame"), ImVec2(-FLT_MIN, 6.25f * item_height)))
 --                 {
 --                     for (int n = 0; n < close_queue.Size; n++)
 --                         if (close_queue[n]->Dirty)
 --                             r.ImGui_Text("%s", close_queue[n]->Name);
---                     r.ImGui_ListBoxFooter();
+--                     ImGui::EndChildFrame();
 --                 }
 --
---                 if (r.ImGui_Button("Yes", ImVec2(80, 0)))
+--                 ImVec2 button_size(ImGui::GetFontSize() * 7.0f, 0.0f);
+--                 if (ImGui::Button("Yes", button_size))
 --                 {
 --                     for (int n = 0; n < close_queue.Size; n++)
 --                     {
@@ -7424,7 +7535,7 @@ end
 --                     r.ImGui_CloseCurrentPopup();
 --                 }
 --                 r.ImGui_SameLine();
---                 if (r.ImGui_Button("No", ImVec2(80, 0)))
+--                 if (ImGui::Button("No", button_size))
 --                 {
 --                     for (int n = 0; n < close_queue.Size; n++)
 --                         close_queue[n]->DoForceClose();
@@ -7432,7 +7543,7 @@ end
 --                     r.ImGui_CloseCurrentPopup();
 --                 }
 --                 r.ImGui_SameLine();
---                 if (r.ImGui_Button("Cancel", ImVec2(80, 0)))
+--                 if (ImGui::Button("Cancel", button_size))
 --                 {
 --                     close_queue.clear();
 --                     r.ImGui_CloseCurrentPopup();
