@@ -1,7 +1,5 @@
 #include "api_helper.hpp"
 
-#include "color.hpp"
-
 static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 {
   flags &= ~ImGuiColorEditFlags_HDR; // enforce 0.0..1.0 limits
@@ -9,7 +7,7 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 
 // Widgets: Color Editor/Picker
 DEFINE_API(bool, ColorEdit, ((ImGui_Context*,ctx))
-((const char*,label))((int*,colorInOut)) // the ReaScript analyzer doesn't like unsigned int*
+((const char*,label))((int*,rgbaInOut)) // the ReaScript analyzer doesn't like unsigned int*
 ((int*,flagsInOptional)),
 "tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.",
 {
@@ -18,16 +16,13 @@ DEFINE_API(bool, ColorEdit, ((ImGui_Context*,ctx))
   ImGuiColorEditFlags flags { valueOr(flagsInOptional, 0) };
   sanitizeColorEditFlags(flags);
 
+  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
   float col[4];
-  float *a { flags & ImGuiColorEditFlags_NoAlpha ? nullptr : &col[3] };
-  Color::unpack(*colorInOut, col[0], col[1], col[2], a);
-
+  Color(*rgbaInOut, alpha).unpack(col);
   const bool ret { ImGui::ColorEdit4(label, col, flags) };
 
-  // preserve unused bits from the input integer as-is (eg. REAPER's enable flag)
-  const unsigned int newColor { Color::pack(col[0], col[1], col[2], a) };
-  const unsigned int mask { a ? 0xFFFFFFFF : 0xFFFFFF };
-  *colorInOut = (*colorInOut & ~mask) | newColor;
+  // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
+  *rgbaInOut = Color{col}.pack(alpha, *rgbaInOut);
 
   return ret;
 });

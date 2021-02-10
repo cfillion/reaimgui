@@ -25,36 +25,6 @@ struct MetalSharedState {
 
 static std::weak_ptr<MetalSharedState> g_shared;
 
-class MetalBackend : public Backend {
-public:
-  MetalBackend(Context *);
-  ~MetalBackend() override;
-
-  void beginFrame() override;
-  void endFrame(ImDrawData *) override;
-  float deltaTime() override;
-  float scaleFactor() const override;
-  void translateAccel(MSG *) override;
-
-private:
-  std::shared_ptr<MetalSharedState> m_shared;
-
-  NSView *m_view;
-  CAMetalLayer *m_layer;
-  InputView *m_inputView;
-
-  // per-frame
-  CFAbsoluteTime m_lastFrame;
-  id<MTLCommandBuffer> m_commandBuffer;
-  id<MTLRenderCommandEncoder> m_renderEncoder;
-  id<CAMetalDrawable> m_drawable;
-};
-
-std::unique_ptr<Backend> Backend::create(Context *ctx)
-{
-  return std::make_unique<MetalBackend>(ctx);
-}
-
 MetalSharedState::MetalSharedState()
 {
   device = MTLCreateSystemDefaultDevice();
@@ -76,8 +46,39 @@ MetalSharedState::~MetalSharedState()
   ImGui_ImplMetal_Shutdown();
 }
 
+class MetalBackend : public Backend {
+public:
+  MetalBackend(Context *);
+  ~MetalBackend() override;
+
+  void beginFrame() override;
+  void endFrame(ImDrawData *) override;
+  float deltaTime() override;
+  float scaleFactor() const override;
+  void translateAccel(MSG *) override;
+
+private:
+  std::shared_ptr<MetalSharedState> m_shared;
+
+  Context *m_ctx;
+  NSView *m_view;
+  CAMetalLayer *m_layer;
+  InputView *m_inputView;
+
+  // per-frame
+  CFAbsoluteTime m_lastFrame;
+  id<MTLCommandBuffer> m_commandBuffer;
+  id<MTLRenderCommandEncoder> m_renderEncoder;
+  id<CAMetalDrawable> m_drawable;
+};
+
+std::unique_ptr<Backend> Backend::create(Context *ctx)
+{
+  return std::make_unique<MetalBackend>(ctx);
+}
+
 MetalBackend::MetalBackend(Context *ctx)
-  : m_view { (__bridge NSView *)ctx->handle() }, m_lastFrame {}
+  : m_ctx { ctx }, m_view { (__bridge NSView *)ctx->handle() }, m_lastFrame {}
 {
   if(g_shared.expired())
     g_shared = m_shared = std::make_shared<MetalSharedState>();
@@ -137,7 +138,7 @@ void MetalBackend::beginFrame()
   m_layer.drawableSize = m_view.bounds.size;
 
   auto *colorAttachment { m_shared->renderPass.colorAttachments[0] };
-  // colorAttachment.clearColor = std::apply(MTLClearColorMake, m_clearColor);
+  colorAttachment.clearColor = m_ctx->clearColor().apply(MTLClearColorMake);
   colorAttachment.texture = m_drawable.texture;
   colorAttachment.loadAction = MTLLoadActionClear;
   colorAttachment.storeAction = MTLStoreActionStore;

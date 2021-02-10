@@ -1,7 +1,5 @@
 #include "api_helper.hpp"
 
-#include "color.hpp"
-
 DEFINE_API(void, Text, ((ImGui_Context*,ctx))
 ((const char*,text)),
 "",
@@ -16,8 +14,7 @@ DEFINE_API(void, TextColored, ((ImGui_Context*,ctx))
 {
   ENTER_CONTEXT(ctx);
 
-  ImVec4 color;
-  Color::unpack(colorRGBA, color);
+  ImVec4 color { Color(colorRGBA) };
   ImGui::PushStyleColor(ImGuiCol_Text, color);
   ImGui::TextUnformatted(text);
   ImGui::PopStyleColor();

@@ -1,9 +1,10 @@
 #ifndef REAIMGUI_CONTEXT_HPP
 #define REAIMGUI_CONTEXT_HPP
 
+#include "color.hpp"
+
 #include <array>
 #include <memory>
-#include <tuple>
 
 #include <imgui/imgui.h>
 #include <reaper_plugin.h>
@@ -27,8 +28,8 @@ public:
 
   HWND handle() const { return m_handle; }
   bool isCloseRequested() const { return m_closeReq; }
-  unsigned int clearColor() const;
-  void setClearColor(unsigned int rgba);
+  const Color &clearColor() const { return m_clearColor; }
+  void setClearColor(const Color &col) { m_clearColor = col; }
 
   void enterFrame();
   void endFrame(bool render);
@@ -60,7 +61,7 @@ private:
 
   HWND m_handle;
   bool m_keepAlive, m_inFrame, m_closeReq;
-  std::tuple<float, float, float, float> m_clearColor;
+  Color m_clearColor;
   std::array<char, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   accelerator_register_t m_accel;
 

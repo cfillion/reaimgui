@@ -1,7 +1,5 @@
 #include "api_helper.hpp"
 
-#include "color.hpp"
-
     // Primitives
     // - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
     // - For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).

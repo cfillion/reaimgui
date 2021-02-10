@@ -25,6 +25,7 @@ add_library(${PROJECT_NAME} SHARED
   api_trees.cpp
   api_widgets.cpp
   api_windows.cpp
+  color.cpp
   context.cpp
   main.cpp
   watchdog.cpp

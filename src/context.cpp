@@ -1,6 +1,5 @@
 #include "context.hpp"
 
-#include "color.hpp"
 #include "backend.hpp"
 #include "watchdog.hpp"
 
@@ -130,7 +129,7 @@ void Context::heartbeat()
 Context::Context(const char *title,
     const int x, const int y, const int w, const int h)
   : m_keepAlive { true }, m_inFrame { false }, m_closeReq { false },
-    m_clearColor { std::make_tuple(0.0f, 0.0f, 0.0f, 1.0f) }, m_mouseDown {},
+    m_clearColor { 0x000000FF }, m_mouseDown {},
     m_accel { &Context::translateAccel, true, this },
     m_watchdog { Watchdog::get() }
 {
@@ -195,7 +194,7 @@ void Context::setupImGui()
   int themeSize;
   ColorTheme *theme { static_cast<ColorTheme *>(GetColorThemeStruct(&themeSize)) };
   if(static_cast<size_t>(themeSize) >= sizeof(ColorTheme))
-    setClearColor((theme->main_bg << 8) | 0xff);
+    m_clearColor = Color(theme->main_bg, false);
 }
 
 Context::~Context()
@@ -257,18 +256,6 @@ void Context::endFrame(const bool render)
 void Context::close()
 {
   DestroyWindow(m_handle);
-}
-
-unsigned int Context::clearColor() const
-{
-  const auto [r, g, b, a] { m_clearColor };
-  return Color::pack(r, g, b, &a);
-}
-
-void Context::setClearColor(const unsigned int rgba)
-{
-  auto &[r, g, b, a] { m_clearColor };
-  Color::unpack(rgba, r, g, b, &a);
 }
 
 void Context::updateFrameInfo()
