@@ -79,7 +79,7 @@ if(APPLE)
   target_link_libraries(${PROJECT_NAME} ${QUARTZCORE_LIB})
 elseif(WIN32)
 else()
-  target_sources(${PROJECT_NAME} PRIVATE gdk_backend.cpp)
+  target_sources(${PROJECT_NAME} PRIVATE gdk_backend.cpp opengl_renderer.cpp)
 
   pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
   pkg_search_module(GDK REQUIRED IMPORTED_TARGET gdk-3.0)

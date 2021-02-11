@@ -1,6 +1,7 @@
 #include "backend.hpp"
 
 #include "context.hpp"
+#include "opengl_renderer.hpp"
 
 #include <epoxy/gl.h>
 #include <gdk/gdk.h>
@@ -9,28 +10,26 @@
 #define SWELL_TARGET_GDK
 #include <swell/swell-internal.h> // access to hwnd->m_oswindow
 
-#include <imgui/backends/imgui_impl_opengl3.h>
-
 class GdkBackend : public Backend {
 public:
   GdkBackend(Context *);
   ~GdkBackend() override;
 
-  void beginFrame() override;
-  void enterFrame() override;
-  void endFrame(ImDrawData *) override;
+  void drawFrame(ImDrawData *) override;
   float deltaTime() override;
   float scaleFactor() const override;
   void translateAccel(MSG *) override;
 
 private:
+  void initGl();
+
   Context *m_ctx;
   GdkWindow *m_window;
   gint64 m_lastFrame;
   ImDrawData *m_drawData;
 
   GdkGLContext *m_gl;
-  GdkDrawingContext *m_drawContext;
+  OpenGLRenderer *m_renderer;
 
   GLuint m_tex, m_fbo;
 };
@@ -48,27 +47,7 @@ GdkBackend::GdkBackend(Context *ctx)
     GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK
   ));
 
-  GError *error {};
-  m_gl = gdk_window_create_gl_context(m_window, &error);
-  if(error) {
-    const std::runtime_error ex { error->message };
-    g_clear_error(&error);
-    throw ex;
-  }
-
-  gdk_gl_context_set_required_version(m_gl, 3, 2);
-  gdk_gl_context_set_forward_compatible(m_gl, true);
-  gdk_gl_context_set_use_es(m_gl, 0);
-
-  gdk_gl_context_realize(m_gl, &error);
-  if(error) {
-    const std::runtime_error ex { error->message };
-    g_clear_error(&error);
-    g_object_unref(&m_gl);
-    throw ex;
-  }
-
-  gdk_gl_context_make_current(m_gl);
+  initGl();
 
   glGenTextures(1, &m_tex);
   glBindTexture(GL_TEXTURE_2D, m_tex);
@@ -80,7 +59,41 @@ GdkBackend::GdkBackend(Context *ctx)
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_tex, 0);
   assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
-  ImGui_ImplOpenGL3_Init();
+  m_renderer = new OpenGLRenderer;
+}
+
+void GdkBackend::initGl()
+{
+  GError *error {};
+  m_gl = gdk_window_create_gl_context(m_window, &error);
+  if(error) {
+    const std::runtime_error ex { error->message };
+    g_clear_error(&error);
+    throw ex;
+  }
+
+  gdk_gl_context_set_required_version(m_gl, 3, 2);
+  gdk_gl_context_set_forward_compatible(m_gl, true);
+
+  gdk_gl_context_realize(m_gl, &error);
+  if(error) {
+    const std::runtime_error ex { error->message };
+    g_clear_error(&error);
+    g_object_unref(m_gl);
+    throw ex;
+  }
+
+  gdk_gl_context_make_current(m_gl);
+
+  int major, minor;
+  gdk_gl_context_get_version(m_gl, &major, &minor);
+  if(major < 3 || (major == 3 && minor < 2)) {
+    g_object_unref(m_gl);
+
+    char msg[1024];
+    snprintf(msg, sizeof(msg), "OpenGL v3.2 or newer required, got v%d.%d", major, minor);
+    throw std::runtime_error { msg };
+  }
 }
 
 GdkBackend::~GdkBackend()
@@ -89,7 +102,7 @@ GdkBackend::~GdkBackend()
   glDeleteFramebuffers(1, &m_fbo);
   glDeleteTextures(1, &m_tex);
 
-  ImGui_ImplOpenGL3_Shutdown();
+  delete m_renderer;
 
   // current GL context must be cleared before calling unref to avoid this bug:
   // https://gitlab.gnome.org/GNOME/gtk/-/issues/2562
@@ -97,11 +110,8 @@ GdkBackend::~GdkBackend()
   g_object_unref(m_gl);
 }
 
-void GdkBackend::beginFrame()
+void GdkBackend::drawFrame(ImDrawData *data)
 {
-  const cairo_region_t *region { gdk_window_get_clip_region(m_window) };
-  m_drawContext = gdk_window_begin_draw_frame(m_window, region);
-
   gdk_gl_context_make_current(m_gl);
 
   ImGuiIO &io { ImGui::GetIO() };
@@ -109,29 +119,14 @@ void GdkBackend::beginFrame()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, io.DisplaySize.x, io.DisplaySize.y,
     0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
-  ImGui_ImplOpenGL3_NewFrame();
-}
+  m_renderer->draw(data, m_ctx->clearColor());
 
-void GdkBackend::enterFrame()
-{
-  gdk_gl_context_make_current(m_gl);
-}
-
-void GdkBackend::endFrame(ImDrawData *drawData)
-{
-  gdk_gl_context_make_current(m_gl);
-
-  m_ctx->clearColor().apply(glClearColor);
-  glClear(GL_COLOR_BUFFER_BIT);
-
-  if(drawData)
-    ImGui_ImplOpenGL3_RenderDrawData(drawData);
-
-  ImGuiIO &io { ImGui::GetIO() };
-  cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(m_drawContext) };
+  const cairo_region_t *region { gdk_window_get_clip_region(m_window) };
+  GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(m_window, region) };
+  cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
   gdk_cairo_draw_from_gl(cairoContext, m_window, m_tex, GL_TEXTURE, 1,
     0, 0, io.DisplaySize.x, io.DisplaySize.y);
-  gdk_window_end_draw_frame(m_window, m_drawContext);
+  gdk_window_end_draw_frame(m_window, drawContext);
 }
 
 float GdkBackend::deltaTime()

@@ -241,8 +241,6 @@ void Context::enterFrame()
 
   if(!m_inFrame)
     beginFrame();
-
-  m_backend->enterFrame();
 }
 
 void Context::endFrame(const bool render)
@@ -250,11 +248,9 @@ void Context::endFrame(const bool render)
   ImGui::SetCurrentContext(m_imgui);
   ImGui::ErrorCheckEndFrameRecover(reportRecovery);
 
-  ImDrawData *drawData {};
-
   if(render) {
     ImGui::Render();
-    drawData = ImGui::GetDrawData();
+    m_backend->drawFrame(ImGui::GetDrawData());
   }
   else
     ImGui::EndFrame();
@@ -262,7 +258,7 @@ void Context::endFrame(const bool render)
   m_inFrame = false;
   m_keepAlive = true;
 
-  m_backend->endFrame(drawData);
+  m_backend->endFrame();
 }
 
 void Context::close()

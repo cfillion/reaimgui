@@ -52,8 +52,8 @@ public:
   ~MetalBackend() override;
 
   void beginFrame() override;
-  void enterFrame() override {}
-  void endFrame(ImDrawData *) override;
+  void drawFrame(ImDrawData *) override;
+  void endFrame() override;
   float deltaTime() override;
   float scaleFactor() const override;
   void translateAccel(MSG *) override;
@@ -151,22 +151,25 @@ void MetalBackend::beginFrame()
   ImGui_ImplMetal_NewFrame(m_shared->renderPass);
 }
 
-void MetalBackend::endFrame(ImDrawData *drawData)
+void MetalBackend::drawFrame(ImDrawData *drawData)
 {
   if(!m_drawable)
     return;
 
-  if(drawData)
-    ImGui_ImplMetal_RenderDrawData(drawData, m_commandBuffer, m_renderEncoder);
+  ImGui_ImplMetal_RenderDrawData(drawData, m_commandBuffer, m_renderEncoder);
+}
+
+void MetalBackend::endFrame()
+{
+  if(!m_drawable)
+    return;
 
   [m_renderEncoder popDebugGroup];
   [m_renderEncoder endEncoding];
 
-  if(drawData) {
-    // [m_commandBuffer presentDrawable:m_drawable];
-    [m_commandBuffer commit];
-    [m_drawable present]; // much faster than commandBuffer::presentDrawable
-  }
+  // [m_commandBuffer presentDrawable:m_drawable];
+  [m_commandBuffer commit];
+  [m_drawable present]; // much faster than commandBuffer::presentDrawable
 
   m_drawable = nil; // tell ARC it can release it now
 }

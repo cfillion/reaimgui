@@ -18,9 +18,9 @@ public:
 
   virtual ~Backend() {}
 
-  virtual void beginFrame() = 0;
-  virtual void enterFrame() = 0;
-  virtual void endFrame(ImDrawData *) = 0;
+  virtual void beginFrame() {}
+  virtual void drawFrame(ImDrawData *) = 0;
+  virtual void endFrame() {}
   virtual float deltaTime() = 0;
   virtual float scaleFactor() const = 0;
   virtual void translateAccel(MSG *) = 0;
