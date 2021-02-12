@@ -40,7 +40,7 @@ public:
   void charInput(unsigned int);
 
 private:
-  static WDL_DLGRET proc(HWND, UINT, WPARAM, LPARAM);
+  static LRESULT CALLBACK proc(HWND, UINT, WPARAM, LPARAM);
   static int translateAccel(MSG *, accelerator_register_t *);
 
   enum ButtonState {

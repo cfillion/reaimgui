@@ -4,6 +4,8 @@
 
 #ifdef __APPLE__
 #  include <OpenGL/gl3.h>
+#elif _WIN32
+#  include <GL/gl3w.h>
 #else
 #  include <epoxy/gl.h>
 #endif

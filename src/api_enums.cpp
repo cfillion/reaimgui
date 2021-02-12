@@ -1,7 +1,7 @@
 #include "api_helper.hpp"
 
 #define DEFINE_ENUM(name, doc) \
-  DEFINE_API(int, name, (()), doc, { return ImGui##name; })
+  DEFINE_API(int, name, ((,)), doc, { return ImGui##name; })
 
 // typedef int ImGuiCol;               // -> enum ImGuiCol_             // Enum: A color identifier for styling
 

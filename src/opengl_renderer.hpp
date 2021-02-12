@@ -8,6 +8,10 @@ struct ImDrawData;
 
 class OpenGLRenderer {
 public:
+  // minimum OpenGL version
+  static constexpr int MIN_MAJOR { 3 };
+  static constexpr int MIN_MINOR { 2 };
+
   OpenGLRenderer();
   ~OpenGLRenderer();
 

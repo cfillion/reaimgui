@@ -101,8 +101,8 @@ using ImGui_Context = Context;
 
 // https://forum.cockos.com/showthread.php?t=211620
 struct reaper_array {
-  unsigned int size, alloc;
-  double data[];
+  const unsigned int size, alloc;
+  double data[1];
 };
 
 template<typename T, typename Y>

@@ -26,7 +26,7 @@ private:
 
   Context *m_ctx;
   GdkWindow *m_window;
-  gint64 m_lastFrame;
+  int64_t m_lastFrame;
   GdkGLContext *m_gl;
   unsigned int m_tex, m_fbo;
   OpenGLRenderer *m_renderer;
@@ -70,7 +70,7 @@ void GdkBackend::initGl()
     throw ex;
   }
 
-  gdk_gl_context_set_required_version(m_gl, 3, 2);
+  gdk_gl_context_set_required_version(m_gl, OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR);
   gdk_gl_context_set_forward_compatible(m_gl, true);
 
   gdk_gl_context_realize(m_gl, &error);
@@ -85,11 +85,13 @@ void GdkBackend::initGl()
 
   int major, minor;
   gdk_gl_context_get_version(m_gl, &major, &minor);
-  if(major < 3 || (major == 3 && minor < 2)) {
+  if(major < OpenGLRenderer::MIN_MAJOR ||
+      (major == OpenGLRenderer::MIN_MAJOR && minor < OpenGLRenderer::MIN_MINOR)) {
     g_object_unref(m_gl);
 
     char msg[1024];
-    snprintf(msg, sizeof(msg), "OpenGL v3.2 or newer required, got v%d.%d", major, minor);
+    snprintf(msg, sizeof(msg), "OpenGL v%d.%d or newer required, got v%d.%d",
+      OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR, major, minor);
     throw std::runtime_error { msg };
   }
 }
@@ -142,10 +144,10 @@ void GdkBackend::resize()
 
 float GdkBackend::deltaTime()
 {
-  const gint64 now { g_get_monotonic_time() }; // microseconds
+  const int64_t now { g_get_monotonic_time() }; // microseconds
   if(!m_lastFrame)
     m_lastFrame = now;
-  const float delta = { (now - m_lastFrame) / 1'000'000.f };
+  const float delta { (now - m_lastFrame) / 1'000'000.f };
   m_lastFrame = now;
   return delta;
 }

@@ -30,6 +30,7 @@ add_library(${PROJECT_NAME} SHARED
   color.cpp
   context.cpp
   main.cpp
+  opengl_renderer.cpp
   watchdog.cpp
 )
 
@@ -49,9 +50,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 if(WIN32)
   # TODO
   # target_sources(${PROJECT_NAME} PRIVATE buildinfo.rc)
-  target_compile_options(${PROJECT_NAME} PUBLIC /W3 /WX /wd4996 /wd5208)
+  target_sources(${PROJECT_NAME} PRIVATE win32_backend.cpp)
+  target_compile_options(${PROJECT_NAME} PUBLIC /W3 /WX /wd4244 /wd4267 /wd4312 /wd4996 /wd5208)
   target_compile_definitions(${PROJECT_NAME} PUBLIC NOMINMAX UNICODE)
-  # target_link_libraries(${PROJECT_NAME} )
+
+  find_package(gl3w CONFIG REQUIRED)
+  target_link_libraries(${PROJECT_NAME} unofficial::gl3w::gl3w)
 else()
   target_compile_options(${PROJECT_NAME} PUBLIC
     -Wall -Wextra -Werror
@@ -70,21 +74,20 @@ else()
   if(HAVE_NO_UNDEFINED)
     target_link_options(${PROJECT_NAME} PRIVATE -Wl,--no-undefined)
   endif()
-endif()
 
-if(APPLE)
-  target_sources(${PROJECT_NAME} PRIVATE cocoa_backend.mm inputview.mm opengl_renderer.cpp)
-  target_compile_options(${PROJECT_NAME} PRIVATE -fobjc-arc)
+  if(APPLE)
+    target_sources(${PROJECT_NAME} PRIVATE cocoa_backend.mm inputview.mm)
+    target_compile_options(${PROJECT_NAME} PRIVATE -fobjc-arc)
 
-  find_package(OpenGL REQUIRED)
-  target_link_libraries(${PROJECT_NAME} OpenGL::GL)
-elseif(WIN32)
-else()
-  target_sources(${PROJECT_NAME} PRIVATE gdk_backend.cpp opengl_renderer.cpp)
+    find_package(OpenGL REQUIRED)
+    target_link_libraries(${PROJECT_NAME} OpenGL::GL)
+  else()
+    target_sources(${PROJECT_NAME} PRIVATE gdk_backend.cpp)
 
-  pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
-  pkg_search_module(GDK REQUIRED IMPORTED_TARGET gdk-3.0)
-  target_link_libraries(${PROJECT_NAME} PkgConfig::Epoxy PkgConfig::GDK)
+    pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
+    pkg_search_module(GDK REQUIRED IMPORTED_TARGET gdk-3.0)
+    target_link_libraries(${PROJECT_NAME} PkgConfig::Epoxy PkgConfig::GDK)
+  endif()
 endif()
 
 find_package(Boost REQUIRED)

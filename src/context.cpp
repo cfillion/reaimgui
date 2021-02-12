@@ -2,6 +2,7 @@
 
 #include "backend.hpp"
 #include "watchdog.hpp"
+#include "win32.hpp"
 
 #include <imgui/imgui_internal.h>
 #include <reaper_colortheme.h>
@@ -28,11 +29,6 @@ constexpr float WHEEL_DELTA {
 };
 #endif
 
-enum SwellDialogResFlags {
-  ForceNonChild = 0x400000 | 0x8, // allows not using a resource id
-  Resizable = 1,
-};
-
 static void reportRecovery(void *, const char *fmt, ...)
 {
   char msg[1024];
@@ -46,7 +42,7 @@ static void reportRecovery(void *, const char *fmt, ...)
   fprintf(stderr, "ReaImGUI Warning: %s\n", msg);
 }
 
-WDL_DLGRET Context::proc(HWND handle, const UINT msg,
+LRESULT CALLBACK Context::proc(HWND handle, const UINT msg,
   const WPARAM wParam, const LPARAM lParam)
 {
   Context *self {
@@ -54,12 +50,12 @@ WDL_DLGRET Context::proc(HWND handle, const UINT msg,
   };
 
   if(!self)
-    return 0;
+    return DefWindowProc(handle, msg, wParam, lParam);
 
   switch(msg) {
   case WM_CLOSE:
     self->m_closeReq = true;
-    break;
+    return 0;
   case WM_DESTROY:
     delete self;
     break;
@@ -99,9 +95,11 @@ WDL_DLGRET Context::proc(HWND handle, const UINT msg,
   case WM_SIZE:
     self->m_backend->resize();
     break;
+  default:
+    return DefWindowProc(handle, msg, wParam, lParam);
   }
 
-  return DefWindowProc(handle, msg, wParam, lParam);
+  return 0;
 }
 
 int Context::translateAccel(MSG *msg, accelerator_register_t *accel)
@@ -151,13 +149,28 @@ Context::Context(const char *title,
     m_accel { &Context::translateAccel, true, this },
     m_watchdog { Watchdog::get() }
 {
-  m_handle = CreateDialog(s_instance,
-    MAKEINTRESOURCE(ForceNonChild | Resizable),
-    GetMainHwnd(), proc);
+  const HWND parent { GetMainHwnd() };
 
+#ifdef _WIN32
+  static Win32::Class windowClass { L"reaimgui_context", proc };
+  // WS_EX_DLGMODALFRAME removes the default icon
+  m_handle = CreateWindowEx(WS_EX_DLGMODALFRAME, windowClass.name(),
+    Win32::widen(title).c_str(), WS_OVERLAPPEDWINDOW | WS_VISIBLE, x, y, w, h,
+    parent, nullptr, s_instance, nullptr);
+#else
+  enum SwellDialogResFlags {
+    ForceNonChild = 0x400000 | 0x8, // allows not using a resource id
+    Resizable = 1,
+  };
+
+  m_handle = CreateDialog(s_instance,
+    MAKEINTRESOURCE(ForceNonChild | Resizable), parent, proc);
   SetWindowText(m_handle, title);
   SetWindowPos(m_handle, HWND_TOP, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
   ShowWindow(m_handle, SW_SHOW);
+#endif
+
+  assert(m_handle && "window creation failed");
 
   setupImGui();
 
