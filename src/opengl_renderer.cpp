@@ -2,7 +2,12 @@
 
 #include "color.hpp"
 
-#include <epoxy/gl.h>
+#ifdef __APPLE__
+#  include <OpenGL/gl3.h>
+#else
+#  include <epoxy/gl.h>
+#endif
+
 #include <imgui/imgui.h>
 
 // Extracted from ImGui's reference OpenGL3 renderer

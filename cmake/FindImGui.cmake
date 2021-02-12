@@ -33,11 +33,4 @@ target_compile_features(imgui PRIVATE cxx_std_17)
 target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
 target_include_directories(imgui PUBLIC ${ImGui_INCLUDE_DIR})
 
-if(APPLE)
-  target_sources(imgui PRIVATE ${ImGui_INCLUDE_DIR}/backends/imgui_impl_metal.mm)
-  target_compile_options(imgui PUBLIC -fobjc-arc)
-  find_library(METAL_LIB Metal)
-  target_link_libraries(imgui PUBLIC ${METAL_LIB})
-endif()
-
 add_library(ImGui::ImGui ALIAS imgui)
