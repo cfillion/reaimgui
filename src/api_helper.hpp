@@ -91,7 +91,7 @@ using ImGui_Context = Context;
 
 #define CHECK_CONTEXT(ctx, ...)                            \
   if(!Context::exists(ctx)) {                              \
-    ReaScriptError("ReaImGui: Invalid context reference"); \
+    ReaScriptError("ReaImGui: invalid context reference"); \
     return __VA_ARGS__;                                    \
   }
 

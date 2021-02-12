@@ -52,9 +52,6 @@ function demo.loop()
     demo.open = demo.ShowDemoWindow(demo.open)
   end
 
-  -- UpdateContext() must be called at least once per window per timer cycle
-  r.ImGui_UpdateContext(ctx)
-
   r.defer(demo.loop)
 end
 

@@ -50,16 +50,6 @@ R"(Return whether the user has requested closing the window since the previous f
   return ctx->isCloseRequested();
 });
 
-DEFINE_API(void, UpdateContext, ((ImGui_Context*, ctx)),
-R"(Render a frame to the window. This must be called at every global timer cycle.
-
-Perform all draw + update calls one window at a time for best performance.)",
-{
-  CHECK_CONTEXT(ctx);
-  ctx->enterFrame();
-  ctx->endFrame(true);
-});
-
 DEFINE_API(int, GetContextClearColor, ((ImGui_Context*, ctx)),
 R"(Return the current clear color of the window (0xRRGGBB).
 
@@ -89,7 +79,6 @@ DEFINE_API(double, GetTime, ((ImGui_Context*,ctx)),
 DEFINE_API(void, FooBar, ((ImGui_Context*,ctx)),
 R"()",
 {
-  CHECK_CONTEXT(ctx);
-  ctx->enterFrame();
+  ENTER_CONTEXT(ctx);
   ImGui::ShowDemoWindow();
 });

@@ -137,8 +137,8 @@ void Context::heartbeat()
     if(win->m_closeReq)
       win->m_closeReq = false;
 
-    if(win->m_keepAlive)
-      win->m_keepAlive = false;
+    if(win->m_inFrame)
+      win->endFrame(true);
     else
       win->close();
   }
@@ -146,7 +146,7 @@ void Context::heartbeat()
 
 Context::Context(const char *title,
     const int x, const int y, const int w, const int h)
-  : m_keepAlive { true }, m_inFrame { false }, m_closeReq { false },
+  : m_inFrame { false }, m_closeReq { false },
     m_clearColor { 0x000000FF }, m_mouseDown {},
     m_accel { &Context::translateAccel, true, this },
     m_watchdog { Watchdog::get() }
@@ -270,10 +270,8 @@ void Context::endFrame(const bool render)
   else
     ImGui::EndFrame();
 
-  m_inFrame = false;
-  m_keepAlive = true;
-
   m_backend->endFrame();
+  m_inFrame = false;
 }
 
 void Context::close()

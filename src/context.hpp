@@ -32,7 +32,6 @@ public:
   void setClearColor(const Color &col) { m_clearColor = col; }
 
   void enterFrame();
-  void endFrame(bool render);
   void close();
 
   void mouseDown(UINT msg);
@@ -51,6 +50,7 @@ private:
 
   void setupImGui();
   void beginFrame();
+  void endFrame(bool render);
   void updateFrameInfo();
   void updateCursor();
   bool anyMouseDown() const;
@@ -60,7 +60,7 @@ private:
   void updateKeyMods();
 
   HWND m_handle;
-  bool m_keepAlive, m_inFrame, m_closeReq;
+  bool m_inFrame, m_closeReq;
   Color m_clearColor;
   std::array<char, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   accelerator_register_t m_accel;
