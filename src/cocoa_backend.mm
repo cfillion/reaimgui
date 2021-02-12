@@ -73,6 +73,8 @@ CocoaBackend::CocoaBackend(Context *ctx)
   io.KeyMap[ImGuiKey_Y]           = kVK_ANSI_Y;
   io.KeyMap[ImGuiKey_Z]           = kVK_ANSI_Z;
 
+  [[m_view window] setColorSpace:[NSColorSpace sRGBColorSpace]];
+
   const NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
     NSOpenGLPFAAccelerated,
@@ -86,6 +88,7 @@ CocoaBackend::CocoaBackend(Context *ctx)
   [m_view setWantsBestResolutionOpenGLSurface:YES];
   [m_gl setView:m_view];
   [m_gl makeCurrentContext];
+
   m_renderer = std::make_unique<OpenGLRenderer>();
 }
 
