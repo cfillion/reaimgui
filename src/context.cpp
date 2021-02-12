@@ -14,9 +14,18 @@ static std::weak_ptr<ImFontAtlas> g_fontAtlas;
 
 REAPER_PLUGIN_HINSTANCE Context::s_instance;
 
-#ifdef _WDL_SWELL_H_
+#ifndef GET_WHEEL_DELTA_WPARAM
 #  define GET_WHEEL_DELTA_WPARAM GET_Y_LPARAM
-constexpr float WHEEL_DELTA { 60.0f };
+#endif
+
+#ifndef WHEEL_DELTA
+constexpr float WHEEL_DELTA {
+#  ifdef __APPLE__
+  60.0f
+#  else
+  120.0f
+#  endif
+};
 #endif
 
 enum SwellDialogResFlags {
