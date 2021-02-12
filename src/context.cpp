@@ -87,6 +87,9 @@ WDL_DLGRET Context::proc(HWND handle, const UINT msg,
       self->keyInput(wParam, false);
     return -1;
 #endif // _WIN32
+  case WM_SIZE:
+    self->m_backend->resize();
+    break;
   }
 
   return DefWindowProc(handle, msg, wParam, lParam);

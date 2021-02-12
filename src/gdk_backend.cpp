@@ -16,6 +16,7 @@ public:
   ~GdkBackend() override;
 
   void drawFrame(ImDrawData *) override;
+  void resize() override;
   float deltaTime() override;
   float scaleFactor() const override;
   void translateAccel(MSG *) override;
@@ -50,9 +51,7 @@ GdkBackend::GdkBackend(Context *ctx)
   initGl();
 
   glGenTextures(1, &m_tex);
-  glBindTexture(GL_TEXTURE_2D, m_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 100, 100, // TODO: optimize resizes
-    0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+  resize(); // binds to the texture and sets its size
 
   glGenFramebuffers(1, &m_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
@@ -114,19 +113,29 @@ void GdkBackend::drawFrame(ImDrawData *data)
 {
   gdk_gl_context_make_current(m_gl);
 
-  ImGuiIO &io { ImGui::GetIO() };
-  glBindTexture(GL_TEXTURE_2D, m_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, io.DisplaySize.x, io.DisplaySize.y,
-    0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
   m_renderer->draw(data, m_ctx->clearColor());
 
+  ImGuiIO &io { ImGui::GetIO() };
   const cairo_region_t *region { gdk_window_get_clip_region(m_window) };
   GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(m_window, region) };
   cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
   gdk_cairo_draw_from_gl(cairoContext, m_window, m_tex, GL_TEXTURE, 1,
     0, 0, io.DisplaySize.x, io.DisplaySize.y);
   gdk_window_end_draw_frame(m_window, drawContext);
+}
+
+void GdkBackend::resize()
+{
+  RECT rect;
+  GetClientRect(m_ctx->handle(), &rect);
+  const int width  { rect.right - rect.left },
+            height { rect.bottom - rect.top };
+
+  gdk_gl_context_make_current(m_gl);
+
+  glBindTexture(GL_TEXTURE_2D, m_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
+    0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 }
 
 float GdkBackend::deltaTime()
