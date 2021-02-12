@@ -472,7 +472,7 @@ widgets = {
       { true,  false, true  },
     },
   },
-  text = {
+  input = {
     multiline = {
       text = [[/*
  The Pentium F00F bug, shorthand for F0 0F C7 C8,
@@ -854,7 +854,7 @@ function demo.ShowDemoWindowWidgets()
         'for text wrapping follows simple rules suitable for English and possibly other languages.')
       r.ImGui_Spacing(ctx)
 
-      rv,widgets.text.wrap_width = r.ImGui_SliderDouble(ctx,'Wrap width', widgets.text.wrap_width, -20, 600, '%.0f')
+      rv,widgets.text.wrap_width = r.ImGui_SliderDouble(ctx, 'Wrap width', widgets.text.wrap_width, -20, 600, '%.0f')
 
 --             ImDrawList* draw_list = r.ImGui_GetWindowDrawList();
       for n = 0, 1 do
@@ -1212,10 +1212,10 @@ function demo.ShowDemoWindowWidgets()
 
   if r.ImGui_TreeNode(ctx, 'Text Input') then
     if r.ImGui_TreeNode(ctx, 'Multi-line Text Input') then
-      rv,widgets.text.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_ReadOnly', widgets.text.multiline.flags, r.ImGui_InputTextFlags_ReadOnly());
-      rv,widgets.text.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_AllowTabInput', widgets.text.multiline.flags, r.ImGui_InputTextFlags_AllowTabInput());
-      rv,widgets.text.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_CtrlEnterForNewLine', widgets.text.multiline.flags, r.ImGui_InputTextFlags_CtrlEnterForNewLine());
-      rv,widgets.text.multiline.text = r.ImGui_InputTextMultiline(ctx, '##source', widgets.text.multiline.text, -1, r.ImGui_GetTextLineHeight(ctx) * 16, widgets.text.multiline.flags)
+      rv,widgets.input.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_ReadOnly', widgets.input.multiline.flags, r.ImGui_InputTextFlags_ReadOnly());
+      rv,widgets.input.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_AllowTabInput', widgets.input.multiline.flags, r.ImGui_InputTextFlags_AllowTabInput());
+      rv,widgets.input.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_CtrlEnterForNewLine', widgets.input.multiline.flags, r.ImGui_InputTextFlags_CtrlEnterForNewLine());
+      rv,widgets.input.multiline.text = r.ImGui_InputTextMultiline(ctx, '##source', widgets.input.multiline.text, -1, r.ImGui_GetTextLineHeight(ctx) * 16, widgets.input.multiline.flags)
       r.ImGui_TreePop(ctx)
     end
 
@@ -1232,20 +1232,20 @@ function demo.ShowDemoWindowWidgets()
       --     }
       -- };
 
-      rv,widgets.text.buf[1] = r.ImGui_InputText(ctx, 'default',     widgets.text.buf[1]);
-      rv,widgets.text.buf[2] = r.ImGui_InputText(ctx, 'decimal',     widgets.text.buf[2], r.ImGui_InputTextFlags_CharsDecimal())
-      rv,widgets.text.buf[3] = r.ImGui_InputText(ctx, 'hexadecimal', widgets.text.buf[3], r.ImGui_InputTextFlags_CharsHexadecimal() | r.ImGui_InputTextFlags_CharsUppercase())
-      rv,widgets.text.buf[4] = r.ImGui_InputText(ctx, 'uppercase',   widgets.text.buf[4], r.ImGui_InputTextFlags_CharsUppercase())
-      rv,widgets.text.buf[5] = r.ImGui_InputText(ctx, 'no blank',    widgets.text.buf[5], r.ImGui_InputTextFlags_CharsNoBlank())
+      rv,widgets.input.buf[1] = r.ImGui_InputText(ctx, 'default',     widgets.input.buf[1]);
+      rv,widgets.input.buf[2] = r.ImGui_InputText(ctx, 'decimal',     widgets.input.buf[2], r.ImGui_InputTextFlags_CharsDecimal())
+      rv,widgets.input.buf[3] = r.ImGui_InputText(ctx, 'hexadecimal', widgets.input.buf[3], r.ImGui_InputTextFlags_CharsHexadecimal() | r.ImGui_InputTextFlags_CharsUppercase())
+      rv,widgets.input.buf[4] = r.ImGui_InputText(ctx, 'uppercase',   widgets.input.buf[4], r.ImGui_InputTextFlags_CharsUppercase())
+      rv,widgets.input.buf[5] = r.ImGui_InputText(ctx, 'no blank',    widgets.input.buf[5], r.ImGui_InputTextFlags_CharsNoBlank())
       -- static char buf6[64] = ""; r.ImGui_InputText("\"imgui\" letters", buf6, 64, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters);
       r.ImGui_TreePop(ctx)
     end
 
     if r.ImGui_TreeNode(ctx, 'Password Input') then
-      rv,widgets.text.password = r.ImGui_InputText(ctx, 'password', widgets.text.password, r.ImGui_InputTextFlags_Password())
+      rv,widgets.input.password = r.ImGui_InputText(ctx, 'password', widgets.input.password, r.ImGui_InputTextFlags_Password())
       r.ImGui_SameLine(ctx); demo.HelpMarker("Display all characters as '*'.\nDisable clipboard cut and copy.\nDisable logging.\n");
-      rv,widgets.text.password = r.ImGui_InputTextWithHint(ctx, 'password (w/ hint)', '<password>', widgets.text.password, r.ImGui_InputTextFlags_Password());
-      rv,widgets.text.password = r.ImGui_InputText(ctx, 'password (clear)', widgets.text.password)
+      rv,widgets.input.password = r.ImGui_InputTextWithHint(ctx, 'password (w/ hint)', '<password>', widgets.input.password, r.ImGui_InputTextFlags_Password());
+      rv,widgets.input.password = r.ImGui_InputText(ctx, 'password (clear)', widgets.input.password)
       r.ImGui_TreePop(ctx)
     end
 
