@@ -44,7 +44,7 @@ R"(Return the native handle for the window.)",
 });
 
 DEFINE_API(bool, IsCloseRequested, ((ImGui_Context*, ctx)),
-R"(Return whether the user has requested closing the window.)",
+R"(Return whether the user has requested closing the window since the previous frame.)",
 {
   CHECK_CONTEXT(ctx, false);
   return ctx->isCloseRequested();

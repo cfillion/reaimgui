@@ -134,6 +134,9 @@ void Context::heartbeat()
   while(it != g_windows.end()) {
     Context *win = *it++;
 
+    if(win->m_closeReq)
+      win->m_closeReq = false;
+
     if(win->m_keepAlive)
       win->m_keepAlive = false;
     else
