@@ -27,12 +27,9 @@ private:
   Context *m_ctx;
   GdkWindow *m_window;
   gint64 m_lastFrame;
-  ImDrawData *m_drawData;
-
   GdkGLContext *m_gl;
+  unsigned int m_tex, m_fbo;
   OpenGLRenderer *m_renderer;
-
-  GLuint m_tex, m_fbo;
 };
 
 std::unique_ptr<Backend> Backend::create(Context *ctx)
