@@ -30,7 +30,7 @@ private:
   CFAbsoluteTime m_lastFrame;
   ImDrawData *m_lastDrawData;
   NSOpenGLContext *m_gl;
-  std::unique_ptr<OpenGLRenderer> m_renderer;
+  OpenGLRenderer *m_renderer;
 };
 
 std::unique_ptr<Backend> Backend::create(Context *ctx)
@@ -87,13 +87,15 @@ CocoaBackend::CocoaBackend(Context *ctx)
   m_gl = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
   [m_view setWantsBestResolutionOpenGLSurface:YES];
   [m_gl setView:m_view];
-  [m_gl makeCurrentContext];
 
-  m_renderer = std::make_unique<OpenGLRenderer>();
+  [m_gl makeCurrentContext];
+  m_renderer = new OpenGLRenderer;
 }
 
 CocoaBackend::~CocoaBackend()
 {
+  [m_gl makeCurrentContext];
+  delete m_renderer;
 }
 
 void CocoaBackend::beginFrame()
