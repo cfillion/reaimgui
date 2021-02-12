@@ -90,6 +90,7 @@ CocoaBackend::CocoaBackend(Context *ctx)
 
   [m_gl makeCurrentContext];
   m_renderer = new OpenGLRenderer;
+  [NSOpenGLContext clearCurrentContext];
 }
 
 CocoaBackend::~CocoaBackend()
@@ -109,6 +110,7 @@ void CocoaBackend::drawFrame(ImDrawData *drawData)
   [m_gl makeCurrentContext];
   m_renderer->draw(drawData, m_ctx->clearColor());
   [m_gl flushBuffer];
+  [NSOpenGLContext clearCurrentContext];
 }
 
 void CocoaBackend::resize()

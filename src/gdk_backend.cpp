@@ -49,6 +49,7 @@ GdkBackend::GdkBackend(Context *ctx)
 
   glGenTextures(1, &m_tex);
   resize(); // binds to the texture and sets its size
+  gdk_gl_context_make_current(m_gl); // re-set as current after resize
 
   glGenFramebuffers(1, &m_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
@@ -56,6 +57,7 @@ GdkBackend::GdkBackend(Context *ctx)
   assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
   m_renderer = new OpenGLRenderer;
+  gdk_gl_context_clear_current();
 }
 
 void GdkBackend::initGl()
@@ -95,6 +97,7 @@ void GdkBackend::initGl()
 GdkBackend::~GdkBackend()
 {
   gdk_gl_context_make_current(m_gl);
+
   glDeleteFramebuffers(1, &m_fbo);
   glDeleteTextures(1, &m_tex);
 
@@ -119,6 +122,8 @@ void GdkBackend::drawFrame(ImDrawData *data)
   gdk_cairo_draw_from_gl(cairoContext, m_window, m_tex, GL_TEXTURE, 1,
     0, 0, io.DisplaySize.x, io.DisplaySize.y);
   gdk_window_end_draw_frame(m_window, drawContext);
+
+  gdk_gl_context_clear_current();
 }
 
 void GdkBackend::resize()
@@ -129,10 +134,10 @@ void GdkBackend::resize()
             height { rect.bottom - rect.top };
 
   gdk_gl_context_make_current(m_gl);
-
   glBindTexture(GL_TEXTURE_2D, m_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
     0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+  gdk_gl_context_clear_current();
 }
 
 float GdkBackend::deltaTime()
