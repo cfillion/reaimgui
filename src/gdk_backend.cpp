@@ -16,13 +16,14 @@ public:
   ~GdkBackend() override;
 
   void drawFrame(ImDrawData *) override;
-  void resize() override;
   float deltaTime() override;
   float scaleFactor() const override;
+  bool handleMessage(unsigned int msg, WPARAM, LPARAM) override;
   void translateAccel(MSG *) override;
 
 private:
   void initGl();
+  void resizeFbTex();
 
   Context *m_ctx;
   GdkWindow *m_window;
@@ -48,8 +49,7 @@ GdkBackend::GdkBackend(Context *ctx)
   initGl();
 
   glGenTextures(1, &m_tex);
-  resize(); // binds to the texture and sets its size
-  gdk_gl_context_make_current(m_gl); // re-set as current after resize
+  resizeFbTex(); // binds to the texture and sets its size
 
   glGenFramebuffers(1, &m_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
@@ -128,18 +128,16 @@ void GdkBackend::drawFrame(ImDrawData *data)
   gdk_gl_context_clear_current();
 }
 
-void GdkBackend::resize()
+void GdkBackend::resizeFbTex()
 {
   RECT rect;
   GetClientRect(m_ctx->handle(), &rect);
   const int width  { rect.right - rect.left },
             height { rect.bottom - rect.top };
 
-  gdk_gl_context_make_current(m_gl);
   glBindTexture(GL_TEXTURE_2D, m_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
     0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-  gdk_gl_context_clear_current();
 }
 
 float GdkBackend::deltaTime()
@@ -155,6 +153,19 @@ float GdkBackend::deltaTime()
 float GdkBackend::scaleFactor() const
 {
   return gdk_window_get_scale_factor(m_window);
+}
+
+bool GdkBackend::handleMessage(const unsigned int msg, WPARAM, LPARAM)
+{
+  switch(msg) {
+  case WM_SIZE:
+    gdk_gl_context_make_current(m_gl);
+    resizeFbTex();
+    gdk_gl_context_clear_current();
+    return true;
+  }
+
+  return false;
 }
 
 static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)

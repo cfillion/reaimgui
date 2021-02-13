@@ -42,7 +42,7 @@ static void reportRecovery(void *, const char *fmt, ...)
   fprintf(stderr, "ReaImGUI Warning: %s\n", msg);
 }
 
-LRESULT CALLBACK Context::proc(HWND handle, const UINT msg,
+LRESULT CALLBACK Context::proc(HWND handle, const unsigned int msg,
   const WPARAM wParam, const LPARAM lParam)
 {
   Context *self {
@@ -51,12 +51,15 @@ LRESULT CALLBACK Context::proc(HWND handle, const UINT msg,
 
   if(!self)
     return DefWindowProc(handle, msg, wParam, lParam);
+  else if(self->m_backend->handleMessage(msg, wParam, lParam))
+    return 1;
 
   switch(msg) {
   case WM_CLOSE:
     self->m_closeReq = true;
     return 0;
   case WM_DESTROY:
+    SetWindowLongPtr(handle, GWLP_USERDATA, 0);
     delete self;
     return 0;
   case WM_MOUSEMOVE:
@@ -84,21 +87,6 @@ LRESULT CALLBACK Context::proc(HWND handle, const UINT msg,
     self->mouseUp(msg);
     return 0;
 #endif // __APPLE__
-#ifdef _WIN32
-  case WM_KEYDOWN:
-  case WM_SYSKEYDOWN:
-    if(wParam < 256)
-      self->keyInput(wParam, true);
-    return 0;
-  case WM_KEYUP:
-  case WM_SYSKEYUP:
-    if(wParam < 256)
-      self->keyInput(wParam, false);
-    return 0;
-#endif // _WIN32
-  case WM_SIZE:
-    self->m_backend->resize();
-    return 0;
   }
 
   return DefWindowProc(handle, msg, wParam, lParam);

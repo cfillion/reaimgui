@@ -15,6 +15,7 @@ public:
   void drawFrame(ImDrawData *) override;
   float deltaTime() override;
   float scaleFactor() const override;
+  bool handleMessage(unsigned int, WPARAM, LPARAM) override;
   void translateAccel(MSG *) override;
 
 private:
@@ -126,6 +127,24 @@ float Win32Backend::deltaTime()
 float Win32Backend::scaleFactor() const
 {
   return 1; // TODO
+}
+
+bool Win32Backend::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
+{
+  switch(msg) {
+  case WM_KEYDOWN:
+  case WM_SYSKEYDOWN:
+    if(wParam < 256)
+      m_ctx->keyInput(wParam, true);
+    return true;
+  case WM_KEYUP:
+  case WM_SYSKEYUP:
+    if(wParam < 256)
+      m_ctx->keyInput(wParam, false);
+    return true;
+  }
+
+  return false;
 }
 
 void Win32Backend::translateAccel(MSG *)

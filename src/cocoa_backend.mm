@@ -18,9 +18,9 @@ public:
 
   void beginFrame() override;
   void drawFrame(ImDrawData *) override;
-  void resize() override;
   float deltaTime() override;
   float scaleFactor() const override;
+  bool handleMessage(unsigned int msg, WPARAM, LPARAM) override;
   void translateAccel(MSG *) override;
 
 private:
@@ -114,14 +114,6 @@ void CocoaBackend::drawFrame(ImDrawData *drawData)
   [NSOpenGLContext clearCurrentContext];
 }
 
-void CocoaBackend::resize()
-{
-  [m_gl update];
-
-  if(m_lastDrawData)
-    drawFrame(m_lastDrawData);
-}
-
 float CocoaBackend::scaleFactor() const
 {
   return [m_view.window backingScaleFactor];
@@ -135,6 +127,19 @@ float CocoaBackend::deltaTime()
   const float delta { static_cast<float>(now - m_lastFrame) };
   m_lastFrame = now;
   return delta;
+}
+
+bool CocoaBackend::handleMessage(const unsigned int msg, WPARAM, LPARAM)
+{
+  switch(msg) {
+  case WM_SIZE:
+    [m_gl update];
+    if(m_lastDrawData)
+      drawFrame(m_lastDrawData);
+    return true;
+  }
+
+  return false;
 }
 
 void CocoaBackend::translateAccel(MSG *)
