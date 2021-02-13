@@ -7,6 +7,7 @@
 #undef CreateEvent
 
 #include <Carbon/Carbon.h>
+#include <reaper_plugin_functions.h>
 
 static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
@@ -21,12 +22,14 @@ public:
   float deltaTime() override;
   float scaleFactor() const override;
   bool handleMessage(unsigned int msg, WPARAM, LPARAM) override;
-  void translateAccel(MSG *) override;
 
 private:
+  static int translateAccel(MSG *, accelerator_register_t *);
+
   Context *m_ctx;
   NSView *m_view;
   InputView *m_inputView;
+  accelerator_register_t m_accel;
   CFAbsoluteTime m_lastFrame;
   ImDrawData *m_lastDrawData;
   NSOpenGLContext *m_gl;
@@ -40,6 +43,7 @@ std::unique_ptr<Backend> Backend::create(Context *ctx)
 
 CocoaBackend::CocoaBackend(Context *ctx)
   : m_ctx { ctx }, m_view { (__bridge NSView *)ctx->handle() },
+    m_accel { &CocoaBackend::translateAccel, true, this },
     m_lastFrame {}, m_lastDrawData {}
 {
   // Temprarily enable repeat character input
@@ -92,10 +96,14 @@ CocoaBackend::CocoaBackend(Context *ctx)
   m_renderer = new OpenGLRenderer;
   [m_gl flushBuffer]; // avoid a quick flash of undefined pixels
   [NSOpenGLContext clearCurrentContext];
+
+  plugin_register("accelerator", &m_accel);
 }
 
 CocoaBackend::~CocoaBackend()
 {
+  plugin_register("-accelerator", &m_accel);
+
   [m_gl makeCurrentContext];
   delete m_renderer;
 }
@@ -142,7 +150,16 @@ bool CocoaBackend::handleMessage(const unsigned int msg, WPARAM, LPARAM)
   return false;
 }
 
-void CocoaBackend::translateAccel(MSG *)
+int CocoaBackend::translateAccel(MSG *msg, accelerator_register_t *accel)
 {
-  [[m_view window] sendEvent:[NSApp currentEvent]];
+  enum { NotOurWindow = 0, EatKeystroke = 1 };
+
+  CocoaBackend *self { static_cast<CocoaBackend *>(accel->user) };
+  HWND contextHwnd { self->m_ctx->handle() };
+  if(contextHwnd != msg->hwnd && !IsChild(contextHwnd, msg->hwnd))
+    return NotOurWindow;
+
+  [[self->m_view window] sendEvent:[NSApp currentEvent]];
+
+  return EatKeystroke;
 }

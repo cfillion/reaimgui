@@ -16,7 +16,6 @@ public:
   float deltaTime() override;
   float scaleFactor() const override;
   bool handleMessage(unsigned int, WPARAM, LPARAM) override;
-  void translateAccel(MSG *) override;
 
 private:
   void initPixelFormat();
@@ -145,8 +144,4 @@ bool Win32Backend::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM l
   }
 
   return false;
-}
-
-void Win32Backend::translateAccel(MSG *)
-{
 }

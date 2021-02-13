@@ -92,19 +92,6 @@ LRESULT CALLBACK Context::proc(HWND handle, const unsigned int msg,
   return DefWindowProc(handle, msg, wParam, lParam);
 }
 
-int Context::translateAccel(MSG *msg, accelerator_register_t *accel)
-{
-  enum { NotOurWindow = 0, EatKeystroke = 1 };
-
-  Context *self { static_cast<Context *>(accel->user) };
-  if(self->handle() != msg->hwnd && !IsChild(self->handle(), msg->hwnd))
-    return NotOurWindow;
-
-  self->m_backend->translateAccel(msg);
-
-  return EatKeystroke;
-}
-
 bool Context::exists(Context *win)
 {
   return g_windows.count(win) > 0;
@@ -136,7 +123,6 @@ Context::Context(const char *title,
     const int x, const int y, const int w, const int h)
   : m_inFrame { false }, m_closeReq { false },
     m_clearColor { 0x000000FF }, m_mouseDown {},
-    m_accel { &Context::translateAccel, true, this },
     m_watchdog { Watchdog::get() }
 {
   const HWND parent { GetMainHwnd() };
@@ -174,7 +160,6 @@ Context::Context(const char *title,
   }
 
   SetWindowLongPtr(m_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-  plugin_register("accelerator", &m_accel);
   g_windows.emplace(this);
 }
 
@@ -225,8 +210,6 @@ void Context::setupImGui()
 Context::~Context()
 {
   ImGui::SetCurrentContext(m_imgui);
-
-  plugin_register("-accelerator", &m_accel);
 
   if(m_inFrame)
     endFrame(false);

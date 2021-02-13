@@ -41,7 +41,6 @@ public:
 
 private:
   static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
-  static int translateAccel(MSG *, accelerator_register_t *);
 
   enum ButtonState {
     Down       = 1<<0,
@@ -63,7 +62,6 @@ private:
   bool m_inFrame, m_closeReq;
   Color m_clearColor;
   std::array<char, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
-  accelerator_register_t m_accel;
 
   ImGuiContext *m_imgui;
   std::unique_ptr<Backend> m_backend;

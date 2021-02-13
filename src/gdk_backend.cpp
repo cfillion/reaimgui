@@ -19,7 +19,6 @@ public:
   float deltaTime() override;
   float scaleFactor() const override;
   bool handleMessage(unsigned int msg, WPARAM, LPARAM) override;
-  void translateAccel(MSG *) override;
 
 private:
   void initGl();
@@ -155,19 +154,6 @@ float GdkBackend::scaleFactor() const
   return gdk_window_get_scale_factor(m_window);
 }
 
-bool GdkBackend::handleMessage(const unsigned int msg, WPARAM, LPARAM)
-{
-  switch(msg) {
-  case WM_SIZE:
-    gdk_gl_context_make_current(m_gl);
-    resizeFbTex();
-    gdk_gl_context_clear_current();
-    return true;
-  }
-
-  return false;
-}
-
 static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)
 {
   // Trying to guess the character to print from SWELL's event data.
@@ -193,19 +179,26 @@ static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)
   return wParam;
 }
 
-void GdkBackend::translateAccel(MSG *msg)
+bool GdkBackend::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
-  // No access to the orignal GDK key event, unfortunately.
-  switch(msg->message) {
+  switch(msg) {
+  case WM_SIZE:
+    gdk_gl_context_make_current(m_gl);
+    resizeFbTex();
+    gdk_gl_context_clear_current();
+    return true;
   case WM_KEYDOWN:
-    if(unsigned int c { unmangleSwellChar(msg->wParam, msg->lParam) })
+    // No access to the orignal GDK key event, unfortunately.
+    if(unsigned int c { unmangleSwellChar(wParam, lParam) })
       m_ctx->charInput(c);
-    if(msg->wParam < 256)
-      m_ctx->keyInput(msg->wParam, true);
-    break;
+    if(wParam < 256)
+      m_ctx->keyInput(wParam, true);
+    return true;
   case WM_KEYUP:
-    if(msg->wParam < 256)
-      m_ctx->keyInput(msg->wParam, false);
-    break;
+    if(wParam < 256)
+      m_ctx->keyInput(wParam, false);
+    return true;
   }
+
+  return false;
 }

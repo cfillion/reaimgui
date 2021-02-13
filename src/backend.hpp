@@ -24,7 +24,6 @@ public:
   virtual float deltaTime() = 0;
   virtual float scaleFactor() const = 0;
   virtual bool handleMessage(unsigned int msg, WPARAM, LPARAM) = 0;
-  virtual void translateAccel(MSG *) = 0;
 };
 
 #endif
