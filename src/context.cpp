@@ -58,7 +58,7 @@ LRESULT CALLBACK Context::proc(HWND handle, const UINT msg,
     return 0;
   case WM_DESTROY:
     delete self;
-    break;
+    return 0;
   case WM_MOUSEMOVE:
     self->updateCursor();
     break;
@@ -67,39 +67,41 @@ LRESULT CALLBACK Context::proc(HWND handle, const UINT msg,
     self->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
     break;
   case WM_SETCURSOR:
-    return 1;
+    if(LOWORD(lParam) == HTCLIENT) {
+      self->updateCursor();
+      return 1;
+    }
+    break;
 #ifndef __APPLE__ // these are handled by InputView, bypassing SWELL
   case WM_LBUTTONDOWN:
   case WM_MBUTTONDOWN:
   case WM_RBUTTONDOWN:
     self->mouseDown(msg);
-    break;
+    return 0;
   case WM_LBUTTONUP:
   case WM_MBUTTONUP:
   case WM_RBUTTONUP:
     self->mouseUp(msg);
-    break;
+    return 0;
 #endif // __APPLE__
 #ifdef _WIN32
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
     if(wParam < 256)
       self->keyInput(wParam, true);
-    return -1;
+    return 0;
   case WM_KEYUP:
   case WM_SYSKEYUP:
     if(wParam < 256)
       self->keyInput(wParam, false);
-    return -1;
+    return 0;
 #endif // _WIN32
   case WM_SIZE:
     self->m_backend->resize();
-    break;
-  default:
-    return DefWindowProc(handle, msg, wParam, lParam);
+    return 0;
   }
 
-  return 0;
+  return DefWindowProc(handle, msg, wParam, lParam);
 }
 
 int Context::translateAccel(MSG *msg, accelerator_register_t *accel)
