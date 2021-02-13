@@ -17,7 +17,6 @@ public:
     wc.lpfnWndProc = proc;
     wc.hInstance = Context::s_instance;
     wc.lpszClassName = m_name;
-    wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
     RegisterClass(&wc);
   }
 
