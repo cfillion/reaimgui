@@ -11,6 +11,18 @@ uint32_t Color::rgba2abgr(const uint32_t rgba)
     (rgba << 24 & 0xFF000000) ; // alpha
 }
 
+Color Color::fromREAPER(uint32_t color)
+{
+#ifdef _WIN32
+  // bgr to rgb
+  color = (color >> 16 & 0x0000ff) |
+          (color       & 0x00ff00) |
+          (color << 16 & 0xff0000) ;
+#endif
+
+  return Color(color, false);
+}
+
 Color::Color(const uint32_t rgba, const bool alpha)
 {
   uint32_t i {};

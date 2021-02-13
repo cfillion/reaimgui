@@ -234,7 +234,7 @@ void Context::setupImGui()
   int themeSize;
   ColorTheme *theme { static_cast<ColorTheme *>(GetColorThemeStruct(&themeSize)) };
   if(static_cast<size_t>(themeSize) >= sizeof(ColorTheme))
-    m_clearColor = Color(theme->main_bg, false);
+    m_clearColor = Color::fromREAPER(theme->main_bg);
 }
 
 Context::~Context()
