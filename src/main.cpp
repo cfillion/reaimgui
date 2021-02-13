@@ -13,13 +13,14 @@ static bool loadAPI(void *(*getFunc)(const char *))
   struct ApiImport { void **ptr; const char *name; };
 
   const ApiImport funcs[] {
+    IMPORT(GetColorThemeStruct),
+    IMPORT(GetMainHwnd),
+    IMPORT(GSC_mainwnd),
     IMPORT(plugin_getapi),
     IMPORT(plugin_register),
-    IMPORT(GetMainHwnd),
-    IMPORT(GetColorThemeStruct),
+    IMPORT(realloc_cmd_ptr),
     IMPORT(ReaScriptError),
     IMPORT(ShowMessageBox),
-    IMPORT(realloc_cmd_ptr),
   };
 
   for(const ApiImport &func : funcs) {

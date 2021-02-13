@@ -11,7 +11,7 @@ uint32_t Color::rgba2abgr(const uint32_t rgba)
     (rgba << 24 & 0xFF000000) ; // alpha
 }
 
-Color Color::fromREAPER(uint32_t color)
+Color Color::fromTheme(uint32_t color)
 {
 #ifdef _WIN32
   // bgr to rgb

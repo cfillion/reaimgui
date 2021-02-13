@@ -231,10 +231,7 @@ void Context::setupImGui()
   io.KeyMap[ImGuiKey_Z]           = 'Z';
 #endif
 
-  int themeSize;
-  ColorTheme *theme { static_cast<ColorTheme *>(GetColorThemeStruct(&themeSize)) };
-  if(static_cast<size_t>(themeSize) >= sizeof(ColorTheme))
-    m_clearColor = Color::fromREAPER(theme->main_bg);
+  m_clearColor = Color::fromTheme(GSC_mainwnd(COLOR_WINDOW));
 }
 
 Context::~Context()
