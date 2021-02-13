@@ -90,6 +90,7 @@ CocoaBackend::CocoaBackend(Context *ctx)
 
   [m_gl makeCurrentContext];
   m_renderer = new OpenGLRenderer;
+  [m_gl flushBuffer]; // avoid a quick flash of undefined pixels
   [NSOpenGLContext clearCurrentContext];
 }
 
