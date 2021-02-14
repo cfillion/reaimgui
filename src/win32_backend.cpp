@@ -60,28 +60,25 @@ void Win32Backend::initPixelFormat()
 
 void Win32Backend::initGL()
 {
-  HGLRC dummy { wglCreateContext(m_dc) }; // creates a legacy (< 2.1) context
-  wglMakeCurrent(m_dc, dummy);
-
-  const int attrs[] {
-    WGL_CONTEXT_MAJOR_VERSION_ARB, OpenGLRenderer::MIN_MAJOR,
-    WGL_CONTEXT_MINOR_VERSION_ARB, OpenGLRenderer::MIN_MINOR,
-    0
-  };
+  HGLRC dummyGl { wglCreateContext(m_dc) }; // creates a legacy (< 2.1) context
+  wglMakeCurrent(m_dc, m_gl = dummyGl);
 
   PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB
     { reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(
       wglGetProcAddress("wglCreateContextAttribsARB")) };
 
   if(wglCreateContextAttribsARB) {
-    m_gl = wglCreateContextAttribsARB(m_dc, nullptr, attrs);
-    if(m_gl) {
-      wglMakeCurrent(m_dc, m_gl);
-      wglDeleteContext(dummy);
+    constexpr int attrs[] {
+      WGL_CONTEXT_MAJOR_VERSION_ARB, OpenGLRenderer::MIN_MAJOR,
+      WGL_CONTEXT_MINOR_VERSION_ARB, OpenGLRenderer::MIN_MINOR,
+      0
+    };
+
+    if(HGLRC coreGl { wglCreateContextAttribsARB(m_dc, nullptr, attrs) }) {
+      wglMakeCurrent(m_dc, m_gl = coreGl);
+      wglDeleteContext(dummyGl);
     }
   }
-  else
-    m_gl = dummy;
 
   if(gl3wInit() || !gl3wIsSupported(OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR)) {
     wglDeleteContext(m_gl);
