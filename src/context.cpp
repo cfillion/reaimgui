@@ -11,23 +11,8 @@
 #include <unordered_set>
 
 static std::unordered_set<Context *> g_windows;
-static std::weak_ptr<ImFontAtlas> g_fontAtlas;
 
 REAPER_PLUGIN_HINSTANCE Context::s_instance;
-
-#ifndef GET_WHEEL_DELTA_WPARAM
-#  define GET_WHEEL_DELTA_WPARAM GET_Y_LPARAM
-#endif
-
-#ifndef WHEEL_DELTA
-constexpr float WHEEL_DELTA {
-#  ifdef __APPLE__
-  60.0f
-#  else
-  120.0f
-#  endif
-};
-#endif
 
 static void reportRecovery(void *, const char *fmt, ...)
 {
@@ -67,6 +52,9 @@ LRESULT CALLBACK Context::proc(HWND handle, const unsigned int msg,
     break;
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
+#ifndef GET_WHEEL_DELTA_WPARAM
+#  define GET_WHEEL_DELTA_WPARAM GET_Y_LPARAM
+#endif
     self->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
     break;
   case WM_SETCURSOR:
@@ -165,6 +153,8 @@ Context::Context(const char *title,
 
 void Context::setupImGui()
 {
+  static std::weak_ptr<ImFontAtlas> g_fontAtlas;
+
   if(g_fontAtlas.expired())
     g_fontAtlas = m_fontAtlas = std::make_shared<ImFontAtlas>();
   else
@@ -407,6 +397,17 @@ void Context::updateMousePos()
 void Context::mouseWheel(const UINT msg, const short delta)
 {
   ImGui::SetCurrentContext(m_imgui);
+
+#ifndef WHEEL_DELTA
+  constexpr float WHEEL_DELTA {
+#  ifdef __APPLE__
+    60.0f
+#  else
+    120.0f
+#  endif
+  };
+#endif
+
   ImGuiIO &io { ImGui::GetIO() };
   float &wheel { msg == WM_MOUSEHWHEEL ? io.MouseWheelH : io.MouseWheel };
   wheel += static_cast<float>(delta) / static_cast<float>(WHEEL_DELTA);
