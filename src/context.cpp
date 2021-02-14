@@ -52,7 +52,7 @@ LRESULT CALLBACK Context::proc(HWND handle, const unsigned int msg,
   if(!self)
     return DefWindowProc(handle, msg, wParam, lParam);
   else if(self->m_backend->handleMessage(msg, wParam, lParam))
-    return 1;
+    return 0;
 
   switch(msg) {
   case WM_CLOSE:

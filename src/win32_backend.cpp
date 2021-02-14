@@ -141,6 +141,9 @@ bool Win32Backend::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM l
     if(wParam < 256)
       m_ctx->keyInput(wParam, false);
     return true;
+  case WM_CHAR:
+    m_ctx->charInput(wParam);
+    return true;
   }
 
   return false;
