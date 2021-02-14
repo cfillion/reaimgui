@@ -19,7 +19,6 @@ public:
 
   void beginFrame() override;
   void drawFrame(ImDrawData *) override;
-  float deltaTime() override;
   float scaleFactor() const override;
   bool handleMessage(unsigned int msg, WPARAM, LPARAM) override;
 
@@ -30,7 +29,6 @@ private:
   NSView *m_view;
   InputView *m_inputView;
   accelerator_register_t m_accel;
-  CFAbsoluteTime m_lastFrame;
   ImDrawData *m_lastDrawData;
   NSOpenGLContext *m_gl;
   OpenGLRenderer *m_renderer;
@@ -44,7 +42,7 @@ std::unique_ptr<Backend> Backend::create(Context *ctx)
 CocoaBackend::CocoaBackend(Context *ctx)
   : m_ctx { ctx }, m_view { (__bridge NSView *)ctx->handle() },
     m_accel { &CocoaBackend::translateAccel, true, this },
-    m_lastFrame {}, m_lastDrawData {}
+    m_lastDrawData {}
 {
   // Temprarily enable repeat character input
   // WARNING: this is application-wide!
@@ -125,16 +123,6 @@ void CocoaBackend::drawFrame(ImDrawData *drawData)
 float CocoaBackend::scaleFactor() const
 {
   return [m_view.window backingScaleFactor];
-}
-
-float CocoaBackend::deltaTime()
-{
-  const CFAbsoluteTime now { CFAbsoluteTimeGetCurrent() };
-  if(!m_lastFrame)
-    m_lastFrame = now;
-  const float delta { static_cast<float>(now - m_lastFrame) };
-  m_lastFrame = now;
-  return delta;
 }
 
 bool CocoaBackend::handleMessage(const unsigned int msg, WPARAM, LPARAM)

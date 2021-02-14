@@ -16,7 +16,6 @@ public:
   ~GdkBackend() override;
 
   void drawFrame(ImDrawData *) override;
-  float deltaTime() override;
   float scaleFactor() const override;
   bool handleMessage(unsigned int msg, WPARAM, LPARAM) override;
 
@@ -26,7 +25,6 @@ private:
 
   Context *m_ctx;
   GdkWindow *m_window;
-  int64_t m_lastFrame;
   GdkGLContext *m_gl;
   unsigned int m_tex, m_fbo;
   OpenGLRenderer *m_renderer;
@@ -38,7 +36,7 @@ std::unique_ptr<Backend> Backend::create(Context *ctx)
 }
 
 GdkBackend::GdkBackend(Context *ctx)
-  : m_ctx { ctx }, m_window { ctx->handle()->m_oswindow }, m_lastFrame {}
+  : m_ctx { ctx }, m_window { ctx->handle()->m_oswindow }
 {
   gdk_window_set_events(m_window, GdkEventMask(
     gdk_window_get_events(m_window) |
@@ -137,16 +135,6 @@ void GdkBackend::resizeFbTex()
   glBindTexture(GL_TEXTURE_2D, m_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
     0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-}
-
-float GdkBackend::deltaTime()
-{
-  const int64_t now { g_get_monotonic_time() }; // microseconds
-  if(!m_lastFrame)
-    m_lastFrame = now;
-  const float delta { (now - m_lastFrame) / 1'000'000.f };
-  m_lastFrame = now;
-  return delta;
 }
 
 float GdkBackend::scaleFactor() const

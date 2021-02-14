@@ -4,6 +4,7 @@
 #include "color.hpp"
 
 #include <array>
+#include <chrono>
 #include <memory>
 
 #include <imgui/imgui.h>
@@ -34,8 +35,8 @@ public:
   void enterFrame();
   void close();
 
-  void mouseDown(UINT msg);
-  void mouseUp(UINT msg);
+  void mouseDown(unsigned int msg);
+  void mouseUp(unsigned int msg);
   void keyInput(uint8_t key, bool down);
   void charInput(unsigned int);
 
@@ -55,13 +56,14 @@ private:
   bool anyMouseDown() const;
   void updateMouseDown();
   void updateMousePos();
-  void mouseWheel(UINT msg, short delta);
+  void mouseWheel(unsigned int msg, short delta);
   void updateKeyMods();
 
   HWND m_handle;
   bool m_inFrame, m_closeReq;
   Color m_clearColor;
   std::array<char, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
+  std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
 
   ImGuiContext *m_imgui;
   std::unique_ptr<Backend> m_backend;

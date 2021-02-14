@@ -13,7 +13,6 @@ public:
   ~Win32Backend() override;
 
   void drawFrame(ImDrawData *) override;
-  float deltaTime() override;
   float scaleFactor() const override;
   bool handleMessage(unsigned int, WPARAM, LPARAM) override;
 
@@ -22,7 +21,6 @@ private:
   void initGL();
 
   Context *m_ctx;
-  LARGE_INTEGER m_lastFrame, m_ticksPerSecond;
   HDC m_dc;
   HGLRC m_gl;
   OpenGLRenderer *m_renderer;
@@ -36,9 +34,6 @@ std::unique_ptr<Backend> Backend::create(Context *ctx)
 Win32Backend::Win32Backend(Context *ctx)
   : m_ctx { ctx }, m_dc { GetDC(ctx->handle()) }
 {
-  QueryPerformanceCounter(&m_lastFrame);
-  QueryPerformanceFrequency(&m_ticksPerSecond);
-
   initPixelFormat();
   initGL();
   m_renderer = new OpenGLRenderer;
@@ -109,18 +104,6 @@ void Win32Backend::drawFrame(ImDrawData *drawData)
   m_renderer->draw(drawData, m_ctx->clearColor());
   SwapBuffers(m_dc);
   wglMakeCurrent(m_dc, nullptr);
-}
-
-float Win32Backend::deltaTime()
-{
-  LARGE_INTEGER now;
-  QueryPerformanceCounter(&now);
-  const float delta {
-    static_cast<float>(now.QuadPart - m_lastFrame.QuadPart)
-    / m_ticksPerSecond.QuadPart
-  };
-  m_lastFrame = now;
-  return delta;
 }
 
 float Win32Backend::scaleFactor() const

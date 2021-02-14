@@ -111,6 +111,7 @@ Context::Context(const char *title,
     const int x, const int y, const int w, const int h)
   : m_inFrame { false }, m_closeReq { false },
     m_clearColor { 0x000000FF }, m_mouseDown {},
+    m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_watchdog { Watchdog::get() }
 {
   const HWND parent { GetMainHwnd() };
@@ -263,7 +264,9 @@ void Context::updateFrameInfo()
   const float scale { m_backend->scaleFactor() };
   io.DisplayFramebufferScale = ImVec2{scale, scale};
 
-  io.DeltaTime = m_backend->deltaTime();
+  const auto now { decltype(m_lastFrame)::clock::now() };
+  io.DeltaTime = std::chrono::duration<float> { now - m_lastFrame }.count();
+  m_lastFrame = now;
 }
 
 void Context::updateCursor()
@@ -302,7 +305,7 @@ bool Context::anyMouseDown() const
   return false;
 }
 
-void Context::mouseDown(const UINT msg)
+void Context::mouseDown(const unsigned int msg)
 {
   size_t btn;
 
@@ -328,7 +331,7 @@ void Context::mouseDown(const UINT msg)
   m_mouseDown[btn] = Down | DownUnread;
 }
 
-void Context::mouseUp(const UINT msg)
+void Context::mouseUp(const unsigned int msg)
 {
   size_t btn;
 
@@ -394,7 +397,7 @@ void Context::updateMousePos()
     io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
 }
 
-void Context::mouseWheel(const UINT msg, const short delta)
+void Context::mouseWheel(const unsigned int msg, const short delta)
 {
   ImGui::SetCurrentContext(m_imgui);
 

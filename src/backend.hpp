@@ -21,7 +21,6 @@ public:
   virtual void beginFrame() {}
   virtual void drawFrame(ImDrawData *) = 0;
   virtual void endFrame() {}
-  virtual float deltaTime() = 0;
   virtual float scaleFactor() const = 0;
   virtual bool handleMessage(unsigned int msg, WPARAM, LPARAM) = 0;
 };
