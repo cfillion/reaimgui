@@ -44,13 +44,6 @@ CocoaBackend::CocoaBackend(Context *ctx)
     m_accel { &CocoaBackend::translateAccel, true, this },
     m_lastDrawData {}
 {
-  // Temprarily enable repeat character input
-  // WARNING: this is application-wide!
-  NSUserDefaults *defaults { [NSUserDefaults standardUserDefaults] };
-  [defaults registerDefaults:@{@"ApplePressAndHoldEnabled":@NO}];
-
-  m_inputView = [[InputView alloc] initWithContext:ctx parent:m_view];
-
   ImGuiIO &io { ImGui::GetIO() };
   io.KeyMap[ImGuiKey_Tab]         = kVK_Tab;
   io.KeyMap[ImGuiKey_LeftArrow]   = kVK_LeftArrow;
@@ -77,7 +70,7 @@ CocoaBackend::CocoaBackend(Context *ctx)
 
   [[m_view window] setColorSpace:[NSColorSpace sRGBColorSpace]];
 
-  const NSOpenGLPixelFormatAttribute attrs[] {
+  constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
     NSOpenGLPFAAccelerated,
     NSOpenGLPFADoubleBuffer,
@@ -87,13 +80,24 @@ CocoaBackend::CocoaBackend(Context *ctx)
 
   NSOpenGLPixelFormat *fmt { [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] };
   m_gl = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
-  [m_view setWantsBestResolutionOpenGLSurface:YES];
+  if(!m_gl)
+    throw std::runtime_error { "failed to initialize OpenGL 3.2 core context" };
+
+  [m_view setWantsBestResolutionOpenGLSurface:YES]; // retina
   [m_gl setView:m_view];
 
   [m_gl makeCurrentContext];
   m_renderer = new OpenGLRenderer;
   [m_gl flushBuffer]; // avoid a quick flash of undefined pixels
   [NSOpenGLContext clearCurrentContext];
+
+  // Temprarily enable repeat character input
+  // WARNING: this is application-wide!
+  NSUserDefaults *defaults { [NSUserDefaults standardUserDefaults] };
+  [defaults registerDefaults:@{@"ApplePressAndHoldEnabled":@NO}];
+
+  m_inputView = [[InputView alloc] initWithContext:ctx parent:m_view];
+
 
   plugin_register("accelerator", &m_accel);
 }

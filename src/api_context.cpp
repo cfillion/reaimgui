@@ -17,7 +17,7 @@ R"(Create a new window. Call ImGui_UpdateWindow at every timer cycle until destr
   }
   catch(const std::runtime_error &e) {
     char msg[1024];
-    snprintf(msg, sizeof(msg), "ReaImGui: failed to create context: %s", e.what());
+    snprintf(msg, sizeof(msg), "ReaImGui: ImGui_CreateContext: %s", e.what());
     ReaScriptError(msg);
   }
   return ctx;
