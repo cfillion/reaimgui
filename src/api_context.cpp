@@ -52,23 +52,24 @@ R"(Return whether the user has requested closing the window since the previous f
   return ctx->isCloseRequested();
 });
 
-DEFINE_API(int, GetContextClearColor, ((ImGui_Context*, ctx)),
-R"(Return the current clear color of the window (0xRRGGBB).
-
-See SetWindowClearColor.)",
-{
-  CHECK_CONTEXT(ctx, 0);
-  return ctx->clearColor().pack(false);
-});
-
-DEFINE_API(void, SetContextClearColor, ((ImGui_Context*, ctx))((int, rgb)),
-R"(Set the current clear color of the window (0xRRGGBB). The default is 0x000000.
-
-See GetClearColor.)",
-{
-  CHECK_CONTEXT(ctx);
-  ctx->setClearColor(Color(rgb, false));
-});
+// TODO
+// DEFINE_API(int, GetContextClearColor, ((ImGui_Context*, ctx)),
+// R"(Return the current clear color of the window (0xRRGGBB).
+//
+// See SetWindowClearColor.)",
+// {
+//   CHECK_CONTEXT(ctx, 0);
+//   return ctx->clearColor().pack(false);
+// });
+//
+// DEFINE_API(void, SetContextClearColor, ((ImGui_Context*, ctx))((int, rgb)),
+// R"(Set the current clear color of the window (0xRRGGBB). The default is 0x000000.
+//
+// See GetClearColor.)",
+// {
+//   CHECK_CONTEXT(ctx);
+//   ctx->setClearColor(Color(rgb, false));
+// });
 
 DEFINE_API(double, GetTime, ((ImGui_Context*,ctx)),
 "Get global imgui time. Incremented every frame.",

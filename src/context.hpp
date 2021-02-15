@@ -58,6 +58,7 @@ private:
   void endFrame(bool render);
   bool anyMouseDown() const;
   void updateFrameInfo();
+  void updateTheme();
   void updateCursor();
   void updateMouseDown();
   void updateMousePos();

@@ -95,7 +95,6 @@ void Context::setupImGui()
 
   m_imgui.reset(ImGui::CreateContext(m_fontAtlas.get()));
   ImGui::SetCurrentContext(m_imgui.get());
-  ImGui::StyleColorsDark();
 
   ImGuiIO &io { ImGui::GetIO() };
   io.IniFilename = nullptr;
@@ -126,8 +125,6 @@ void Context::setupImGui()
   io.KeyMap[ImGuiKey_Y]           = 'Y';
   io.KeyMap[ImGuiKey_Z]           = 'Z';
 #endif
-
-  m_clearColor = Color::fromTheme(GSC_mainwnd(COLOR_WINDOW));
 }
 
 Context::~Context()
@@ -147,6 +144,7 @@ void Context::beginFrame()
   m_inFrame = true;
 
   updateFrameInfo();
+  updateTheme();
   updateMouseDown();
   updateMousePos();
   updateKeyMods();
@@ -378,4 +376,9 @@ void Context::charInput(const unsigned int codepoint)
   ImGui::SetCurrentContext(m_imgui.get());
   ImGuiIO &io { ImGui::GetIO() };
   io.AddInputCharacter(codepoint);
+}
+
+void Context::updateTheme()
+{
+  m_clearColor = Color::fromTheme(GSC_mainwnd(COLOR_WINDOW));
 }
