@@ -60,6 +60,8 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   constexpr int style { WS_OVERLAPPEDWINDOW | WS_VISIBLE };
   constexpr int exStyle { WS_EX_DLGMODALFRAME };
 
+  AdjustWindowRectEx(&rect, style, false, exStyle);
+
   HWND hwnd {
     CreateWindowEx(exStyle, CLASS_NAME, widen(title).c_str(), style,
       rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,

@@ -40,7 +40,7 @@ Index of this file:
 demo = { open = true }
 
 local r = reaper
-local ctx = r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 740)
+local ctx = r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 720)
 
 function demo.loop()
   if r.ImGui_IsCloseRequested(ctx) then

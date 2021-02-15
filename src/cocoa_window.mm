@@ -30,17 +30,24 @@ struct Window::Impl {
 Window::Window(const char *title, RECT rect, Context *ctx)
   : m_impl { std::make_unique<Impl>() }
 {
+  const NSPoint position {
+    static_cast<float>(rect.left), static_cast<float>(rect.top)
+  };
+  const NSSize size {
+    static_cast<float>(rect.right - rect.left),
+    static_cast<float>(rect.bottom - rect.top)
+  };
+
   HWND hwnd { createSwellDialog(title) };
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
-  SetWindowPos(hwnd, HWND_TOP,
-    rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
-    SWP_NOZORDER | SWP_NOACTIVATE);
   ShowWindow(hwnd, SW_SHOW);
 
   m_impl->ctx = ctx;
   m_impl->hwnd = HwndPtr { hwnd };
   m_impl->view = (__bridge NSView *)hwnd; // SWELL_hwndChild inherits from NSView
   [[m_impl->view window] setColorSpace:[NSColorSpace sRGBColorSpace]];
+  [[m_impl->view window] setFrameOrigin:position];
+  [[m_impl->view window] setContentSize:size];
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
