@@ -31,7 +31,6 @@ add_library(${PROJECT_NAME} SHARED
   context.cpp
   main.cpp
   opengl_renderer.cpp
-  watchdog.cpp
   window.cpp
 )
 

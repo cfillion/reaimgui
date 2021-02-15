@@ -1,6 +1,5 @@
 #include "context.hpp"
 
-#include "watchdog.hpp"
 #include "window.hpp"
 
 #include <imgui/imgui_internal.h>
@@ -13,6 +12,18 @@
 #else
 #  include <swell/swell.h>
 #endif
+
+struct Heartbeat {
+  Heartbeat()
+  {
+    plugin_register("timer", reinterpret_cast<void *>(&Context::heartbeat));
+  }
+
+  ~Heartbeat()
+  {
+    plugin_register("-timer", reinterpret_cast<void *>(&Context::heartbeat));
+  }
+};
 
 static std::unordered_set<Context *> g_ctx;
 
@@ -61,9 +72,15 @@ Context::Context(const char *title,
   : m_inFrame { false }, m_closeReq { false },
     m_clearColor { 0x000000FF }, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
-    m_imgui { nullptr, &ImGui::DestroyContext },
-    m_watchdog { Watchdog::get() }
+    m_imgui { nullptr, &ImGui::DestroyContext }
 {
+  static std::weak_ptr<Heartbeat> g_heartbeat;
+
+  if(g_heartbeat.expired())
+    g_heartbeat = m_heartbeat = std::make_shared<Heartbeat>();
+  else
+    m_heartbeat = g_heartbeat.lock();
+
   setupImGui();
 
   const RECT rect { x, y, x + w, y + h };

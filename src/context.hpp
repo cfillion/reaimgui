@@ -9,8 +9,8 @@
 
 #include <imgui/imgui.h>
 
-class Watchdog;
 class Window;
+struct Heartbeat;
 struct ImFontAtlas;
 struct ImGuiContext;
 
@@ -63,7 +63,7 @@ private:
 
   std::unique_ptr<ImGuiContext, void(*)(ImGuiContext*)> m_imgui;
   std::unique_ptr<Window> m_window; // must be after m_imgui for correct destruction
-  std::shared_ptr<Watchdog> m_watchdog;
+  std::shared_ptr<Heartbeat> m_heartbeat;
   std::shared_ptr<ImFontAtlas> m_fontAtlas;
 };
 
