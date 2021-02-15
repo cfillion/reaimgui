@@ -5,6 +5,7 @@
 #include <imgui/imgui_internal.h>
 // #include <reaper_colortheme.h>
 #include <reaper_plugin_functions.h>
+#include <reaper_plugin_secrets.h>
 #include <stdexcept>
 #include <unordered_set>
 
@@ -79,6 +80,7 @@ Context::Context(const char *title,
 
   const RECT rect { x, y, x + w, y + h };
   m_window = std::make_unique<Window>(title, rect, this);
+  AttachWindowTopmostButton(m_window->nativeHandle());
   g_ctx.emplace(this);
 }
 

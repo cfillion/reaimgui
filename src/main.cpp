@@ -3,6 +3,7 @@
 
 #define REAPERAPI_IMPLEMENT
 #include <reaper_plugin_functions.h>
+#include <reaper_plugin_secrets.h>
 
 #include <imgui/imgui.h>
 
@@ -13,6 +14,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
   struct ApiImport { void **ptr; const char *name; };
 
   const ApiImport funcs[] {
+    IMPORT(AttachWindowTopmostButton),
     IMPORT(GetColorThemeStruct),
     IMPORT(GetMainHwnd),
     IMPORT(GSC_mainwnd),
