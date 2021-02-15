@@ -45,6 +45,9 @@ Window::Window(const char *title, RECT rect, Context *ctx)
     GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK
   ));
 
+  // prevent invalidation (= displaying garbage) when moving another window over
+  gdk_window_freeze_updates(m_impl->window);
+
   m_impl->initGl();
 
   glGenTextures(1, &m_impl->tex);
