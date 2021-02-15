@@ -38,11 +38,6 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   m_impl->hwnd = HwndPtr { hwnd };
   m_impl->window = m_impl->hwnd->m_oswindow;
 
-  gdk_window_set_events(m_impl->window, GdkEventMask(
-    gdk_window_get_events(m_impl->window) |
-    GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK
-  ));
-
   // prevent invalidation (= displaying garbage) when moving another window over
   gdk_window_freeze_updates(m_impl->window);
 
