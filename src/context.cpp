@@ -69,8 +69,7 @@ void Context::heartbeat()
 
 Context::Context(const char *title,
     const int x, const int y, const int w, const int h)
-  : m_inFrame { false }, m_closeReq { false },
-    m_clearColor { 0x000000FF }, m_mouseDown {},
+  : m_inFrame { false }, m_closeReq { false }, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_imgui { nullptr, &ImGui::DestroyContext }
 {

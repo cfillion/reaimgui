@@ -11,6 +11,7 @@ public:
   static uint32_t rgba2abgr(const uint32_t rgba);
   static Color fromTheme(const uint32_t themeColor);
 
+  Color(); // opaque black
   Color(uint32_t rgba, bool alpha = true);
   Color(const ImVec4 &, bool alpha = true);
   Color(const float rgba[4], bool alpha = true);

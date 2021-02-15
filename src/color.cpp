@@ -23,6 +23,11 @@ Color Color::fromTheme(uint32_t color)
   return Color(color, false);
 }
 
+Color::Color()
+  : m_store { 0.0f, 0.0f, 0.0f, 1.0f }
+{
+}
+
 Color::Color(const uint32_t rgba, const bool alpha)
 {
   uint32_t i {};
