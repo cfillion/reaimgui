@@ -41,10 +41,14 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     break;
   case WM_SETCURSOR:
     if(LOWORD(lParam) == HTCLIENT) {
-      ctx->updateCursor();
+      SetCursor(ctx->cursor()); // sets the cursor when re-entering the window
       return 1;
     }
-    break;
+#ifdef _WIN32
+    break; // lets Windows set the cursor over resize handles
+#else
+    return 1; // tells SWELL to not reset the cursor to IDC_ARROW on mouse events
+#endif
 #ifndef __APPLE__ // these are handled by InputView, bypassing SWELL
   case WM_LBUTTONDOWN:
   case WM_MBUTTONDOWN:

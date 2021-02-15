@@ -3,15 +3,10 @@
 #include "window.hpp"
 
 #include <imgui/imgui_internal.h>
+// #include <reaper_colortheme.h>
 #include <reaper_plugin_functions.h>
 #include <stdexcept>
 #include <unordered_set>
-
-#ifdef _WIN32
-#  include <windows.h>
-#else
-#  include <swell/swell.h>
-#endif
 
 struct Heartbeat {
   Heartbeat()
@@ -69,7 +64,7 @@ void Context::heartbeat()
 
 Context::Context(const char *title,
     const int x, const int y, const int w, const int h)
-  : m_inFrame { false }, m_closeReq { false }, m_mouseDown {},
+  : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_imgui { nullptr, &ImGui::DestroyContext }
 {
@@ -150,7 +145,6 @@ void Context::beginFrame()
   m_inFrame = true;
 
   updateFrameInfo();
-  updateCursor();
   updateMouseDown();
   updateMousePos();
   updateKeyMods();
@@ -173,6 +167,7 @@ void Context::endFrame(const bool render)
   ImGui::ErrorCheckEndFrameRecover(reportRecovery);
 
   if(render) {
+    updateCursor();
     ImGui::Render();
     m_window->drawFrame(ImGui::GetDrawData());
   }
@@ -220,9 +215,13 @@ void Context::updateCursor()
   // ImGuiConfigFlags_NoMouseCursorChange
   // SetCursor(nullptr) does not hide the cursor with SWELL
 
+  // ImGui::GetMouseCursor is only valid after a frame, before Render
+  // (it's reset when a new frame is started)
   const ImGuiMouseCursor imguiCursor { ImGui::GetMouseCursor() };
   const bool hidden { imguiCursor == ImGuiMouseCursor_None };
-  SetCursor(hidden ? nullptr : nativeCursors[imguiCursor]);
+  HCURSOR cursor { hidden ? nullptr : nativeCursors[imguiCursor] };
+  if(m_cursor != cursor)
+    SetCursor(m_cursor = cursor);
 }
 
 bool Context::anyMouseDown() const

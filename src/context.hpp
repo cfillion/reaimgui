@@ -9,6 +9,12 @@
 
 #include <imgui/imgui.h>
 
+#ifdef _WIN32
+#  include <windows.h>
+#else
+#  include <swell/swell.h>
+#endif
+
 class Window;
 struct Heartbeat;
 struct ImFontAtlas;
@@ -31,7 +37,6 @@ public:
   void setClearColor(const Color &col) { m_clearColor = col; }
 
   void enterFrame();
-  void updateCursor();
 
   void mouseDown(unsigned int msg);
   void mouseUp(unsigned int msg);
@@ -39,6 +44,7 @@ public:
   void keyInput(uint8_t key, bool down);
   void charInput(unsigned int);
 
+  HCURSOR cursor() const { return m_cursor; }
   Window *window() const { return m_window.get(); }
 
 private:
@@ -52,12 +58,14 @@ private:
   void endFrame(bool render);
   bool anyMouseDown() const;
   void updateFrameInfo();
+  void updateCursor();
   void updateMouseDown();
   void updateMousePos();
   void updateKeyMods();
 
   bool m_inFrame, m_closeReq;
   Color m_clearColor;
+  HCURSOR m_cursor;
   std::array<uint8_t, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
 
