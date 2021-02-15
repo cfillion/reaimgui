@@ -1,18 +1,20 @@
 #include "context.hpp"
 
-#include "backend.hpp"
 #include "watchdog.hpp"
-#include "win32.hpp"
+#include "window.hpp"
 
 #include <imgui/imgui_internal.h>
-#include <reaper_colortheme.h>
 #include <reaper_plugin_functions.h>
 #include <stdexcept>
 #include <unordered_set>
 
-static std::unordered_set<Context *> g_windows;
+#ifdef _WIN32
+#  include <windows.h>
+#else
+#  include <swell/swell.h>
+#endif
 
-REAPER_PLUGIN_HINSTANCE Context::s_instance;
+static std::unordered_set<Context *> g_ctx;
 
 static void reportRecovery(void *, const char *fmt, ...)
 {
@@ -27,83 +29,30 @@ static void reportRecovery(void *, const char *fmt, ...)
   fprintf(stderr, "ReaImGUI Warning: %s\n", msg);
 }
 
-LRESULT CALLBACK Context::proc(HWND handle, const unsigned int msg,
-  const WPARAM wParam, const LPARAM lParam)
-{
-  Context *self {
-    reinterpret_cast<Context *>(GetWindowLongPtr(handle, GWLP_USERDATA))
-  };
-
-  if(!self)
-    return DefWindowProc(handle, msg, wParam, lParam);
-  else if(self->m_backend->handleMessage(msg, wParam, lParam))
-    return 0;
-
-  switch(msg) {
-  case WM_CLOSE:
-    self->m_closeReq = true;
-    return 0;
-  case WM_DESTROY:
-    SetWindowLongPtr(handle, GWLP_USERDATA, 0);
-    delete self;
-    return 0;
-  case WM_MOUSEMOVE:
-    self->updateCursor();
-    break;
-  case WM_MOUSEWHEEL:
-  case WM_MOUSEHWHEEL:
-#ifndef GET_WHEEL_DELTA_WPARAM
-#  define GET_WHEEL_DELTA_WPARAM GET_Y_LPARAM
-#endif
-    self->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
-    break;
-  case WM_SETCURSOR:
-    if(LOWORD(lParam) == HTCLIENT) {
-      self->updateCursor();
-      return 1;
-    }
-    break;
-#ifndef __APPLE__ // these are handled by InputView, bypassing SWELL
-  case WM_LBUTTONDOWN:
-  case WM_MBUTTONDOWN:
-  case WM_RBUTTONDOWN:
-    self->mouseDown(msg);
-    return 0;
-  case WM_LBUTTONUP:
-  case WM_MBUTTONUP:
-  case WM_RBUTTONUP:
-    self->mouseUp(msg);
-    return 0;
-#endif // __APPLE__
-  }
-
-  return DefWindowProc(handle, msg, wParam, lParam);
-}
-
 bool Context::exists(Context *win)
 {
-  return g_windows.count(win) > 0;
+  return g_ctx.count(win) > 0;
 }
 
 size_t Context::count()
 {
-  return g_windows.size();
+  return g_ctx.size();
 }
 
 void Context::heartbeat()
 {
-  auto it = g_windows.begin();
+  auto it = g_ctx.begin();
 
-  while(it != g_windows.end()) {
-    Context *win = *it++;
+  while(it != g_ctx.end()) {
+    Context *ctx = *it++;
 
-    if(win->m_closeReq)
-      win->m_closeReq = false;
+    if(ctx->m_closeReq)
+      ctx->m_closeReq = false;
 
-    if(win->m_inFrame)
-      win->endFrame(true);
+    if(ctx->m_inFrame)
+      ctx->endFrame(true);
     else
-      win->close();
+      delete ctx;
   }
 }
 
@@ -112,44 +61,14 @@ Context::Context(const char *title,
   : m_inFrame { false }, m_closeReq { false },
     m_clearColor { 0x000000FF }, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
+    m_imgui { nullptr, &ImGui::DestroyContext },
     m_watchdog { Watchdog::get() }
 {
-  const HWND parent { GetMainHwnd() };
-
-#ifdef _WIN32
-  static Win32::Class windowClass { L"reaimgui_context", proc };
-  // WS_EX_DLGMODALFRAME removes the default icon
-  m_handle = CreateWindowEx(WS_EX_DLGMODALFRAME, windowClass.name(),
-    Win32::widen(title).c_str(), WS_OVERLAPPEDWINDOW | WS_VISIBLE, x, y, w, h,
-    parent, nullptr, s_instance, nullptr);
-#else
-  enum SwellDialogResFlags {
-    ForceNonChild = 0x400000 | 0x8, // allows not using a resource id
-    Resizable = 1,
-  };
-
-  m_handle = CreateDialog(s_instance,
-    MAKEINTRESOURCE(ForceNonChild | Resizable), parent, proc);
-  SetWindowText(m_handle, title);
-  SetWindowPos(m_handle, HWND_TOP, x, y, w, h, SWP_NOZORDER | SWP_NOACTIVATE);
-  ShowWindow(m_handle, SW_SHOW);
-#endif
-
-  assert(m_handle && "window creation failed");
-
   setupImGui();
 
-  try {
-    m_backend = Backend::create(this);
-  }
-  catch(const std::runtime_error &) {
-    ImGui::DestroyContext();
-    DestroyWindow(m_handle);
-    throw;
-  }
-
-  SetWindowLongPtr(m_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-  g_windows.emplace(this);
+  const RECT rect { x, y, x + w, y + h };
+  m_window = std::make_unique<Window>(title, rect, this);
+  g_ctx.emplace(this);
 }
 
 void Context::setupImGui()
@@ -161,8 +80,8 @@ void Context::setupImGui()
   else
     m_fontAtlas = g_fontAtlas.lock();
 
-  m_imgui = ImGui::CreateContext(m_fontAtlas.get());
-  ImGui::SetCurrentContext(m_imgui);
+  m_imgui.reset(ImGui::CreateContext(m_fontAtlas.get()));
+  ImGui::SetCurrentContext(m_imgui.get());
   ImGui::StyleColorsDark();
 
   ImGuiIO &io { ImGui::GetIO() };
@@ -200,15 +119,12 @@ void Context::setupImGui()
 
 Context::~Context()
 {
-  ImGui::SetCurrentContext(m_imgui);
+  ImGui::SetCurrentContext(m_imgui.get());
 
   if(m_inFrame)
     endFrame(false);
 
-  m_backend.reset(); // destroy the backend before ImGui
-  ImGui::DestroyContext();
-
-  g_windows.erase(this);
+  g_ctx.erase(this);
 }
 
 void Context::beginFrame()
@@ -216,17 +132,20 @@ void Context::beginFrame()
   assert(!m_inFrame);
 
   m_inFrame = true;
-  updateFrameInfo(); // before calling the backend
-  m_backend->beginFrame();
+
+  updateFrameInfo();
+  updateCursor();
   updateMouseDown();
   updateMousePos();
   updateKeyMods();
+
   ImGui::NewFrame();
+  m_window->beginFrame();
 }
 
 void Context::enterFrame()
 {
-  ImGui::SetCurrentContext(m_imgui);
+  ImGui::SetCurrentContext(m_imgui.get());
 
   if(!m_inFrame)
     beginFrame();
@@ -234,23 +153,18 @@ void Context::enterFrame()
 
 void Context::endFrame(const bool render)
 {
-  ImGui::SetCurrentContext(m_imgui);
+  ImGui::SetCurrentContext(m_imgui.get());
   ImGui::ErrorCheckEndFrameRecover(reportRecovery);
 
   if(render) {
     ImGui::Render();
-    m_backend->drawFrame(ImGui::GetDrawData());
+    m_window->drawFrame(ImGui::GetDrawData());
   }
   else
     ImGui::EndFrame();
 
-  m_backend->endFrame();
+  m_window->endFrame();
   m_inFrame = false;
-}
-
-void Context::close()
-{
-  DestroyWindow(m_handle);
 }
 
 void Context::updateFrameInfo()
@@ -258,10 +172,10 @@ void Context::updateFrameInfo()
   ImGuiIO &io { ImGui::GetIO() };
 
   RECT rect;
-  GetClientRect(m_handle, &rect);
+  GetClientRect(m_window->nativeHandle(), &rect);
   io.DisplaySize = ImVec2(rect.right - rect.left, rect.bottom - rect.top);
 
-  const float scale { m_backend->scaleFactor() };
+  const float scale { m_window->scaleFactor() };
   io.DisplayFramebufferScale = ImVec2{scale, scale};
 
   const auto now { decltype(m_lastFrame)::clock::now() };
@@ -271,7 +185,7 @@ void Context::updateFrameInfo()
 
 void Context::updateCursor()
 {
-  ImGui::SetCurrentContext(m_imgui);
+  ImGui::SetCurrentContext(m_imgui.get());
 
   static HCURSOR nativeCursors[ImGuiMouseCursor_COUNT] {
     LoadCursor(nullptr, IDC_ARROW),
@@ -325,7 +239,7 @@ void Context::mouseDown(const unsigned int msg)
 
 #ifndef __APPLE__
   if(!anyMouseDown() && GetCapture() == nullptr)
-    SetCapture(m_handle);
+    SetCapture(m_window->nativeHandle());
 #endif
 
   m_mouseDown[btn] = Down | DownUnread;
@@ -353,7 +267,7 @@ void Context::mouseUp(const unsigned int msg)
   m_mouseDown[btn] &= ~Down;
 
 #ifndef __APPLE__
-  if(!anyMouseDown() && GetCapture() == m_handle)
+  if(!anyMouseDown() && GetCapture() == m_window->nativeHandle())
     ReleaseCapture();
 #endif
 }
@@ -361,7 +275,7 @@ void Context::mouseUp(const unsigned int msg)
 void Context::updateMouseDown()
 {
   // this is only called from enterFrame, the context is already set
-  // ImGui::SetCurrentContext(m_imgui);
+  // ImGui::SetCurrentContext(m_imgui.get());
 
   ImGuiIO &io { ImGui::GetIO() };
 
@@ -375,12 +289,14 @@ void Context::updateMouseDown()
 void Context::updateMousePos()
 {
   // this is only called from enterFrame, the context is already set
-  // ImGui::SetCurrentContext(m_imgui);
+  // ImGui::SetCurrentContext(m_imgui.get());
+
+  HWND windowHwnd { m_window->nativeHandle() };
 
   POINT p;
   GetCursorPos(&p);
-  const HWND targetView { WindowFromPoint(p) };
-  ScreenToClient(m_handle, &p);
+  const HWND targetHwnd { WindowFromPoint(p) };
+  ScreenToClient(windowHwnd, &p);
 
   ImGuiIO &io { ImGui::GetIO() };
 
@@ -388,9 +304,9 @@ void Context::updateMousePos()
   // Our InputView overlays SWELL's NSView.
   // Capturing is not used as macOS sends mouse up events from outside of the
   // frame when the mouse down event occured within.
-  if(IsChild(m_handle, targetView) || anyMouseDown())
+  if(IsChild(windowHwnd, targetHwnd) || anyMouseDown())
 #else
-  if(targetView == m_handle || GetCapture() == m_handle)
+  if(targetHwnd == windowHwnd || GetCapture() == windowHwnd)
 #endif
     io.MousePos = ImVec2(static_cast<float>(p.x), static_cast<float>(p.y));
   else
@@ -399,7 +315,7 @@ void Context::updateMousePos()
 
 void Context::mouseWheel(const unsigned int msg, const short delta)
 {
-  ImGui::SetCurrentContext(m_imgui);
+  ImGui::SetCurrentContext(m_imgui.get());
 
 #ifndef WHEEL_DELTA
   constexpr float WHEEL_DELTA {
@@ -419,7 +335,7 @@ void Context::mouseWheel(const unsigned int msg, const short delta)
 void Context::updateKeyMods()
 {
   // this is only called from enterFrame, the context is already set
-  // ImGui::SetCurrentContext(m_imgui);
+  // ImGui::SetCurrentContext(m_imgui.get());
 
   constexpr int down { 0x8000 };
 
@@ -432,7 +348,7 @@ void Context::updateKeyMods()
 
 void Context::keyInput(const uint8_t key, const bool down)
 {
-  ImGui::SetCurrentContext(m_imgui);
+  ImGui::SetCurrentContext(m_imgui.get());
   ImGuiIO &io { ImGui::GetIO() };
   io.KeysDown[key] = down;
 }
@@ -442,7 +358,7 @@ void Context::charInput(const unsigned int codepoint)
   if(codepoint < 32 || (codepoint > 126 && codepoint < 160))
     return;
 
-  ImGui::SetCurrentContext(m_imgui);
+  ImGui::SetCurrentContext(m_imgui.get());
   ImGuiIO &io { ImGui::GetIO() };
   io.AddInputCharacter(codepoint);
 }

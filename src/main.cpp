@@ -1,5 +1,5 @@
 #include "api.hpp"
-#include "context.hpp"
+#include "window.hpp"
 
 #define REAPERAPI_IMPLEMENT
 #include <reaper_plugin_functions.h>
@@ -52,7 +52,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
 
   IMGUI_CHECKVERSION();
 
-  Context::s_instance = instance;
+  Window::s_instance = instance;
   API::registerAll();
 
   return 1;

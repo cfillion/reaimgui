@@ -8,17 +8,14 @@
 #include <memory>
 
 #include <imgui/imgui.h>
-#include <reaper_plugin.h>
-#include <WDL/wdltypes.h>
 
-class Backend;
 class Watchdog;
+class Window;
 struct ImFontAtlas;
 struct ImGuiContext;
 
 class Context {
 public:
-  static REAPER_PLUGIN_HINSTANCE s_instance;
   static bool exists(Context *);
   static size_t count();
   static void heartbeat();
@@ -27,22 +24,24 @@ public:
   Context(const Context &) = delete;
   ~Context();
 
-  HWND handle() const { return m_handle; }
+  void setCloseRequested(bool req = true) { m_closeReq = req; }
   bool isCloseRequested() const { return m_closeReq; }
+
   const Color &clearColor() const { return m_clearColor; }
   void setClearColor(const Color &col) { m_clearColor = col; }
 
   void enterFrame();
-  void close();
+  void updateCursor();
 
   void mouseDown(unsigned int msg);
   void mouseUp(unsigned int msg);
+  void mouseWheel(unsigned int msg, short delta);
   void keyInput(uint8_t key, bool down);
   void charInput(unsigned int);
 
-private:
-  static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
+  Window *window() const { return m_window.get(); }
 
+private:
   enum ButtonState {
     Down       = 1<<0,
     DownUnread = 1<<1,
@@ -51,22 +50,19 @@ private:
   void setupImGui();
   void beginFrame();
   void endFrame(bool render);
-  void updateFrameInfo();
-  void updateCursor();
   bool anyMouseDown() const;
+  void updateFrameInfo();
   void updateMouseDown();
   void updateMousePos();
-  void mouseWheel(unsigned int msg, short delta);
   void updateKeyMods();
 
-  HWND m_handle;
   bool m_inFrame, m_closeReq;
   Color m_clearColor;
-  std::array<char, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
+  std::array<uint8_t, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
 
-  ImGuiContext *m_imgui;
-  std::unique_ptr<Backend> m_backend;
+  std::unique_ptr<ImGuiContext, void(*)(ImGuiContext*)> m_imgui;
+  std::unique_ptr<Window> m_window; // must be after m_imgui for correct destruction
   std::shared_ptr<Watchdog> m_watchdog;
   std::shared_ptr<ImFontAtlas> m_fontAtlas;
 };

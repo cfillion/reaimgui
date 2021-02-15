@@ -2,6 +2,8 @@
 
 #include "context.hpp"
 
+#include <swell/swell-types.h>
+
 constexpr NSRange kEmptyRange { NSNotFound, 0 };
 
 @implementation InputView

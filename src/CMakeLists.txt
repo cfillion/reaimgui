@@ -32,6 +32,7 @@ add_library(${PROJECT_NAME} SHARED
   main.cpp
   opengl_renderer.cpp
   watchdog.cpp
+  window.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
@@ -50,7 +51,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 if(WIN32)
   # TODO
   # target_sources(${PROJECT_NAME} PRIVATE buildinfo.rc)
-  target_sources(${PROJECT_NAME} PRIVATE win32_backend.cpp)
+  target_sources(${PROJECT_NAME} PRIVATE win32_window.cpp)
   target_compile_options(${PROJECT_NAME} PUBLIC /W3 /WX /wd4244 /wd4267 /wd4312 /wd4996 /wd5208)
   target_compile_definitions(${PROJECT_NAME} PUBLIC NOMINMAX UNICODE)
 
@@ -76,13 +77,13 @@ else()
   endif()
 
   if(APPLE)
-    target_sources(${PROJECT_NAME} PRIVATE cocoa_backend.mm inputview.mm)
+    target_sources(${PROJECT_NAME} PRIVATE cocoa_window.mm inputview.mm)
     target_compile_options(${PROJECT_NAME} PRIVATE -fobjc-arc)
 
     find_package(OpenGL REQUIRED)
     target_link_libraries(${PROJECT_NAME} OpenGL::GL)
   else()
-    target_sources(${PROJECT_NAME} PRIVATE gdk_backend.cpp)
+    target_sources(${PROJECT_NAME} PRIVATE gdk_window.cpp)
 
     pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
     pkg_search_module(GDK REQUIRED IMPORTED_TARGET gdk-3.0)

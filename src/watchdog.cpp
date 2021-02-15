@@ -19,15 +19,10 @@ std::shared_ptr<Watchdog> Watchdog::get()
 
 Watchdog::Watchdog()
 {
-  plugin_register("timer", reinterpret_cast<void *>(&timerTick));
+  plugin_register("timer", reinterpret_cast<void *>(&Context::heartbeat));
 }
 
 Watchdog::~Watchdog()
 {
-  plugin_register("-timer", reinterpret_cast<void *>(&timerTick));
-}
-
-void Watchdog::timerTick()
-{
-  Context::heartbeat();
+  plugin_register("-timer", reinterpret_cast<void *>(&Context::heartbeat));
 }

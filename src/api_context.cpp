@@ -1,5 +1,7 @@
 #include "api_helper.hpp"
 
+#include "window.hpp"
+
 #include <stdexcept>
 
 constexpr size_t MAX_INSTANCES { 99 };
@@ -33,14 +35,14 @@ DEFINE_API(void, DestroyContext, ((ImGui_Context*, ctx)),
 R"(Close and free the resources used by a window.)",
 {
   CHECK_CONTEXT(ctx);
-  ctx->close();
+  delete ctx;
 });
 
 DEFINE_API(void *, GetNativeHwnd, ((ImGui_Context*, ctx)),
 R"(Return the native handle for the window.)",
 {
   CHECK_CONTEXT(ctx, nullptr);
-  return ctx->handle();
+  return ctx->window()->nativeHandle();
 });
 
 DEFINE_API(bool, IsCloseRequested, ((ImGui_Context*, ctx)),

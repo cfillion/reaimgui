@@ -9,9 +9,6 @@ public:
 
   Watchdog();
   ~Watchdog();
-
-private:
-  static void timerTick();
 };
 
 #endif
