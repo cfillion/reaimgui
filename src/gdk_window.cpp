@@ -30,15 +30,13 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   : m_impl { std::make_unique<Impl>() }
 {
   HWND hwnd { createSwellDialog(title) };
+  hwnd->m_position = rect;
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
   ShowWindow(hwnd, SW_SHOW);
 
   m_impl->ctx = ctx;
   m_impl->hwnd = HwndPtr { hwnd };
   m_impl->window = m_impl->hwnd->m_oswindow;
-
-  gdk_window_move_resize(m_impl->window,
-    rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top);
 
   gdk_window_set_events(m_impl->window, GdkEventMask(
     gdk_window_get_events(m_impl->window) |
