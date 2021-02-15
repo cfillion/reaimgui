@@ -38,6 +38,9 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   m_impl->hwnd = HwndPtr { hwnd };
   m_impl->window = m_impl->hwnd->m_oswindow;
 
+  if(static_cast<void *>(m_impl->window) == hwnd)
+    throw std::runtime_error { "headless SWELL is not supported" };
+
   // prevent invalidation (= displaying garbage) when moving another window over
   gdk_window_freeze_updates(m_impl->window);
 
