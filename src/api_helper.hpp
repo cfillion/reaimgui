@@ -84,6 +84,8 @@ void *InvokeReaScriptAPI(void **argv, int argc)
     ))                                                                   \
   }
 
+#define NO_ARGS ((,))
+
 #include "context.hpp"
 #include <reaper_plugin_functions.h>
 

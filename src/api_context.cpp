@@ -8,45 +8,46 @@ constexpr size_t MAX_INSTANCES { 99 };
 
 DEFINE_API(ImGui_Context*, CreateContext,
 ((const char*, title))((int, x))((int, y))((int, w))((int, h)),
-R"(Create a new window. Call ImGui_UpdateWindow at every timer cycle until destroyed to keep the window active.)",
+R"(Create a new Dear ImGui context and OS window. The context will remain active as long as it is used every timer cycle.)",
 {
-  if(Context::count() >= MAX_INSTANCES)
+  if(Context::count() >= MAX_INSTANCES) {
+    ReaScriptError("ReaImGui: ImGui_CreateContext: too many windows");
     return nullptr;
+  }
 
-  Context *ctx {};
   try {
-    ctx = new Context(title, x, y, w, h);
+    return new Context(title, x, y, w, h);
   }
   catch(const std::runtime_error &e) {
     char msg[1024];
     snprintf(msg, sizeof(msg), "ReaImGui: ImGui_CreateContext: %s", e.what());
     ReaScriptError(msg);
+    return nullptr;
   }
-  return ctx;
-});
-
-DEFINE_API(bool, IsContextValid, ((ImGui_Context*, ctx)),
-R"(Return whether the window is still open.)",
-{
-  return Context::exists(ctx);
 });
 
 DEFINE_API(void, DestroyContext, ((ImGui_Context*, ctx)),
-R"(Close and free the resources used by a window.)",
+R"(Close and free the resources used by a context.)",
 {
   CHECK_CONTEXT(ctx);
   delete ctx;
 });
 
+DEFINE_API(bool, IsContextValid, ((ImGui_Context*, ctx)),
+R"(Return whether the context is still active.)",
+{
+  return Context::exists(ctx);
+});
+
 DEFINE_API(void *, GetNativeHwnd, ((ImGui_Context*, ctx)),
-R"(Return the native handle for the window.)",
+R"(Return the native handle for the context's OS window.)",
 {
   CHECK_CONTEXT(ctx, nullptr);
   return ctx->window()->nativeHandle();
 });
 
 DEFINE_API(bool, IsCloseRequested, ((ImGui_Context*, ctx)),
-R"(Return whether the user has requested closing the window since the previous frame.)",
+R"(Return whether the user has requested closing the OS window since the previous frame.)",
 {
   CHECK_CONTEXT(ctx, false);
   return ctx->isCloseRequested();
@@ -78,10 +79,24 @@ DEFINE_API(double, GetTime, ((ImGui_Context*,ctx)),
   return ImGui::GetTime();
 });
 
+DEFINE_API(double, GetDeltaTime, ((ImGui_Context*,ctx)),
+"Time elapsed since last frame, in seconds.",
+{
+  ENTER_CONTEXT(ctx, 0.0);
+  return ImGui::GetIO().DeltaTime;
+});
+
 // TODO: remove this
 DEFINE_API(void, FooBar, ((ImGui_Context*,ctx)),
 R"()",
 {
   ENTER_CONTEXT(ctx);
   ImGui::ShowDemoWindow();
+});
+
+// TODO: move somewhere else? (not context-related)
+DEFINE_API(double, FLT_MIN, NO_ARGS,
+"",
+{
+  return FLT_MIN;
 });

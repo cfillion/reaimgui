@@ -64,7 +64,19 @@ DEFINE_API(bool, RadioButtonEx, ((ImGui_Context*,ctx))
   return ImGui::RadioButton(label, valueInOut, valueButton);
 });
 
-// IMGUI_API void          ProgressBar(float fraction, const ImVec2& size_arg = ImVec2(-FLT_MIN, 0), const char* overlay = NULL);
+DEFINE_API(void, ProgressBar, ((ImGui_Context*,ctx))
+((double,fraction))
+((double*,widthInOptional))((double*,heightInOptional))
+((const char*,overlayInOptional)),
+"Default values: width = -FLT_MIN, height = 0.0, overlay = nil",
+{
+  ENTER_CONTEXT(ctx);
+  nullIfEmpty(overlayInOptional);
+
+  ImGui::ProgressBar(fraction,
+    ImVec2(valueOr(widthInOptional, -FLT_MIN), valueOr(heightInOptional, 0.0)),
+    overlayInOptional);
+});
 
 DEFINE_API(void, Bullet, ((ImGui_Context*,ctx)),
 "Draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses.",

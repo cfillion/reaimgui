@@ -41,6 +41,7 @@ demo = { open = true }
 
 local r = reaper
 local ctx = r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 720)
+local FLT_MIN = r.ImGui_FLT_MIN()
 
 function demo.loop()
   if r.ImGui_IsCloseRequested(ctx) then
@@ -218,9 +219,8 @@ function demo.ShowDemoWindow(open)
   -- e.g. Use 2/3 of the space for widgets and 1/3 for labels (right align)
   --r.ImGui_PushItemWidth(-r.ImGui_GetWindowWidth() * 0.35f);
 
-  -- TODO this one
   -- e.g. Leave a fixed amount of width for labels (by passing a negative value), the rest goes to widgets.
-  --r.ImGui_PushItemWidth(r.ImGui_GetFontSize() * -12);
+  r.ImGui_PushItemWidth(ctx, r.ImGui_GetFontSize(ctx) * -12);
 
   -- Menu Bar
   if r.ImGui_BeginMenuBar(ctx) then
@@ -451,6 +451,9 @@ widgets = {
     current_item2 = 0,
     current_item3 = -1,
   },
+  lists = {
+   current_idx = 1,
+  },
   selectables = {
     basic    = { false, false, false, false, false },
     single   = -1,
@@ -513,6 +516,13 @@ label:\n"
     progress     = 0.0,
     progress_dir = 1,
   },
+  colors = {
+    rgba = 0x72909ac8,
+    alpha_preview = true,
+    alpha_half_preview = false,
+    drag_and_drop = true,
+    options_menu = true,
+  },
 }
 
 local tooltip_curve = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 })
@@ -572,8 +582,7 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_SameLine(ctx)
 
     -- Arrow buttons with Repeater
-    -- local spacing = r.ImGui_GetStyle().ItemInnerSpacing.x TODO
-    local spacing = 1
+    local rv,spacing = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())
     r.ImGui_PushButtonRepeat(ctx, true)
     if r.ImGui_ArrowButton(ctx, '##left', r.ImGui_Dir_Left()) then
       widgets.basic.counter = widgets.basic.counter - 1
@@ -840,7 +849,7 @@ function demo.ShowDemoWindowWidgets()
       r.ImGui_TextColored(ctx, 0xFF00FFFF, 'Pink')
       r.ImGui_TextColored(ctx, 0xFFFF00FF, 'Yellow')
       r.ImGui_TextDisabled(ctx, 'Disabled');
-      r.ImGui_SameLine(ctx); demo.HelpMarker('The TextDisabled color is stored in ImGuiStyle.') -- TODO style
+      r.ImGui_SameLine(ctx); demo.HelpMarker('The TextDisabled color is stored in ImGuiStyle.')
       r.ImGui_TreePop(ctx)
     end
 
@@ -1025,48 +1034,45 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_TreePop(ctx)
   end
 
-  -- TODO!
-  -- if (ImGui::TreeNode("List boxes"))
-  -- {
-  --     // Using the generic BeginListBox() API, you have full control over how to display the combo contents.
-  --     // (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
-  --     // stored in the object itself, etc.)
-  --     const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" };
-  --     static int item_current_idx = 0; // Here we store our selection data as an index.
-  --     if (ImGui::BeginListBox("listbox 1"))
-  --     {
-  --         for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-  --         {
-  --             const bool is_selected = (item_current_idx == n);
-  --             if (ImGui::Selectable(items[n], is_selected))
-  --                 item_current_idx = n;
-  --
-  --             // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-  --             if (is_selected)
-  --                 ImGui::SetItemDefaultFocus();
-  --         }
-  --         ImGui::EndListBox();
-  --     }
-  --
-  --     // Custom size: use all width, 5 items tall
-  --     ImGui::Text("Full-width:");
-  --     if (ImGui::BeginListBox("##listbox 2", ImVec2(-FLT_MIN, 5 * ImGui::GetTextLineHeightWithSpacing())))
-  --     {
-  --         for (int n = 0; n < IM_ARRAYSIZE(items); n++)
-  --         {
-  --             const bool is_selected = (item_current_idx == n);
-  --             if (ImGui::Selectable(items[n], is_selected))
-  --                 item_current_idx = n;
-  --
-  --             // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-  --             if (is_selected)
-  --                 ImGui::SetItemDefaultFocus();
-  --         }
-  --         ImGui::EndListBox();
-  --     }
-  --
-  --     ImGui::TreePop();
-  -- }
+  if r.ImGui_TreeNode(ctx, 'List boxes') then
+    -- Using the generic BeginListBox() API, you have full control over how to display the combo contents.
+    -- (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
+    -- stored in the object itself, etc.)
+    local items = { 'AAAA', 'BBBB', 'CCCC', 'DDDD', 'EEEE', 'FFFF', 'GGGG', 'HHHH', 'IIII', 'JJJJ', 'KKKK', 'LLLLLLL', 'MMMM', 'OOOOOOO' }
+    if r.ImGui_BeginListBox(ctx, 'listbox 1') then
+      for n,v in ipairs(items) do
+        local is_selected = widgets.lists.current_idx == n
+        if r.ImGui_Selectable(ctx, v, is_selected) then
+          widgets.lists.current_idx = n
+        end
+
+        -- Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+        if is_selected then
+          r.ImGui_SetItemDefaultFocus(ctx)
+        end
+      end
+      r.ImGui_EndListBox(ctx)
+    end
+
+    -- Custom size: use all width, 5 items tall
+    r.ImGui_Text(ctx, 'Full-width:')
+    if r.ImGui_BeginListBox(ctx, '##listbox 2', -FLT_MIN, 5 * r.ImGui_GetTextLineHeightWithSpacing(ctx)) then
+      for n,v in ipairs(items) do
+        local is_selected = widgets.lists.current_idx == n
+        if r.ImGui_Selectable(ctx, v, is_selected) then
+          widgets.lists.current_idx = n;
+        end
+
+        -- Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+        if is_selected then
+          r.ImGui_SetItemDefaultFocus(ctx)
+        end
+      end
+      r.ImGui_EndListBox(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
 
   if r.ImGui_TreeNode(ctx, 'Selectables') then
     -- Selectable() has 2 overloads:
@@ -1212,7 +1218,7 @@ function demo.ShowDemoWindowWidgets()
       rv,widgets.input.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_ReadOnly', widgets.input.multiline.flags, r.ImGui_InputTextFlags_ReadOnly());
       rv,widgets.input.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_AllowTabInput', widgets.input.multiline.flags, r.ImGui_InputTextFlags_AllowTabInput());
       rv,widgets.input.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_CtrlEnterForNewLine', widgets.input.multiline.flags, r.ImGui_InputTextFlags_CtrlEnterForNewLine());
-      rv,widgets.input.multiline.text = r.ImGui_InputTextMultiline(ctx, '##source', widgets.input.multiline.text, -1, r.ImGui_GetTextLineHeight(ctx) * 16, widgets.input.multiline.flags)
+      rv,widgets.input.multiline.text = r.ImGui_InputTextMultiline(ctx, '##source', widgets.input.multiline.text, -FLT_MIN, r.ImGui_GetTextLineHeight(ctx) * 16, widgets.input.multiline.flags)
       r.ImGui_TreePop(ctx)
     end
 
@@ -1531,66 +1537,67 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_Separator(ctx)
 
     -- Animate a simple progress bar
-    -- if widgets.plots.animate then
-    --   widgets.plots.progress = widgets.plots.progress +
-    --     (widgets.plots.progress_dir * 0.4f * r.ImGui_GetDeltaTime())
-    --   if widgets.plots.progress >= +1.1 then
-    --     widgets.plots.progress = +1.1
-    --     widgets.plots.progress_dir = widgets.plots.progress_dir * -1
-    --   elseif widgets.plots.progress <= -0.1 then
-    --     widgets.plots.progress = -0.1
-    --     widgets.plots.progress_dir = widgets.plots.progress_dir * -1
-    --   end
-    -- end
-    --
-    -- -- Typically we would use (-1.0f,0.0f) or (-FLT_MIN,0.0f) to use all available width,
-    -- -- or (width,0.0f) for a specified width. (0.0f,0.0f) uses ItemWidth.
-    -- r.ImGui_ProgressBar(ctx, progress, 0.0, 0.0)
-    -- r.ImGui_SameLine(0.0, r.ImGui_GetStyle().ItemInnerSpacing.x)
-    -- r.ImGui_Text(ctx, 'Progress Bar')
-    --
-    -- local progress_saturated = demo.clamp(progress, 0.0, 1.0);
-    -- local buf = ("%d/%d"):format(progress_saturated * 1753, 1753)
-    -- r.ImGui_ProgressBar(progress, 0.0, 0.0, buf);
+    if widgets.plots.animate then
+      widgets.plots.progress = widgets.plots.progress +
+        (widgets.plots.progress_dir * 0.4 * r.ImGui_GetDeltaTime(ctx))
+      if widgets.plots.progress >= 1.1 then
+        widgets.plots.progress = 1.1
+        widgets.plots.progress_dir = widgets.plots.progress_dir * -1
+      elseif widgets.plots.progress <= -0.1 then
+        widgets.plots.progress = -0.1
+        widgets.plots.progress_dir = widgets.plots.progress_dir * -1
+      end
+    end
+
+    -- Typically we would use (-1.0f,0.0f) or (-FLT_MIN,0.0f) to use all available width,
+    -- or (width,0.0f) for a specified width. (0.0f,0.0f) uses ItemWidth.
+    r.ImGui_ProgressBar(ctx, widgets.plots.progress, 0.0, 0.0)
+    r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[2])
+    r.ImGui_Text(ctx, 'Progress Bar')
+
+    local progress_saturated = demo.clamp(widgets.plots.progress, 0.0, 1.0);
+    local buf = ('%d/%d'):format(math.floor(progress_saturated * 1753), 1753)
+    r.ImGui_ProgressBar(ctx, widgets.plots.progress, 0.0, 0.0, buf);
 
     r.ImGui_TreePop(ctx)
   end
---
---     if (r.ImGui_TreeNode("Color/Picker Widgets"))
---     {
---         static ImVec4 color = ImVec4(114.0f / 255.0f, 144.0f / 255.0f, 154.0f / 255.0f, 200.0f / 255.0f);
---
---         static bool alpha_preview = true;
---         static bool alpha_half_preview = false;
---         static bool drag_and_drop = true;
---         static bool options_menu = true;
---         static bool hdr = false;
---         r.ImGui_Checkbox("With Alpha Preview", &alpha_preview);
---         r.ImGui_Checkbox("With Half Alpha Preview", &alpha_half_preview);
---         r.ImGui_Checkbox("With Drag and Drop", &drag_and_drop);
---         r.ImGui_Checkbox("With Options Menu", &options_menu); r.ImGui_SameLine(); HelpMarker("Right-click on the individual color widget to show options.");
---         r.ImGui_Checkbox("With HDR", &hdr); r.ImGui_SameLine(); HelpMarker("Currently all this does is to lift the 0..1 limits on dragging widgets.");
---         ImGuiColorEditFlags misc_flags = (hdr ? ImGuiColorEditFlags_HDR : 0) | (drag_and_drop ? 0 : ImGuiColorEditFlags_NoDragDrop) | (alpha_half_preview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alpha_preview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (options_menu ? 0 : ImGuiColorEditFlags_NoOptions);
---
---         r.ImGui_Text("Color widget:");
---         r.ImGui_SameLine(); HelpMarker(
---             "Click on the color square to open a color picker.\n"
---             "CTRL+click on individual component to input value.\n");
---         r.ImGui_ColorEdit3("MyColor##1", (float*)&color, misc_flags);
---
---         r.ImGui_Text("Color widget HSV with Alpha:");
---         r.ImGui_ColorEdit4("MyColor##2", (float*)&color, ImGuiColorEditFlags_DisplayHSV | misc_flags);
---
---         r.ImGui_Text("Color widget with Float Display:");
---         r.ImGui_ColorEdit4("MyColor##2f", (float*)&color, ImGuiColorEditFlags_Float | misc_flags);
---
---         r.ImGui_Text("Color button with Picker:");
---         r.ImGui_SameLine(); HelpMarker(
---             "With the ImGuiColorEditFlags_NoInputs flag you can hide all the slider/text inputs.\n"
---             "With the ImGuiColorEditFlags_NoLabel flag you can pass a non-empty label which will only "
---             "be used for the tooltip and picker popup.");
---         r.ImGui_ColorEdit4("MyColor##3", (float*)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | misc_flags);
---
+
+  if r.ImGui_TreeNode(ctx, 'Color/Picker Widgets') then
+    -- static bool hdr = false;
+    rv,widgets.colors.alpha_preview      = r.ImGui_Checkbox(ctx, 'With Alpha Preview',      widgets.colors.alpha_preview)
+    rv,widgets.colors.alpha_half_preview = r.ImGui_Checkbox(ctx, 'With Half Alpha Preview', widgets.colors.alpha_half_preview)
+    rv,widgets.colors.drag_and_drop      = r.ImGui_Checkbox(ctx, 'With Drag and Drop',      widgets.colors.drag_and_drop)
+    rv,widgets.colors.options_menu       = r.ImGui_Checkbox(ctx, 'With Options Menu',       widgets.colors.options_menu)
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Right-click on the individual color widget to show options.')
+    -- r.ImGui_Checkbox("With HDR", &hdr); r.ImGui_SameLine(); HelpMarker("Currently all this does is to lift the 0..1 limits on dragging widgets.");
+    local misc_flags = --(widgets.colors.hdr and r.ImGui_ColorEditFlags_HDR() or 0) |
+    (widgets.colors.drag_and_drop and 0 or r.ImGui_ColorEditFlags_NoDragDrop()) |
+    (widgets.colors.alpha_half_preview and r.ImGui_ColorEditFlags_AlphaPreviewHalf()
+    or (widgets.colors.alpha_preview and r.ImGui_ColorEditFlags_AlphaPreview() or 0)) |
+    (widgets.colors.options_menu  and 0 or r.ImGui_ColorEditFlags_NoOptions())
+
+    r.ImGui_Text(ctx, 'Color widget:')
+    r.ImGui_SameLine(ctx); demo.HelpMarker(
+      'Click on the color square to open a color picker.\n\z
+       CTRL+click on individual component to input value.\n')
+    local argb = widgets.colors.rgba
+    argb = (argb >> 8) | (argb << 24 & 0xFF000000) -- move alpha channel to the last byte
+    rv,argb = r.ImGui_ColorEdit(ctx, 'MyColor##1', argb, r.ImGui_ColorEditFlags_NoAlpha() | misc_flags)
+    widgets.colors.rgba = (argb << 8) | (argb >> 24 & 0xFF) -- restore alpha channel position
+
+    r.ImGui_Text(ctx, 'Color widget HSV with Alpha:')
+    rv,widgets.colors.rgba = r.ImGui_ColorEdit(ctx, 'MyColor##2', widgets.colors.rgba, r.ImGui_ColorEditFlags_DisplayHSV() | misc_flags)
+
+    r.ImGui_Text(ctx, 'Color widget with Float Display:')
+    rv,widgets.colors.rgba = r.ImGui_ColorEdit(ctx, 'MyColor##2f', widgets.colors.rgba, r.ImGui_ColorEditFlags_Float() | misc_flags)
+
+    r.ImGui_Text(ctx, 'Color button with Picker:')
+    r.ImGui_SameLine(ctx); demo.HelpMarker(
+      'With the ImGuiColorEditFlags_NoInputs flag you can hide all the slider/text inputs.\n\z
+       With the ImGuiColorEditFlags_NoLabel flag you can pass a non-empty label which will only \z
+       be used for the tooltip and picker popup.')
+    rv,widgets.colors.rgba = r.ImGui_ColorEdit(ctx, 'MyColor##3', widgets.colors.rgba, r.ImGui_ColorEditFlags_NoInputs() | r.ImGui_ColorEditFlags_NoLabel() | misc_flags);
+
 --         r.ImGui_Text("Color button with Custom Picker Popup:");
 --
 --         // Generate a default palette. The palette will persist and can be edited.
@@ -1726,9 +1733,9 @@ function demo.ShowDemoWindowWidgets()
 --         r.ImGui_ColorEdit4("HSV shown as RGB##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
 --         r.ImGui_ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
 --         r.ImGui_DragFloat4("Raw HSV values", (float*)&color_hsv, 0.01f, 0.0f, 1.0f);
---
---         r.ImGui_TreePop();
---     }
+
+    r.ImGui_TreePop(ctx)
+  end
 --
 --     if (r.ImGui_TreeNode("Drag/Slider Flags"))
 --     {

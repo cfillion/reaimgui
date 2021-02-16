@@ -74,7 +74,9 @@ R"(Helper over BeginCombo()/EndCombo() for convenience purpose. Use \31 (ASCII U
 // Widgets: List Boxes
 DEFINE_API(bool, ListBox, ((ImGui_Context*,ctx))((const char*,label))
 ((int*,currentItemInOut))((char*,items))((int*,heightInItemsInOptional)),
-R"(Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
+R"(This is an helper over BeginListBox()/EndListBox() for convenience purpose. This is analoguous to how Combos are created.
+
+Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
 
 'heightInItems' defaults to -1.)",
 {
@@ -85,9 +87,31 @@ R"(Use \31 (ASCII Unit Separator) to separate items within the string and to ter
   return ImGui::ListBox(label, currentItemInOut, strings.data(), strings.size(),
     valueOr(heightInItemsInOptional, -1));
 });
-// IMGUI_API bool          ListBox(const char* label, int* current_item, const char* const items[], int items_count, int height_in_items = -1);
-// IMGUI_API bool          ListBox(const char* label, int* current_item, bool (*items_getter)(void* data, int idx, const char** out_text), void* data, int items_count, int height_in_items = -1);
-// - FIXME: To be consistent with all the newer API, ListBoxHeader/ListBoxFooter should in reality be called BeginListBox/EndListBox. Will rename them.
-// IMGUI_API bool          ListBoxHeader(const char* label, const ImVec2& size = ImVec2(0, 0)); // use if you want to reimplement ListBox() will custom data or interactions. if the function return true, you can output elements then call ListBoxFooter() afterwards.
-// IMGUI_API bool          ListBoxHeader(const char* label, int items_count, int height_in_items = -1); // "
-// IMGUI_API void          ListBoxFooter();                                                    // terminate the scrolling region. only call ListBoxFooter() if ListBoxHeader() returned true!
+
+DEFINE_API(bool, BeginListBox, ((ImGui_Context*,ctx))
+((const char*,label))((double*,widthInOptional))((double*,heightInOptional)),
+R"(Open a framed scrolling region.  This is essentially a thin wrapper to using BeginChild/EndChild with some stylistic changes.
+
+The BeginListBox()/EndListBox() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() or any items.
+
+- Choose frame width:   width  > 0.0: custom  /  width  < 0.0 or -FLT_MIN: right-align   /  width  = 0.0 (default): use current ItemWidth
+- Choose frame height:  height > 0.0: custom  /  height < 0.0 or -FLT_MIN: bottom-align  /  height = 0.0 (default): arbitrary default height which can fit ~7 items
+
+Default values: width = 0, height = 0
+
+See ImGui_EndListBox.)",
+{
+  ENTER_CONTEXT(ctx, false);
+
+  return ImGui::BeginListBox(label,
+    ImVec2(valueOr(widthInOptional, 0.0), valueOr(heightInOptional, 0.0)));
+});
+
+DEFINE_API(void, EndListBox, ((ImGui_Context*,ctx)),
+R"(Only call EndListBox() if BeginListBox() returned true!
+
+See ImGui_BeginListBox.)",
+{
+  ENTER_CONTEXT(ctx);
+  ImGui::EndListBox();
+});

@@ -111,6 +111,12 @@ DEFINE_API(double, GetTextLineHeight, ((ImGui_Context*,ctx)),
   ENTER_CONTEXT(ctx, 0.0);
   return ImGui::GetTextLineHeight();
 });
-    // IMGUI_API float         GetTextLineHeightWithSpacing();                                 // ~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)
+
+DEFINE_API(double, GetTextLineHeightWithSpacing, ((ImGui_Context*,ctx)),
+"~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)",
+{
+  ENTER_CONTEXT(ctx, 0.0);
+  return ImGui::GetTextLineHeightWithSpacing();
+});
     // IMGUI_API float         GetFrameHeight();                                               // ~ FontSize + style.FramePadding.y * 2
     // IMGUI_API float         GetFrameHeightWithSpacing();                                    // ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)

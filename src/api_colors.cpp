@@ -9,7 +9,11 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 DEFINE_API(bool, ColorEdit, ((ImGui_Context*,ctx))
 ((const char*,label))((int*,rgbaInOut)) // the ReaScript analyzer doesn't like unsigned int*
 ((int*,flagsInOptional)),
-"tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.",
+R"(Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xXXRRGGBB (XX is ignored and will not be modified).
+
+tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
+
+Default values: flags = 0)",
 {
   ENTER_CONTEXT(ctx, false);
 
