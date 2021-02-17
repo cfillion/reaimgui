@@ -1,28 +1,31 @@
 #include "api_helper.hpp"
 
   // Drag and Drop
-DEFINE_API(bool, BeginDragDropSource, ((ImGui_Context*,ctx))((int*,flagsInOptional)),
+DEFINE_API(bool, BeginDragDropSource, ((ImGui_Context*,ctx))((int*,API_RO(flags))),
 R"(Call when the current item is active. If this return true, you can call SetDragDropPayload() + EndDragDropSource().
 
 If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).)",
 {
   ENTER_CONTEXT(ctx, false);
-  return ImGui::BeginDragDropSource(valueOr(flagsInOptional, 0));
+  return ImGui::BeginDragDropSource(valueOr(API_RO(flags), 0));
 });
 
 DEFINE_API(bool, SetDragDropPayload, ((ImGui_Context*,ctx))
-((const char*,type))((const char*,data))((int*,condInOptional)),
-"type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.",
+((const char*,type))((const char*,data))((int*,API_RO(cond))),
+R"(type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
+
+Default values: cond = ImGui_Cond_Always)",
 {
   ENTER_CONTEXT(ctx, false);
   nullIfEmpty(data);
 
+  // TODO: return false if type begins with _
   return ImGui::SetDragDropPayload(type, data, data ? strlen(data) : 0,
-    valueOr(condInOptional, 0));
+    valueOr(API_RO(cond), ImGuiCond_Always));
 });
 
 DEFINE_API(void, EndDragDropSource, ((ImGui_Context*,ctx)),
-"only call EndDragDropSource() if BeginDragDropSource() returns true!",
+"Only call EndDragDropSource() if BeginDragDropSource() returns true!",
 {
   ENTER_CONTEXT(ctx);
   ImGui::EndDragDropSource();

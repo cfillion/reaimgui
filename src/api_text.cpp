@@ -59,13 +59,13 @@ DEFINE_API(void, BulletText, ((ImGui_Context*,ctx))
 });
 
 DEFINE_API(void, PushTextWrapPos, ((ImGui_Context*,ctx))
-((double*,wrapLocalPosXInOptional)),
+((double*,API_RO(wrapLocalPosX))),
 R"(Push word-wrapping position for Text*() commands. < 0.0f: no wrapping; 0.0f: wrap to end of window (or column); > 0.0f: wrap at 'wrap_pos_x' position in window local space.
 
 Default values: wrapLocalPosX = 0.0)",
 {
   ENTER_CONTEXT(ctx);
-  ImGui::PushTextWrapPos(valueOr(wrapLocalPosXInOptional, 0.0));
+  ImGui::PushTextWrapPos(valueOr(API_RO(wrapLocalPosX), 0.0));
 });
 
 

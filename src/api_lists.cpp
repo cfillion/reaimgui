@@ -39,7 +39,7 @@ static std::vector<const char *> nullSeparatedToVector(const char *list)
 
 // Widgets: Combo Box
 DEFINE_API(bool, BeginCombo, ((ImGui_Context*,ctx))((const char*,label))
-((const char*,previewValue))((int*,flagsInOptional)),
+((const char*,previewValue))((int*,API_RO(flags))),
 R"(The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() items.
 
 Default values: flags = ImGui_ComboFlags_None)",
@@ -47,7 +47,7 @@ Default values: flags = ImGui_ComboFlags_None)",
   ENTER_CONTEXT(ctx, false);
 
   return ImGui::BeginCombo(label, previewValue,
-    valueOr(flagsInOptional, ImGuiComboFlags_None));
+    valueOr(API_RO(flags), ImGuiComboFlags_None));
 });
 
 DEFINE_API(void, EndCombo, ((ImGui_Context*,ctx)),
@@ -58,22 +58,22 @@ DEFINE_API(void, EndCombo, ((ImGui_Context*,ctx)),
 });
 
 DEFINE_API(bool, Combo, ((ImGui_Context*,ctx))
-((const char*,label))((int*,currentItemInOut))((char*,items))
-((int*,popupMaxHeightInItemsInOptional)),
+((const char*,label))((int*,API_RW(currentItem)))((char*,items))
+((int*,API_RO(popupMaxHeightInItems))),
 R"(Helper over BeginCombo()/EndCombo() for convenience purpose. Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
 
-'popupMaxHeightInItems' defaults to -1.)",
+Default values: popupMaxHeightInItems = -1)",
 {
   ENTER_CONTEXT(ctx, false);
   NULL_SEPARATED_LIST(items, false);
 
-  return ImGui::Combo(label, currentItemInOut, items,
-    valueOr(popupMaxHeightInItemsInOptional, -1));
+  return ImGui::Combo(label, API_RW(currentItem), items,
+    valueOr(API_RO(popupMaxHeightInItems), -1));
 });
 
 // Widgets: List Boxes
 DEFINE_API(bool, ListBox, ((ImGui_Context*,ctx))((const char*,label))
-((int*,currentItemInOut))((char*,items))((int*,heightInItemsInOptional)),
+((int*,API_RW(currentItem)))((char*,items))((int*,API_RO(heightInItems))),
 R"(This is an helper over BeginListBox()/EndListBox() for convenience purpose. This is analoguous to how Combos are created.
 
 Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
@@ -84,12 +84,12 @@ Use \31 (ASCII Unit Separator) to separate items within the string and to termin
   NULL_SEPARATED_LIST(items, false);
 
   const auto &strings { nullSeparatedToVector(items) };
-  return ImGui::ListBox(label, currentItemInOut, strings.data(), strings.size(),
-    valueOr(heightInItemsInOptional, -1));
+  return ImGui::ListBox(label, API_RW(currentItem), strings.data(), strings.size(),
+    valueOr(API_RO(heightInItems), -1));
 });
 
 DEFINE_API(bool, BeginListBox, ((ImGui_Context*,ctx))
-((const char*,label))((double*,widthInOptional))((double*,heightInOptional)),
+((const char*,label))((double*,API_RO(width)))((double*,API_RO(height))),
 R"(Open a framed scrolling region.  This is essentially a thin wrapper to using BeginChild/EndChild with some stylistic changes.
 
 The BeginListBox()/EndListBox() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() or any items.
@@ -104,7 +104,7 @@ See ImGui_EndListBox.)",
   ENTER_CONTEXT(ctx, false);
 
   return ImGui::BeginListBox(label,
-    ImVec2(valueOr(widthInOptional, 0.0), valueOr(heightInOptional, 0.0)));
+    ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
 });
 
 DEFINE_API(void, EndListBox, ((ImGui_Context*,ctx)),

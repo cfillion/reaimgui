@@ -1,9 +1,9 @@
 #include "api_helper.hpp"
 
 DEFINE_API(bool, BeginTable, ((ImGui_Context*,ctx))
-((const char*,strId))((int, column))((int*,flagsInOptional))
-((double*,outerWidthInOptional))((double*,outerHeightInOptional))
-((double*,innerWidthInOptional)),
+((const char*,strId))((int, column))((int*,API_RO(flags)))
+((double*,API_RO(outerWidth)))((double*,API_RO(outerHeight)))
+((double*,API_RO(innerWidth))),
 R"([BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!
 - Full-featured replacement for old Columns API.
 - See Demo->Tables for demo code.
@@ -32,12 +32,12 @@ The typical call flow is:
   ENTER_CONTEXT(ctx, false);
 
   return ImGui::BeginTable(strId, column,
-    valueOr(flagsInOptional, 0),
+    valueOr(API_RO(flags), 0),
     ImVec2(
-      valueOr(outerWidthInOptional, 0.0),
-      valueOr(outerHeightInOptional, 0.0)
+      valueOr(API_RO(outerWidth), 0.0),
+      valueOr(API_RO(outerHeight), 0.0)
     ),
-    valueOr(innerWidthInOptional, 0.0)
+    valueOr(API_RO(innerWidth), 0.0)
   );
 });
 
@@ -49,14 +49,14 @@ DEFINE_API(void, EndTable, ((ImGui_Context*,ctx)),
 });
 
 DEFINE_API(void, TableNextRow, ((ImGui_Context*,ctx))
-((int*,rowFlagsInOptional))((double*,minRowHeightInOptional)),
+((int*,API_RO(rowFlags)))((double*,API_RO(minRowHeight))),
 R"(Append into the first cell of a new row.
 
 Default values: rowFlags = ImGui_TableRowFlags_None, minRowHeight = 0.0)",
 {
   ENTER_CONTEXT(ctx);
-  ImGui::TableNextRow(valueOr(rowFlagsInOptional, ImGuiTableRowFlags_None),
-    valueOr(minRowHeightInOptional, 0.0));
+  ImGui::TableNextRow(valueOr(API_RO(rowFlags), ImGuiTableRowFlags_None),
+    valueOr(API_RO(minRowHeight), 0.0));
 });
 
 DEFINE_API(bool, TableNextColumn, ((ImGui_Context*,ctx)),

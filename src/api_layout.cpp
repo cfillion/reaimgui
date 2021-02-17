@@ -10,14 +10,14 @@ DEFINE_API(void, Separator, ((ImGui_Context*,ctx)),
 });
 
 DEFINE_API(void, SameLine, ((ImGui_Context*,ctx))
-((double*,offsetFromStartXInOptional))((double*,spacingInOptional)),
+((double*,API_RO(offsetFromStartX)))((double*,API_RO(spacing))),
 R"(Call between widgets or groups to layout them horizontally. X position given in window coordinates.
 
-'offsetFromStartX' defaults to 0.0, 'spacing' defaults to -1.0.)",
+Default values: offsetFromStartX = 0.0, spacing = -1.0.)",
 {
   ENTER_CONTEXT(ctx);
-  ImGui::SameLine(valueOr(offsetFromStartXInOptional, 0.0),
-    valueOr(spacingInOptional, -1.0));
+  ImGui::SameLine(valueOr(API_RO(offsetFromStartX), 0.0),
+    valueOr(API_RO(spacing), -1.0));
 });
 
 DEFINE_API(void, NewLine, ((ImGui_Context*,ctx)),
@@ -41,18 +41,20 @@ DEFINE_API(void, Dummy, ((ImGui_Context*,ctx))((double,w))((double,h)),
   ImGui::Dummy(ImVec2(w, h));
 });
 
-DEFINE_API(void, Indent, ((ImGui_Context*,ctx))((double*,indentWidthInOptional)),
-"Move content position toward the right, by 'indentWidth', or style.IndentSpacing if 'indentWidth' <= 0",
+DEFINE_API(void, Indent, ((ImGui_Context*,ctx))((double*,API_RO(indentWidth))),
+R"(Move content position toward the right, by 'indentWidth', or style.IndentSpacing if 'indentWidth' <= 0
+
+Default values: indentWidth = 0.0)",
 {
   ENTER_CONTEXT(ctx);
-  ImGui::Indent(valueOr(indentWidthInOptional, 0.0));
+  ImGui::Indent(valueOr(API_RO(indentWidth), 0.0));
 });
 
-DEFINE_API(void, Unindent, ((ImGui_Context*,ctx))((double*,indentWidthInOptional)),
+DEFINE_API(void, Unindent, ((ImGui_Context*,ctx))((double*,API_RO(indentWidth))),
 "Move content position back to the left, by 'indentWidth', or style.IndentSpacing if 'indentWidth' <= 0",
 {
   ENTER_CONTEXT(ctx);
-  ImGui::Unindent(valueOr(indentWidthInOptional, 0.0));
+  ImGui::Unindent(valueOr(API_RO(indentWidth), 0.0));
 });
 
 DEFINE_API(void, BeginGroup, ((ImGui_Context*,ctx)),
@@ -72,13 +74,13 @@ See ImGui_BeginGroup.)",
 });
 
 DEFINE_API(void, GetCursorPos, ((ImGui_Context*,ctx))
-((double*,xOut))((double*,yOut)),
+((double*,API_W(x)))((double*,API_W(y))),
 "Cursor position in window",
 {
   ENTER_CONTEXT(ctx);
   const ImVec2 &pos { ImGui::GetCursorPos() };
-  if(xOut) *xOut = pos.x;
-  if(yOut) *yOut = pos.y;
+  if(API_W(x)) *API_W(x) = pos.x;
+  if(API_W(y)) *API_W(y) = pos.y;
 });
 
 DEFINE_API(void, SetCursorPos, ((ImGui_Context*,ctx))
@@ -92,13 +94,13 @@ DEFINE_API(void, SetCursorPos, ((ImGui_Context*,ctx))
     // IMGUI_API ImVec2        GetCursorStartPos();                                            // initial cursor position in window coordinates
 
 DEFINE_API(void, GetCursorScreenPos, ((ImGui_Context*,ctx))
-((double*,xOut))((double*,yOut)),
+((double*,API_W(x)))((double*,API_W(y))),
 "Cursor position in absolute screen coordinates [0..io.DisplaySize] (useful to work with ImDrawList API)",
 {
   ENTER_CONTEXT(ctx);
   const ImVec2 &pos { ImGui::GetCursorScreenPos() };
-  if(xOut) *xOut = pos.x;
-  if(yOut) *yOut = pos.y;
+  if(API_W(x)) *API_W(x) = pos.x;
+  if(API_W(y)) *API_W(y) = pos.y;
 });
 
 DEFINE_API(void, SetCursorScreenPos, ((ImGui_Context*,ctx))

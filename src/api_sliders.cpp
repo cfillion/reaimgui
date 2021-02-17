@@ -8,9 +8,9 @@ static void sanitizeSliderFlags(ImGuiSliderFlags &flags)
 
 // Widgets: Drag Sliders
 DEFINE_API(bool, DragInt, ((ImGui_Context*,ctx))
-((const char*,label))((int*,valueInOut))((double*,valueSpeedInOptional))
-((double*,valueMinInOptional))((double*,valueMaxInOptional))
-((const char*,formatInOptional))((int*,flagsInOptional)),
+((const char*,label))((int*,API_RW(value)))((double*,API_RO(valueSpeed)))
+((double*,API_RO(valueMin)))((double*,API_RO(valueMax)))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
 R"(- CTRL+Click on any drag box to turn them into an input box. Manually input values aren't clamped and can go off-bounds.
 - Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.g. "%.3f" -> 1.234; "%5.2f secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
 - Format string may also be set to NULL or use the default format ("%f" or "%d").
@@ -20,15 +20,15 @@ R"(- CTRL+Click on any drag box to turn them into an input box. Manually input v
 - We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.)",
 {
   ENTER_CONTEXT(ctx, false);
-  nullIfEmpty(formatInOptional);
+  nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeSliderFlags(flags);
 
-  return ImGui::DragInt(label, valueInOut,
-    valueOr(valueSpeedInOptional, 1.0),
-    valueOr(valueMinInOptional, 0.0), valueOr(valueMaxInOptional, 0.0),
-    formatInOptional, flags
+  return ImGui::DragInt(label, API_RW(value),
+    valueOr(API_RO(valueSpeed), 1.0),
+    valueOr(API_RO(valueMin), 0.0), valueOr(API_RO(valueMax), 0.0),
+    API_RO(format), flags
   );
 });
     // IMGUI_API bool          DragInt2(const char* label, int v[2], float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%d", ImGuiSliderFlags flags = 0);
@@ -37,21 +37,21 @@ R"(- CTRL+Click on any drag box to turn them into an input box. Manually input v
     // IMGUI_API bool          DragIntRange2(const char* label, int* v_current_min, int* v_current_max, float v_speed = 1.0f, int v_min = 0, int v_max = 0, const char* format = "%d", const char* format_max = NULL, ImGuiSliderFlags flags = 0);
 
 DEFINE_API(bool, DragDouble, ((ImGui_Context*,ctx))
-((const char*,label))((double*,valueInOut))((double*,valueSpeedInOptional))
-((double*,valueMinInOptional))((double*,valueMaxInOptional))
-((const char*,formatInOptional))((int*,flagsInOptional)),
+((const char*,label))((double*,API_RW(value)))((double*,API_RO(valueSpeed)))
+((double*,API_RO(valueMin)))((double*,API_RO(valueMax)))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
 "",
 {
   ENTER_CONTEXT(ctx, false);
-  nullIfEmpty(formatInOptional);
+  nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeSliderFlags(flags);
 
   return ImGui::DragScalar(label, ImGuiDataType_Double,
-    valueInOut, valueOr(valueSpeedInOptional, 1.0),
-    valueMinInOptional, valueMaxInOptional,
-    formatInOptional, flags
+    API_RW(value), valueOr(API_RO(valueSpeed), 1.0),
+    API_RO(valueMin), API_RO(valueMax),
+    API_RO(format), flags
   );
 });
 
@@ -59,35 +59,35 @@ DEFINE_API(bool, DragDouble, ((ImGui_Context*,ctx))
     // IMGUI_API bool          DragScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, float v_speed, const void* p_min = NULL, const void* p_max = NULL, const char* format = NULL, ImGuiSliderFlags flags = 0);
 
 DEFINE_API(bool, SliderInt, ((ImGui_Context*,ctx))
-((const char*,label))((int*,valueInOut))((int,valueMin))((int,valueMax))
-((const char*,formatInOptional))((int*,flagsInOptional)),
+((const char*,label))((int*,API_RW(value)))((int,valueMin))((int,valueMax))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
 "'format' is '%d' by default.",
 {
   ENTER_CONTEXT(ctx, false);
-  nullIfEmpty(formatInOptional);
+  nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeSliderFlags(flags);
 
-  return ImGui::SliderInt(label, valueInOut, valueMin, valueMax,
-    formatInOptional ? formatInOptional : "%d", flags);
+  return ImGui::SliderInt(label, API_RW(value), valueMin, valueMax,
+    API_RO(format) ? API_RO(format) : "%d", flags);
 });
 
 
 DEFINE_API(bool, SliderDouble, ((ImGui_Context*,ctx))
-((const char*,label))((double*,valueInOut))((double,valueMin))((double,valueMax))
-((const char*,formatInOptional))((int*,flagsInOptional)),
+((const char*,label))((double*,API_RW(value)))((double,valueMin))((double,valueMax))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
 "'format' is '%f' by default.",
 {
   ENTER_CONTEXT(ctx, false);
-  nullIfEmpty(formatInOptional);
+  nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeSliderFlags(flags);
 
   return ImGui::SliderScalar(label, ImGuiDataType_Double,
-    valueInOut, &valueMin, &valueMax,
-    formatInOptional ? formatInOptional : "%f", flags);
+    API_RW(value), &valueMin, &valueMax,
+    API_RO(format) ? API_RO(format) : "%f", flags);
 });
 
     // IMGUI_API bool          SliderFloat(const char* label, float* v, float v_min, float v_max, const char* format = "%.3f", ImGuiSliderFlags flags = 0);     // adjust format to decorate the value with a prefix or a suffix for in-slider labels or unit display.

@@ -23,35 +23,35 @@ static void sanitizeInputTextFlags(ImGuiInputTextFlags &flags)
 
 // Widgets: Input with Keyboard
 DEFINE_API(bool, InputText, ((ImGui_Context*,ctx))
-((const char*,label))((char*,bufOutNeedBig))((int,bufOutNeedBig_sz))
-((int*,flagsInOptional)),
+((const char*,label))((char*,API_WBIG(buf)))((int,API_WBIG_SZ(buf)))
+((int*,API_RO(flags))),
 "",
 {
   ENTER_CONTEXT(ctx, false);
 
-  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeInputTextFlags(flags);
   flags |= ImGuiInputTextFlags_CallbackResize;
 
-  return ImGui::InputText(label, bufOutNeedBig, bufOutNeedBig_sz,
+  return ImGui::InputText(label, API_WBIG(buf), API_WBIG_SZ(buf),
     flags, &inputTextCallback, nullptr);
 });
 
 DEFINE_API(bool, InputTextMultiline, ((ImGui_Context*,ctx))
-((const char*,label))((char*,bufOutNeedBig))((int,bufOutNeedBig_sz))
-((double*,widthInOptional))((double*,heightInOptional))
-((int*,flagsInOptional)),
+((const char*,label))((char*,API_WBIG(buf)))((int,API_WBIG_SZ(buf)))
+((double*,API_RO(width)))((double*,API_RO(height)))
+((int*,API_RO(flags))),
 "Default values: width = 0, height = 0, flags = ImGui_InputTextFlags_None",
 {
   ENTER_CONTEXT(ctx, false)
 
-  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeInputTextFlags(flags);
   flags |= ImGuiInputTextFlags_CallbackResize;
 
-  return ImGui::InputTextMultiline(label, bufOutNeedBig, bufOutNeedBig_sz,
-    ImVec2(valueOr(widthInOptional, 0.0), valueOr(heightInOptional, 0.0)),
-    valueOr(flagsInOptional, ImGuiInputTextFlags_None),
+  return ImGui::InputTextMultiline(label, API_WBIG(buf), API_WBIG_SZ(buf),
+    ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)),
+    valueOr(API_RO(flags), ImGuiInputTextFlags_None),
     &inputTextCallback, nullptr);
 });
 
@@ -59,65 +59,65 @@ DEFINE_API(bool, InputTextMultiline, ((ImGui_Context*,ctx))
 
 DEFINE_API(bool, InputTextWithHint, ((ImGui_Context*,ctx))
 ((const char*,label))((const char*,hint))
-((char*,bufOutNeedBig))((int,bufOutNeedBig_sz))
-((int*,flagsInOptional)),
+((char*,API_WBIG(buf)))((int,API_WBIG_SZ(buf)))
+((int*,API_RO(flags))),
 "",
 {
   ENTER_CONTEXT(ctx, false);
 
-  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeInputTextFlags(flags);
   flags |= ImGuiInputTextFlags_CallbackResize;
 
-  return ImGui::InputTextWithHint(label, hint, bufOutNeedBig, bufOutNeedBig_sz,
+  return ImGui::InputTextWithHint(label, hint, API_WBIG(buf), API_WBIG_SZ(buf),
     flags, &inputTextCallback, nullptr);
 });
 
 DEFINE_API(bool, InputInt, ((ImGui_Context*,ctx))((const char*,label))
-((int*,valueInOut))((int*,stepInOptional))((int*,stepFastInOptional))
-((int*,flagsInOptional)),
+((int*,API_RW(value)))((int*,API_RO(step)))((int*,API_RO(stepFast)))
+((int*,API_RO(flags))),
 "'step' defaults to 1, 'stepFast' defaults to 100",
 {
   ENTER_CONTEXT(ctx, false);
 
-  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeInputTextFlags(flags);
 
-  return ImGui::InputInt(label, valueInOut,
-    valueOr(stepInOptional, 1), valueOr(stepFastInOptional, 100), flags);
+  return ImGui::InputInt(label, API_RW(value),
+    valueOr(API_RO(step), 1), valueOr(API_RO(stepFast), 100), flags);
 });
 
 DEFINE_API(bool, InputDouble, ((ImGui_Context*,ctx))((const char*,label))
-((double*,valueInOut))((double*,stepInOptional))((double*,stepFastInOptional))
-((const char*,formatInOptional))((int*,flagsInOptional)),
+((double*,API_RW(value)))((double*,API_RO(step)))((double*,API_RO(stepFast)))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
 "'step' defaults to 1, 'stepFast' defaults to 100",
 {
   ENTER_CONTEXT(ctx, false);
-  nullIfEmpty(formatInOptional);
+  nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeInputTextFlags(flags);
 
-  return ImGui::InputDouble(label, valueInOut,
-    valueOr(stepInOptional, 1.0), valueOr(stepFastInOptional, 100.0),
-    formatInOptional, flags);
+  return ImGui::InputDouble(label, API_RW(value),
+    valueOr(API_RO(step), 1.0), valueOr(API_RO(stepFast), 100.0),
+    API_RO(format), flags);
 });
 
 // IMGUI_API bool          InputScalar(const char* label, ImGuiDataType data_type, void* p_data, const void* p_step = NULL, const void* p_step_fast = NULL, const char* format = NULL, ImGuiInputTextFlags flags = 0);
 // IMGUI_API bool          InputScalarN(const char* label, ImGuiDataType data_type, void* p_data, int components, const void* p_step = NULL, const void* p_step_fast = NULL, const char* format = NULL, ImGuiInputTextFlags flags = 0);
 
 DEFINE_API(bool, InputDoubleN, ((ImGui_Context*,ctx))((const char*,label))
-((reaper_array*,values))((double*,stepInOptional))((double*,stepFastInOptional))
-((const char*,formatInOptional))((int*,flagsInOptional)),
+((reaper_array*,values))((double*,API_RO(step)))((double*,API_RO(stepFast)))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
 "",
 {
   ENTER_CONTEXT(ctx, false);
-  nullIfEmpty(formatInOptional);
+  nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeInputTextFlags(flags);
 
   return ImGui::InputScalarN(label, ImGuiDataType_Double,
-    values->data, values->size, stepInOptional, stepFastInOptional,
-    formatInOptional, flags);
+    values->data, values->size, API_RO(step), API_RO(stepFast),
+    API_RO(format), flags);
 });

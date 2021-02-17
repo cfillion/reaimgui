@@ -31,13 +31,13 @@ R"(Only call EndMainMenuBar() if BeginMainMenuBar() returns true! See ImGui_Begi
 });
 
 DEFINE_API(bool, BeginMenu, ((ImGui_Context*,ctx))
-((const char*, label))((bool*, enabledInOptional)),
+((const char*, label))((bool*, API_RO(enabled))),
 R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_EndMenu.
 
 'enabled' is true by default.)",
 {
   ENTER_CONTEXT(ctx, false);
-  return ImGui::BeginMenu(label, valueOr(enabledInOptional, true));
+  return ImGui::BeginMenu(label, valueOr(API_RO(enabled), true));
 });
 
 DEFINE_API(void, EndMenu, ((ImGui_Context*,ctx)),
@@ -48,13 +48,15 @@ R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BeginMenu.)",
 });
 
 DEFINE_API(bool, MenuItem, ((ImGui_Context*,ctx))
-((const char*, label))((const char*, shortcutInOptional))
-((bool*, selectedInOptional))((bool*, enabledInOptional)),
+((const char*, label))((const char*, API_RO(shortcut)))
+((bool*, API_RWO(selected)))((bool*, API_RO(enabled))),
 R"(Return true when activated. Shortcuts are displayed for convenience but not processed by ImGui at the moment. Toggle state is written to 'selected' when provided.
 
 'enabled' is true by default.)",
 {
   ENTER_CONTEXT(ctx, false);
-  return ImGui::MenuItem(label, shortcutInOptional, selectedInOptional,
-    valueOr(enabledInOptional, true));
+  nullIfEmpty(API_RO(shortcut));
+
+  return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(selected),
+    valueOr(API_RO(enabled), true));
 });

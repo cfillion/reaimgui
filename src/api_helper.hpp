@@ -60,9 +60,6 @@ void *InvokeReaScriptAPI(void **argv, int argc)
   return ReaScriptAPI<decltype(fn)>::applyVarArg(fn, argv, argc);
 }
 
-// int* fooInOptional -> can be null, input and output (but not visible in the Lua return list)
-// int* fooInOutOptional -> cannot be null, input and output (visible in the Lua return list)
-
 #define ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
 #define ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
 
@@ -85,6 +82,14 @@ void *InvokeReaScriptAPI(void **argv, int argc)
   }
 
 #define NO_ARGS ((,))
+
+#define API_RO(var)      var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
+#define API_RW(var)      var##InOut      // read/write
+#define API_W(var)       var##Out        // write
+// Not using varInOutOptional because REAPER refuses to give them as null
+#define API_RWO(var)     var##InOptional // read/write, optional/nullable
+#define API_WBIG(var)    var##OutNeedBig    // write, resizable (realloc_cmd_ptr)
+#define API_WBIG_SZ(var) var##OutNeedBig_sz // size of previous API_BIG buffer
 
 #include "context.hpp"
 #include <reaper_plugin_functions.h>

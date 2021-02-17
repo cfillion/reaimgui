@@ -54,7 +54,7 @@ DEFINE_API(double, GetFontSize, ((ImGui_Context*,ctx)),
 });
 
 DEFINE_API(bool, PushStyleVar, ((ImGui_Context*,ctx))
-((int,varIdx))((double,val1))((double*,val2InOptional)),
+((int,varIdx))((double,val1))((double*,API_RO(val2))),
 "See ImGui_StyleVar_* for possible values of 'varIdx'.",
 {
   ENTER_CONTEXT(ctx, false);
@@ -66,9 +66,9 @@ DEFINE_API(bool, PushStyleVar, ((ImGui_Context*,ctx))
     ImGui::PushStyleVar(varIdx, val1);
     return true;
   case StyleVarType::ImVec2:
-    if(!val2InOptional)
+    if(!API_RO(val2))
       return false;
-    ImGui::PushStyleVar(varIdx, ImVec2(val1, *val2InOptional));
+    ImGui::PushStyleVar(varIdx, ImVec2(val1, *API_RO(val2)));
     return true;
   }
 
@@ -76,33 +76,33 @@ DEFINE_API(bool, PushStyleVar, ((ImGui_Context*,ctx))
 });
 
 DEFINE_API(void, PopStyleVar, ((ImGui_Context*,ctx))
-((int*,countInOptional)),
+((int*,API_RO(count))),
 R"(Reset a style variable.
 
 Default values: count = 1)",
 {
   ENTER_CONTEXT(ctx);
 
-  ImGui::PopStyleVar(valueOr(countInOptional, 1));
+  ImGui::PopStyleVar(valueOr(API_RO(count), 1));
 });
 
-#define CASE_FLOAT_VAR(var) \
-  case ImGuiStyleVar_##var: \
-    if(!val1Out)            \
-      return false;         \
-    *val1Out = style.var;   \
+#define CASE_FLOAT_VAR(var)   \
+  case ImGuiStyleVar_##var:   \
+    if(!API_W(val1))          \
+      return false;           \
+    *API_W(val1) = style.var; \
     return true;
 
-#define CASE_IMVEC2_VAR(var) \
-  case ImGuiStyleVar_##var:  \
-    if(!val1Out || !val2Out) \
-      return false;          \
-    *val1Out = style.var.x;  \
-    *val2Out = style.var.y;  \
+#define CASE_IMVEC2_VAR(var)         \
+  case ImGuiStyleVar_##var:          \
+    if(!API_W(val1) || !API_W(val2)) \
+      return false;                  \
+    *API_W(val1) = style.var.x;      \
+    *API_W(val2) = style.var.y;      \
     return true;
 
 DEFINE_API(bool, GetStyleVar, ((ImGui_Context*,ctx))
-((int,varIdx))((double*,val1Out))((double*,val2Out)),
+((int,varIdx))((double*,API_W(val1)))((double*,API_W(val2))),
 "",
 {
   ENTER_CONTEXT(ctx, false); // TODO: don't start a frame
@@ -161,22 +161,22 @@ DEFINE_API(bool, PushStyleColor, ((ImGui_Context*,ctx))
 });
 
 DEFINE_API(void, PopStyleColor, ((ImGui_Context*,ctx))
-((int*,countInOptional)),
+((int*,API_RO(count))),
 "Default values: count = 1",
 {
   ENTER_CONTEXT(ctx);
   // TODO harden
-  ImGui::PopStyleColor(valueOr(countInOptional, 1));
+  ImGui::PopStyleColor(valueOr(API_RO(count), 1));
 });
 
 DEFINE_API(int, ColorConvertHSVtoRGB,
-((double,h))((double,s))((double,v))((double*,alphaInOptional)),
+((double,h))((double,s))((double,v))((double*,API_RO(alpha))),
 "Return 0x00RRGGBB or, if alpha is provided, 0xRRGGBBAA.",
 {
-  const bool alpha { alphaInOptional != nullptr };
+  const bool alpha { API_RO(alpha) != nullptr };
   ImVec4 rgba;
   if(alpha)
-    rgba.w = *alphaInOptional;
+    rgba.w = *API_RO(alpha);
   ImGui::ColorConvertHSVtoRGB(h, s, v, rgba.x, rgba.y, rgba.z);
   return Color{rgba}.pack(alpha);
 });

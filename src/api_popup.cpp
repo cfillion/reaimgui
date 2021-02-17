@@ -1,7 +1,7 @@
 #include "api_helper.hpp"
 
 DEFINE_API(bool, BeginPopup, ((ImGui_Context*,ctx))
-((const char*,str_id))((int*,flagsInOptional)),
+((const char*,str_id))((int*,API_RO(flags))),
 R"(Popups, Modals
  - They block normal mouse hovering detection (and therefore most mouse interactions) behind them.
  - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
@@ -19,7 +19,7 @@ Return true if the popup is open, and you can start outputting to it.
 Default values: flags = ImGui_WindowFlags_None)",
 {
   ENTER_CONTEXT(ctx, false);
-  return ImGui::BeginPopup(str_id, valueOr(flagsInOptional, ImGuiWindowFlags_None));
+  return ImGui::BeginPopup(str_id, valueOr(API_RO(flags), ImGuiWindowFlags_None));
 });
 
 // IMGUI_API bool          BeginPopupModal(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0); // return true if the modal is open, and you can start outputting to it.
@@ -37,7 +37,7 @@ DEFINE_API(void, EndPopup, ((ImGui_Context*,ctx)),
 //  - CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activated (FIXME: need some options).
 //  - Use ImGuiPopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
 DEFINE_API(void, OpenPopup, ((ImGui_Context*,ctx))
-((const char*,str_id))((int*,flagsInOptional)),
+((const char*,str_id))((int*,API_RO(flags))),
 R"(Set popup state to open (don't call every frame!).
 
 If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
@@ -45,7 +45,7 @@ If not modal: they can be closed by clicking anywhere outside them, or by pressi
 Default values: flags = ImGui_PopupFlags_None)",
 {
   ENTER_CONTEXT(ctx);
-  ImGui::OpenPopup(str_id, valueOr(flagsInOptional, ImGuiPopupFlags_None));
+  ImGui::OpenPopup(str_id, valueOr(API_RO(flags), ImGuiPopupFlags_None));
 });
 
 IMGUI_API void          OpenPopupOnItemClick(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);   // helper to open popup when clicked on last item. return true when just opened. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)

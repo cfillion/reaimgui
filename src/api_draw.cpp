@@ -9,26 +9,26 @@
     // IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1.0f);
 DEFINE_API(void, DrawList_AddRect, ((ImGui_Context*,ctx))
 ((double,fromX))((double,fromY))((double,toX))((double,toY))((int,colorRGBA))
-((double*,roundingInOptional))((int*,roundingCornersInOptional))
-((double*,thicknessInOptional)),
+((double*,API_RO(rounding)))((int*,API_RO(roundingCorners)))
+((double*,API_RO(thickness))),
 "Default values: rounding = 0.0, roundingCorners = ImGui_DrawCornerFlags_All, thickness = 1.0",
 {
   ENTER_CONTEXT(ctx);
   ImDrawList *drawList { ImGui::GetWindowDrawList() };
   drawList->AddRect(ImVec2(fromX, fromY), ImVec2(toX, toY), Color::rgba2abgr(colorRGBA),
-    valueOr(roundingInOptional, 0.0), valueOr(roundingCornersInOptional, ImDrawCornerFlags_All),
-    valueOr(thicknessInOptional, 1.0));
+    valueOr(API_RO(rounding), 0.0), valueOr(API_RO(roundingCorners), ImDrawCornerFlags_All),
+    valueOr(API_RO(thickness), 1.0));
 });
 
 DEFINE_API(void, DrawList_AddRectFilled, ((ImGui_Context*,ctx))
 ((double,fromX))((double,fromY))((double,toX))((double,toY))((int,colorRGBA))
-((double*,roundingInOptional))((int*,roundingCornersInOptional)),
+((double*,API_RO(rounding)))((int*,API_RO(roundingCorners))),
 "Default values: rounding = 0.0, roundingCorners = ImGui_DrawCornerFlags_All, thickness = 1.0",
 {
   ENTER_CONTEXT(ctx);
   ImDrawList *drawList { ImGui::GetWindowDrawList() };
   drawList->AddRectFilled(ImVec2(fromX, fromY), ImVec2(toX, toY), Color::rgba2abgr(colorRGBA),
-    valueOr(roundingInOptional, 0.0), valueOr(roundingCornersInOptional, ImDrawCornerFlags_All));
+    valueOr(API_RO(rounding), 0.0), valueOr(API_RO(roundingCorners), ImDrawCornerFlags_All));
 });
 
     // IMGUI_API void  AddRectFilledMultiColor(const ImVec2& p_min, const ImVec2& p_max, ImU32 col_upr_left, ImU32 col_upr_right, ImU32 col_bot_right, ImU32 col_bot_left);

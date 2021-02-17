@@ -7,8 +7,8 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 
 // Widgets: Color Editor/Picker
 DEFINE_API(bool, ColorEdit, ((ImGui_Context*,ctx))
-((const char*,label))((int*,rgbaInOut)) // the ReaScript analyzer doesn't like unsigned int*
-((int*,flagsInOptional)),
+((const char*,label))((int*,API_RW(rgba))) // the ReaScript analyzer doesn't like unsigned int*
+((int*,API_RO(flags))),
 R"(Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xXXRRGGBB (XX is ignored and will not be modified).
 
 tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
@@ -17,63 +17,63 @@ Default values: flags = 0)",
 {
   ENTER_CONTEXT(ctx, false);
 
-  ImGuiColorEditFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeColorEditFlags(flags);
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
   float col[4];
-  Color(*rgbaInOut, alpha).unpack(col);
+  Color(*API_RW(rgba), alpha).unpack(col);
   const bool ret { ImGui::ColorEdit4(label, col, flags) };
 
   // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
-  *rgbaInOut = Color{col}.pack(alpha, *rgbaInOut);
+  *API_RW(rgba) = Color{col}.pack(alpha, *API_RW(rgba));
 
   return ret;
 });
 
 DEFINE_API(bool, ColorPicker, ((ImGui_Context*,ctx))
-((const char*,label))((int*,rgbaInOut))
-((int*,flagsInOptional))((int*,refColInOptional)),
+((const char*,label))((int*,API_RW(rgba)))
+((int*,API_RO(flags)))((int*,API_RO(refCol))),
 "Default values: flags = ImGui_ColorEditFlags_None, refCol = nil",
 {
   ENTER_CONTEXT(ctx, false);
 
-  ImGuiColorEditFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeColorEditFlags(flags);
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
 
   float col[4], refCol[4];
-  Color(*rgbaInOut, alpha).unpack(col);
-  if(refColInOptional)
-    Color(*refColInOptional, alpha).unpack(col);
+  Color(*API_RW(rgba), alpha).unpack(col);
+  if(API_RO(refCol))
+    Color(*API_RO(refCol), alpha).unpack(col);
 
   const bool ret {
-    ImGui::ColorPicker4(label, col, flags, refColInOptional ? refCol : nullptr)
+    ImGui::ColorPicker4(label, col, flags, API_RO(refCol) ? refCol : nullptr)
   };
 
   // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
-  *rgbaInOut = Color{col}.pack(alpha, *rgbaInOut);
+  *API_RW(rgba) = Color{col}.pack(alpha, *API_RW(rgba));
 
   return ret;
 });
 
 DEFINE_API(bool, ColorButton, ((ImGui_Context*,ctx))
-((const char*,desc_id))((int*,rgbaInOut))
-((int*,flagsInOptional))((double*,widthInOptional))((double*,heightInOptional)),
+((const char*,desc_id))((int*,API_RW(rgba)))
+((int*,API_RO(flags)))((double*,API_RO(width)))((double*,API_RO(height))),
 R"(Display a color square/button, hover for details, return true when pressed.
 
 Default values: flags = ImGui_ColorEditFlags_None, width = 0.0, height = 0.0)",
 {
   ENTER_CONTEXT(ctx, false);
 
-  ImGuiColorEditFlags flags { valueOr(flagsInOptional, 0) };
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeColorEditFlags(flags);
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
-  const ImVec4 col { Color(*rgbaInOut, alpha) };
+  const ImVec4 col { Color(*API_RW(rgba), alpha) };
 
   return ImGui::ColorButton(desc_id, col, flags,
-    ImVec2(valueOr(widthInOptional, 0.0), valueOr(heightInOptional, 0.0)));
+    ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
 });
 // void          SetColorEditOptions(ImGuiColorEditFlags flags);                     // initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
