@@ -517,11 +517,13 @@ label:\n"
     progress_dir = 1,
   },
   colors = {
-    rgba = 0x72909ac8,
-    alpha_preview = true,
+    rgba               = 0x72909ac8,
+    alpha_preview      = true,
     alpha_half_preview = false,
-    drag_and_drop = true,
-    options_menu = true,
+    drag_and_drop      = true,
+    options_menu       = true,
+    saved_palette      = nil, -- filled later
+    backup_color       = nil,
   },
 }
 
@@ -559,21 +561,23 @@ function demo.ShowDemoWindowWidgets()
     rv,widgets.basic.radio = r.ImGui_RadioButtonEx(ctx, 'radio b', widgets.basic.radio, 1); r.ImGui_SameLine(ctx)
     rv,widgets.basic.radio = r.ImGui_RadioButtonEx(ctx, 'radio c', widgets.basic.radio, 2)
 
-    -- TODO
---         // Color buttons, demonstrate using PushID() to add unique identifier in the ID stack, and changing style.
---         for (int i = 0; i < 7; i++)
---         {
---             if (i > 0)
---                 r.ImGui_SameLine();
---             r.ImGui_PushID(i);
---             r.ImGui_PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.6f));
---             r.ImGui_PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.7f));
---             r.ImGui_PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.8f, 0.8f));
---             r.ImGui_Button("Click");
---             r.ImGui_PopStyleColor(3);
---             r.ImGui_PopID();
---         }
---
+    -- Color buttons, demonstrate using PushID() to add unique identifier in the ID stack, and changing style.
+    for i = 0, 6 do
+     if i > 0 then
+      r.ImGui_SameLine(ctx)
+     end
+     r.ImGui_PushID(ctx, i)
+     local buttonColor  = reaper.ImGui_ColorConvertHSVtoRGB(i / 7.0, 0.6, 0.6, 1.0)
+     local hoveredColor = reaper.ImGui_ColorConvertHSVtoRGB(i / 7.0, 0.7, 0.7, 1.0)
+     local activeColor  = reaper.ImGui_ColorConvertHSVtoRGB(i / 7.0, 0.8, 0.8, 1.0)
+     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_Button(),        buttonColor)
+     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonHovered(), hoveredColor)
+     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonActive(),  activeColor)
+     r.ImGui_Button(ctx, 'Click')
+     r.ImGui_PopStyleColor(ctx, 3)
+     r.ImGui_PopID(ctx)
+    end
+
     -- Use AlignTextToFramePadding() to align text baseline to the baseline of framed widgets elements
     -- (otherwise a Text+SameLine+Button sequence will have the text a little too high by default!)
     -- See 'Demo->Layout->Text Baseline Alignment' for details.
@@ -1581,7 +1585,7 @@ function demo.ShowDemoWindowWidgets()
       'Click on the color square to open a color picker.\n\z
        CTRL+click on individual component to input value.\n')
     local argb = widgets.colors.rgba
-    argb = (argb >> 8) | (argb << 24 & 0xFF000000) -- move alpha channel to the last byte
+    argb = (argb >> 8 & 0x00FFFFFF) | (argb << 24 & 0xFF000000) -- move alpha channel to the last byte
     rv,argb = r.ImGui_ColorEdit(ctx, 'MyColor##1', argb, r.ImGui_ColorEditFlags_NoAlpha() | misc_flags)
     widgets.colors.rgba = (argb << 8) | (argb >> 24 & 0xFF) -- restore alpha channel position
 
@@ -1598,56 +1602,56 @@ function demo.ShowDemoWindowWidgets()
        be used for the tooltip and picker popup.')
     rv,widgets.colors.rgba = r.ImGui_ColorEdit(ctx, 'MyColor##3', widgets.colors.rgba, r.ImGui_ColorEditFlags_NoInputs() | r.ImGui_ColorEditFlags_NoLabel() | misc_flags);
 
---         r.ImGui_Text("Color button with Custom Picker Popup:");
---
---         // Generate a default palette. The palette will persist and can be edited.
---         static bool saved_palette_init = true;
---         static ImVec4 saved_palette[32] = {};
---         if (saved_palette_init)
---         {
---             for (int n = 0; n < IM_ARRAYSIZE(saved_palette); n++)
---             {
---                 r.ImGui_ColorConvertHSVtoRGB(n / 31.0f, 0.8f, 0.8f,
---                     saved_palette[n].x, saved_palette[n].y, saved_palette[n].z);
---                 saved_palette[n].w = 1.0f; // Alpha
---             }
---             saved_palette_init = false;
---         }
---
---         static ImVec4 backup_color;
---         bool open_popup = r.ImGui_ColorButton("MyColor##3b", color, misc_flags);
---         r.ImGui_SameLine(0, r.ImGui_GetStyle().ItemInnerSpacing.x);
---         open_popup |= r.ImGui_Button("Palette");
---         if (open_popup)
---         {
---             r.ImGui_OpenPopup("mypicker");
---             backup_color = color;
---         }
---         if (r.ImGui_BeginPopup("mypicker"))
---         {
---             r.ImGui_Text("MY CUSTOM COLOR PICKER WITH AN AMAZING PALETTE!");
---             r.ImGui_Separator();
---             r.ImGui_ColorPicker4("##picker", (float*)&color, misc_flags | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview);
---             r.ImGui_SameLine();
---
---             r.ImGui_BeginGroup(); // Lock X position
---             r.ImGui_Text("Current");
---             r.ImGui_ColorButton("##current", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2(60, 40));
---             r.ImGui_Text("Previous");
---             if (r.ImGui_ColorButton("##previous", backup_color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2(60, 40)))
---                 color = backup_color;
---             r.ImGui_Separator();
---             r.ImGui_Text("Palette");
---             for (int n = 0; n < IM_ARRAYSIZE(saved_palette); n++)
---             {
---                 r.ImGui_PushID(n);
---                 if ((n % 8) != 0)
---                     r.ImGui_SameLine(0.0f, r.ImGui_GetStyle().ItemSpacing.y);
---
---                 ImGuiColorEditFlags palette_button_flags = ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoTooltip;
---                 if (r.ImGui_ColorButton("##palette", saved_palette[n], palette_button_flags, ImVec2(20, 20)))
---                     color = ImVec4(saved_palette[n].x, saved_palette[n].y, saved_palette[n].z, color.w); // Preserve alpha!
---
+    r.ImGui_Text(ctx, 'Color button with Custom Picker Popup:')
+
+    -- Generate a default palette. The palette will persist and can be edited.
+    if not widgets.colors.saved_palette then
+      widgets.colors.saved_palette = {}
+      for n = 0, 31 do
+        local color = r.ImGui_ColorConvertHSVtoRGB(n / 31.0, 0.8, 0.8)
+        table.insert(widgets.colors.saved_palette, color)
+      end
+    end
+
+    local open_popup = r.ImGui_ColorButton(ctx, 'MyColor##3b', widgets.colors.rgba, misc_flags)
+    r.ImGui_SameLine(ctx, 0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[2])
+    open_popup = r.ImGui_Button(ctx, 'Palette') or open_popup
+    if open_popup then
+      r.ImGui_OpenPopup(ctx, 'mypicker')
+      widgets.colors.backup_color = widgets.colors.rgba
+    end
+    if r.ImGui_BeginPopup(ctx, 'mypicker') then
+      r.ImGui_Text(ctx, 'MY CUSTOM COLOR PICKER WITH AN AMAZING PALETTE!')
+      r.ImGui_Separator(ctx)
+      rv,widgets.colors.rgba = r.ImGui_ColorPicker(ctx, '##picker', widgets.colors.rgba, misc_flags | r.ImGui_ColorEditFlags_NoSidePreview() | r.ImGui_ColorEditFlags_NoSmallPreview())
+      r.ImGui_SameLine(ctx)
+
+      r.ImGui_BeginGroup(ctx) -- Lock X position
+      r.ImGui_Text(ctx, 'Current')
+      r.ImGui_ColorButton(ctx, '##current', widgets.colors.rgba,
+        r.ImGui_ColorEditFlags_NoPicker() |
+        r.ImGui_ColorEditFlags_AlphaPreviewHalf(), 60, 40)
+      r.ImGui_Text(ctx, 'Previous')
+      if r.ImGui_ColorButton(ctx, '##previous', widgets.colors.backup_color,
+          r.ImGui_ColorEditFlags_NoPicker() |
+          r.ImGui_ColorEditFlags_AlphaPreviewHalf(), 60, 40) then
+        widgets.colors.rgba = widgets.colors.backup_color
+      end
+      r.ImGui_Separator(ctx)
+      r.ImGui_Text(ctx, 'Palette')
+      local palette_button_flags = r.ImGui_ColorEditFlags_NoAlpha()  |
+                                   r.ImGui_ColorEditFlags_NoPicker() |
+                                   r.ImGui_ColorEditFlags_NoTooltip()
+      for n,c in ipairs(widgets.colors.saved_palette) do
+        r.ImGui_PushID(ctx, n)
+        if ((n - 1) % 8) ~= 0 then
+          r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[3])
+        end
+
+        if r.ImGui_ColorButton(ctx, '##palette', c, palette_button_flags, 20, 20) then
+          widgets.colors.rgba = (c << 8) | (widgets.colors.rgba & 0xFF) -- Preserve alpha!
+        end
+
 --                 // Allow user to drop colors into each palette entry. Note that ColorButton() is already a
 --                 // drag source by default, unless specifying the ImGuiColorEditFlags_NoDragDrop flag.
 --                 if (r.ImGui_BeginDragDropTarget())
@@ -1659,12 +1663,12 @@ function demo.ShowDemoWindowWidgets()
 --                     r.ImGui_EndDragDropTarget();
 --                 }
 --
---                 r.ImGui_PopID();
---             }
---             r.ImGui_EndGroup();
---             r.ImGui_EndPopup();
---         }
---
+        r.ImGui_PopID(ctx)
+      end
+      r.ImGui_EndGroup(ctx)
+      r.ImGui_EndPopup(ctx)
+    end
+
 --         r.ImGui_Text("Color button only:");
 --         static bool no_border = false;
 --         r.ImGui_Checkbox("ImGuiColorEditFlags_NoBorder", &no_border);

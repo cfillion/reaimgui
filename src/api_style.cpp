@@ -148,3 +148,35 @@ DEFINE_API(bool, GetStyleVar, ((ImGui_Context*,ctx))
 // IMGUI_API ImU32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 // IMGUI_API ImU32         GetColorU32(ImU32 col);                                         // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 // IMGUI_API const ImVec4& GetStyleColorVec4(ImGuiCol idx);                                // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
+
+DEFINE_API(bool, PushStyleColor, ((ImGui_Context*,ctx))
+((int,idx))((int,rgba)),
+"Modify a style color. always use this if you modify the style after NewFrame().",
+{
+  ENTER_CONTEXT(ctx, false);
+  if(idx < 0 || idx >= ImGuiCol_COUNT)
+    return false; // out of range!
+  ImGui::PushStyleColor(idx, ImVec4{Color(rgba)});
+  return true;
+});
+
+DEFINE_API(void, PopStyleColor, ((ImGui_Context*,ctx))
+((int*,countInOptional)),
+"Default values: count = 1",
+{
+  ENTER_CONTEXT(ctx);
+  // TODO harden
+  ImGui::PopStyleColor(valueOr(countInOptional, 1));
+});
+
+DEFINE_API(int, ColorConvertHSVtoRGB,
+((double,h))((double,s))((double,v))((double*,alphaInOptional)),
+"Return 0x00RRGGBB or, if alpha is provided, 0xRRGGBBAA.",
+{
+  const bool alpha { alphaInOptional != nullptr };
+  ImVec4 rgba;
+  if(alpha)
+    rgba.w = *alphaInOptional;
+  ImGui::ColorConvertHSVtoRGB(h, s, v, rgba.x, rgba.y, rgba.z);
+  return Color{rgba}.pack(alpha);
+});

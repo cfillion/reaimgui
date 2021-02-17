@@ -30,7 +30,50 @@ Default values: flags = 0)",
 
   return ret;
 });
-// bool          ColorPicker3(const char* label, float col[3], ImGuiColorEditFlags flags = 0);
-// bool          ColorPicker4(const char* label, float col[4], ImGuiColorEditFlags flags = 0, const float* ref_col = NULL);
-// bool          ColorButton(const char* desc_id, const ImVec4& col, ImGuiColorEditFlags flags = 0, ImVec2 size = ImVec2(0, 0)); // display a color square/button, hover for details, return true when pressed.
+
+DEFINE_API(bool, ColorPicker, ((ImGui_Context*,ctx))
+((const char*,label))((int*,rgbaInOut))
+((int*,flagsInOptional))((int*,refColInOptional)),
+"Default values: flags = ImGui_ColorEditFlags_None, refCol = nil",
+{
+  ENTER_CONTEXT(ctx, false);
+
+  ImGuiColorEditFlags flags { valueOr(flagsInOptional, 0) };
+  sanitizeColorEditFlags(flags);
+
+  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+
+  float col[4], refCol[4];
+  Color(*rgbaInOut, alpha).unpack(col);
+  if(refColInOptional)
+    Color(*refColInOptional, alpha).unpack(col);
+
+  const bool ret {
+    ImGui::ColorPicker4(label, col, flags, refColInOptional ? refCol : nullptr)
+  };
+
+  // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
+  *rgbaInOut = Color{col}.pack(alpha, *rgbaInOut);
+
+  return ret;
+});
+
+DEFINE_API(bool, ColorButton, ((ImGui_Context*,ctx))
+((const char*,desc_id))((int*,rgbaInOut))
+((int*,flagsInOptional))((double*,widthInOptional))((double*,heightInOptional)),
+R"(Display a color square/button, hover for details, return true when pressed.
+
+Default values: flags = ImGui_ColorEditFlags_None, width = 0.0, height = 0.0)",
+{
+  ENTER_CONTEXT(ctx, false);
+
+  ImGuiColorEditFlags flags { valueOr(flagsInOptional, 0) };
+  sanitizeColorEditFlags(flags);
+
+  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+  const ImVec4 col { Color(*rgbaInOut, alpha) };
+
+  return ImGui::ColorButton(desc_id, col, flags,
+    ImVec2(valueOr(widthInOptional, 0.0), valueOr(heightInOptional, 0.0)));
+});
 // void          SetColorEditOptions(ImGuiColorEditFlags flags);                     // initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.

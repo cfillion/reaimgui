@@ -18,11 +18,6 @@ DEFINE_API(void, PopID, ((ImGui_Context*,ctx)),
 });
 
 // Parameters stacks (shared)
-// IMGUI_API void          PushFont(ImFont* font);                                         // use NULL as a shortcut to push default font
-// IMGUI_API void          PopFont();
-// IMGUI_API void          PushStyleColor(ImGuiCol idx, ImU32 col);                        // modify a style color. always use this if you modify the style after NewFrame().
-// IMGUI_API void          PushStyleColor(ImGuiCol idx, const ImVec4& col);
-// IMGUI_API void          PopStyleColor(int count = 1);
 
 DEFINE_API(void, PushAllowKeyboardFocus, ((ImGui_Context*,ctx))
 ((bool,allowKeyboardFocus)),

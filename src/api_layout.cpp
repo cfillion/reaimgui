@@ -41,7 +41,6 @@ DEFINE_API(void, Dummy, ((ImGui_Context*,ctx))((double,w))((double,h)),
   ImGui::Dummy(ImVec2(w, h));
 });
 
-// TODO style
 DEFINE_API(void, Indent, ((ImGui_Context*,ctx))((double*,indentWidthInOptional)),
 "Move content position toward the right, by 'indentWidth', or style.IndentSpacing if 'indentWidth' <= 0",
 {
@@ -49,7 +48,6 @@ DEFINE_API(void, Indent, ((ImGui_Context*,ctx))((double*,indentWidthInOptional))
   ImGui::Indent(valueOr(indentWidthInOptional, 0.0));
 });
 
-// TODO style
 DEFINE_API(void, Unindent, ((ImGui_Context*,ctx))((double*,indentWidthInOptional)),
 "Move content position back to the left, by 'indentWidth', or style.IndentSpacing if 'indentWidth' <= 0",
 {
@@ -57,8 +55,21 @@ DEFINE_API(void, Unindent, ((ImGui_Context*,ctx))((double*,indentWidthInOptional
   ImGui::Unindent(valueOr(indentWidthInOptional, 0.0));
 });
 
-    // IMGUI_API void          BeginGroup();                                                   // lock horizontal starting position
-    // IMGUI_API void          EndGroup();                                                     // unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.)
+DEFINE_API(void, BeginGroup, ((ImGui_Context*,ctx)),
+"Lock horizontal starting position. See ImGui_EndGroup.",
+{
+  ENTER_CONTEXT(ctx);
+  ImGui::BeginGroup();
+});
+
+DEFINE_API(void, EndGroup, ((ImGui_Context*,ctx)),
+R"(Unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.).
+
+See ImGui_BeginGroup.)",
+{
+  ENTER_CONTEXT(ctx);
+  ImGui::EndGroup();
+});
 
 DEFINE_API(void, GetCursorPos, ((ImGui_Context*,ctx))
 ((double*,xOut))((double*,yOut)),

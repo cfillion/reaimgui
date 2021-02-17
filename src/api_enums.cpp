@@ -3,7 +3,61 @@
 #define DEFINE_ENUM(name, doc) \
   DEFINE_API(int, name, NO_ARGS, doc, { return ImGui##name; })
 
-// typedef int ImGuiCol;               // -> enum ImGuiCol_             // Enum: A color identifier for styling
+// ImGuiCol
+// Enum: A color identifier for styling
+DEFINE_ENUM(Col_Text,                  "");
+DEFINE_ENUM(Col_TextDisabled,          "");
+DEFINE_ENUM(Col_WindowBg,              "Background of normal windows");
+DEFINE_ENUM(Col_ChildBg,               "Background of child windows");
+DEFINE_ENUM(Col_PopupBg,               "Background of popups, menus, tooltips windows");
+DEFINE_ENUM(Col_Border,                "");
+DEFINE_ENUM(Col_BorderShadow,          "");
+DEFINE_ENUM(Col_FrameBg,               "Background of checkbox, radio button, plot, slider, text input");
+DEFINE_ENUM(Col_FrameBgHovered,        "");
+DEFINE_ENUM(Col_FrameBgActive,         "");
+DEFINE_ENUM(Col_TitleBg,               "");
+DEFINE_ENUM(Col_TitleBgActive,         "");
+DEFINE_ENUM(Col_TitleBgCollapsed,      "");
+DEFINE_ENUM(Col_MenuBarBg,             "");
+DEFINE_ENUM(Col_ScrollbarBg,           "");
+DEFINE_ENUM(Col_ScrollbarGrab,         "");
+DEFINE_ENUM(Col_ScrollbarGrabHovered,  "");
+DEFINE_ENUM(Col_ScrollbarGrabActive,   "");
+DEFINE_ENUM(Col_CheckMark,             "");
+DEFINE_ENUM(Col_SliderGrab,            "");
+DEFINE_ENUM(Col_SliderGrabActive,      "");
+DEFINE_ENUM(Col_Button,                "");
+DEFINE_ENUM(Col_ButtonHovered,         "");
+DEFINE_ENUM(Col_ButtonActive,          "");
+DEFINE_ENUM(Col_Header,                "Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem");
+DEFINE_ENUM(Col_HeaderHovered,         "");
+DEFINE_ENUM(Col_HeaderActive,          "");
+DEFINE_ENUM(Col_Separator,             "");
+DEFINE_ENUM(Col_SeparatorHovered,      "");
+DEFINE_ENUM(Col_SeparatorActive,       "");
+DEFINE_ENUM(Col_ResizeGrip,            "");
+DEFINE_ENUM(Col_ResizeGripHovered,     "");
+DEFINE_ENUM(Col_ResizeGripActive,      "");
+DEFINE_ENUM(Col_Tab,                   "");
+DEFINE_ENUM(Col_TabHovered,            "");
+DEFINE_ENUM(Col_TabActive,             "");
+DEFINE_ENUM(Col_TabUnfocused,          "");
+DEFINE_ENUM(Col_TabUnfocusedActive,    "");
+DEFINE_ENUM(Col_PlotLines,             "");
+DEFINE_ENUM(Col_PlotLinesHovered,      "");
+DEFINE_ENUM(Col_PlotHistogram,         "");
+DEFINE_ENUM(Col_PlotHistogramHovered,  "");
+DEFINE_ENUM(Col_TableHeaderBg,         "Table header background");
+DEFINE_ENUM(Col_TableBorderStrong,     "Table outer and header borders (prefer using Alpha=1.0 here)");
+DEFINE_ENUM(Col_TableBorderLight,      "Table inner borders (prefer using Alpha=1.0 here)");
+DEFINE_ENUM(Col_TableRowBg,            "Table row background (even rows)");
+DEFINE_ENUM(Col_TableRowBgAlt,         "Table row background (odd rows)");
+DEFINE_ENUM(Col_TextSelectedBg,        "");
+DEFINE_ENUM(Col_DragDropTarget,        "");
+DEFINE_ENUM(Col_NavHighlight,          "Gamepad/keyboard: current highlighted item");
+DEFINE_ENUM(Col_NavWindowingHighlight, "Highlight window when using CTRL+TAB");
+DEFINE_ENUM(Col_NavWindowingDimBg,     "Darken/colorize entire screen behind the CTRL+TAB window list, when active");
+DEFINE_ENUM(Col_ModalWindowDimBg,      "Darken/colorize entire screen behind a modal window, when one is active");
 
 // ImGuiCond
 // Enumeration for ImGui::SetWindow***(), SetNextWindow***(), SetNextItem***() functions
