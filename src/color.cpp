@@ -1,5 +1,6 @@
 #include "color.hpp"
 
+#include <cmath>
 #include <imgui/imgui.h>
 
 uint32_t Color::rgba2abgr(const uint32_t rgba)
@@ -64,12 +65,12 @@ uint32_t Color::pack(const bool alpha, const uint32_t extra) const
   auto [r, g, b, a] { m_store };
 
   if(alpha)
-    rgba |= static_cast<uint32_t>(a * 0xFF) << (8 * i++);
+    rgba |= static_cast<uint32_t>(std::round(a * 0xFF)) << (8 * i++);
   else if(extra) // preserve unused bits as-is (eg. REAPER's color enable flag)
     rgba |= extra & 0xFF000000;
-  rgba   |= static_cast<uint32_t>(b * 0xFF) << (8 * i++);
-  rgba   |= static_cast<uint32_t>(g * 0xFF) << (8 * i++);
-  rgba   |= static_cast<uint32_t>(r * 0xFF) << (8 * i++);
+  rgba   |= static_cast<uint32_t>(std::round(b * 0xFF)) << (8 * i++);
+  rgba   |= static_cast<uint32_t>(std::round(g * 0xFF)) << (8 * i++);
+  rgba   |= static_cast<uint32_t>(std::round(r * 0xFF)) << (8 * i++);
 
   return rgba;
 }
