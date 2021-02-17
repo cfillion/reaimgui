@@ -79,6 +79,14 @@ function demo.HelpMarker(desc)
   end
 end
 
+function demo.RgbaToArgb(rgba)
+  return (rgba >> 8 & 0x00FFFFFF) | (rgba << 24 & 0xFF000000)
+end
+
+function demo.ArgbToRgba(argb)
+  return (argb << 8) | (argb >> 24 & 0xFF)
+end
+
 -- Helper to display basic user controls.
 function demo.ShowUserGuide()
   -- ImGuiIO& io = r.ImGui_GetIO() TODO
@@ -524,6 +532,22 @@ label:\n"
     options_menu       = true,
     saved_palette      = nil, -- filled later
     backup_color       = nil,
+    no_border          = false,
+    alpha              = true,
+    alpha_bar          = true,
+    side_preview       = true,
+    ref_color          = false,
+    ref_color_rgba     = 0xff00ff80,
+    display_mode       = 0,
+    picker_mode        = 0,
+    hsva               = 0x3bffffff,
+  },
+  sliders = {
+    flags    = r.ImGui_SliderFlags_None(),
+    drag_d   = 0.5,
+    drag_i   = 50,
+    slider_d = 0.5,
+    slider_i = 50,
   },
 }
 
@@ -676,8 +700,8 @@ function demo.ShowDemoWindowWidgets()
     -- This technique can also be used with DragInt().
     local elements = { 'Fire', 'Earth', 'Air', 'Water' }
     local current_elem = elements[widgets.basic.elem] or 'Unknown'
-    rv,widgets.basic.elem = r.ImGui_SliderInt(ctx, 'slider enum', widgets.basic.elem, 1, #elements, current_elem);
-    r.ImGui_SameLine(ctx);
+    rv,widgets.basic.elem = r.ImGui_SliderInt(ctx, 'slider enum', widgets.basic.elem, 1, #elements, current_elem)
+    r.ImGui_SameLine(ctx)
     demo.HelpMarker(
       'Using the format string parameter to display a name instead \z
        of the underlying integer.'
@@ -697,15 +721,15 @@ function demo.ShowDemoWindowWidgets()
     -- Using the _simplified_ one-liner ListBox() api here
     -- See "List boxes" section for examples of how to use the more flexible BeginListBox()/EndListBox() api.
     local items = 'Apple\31Banana\31Cherry\31Kiwi\31Mango\31Orange\31Pineapple\31Strawberry\31Watermelon\31'
-    rv,widgets.basic.listcur = r.ImGui_ListBox(ctx, 'listbox\n(single select)', widgets.basic.listcur, items, 4);
-    r.ImGui_SameLine(ctx);
+    rv,widgets.basic.listcur = r.ImGui_ListBox(ctx, 'listbox\n(single select)', widgets.basic.listcur, items, 4)
+    r.ImGui_SameLine(ctx)
     demo.HelpMarker(
       'Using the simplified one-liner ListBox API here.\n\z
        Refer to the "List boxes" section below for an explanation of how to use\z
        the more flexible and general BeginListBox/EndListBox API.'
     )
 
-    r.ImGui_TreePop(ctx);
+    r.ImGui_TreePop(ctx)
   end
 
 --     // Testing ImGuiOnceUponAFrame helper.
@@ -1584,10 +1608,9 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_SameLine(ctx); demo.HelpMarker(
       'Click on the color square to open a color picker.\n\z
        CTRL+click on individual component to input value.\n')
-    local argb = widgets.colors.rgba
-    argb = (argb >> 8 & 0x00FFFFFF) | (argb << 24 & 0xFF000000) -- move alpha channel to the last byte
+    local argb = demo.RgbaToArgb(widgets.colors.rgba)
     rv,argb = r.ImGui_ColorEdit(ctx, 'MyColor##1', argb, r.ImGui_ColorEditFlags_NoAlpha() | misc_flags)
-    widgets.colors.rgba = (argb << 8) | (argb >> 24 & 0xFF) -- restore alpha channel position
+    widgets.colors.rgba = demo.ArgbToRgba(argb)
 
     r.ImGui_Text(ctx, 'Color widget HSV with Alpha:')
     rv,widgets.colors.rgba = r.ImGui_ColorEdit(ctx, 'MyColor##2', widgets.colors.rgba, r.ImGui_ColorEditFlags_DisplayHSV() | misc_flags)
@@ -1652,128 +1675,131 @@ function demo.ShowDemoWindowWidgets()
           widgets.colors.rgba = (c << 8) | (widgets.colors.rgba & 0xFF) -- Preserve alpha!
         end
 
---                 // Allow user to drop colors into each palette entry. Note that ColorButton() is already a
---                 // drag source by default, unless specifying the ImGuiColorEditFlags_NoDragDrop flag.
---                 if (r.ImGui_BeginDragDropTarget())
---                 {
---                     if (const ImGuiPayload* payload = r.ImGui_AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F))
---                         memcpy((float*)&saved_palette[n], payload->Data, sizeof(float) * 3);
---                     if (const ImGuiPayload* payload = r.ImGui_AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_4F))
---                         memcpy((float*)&saved_palette[n], payload->Data, sizeof(float) * 4);
---                     r.ImGui_EndDragDropTarget();
---                 }
---
+        -- Allow user to drop colors into each palette entry. Note that ColorButton() is already a
+        -- drag source by default, unless specifying the ImGuiColorEditFlags_NoDragDrop flag.
+        if r.ImGui_BeginDragDropTarget(ctx) then
+          local drop_color
+          rv,drop_color = r.ImGui_AcceptDragDropPayloadRGB(ctx)
+          if rv then
+            widgets.colors.saved_palette[n] = drop_color
+          end
+          rv,drop_color = r.ImGui_AcceptDragDropPayloadRGBA(ctx)
+          if rv then
+            widgets.colors.saved_palette[n] = drop_color >> 8
+          end
+          r.ImGui_EndDragDropTarget(ctx)
+        end
+
         r.ImGui_PopID(ctx)
       end
       r.ImGui_EndGroup(ctx)
       r.ImGui_EndPopup(ctx)
     end
 
---         r.ImGui_Text("Color button only:");
---         static bool no_border = false;
---         r.ImGui_Checkbox("ImGuiColorEditFlags_NoBorder", &no_border);
---         r.ImGui_ColorButton("MyColor##3c", *(ImVec4*)&color, misc_flags | (no_border ? ImGuiColorEditFlags_NoBorder : 0), ImVec2(80, 80));
---
---         r.ImGui_Text("Color picker:");
---         static bool alpha = true;
---         static bool alpha_bar = true;
---         static bool side_preview = true;
---         static bool ref_color = false;
---         static ImVec4 ref_color_v(1.0f, 0.0f, 1.0f, 0.5f);
---         static int display_mode = 0;
---         static int picker_mode = 0;
---         r.ImGui_Checkbox("With Alpha", &alpha);
---         r.ImGui_Checkbox("With Alpha Bar", &alpha_bar);
---         r.ImGui_Checkbox("With Side Preview", &side_preview);
---         if (side_preview)
---         {
---             r.ImGui_SameLine();
---             r.ImGui_Checkbox("With Ref Color", &ref_color);
---             if (ref_color)
---             {
---                 r.ImGui_SameLine();
---                 r.ImGui_ColorEdit4("##RefColor", &ref_color_v.x, ImGuiColorEditFlags_NoInputs | misc_flags);
---             }
---         }
---         r.ImGui_Combo("Display Mode", &display_mode, "Auto/Current\0None\0RGB Only\0HSV Only\0Hex Only\0");
---         r.ImGui_SameLine(); HelpMarker(
---             "ColorEdit defaults to displaying RGB inputs if you don't specify a display mode, "
---             "but the user can change it with a right-click.\n\nColorPicker defaults to displaying RGB+HSV+Hex "
---             "if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().");
---         r.ImGui_Combo("Picker Mode", &picker_mode, "Auto/Current\0Hue bar + SV rect\0Hue wheel + SV triangle\0");
---         r.ImGui_SameLine(); HelpMarker("User can right-click the picker to change mode.");
---         ImGuiColorEditFlags flags = misc_flags;
---         if (!alpha)            flags |= ImGuiColorEditFlags_NoAlpha;        // This is by default if you call ColorPicker3() instead of ColorPicker4()
---         if (alpha_bar)         flags |= ImGuiColorEditFlags_AlphaBar;
---         if (!side_preview)     flags |= ImGuiColorEditFlags_NoSidePreview;
---         if (picker_mode == 1)  flags |= ImGuiColorEditFlags_PickerHueBar;
---         if (picker_mode == 2)  flags |= ImGuiColorEditFlags_PickerHueWheel;
---         if (display_mode == 1) flags |= ImGuiColorEditFlags_NoInputs;       // Disable all RGB/HSV/Hex displays
---         if (display_mode == 2) flags |= ImGuiColorEditFlags_DisplayRGB;     // Override display mode
---         if (display_mode == 3) flags |= ImGuiColorEditFlags_DisplayHSV;
---         if (display_mode == 4) flags |= ImGuiColorEditFlags_DisplayHex;
---         r.ImGui_ColorPicker4("MyColor##4", (float*)&color, flags, ref_color ? &ref_color_v.x : NULL);
---
---         r.ImGui_Text("Set defaults in code:");
---         r.ImGui_SameLine(); HelpMarker(
---             "SetColorEditOptions() is designed to allow you to set boot-time default.\n"
---             "We don't have Push/Pop functions because you can force options on a per-widget basis if needed,"
---             "and the user can change non-forced ones with the options menu.\nWe don't have a getter to avoid"
---             "encouraging you to persistently save values that aren't forward-compatible.");
---         if (r.ImGui_Button("Default: Uint8 + HSV + Hue Bar"))
---             r.ImGui_SetColorEditOptions(ImGuiColorEditFlags_Uint8 | ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_PickerHueBar);
---         if (r.ImGui_Button("Default: Float + HDR + Hue Wheel"))
---             r.ImGui_SetColorEditOptions(ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_PickerHueWheel);
---
---         // HSV encoded support (to avoid RGB<>HSV round trips and singularities when S==0 or V==0)
---         static ImVec4 color_hsv(0.23f, 1.0f, 1.0f, 1.0f); // Stored as HSV!
---         r.ImGui_Spacing();
---         r.ImGui_Text("HSV encoded colors");
---         r.ImGui_SameLine(); HelpMarker(
---             "By default, colors are given to ColorEdit and ColorPicker in RGB, but ImGuiColorEditFlags_InputHSV"
---             "allows you to store colors as HSV and pass them to ColorEdit and ColorPicker as HSV. This comes with the"
---             "added benefit that you can manipulate hue values with the picker even when saturation or value are zero.");
---         r.ImGui_Text("Color widget with InputHSV:");
---         r.ImGui_ColorEdit4("HSV shown as RGB##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
---         r.ImGui_ColorEdit4("HSV shown as HSV##1", (float*)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
---         r.ImGui_DragFloat4("Raw HSV values", (float*)&color_hsv, 0.01f, 0.0f, 1.0f);
+    r.ImGui_Text(ctx, 'Color button only:')
+    rv,widgets.colors.no_border = r.ImGui_Checkbox(ctx, 'ImGuiColorEditFlags_NoBorder', widgets.colors.no_border)
+    rv,widgets.colors.rgba = r.ImGui_ColorButton(ctx, 'MyColor##3c', widgets.colors.rgba,
+      misc_flags | (widgets.colors.no_border and r.ImGui_ColorEditFlags_NoBorder() or 0),
+      80, 80)
+
+    r.ImGui_Text(ctx, 'Color picker:')
+    rv,widgets.colors.alpha = r.ImGui_Checkbox(ctx, 'With Alpha', widgets.colors.alpha)
+    rv,widgets.colors.alpha_bar = r.ImGui_Checkbox(ctx, 'With Alpha Bar', widgets.colors.alpha_bar)
+    rv,widgets.colors.side_preview = r.ImGui_Checkbox(ctx, 'With Side Preview', widgets.colors.side_preview)
+    if widgets.colors.side_preview then
+      r.ImGui_SameLine(ctx)
+      rv,widgets.colors.ref_color = r.ImGui_Checkbox(ctx, 'With Ref Color', widgets.colors.ref_color)
+      if widgets.colors.ref_color then
+        r.ImGui_SameLine(ctx)
+        rv,widgets.colors.ref_color_rgba = r.ImGui_ColorEdit(ctx, '##RefColor',
+          widgets.colors.ref_color_rgba, r.ImGui_ColorEditFlags_NoInputs() | misc_flags)
+      end
+    end
+    rv,widgets.colors.display_mode = r.ImGui_Combo(ctx, 'Display Mode', widgets.colors.display_mode,
+      'Auto/Current\31None\31RGB Only\31HSV Only\31Hex Only\31')
+    r.ImGui_SameLine(ctx); demo.HelpMarker(
+      "ColorEdit defaults to displaying RGB inputs if you don't specify a display mode, \z
+       but the user can change it with a right-click.\n\nColorPicker defaults to displaying RGB+HSV+Hex \z
+       if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().");
+    rv,widgets.colors.picker_mode = r.ImGui_Combo(ctx, 'Picker Mode', widgets.colors.picker_mode,
+      'Auto/Current\31Hue bar + SV rect\31Hue wheel + SV triangle\31')
+    r.ImGui_SameLine(ctx); demo.HelpMarker('User can right-click the picker to change mode.');
+    local flags = misc_flags
+    if not widgets.colors.alpha         then flags = flags | r.ImGui_ColorEditFlags_NoAlpha()        end
+    if widgets.colors.alpha_bar         then flags = flags | r.ImGui_ColorEditFlags_AlphaBar()       end
+    if not widgets.colors.side_preview  then flags = flags | r.ImGui_ColorEditFlags_NoSidePreview()  end
+    if widgets.colors.picker_mode  == 1 then flags = flags | r.ImGui_ColorEditFlags_PickerHueBar()   end
+    if widgets.colors.picker_mode  == 2 then flags = flags | r.ImGui_ColorEditFlags_PickerHueWheel() end
+    if widgets.colors.display_mode == 1 then flags = flags | r.ImGui_ColorEditFlags_NoInputs()       end -- Disable all RGB/HSV/Hex displays
+    if widgets.colors.display_mode == 2 then flags = flags | r.ImGui_ColorEditFlags_DisplayRGB()     end -- Override display mode
+    if widgets.colors.display_mode == 3 then flags = flags | r.ImGui_ColorEditFlags_DisplayHSV()     end
+    if widgets.colors.display_mode == 4 then flags = flags | r.ImGui_ColorEditFlags_DisplayHex()     end
+
+    local color = widgets.colors.alpha and widgets.colors.rgba or demo.RgbaToArgb(widgets.colors.rgba)
+    local ref_color = widgets.colors.alpha and widgets.colors.ref_color_rgba or demo.RgbaToArgb(widgets.colors.ref_color_rgba)
+    rv,color = r.ImGui_ColorPicker(ctx, 'MyColor##4', color, flags,
+      widgets.colors.ref_color and ref_color or nil)
+    widgets.colors.rgba = widgets.colors.alpha and color or demo.ArgbToRgba(color)
+
+    r.ImGui_Text(ctx, 'Set defaults in code:')
+    r.ImGui_SameLine(ctx); demo.HelpMarker(
+      "SetColorEditOptions() is designed to allow you to set boot-time default.\n\z
+       We don't have Push/Pop functions because you can force options on a per-widget basis if needed,\z
+       and the user can change non-forced ones with the options menu.\nWe don't have a getter to avoid\z
+       encouraging you to persistently save values that aren't forward-compatible.")
+    if r.ImGui_Button(ctx, 'Default: Uint8 + HSV + Hue Bar') then
+      r.ImGui_SetColorEditOptions(ctx, r.ImGui_ColorEditFlags_Uint8() | r.ImGui_ColorEditFlags_DisplayHSV() | r.ImGui_ColorEditFlags_PickerHueBar())
+    end
+    if r.ImGui_Button(ctx, 'Default: Float + Hue Wheel') then -- (NOTE: removed HDR for ReaImGui as we use uint32 for color i/o)
+      r.ImGui_SetColorEditOptions(ctx, r.ImGui_ColorEditFlags_Float() | r.ImGui_ColorEditFlags_PickerHueWheel())
+    end
+
+    -- HSV encoded support (to avoid RGB<>HSV round trips and singularities when S==0 or V==0)
+    r.ImGui_Spacing(ctx)
+    r.ImGui_Text(ctx, 'HSV encoded colors')
+    r.ImGui_SameLine(ctx); demo.HelpMarker(
+      'By default, colors are given to ColorEdit and ColorPicker in RGB, but ImGuiColorEditFlags_InputHSV \z
+       allows you to store colors as HSV and pass them to ColorEdit and ColorPicker as HSV. This comes with the \z
+       added benefit that you can manipulate hue values with the picker even when saturation or value are zero.')
+    r.ImGui_Text(ctx, 'Color widget with InputHSV:')
+    rv,widgets.colors.hsva = r.ImGui_ColorEdit(ctx, 'HSV shown as RGB##1', widgets.colors.hsva,
+      r.ImGui_ColorEditFlags_DisplayRGB() | r.ImGui_ColorEditFlags_InputHSV() | r.ImGui_ColorEditFlags_Float())
+    rv,widgets.colors.hsva = r.ImGui_ColorEdit(ctx, 'HSV shown as HSV##1', widgets.colors.hsva,
+      r.ImGui_ColorEditFlags_DisplayHSV() | r.ImGui_ColorEditFlags_InputHSV() | r.ImGui_ColorEditFlags_Float())
+    -- r.ImGui_DragFloat4(ctx, 'Raw HSV values', (float*)&color_hsv, 0.01f, 0.0f, 1.0f); TODO
 
     r.ImGui_TreePop(ctx)
   end
---
---     if (r.ImGui_TreeNode("Drag/Slider Flags"))
---     {
---         // Demonstrate using advanced flags for DragXXX and SliderXXX functions. Note that the flags are the same!
---         static ImGuiSliderFlags flags = ImGuiSliderFlags_None;
---         r.ImGui_CheckboxFlags("ImGuiSliderFlags_AlwaysClamp", &flags, ImGuiSliderFlags_AlwaysClamp);
---         r.ImGui_SameLine(); HelpMarker("Always clamp value to min/max bounds (if any) when input manually with CTRL+Click.");
---         r.ImGui_CheckboxFlags("ImGuiSliderFlags_Logarithmic", &flags, ImGuiSliderFlags_Logarithmic);
---         r.ImGui_SameLine(); HelpMarker("Enable logarithmic editing (more precision for small values).");
---         r.ImGui_CheckboxFlags("ImGuiSliderFlags_NoRoundToFormat", &flags, ImGuiSliderFlags_NoRoundToFormat);
---         r.ImGui_SameLine(); HelpMarker("Disable rounding underlying value to match precision of the format string (e.g. %.3f values are rounded to those 3 digits).");
---         r.ImGui_CheckboxFlags("ImGuiSliderFlags_NoInput", &flags, ImGuiSliderFlags_NoInput);
---         r.ImGui_SameLine(); HelpMarker("Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
---
---         // Drags
---         static float drag_f = 0.5f;
---         static int drag_i = 50;
---         r.ImGui_Text("Underlying float value: %f", drag_f);
---         r.ImGui_DragFloat("DragFloat (0 -> 1)", &drag_f, 0.005f, 0.0f, 1.0f, "%.3f", flags);
---         r.ImGui_DragFloat("DragFloat (0 -> +inf)", &drag_f, 0.005f, 0.0f, FLT_MAX, "%.3f", flags);
---         r.ImGui_DragFloat("DragFloat (-inf -> 1)", &drag_f, 0.005f, -FLT_MAX, 1.0f, "%.3f", flags);
---         r.ImGui_DragFloat("DragFloat (-inf -> +inf)", &drag_f, 0.005f, -FLT_MAX, +FLT_MAX, "%.3f", flags);
---         r.ImGui_DragInt("DragInt (0 -> 100)", &drag_i, 0.5f, 0, 100, "%d", flags);
---
---         // Sliders
---         static float slider_f = 0.5f;
---         static int slider_i = 50;
---         r.ImGui_Text("Underlying float value: %f", slider_f);
---         r.ImGui_SliderFloat("SliderFloat (0 -> 1)", &slider_f, 0.0f, 1.0f, "%.3f", flags);
---         r.ImGui_SliderInt("SliderInt (0 -> 100)", &slider_i, 0, 100, "%d", flags);
---
---         r.ImGui_TreePop();
---     }
---
+
+  if r.ImGui_TreeNode(ctx, 'Drag/Slider Flags') then
+    -- Demonstrate using advanced flags for DragXXX and SliderXXX functions. Note that the flags are the same!
+    rv,widgets.sliders.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiSliderFlags_AlwaysClamp', widgets.sliders.flags, r.ImGui_SliderFlags_AlwaysClamp())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Always clamp value to min/max bounds (if any) when input manually with CTRL+Click.')
+    rv,widgets.sliders.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiSliderFlags_Logarithmic', widgets.sliders.flags, r.ImGui_SliderFlags_Logarithmic())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Enable logarithmic editing (more precision for small values).')
+    rv,widgets.sliders.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiSliderFlags_NoRoundToFormat', widgets.sliders.flags, r.ImGui_SliderFlags_NoRoundToFormat())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Disable rounding underlying value to match precision of the format string (e.g. %.3f values are rounded to those 3 digits).')
+    rv,widgets.sliders.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiSliderFlags_NoInput', widgets.sliders.flags, r.ImGui_SliderFlags_NoInput())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Disable CTRL+Click or Enter key allowing to input text directly into the widget.')
+
+    local DBL_MIN, DBL_MAX = 2.22507e-308, 1.79769e+308
+
+    -- Drags
+    r.ImGui_Text(ctx, ('Underlying double value: %f'):format(widgets.sliders.drag_d))
+    rv,widgets.sliders.drag_d = r.ImGui_DragDouble(ctx, 'DragDouble (0 -> 1)', widgets.sliders.drag_d, 0.005, 0.0, 1.0, '%.3f', widgets.sliders.flags)
+    rv,widgets.sliders.drag_d = r.ImGui_DragDouble(ctx, 'DragDouble (0 -> +inf)', widgets.sliders.drag_d, 0.005, 0.0, DBL_MAX, '%.3f', widgets.sliders.flags)
+    rv,widgets.sliders.drag_d = r.ImGui_DragDouble(ctx, 'DragDouble (-inf -> 1)', widgets.sliders.drag_d, 0.005, -DBL_MAX, 1.0, '%.3f', widgets.sliders.flags)
+    rv,widgets.sliders.drag_d = r.ImGui_DragDouble(ctx, 'DragDouble (-inf -> +inf)', widgets.sliders.drag_d, 0.005, -DBL_MAX, DBL_MAX, '%.3f', widgets.sliders.flags)
+    rv,widgets.sliders.drag_i = r.ImGui_DragInt(ctx, 'DragInt (0 -> 100)', widgets.sliders.drag_i, 0.5, 0, 100, '%d', widgets.sliders.flags)
+
+    -- Sliders
+    r.ImGui_Text(ctx, ('Underlying float value: %f'):format(widgets.sliders.slider_d))
+    rv,widgets.sliders.slider_d = r.ImGui_SliderDouble(ctx, 'SliderDouble (0 -> 1)', widgets.sliders.slider_d, 0.0, 1.0, '%.3f', widgets.sliders.flags)
+    rv,widgets.sliders.slider_i = r.ImGui_SliderInt(ctx, 'SliderInt (0 -> 100)', widgets.sliders.slider_i, 0, 100, '%d', widgets.sliders.flags)
+
+    r.ImGui_TreePop(ctx)
+  end
+
 --     if (r.ImGui_TreeNode("Range Widgets"))
 --     {
 --         static float begin = 10, end = 90;

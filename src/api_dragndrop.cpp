@@ -1,5 +1,11 @@
 #include "api_helper.hpp"
 
+static bool isUserType(const char *type)
+{
+  // types starting with '_' are reserved for ImGui use
+  // (and their payloads are likely not strings either)
+  return type && *type && type[0] != '_';
+}
   // Drag and Drop
 DEFINE_API(bool, BeginDragDropSource, ((ImGui_Context*,ctx))((int*,API_RO(flags))),
 R"(Call when the current item is active. If this return true, you can call SetDragDropPayload() + EndDragDropSource().
@@ -19,7 +25,9 @@ Default values: cond = ImGui_Cond_Always)",
   ENTER_CONTEXT(ctx, false);
   nullIfEmpty(data);
 
-  // TODO: return false if type begins with _
+  if(!isUserType(type))
+    return false;
+
   return ImGui::SetDragDropPayload(type, data, data ? strlen(data) : 0,
     valueOr(API_RO(cond), ImGuiCond_Always));
 });
@@ -31,7 +39,90 @@ DEFINE_API(void, EndDragDropSource, ((ImGui_Context*,ctx)),
   ImGui::EndDragDropSource();
 });
 
-    // IMGUI_API bool                  BeginDragDropTarget();                                                          // call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()
-    // IMGUI_API const ImGuiPayload*   AcceptDragDropPayload(const char* type, ImGuiDragDropFlags flags = 0);          // accept contents of a given type. If ImGuiDragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
-    // IMGUI_API void                  EndDragDropTarget();                                                            // only call EndDragDropTarget() if BeginDragDropTarget() returns true!
+DEFINE_API(bool, BeginDragDropTarget, ((ImGui_Context*,ctx)),
+"Call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::BeginDragDropTarget();
+});
+
+DEFINE_API(bool, AcceptDragDropPayload, ((ImGui_Context*,ctx))
+((const char*,type))
+((char*,API_WBIG(payload)))((int,API_WBIG_SZ(payload)))
+((int*,API_RO(flags))),
+R"(Accept contents of a given type. If ImGui_DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
+
+Default values: flags = ImGui_DragDropFlags_None)",
+{
+  ENTER_CONTEXT(ctx, false);
+
+  if(!isUserType(type))
+    return false;
+
+  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
+  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
+
+  const char *strData { static_cast<const char *>(payload->Data) };
+  if(!payload || strData[payload->DataSize] /* not null terminated? */)
+    return false;
+
+  if(payload->DataSize > API_WBIG_SZ(payload))
+    realloc_cmd_ptr(&API_WBIG(payload), &API_WBIG_SZ(payload), payload->DataSize);
+
+  snprintf(API_WBIG(payload), API_WBIG_SZ(payload), "%s", strData);
+
+  return true;
+});
+
+DEFINE_API(bool, AcceptDragDropPayloadRGB, ((ImGui_Context*,ctx))
+((int*,API_W(rgb)))((int*,API_RO(flags))),
+R"(Accept contents of a RGB color. If ImGui_DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
+
+Default values: flags = ImGui_DragDropFlags_None)",
+{
+  ENTER_CONTEXT(ctx, false);
+
+  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
+  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, flags) };
+
+  if(!payload)
+    return false;
+
+  float rgb[3];
+  assert(payload->DataSize == sizeof(rgb));
+  memcpy(rgb, payload->Data, sizeof(rgb));
+  *API_W(rgb) = Color{rgb, false}.pack(false);
+
+  return true;
+});
+
+DEFINE_API(bool, AcceptDragDropPayloadRGBA, ((ImGui_Context*,ctx))
+((int*,API_W(rgba)))((int*,API_RO(flags))),
+R"(Accept contents of a RGBA color. If ImGui_DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
+
+Default values: flags = ImGui_DragDropFlags_None)",
+{
+  ENTER_CONTEXT(ctx, false);
+
+  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
+  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_4F, flags) };
+
+  if(!payload)
+    return false;
+
+  float rgba[4];
+  assert(payload->DataSize == sizeof(rgba));
+  memcpy(rgba, payload->Data, sizeof(rgba));
+  *API_W(rgba) = Color{rgba, true}.pack(true);
+
+  return true;
+});
+
+DEFINE_API(void, EndDragDropTarget, ((ImGui_Context*,ctx)),
+"Only call EndDragDropTarget() if BeginDragDropTarget() returns true!",
+{
+  ENTER_CONTEXT(ctx);
+  ImGui::EndDragDropTarget();
+});
+
     // IMGUI_API const ImGuiPayload*   GetDragDropPayload();                                                           // peek directly into the current payload from anywhere. may return NULL. use ImGuiPayload::IsDataType() to test for the payload type.

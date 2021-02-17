@@ -17,12 +17,14 @@ R"(- CTRL+Click on any drag box to turn them into an input box. Manually input v
 - Speed are per-pixel of mouse movement (v_speed=0.2f: mouse needs to move by 5 pixels to increase value by 1). For gamepad/keyboard navigation, minimum speed is Max(v_speed, minimum_step_at_given_precision).
 - Use v_min < v_max to clamp edits to given limits. Note that CTRL+Click manual input can override those limits.
 - Use v_max = FLT_MAX / INT_MAX etc to avoid clamping to a maximum, same with v_min = -FLT_MAX / INT_MIN to avoid clamping to a minimum.
-- We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.)",
+- We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.
+
+Default values: valueSpeed = 1.0, valueMin = 0.0, valueMax = 0.0, format = nil, format = ImGui_SliderFlags_None)",
 {
   ENTER_CONTEXT(ctx, false);
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), 0) };
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
   sanitizeSliderFlags(flags);
 
   return ImGui::DragInt(label, API_RW(value),
@@ -45,7 +47,7 @@ DEFINE_API(bool, DragDouble, ((ImGui_Context*,ctx))
   ENTER_CONTEXT(ctx, false);
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), 0) };
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
   sanitizeSliderFlags(flags);
 
   return ImGui::DragScalar(label, ImGuiDataType_Double,
@@ -61,12 +63,12 @@ DEFINE_API(bool, DragDouble, ((ImGui_Context*,ctx))
 DEFINE_API(bool, SliderInt, ((ImGui_Context*,ctx))
 ((const char*,label))((int*,API_RW(value)))((int,valueMin))((int,valueMax))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
-"'format' is '%d' by default.",
+"Default values: format = '%d', flags = ImGui_SliderFlags_None",
 {
   ENTER_CONTEXT(ctx, false);
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), 0) };
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
   sanitizeSliderFlags(flags);
 
   return ImGui::SliderInt(label, API_RW(value), valueMin, valueMax,
@@ -77,12 +79,12 @@ DEFINE_API(bool, SliderInt, ((ImGui_Context*,ctx))
 DEFINE_API(bool, SliderDouble, ((ImGui_Context*,ctx))
 ((const char*,label))((double*,API_RW(value)))((double,valueMin))((double,valueMax))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
-"'format' is '%f' by default.",
+"Default values: format = '%f', flags = ImGui_SliderFlags_None",
 {
   ENTER_CONTEXT(ctx, false);
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), 0) };
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
   sanitizeSliderFlags(flags);
 
   return ImGui::SliderScalar(label, ImGuiDataType_Double,

@@ -46,7 +46,7 @@ DEFINE_API(bool, ColorPicker, ((ImGui_Context*,ctx))
   float col[4], refCol[4];
   Color(*API_RW(rgba), alpha).unpack(col);
   if(API_RO(refCol))
-    Color(*API_RO(refCol), alpha).unpack(col);
+    Color(*API_RO(refCol), alpha).unpack(refCol);
 
   const bool ret {
     ImGui::ColorPicker4(label, col, flags, API_RO(refCol) ? refCol : nullptr)
@@ -76,4 +76,12 @@ Default values: flags = ImGui_ColorEditFlags_None, width = 0.0, height = 0.0)",
   return ImGui::ColorButton(desc_id, col, flags,
     ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
 });
-// void          SetColorEditOptions(ImGuiColorEditFlags flags);                     // initialize current options (generally on application startup) if you want to select a default format, picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.
+
+DEFINE_API(void, SetColorEditOptions, ((ImGui_Context*,ctx))
+((int,flags)),
+"Picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.",
+{
+  ENTER_CONTEXT(ctx);
+  sanitizeColorEditFlags(flags);
+  ImGui::SetColorEditOptions(flags);
+});
