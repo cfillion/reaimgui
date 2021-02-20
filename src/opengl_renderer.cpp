@@ -61,7 +61,7 @@ enum Locations { ProjMtxUniLoc, TexUniLoc,
 OpenGLRenderer::OpenGLRenderer()
 {
   ImGuiIO &io { ImGui::GetIO() };
-  io.BackendRendererName = "reaimgui_opengl3";
+  io.BackendRendererName = "reaper_imgui_opengl3";
   io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset; // glDrawElementsBaseVertex
 
   glGenBuffers(m_buffers.size(), m_buffers.data());

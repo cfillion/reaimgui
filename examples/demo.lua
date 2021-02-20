@@ -146,9 +146,9 @@ show_app = {
   custom_rendering   = false,
 
   -- Dear ImGui Apps (accessible from the "Tools" menu)
-  -- metrics      = false
+  metrics      = false,
   -- style_editor = false
-  -- about        = false
+  about        = false,
 
   -- Window flags (accessible from the "Configuration" section)
   no_titlebar = false,
@@ -183,8 +183,8 @@ function demo.ShowDemoWindow(open)
   if show_app.window_titles      then show_app.window_titles      = ShowExampleAppWindowTitles()      end
   if show_app.custom_rendering   then show_app.custom_rendering   = ShowExampleAppCustomRendering()   end
 
-  -- if (show_app_metrics)       { r.ImGui_ShowMetricsWindow(&show_app_metrics); }
-  -- if (show_app_about)         { r.ImGui_ShowAboutWindow(&show_app_about); }
+  if show_app.metrics then show_app.metrics = r.ImGui_ShowMetricsWindow(ctx, show_app.metrics) end
+  if show_app.about   then show_app.about   = r.ImGui_ShowAboutWindow(ctx, show_app.about)     end
   -- if (show_app_style_editor)
   -- {
   --     r.ImGui_Begin("Dear ImGui Style Editor", &show_app_style_editor);

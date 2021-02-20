@@ -139,6 +139,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   wglMakeCurrent(m_impl->dc, nullptr);
 
   ImGuiIO &io { ImGui::GetIO() };
+  io.BackendPlatformName = "reaper_imgui_win32";
   io.ImeWindowHandle = hwnd;
 }
 

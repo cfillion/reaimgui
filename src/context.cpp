@@ -99,7 +99,6 @@ void Context::setupImGui()
   ImGuiIO &io { ImGui::GetIO() };
   io.IniFilename = nullptr;
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
-  io.BackendPlatformName = "reaper_imgui";
 
 #ifndef __APPLE__
   io.KeyMap[ImGuiKey_Tab]         = VK_TAB;

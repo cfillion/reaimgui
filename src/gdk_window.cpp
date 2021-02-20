@@ -57,6 +57,9 @@ Window::Window(const char *title, RECT rect, Context *ctx)
 
   m_impl->renderer = new OpenGLRenderer;
   gdk_gl_context_clear_current();
+
+  ImGuiIO &io { ImGui::GetIO() };
+  io.BackendPlatformName = "reaper_imgui_gdk";
 }
 
 void Window::Impl::initGl()

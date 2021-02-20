@@ -80,6 +80,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   plugin_register("accelerator", &m_impl->accel);
 
   ImGuiIO &io { ImGui::GetIO() };
+  io.BackendPlatformName = "reaper_imgui_cocoa";
   io.KeyMap[ImGuiKey_Tab]         = kVK_Tab;
   io.KeyMap[ImGuiKey_LeftArrow]   = kVK_LeftArrow;
   io.KeyMap[ImGuiKey_RightArrow]  = kVK_RightArrow;
