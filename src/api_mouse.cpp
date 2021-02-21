@@ -20,8 +20,30 @@ DEFINE_API(bool, IsMouseDoubleClicked, ((ImGui_Context*,ctx))
 // IMGUI_API ImVec2        GetMousePos();                                                      // shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
 // IMGUI_API ImVec2        GetMousePosOnOpeningCurrentPopup();                                 // retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to avoid user backing that value themselves)
 // IMGUI_API bool          IsMouseDragging(ImGuiMouseButton button, float lock_threshold = -1.0f);         // is mouse dragging? (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
-// IMGUI_API ImVec2        GetMouseDragDelta(ImGuiMouseButton button = 0, float lock_threshold = -1.0f);   // return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0f until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
-// IMGUI_API void          ResetMouseDragDelta(ImGuiMouseButton button = 0);                   //
+
+DEFINE_API(void, GetMouseDragDelta, ((ImGui_Context*,ctx))
+((double*,API_W(x)))((double*,API_W(y)))
+((int*,API_RO(button)))((double*,API_RO(lockThreshold))),
+R"(Return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0f until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold).
+
+Default values: button = ImGui_MouseButton_Left, lockThreshold = -1.0)",
+{
+  ENTER_CONTEXT(ctx);
+  const ImVec2 &delta {
+    ImGui::GetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left),
+      valueOr(API_RO(lockThreshold), -1.0))
+  };
+  *API_W(x) = delta.x, *API_W(y) = delta.y;
+});
+
+DEFINE_API(void, ResetMouseDragDelta, ((ImGui_Context*,ctx))
+((int*,API_RO(button))),
+"Default values: button = ImGui_MouseButton_Left",
+{
+  ENTER_CONTEXT(ctx);
+  ImGui::ResetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left));
+});
+
 // IMGUI_API ImGuiMouseCursor GetMouseCursor();                                                // get desired cursor type, reset in ImGui::NewFrame(), this is updated during the frame. valid before Render(). If you use software rendering by setting io.MouseDrawCursor ImGui will render those for you
 // IMGUI_API void          SetMouseCursor(ImGuiMouseCursor cursor_type);                       // set desired cursor type
 // IMGUI_API void          CaptureMouseFromApp(bool want_capture_mouse_value = true);          // attention: misleading name! manually override io.WantCaptureMouse flag next frame (said flag is entirely left for your application to handle). This is equivalent to setting "io.WantCaptureMouse = want_capture_mouse_value;" after the next NewFrame() call.

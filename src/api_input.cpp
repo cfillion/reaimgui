@@ -156,6 +156,62 @@ DEFINE_API(bool, InputDouble, ((ImGui_Context*,ctx))((const char*,label))
     API_RO(format) ? API_RO(format) : "%.6f", flags);
 });
 
+DEFINE_API(bool, InputDouble2, ((ImGui_Context*,ctx))((const char*,label))
+((double*,API_RW(value1)))((double*,API_RW(value2)))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
+"Default values: format = '%.6f', flags = ImGui_InputTextFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
+  sanitizeInputTextFlags(flags);
+
+  double values[] { *API_RW(value1), *API_RW(value2) };
+  const bool rv = ImGui::InputScalarN(label, ImGuiDataType_Double, values, 2,
+    nullptr, nullptr, API_RO(format) ? API_RO(format) : "%.6f", flags);
+  *API_RW(value1) = values[0], *API_RW(value2) = values[1];
+  return rv;
+});
+
+DEFINE_API(bool, InputDouble3, ((ImGui_Context*,ctx))((const char*,label))
+((double*,API_RW(value1)))((double*,API_RW(value2)))((double*,API_RW(value3)))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
+"Default values: format = '%.6f', flags = ImGui_InputTextFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
+  sanitizeInputTextFlags(flags);
+
+  double values[] { *API_RW(value1), *API_RW(value2), *API_RW(value3) };
+  const bool rv = ImGui::InputScalarN(label, ImGuiDataType_Double, values, 3,
+    nullptr, nullptr, API_RO(format) ? API_RO(format) : "%.6f", flags);
+  *API_RW(value1) = values[0], *API_RW(value2) = values[1],
+  *API_RW(value3) = values[2];
+  return rv;
+});
+
+DEFINE_API(bool, InputDouble4, ((ImGui_Context*,ctx))((const char*,label))
+((double*,API_RW(value1)))((double*,API_RW(value2)))((double*,API_RW(value3)))
+((double*,API_RW(value4)))((const char*,API_RO(format)))((int*,API_RO(flags))),
+"Default values: format = '%.6f', flags = ImGui_InputTextFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
+  sanitizeInputTextFlags(flags);
+
+  double values[] { *API_RW(value1), *API_RW(value2), *API_RW(value3), *API_RW(value4) };
+  const bool rv = ImGui::InputScalarN(label, ImGuiDataType_Double, values, 4,
+    nullptr, nullptr, API_RO(format) ? API_RO(format) : "%.6f", flags);
+  *API_RW(value1) = values[0], *API_RW(value2) = values[1],
+  *API_RW(value3) = values[2], *API_RW(value4) = values[3];
+  return rv;
+});
+
 DEFINE_API(bool, InputDoubleN, ((ImGui_Context*,ctx))((const char*,label))
 ((reaper_array*,values))((double*,API_RO(step)))((double*,API_RO(stepFast)))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
@@ -318,7 +374,7 @@ DEFINE_API(bool, DragDouble, ((ImGui_Context*,ctx))
 ((const char*,label))((double*,API_RW(value)))((double*,API_RO(valueSpeed)))
 ((double*,API_RO(valueMin)))((double*,API_RO(valueMax)))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
-"Default values: valueSpeed = 1.0, format = '%.6f', flags = ImGui_SliderFlags_None",
+"Default values: valueSpeed = 1.0, valueMin = 0, valueMax = 0, format = '%.6f', flags = ImGui_SliderFlags_None",
 {
   ENTER_CONTEXT(ctx, false);
   nullIfEmpty(API_RO(format));
@@ -331,6 +387,69 @@ DEFINE_API(bool, DragDouble, ((ImGui_Context*,ctx))
     API_RO(valueMin), API_RO(valueMax),
     API_RO(format) ? API_RO(format) : "%.6f", flags
   );
+});
+
+DEFINE_API(bool, DragDouble2, ((ImGui_Context*,ctx))((const char*,label))
+((double*,API_RW(value1)))((double*,API_RW(value2)))
+((double*,API_RO(valueSpeed)))((double*,API_RO(valueMin)))
+((double*,API_RO(valueMax)))((const char*,API_RO(format)))((int*,API_RO(flags))),
+"Default values: valueSpeed = 1.0, valueMin = 0, valueMax = 0, format = '%.6f', flags = ImGui_SliderFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
+  sanitizeInputTextFlags(flags);
+
+  double values[] { *API_RW(value1), *API_RW(value2) };
+  const bool rv = ImGui::DragScalarN(label, ImGuiDataType_Double, values, 2,
+    valueOr(API_RO(valueSpeed), 1.0), API_RO(valueMin), API_RO(valueMax),
+    API_RO(format) ? API_RO(format) : "%.6f", flags);
+  *API_RW(value1) = values[0], *API_RW(value2) = values[1];
+  return rv;
+});
+
+DEFINE_API(bool, DragDouble3, ((ImGui_Context*,ctx))((const char*,label))
+((double*,API_RW(value1)))((double*,API_RW(value2)))((double*,API_RW(value3)))
+((double*,API_RO(valueSpeed)))((double*,API_RO(valueMin)))
+((double*,API_RO(valueMax)))((const char*,API_RO(format)))((int*,API_RO(flags))),
+"Default values: valueSpeed = 1.0, valueMin = 0, valueMax = 0, format = '%.6f', flags = ImGui_SliderFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
+  sanitizeInputTextFlags(flags);
+
+  double values[] { *API_RW(value1), *API_RW(value2), *API_RW(value3) };
+  const bool rv = ImGui::DragScalarN(label, ImGuiDataType_Double, values, 3,
+    valueOr(API_RO(valueSpeed), 1.0), API_RO(valueMin), API_RO(valueMax),
+    API_RO(format) ? API_RO(format) : "%.6f", flags);
+  *API_RW(value1) = values[0], *API_RW(value2) = values[1],
+  *API_RW(value3) = values[2];
+  return rv;
+});
+
+DEFINE_API(bool, DragDouble4, ((ImGui_Context*,ctx))((const char*,label))
+((double*,API_RW(value1)))((double*,API_RW(value2)))((double*,API_RW(value3)))
+((double*,API_RW(value4)))((double*,API_RO(valueSpeed)))
+((double*,API_RO(valueMin)))((double*,API_RO(valueMax)))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
+"Default values: valueSpeed = 1.0, valueMin = 0, valueMax = 0, format = '%.6f', flags = ImGui_SliderFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
+  sanitizeInputTextFlags(flags);
+
+  double values[] { *API_RW(value1), *API_RW(value2), *API_RW(value3), *API_RW(value4) };
+  const bool rv = ImGui::DragScalarN(label, ImGuiDataType_Double, values, 4,
+    valueOr(API_RO(valueSpeed), 1.0), API_RO(valueMin), API_RO(valueMax),
+    API_RO(format) ? API_RO(format) : "%.6f", flags);
+  *API_RW(value1) = values[0], *API_RW(value2) = values[1],
+  *API_RW(value3) = values[2], *API_RW(value4) = values[3];
+  return rv;
 });
 
 DEFINE_API(bool, DragDoubleN, ((ImGui_Context*,ctx))
@@ -440,6 +559,65 @@ DEFINE_API(bool, SliderDouble, ((ImGui_Context*,ctx))
     API_RO(format) ? API_RO(format) : "%.6f", flags);
 });
 
+DEFINE_API(bool, SliderDouble2, ((ImGui_Context*,ctx))((const char*,label))
+((double*,API_RW(value1)))((double*,API_RW(value2)))
+((double*,valueMin))((double*,valueMax))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
+"Default values: format = '%.6f', flags = ImGui_SliderFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
+  sanitizeInputTextFlags(flags);
+
+  double values[] { *API_RW(value1), *API_RW(value2) };
+  const bool rv = ImGui::SliderScalarN(label, ImGuiDataType_Double, values, 2,
+    valueMin, valueMax, API_RO(format) ? API_RO(format) : "%.6f", flags);
+  *API_RW(value1) = values[0], *API_RW(value2) = values[1];
+  return rv;
+});
+
+DEFINE_API(bool, SliderDouble3, ((ImGui_Context*,ctx))((const char*,label))
+((double*,API_RW(value1)))((double*,API_RW(value2)))((double*,API_RW(value3)))
+((double*,valueMin))((double*,valueMax))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
+"Default values: format = '%.6f', flags = ImGui_SliderFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
+  sanitizeInputTextFlags(flags);
+
+  double values[] { *API_RW(value1), *API_RW(value2), *API_RW(value3) };
+  const bool rv = ImGui::SliderScalarN(label, ImGuiDataType_Double, values, 3,
+    valueMin, valueMax, API_RO(format) ? API_RO(format) : "%.6f", flags);
+  *API_RW(value1) = values[0], *API_RW(value2) = values[1],
+  *API_RW(value3) = values[2];
+  return rv;
+});
+
+DEFINE_API(bool, SliderDouble4, ((ImGui_Context*,ctx))((const char*,label))
+((double*,API_RW(value1)))((double*,API_RW(value2)))((double*,API_RW(value3)))
+((double*,API_RW(value4)))((double*,valueMin))((double*,valueMax))
+((const char*,API_RO(format)))((int*,API_RO(flags))),
+"Default values: format = '%.6f', flags = ImGui_SliderFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
+  sanitizeInputTextFlags(flags);
+
+  double values[] { *API_RW(value1), *API_RW(value2), *API_RW(value3), *API_RW(value4) };
+  const bool rv = ImGui::SliderScalarN(label, ImGuiDataType_Double, values, 4,
+    valueMin, valueMax, API_RO(format) ? API_RO(format) : "%.6f", flags);
+  *API_RW(value1) = values[0], *API_RW(value2) = values[1],
+  *API_RW(value3) = values[2], *API_RW(value4) = values[3];
+  return rv;
+});
+
 DEFINE_API(bool, SliderDoubleN, ((ImGui_Context*,ctx))
 ((const char*,label))((reaper_array*,values))
 ((double,valueMin))((double,valueMax))((const char*,API_RO(format)))
@@ -454,5 +632,38 @@ DEFINE_API(bool, SliderDoubleN, ((ImGui_Context*,ctx))
 
   return ImGui::SliderScalarN(label, ImGuiDataType_Double,
     values->data, values->size, &valueMin, &valueMax,
+    API_RO(format) ? API_RO(format) : "%.6f", flags);
+});
+
+DEFINE_API(bool, VSliderInt, ((ImGui_Context*,ctx))
+((const char*,label))((double,width))((double,height))((int*,API_RW(value)))
+((int,valueMin))((int,valueMax))((const char*,API_RO(format)))
+((int*,API_RO(flags))),
+"Default values: format = '%d', flags = ImGui_SliderFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
+  sanitizeSliderFlags(flags);
+
+  return ImGui::VSliderInt(label, ImVec2(width, height), API_RW(value),
+    valueMin, valueMax, API_RO(format) ? API_RO(format) : "%d", flags);
+});
+
+DEFINE_API(bool, VSliderDouble, ((ImGui_Context*,ctx))
+((const char*,label))((double,width))((double,height))((double*,API_RW(value)))
+((double,valueMin))((double,valueMax))((const char*,API_RO(format)))
+((int*,API_RO(flags))),
+"Default values: format = '%d', flags = ImGui_SliderFlags_None",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(format));
+
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
+  sanitizeSliderFlags(flags);
+
+  return ImGui::VSliderScalar(label, ImVec2(width, height),
+    ImGuiDataType_Double, API_RW(value), &valueMin, &valueMax,
     API_RO(format) ? API_RO(format) : "%.6f", flags);
 });

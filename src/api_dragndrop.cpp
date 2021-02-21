@@ -28,7 +28,7 @@ Default values: cond = ImGui_Cond_Always)",
   if(!isUserType(type))
     return false;
 
-  return ImGui::SetDragDropPayload(type, data, data ? strlen(data) : 0,
+  return ImGui::SetDragDropPayload(type, data, data ? strlen(data) + 1 : 0,
     valueOr(API_RO(cond), ImGuiCond_Always));
 });
 
@@ -62,9 +62,12 @@ Default values: flags = ImGui_DragDropFlags_None)",
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
 
-  const char *strData { static_cast<const char *>(payload->Data) };
-  if(!payload || strData[payload->DataSize] /* not null terminated? */)
+  if(!payload)
     return false;
+
+  const char *strData { static_cast<const char *>(payload->Data) };
+  if(strData[payload->DataSize] != '\0')
+    return false; // payload somehow is not a null terminated string
 
   if(payload->DataSize > API_WBIG_SZ(payload))
     realloc_cmd_ptr(&API_WBIG(payload), &API_WBIG_SZ(payload), payload->DataSize);

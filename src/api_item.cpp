@@ -3,13 +3,27 @@
 // - Most of the functions are referring to the last/previous item we submitted.
 // - See Demo Window under "Widgets->Querying Status" for an interactive visualization of most of those functions.
 DEFINE_API(bool, IsItemHovered, ((ImGui_Context*,ctx))((int*,API_RO(flags))),
-"Is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGuiHoveredFlags for more options.",
+R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGui_HoveredFlags_* for more options.
+
+Default values: flags = ImGui_HoveredFlags_None)",
 {
   ENTER_CONTEXT(ctx, false);
   return ImGui::IsItemHovered(valueOr(API_RO(flags), 0));
 });
-// IMGUI_API bool          IsItemActive();                                                     // is the last item active? (e.g. button being held, text field being edited. This will continuously return true while holding mouse button on an item. Items that don't interact will always return false)
-// IMGUI_API bool          IsItemFocused();                                                    // is the last item focused for keyboard/gamepad navigation?
+
+DEFINE_API(bool, IsItemActive, ((ImGui_Context*,ctx)),
+"Is the last item active? (e.g. button being held, text field being edited. This will continuously return true while holding mouse button on an item. Items that don't interact will always return false)",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsItemActive();
+});
+
+DEFINE_API(bool, IsItemFocused, ((ImGui_Context*,ctx)),
+"Is the last item focused for keyboard/gamepad navigation?",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsItemFocused();
+});
 
 DEFINE_API(bool, IsItemClicked, ((ImGui_Context*,ctx))((int*,API_RO(mouseButton))),
 R"(Is the last item clicked? (e.g. button/node just clicked on) == IsMouseClicked(mouse_button) && IsItemHovered().
@@ -20,12 +34,48 @@ Default values: mousebutton = ImGui_MouseButton_Left)",
   return ImGui::IsItemClicked(valueOr(API_RO(mouseButton), ImGuiMouseButton_Left));
 });
 
-// IMGUI_API bool          IsItemVisible();                                                    // is the last item visible? (items may be out of sight because of clipping/scrolling)
-// IMGUI_API bool          IsItemEdited();                                                     // did the last item modify its underlying value this frame? or was pressed? This is generally the same as the "bool" return value of many widgets.
-// IMGUI_API bool          IsItemActivated();                                                  // was the last item just made active (item was previously inactive).
-// IMGUI_API bool          IsItemDeactivated();                                                // was the last item just made inactive (item was previously active). Useful for Undo/Redo patterns with widgets that requires continuous editing.
-// IMGUI_API bool          IsItemDeactivatedAfterEdit();                                       // was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that requires continuous editing. Note that you may get false positives (some widgets such as Combo()/ListBox()/Selectable() will return true even when clicking an already selected item).
-// IMGUI_API bool          IsItemToggledOpen();                                                // was the last item open state toggled? set by TreeNode().
+DEFINE_API(bool, IsItemVisible, ((ImGui_Context*,ctx)),
+"Is the last item visible? (items may be out of sight because of clipping/scrolling)",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsItemVisible();
+});
+
+DEFINE_API(bool, IsItemEdited, ((ImGui_Context*,ctx)),
+R"(Did the last item modify its underlying value this frame? or was pressed? This is generally the same as the "bool" return value of many widgets.)",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsItemEdited();
+});
+
+DEFINE_API(bool, IsItemActivated, ((ImGui_Context*,ctx)),
+"Was the last item just made active (item was previously inactive).",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsItemActivated();
+});
+
+DEFINE_API(bool, IsItemDeactivated, ((ImGui_Context*,ctx)),
+"Was the last item just made inactive (item was previously active). Useful for Undo/Redo patterns with widgets that requires continuous editing.",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsItemDeactivated();
+});
+
+DEFINE_API(bool, IsItemDeactivatedAfterEdit, ((ImGui_Context*,ctx)),
+"Was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that requires continuous editing. Note that you may get false positives (some widgets such as Combo()/ListBox()/Selectable() will return true even when clicking an already selected item).",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsItemDeactivatedAfterEdit();
+});
+
+DEFINE_API(bool, IsItemToggledOpen, ((ImGui_Context*,ctx)),
+"Was the last item open state toggled? Set by TreeNode().",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsItemToggledOpen();
+});
+
 // IMGUI_API bool          IsAnyItemHovered();                                                 // is any item hovered?
 // IMGUI_API bool          IsAnyItemActive();                                                  // is any item active?
 // IMGUI_API bool          IsAnyItemFocused();                                                 // is any item focused?

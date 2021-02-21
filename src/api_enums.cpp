@@ -79,6 +79,7 @@ DEFINE_ENUM(Dir_Down,  "A cardinal direction");
 
 // typedef int ImGuiKey;               // -> enum ImGuiKey_             // Enum: A key identifier (ImGui-side enum)
 // typedef int ImGuiNavInput;          // -> enum ImGuiNavInput_        // Enum: An input identifier for navigation
+
 // ImGuiMouseButton
 // Enum: A mouse button identifier (0=left, 1=right, 2=middle)
 DEFINE_ENUM(MouseButton_Left, "");
@@ -163,9 +164,42 @@ DEFINE_ENUM(ComboFlags_HeightLargest,  "As many fitting items as possible");
 DEFINE_ENUM(ComboFlags_NoArrowButton,  "Display on the preview box without the square arrow button");
 DEFINE_ENUM(ComboFlags_NoPreview,      "Display only a square arrow button");
 
-// typedef int ImGuiDragDropFlags;     // -> enum ImGuiDragDropFlags_   // Flags: for BeginDragDropSource(), AcceptDragDropPayload()
-// typedef int ImGuiFocusedFlags;      // -> enum ImGuiFocusedFlags_    // Flags: for IsWindowFocused()
-// typedef int ImGuiHoveredFlags;      // -> enum ImGuiHoveredFlags_    // Flags: for IsItemHovered(), IsWindowHovered() etc.
+// ImGuiDragDropFlags
+// Flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()
+DEFINE_ENUM(DragDropFlags_None,                     "");
+// BeginDragDropSource() flags
+DEFINE_ENUM(DragDropFlags_SourceNoPreviewTooltip,   "By default, a successful call to BeginDragDropSource opens a tooltip so you can display a preview or description of the source contents. This flag disable this behavior.");
+DEFINE_ENUM(DragDropFlags_SourceNoDisableHover,     "By default, when dragging we clear data so that IsItemHovered() will return false, to avoid subsequent user code submitting tooltips. This flag disable this behavior so you can still call IsItemHovered() on the source item.");
+DEFINE_ENUM(DragDropFlags_SourceNoHoldToOpenOthers, "Disable the behavior that allows to open tree nodes and collapsing header by holding over them while dragging a source item.");
+DEFINE_ENUM(DragDropFlags_SourceAllowNullID,        "Allow items such as Text(), Image() that have no unique identifier to be used as drag source, by manufacturing a temporary identifier based on their window-relative position. This is extremely unusual within the dear imgui ecosystem and so we made it explicit.");
+DEFINE_ENUM(DragDropFlags_SourceExtern,             "External source (from outside of dear imgui), won't attempt to read current item/window info. Will always return true. Only one Extern source can be active simultaneously.");
+DEFINE_ENUM(DragDropFlags_SourceAutoExpirePayload,  "Automatically expire the payload if the source cease to be submitted (otherwise payloads are persisting while being dragged)");
+// AcceptDragDropPayload() flags
+DEFINE_ENUM(DragDropFlags_AcceptBeforeDelivery,     "AcceptDragDropPayload() will returns true even before the mouse button is released. You can then call IsDelivery() to test if the payload needs to be delivered.");
+DEFINE_ENUM(DragDropFlags_AcceptNoDrawDefaultRect,  "Do not draw the default highlight rectangle when hovering over target.");
+DEFINE_ENUM(DragDropFlags_AcceptNoPreviewTooltip,   "Request hiding the BeginDragDropSource tooltip from the BeginDragDropTarget site.");
+DEFINE_ENUM(DragDropFlags_AcceptPeekOnly,           "For peeking ahead and inspecting the payload before delivery. Equivalent to ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect.");
+
+// ImGuiFocusedFlags
+// Flags for ImGui::IsWindowFocused()
+DEFINE_ENUM(FocusedFlags_None,                "");
+DEFINE_ENUM(FocusedFlags_ChildWindows,        "IsWindowFocused(): Return true if any children of the window is focused");
+DEFINE_ENUM(FocusedFlags_RootWindow,          "IsWindowFocused(): Test from root window (top most parent of the current hierarchy)");
+DEFINE_ENUM(FocusedFlags_AnyWindow,           "IsWindowFocused(): Return true if any window is focused. Important: If you are trying to tell how to dispatch your low-level inputs, do NOT use this. Use 'io.WantCaptureMouse' instead! Please read the FAQ!");
+DEFINE_ENUM(FocusedFlags_RootAndChildWindows, "ImGui_FocusedFlags_RootWindow | ImGui_FocusedFlags_ChildWindows");
+
+// ImGuiHoveredFlags
+// Flags: for IsItemHovered(), IsWindowHovered() etc.
+DEFINE_ENUM(HoveredFlags_None,                         "Return true if directly over the item/window, not obstructed by another window, not obstructed by an active popup or modal blocking inputs under them.");
+DEFINE_ENUM(HoveredFlags_ChildWindows,                 "IsWindowHovered() only: Return true if any children of the window is hovered");
+DEFINE_ENUM(HoveredFlags_RootWindow,                   "IsWindowHovered() only: Test from root window (top most parent of the current hierarchy)");
+DEFINE_ENUM(HoveredFlags_AnyWindow,                    "IsWindowHovered() only: Return true if any window is hovered");
+DEFINE_ENUM(HoveredFlags_AllowWhenBlockedByPopup,      "Return true even if a popup window is normally blocking access to this item/window");
+DEFINE_ENUM(HoveredFlags_AllowWhenBlockedByActiveItem, "Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.");
+DEFINE_ENUM(HoveredFlags_AllowWhenOverlapped,          "Return true even if the position is obstructed or overlapped by another window");
+DEFINE_ENUM(HoveredFlags_AllowWhenDisabled,            "Return true even if the item is disabled");
+DEFINE_ENUM(HoveredFlags_RectOnly,                     "ImGui_HoveredFlags_AllowWhenBlockedByPopup | ImGui_HoveredFlags_AllowWhenBlockedByActiveItem | ImGui_HoveredFlags_AllowWhenOverlapped");
+DEFINE_ENUM(HoveredFlags_RootAndChildWindows,          "ImGui_HoveredFlags_RootWindow | ImGui_HoveredFlags_ChildWindows");
 
 // ImGuiInputTextFlags
 // Most of the ImGuiInputTextFlags flags are only useful for InputText() and not for InputFloatX, InputIntX, InputDouble etc.

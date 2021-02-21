@@ -26,6 +26,67 @@ R"(Pop window from the stack. See ImGui_Begin.)",
   ENTER_CONTEXT(ctx);
   ImGui::End();
 });
+
+DEFINE_API(bool, BeginChild, ((ImGui_Context*,ctx))
+((const char*,str_id))((double*,API_RO(width)))((double*,API_RO(height)))
+((bool*,API_RO(border)))((int*,API_RO(flags))),
+R"(Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window. Child windows can embed their own child.
+- For each independent axis of 'size': ==0.0f: use remaining host window size / >0.0f: fixed size / <0.0f: use remaining window size minus abs(size) / Each axis can use a different mode, e.g. ImVec2(0,400).
+- BeginChild() returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
+  Always call a matching EndChild() for each BeginChild() call, regardless of its return value.
+  [Important: due to legacy reason, this is inconsistent with most other functions such as BeginMenu/EndMenu,
+   BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding BeginXXX function
+   returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
+
+Default values: width = 0.0, height = 0.0, border = false, flags = ImGui_WindowFlags_None)",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::BeginChild(str_id,
+    ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)),
+    valueOr(API_RO(border), false), valueOr(API_RO(flags), ImGuiWindowFlags_None));
+});
+
+DEFINE_API(void, EndChild, ((ImGui_Context*,ctx)),
+"See ImGui_BeginChild.",
+{
+  ENTER_CONTEXT(ctx);
+  ImGui::EndChild();
+});
+
+DEFINE_API(bool, IsWindowAppearing, ((ImGui_Context*,ctx)),
+"",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsWindowAppearing();
+});
+
+DEFINE_API(bool, IsWindowCollapsed, ((ImGui_Context*,ctx)),
+"",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsWindowCollapsed();
+});
+
+DEFINE_API(bool, IsWindowFocused, ((ImGui_Context*,ctx))
+((int*,API_RO(flags))),
+R"(Is current window focused? or its root/child, depending on flags. see flags for options.
+
+Default values: flags = ImGui_FocusedFlags_None)",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsWindowFocused(valueOr(API_RO(flags), ImGuiFocusedFlags_None));
+});
+
+DEFINE_API(bool, IsWindowHovered, ((ImGui_Context*,ctx))
+((int*,API_RO(flags))),
+R"(Is current window hovered (and typically: not blocked by a popup/modal)? see flags for options.
+
+Default values: flags = ImGui_HoveredFlags_None)",
+{
+  ENTER_CONTEXT(ctx, false);
+  return ImGui::IsWindowHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
+});
+
 DEFINE_API(void, SetNextWindowPos, ((ImGui_Context*,ctx))
 ((double,x))((double,y))((int*,API_RO(cond)))
 ((double*,API_RO(pivotX)))((double*,API_RO(pivotY))),

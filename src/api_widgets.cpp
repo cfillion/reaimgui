@@ -49,7 +49,7 @@ DEFINE_API(bool, CheckboxFlags, ((ImGui_Context*,ctx))
 });
 
 DEFINE_API(bool, RadioButton, ((ImGui_Context*,ctx))
-((const char*,label))((bool active)),
+((const char*,label))((bool,active)),
 R"(Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })",
 {
   ENTER_CONTEXT(ctx, false);

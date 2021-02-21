@@ -50,12 +50,26 @@ Default values: flags = ImGui_PopupFlags_None)",
 
 IMGUI_API void          OpenPopupOnItemClick(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);   // helper to open popup when clicked on last item. return true when just opened. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
 IMGUI_API void          CloseCurrentPopup();                                                                // manually close the popup we have begin-ed into.
+
 // Popups: open+begin combined functions helpers
 //  - Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.g. hovering an item and right-clicking.
 //  - They are convenient to easily create context menus, hence the name.
-//  - IMPORTANT: Notice that BeginPopupContextXXX takes ImGuiPopupFlags just like OpenPopup() and unlike BeginPopup(). For full consistency, we may add ImGuiWindowFlags to the BeginPopupContextXXX functions in the future.
-//  - IMPORTANT: we exceptionally default their flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGuiPopupFlags_MouseButtonRight.
-IMGUI_API bool          BeginPopupContextItem(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);  // open+begin popup when clicked on last item. if you can pass a NULL str_id only if the previous item had an id. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here. read comments in .cpp!
+DEFINE_API(bool, BeginPopupContextItem, ((ImGui_Context*,ctx))
+((const char*,API_RO(str_id)))((int*,API_RO(flags))),
+R"(This is a helper to handle the simplest case of associating one named popup to one given widget. You can pass a NULL str_id to use the identifier of the last item. This is essentially the same as calling OpenPopupOnItemClick() + BeginPopup() but written to avoid computing the ID twice because BeginPopupContextXXX functions may be called very frequently.
+
+Open+begin popup when clicked on last item. if you can pass a NULL str_id only if the previous item had an id. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here.
+
+- IMPORTANT: Notice that BeginPopupContextXXX takes ImGuiPopupFlags just like OpenPopup() and unlike BeginPopup().
+- IMPORTANT: we exceptionally default their flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGuiPopupFlags_MouseButtonRight.)",
+{
+  ENTER_CONTEXT(ctx, false);
+  nullIfEmpty(API_RO(str_id));
+
+  return ImGui::BeginPopupContextItem(API_RO(str_id),
+    valueOr(API_RO(flags), ImGuiPopupFlags_MouseButtonRight));
+});
+
 IMGUI_API bool          BeginPopupContextWindow(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);// open+begin popup when clicked on current window.
 IMGUI_API bool          BeginPopupContextVoid(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);  // open+begin popup when clicked in void (where there are no windows).
 // Popups: test function

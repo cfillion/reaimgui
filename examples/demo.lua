@@ -563,6 +563,32 @@ label:\n"
     vec4d = { 0.10, 0.20, 0.30, 0.44 },
     vec4i = { 1, 5, 100, 255 },
   },
+  vsliders = {
+    int_value = 0,
+    values    = { 0.0,  0.60, 0.35, 0.9, 0.70, 0.20, 0.0 },
+    values2   = { 0.20, 0.80, 0.40, 0.25 },
+  },
+  dragdrop = {
+    color1 = 0xFF0033,
+    color2 = 0x66B30080,
+    mode   = 0,
+    names  = {
+      'Bobby', 'Beatrice', 'Betty',
+      'Brianna', 'Barry', 'Bernard',
+      'Bibi', 'Blaine', 'Bryn',
+    },
+    items  = { 'Item One', 'Item Two', 'Item Three', 'Item Four', 'Item Five' },
+  },
+  query = {
+    item_type  = 1,
+    b          = false,
+    color      = 0xFF8000FF,
+    str        = '',
+    current    = 1,
+    d4a        = { 1.0, 0.5, 0.0, 1.0 },
+    embed_all_inside_a_child_window = false,
+    test_window = false,
+  },
 }
 
 local tooltip_curve = reaper.new_array({ 0.6,  0.1,  1.0,  0.5, 0.92, 0.1, 0.2 })
@@ -1959,25 +1985,25 @@ function demo.ShowDemoWindowWidgets()
     local vec4d = widgets.multi_component.vec4d
     local vec4i = widgets.multi_component.vec4i
 
-    -- rv,vec4d[1],vec4d[2] = r.ImGui_InputDouble2(ctx, 'input float2', vec4d[1], vec4d[2])
-    -- rv,vec4d[1],vec4d[2] = r.ImGui_DragDouble2(ctx, 'drag float2', vec4d[1], vec4d[2], 0.01, 0.0, 1.0)
-    -- rv,vec4d[1],vec4d[2] = r.ImGui_SliderDouble2(ctx, 'slider float2', vec4d[1], vec4d[2], 0.0, 1.0)
+    rv,vec4d[1],vec4d[2] = r.ImGui_InputDouble2(ctx, 'input double2', vec4d[1], vec4d[2])
+    rv,vec4d[1],vec4d[2] = r.ImGui_DragDouble2(ctx, 'drag double2', vec4d[1], vec4d[2], 0.01, 0.0, 1.0)
+    rv,vec4d[1],vec4d[2] = r.ImGui_SliderDouble2(ctx, 'slider double2', vec4d[1], vec4d[2], 0.0, 1.0)
     rv,vec4i[1],vec4i[2] = r.ImGui_InputInt2(ctx, 'input int2', vec4i[1], vec4i[2])
     rv,vec4i[1],vec4i[2] = r.ImGui_DragInt2(ctx, 'drag int2', vec4i[1], vec4i[2], 1, 0, 255)
     rv,vec4i[1],vec4i[2] = r.ImGui_SliderInt2(ctx, 'slider int2', vec4i[1], vec4i[2], 0, 255)
     r.ImGui_Spacing(ctx)
 
-    -- rv,vec4d[1],vec4d[2],vec4d[3] = r.ImGui_InputDouble3(ctx, 'input float3', vec4d[1], vec4d[2], vec4d[3])
-    -- rv,vec4d[1],vec4d[2],vec4d[3] = r.ImGui_DragDouble3(ctx, 'drag float3', vec4d[1], vec4d[2], vec4d[3], 0.01, 0.0, 1.0)
-    -- rv,vec4d[1],vec4d[2],vec4d[3] = r.ImGui_SliderDouble3(ctx, 'slider float3', vec4d[1], vec4d[2], vec4d[3], 0.0, 1.0)
+    rv,vec4d[1],vec4d[2],vec4d[3] = r.ImGui_InputDouble3(ctx, 'input double3', vec4d[1], vec4d[2], vec4d[3])
+    rv,vec4d[1],vec4d[2],vec4d[3] = r.ImGui_DragDouble3(ctx, 'drag double3', vec4d[1], vec4d[2], vec4d[3], 0.01, 0.0, 1.0)
+    rv,vec4d[1],vec4d[2],vec4d[3] = r.ImGui_SliderDouble3(ctx, 'slider double3', vec4d[1], vec4d[2], vec4d[3], 0.0, 1.0)
     rv,vec4i[1],vec4i[2],vec4i[3] = r.ImGui_InputInt3(ctx, 'input int3', vec4i[1], vec4i[2], vec4i[3])
     rv,vec4i[1],vec4i[2],vec4i[3] = r.ImGui_DragInt3(ctx, 'drag int3', vec4i[1], vec4i[2], vec4i[3], 1, 0, 255)
     rv,vec4i[1],vec4i[2],vec4i[3] = r.ImGui_SliderInt3(ctx, 'slider int3', vec4i[1], vec4i[2], vec4i[3], 0, 255)
     r.ImGui_Spacing(ctx)
 
-    -- rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = r.ImGui_InputDouble4(ctx, 'input float4', vec4d[1], vec4d[2], vec4d[3], vec4d[4])
-    -- rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = r.ImGui_DragDouble4(ctx, 'drag float4', vec4d[1], vec4d[2], vec4d[3], vec4d[4], 0.01, 0.0, 1.0)
-    -- rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = r.ImGui_SliderDouble4(ctx, 'slider float4', vec4d[1], vec4d[2], vec4d[3], vec4d[4], 0.0, 1.0)
+    rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = r.ImGui_InputDouble4(ctx, 'input double4', vec4d[1], vec4d[2], vec4d[3], vec4d[4])
+    rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = r.ImGui_DragDouble4(ctx, 'drag double4', vec4d[1], vec4d[2], vec4d[3], vec4d[4], 0.01, 0.0, 1.0)
+    rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = r.ImGui_SliderDouble4(ctx, 'slider double4', vec4d[1], vec4d[2], vec4d[3], vec4d[4], 0.0, 1.0)
     rv,vec4i[1],vec4i[2],vec4i[3],vec4i[4] = r.ImGui_InputInt4(ctx, 'input int4', vec4i[1], vec4i[2], vec4i[3], vec4i[4])
     rv,vec4i[1],vec4i[2],vec4i[3],vec4i[4] = r.ImGui_DragInt4(ctx, 'drag int4', vec4i[1], vec4i[2], vec4i[3], vec4i[4], 1, 0, 255)
     rv,vec4i[1],vec4i[2],vec4i[3],vec4i[4] = r.ImGui_SliderInt4(ctx, 'slider int4', vec4i[1], vec4i[2], vec4i[3], vec4i[4], 0, 255)
@@ -1990,327 +2016,328 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_TreePop(ctx)
   end
 
---     if (r.ImGui_TreeNode("Vertical Sliders"))
---     {
---         const float spacing = 4;
---         r.ImGui_PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(spacing, spacing));
---
---         static int int_value = 0;
---         r.ImGui_VSliderInt("##int", ImVec2(18, 160), &int_value, 0, 5);
---         r.ImGui_SameLine();
---
---         static float values[7] = { 0.0f, 0.60f, 0.35f, 0.9f, 0.70f, 0.20f, 0.0f };
---         r.ImGui_PushID("set1");
---         for (int i = 0; i < 7; i++)
---         {
---             if (i > 0) r.ImGui_SameLine();
---             r.ImGui_PushID(i);
---             r.ImGui_PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0f, 0.5f, 0.5f));
---             r.ImGui_PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0f, 0.6f, 0.5f));
---             r.ImGui_PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(i / 7.0f, 0.7f, 0.5f));
---             r.ImGui_PushStyleColor(ImGuiCol_SliderGrab, (ImVec4)ImColor::HSV(i / 7.0f, 0.9f, 0.9f));
---             r.ImGui_VSliderFloat("##v", ImVec2(18, 160), &values[i], 0.0f, 1.0f, "");
---             if (r.ImGui_IsItemActive() || r.ImGui_IsItemHovered())
---                 r.ImGui_SetTooltip("%.3f", values[i]);
---             r.ImGui_PopStyleColor(4);
---             r.ImGui_PopID();
---         }
---         r.ImGui_PopID();
---
---         r.ImGui_SameLine();
---         r.ImGui_PushID("set2");
---         static float values2[4] = { 0.20f, 0.80f, 0.40f, 0.25f };
---         const int rows = 3;
---         const ImVec2 small_slider_size(18, (float)(int)((160.0f - (rows - 1) * spacing) / rows));
---         for (int nx = 0; nx < 4; nx++)
---         {
---             if (nx > 0) r.ImGui_SameLine();
---             r.ImGui_BeginGroup();
---             for (int ny = 0; ny < rows; ny++)
---             {
---                 r.ImGui_PushID(nx * rows + ny);
---                 r.ImGui_VSliderFloat("##v", small_slider_size, &values2[nx], 0.0f, 1.0f, "");
---                 if (r.ImGui_IsItemActive() || r.ImGui_IsItemHovered())
---                     r.ImGui_SetTooltip("%.3f", values2[nx]);
---                 r.ImGui_PopID();
---             }
---             r.ImGui_EndGroup();
---         }
---         r.ImGui_PopID();
---
---         r.ImGui_SameLine();
---         r.ImGui_PushID("set3");
---         for (int i = 0; i < 4; i++)
---         {
---             if (i > 0) r.ImGui_SameLine();
---             r.ImGui_PushID(i);
---             r.ImGui_PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
---             r.ImGui_VSliderFloat("##v", ImVec2(40, 160), &values[i], 0.0f, 1.0f, "%.2f\nsec");
---             r.ImGui_PopStyleVar();
---             r.ImGui_PopID();
---         }
---         r.ImGui_PopID();
---         r.ImGui_PopStyleVar();
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Drag and Drop"))
---     {
---         if (r.ImGui_TreeNode("Drag and drop in standard widgets"))
---         {
---             // ColorEdit widgets automatically act as drag source and drag target.
---             // They are using standardized payload strings IMGUI_PAYLOAD_TYPE_COLOR_3F and IMGUI_PAYLOAD_TYPE_COLOR_4F
---             // to allow your own widgets to use colors in their drag and drop interaction.
---             // Also see 'Demo->Widgets->Color/Picker Widgets->Palette' demo.
---             HelpMarker("You can drag from the color squares.");
---             static float col1[3] = { 1.0f, 0.0f, 0.2f };
---             static float col2[4] = { 0.4f, 0.7f, 0.0f, 0.5f };
---             r.ImGui_ColorEdit3("color 1", col1);
---             r.ImGui_ColorEdit4("color 2", col2);
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Drag and drop to copy/swap items"))
---         {
---             enum Mode
---             {
---                 Mode_Copy,
---                 Mode_Move,
---                 Mode_Swap
---             };
---             static int mode = 0;
---             if (r.ImGui_RadioButton("Copy", mode == Mode_Copy)) { mode = Mode_Copy; } r.ImGui_SameLine();
---             if (r.ImGui_RadioButton("Move", mode == Mode_Move)) { mode = Mode_Move; } r.ImGui_SameLine();
---             if (r.ImGui_RadioButton("Swap", mode == Mode_Swap)) { mode = Mode_Swap; }
---             static const char* names[9] =
---             {
---                 "Bobby", "Beatrice", "Betty",
---                 "Brianna", "Barry", "Bernard",
---                 "Bibi", "Blaine", "Bryn"
---             };
---             for (int n = 0; n < IM_ARRAYSIZE(names); n++)
---             {
---                 r.ImGui_PushID(n);
---                 if ((n % 3) != 0)
---                     r.ImGui_SameLine();
---                 r.ImGui_Button(names[n], ImVec2(60, 60));
---
---                 // Our buttons are both drag sources and drag targets here!
---                 if (r.ImGui_BeginDragDropSource(ImGuiDragDropFlags_None))
---                 {
---                     // Set payload to carry the index of our item (could be anything)
---                     r.ImGui_SetDragDropPayload("DND_DEMO_CELL", &n, sizeof(int));
---
---                     // Display preview (could be anything, e.g. when dragging an image we could decide to display
---                     // the filename and a small preview of the image, etc.)
---                     if (mode == Mode_Copy) { r.ImGui_Text("Copy %s", names[n]); }
---                     if (mode == Mode_Move) { r.ImGui_Text("Move %s", names[n]); }
---                     if (mode == Mode_Swap) { r.ImGui_Text("Swap %s", names[n]); }
---                     r.ImGui_EndDragDropSource();
---                 }
---                 if (r.ImGui_BeginDragDropTarget())
---                 {
---                     if (const ImGuiPayload* payload = r.ImGui_AcceptDragDropPayload("DND_DEMO_CELL"))
---                     {
---                         IM_ASSERT(payload->DataSize == sizeof(int));
---                         int payload_n = *(const int*)payload->Data;
---                         if (mode == Mode_Copy)
---                         {
---                             names[n] = names[payload_n];
---                         }
---                         if (mode == Mode_Move)
---                         {
---                             names[n] = names[payload_n];
---                             names[payload_n] = "";
---                         }
---                         if (mode == Mode_Swap)
---                         {
---                             const char* tmp = names[n];
---                             names[n] = names[payload_n];
---                             names[payload_n] = tmp;
---                         }
---                     }
---                     r.ImGui_EndDragDropTarget();
---                 }
---                 r.ImGui_PopID();
---             }
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Drag to reorder items (simple)"))
---         {
---             // Simple reordering
---             HelpMarker(
---                 "We don't use the drag and drop api at all here! "
---                 "Instead we query when the item is held but not hovered, and order items accordingly.");
---             static const char* item_names[] = { "Item One", "Item Two", "Item Three", "Item Four", "Item Five" };
---             for (int n = 0; n < IM_ARRAYSIZE(item_names); n++)
---             {
---                 const char* item = item_names[n];
---                 r.ImGui_Selectable(item);
---
---                 if (r.ImGui_IsItemActive() && !r.ImGui_IsItemHovered())
---                 {
---                     int n_next = n + (r.ImGui_GetMouseDragDelta(0).y < 0.f ? -1 : 1);
---                     if (n_next >= 0 && n_next < IM_ARRAYSIZE(item_names))
---                     {
---                         item_names[n] = item_names[n_next];
---                         item_names[n_next] = item;
---                         r.ImGui_ResetMouseDragDelta();
---                     }
---                 }
---             }
---             r.ImGui_TreePop();
---         }
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Querying Status (Edited/Active/Focused/Hovered etc.)"))
---     {
---         // Select an item type
---         const char* item_names[] =
---         {
---             "Text", "Button", "Button (w/ repeat)", "Checkbox", "SliderFloat", "InputText", "InputFloat",
---             "InputFloat3", "ColorEdit4", "MenuItem", "TreeNode", "TreeNode (w/ double-click)", "Combo", "ListBox"
---         };
---         static int item_type = 1;
---         r.ImGui_Combo("Item Type", &item_type, item_names, IM_ARRAYSIZE(item_names), IM_ARRAYSIZE(item_names));
---         r.ImGui_SameLine();
---         HelpMarker("Testing how various types of items are interacting with the IsItemXXX functions. Note that the bool return value of most ImGui function is generally equivalent to calling r.ImGui_IsItemHovered().");
---
---         // Submit selected item item so we can query their status in the code following it.
---         bool ret = false;
---         static bool b = false;
---         static float col4f[4] = { 1.0f, 0.5, 0.0f, 1.0f };
---         static char str[16] = {};
---         if (item_type == 0) { r.ImGui_Text("ITEM: Text"); }                                              // Testing text items with no identifier/interaction
---         if (item_type == 1) { ret = r.ImGui_Button("ITEM: Button"); }                                    // Testing button
---         if (item_type == 2) { r.ImGui_PushButtonRepeat(true); ret = r.ImGui_Button("ITEM: Button"); r.ImGui_PopButtonRepeat(); } // Testing button (with repeater)
---         if (item_type == 3) { ret = r.ImGui_Checkbox("ITEM: Checkbox", &b); }                            // Testing checkbox
---         if (item_type == 4) { ret = r.ImGui_SliderFloat("ITEM: SliderFloat", &col4f[0], 0.0f, 1.0f); }   // Testing basic item
---         if (item_type == 5) { ret = r.ImGui_InputText("ITEM: InputText", &str[0], IM_ARRAYSIZE(str)); }  // Testing input text (which handles tabbing)
---         if (item_type == 6) { ret = r.ImGui_InputFloat("ITEM: InputFloat", col4f, 1.0f); }               // Testing +/- buttons on scalar input
---         if (item_type == 7) { ret = r.ImGui_InputFloat3("ITEM: InputFloat3", col4f); }                   // Testing multi-component items (IsItemXXX flags are reported merged)
---         if (item_type == 8) { ret = r.ImGui_ColorEdit4("ITEM: ColorEdit4", col4f); }                     // Testing multi-component items (IsItemXXX flags are reported merged)
---         if (item_type == 9) { ret = r.ImGui_MenuItem("ITEM: MenuItem"); }                                // Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
---         if (item_type == 10){ ret = r.ImGui_TreeNode("ITEM: TreeNode"); if (ret) r.ImGui_TreePop(); }     // Testing tree node
---         if (item_type == 11){ ret = r.ImGui_TreeNodeEx("ITEM: TreeNode w/ ImGuiTreeNodeFlags_OpenOnDoubleClick", ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_NoTreePushOnOpen); } // Testing tree node with ImGuiButtonFlags_PressedOnDoubleClick button policy.
---         if (item_type == 12){ const char* items[] = { "Apple", "Banana", "Cherry", "Kiwi" }; static int current = 1; ret = r.ImGui_Combo("ITEM: Combo", &current, items, IM_ARRAYSIZE(items)); }
---         if (item_type == 13){ const char* items[] = { "Apple", "Banana", "Cherry", "Kiwi" }; static int current = 1; ret = r.ImGui_ListBox("ITEM: ListBox", &current, items, IM_ARRAYSIZE(items), IM_ARRAYSIZE(items)); }
---
---         // Display the values of IsItemHovered() and other common item state functions.
---         // Note that the ImGuiHoveredFlags_XXX flags can be combined.
---         // Because BulletText is an item itself and that would affect the output of IsItemXXX functions,
---         // we query every state in a single call to avoid storing them and to simplify the code.
---         r.ImGui_BulletText(
---             "Return value = %d\n"
---             "IsItemFocused() = %d\n"
---             "IsItemHovered() = %d\n"
---             "IsItemHovered(_AllowWhenBlockedByPopup) = %d\n"
---             "IsItemHovered(_AllowWhenBlockedByActiveItem) = %d\n"
---             "IsItemHovered(_AllowWhenOverlapped) = %d\n"
---             "IsItemHovered(_RectOnly) = %d\n"
---             "IsItemActive() = %d\n"
---             "IsItemEdited() = %d\n"
---             "IsItemActivated() = %d\n"
---             "IsItemDeactivated() = %d\n"
---             "IsItemDeactivatedAfterEdit() = %d\n"
---             "IsItemVisible() = %d\n"
---             "IsItemClicked() = %d\n"
---             "IsItemToggledOpen() = %d\n"
---             "GetItemRectMin() = (%.1f, %.1f)\n"
---             "GetItemRectMax() = (%.1f, %.1f)\n"
---             "GetItemRectSize() = (%.1f, %.1f)",
---             ret,
---             r.ImGui_IsItemFocused(),
---             r.ImGui_IsItemHovered(),
---             r.ImGui_IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup),
---             r.ImGui_IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem),
---             r.ImGui_IsItemHovered(ImGuiHoveredFlags_AllowWhenOverlapped),
---             r.ImGui_IsItemHovered(ImGuiHoveredFlags_RectOnly),
---             r.ImGui_IsItemActive(),
---             r.ImGui_IsItemEdited(),
---             r.ImGui_IsItemActivated(),
---             r.ImGui_IsItemDeactivated(),
---             r.ImGui_IsItemDeactivatedAfterEdit(),
---             r.ImGui_IsItemVisible(),
---             r.ImGui_IsItemClicked(),
---             r.ImGui_IsItemToggledOpen(),
---             r.ImGui_GetItemRectMin().x, r.ImGui_GetItemRectMin().y,
---             r.ImGui_GetItemRectMax().x, r.ImGui_GetItemRectMax().y,
---             r.ImGui_GetItemRectSize().x, r.ImGui_GetItemRectSize().y
---         );
---
---         static bool embed_all_inside_a_child_window = false;
---         r.ImGui_Checkbox("Embed everything inside a child window (for additional testing)", &embed_all_inside_a_child_window);
---         if (embed_all_inside_a_child_window)
---             r.ImGui_BeginChild("outer_child", ImVec2(0, r.ImGui_GetFontSize() * 20.0f), true);
---
---         // Testing IsWindowFocused() function with its various flags.
---         // Note that the ImGuiFocusedFlags_XXX flags can be combined.
---         r.ImGui_BulletText(
---             "IsWindowFocused() = %d\n"
---             "IsWindowFocused(_ChildWindows) = %d\n"
---             "IsWindowFocused(_ChildWindows|_RootWindow) = %d\n"
---             "IsWindowFocused(_RootWindow) = %d\n"
---             "IsWindowFocused(_AnyWindow) = %d\n",
---             r.ImGui_IsWindowFocused(),
---             r.ImGui_IsWindowFocused(ImGuiFocusedFlags_ChildWindows),
---             r.ImGui_IsWindowFocused(ImGuiFocusedFlags_ChildWindows | ImGuiFocusedFlags_RootWindow),
---             r.ImGui_IsWindowFocused(ImGuiFocusedFlags_RootWindow),
---             r.ImGui_IsWindowFocused(ImGuiFocusedFlags_AnyWindow));
---
---         // Testing IsWindowHovered() function with its various flags.
---         // Note that the ImGuiHoveredFlags_XXX flags can be combined.
---         r.ImGui_BulletText(
---             "IsWindowHovered() = %d\n"
---             "IsWindowHovered(_AllowWhenBlockedByPopup) = %d\n"
---             "IsWindowHovered(_AllowWhenBlockedByActiveItem) = %d\n"
---             "IsWindowHovered(_ChildWindows) = %d\n"
---             "IsWindowHovered(_ChildWindows|_RootWindow) = %d\n"
---             "IsWindowHovered(_ChildWindows|_AllowWhenBlockedByPopup) = %d\n"
---             "IsWindowHovered(_RootWindow) = %d\n"
---             "IsWindowHovered(_AnyWindow) = %d\n",
---             r.ImGui_IsWindowHovered(),
---             r.ImGui_IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup),
---             r.ImGui_IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem),
---             r.ImGui_IsWindowHovered(ImGuiHoveredFlags_ChildWindows),
---             r.ImGui_IsWindowHovered(ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_RootWindow),
---             r.ImGui_IsWindowHovered(ImGuiHoveredFlags_ChildWindows | ImGuiHoveredFlags_AllowWhenBlockedByPopup),
---             r.ImGui_IsWindowHovered(ImGuiHoveredFlags_RootWindow),
---             r.ImGui_IsWindowHovered(ImGuiHoveredFlags_AnyWindow));
---
---         r.ImGui_BeginChild("child", ImVec2(0, 50), true);
---         r.ImGui_Text("This is another child window for testing the _ChildWindows flag.");
---         r.ImGui_EndChild();
---         if (embed_all_inside_a_child_window)
---             r.ImGui_EndChild();
---
---         static char unused_str[] = "This widget is only here to be able to tab-out of the widgets above.";
---         r.ImGui_InputText("unused", unused_str, IM_ARRAYSIZE(unused_str), ImGuiInputTextFlags_ReadOnly);
---
---         // Calling IsItemHovered() after begin returns the hovered status of the title bar.
---         // This is useful in particular if you want to create a context menu associated to the title bar of a window.
---         static bool test_window = false;
---         r.ImGui_Checkbox("Hovered/Active tests after Begin() for title bar testing", &test_window);
---         if (test_window)
---         {
---             r.ImGui_Begin("Title bar Hovered/Active tests", &test_window);
---             if (r.ImGui_BeginPopupContextItem()) // <-- This is using IsItemHovered()
---             {
---                 if (r.ImGui_MenuItem("Close")) { test_window = false; }
---                 r.ImGui_EndPopup();
---             }
---             r.ImGui_Text(
---                 "IsItemHovered() after begin = %d (== is title bar hovered)\n"
---                 "IsItemActive() after begin = %d (== is window being clicked/moved)\n",
---                 r.ImGui_IsItemHovered(), r.ImGui_IsItemActive());
---             r.ImGui_End();
---         }
---
---         r.ImGui_TreePop();
---     }
+  if r.ImGui_TreeNode(ctx, 'Vertical Sliders') then
+    local spacing = 4
+    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), spacing, spacing)
+
+    rv,widgets.sliders.int_value = r.ImGui_VSliderInt(ctx, '##int', 18, 160, widgets.vsliders.int_value, 0, 5)
+    r.ImGui_SameLine(ctx)
+
+    r.ImGui_PushID(ctx, 'set1')
+    for i,v in ipairs(widgets.vsliders.values) do
+      if i > 1 then r.ImGui_SameLine(ctx) end
+      r.ImGui_PushID(ctx, i)
+      local frameBg        = reaper.ImGui_ColorConvertHSVtoRGB((i-1) / 7.0, 0.5, 0.5, 1.0)
+      local frameBgHovered = reaper.ImGui_ColorConvertHSVtoRGB((i-1) / 7.0, 0.6, 0.5, 1.0)
+      local frameBgActive  = reaper.ImGui_ColorConvertHSVtoRGB((i-1) / 7.0, 0.7, 0.5, 1.0)
+      local sliderGrab     = reaper.ImGui_ColorConvertHSVtoRGB((i-1) / 7.0, 0.9, 0.9, 1.0)
+      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBg(), frameBg)
+      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBgHovered(), frameBgHovered)
+      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBgActive(), frameBgActive)
+      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_SliderGrab(), sliderGrab)
+      rv,widgets.vsliders.values[i] = r.ImGui_VSliderDouble(ctx, '##v', 18, 160, v, 0.0, 1.0, ' ')
+      if r.ImGui_IsItemActive(ctx) or r.ImGui_IsItemHovered(ctx) then
+        r.ImGui_SetTooltip(ctx, ('%.3f'):format(v))
+      end
+      r.ImGui_PopStyleColor(ctx, 4)
+      r.ImGui_PopID(ctx)
+    end
+    r.ImGui_PopID(ctx)
+
+    r.ImGui_SameLine(ctx)
+    r.ImGui_PushID(ctx, 'set2')
+    local rows = 3
+    local small_slider_w, small_slider_h = 18, (160.0 - (rows - 1) * spacing) / rows
+    for nx,v2 in ipairs(widgets.vsliders.values2) do
+      if nx > 1 then r.ImGui_SameLine(ctx) end
+      r.ImGui_BeginGroup(ctx)
+      for ny = 0, rows - 1 do
+        r.ImGui_PushID(ctx, nx * rows + ny)
+        rv,v2 = r.ImGui_VSliderDouble(ctx, '##v', small_slider_w, small_slider_h, v2, 0.0, 1.0, ' ')
+        if rv then
+          widgets.vsliders.values2[nx] = v2
+        end
+        if r.ImGui_IsItemActive(ctx) or r.ImGui_IsItemHovered(ctx) then
+          r.ImGui_SetTooltip(ctx, ('%.3f'):format(v2))
+        end
+        r.ImGui_PopID(ctx)
+      end
+      r.ImGui_EndGroup(ctx)
+    end
+    r.ImGui_PopID(ctx)
+
+    r.ImGui_SameLine(ctx)
+    r.ImGui_PushID(ctx, 'set3')
+    for i = 1, 4 do
+      local v = widgets.vsliders.values[i]
+      if i > 1 then r.ImGui_SameLine(ctx) end
+      r.ImGui_PushID(ctx, i)
+      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_GrabMinSize(), 40)
+      rv,widgets.vsliders.values[i] = r.ImGui_VSliderDouble(ctx, '##v', 40, 160, v, 0.0, 1.0, '%.2f\nsec')
+      r.ImGui_PopStyleVar(ctx)
+      r.ImGui_PopID(ctx)
+    end
+    r.ImGui_PopID(ctx)
+    r.ImGui_PopStyleVar(ctx)
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Drag and Drop') then
+    if r.ImGui_TreeNode(ctx, 'Drag and drop in standard widgets') then
+      -- ColorEdit widgets automatically act as drag source and drag target.
+      -- They are using standardized payload types accessible using
+      -- ImGui_AcceptDragDropPayloadRGB or ImGui_AcceptDragDropPayloadRGBA
+      -- to allow your own widgets to use colors in their drag and drop interaction.
+      -- Also see 'Demo->Widgets->Color/Picker Widgets->Palette' demo.
+      demo.HelpMarker('You can drag from the color squares.')
+      rv,widgets.dragdrop.color1 = r.ImGui_ColorEdit(ctx, 'color 1', widgets.dragdrop.color1, r.ImGui_ColorEditFlags_NoAlpha())
+      rv,widgets.dragdrop.color2 = r.ImGui_ColorEdit(ctx, 'color 2', widgets.dragdrop.color2)
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Drag and drop to copy/swap items') then
+      local mode_copy, mode_move, mode_swap = 0, 1, 2
+      if r.ImGui_RadioButton(ctx, 'Copy', widgets.dragdrop.mode == mode_copy) then widgets.dragdrop.mode = mode_copy end r.ImGui_SameLine(ctx)
+      if r.ImGui_RadioButton(ctx, 'Move', widgets.dragdrop.mode == mode_move) then widgets.dragdrop.mode = mode_move end r.ImGui_SameLine(ctx)
+      if r.ImGui_RadioButton(ctx, 'Swap', widgets.dragdrop.mode == mode_swap) then widgets.dragdrop.mode = mode_swap end
+      for n,name in ipairs(widgets.dragdrop.names) do
+        r.ImGui_PushID(ctx, n)
+        if ((n-1) % 3) ~= 0 then
+          r.ImGui_SameLine(ctx)
+        end
+        r.ImGui_Button(ctx, name, 60, 60)
+
+        -- Our buttons are both drag sources and drag targets here!
+        if r.ImGui_BeginDragDropSource(ctx, r.ImGui_DragDropFlags_None()) then
+          -- Set payload to carry the index of our item (could be anything)
+          r.ImGui_SetDragDropPayload(ctx, 'DND_DEMO_CELL', tostring(n))
+
+          -- Display preview (could be anything, e.g. when dragging an image we could decide to display
+          -- the filename and a small preview of the image, etc.)
+          if widgets.dragdrop.mode == mode_copy then r.ImGui_Text(ctx, ('Copy %s'):format(name)) end
+          if widgets.dragdrop.mode == mode_move then r.ImGui_Text(ctx, ('Move %s'):format(name)) end
+          if widgets.dragdrop.mode == mode_swap then r.ImGui_Text(ctx, ('Swap %s'):format(name)) end
+          r.ImGui_EndDragDropSource(ctx)
+        end
+        if r.ImGui_BeginDragDropTarget(ctx) then
+          local payload
+          rv,payload = r.ImGui_AcceptDragDropPayload(ctx, 'DND_DEMO_CELL')
+          if rv then
+            local payload_n = tonumber(payload)
+            if widgets.dragdrop.mode == mode_copy then
+              widgets.dragdrop.names[n] = widgets.dragdrop.names[payload_n]
+            end
+            if widgets.dragdrop.mode == mode_move then
+              widgets.dragdrop.names[n] = widgets.dragdrop.names[payload_n]
+              widgets.dragdrop.names[payload_n] = '';
+            end
+            if widgets.dragdrop.mode == mode_swap then
+              widgets.dragdrop.names[n] = widgets.dragdrop.names[payload_n]
+              widgets.dragdrop.names[payload_n] = name
+            end
+          end
+          r.ImGui_EndDragDropTarget(ctx)
+        end
+        r.ImGui_PopID(ctx)
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Drag to reorder items (simple)') then
+      -- Simple reordering
+      demo.HelpMarker(
+        "We don't use the drag and drop api at all here! \z
+         Instead we query when the item is held but not hovered, and order items accordingly.")
+      for n,item in ipairs(widgets.dragdrop.items) do
+        r.ImGui_Selectable(ctx, item)
+
+        if r.ImGui_IsItemActive(ctx) and not r.ImGui_IsItemHovered(ctx) then
+          local n_next = n + (({r.ImGui_GetMouseDragDelta(ctx, r.ImGui_MouseButton_Left())})[2] < 0 and -1 or 1)
+          if n_next >= 1 and n_next < #widgets.dragdrop.items then
+            widgets.dragdrop.items[n] = widgets.dragdrop.items[n_next]
+            widgets.dragdrop.items[n_next] = item
+            r.ImGui_ResetMouseDragDelta(ctx, r.ImGui_MouseButton_Left())
+          end
+        end
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Querying Status (Edited/Active/Focused/Hovered etc.)') then
+    -- Select an item type
+    rv,widgets.query.item_type = r.ImGui_Combo(ctx, 'Item Type', widgets.query.item_type,
+      'Text\31Button\31Button (w/ repeat)\31Checkbox\31SliderDouble\31\z
+       InputText\31InputDouble\31InputDouble3\31ColorEdit\31MenuItem\31\z
+       TreeNode\31TreeNode (w/ double-click)\31Combo\31ListBox\31')
+
+    r.ImGui_SameLine(ctx)
+    demo.HelpMarker(
+      'Testing how various types of items are interacting with the IsItemXXX \z
+       functions. Note that the bool return value of most ImGui function is \z
+       generally equivalent to calling r.ImGui_IsItemHovered().')
+
+    -- Submit selected item item so we can query their status in the code following it.
+    local item_type = widgets.query.item_type
+    if item_type == 0  then -- Testing text items with no identifier/interaction
+      r.ImGui_Text(ctx, 'ITEM: Text')
+    end
+    if item_type == 1  then -- Testing button
+      rv = r.ImGui_Button(ctx, 'ITEM: Button')
+    end
+    if item_type == 2  then -- Testing button (with repeater)
+      r.ImGui_PushButtonRepeat(ctx, true)
+      rv = r.ImGui_Button(ctx, 'ITEM: Button')
+      r.ImGui_PopButtonRepeat(ctx)
+    end
+    if item_type == 3  then -- Testing checkbox
+      rv,widgets.query.b = r.ImGui_Checkbox(ctx, 'ITEM: Checkbox', widgets.query.b)
+    end
+    if item_type == 4  then -- Testing basic item
+      rv,widgets.query.d4a[1] = r.ImGui_SliderDouble(ctx, 'ITEM: SliderDouble', widgets.query.d4a[1], 0.0, 1.0)
+    end
+    if item_type == 5  then -- Testing input text (which handles tabbing)
+      rv,widgets.query.str = r.ImGui_InputText(ctx, 'ITEM: InputText', widgets.query.str)
+    end
+    if item_type == 6  then -- Testing +/- buttons on scalar input
+      rv,widgets.query.d4a[1] = r.ImGui_InputDouble(ctx, 'ITEM: InputDouble', widgets.query.d4a[1], 1.0)
+    end
+    if item_type == 7  then -- Testing multi-component items (IsItemXXX flags are reported merged)
+      local d4a = widgets.query.d4a
+      rv,d4a[1],d4a[2],d4a[3] = r.ImGui_InputDouble3(ctx, 'ITEM: InputDouble3', d4a[1], d4a[2], d4a[3])
+    end
+    if item_type == 8  then -- Testing multi-component items (IsItemXXX flags are reported merged)
+      rv,widgets.query.color = r.ImGui_ColorEdit(ctx, 'ITEM: ColorEdit', widgets.query.color)
+    end
+    if item_type == 9  then -- Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
+      rv = r.ImGui_MenuItem(ctx, 'ITEM: MenuItem')
+    end
+    if item_type == 10 then -- Testing tree node
+      rv = r.ImGui_TreeNode(ctx, 'ITEM: TreeNode')
+      if rv then r.ImGui_TreePop(ctx) end
+    end
+    if item_type == 11 then -- Testing tree node with ImGuiButtonFlags_PressedOnDoubleClick button policy.
+      rv = r.ImGui_TreeNode(ctx, 'ITEM: TreeNode w/ ImGuiTreeNodeFlags_OpenOnDoubleClick',
+        r.ImGui_TreeNodeFlags_OpenOnDoubleClick() | r.ImGui_TreeNodeFlags_NoTreePushOnOpen())
+    end
+    if item_type == 12 then
+      rv,widgets.query.current = r.ImGui_Combo(ctx, 'ITEM: Combo', widgets.query.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
+    end
+    if item_type == 13 then
+      rv,widgets.query.current = r.ImGui_ListBox(ctx, 'ITEM: ListBox', widgets.query.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
+    end
+
+    -- Display the values of IsItemHovered() and other common item state functions.
+    -- Note that the ImGuiHoveredFlags_XXX flags can be combined.
+    -- Because BulletText is an item itself and that would affect the output of IsItemXXX functions,
+    -- we query every state in a single call to avoid storing them and to simplify the code.
+    r.ImGui_BulletText(ctx, ([[Return value = %s
+IsItemFocused() = %s
+IsItemHovered() = %s
+IsItemHovered(_AllowWhenBlockedByPopup) = %s
+IsItemHovered(_AllowWhenBlockedByActiveItem) = %s
+IsItemHovered(_AllowWhenOverlapped) = %s
+IsItemHovered(_RectOnly) = %s
+IsItemActive() = %s
+IsItemEdited() = %s
+IsItemActivated() = %s
+IsItemDeactivated() = %s
+IsItemDeactivatedAfterEdit() = %s
+IsItemVisible() = %s
+IsItemClicked() = %s
+IsItemToggledOpen() = %s
+GetItemRectMin() = (%.1f, %.1f)
+GetItemRectMax() = (%.1f, %.1f)
+GetItemRectSize() = (%.1f, %.1f)]]):format(
+      rv,
+      r.ImGui_IsItemFocused(ctx),
+      r.ImGui_IsItemHovered(ctx),
+      r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
+      r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByActiveItem()),
+      r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_AllowWhenOverlapped()),
+      r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_RectOnly()),
+      r.ImGui_IsItemActive(ctx),
+      r.ImGui_IsItemEdited(ctx),
+      r.ImGui_IsItemActivated(ctx),
+      r.ImGui_IsItemDeactivated(ctx),
+      r.ImGui_IsItemDeactivatedAfterEdit(ctx),
+      r.ImGui_IsItemVisible(ctx),
+      r.ImGui_IsItemClicked(ctx),
+      r.ImGui_IsItemToggledOpen(ctx),
+      ({r.ImGui_GetItemRectMin(ctx)})[1], ({r.ImGui_GetItemRectMin(ctx)})[2],
+      ({r.ImGui_GetItemRectMax(ctx)})[1], ({r.ImGui_GetItemRectMax(ctx)})[2],
+      ({r.ImGui_GetItemRectSize(ctx)})[1], ({r.ImGui_GetItemRectSize(ctx)})[2]
+    ))
+
+    rv,widgets.query.embed_all_inside_a_child_window =
+      r.ImGui_Checkbox(ctx, 'Embed everything inside a child window (for additional testing)',
+      widgets.query.embed_all_inside_a_child_window)
+    if widgets.query.embed_all_inside_a_child_window then
+      r.ImGui_BeginChild(ctx, 'outer_child', 0, r.ImGui_GetFontSize(ctx) * 20.0, true)
+    end
+
+    -- Testing IsWindowFocused() function with its various flags.
+    -- Note that the ImGuiFocusedFlags_XXX flags can be combined.
+    r.ImGui_BulletText(ctx, ([[IsWindowFocused() = %s
+IsWindowFocused(_ChildWindows) = %s
+IsWindowFocused(_ChildWindows|_RootWindow) = %s
+IsWindowFocused(_RootWindow) = %s
+IsWindowFocused(_AnyWindow) = %s]]):format(
+      r.ImGui_IsWindowFocused(ctx),
+      r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows()),
+      r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows() | r.ImGui_FocusedFlags_RootWindow()),
+      r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_RootWindow()),
+      r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_AnyWindow())))
+
+    -- Testing IsWindowHovered() function with its various flags.
+    -- Note that the ImGuiHoveredFlags_XXX flags can be combined.
+    r.ImGui_BulletText(ctx, ([[IsWindowHovered() = %s
+IsWindowHovered(_AllowWhenBlockedByPopup) = %s
+IsWindowHovered(_AllowWhenBlockedByActiveItem) = %s
+IsWindowHovered(_ChildWindows) = %s
+IsWindowHovered(_ChildWindows|_RootWindow) = %s
+IsWindowHovered(_ChildWindows|_AllowWhenBlockedByPopup) = %s
+IsWindowHovered(_RootWindow) = %s
+IsWindowHovered(_AnyWindow) = %s]]):format(
+      r.ImGui_IsWindowHovered(ctx),
+      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
+      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByActiveItem()),
+      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows()),
+      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_RootWindow()),
+      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
+      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_RootWindow()),
+      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AnyWindow())))
+
+    r.ImGui_BeginChild(ctx, 'child', 0, 50, true)
+    r.ImGui_Text(ctx, 'This is another child window for testing the _ChildWindows flag.')
+    r.ImGui_EndChild(ctx)
+    if widgets.query.embed_all_inside_a_child_window then
+      r.ImGui_EndChild(ctx)
+    end
+
+    local unused_str = 'This widget is only here to be able to tab-out of the widgets above.'
+    r.ImGui_InputText(ctx, 'unused', unused_str, r.ImGui_InputTextFlags_ReadOnly())
+
+    -- Calling IsItemHovered() after begin returns the hovered status of the title bar.
+    -- This is useful in particular if you want to create a context menu associated to the title bar of a window.
+    rv,widgets.query.test_window = r.ImGui_Checkbox(ctx, 'Hovered/Active tests after Begin() for title bar testing', widgets.query.test_window)
+    if widgets.query.test_window then
+      rv,widgets.query.test_window = r.ImGui_Begin(ctx, 'Title bar Hovered/Active tests', widgets.query.test_window)
+      if r.ImGui_BeginPopupContextItem(ctx) then -- <-- This is using IsItemHovered()
+        if r.ImGui_MenuItem(ctx, 'Close') then widgets.query.test_window = false end
+        r.ImGui_EndPopup(ctx)
+      end
+      r.ImGui_Text(ctx,
+        ('IsItemHovered() after begin = %s (== is title bar hovered)\n\z
+          IsItemActive() after begin = %s (== is window being clicked/moved)\n')
+        :format(r.ImGui_IsItemHovered(ctx), r.ImGui_IsItemActive(ctx)))
+      r.ImGui_End(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
 end
 
 -- static void ShowDemoWindowLayout()
