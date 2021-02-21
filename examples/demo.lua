@@ -87,6 +87,10 @@ function demo.ArgbToRgba(argb)
   return (argb << 8) | (argb >> 24 & 0xFF)
 end
 
+function demo.round(n)
+  return math.floor(n + .5)
+end
+
 -- Helper to display basic user controls.
 function demo.ShowUserGuide()
   -- ImGuiIO& io = r.ImGui_GetIO() TODO
@@ -549,11 +553,21 @@ label:\n"
     slider_d = 0.5,
     slider_i = 50,
   },
+  range = {
+    begin_f = 10.0,
+    end_f   = 90.0,
+    begin_i = 100,
+    end_i   = 1000,
+  },
+  multi_component = {
+    vec4d = { 0.10, 0.20, 0.30, 0.44 },
+    vec4i = { 1, 5, 100, 255 },
+  },
 }
 
-local tooltip_curve = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 })
+local tooltip_curve = reaper.new_array({ 0.6,  0.1,  1.0,  0.5, 0.92, 0.1, 0.2 })
 local vec4a         = reaper.new_array({ 0.10, 0.20, 0.30, 0.44 })
-local frame_times   = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 })
+local frame_times   = reaper.new_array({ 0.6,  0.1,  1.0,  0.5, 0.92, 0.1, 0.2 })
 local PLOT1_SIZE    = 90
 local plot1         = reaper.new_array(PLOT1_SIZE)
 plot1.clear()
@@ -562,6 +576,7 @@ local plot2_funcs   = {
   function(i) return math.sin(i * 0.1) end, -- sin
   function(i) return (i & 1) == 1 and 1.0 or -1.0 end, --saw
 }
+local raw_hsv       = reaper.new_array(4)
 
 function demo.ShowDemoWindowWidgets()
   if not r.ImGui_CollapsingHeader(ctx, 'Widgets') then
@@ -1610,7 +1625,9 @@ function demo.ShowDemoWindowWidgets()
        CTRL+click on individual component to input value.\n')
     local argb = demo.RgbaToArgb(widgets.colors.rgba)
     rv,argb = r.ImGui_ColorEdit(ctx, 'MyColor##1', argb, r.ImGui_ColorEditFlags_NoAlpha() | misc_flags)
-    widgets.colors.rgba = demo.ArgbToRgba(argb)
+    if rv then
+      widgets.colors.rgba = demo.ArgbToRgba(argb)
+    end
 
     r.ImGui_Text(ctx, 'Color widget HSV with Alpha:')
     rv,widgets.colors.rgba = r.ImGui_ColorEdit(ctx, 'MyColor##2', widgets.colors.rgba, r.ImGui_ColorEditFlags_DisplayHSV() | misc_flags)
@@ -1739,7 +1756,9 @@ function demo.ShowDemoWindowWidgets()
     local ref_color = widgets.colors.alpha and widgets.colors.ref_color_rgba or demo.RgbaToArgb(widgets.colors.ref_color_rgba)
     rv,color = r.ImGui_ColorPicker(ctx, 'MyColor##4', color, flags,
       widgets.colors.ref_color and ref_color or nil)
-    widgets.colors.rgba = widgets.colors.alpha and color or demo.ArgbToRgba(color)
+    if rv then
+      widgets.colors.rgba = widgets.colors.alpha and color or demo.ArgbToRgba(color)
+    end
 
     r.ImGui_Text(ctx, 'Set defaults in code:')
     r.ImGui_SameLine(ctx); demo.HelpMarker(
@@ -1766,7 +1785,18 @@ function demo.ShowDemoWindowWidgets()
       r.ImGui_ColorEditFlags_DisplayRGB() | r.ImGui_ColorEditFlags_InputHSV() | r.ImGui_ColorEditFlags_Float())
     rv,widgets.colors.hsva = r.ImGui_ColorEdit(ctx, 'HSV shown as HSV##1', widgets.colors.hsva,
       r.ImGui_ColorEditFlags_DisplayHSV() | r.ImGui_ColorEditFlags_InputHSV() | r.ImGui_ColorEditFlags_Float())
-    -- r.ImGui_DragFloat4(ctx, 'Raw HSV values', (float*)&color_hsv, 0.01f, 0.0f, 1.0f); TODO
+
+    raw_hsv[1] = (widgets.colors.hsva >> 24 & 0xFF) / 255.0 -- H
+    raw_hsv[2] = (widgets.colors.hsva >> 16 & 0xFF) / 255.0 -- S
+    raw_hsv[3] = (widgets.colors.hsva >>  8 & 0xFF) / 255.0 -- V
+    raw_hsv[4] = (widgets.colors.hsva       & 0xFF) / 255.0 -- A
+    if r.ImGui_DragDoubleN(ctx, 'Raw HSV values', raw_hsv, 0.01, 0.0, 1.0) then
+      widgets.colors.hsva =
+        (demo.round(raw_hsv[1] * 0xFF) << 24) |
+        (demo.round(raw_hsv[2] * 0xFF) << 16) |
+        (demo.round(raw_hsv[3] * 0xFF) <<  8) |
+        (demo.round(raw_hsv[4] * 0xFF)      )
+    end
 
     r.ImGui_TreePop(ctx)
   end
@@ -1800,16 +1830,13 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_TreePop(ctx)
   end
 
---     if (r.ImGui_TreeNode("Range Widgets"))
---     {
---         static float begin = 10, end = 90;
---         static int begin_i = 100, end_i = 1000;
---         r.ImGui_DragFloatRange2("range float", &begin, &end, 0.25f, 0.0f, 100.0f, "Min: %.1f %%", "Max: %.1f %%", ImGuiSliderFlags_AlwaysClamp);
---         r.ImGui_DragIntRange2("range int", &begin_i, &end_i, 5, 0, 1000, "Min: %d units", "Max: %d units");
---         r.ImGui_DragIntRange2("range int (no bounds)", &begin_i, &end_i, 5, 0, 0, "Min: %d units", "Max: %d units");
---         r.ImGui_TreePop();
---     }
---
+  if r.ImGui_TreeNode(ctx, 'Range Widgets') then
+    rv,widgets.range.begin_f,widgets.range.end_f = r.ImGui_DragFloatRange2(ctx, 'range float', widgets.range.begin_f, widgets.range.end_f, 0.25, 0.0, 100.0, 'Min: %.1f %%', "Max: %.1f %%", r.ImGui_SliderFlags_AlwaysClamp())
+    rv,widgets.range.begin_i,widgets.range.end_i = r.ImGui_DragIntRange2(ctx, 'range int', widgets.range.begin_i, widgets.range.end_i, 5, 0, 1000, 'Min: %d units', "Max: %d units")
+    rv,widgets.range.begin_i,widgets.range.end_i = r.ImGui_DragIntRange2(ctx, 'range int (no bounds)', widgets.range.begin_i, widgets.range.end_i, 5, 0, 0, 'Min: %d units', "Max: %d units")
+    r.ImGui_TreePop(ctx)
+  end
+
 --     if (r.ImGui_TreeNode("Data Types"))
 --     {
 --         // DragScalar/InputScalar/SliderScalar functions allow various data types
@@ -1927,38 +1954,42 @@ function demo.ShowDemoWindowWidgets()
 --
 --         r.ImGui_TreePop();
 --     }
---
---     if (r.ImGui_TreeNode("Multi-component Widgets"))
---     {
---         static float vec4f[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
---         static int vec4i[4] = { 1, 5, 100, 255 };
---
---         r.ImGui_InputFloat2("input float2", vec4f);
---         r.ImGui_DragFloat2("drag float2", vec4f, 0.01f, 0.0f, 1.0f);
---         r.ImGui_SliderFloat2("slider float2", vec4f, 0.0f, 1.0f);
---         r.ImGui_InputInt2("input int2", vec4i);
---         r.ImGui_DragInt2("drag int2", vec4i, 1, 0, 255);
---         r.ImGui_SliderInt2("slider int2", vec4i, 0, 255);
---         r.ImGui_Spacing();
---
---         r.ImGui_InputFloat3("input float3", vec4f);
---         r.ImGui_DragFloat3("drag float3", vec4f, 0.01f, 0.0f, 1.0f);
---         r.ImGui_SliderFloat3("slider float3", vec4f, 0.0f, 1.0f);
---         r.ImGui_InputInt3("input int3", vec4i);
---         r.ImGui_DragInt3("drag int3", vec4i, 1, 0, 255);
---         r.ImGui_SliderInt3("slider int3", vec4i, 0, 255);
---         r.ImGui_Spacing();
---
---         r.ImGui_InputFloat4("input float4", vec4f);
---         r.ImGui_DragFloat4("drag float4", vec4f, 0.01f, 0.0f, 1.0f);
---         r.ImGui_SliderFloat4("slider float4", vec4f, 0.0f, 1.0f);
---         r.ImGui_InputInt4("input int4", vec4i);
---         r.ImGui_DragInt4("drag int4", vec4i, 1, 0, 255);
---         r.ImGui_SliderInt4("slider int4", vec4i, 0, 255);
---
---         r.ImGui_TreePop();
---     }
---
+
+  if r.ImGui_TreeNode(ctx, 'Multi-component Widgets') then
+    local vec4d = widgets.multi_component.vec4d
+    local vec4i = widgets.multi_component.vec4i
+
+    -- rv,vec4d[1],vec4d[2] = r.ImGui_InputDouble2(ctx, 'input float2', vec4d[1], vec4d[2])
+    -- rv,vec4d[1],vec4d[2] = r.ImGui_DragDouble2(ctx, 'drag float2', vec4d[1], vec4d[2], 0.01, 0.0, 1.0)
+    -- rv,vec4d[1],vec4d[2] = r.ImGui_SliderDouble2(ctx, 'slider float2', vec4d[1], vec4d[2], 0.0, 1.0)
+    rv,vec4i[1],vec4i[2] = r.ImGui_InputInt2(ctx, 'input int2', vec4i[1], vec4i[2])
+    rv,vec4i[1],vec4i[2] = r.ImGui_DragInt2(ctx, 'drag int2', vec4i[1], vec4i[2], 1, 0, 255)
+    rv,vec4i[1],vec4i[2] = r.ImGui_SliderInt2(ctx, 'slider int2', vec4i[1], vec4i[2], 0, 255)
+    r.ImGui_Spacing(ctx)
+
+    -- rv,vec4d[1],vec4d[2],vec4d[3] = r.ImGui_InputDouble3(ctx, 'input float3', vec4d[1], vec4d[2], vec4d[3])
+    -- rv,vec4d[1],vec4d[2],vec4d[3] = r.ImGui_DragDouble3(ctx, 'drag float3', vec4d[1], vec4d[2], vec4d[3], 0.01, 0.0, 1.0)
+    -- rv,vec4d[1],vec4d[2],vec4d[3] = r.ImGui_SliderDouble3(ctx, 'slider float3', vec4d[1], vec4d[2], vec4d[3], 0.0, 1.0)
+    rv,vec4i[1],vec4i[2],vec4i[3] = r.ImGui_InputInt3(ctx, 'input int3', vec4i[1], vec4i[2], vec4i[3])
+    rv,vec4i[1],vec4i[2],vec4i[3] = r.ImGui_DragInt3(ctx, 'drag int3', vec4i[1], vec4i[2], vec4i[3], 1, 0, 255)
+    rv,vec4i[1],vec4i[2],vec4i[3] = r.ImGui_SliderInt3(ctx, 'slider int3', vec4i[1], vec4i[2], vec4i[3], 0, 255)
+    r.ImGui_Spacing(ctx)
+
+    -- rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = r.ImGui_InputDouble4(ctx, 'input float4', vec4d[1], vec4d[2], vec4d[3], vec4d[4])
+    -- rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = r.ImGui_DragDouble4(ctx, 'drag float4', vec4d[1], vec4d[2], vec4d[3], vec4d[4], 0.01, 0.0, 1.0)
+    -- rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = r.ImGui_SliderDouble4(ctx, 'slider float4', vec4d[1], vec4d[2], vec4d[3], vec4d[4], 0.0, 1.0)
+    rv,vec4i[1],vec4i[2],vec4i[3],vec4i[4] = r.ImGui_InputInt4(ctx, 'input int4', vec4i[1], vec4i[2], vec4i[3], vec4i[4])
+    rv,vec4i[1],vec4i[2],vec4i[3],vec4i[4] = r.ImGui_DragInt4(ctx, 'drag int4', vec4i[1], vec4i[2], vec4i[3], vec4i[4], 1, 0, 255)
+    rv,vec4i[1],vec4i[2],vec4i[3],vec4i[4] = r.ImGui_SliderInt4(ctx, 'slider int4', vec4i[1], vec4i[2], vec4i[3], vec4i[4], 0, 255)
+    r.ImGui_Spacing(ctx)
+
+    r.ImGui_InputDoubleN(ctx, 'input reaper.array', vec4a)
+    r.ImGui_DragDoubleN(ctx, 'drag reaper.array', vec4a)
+    r.ImGui_SliderDoubleN(ctx, 'slider reaper.array', vec4a, 0.0, 1.0)
+
+    r.ImGui_TreePop(ctx)
+  end
+
 --     if (r.ImGui_TreeNode("Vertical Sliders"))
 --     {
 --         const float spacing = 4;

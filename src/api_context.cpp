@@ -88,7 +88,7 @@ DEFINE_API(double, GetDeltaTime, ((ImGui_Context*,ctx)),
 
 DEFINE_API(void, ShowAboutWindow, ((ImGui_Context*,ctx))
 ((bool*,API_RWO(open))),
-"Create About window. display Dear ImGui version, credits and build/system information.",
+"Create About window. Display Dear ImGui version, credits and build/system information.",
 {
   ENTER_CONTEXT(ctx);
   ImGui::ShowAboutWindow(API_RWO(open));
@@ -96,18 +96,10 @@ DEFINE_API(void, ShowAboutWindow, ((ImGui_Context*,ctx))
 
 DEFINE_API(void, ShowMetricsWindow, ((ImGui_Context*,ctx))
 ((bool*,API_RWO(open))),
-"Create Metrics/Debugger window. display Dear ImGui internals: windows, draw commands, various internal state, etc.",
+"Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc.",
 {
   ENTER_CONTEXT(ctx);
   ImGui::ShowMetricsWindow(API_RWO(open));
-});
-
-// TODO: remove this
-DEFINE_API(void, FooBar, ((ImGui_Context*,ctx)),
-R"()",
-{
-  ENTER_CONTEXT(ctx);
-  ImGui::ShowDemoWindow();
 });
 
 // TODO: move somewhere else? (not context-related)

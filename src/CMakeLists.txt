@@ -17,7 +17,6 @@ add_library(${PROJECT_NAME} SHARED
   api_mouse.cpp
   api_plots.cpp
   api_popup.cpp
-  api_sliders.cpp
   api_stack.cpp
   api_style.cpp
   api_tables.cpp
