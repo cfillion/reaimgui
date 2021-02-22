@@ -109,7 +109,11 @@ inline void ReaImGui_Assert(const bool ok, const char *message)
 // (use 'Metrics->Tools->Item Picker' to pick widgets with the mouse and break into them for easy debugging.)
 //#define IM_DEBUG_BREAK  IM_ASSERT(0)
 //#define IM_DEBUG_BREAK  __debugbreak()
-#define IM_DEBUG_BREAK()
+
+// This is pretty useless right now as it only reports which API function was
+// responsible for the selected widget. This may change in the future should
+// REAPER's ReaScriptError function be updated to report the source file/line.
+#define IM_DEBUG_BREAK() throw reascript_error { "debug break" }
 
 //---- Debug Tools: Have the Item Picker break in the ItemAdd() function instead of ItemHoverable(),
 // (which comes earlier in the code, will catch a few extra items, allow picking items other than Hovered one.)
