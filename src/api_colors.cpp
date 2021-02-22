@@ -6,9 +6,8 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 }
 
 // Widgets: Color Editor/Picker
-DEFINE_API(bool, ColorEdit, ((ImGui_Context*,ctx))
-((const char*,label))((int*,API_RW(rgba))) // the ReaScript analyzer doesn't like unsigned int*
-((int*,API_RO(flags))),
+DEFINE_API(bool, ColorEdit, (ImGui_Context*,ctx)
+(const char*,label)(int*,API_RW(rgba))(int*,API_RO(flags)),
 R"(Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xXXRRGGBB (XX is ignored and will not be modified).
 
 tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
@@ -31,9 +30,8 @@ Default values: flags = 0)",
   return ret;
 });
 
-DEFINE_API(bool, ColorPicker, ((ImGui_Context*,ctx))
-((const char*,label))((int*,API_RW(rgba)))
-((int*,API_RO(flags)))((int*,API_RO(refCol))),
+DEFINE_API(bool, ColorPicker, (ImGui_Context*,ctx)
+(const char*,label)(int*,API_RW(rgba))(int*,API_RO(flags))(int*,API_RO(refCol)),
 "Default values: flags = ImGui_ColorEditFlags_None, refCol = nil",
 {
   Context::check(ctx)->enterFrame();
@@ -58,9 +56,9 @@ DEFINE_API(bool, ColorPicker, ((ImGui_Context*,ctx))
   return ret;
 });
 
-DEFINE_API(bool, ColorButton, ((ImGui_Context*,ctx))
-((const char*,desc_id))((int*,API_RW(rgba)))
-((int*,API_RO(flags)))((double*,API_RO(width)))((double*,API_RO(height))),
+DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)
+(const char*,desc_id)(int*,API_RW(rgba))(int*,API_RO(flags))
+(double*,API_RO(width))(double*,API_RO(height)),
 R"(Display a color square/button, hover for details, return true when pressed.
 
 Default values: flags = ImGui_ColorEditFlags_None, width = 0.0, height = 0.0)",
@@ -77,8 +75,8 @@ Default values: flags = ImGui_ColorEditFlags_None, width = 0.0, height = 0.0)",
     ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
 });
 
-DEFINE_API(void, SetColorEditOptions, ((ImGui_Context*,ctx))
-((int,flags)),
+DEFINE_API(void, SetColorEditOptions, (ImGui_Context*,ctx)
+(int,flags),
 "Picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.",
 {
   Context::check(ctx)->enterFrame();

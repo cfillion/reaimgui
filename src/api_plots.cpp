@@ -9,11 +9,11 @@ static float getArrayValue(void *data, const int index)
 }
 
 // Widgets: Data Plotting
-DEFINE_API(void, PlotLines, ((ImGui_Context*,ctx))
-((const char*,label))((reaper_array*,values))((int*,API_RO(valuesOffset)))
-((const char*,API_RO(overlayText)))
-((double*,API_RO(scaleMin)))((double*,API_RO(scaleMax)))
-((double*,API_RO(graphWidth)))((double*,API_RO(graphHeight))),
+DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
+(const char*,label)(reaper_array*,values)(int*,API_RO(valuesOffset))
+(const char*,API_RO(overlayText))
+(double*,API_RO(scaleMin))(double*,API_RO(scaleMax))
+(double*,API_RO(graphWidth))(double*,API_RO(graphHeight)),
 "",
 {
   Context::check(ctx)->enterFrame();
@@ -25,11 +25,11 @@ DEFINE_API(void, PlotLines, ((ImGui_Context*,ctx))
     ImVec2(valueOr(API_RO(graphWidth), 0.0), valueOr(API_RO(graphHeight), 0.0)));
 });
 
-DEFINE_API(void, PlotHistogram, ((ImGui_Context*,ctx))
-((const char*,label))((reaper_array*,values))((int*,API_RO(valuesOffset)))
-((const char*,API_RO(overlayText)))
-((double*,API_RO(scaleMin)))((double*,API_RO(scaleMax)))
-((double*,API_RO(graphWidth)))((double*,API_RO(graphHeight))),
+DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
+(const char*,label)(reaper_array*,values)(int*,API_RO(valuesOffset))
+(const char*,API_RO(overlayText))
+(double*,API_RO(scaleMin))(double*,API_RO(scaleMax))
+(double*,API_RO(graphWidth))(double*,API_RO(graphHeight)),
 "",
 {
   Context::check(ctx)->enterFrame();

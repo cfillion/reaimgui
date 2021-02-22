@@ -25,7 +25,8 @@ using ImGui_Context = Context; // user-facing alias
 // discording for the default return value when rescuing from exceptions.
 #define DEFINE_API(type, name, args, help, ...)                       \
   template<typename T>                                                \
-  T API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _, args))             \
+  T API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _,                    \
+    BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)))                              \
   try __VA_ARGS__                                                     \
   API_CATCH(name, reascript_error)                                    \
   API_CATCH(name, imgui_error)                                        \
@@ -35,13 +36,15 @@ using ImGui_Context = Context; // user-facing alias
     reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name<type>>), \
     reinterpret_cast<void *>(const_cast<char *>(                      \
       #type "\0"                                                      \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE, args) "\0"           \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME, args) "\0"           \
+      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE,                      \
+        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                      \
+      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                      \
+        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                      \
       help                                                            \
     ))                                                                \
   }
 
-#define NO_ARGS ((,))
+#define NO_ARGS ()
 
 #define API_RO(var)      var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)      var##InOut      // read/write

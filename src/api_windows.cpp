@@ -4,8 +4,8 @@
 
 // Cannot name 'open' as 'openInOutOptional' (and have it listed in the docs as
 // a return value) because REAPER would always make it non-null.
-DEFINE_API(bool, Begin, ((ImGui_Context*,ctx))
-((const char*, name))((bool*, API_RWO(open)))((int*, API_RO(windowFlags))),
+DEFINE_API(bool, Begin, (ImGui_Context*,ctx)
+(const char*, name)(bool*, API_RWO(open))(int*, API_RO(windowFlags)),
 R"(Push window to the stack and start appending to it. See ImGui_End.
 
 - Passing 'open' shows a window-closing widget in the upper-right corner of the window, which clicking will set the boolean to false when clicked.
@@ -20,16 +20,16 @@ R"(Push window to the stack and start appending to it. See ImGui_End.
   return ImGui::Begin(name, API_RWO(open), flags);
 });
 
-DEFINE_API(void, End, ((ImGui_Context*,ctx)),
+DEFINE_API(void, End, (ImGui_Context*,ctx),
 R"(Pop window from the stack. See ImGui_Begin.)",
 {
   Context::check(ctx)->enterFrame();
   ImGui::End();
 });
 
-DEFINE_API(bool, BeginChild, ((ImGui_Context*,ctx))
-((const char*,str_id))((double*,API_RO(width)))((double*,API_RO(height)))
-((bool*,API_RO(border)))((int*,API_RO(flags))),
+DEFINE_API(bool, BeginChild, (ImGui_Context*,ctx)
+(const char*,str_id)(double*,API_RO(width))(double*,API_RO(height))
+(bool*,API_RO(border))(int*,API_RO(flags)),
 R"(Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window. Child windows can embed their own child.
 - For each independent axis of 'size': ==0.0f: use remaining host window size / >0.0f: fixed size / <0.0f: use remaining window size minus abs(size) / Each axis can use a different mode, e.g. ImVec2(0,400).
 - BeginChild() returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
@@ -46,29 +46,29 @@ Default values: width = 0.0, height = 0.0, border = false, flags = ImGui_WindowF
     valueOr(API_RO(border), false), valueOr(API_RO(flags), ImGuiWindowFlags_None));
 });
 
-DEFINE_API(void, EndChild, ((ImGui_Context*,ctx)),
+DEFINE_API(void, EndChild, (ImGui_Context*,ctx),
 "See ImGui_BeginChild.",
 {
   Context::check(ctx)->enterFrame();
   ImGui::EndChild();
 });
 
-DEFINE_API(bool, IsWindowAppearing, ((ImGui_Context*,ctx)),
+DEFINE_API(bool, IsWindowAppearing, (ImGui_Context*,ctx),
 "",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::IsWindowAppearing();
 });
 
-DEFINE_API(bool, IsWindowCollapsed, ((ImGui_Context*,ctx)),
+DEFINE_API(bool, IsWindowCollapsed, (ImGui_Context*,ctx),
 "",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::IsWindowCollapsed();
 });
 
-DEFINE_API(bool, IsWindowFocused, ((ImGui_Context*,ctx))
-((int*,API_RO(flags))),
+DEFINE_API(bool, IsWindowFocused, (ImGui_Context*,ctx)
+(int*,API_RO(flags)),
 R"(Is current window focused? or its root/child, depending on flags. see flags for options.
 
 Default values: flags = ImGui_FocusedFlags_None)",
@@ -77,8 +77,8 @@ Default values: flags = ImGui_FocusedFlags_None)",
   return ImGui::IsWindowFocused(valueOr(API_RO(flags), ImGuiFocusedFlags_None));
 });
 
-DEFINE_API(bool, IsWindowHovered, ((ImGui_Context*,ctx))
-((int*,API_RO(flags))),
+DEFINE_API(bool, IsWindowHovered, (ImGui_Context*,ctx)
+(int*,API_RO(flags)),
 R"(Is current window hovered (and typically: not blocked by a popup/modal)? see flags for options.
 
 Default values: flags = ImGui_HoveredFlags_None)",
@@ -87,9 +87,9 @@ Default values: flags = ImGui_HoveredFlags_None)",
   return ImGui::IsWindowHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
 });
 
-DEFINE_API(void, SetNextWindowPos, ((ImGui_Context*,ctx))
-((double,x))((double,y))((int*,API_RO(cond)))
-((double*,API_RO(pivotX)))((double*,API_RO(pivotY))),
+DEFINE_API(void, SetNextWindowPos, (ImGui_Context*,ctx)
+(double,x)(double,y)(int*,API_RO(cond))
+(double*,API_RO(pivotX))(double*,API_RO(pivotY)),
 R"(Set next window position. Call before Begin(). Use pivot=(0.5f,0.5f) to center on given point, etc.
 
 Default values: cond = ImGui_Cond_Always, pivotX = 0.0, pivotY = 0.0)",
@@ -99,8 +99,8 @@ Default values: cond = ImGui_Cond_Always, pivotX = 0.0, pivotY = 0.0)",
     ImVec2(valueOr(API_RO(pivotX), 0.0), valueOr(API_RO(pivotY), 0.0)));
 });
 
-DEFINE_API(void, SetNextWindowSize, ((ImGui_Context*,ctx))
-((double,x))((double,y))((int*,API_RO(cond))),
+DEFINE_API(void, SetNextWindowSize, (ImGui_Context*,ctx)
+(double,x)(double,y)(int*,API_RO(cond)),
 R"(Set next window size. set axis to 0.0f to force an auto-fit on this axis. Call before Begin().
 
 Default values: cond = ImGui_Cond_Always)",
@@ -120,7 +120,7 @@ Default values: cond = ImGui_Cond_Always)",
     IMGUI_API ImVec2        GetContentRegionMax();                                          // current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
     IMGUI_API ImVec2        GetWindowContentRegionMin();                                    // content boundaries min (roughly (0,0)-Scroll), in window coordinates
     IMGUI_API ImVec2        GetWindowContentRegionMax();                                    // content boundaries max (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates
-DEFINE_API(double, GetWindowContentRegionWidth, ((ImGui_Context*,ctx)),
+DEFINE_API(double, GetWindowContentRegionWidth, (ImGui_Context*,ctx),
 "",
 {
   Context::check(ctx)->enterFrame();

@@ -7,8 +7,8 @@
 // IMGUI_API bool          IsMouseDown(ImGuiMouseButton button);                               // is mouse button held?
 // IMGUI_API bool          IsMouseClicked(ImGuiMouseButton button, bool repeat = false);       // did mouse button clicked? (went from !Down to Down)
 // IMGUI_API bool          IsMouseReleased(ImGuiMouseButton button);                           // did mouse button released? (went from Down to !Down)
-DEFINE_API(bool, IsMouseDoubleClicked, ((ImGui_Context*,ctx))
-((int,button)),
+DEFINE_API(bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
+(int,button),
 "Did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)",
 {
   Context::check(ctx)->enterFrame();
@@ -21,9 +21,9 @@ DEFINE_API(bool, IsMouseDoubleClicked, ((ImGui_Context*,ctx))
 // IMGUI_API ImVec2        GetMousePosOnOpeningCurrentPopup();                                 // retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to avoid user backing that value themselves)
 // IMGUI_API bool          IsMouseDragging(ImGuiMouseButton button, float lock_threshold = -1.0f);         // is mouse dragging? (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
 
-DEFINE_API(void, GetMouseDragDelta, ((ImGui_Context*,ctx))
-((double*,API_W(x)))((double*,API_W(y)))
-((int*,API_RO(button)))((double*,API_RO(lockThreshold))),
+DEFINE_API(void, GetMouseDragDelta, (ImGui_Context*,ctx)
+(double*,API_W(x))(double*,API_W(y))
+(int*,API_RO(button))(double*,API_RO(lockThreshold)),
 R"(Return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0f until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold).
 
 Default values: button = ImGui_MouseButton_Left, lockThreshold = -1.0)",
@@ -36,8 +36,8 @@ Default values: button = ImGui_MouseButton_Left, lockThreshold = -1.0)",
   *API_W(x) = delta.x, *API_W(y) = delta.y;
 });
 
-DEFINE_API(void, ResetMouseDragDelta, ((ImGui_Context*,ctx))
-((int*,API_RO(button))),
+DEFINE_API(void, ResetMouseDragDelta, (ImGui_Context*,ctx)
+(int*,API_RO(button)),
 "Default values: button = ImGui_MouseButton_Left",
 {
   Context::check(ctx)->enterFrame();

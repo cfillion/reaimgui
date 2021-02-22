@@ -1,7 +1,7 @@
 #include "api_helper.hpp"
 
-DEFINE_API(bool, BeginPopup, ((ImGui_Context*,ctx))
-((const char*,str_id))((int*,API_RO(flags))),
+DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
+(const char*,str_id)(int*,API_RO(flags)),
 R"(Popups, Modals
  - They block normal mouse hovering detection (and therefore most mouse interactions) behind them.
  - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
@@ -23,7 +23,7 @@ Default values: flags = ImGui_WindowFlags_None)",
 });
 
 // IMGUI_API bool          BeginPopupModal(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0); // return true if the modal is open, and you can start outputting to it.
-DEFINE_API(void, EndPopup, ((ImGui_Context*,ctx)),
+DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
 "only call EndPopup() if BeginPopupXXX() returns true!",
 {
   Context::check(ctx)->enterFrame();
@@ -36,8 +36,8 @@ DEFINE_API(void, EndPopup, ((ImGui_Context*,ctx)),
 //  - CloseCurrentPopup(): use inside the BeginPopup()/EndPopup() scope to close manually.
 //  - CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activated (FIXME: need some options).
 //  - Use ImGuiPopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
-DEFINE_API(void, OpenPopup, ((ImGui_Context*,ctx))
-((const char*,str_id))((int*,API_RO(flags))),
+DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
+(const char*,str_id)(int*,API_RO(flags)),
 R"(Set popup state to open (don't call every frame!).
 
 If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
@@ -54,8 +54,8 @@ IMGUI_API void          CloseCurrentPopup();                                    
 // Popups: open+begin combined functions helpers
 //  - Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.g. hovering an item and right-clicking.
 //  - They are convenient to easily create context menus, hence the name.
-DEFINE_API(bool, BeginPopupContextItem, ((ImGui_Context*,ctx))
-((const char*,API_RO(str_id)))((int*,API_RO(flags))),
+DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
+(const char*,API_RO(str_id))(int*,API_RO(flags)),
 R"(This is a helper to handle the simplest case of associating one named popup to one given widget. You can pass a NULL str_id to use the identifier of the last item. This is essentially the same as calling OpenPopupOnItemClick() + BeginPopup() but written to avoid computing the ID twice because BeginPopupContextXXX functions may be called very frequently.
 
 Open+begin popup when clicked on last item. if you can pass a NULL str_id only if the previous item had an id. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here.

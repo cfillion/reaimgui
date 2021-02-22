@@ -11,7 +11,7 @@ static bool isUserType(const char *type)
 }
 
 // Drag and Drop
-DEFINE_API(bool, BeginDragDropSource, ((ImGui_Context*,ctx))((int*,API_RO(flags))),
+DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)(int*,API_RO(flags)),
 R"(Call when the current item is active. If this return true, you can call SetDragDropPayload() + EndDragDropSource().
 
 If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).)",
@@ -20,8 +20,8 @@ If you stop calling BeginDragDropSource() the payload is preserved however it wo
   return ImGui::BeginDragDropSource(valueOr(API_RO(flags), 0));
 });
 
-DEFINE_API(bool, SetDragDropPayload, ((ImGui_Context*,ctx))
-((const char*,type))((const char*,data))((int*,API_RO(cond))),
+DEFINE_API(bool, SetDragDropPayload, (ImGui_Context*,ctx)
+(const char*,type)(const char*,data)(int*,API_RO(cond)),
 R"(type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
 
 Default values: cond = ImGui_Cond_Always)",
@@ -36,24 +36,24 @@ Default values: cond = ImGui_Cond_Always)",
     valueOr(API_RO(cond), ImGuiCond_Always));
 });
 
-DEFINE_API(void, EndDragDropSource, ((ImGui_Context*,ctx)),
+DEFINE_API(void, EndDragDropSource, (ImGui_Context*,ctx),
 "Only call EndDragDropSource() if BeginDragDropSource() returns true!",
 {
   Context::check(ctx)->enterFrame();
   ImGui::EndDragDropSource();
 });
 
-DEFINE_API(bool, BeginDragDropTarget, ((ImGui_Context*,ctx)),
+DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
 "Call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::BeginDragDropTarget();
 });
 
-DEFINE_API(bool, AcceptDragDropPayload, ((ImGui_Context*,ctx))
-((const char*,type))
-((char*,API_WBIG(payload)))((int,API_WBIG_SZ(payload)))
-((int*,API_RO(flags))),
+DEFINE_API(bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
+(const char*,type)
+(char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
+(int*,API_RO(flags)),
 R"(Accept contents of a given type. If ImGui_DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
 
 Default values: flags = ImGui_DragDropFlags_None)",
@@ -81,8 +81,8 @@ Default values: flags = ImGui_DragDropFlags_None)",
   return true;
 });
 
-DEFINE_API(bool, AcceptDragDropPayloadRGB, ((ImGui_Context*,ctx))
-((int*,API_W(rgb)))((int*,API_RO(flags))),
+DEFINE_API(bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
+(int*,API_W(rgb))(int*,API_RO(flags)),
 R"(Accept contents of a RGB color. If ImGui_DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
 
 Default values: flags = ImGui_DragDropFlags_None)",
@@ -103,8 +103,8 @@ Default values: flags = ImGui_DragDropFlags_None)",
   return true;
 });
 
-DEFINE_API(bool, AcceptDragDropPayloadRGBA, ((ImGui_Context*,ctx))
-((int*,API_W(rgba)))((int*,API_RO(flags))),
+DEFINE_API(bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
+(int*,API_W(rgba))(int*,API_RO(flags)),
 R"(Accept contents of a RGBA color. If ImGui_DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
 
 Default values: flags = ImGui_DragDropFlags_None)",
@@ -125,7 +125,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
   return true;
 });
 
-DEFINE_API(void, EndDragDropTarget, ((ImGui_Context*,ctx)),
+DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
 "Only call EndDragDropTarget() if BeginDragDropTarget() returns true!",
 {
   Context::check(ctx)->enterFrame();

@@ -7,10 +7,10 @@
     //   In future versions we will use textures to provide cheaper and higher-quality circles.
     //   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
     // IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1.0f);
-DEFINE_API(void, DrawList_AddRect, ((ImGui_Context*,ctx))
-((double,fromX))((double,fromY))((double,toX))((double,toY))((int,colorRGBA))
-((double*,API_RO(rounding)))((int*,API_RO(roundingCorners)))
-((double*,API_RO(thickness))),
+DEFINE_API(void, DrawList_AddRect, (ImGui_Context*,ctx)
+(double,fromX)(double,fromY)(double,toX)(double,toY)(int,colorRGBA)
+(double*,API_RO(rounding))(int*,API_RO(roundingCorners))
+(double*,API_RO(thickness)),
 "Default values: rounding = 0.0, roundingCorners = ImGui_DrawCornerFlags_All, thickness = 1.0",
 {
   Context::check(ctx)->enterFrame();
@@ -20,9 +20,9 @@ DEFINE_API(void, DrawList_AddRect, ((ImGui_Context*,ctx))
     valueOr(API_RO(thickness), 1.0));
 });
 
-DEFINE_API(void, DrawList_AddRectFilled, ((ImGui_Context*,ctx))
-((double,fromX))((double,fromY))((double,toX))((double,toY))((int,colorRGBA))
-((double*,API_RO(rounding)))((int*,API_RO(roundingCorners))),
+DEFINE_API(void, DrawList_AddRectFilled, (ImGui_Context*,ctx)
+(double,fromX)(double,fromY)(double,toX)(double,toY)(int,colorRGBA)
+(double*,API_RO(rounding))(int*,API_RO(roundingCorners)),
 "Default values: rounding = 0.0, roundingCorners = ImGui_DrawCornerFlags_All, thickness = 1.0",
 {
   Context::check(ctx)->enterFrame();

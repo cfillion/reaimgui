@@ -46,15 +46,15 @@ static StyleVarType styleVarType(const ImGuiStyleVar var)
 
 // IMGUI_API ImFont*       GetFont();                                                      // get current font
 
-DEFINE_API(double, GetFontSize, ((ImGui_Context*,ctx)),
+DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
 "Get current font size (= height in pixels) of current font with current scale applied",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::GetFontSize();
 });
 
-DEFINE_API(bool, PushStyleVar, ((ImGui_Context*,ctx))
-((int,varIdx))((double,val1))((double*,API_RO(val2))),
+DEFINE_API(bool, PushStyleVar, (ImGui_Context*,ctx)
+(int,varIdx)(double,val1)(double*,API_RO(val2)),
 "See ImGui_StyleVar_* for possible values of 'varIdx'.",
 {
   Context::check(ctx)->enterFrame();
@@ -75,8 +75,8 @@ DEFINE_API(bool, PushStyleVar, ((ImGui_Context*,ctx))
   return false;
 });
 
-DEFINE_API(void, PopStyleVar, ((ImGui_Context*,ctx))
-((int*,API_RO(count))),
+DEFINE_API(void, PopStyleVar, (ImGui_Context*,ctx)
+(int*,API_RO(count)),
 R"(Reset a style variable.
 
 Default values: count = 1)",
@@ -101,8 +101,8 @@ Default values: count = 1)",
     *API_W(val2) = style.var.y;      \
     return true;
 
-DEFINE_API(bool, GetStyleVar, ((ImGui_Context*,ctx))
-((int,varIdx))((double*,API_W(val1)))((double*,API_W(val2))),
+DEFINE_API(bool, GetStyleVar, (ImGui_Context*,ctx)
+(int,varIdx)(double*,API_W(val1))(double*,API_W(val2)),
 "",
 {
   Context::check(ctx)->enterFrame(); // TODO: don't start a frame
@@ -149,8 +149,8 @@ DEFINE_API(bool, GetStyleVar, ((ImGui_Context*,ctx))
 // IMGUI_API ImU32         GetColorU32(ImU32 col);                                         // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 // IMGUI_API const ImVec4& GetStyleColorVec4(ImGuiCol idx);                                // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
 
-DEFINE_API(bool, PushStyleColor, ((ImGui_Context*,ctx))
-((int,idx))((int,rgba)),
+DEFINE_API(bool, PushStyleColor, (ImGui_Context*,ctx)
+(int,idx)(int,rgba),
 "Modify a style color. always use this if you modify the style after NewFrame().",
 {
   Context::check(ctx)->enterFrame();
@@ -160,8 +160,8 @@ DEFINE_API(bool, PushStyleColor, ((ImGui_Context*,ctx))
   return true;
 });
 
-DEFINE_API(void, PopStyleColor, ((ImGui_Context*,ctx))
-((int*,API_RO(count))),
+DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
+(int*,API_RO(count)),
 "Default values: count = 1",
 {
   Context::check(ctx)->enterFrame();
@@ -170,7 +170,7 @@ DEFINE_API(void, PopStyleColor, ((ImGui_Context*,ctx))
 });
 
 DEFINE_API(int, ColorConvertHSVtoRGB,
-((double,h))((double,s))((double,v))((double*,API_RO(alpha))),
+(double,h)(double,s)(double,v)(double*,API_RO(alpha)),
 "Return 0x00RRGGBB or, if alpha is provided, 0xRRGGBBAA.",
 {
   const bool alpha { API_RO(alpha) != nullptr };

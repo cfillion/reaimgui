@@ -1,15 +1,15 @@
 #include "api_helper.hpp"
 
-DEFINE_API(void, Text, ((ImGui_Context*,ctx))
-((const char*,text)),
+DEFINE_API(void, Text, (ImGui_Context*,ctx)
+(const char*,text),
 "",
 {
   Context::check(ctx)->enterFrame();
   ImGui::TextUnformatted(text);
 });
 
-DEFINE_API(void, TextColored, ((ImGui_Context*,ctx))
-((int,colorRGBA))((const char*,text)),
+DEFINE_API(void, TextColored, (ImGui_Context*,ctx)
+(int,colorRGBA)(const char*,text),
 "Shortcut for PushStyleColor(ImGuiCol_Text, color); Text(text); PopStyleColor();",
 {
   Context::check(ctx)->enterFrame();
@@ -20,8 +20,8 @@ DEFINE_API(void, TextColored, ((ImGui_Context*,ctx))
   ImGui::PopStyleColor();
 });
 
-DEFINE_API(void, TextDisabled, ((ImGui_Context*,ctx))
-((const char*,text)),
+DEFINE_API(void, TextDisabled, (ImGui_Context*,ctx)
+(const char*,text),
 "",
 {
   Context::check(ctx)->enterFrame();
@@ -31,8 +31,8 @@ DEFINE_API(void, TextDisabled, ((ImGui_Context*,ctx))
   ImGui::PopStyleColor();
 });
 
-DEFINE_API(void, TextWrapped, ((ImGui_Context*,ctx))
-((const char*,text)),
+DEFINE_API(void, TextWrapped, (ImGui_Context*,ctx)
+(const char*,text),
 "Shortcut for PushTextWrapPos(0.0f); Text(fmt, ...); PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().",
 {
   Context::check(ctx)->enterFrame();
@@ -41,16 +41,16 @@ DEFINE_API(void, TextWrapped, ((ImGui_Context*,ctx))
   ImGui::PopTextWrapPos();
 });
 
-DEFINE_API(void, LabelText, ((ImGui_Context*,ctx))
-((const char*,label))((const char*,text)),
+DEFINE_API(void, LabelText, (ImGui_Context*,ctx)
+(const char*,label)(const char*,text),
 "Display text+label aligned the same way as value+label widgets",
 {
   Context::check(ctx)->enterFrame();
   ImGui::LabelText(label, "%s", text);
 });
 
-DEFINE_API(void, BulletText, ((ImGui_Context*,ctx))
-((const char*,text)),
+DEFINE_API(void, BulletText, (ImGui_Context*,ctx)
+(const char*,text),
 "Shortcut for Bullet()+Text()",
 {
   Context::check(ctx)->enterFrame();
@@ -58,8 +58,8 @@ DEFINE_API(void, BulletText, ((ImGui_Context*,ctx))
   ImGui::TextUnformatted(text);
 });
 
-DEFINE_API(void, PushTextWrapPos, ((ImGui_Context*,ctx))
-((double*,API_RO(wrapLocalPosX))),
+DEFINE_API(void, PushTextWrapPos, (ImGui_Context*,ctx)
+(double*,API_RO(wrapLocalPosX)),
 R"(Push word-wrapping position for Text*() commands. < 0.0f: no wrapping; 0.0f: wrap to end of window (or column); > 0.0f: wrap at 'wrap_pos_x' position in window local space.
 
 Default values: wrapLocalPosX = 0.0)",
@@ -69,7 +69,7 @@ Default values: wrapLocalPosX = 0.0)",
 });
 
 
-DEFINE_API(void, PopTextWrapPos, ((ImGui_Context*,ctx)),
+DEFINE_API(void, PopTextWrapPos, (ImGui_Context*,ctx),
 "",
 {
   Context::check(ctx)->enterFrame();
