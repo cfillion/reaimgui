@@ -11,7 +11,7 @@ DEFINE_API(bool, IsMouseDoubleClicked, ((ImGui_Context*,ctx))
 ((int,button)),
 "Did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::IsMouseDoubleClicked(button);
 });
 // IMGUI_API bool          IsMouseHoveringRect(const ImVec2& r_min, const ImVec2& r_max, bool clip = true);// is mouse hovering given bounding rect (in screen space). clipped by current clipping settings, but disregarding of other consideration of focus/window ordering/popup-block.
@@ -28,7 +28,7 @@ R"(Return the delta from the initial clicking position while the mouse button is
 
 Default values: button = ImGui_MouseButton_Left, lockThreshold = -1.0)",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   const ImVec2 &delta {
     ImGui::GetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left),
       valueOr(API_RO(lockThreshold), -1.0))
@@ -40,7 +40,7 @@ DEFINE_API(void, ResetMouseDragDelta, ((ImGui_Context*,ctx))
 ((int*,API_RO(button))),
 "Default values: button = ImGui_MouseButton_Left",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   ImGui::ResetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left));
 });
 

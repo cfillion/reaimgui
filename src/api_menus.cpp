@@ -5,28 +5,28 @@
 DEFINE_API(bool, BeginMenuBar, ((ImGui_Context*,ctx)),
 R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag set on parent window). See ImGui_EndMenuBar.)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::BeginMenuBar();
 });
 
 DEFINE_API(void, EndMenuBar, ((ImGui_Context*,ctx)),
 R"(Only call EndMenuBar() if BeginMenuBar() returns true! See ImGui_BeginMenuBar.)",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   ImGui::EndMenuBar();
 });
 
 DEFINE_API(bool, BeginMainMenuBar, ((ImGui_Context*,ctx)),
 R"(Create a menu bar at the top of the screen and append to it.)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::BeginMainMenuBar();
 });
 
 DEFINE_API(void, EndMainMenuBar, ((ImGui_Context*,ctx)),
 R"(Only call EndMainMenuBar() if BeginMainMenuBar() returns true! See ImGui_BeginMainMenuBar.)",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   ImGui::EndMainMenuBar();
 });
 
@@ -36,14 +36,14 @@ R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_
 
 'enabled' is true by default.)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::BeginMenu(label, valueOr(API_RO(enabled), true));
 });
 
 DEFINE_API(void, EndMenu, ((ImGui_Context*,ctx)),
 R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BeginMenu.)",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   ImGui::EndMenu();
 });
 
@@ -54,7 +54,7 @@ R"(Return true when activated. Shortcuts are displayed for convenience but not p
 
 'enabled' is true by default.)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(shortcut));
 
   return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(selected),

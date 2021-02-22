@@ -22,15 +22,15 @@ find_package_handle_standard_args(ImGui
 
 add_library(imgui
   ${ImGui_INCLUDE_DIR}/imgui.cpp
+  ${ImGui_INCLUDE_DIR}/imgui_demo.cpp
   ${ImGui_INCLUDE_DIR}/imgui_draw.cpp
   ${ImGui_INCLUDE_DIR}/imgui_tables.cpp
   ${ImGui_INCLUDE_DIR}/imgui_widgets.cpp
-
-  ${ImGui_INCLUDE_DIR}/imgui_demo.cpp
 )
 
 target_compile_features(imgui PRIVATE cxx_std_17)
-target_compile_definitions(imgui PUBLIC IMGUI_DISABLE_OBSOLETE_FUNCTIONS)
+target_compile_definitions(imgui PUBLIC
+  "IMGUI_USER_CONFIG=\"${CMAKE_CURRENT_SOURCE_DIR}/imconfig.h\"")
 target_include_directories(imgui PUBLIC ${ImGui_INCLUDE_DIR})
 
 add_library(ImGui::ImGui ALIAS imgui)

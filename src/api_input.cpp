@@ -1,5 +1,7 @@
 #include "api_helper.hpp"
 
+#include <reaper_plugin_functions.h> // realloc_cmd_ptr
+
 static int inputTextCallback(ImGuiInputTextCallbackData *data)
 {
   if(data->EventFlag == ImGuiInputTextFlags_CallbackResize)
@@ -33,7 +35,7 @@ DEFINE_API(bool, InputText, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
@@ -49,7 +51,7 @@ DEFINE_API(bool, InputTextMultiline, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: width = 0, height = 0, flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false)
+  ensureContext(ctx)->enterFrame();
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
@@ -67,7 +69,7 @@ DEFINE_API(bool, InputTextWithHint, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
@@ -82,7 +84,7 @@ DEFINE_API(bool, InputInt, ((ImGui_Context*,ctx))((const char*,label))
 ((int*,API_RO(flags))),
 "Default values: step = 1, stepFast = 100, flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
@@ -95,7 +97,7 @@ DEFINE_API(bool, InputInt2, ((ImGui_Context*,ctx))((const char*,label))
 ((int*,API_RW(value1)))((int*,API_RW(value2)))((int*,API_RO(flags))),
 "Default values: flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
@@ -111,7 +113,7 @@ DEFINE_API(bool, InputInt3, ((ImGui_Context*,ctx))((const char*,label))
 ((int*,API_RO(flags))),
 "Default values: flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
@@ -128,7 +130,7 @@ DEFINE_API(bool, InputInt4, ((ImGui_Context*,ctx))((const char*,label))
 ((int*,API_RW(value4)))((int*,API_RO(flags))),
 "Default values: flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
@@ -145,7 +147,7 @@ DEFINE_API(bool, InputDouble, ((ImGui_Context*,ctx))((const char*,label))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: step = 1, stepFast = 100, format = '%.6f', flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -161,7 +163,7 @@ DEFINE_API(bool, InputDouble2, ((ImGui_Context*,ctx))((const char*,label))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%.6f', flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -179,7 +181,7 @@ DEFINE_API(bool, InputDouble3, ((ImGui_Context*,ctx))((const char*,label))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%.6f', flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -198,7 +200,7 @@ DEFINE_API(bool, InputDouble4, ((ImGui_Context*,ctx))((const char*,label))
 ((double*,API_RW(value4)))((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%.6f', flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -217,7 +219,7 @@ DEFINE_API(bool, InputDoubleN, ((ImGui_Context*,ctx))((const char*,label))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = nil, stepFast = nil, format = '%.6f', flags = ImGui_InputTextFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -243,7 +245,7 @@ R"(- CTRL+Click on any drag box to turn them into an input box. Manually input v
 
 Default values: valueSpeed = 1.0, valueMin = 0.0, valueMax = 0.0, format = '%d', flags = ImGui_SliderFlags_None)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -263,7 +265,7 @@ DEFINE_API(bool, DragInt2, ((ImGui_Context*,ctx))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: valueSpeed = 1.0, valueMin = 0.0, valueMax = 0.0, format = '%d', flags = ImGui_SliderFlags_None)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -286,7 +288,7 @@ DEFINE_API(bool, DragInt3, ((ImGui_Context*,ctx))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: valueSpeed = 1.0, valueMin = 0.0, valueMax = 0.0, format = '%d', flags = ImGui_SliderFlags_None)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -310,7 +312,7 @@ DEFINE_API(bool, DragInt4, ((ImGui_Context*,ctx))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: valueSpeed = 1.0, valueMin = 0.0, valueMax = 0.0, format = '%d', flags = ImGui_SliderFlags_None)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -334,7 +336,7 @@ DEFINE_API(bool, DragIntRange2, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: speed = 1.0, minValue = 0, maxValue = 0, format = '%d', formatMax = nil, flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
   nullIfEmpty(API_RO(formatMax));
 
@@ -353,7 +355,7 @@ DEFINE_API(bool, DragFloatRange2, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: speed = 1.0, minValue = 0.0, maxValue = 0.0, format = '%.3f', formatMax = nil, flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
   nullIfEmpty(API_RO(formatMax));
 
@@ -376,7 +378,7 @@ DEFINE_API(bool, DragDouble, ((ImGui_Context*,ctx))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: valueSpeed = 1.0, valueMin = 0, valueMax = 0, format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -395,7 +397,7 @@ DEFINE_API(bool, DragDouble2, ((ImGui_Context*,ctx))((const char*,label))
 ((double*,API_RO(valueMax)))((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: valueSpeed = 1.0, valueMin = 0, valueMax = 0, format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -415,7 +417,7 @@ DEFINE_API(bool, DragDouble3, ((ImGui_Context*,ctx))((const char*,label))
 ((double*,API_RO(valueMax)))((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: valueSpeed = 1.0, valueMin = 0, valueMax = 0, format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -437,7 +439,7 @@ DEFINE_API(bool, DragDouble4, ((ImGui_Context*,ctx))((const char*,label))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: valueSpeed = 1.0, valueMin = 0, valueMax = 0, format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -458,7 +460,7 @@ DEFINE_API(bool, DragDoubleN, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: speed = 1.0, min = nil, max = nil, format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -474,7 +476,7 @@ DEFINE_API(bool, SliderInt, ((ImGui_Context*,ctx))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%d', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -490,7 +492,7 @@ DEFINE_API(bool, SliderInt2, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: format = '%d', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -509,7 +511,7 @@ DEFINE_API(bool, SliderInt3, ((ImGui_Context*,ctx))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%d', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -529,7 +531,7 @@ DEFINE_API(bool, SliderInt4, ((ImGui_Context*,ctx))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%d', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -548,7 +550,7 @@ DEFINE_API(bool, SliderDouble, ((ImGui_Context*,ctx))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -565,7 +567,7 @@ DEFINE_API(bool, SliderDouble2, ((ImGui_Context*,ctx))((const char*,label))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -584,7 +586,7 @@ DEFINE_API(bool, SliderDouble3, ((ImGui_Context*,ctx))((const char*,label))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -604,7 +606,7 @@ DEFINE_API(bool, SliderDouble4, ((ImGui_Context*,ctx))((const char*,label))
 ((const char*,API_RO(format)))((int*,API_RO(flags))),
 "Default values: format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -624,7 +626,7 @@ DEFINE_API(bool, SliderDoubleN, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: format = '%.6f', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -641,7 +643,7 @@ DEFINE_API(bool, VSliderInt, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: format = '%d', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -657,7 +659,7 @@ DEFINE_API(bool, VSliderDouble, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags))),
 "Default values: format = '%d', flags = ImGui_SliderFlags_None",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };

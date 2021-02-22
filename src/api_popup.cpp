@@ -18,7 +18,7 @@ Return true if the popup is open, and you can start outputting to it.
 
 Default values: flags = ImGui_WindowFlags_None)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::BeginPopup(str_id, valueOr(API_RO(flags), ImGuiWindowFlags_None));
 });
 
@@ -26,7 +26,7 @@ Default values: flags = ImGui_WindowFlags_None)",
 DEFINE_API(void, EndPopup, ((ImGui_Context*,ctx)),
 "only call EndPopup() if BeginPopupXXX() returns true!",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   ImGui::EndPopup();
 });
 
@@ -44,7 +44,7 @@ If not modal: they can be closed by clicking anywhere outside them, or by pressi
 
 Default values: flags = ImGui_PopupFlags_None)",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   ImGui::OpenPopup(str_id, valueOr(API_RO(flags), ImGuiPopupFlags_None));
 });
 
@@ -63,7 +63,7 @@ Open+begin popup when clicked on last item. if you can pass a NULL str_id only i
 - IMPORTANT: Notice that BeginPopupContextXXX takes ImGuiPopupFlags just like OpenPopup() and unlike BeginPopup().
 - IMPORTANT: we exceptionally default their flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGuiPopupFlags_MouseButtonRight.)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(str_id));
 
   return ImGui::BeginPopupContextItem(API_RO(str_id),

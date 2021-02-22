@@ -2,11 +2,10 @@
 
 #include "window.hpp"
 
-#include <imgui/imgui_internal.h>
 // #include <reaper_colortheme.h>
+#include <cassert>
 #include <reaper_plugin_functions.h>
 #include <reaper_plugin_secrets.h>
-#include <stdexcept>
 #include <unordered_set>
 
 struct Heartbeat {
@@ -22,19 +21,6 @@ struct Heartbeat {
 };
 
 static std::unordered_set<Context *> g_ctx;
-
-static void reportRecovery(void *, const char *fmt, ...)
-{
-  char msg[1024];
-
-  va_list args;
-  va_start(args, fmt);
-  vsnprintf(msg, sizeof(msg), fmt, args);
-  va_end(args);
-
-  ReaScriptError(msg);
-  fprintf(stderr, "ReaImGUI Warning: %s\n", msg);
-}
 
 bool Context::exists(Context *win)
 {
@@ -160,10 +146,9 @@ void Context::enterFrame()
     beginFrame();
 }
 
-void Context::endFrame(const bool render)
+void Context::endFrame(const bool render) try
 {
   ImGui::SetCurrentContext(m_imgui.get());
-  ImGui::ErrorCheckEndFrameRecover(reportRecovery);
 
   if(render) {
     updateCursor();
@@ -175,6 +160,17 @@ void Context::endFrame(const bool render)
 
   m_window->endFrame();
   m_inFrame = false;
+}
+catch(const imgui_error &e) {
+  char message[1024];
+  snprintf(message, sizeof(message), "ImGui assertion failed: %s\n", e.what());
+  ShowConsoleMsg(message); // cannot use ReaScriptError unless called by a script
+
+  // no recovery, just destroy the context
+  m_window->endFrame();
+  m_fontAtlas->Locked = false; // don't assert again when destroying the atlas
+  m_inFrame = false; // don't call endFrame again from the destructor
+  delete this;
 }
 
 void Context::updateFrameInfo()

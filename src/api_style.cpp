@@ -49,7 +49,7 @@ static StyleVarType styleVarType(const ImGuiStyleVar var)
 DEFINE_API(double, GetFontSize, ((ImGui_Context*,ctx)),
 "Get current font size (= height in pixels) of current font with current scale applied",
 {
-  ENTER_CONTEXT(ctx, 0.0);
+  ensureContext(ctx)->enterFrame();
   return ImGui::GetFontSize();
 });
 
@@ -57,7 +57,7 @@ DEFINE_API(bool, PushStyleVar, ((ImGui_Context*,ctx))
 ((int,varIdx))((double,val1))((double*,API_RO(val2))),
 "See ImGui_StyleVar_* for possible values of 'varIdx'.",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   switch(styleVarType(varIdx)) {
   case StyleVarType::Unknown:
@@ -81,7 +81,7 @@ R"(Reset a style variable.
 
 Default values: count = 1)",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
 
   ImGui::PopStyleVar(valueOr(API_RO(count), 1));
 });
@@ -105,7 +105,7 @@ DEFINE_API(bool, GetStyleVar, ((ImGui_Context*,ctx))
 ((int,varIdx))((double*,API_W(val1)))((double*,API_W(val2))),
 "",
 {
-  ENTER_CONTEXT(ctx, false); // TODO: don't start a frame
+  ensureContext(ctx)->enterFrame(); // TODO: don't start a frame
 
   const ImGuiStyle &style { ImGui::GetStyle() };
 
@@ -153,7 +153,7 @@ DEFINE_API(bool, PushStyleColor, ((ImGui_Context*,ctx))
 ((int,idx))((int,rgba)),
 "Modify a style color. always use this if you modify the style after NewFrame().",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   if(idx < 0 || idx >= ImGuiCol_COUNT)
     return false; // out of range!
   ImGui::PushStyleColor(idx, ImVec4{Color(rgba)});
@@ -164,7 +164,7 @@ DEFINE_API(void, PopStyleColor, ((ImGui_Context*,ctx))
 ((int*,API_RO(count))),
 "Default values: count = 1",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   // TODO harden
   ImGui::PopStyleColor(valueOr(API_RO(count), 1));
 });

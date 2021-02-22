@@ -12,7 +12,7 @@ struct ReaScriptAPI;
 template<typename R, typename... Args>
 struct ReaScriptAPI<R(*)(Args...)>
 {
-  static void *applyVarArg(R(*fn)(Args...), void **argv, int argc)
+  static void *applyVarArg(R(*fn)(Args...), void **argv, const int argc)
   {
     if(static_cast<size_t>(argc) < sizeof...(Args))
       return nullptr;
@@ -67,18 +67,29 @@ void *InvokeReaScriptAPI(void **argv, int argc)
 #define DOCARGS(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
 
-#define DEFINE_API(type, name, args, help, ...)                          \
-  type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _, args)) __VA_ARGS__ \
-                                                                         \
-  static API API_reg_##name { #name,                                     \
-    reinterpret_cast<void *>(&API_##name),                               \
-    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>),          \
-    reinterpret_cast<void *>(const_cast<char *>(                         \
-      #type "\0"                                                         \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE, args) "\0"              \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME, args) "\0"              \
-      help                                                               \
-    ))                                                                   \
+#define API_CATCH(name, except) catch(const except &e) { \
+  API::handleError(#name, e);                            \
+  if constexpr (!std::is_void_v<T>) return {};           \
+}
+
+// The function is defined as a template to enable constexpr condition branch
+// discording for the default return value when rescuing from exceptions.
+#define DEFINE_API(type, name, args, help, ...)                       \
+  template<typename T>                                                \
+  T API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _, args))             \
+  try __VA_ARGS__                                                     \
+  API_CATCH(name, reascript_error)                                    \
+  API_CATCH(name, imgui_error)                                        \
+                                                                      \
+  static API API_reg_##name { #name,                                  \
+    reinterpret_cast<void *>(&API_##name<type>),                      \
+    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name<type>>), \
+    reinterpret_cast<void *>(const_cast<char *>(                      \
+      #type "\0"                                                      \
+      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE, args) "\0"           \
+      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME, args) "\0"           \
+      help                                                            \
+    ))                                                                \
   }
 
 #define NO_ARGS ((,))
@@ -92,19 +103,18 @@ void *InvokeReaScriptAPI(void **argv, int argc)
 #define API_WBIG_SZ(var) var##OutNeedBig_sz // size of previous API_BIG buffer
 
 #include "context.hpp"
-#include <reaper_plugin_functions.h>
 
 using ImGui_Context = Context;
 
-#define CHECK_CONTEXT(ctx, ...)                            \
-  if(!Context::exists(ctx)) {                              \
-    ReaScriptError("ReaImGui: invalid context reference"); \
-    return __VA_ARGS__;                                    \
-  }
+inline Context *ensureContext(Context *ctx)
+{
+  if(Context::exists(ctx))
+    return ctx;
 
-#define ENTER_CONTEXT(ctx, ...)    \
-  CHECK_CONTEXT(ctx, __VA_ARGS__); \
-  ctx->enterFrame();
+  char message[255];
+  snprintf(message, sizeof(message), "argument 1: expected ImGui_Context*, got %p", ctx);
+  throw reascript_error { message };
+}
 
 // https://forum.cockos.com/showthread.php?t=211620
 struct reaper_array {

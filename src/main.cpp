@@ -22,6 +22,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(plugin_register),
     IMPORT(realloc_cmd_ptr),
     IMPORT(ReaScriptError),
+    IMPORT(ShowConsoleMsg),
     IMPORT(ShowMessageBox),
   };
 

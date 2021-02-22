@@ -14,7 +14,7 @@ DEFINE_API(void, PlotLines, ((ImGui_Context*,ctx))
 ((double*,API_RO(graphWidth)))((double*,API_RO(graphHeight))),
 "",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(overlayText));
 
   ImGui::PlotLines(label, &getArrayValue, values->data, values->size,
@@ -30,7 +30,7 @@ DEFINE_API(void, PlotHistogram, ((ImGui_Context*,ctx))
 ((double*,API_RO(graphWidth)))((double*,API_RO(graphHeight))),
 "",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(overlayText));
 
   ImGui::PlotHistogram(label, &getArrayValue, values->data, values->size,

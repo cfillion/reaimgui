@@ -60,7 +60,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   NSOpenGLPixelFormat *fmt { [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] };
   m_impl->gl = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
   if(!m_impl->gl)
-    throw std::runtime_error { "failed to initialize OpenGL 3.2 core context" };
+    throw reascript_error { "failed to initialize OpenGL 3.2 core context" };
 
   [m_impl->view setWantsBestResolutionOpenGLSurface:YES]; // retina
   [m_impl->gl setView:m_impl->view];

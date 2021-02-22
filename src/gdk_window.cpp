@@ -3,9 +3,9 @@
 #include "context.hpp"
 #include "opengl_renderer.hpp"
 
+#include <cassert>
 #include <epoxy/gl.h>
 #include <gdk/gdk.h>
-#include <stdexcept>
 
 #include <swell/swell.h>
 
@@ -39,7 +39,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   m_impl->window = m_impl->hwnd->m_oswindow;
 
   if(static_cast<void *>(m_impl->window) == hwnd)
-    throw std::runtime_error { "headless SWELL is not supported" };
+    throw reascript_error { "headless SWELL is not supported" };
 
   // prevent invalidation (= displaying garbage) when moving another window over
   gdk_window_freeze_updates(m_impl->window);
@@ -67,7 +67,7 @@ void Window::Impl::initGl()
   GError *error {};
   gl = gdk_window_create_gl_context(window, &error);
   if(error) {
-    const std::runtime_error ex { error->message };
+    const reascript_error ex { error->message };
     g_clear_error(&error);
     throw ex;
   }
@@ -78,7 +78,7 @@ void Window::Impl::initGl()
 
   gdk_gl_context_realize(gl, &error);
   if(error) {
-    const std::runtime_error ex { error->message };
+    const reascript_error ex { error->message };
     g_clear_error(&error);
     g_object_unref(gl);
     throw ex;
@@ -95,7 +95,7 @@ void Window::Impl::initGl()
     char msg[1024];
     snprintf(msg, sizeof(msg), "OpenGL v%d.%d or newer required, got v%d.%d",
       OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR, major, minor);
-    throw std::runtime_error { msg };
+    throw reascript_error { msg };
   }
 }
 

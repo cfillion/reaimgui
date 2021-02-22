@@ -5,7 +5,7 @@ DEFINE_API(bool, Button, ((ImGui_Context*,ctx))
 R"(Most widgets return true when the value has been changed or when pressed/selected
 You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   return ImGui::Button(label,
     ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
@@ -14,7 +14,7 @@ You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemH
 DEFINE_API(bool, SmallButton, ((ImGui_Context*,ctx))((const char*,label)),
 "button with FramePadding=(0,0) to easily embed within text",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::SmallButton(label);
 });
 // IMGUI_API bool          InvisibleButton(const char* str_id, const ImVec2& size, ImGuiButtonFlags flags = 0); // flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.)
@@ -23,7 +23,7 @@ DEFINE_API(bool, ArrowButton, ((ImGui_Context*,ctx))
 ((const char*,str_id))((int,dir)),
 "Square button with an arrow shape",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::ArrowButton(str_id, dir);
 });
 
@@ -34,7 +34,7 @@ DEFINE_API(bool, Checkbox, ((ImGui_Context*,ctx))
 ((const char*, label))((bool*, API_RW(value))),
 "",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   if(!API_RW(value))
     return false;
   return ImGui::Checkbox(label, API_RW(value));
@@ -44,7 +44,7 @@ DEFINE_API(bool, CheckboxFlags, ((ImGui_Context*,ctx))
 ((const char*,label))((int*,API_RW(flags)))((int,flagsValue)), // unsigned int* is broken in REAPER
 "",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::CheckboxFlags(label, API_RW(flags), flagsValue);
 });
 
@@ -52,7 +52,7 @@ DEFINE_API(bool, RadioButton, ((ImGui_Context*,ctx))
 ((const char*,label))((bool,active)),
 R"(Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::RadioButton(label, active);
 });
 
@@ -60,7 +60,7 @@ DEFINE_API(bool, RadioButtonEx, ((ImGui_Context*,ctx))
 ((const char*,label))((int*,API_RW(value)))((int,valueButton)),
 "Shortcut to handle RadioButton's example pattern when value is an integer",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::RadioButton(label, API_RW(value), valueButton);
 });
 
@@ -70,7 +70,7 @@ DEFINE_API(void, ProgressBar, ((ImGui_Context*,ctx))
 ((const char*,API_RO(overlay))),
 "Default values: width = -FLT_MIN, height = 0.0, overlay = nil",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(API_RO(overlay));
 
   ImGui::ProgressBar(fraction,
@@ -81,7 +81,7 @@ DEFINE_API(void, ProgressBar, ((ImGui_Context*,ctx))
 DEFINE_API(void, Bullet, ((ImGui_Context*,ctx)),
 "Draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses.",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   ImGui::Bullet();
 });
 
@@ -93,7 +93,7 @@ Neighbors selectable extend their highlight bounds in order to leave no gap betw
 
 Default values: flags = ImGui_SelectableFlags_None, width = 0.0, height = 0.0)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   bool selectedOmitted {};
   bool *selected { API_RWO(selected) ? API_RWO(selected) : &selectedOmitted };

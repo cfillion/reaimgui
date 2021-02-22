@@ -7,7 +7,6 @@
 #include <GL/gl3w.h>
 #include <GL/wglext.h>
 #include <ShellScalingApi.h> // GetDpiForMonitor
-#include <stdexcept>
 #include <string>
 
 static std::wstring widen(const char *input, const UINT codepage = CP_UTF8)
@@ -154,7 +153,7 @@ void Window::Impl::initPixelFormat()
 
   if(!SetPixelFormat(dc, ChoosePixelFormat(dc, &pfd), &pfd)) {
     ReleaseDC(hwnd.get(), dc);
-    throw std::runtime_error { "failed to set a suitable pixel format" };
+    throw reascript_error { "failed to set a suitable pixel format" };
   }
 }
 
@@ -183,7 +182,7 @@ void Window::Impl::initGL()
   if(gl3wInit() || !gl3wIsSupported(OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR)) {
     wglDeleteContext(gl);
     ReleaseDC(hwnd.get(), dc);
-    throw std::runtime_error { "failed to initialize OpenGL 3.2 or newer" };
+    throw reascript_error { "failed to initialize OpenGL 3.2 or newer" };
   }
 }
 

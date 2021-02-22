@@ -1,5 +1,8 @@
 #include "api_helper.hpp"
 
+#include <cassert>
+#include <reaper_plugin_functions.h> // realloc_cmd_ptr
+
 static bool isUserType(const char *type)
 {
   // types starting with '_' are reserved for ImGui use
@@ -12,7 +15,7 @@ R"(Call when the current item is active. If this return true, you can call SetDr
 
 If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::BeginDragDropSource(valueOr(API_RO(flags), 0));
 });
 
@@ -22,7 +25,7 @@ R"(type is a user defined string of maximum 32 characters. Strings starting with
 
 Default values: cond = ImGui_Cond_Always)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   nullIfEmpty(data);
 
   if(!isUserType(type))
@@ -35,14 +38,14 @@ Default values: cond = ImGui_Cond_Always)",
 DEFINE_API(void, EndDragDropSource, ((ImGui_Context*,ctx)),
 "Only call EndDragDropSource() if BeginDragDropSource() returns true!",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   ImGui::EndDragDropSource();
 });
 
 DEFINE_API(bool, BeginDragDropTarget, ((ImGui_Context*,ctx)),
 "Call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
   return ImGui::BeginDragDropTarget();
 });
 
@@ -54,7 +57,7 @@ R"(Accept contents of a given type. If ImGui_DragDropFlags_AcceptBeforeDelivery 
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   if(!isUserType(type))
     return false;
@@ -83,7 +86,7 @@ R"(Accept contents of a RGB color. If ImGui_DragDropFlags_AcceptBeforeDelivery i
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, flags) };
@@ -105,7 +108,7 @@ R"(Accept contents of a RGBA color. If ImGui_DragDropFlags_AcceptBeforeDelivery 
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
-  ENTER_CONTEXT(ctx, false);
+  ensureContext(ctx)->enterFrame();
 
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_4F, flags) };
@@ -124,7 +127,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
 DEFINE_API(void, EndDragDropTarget, ((ImGui_Context*,ctx)),
 "Only call EndDragDropTarget() if BeginDragDropTarget() returns true!",
 {
-  ENTER_CONTEXT(ctx);
+  ensureContext(ctx)->enterFrame();
   ImGui::EndDragDropTarget();
 });
 
