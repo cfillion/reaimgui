@@ -37,7 +37,15 @@ Index of this file:
 #endif
 --]]
 
-demo = { open = true }
+demo = {
+  open = true,
+  menu = {
+    enabled = true,
+    f = 0.5,
+    n = 0,
+    b = true,
+  },
+}
 
 local r = reaper
 local ctx = r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 720)
@@ -237,7 +245,7 @@ function demo.ShowDemoWindow(open)
   -- Menu Bar
   if r.ImGui_BeginMenuBar(ctx) then
     if r.ImGui_BeginMenu(ctx, 'Menu') then
-      --ShowExampleMenuFile() TODO
+      demo.ShowExampleMenuFile()
       r.ImGui_EndMenu(ctx)
     end
     if r.ImGui_BeginMenu(ctx, 'Examples') then
@@ -407,13 +415,13 @@ function demo.ShowDemoWindow(open)
 
   -- All demo contents
   demo.ShowDemoWindowWidgets()
---     ShowDemoWindowLayout();
---     ShowDemoWindowPopups();
---     ShowDemoWindowTables();
---     ShowDemoWindowMisc();
---
---     // End of ShowDemoWindow()
---     r.ImGui_PopItemWidth();
+  demo.ShowDemoWindowLayout()
+  -- demo.ShowDemoWindowPopups()
+  -- demo.ShowDemoWindowTables()
+  -- demo.ShowDemoWindowMisc()
+
+  -- End of ShowDemoWindow()
+  r.ImGui_PopItemWidth(ctx)
   r.ImGui_End(ctx)
   return open
 end
@@ -588,6 +596,14 @@ label:\n"
     d4a        = { 1.0, 0.5, 0.0, 1.0 },
     embed_all_inside_a_child_window = false,
     test_window = false,
+  },
+}
+
+layout = {
+  child = {
+    disable_mouse_wheel = false,
+    disable_menu        = false,
+    offset_x            = 0,
   },
 }
 
@@ -2340,96 +2356,88 @@ IsWindowHovered(_AnyWindow) = %s]]):format(
   end
 end
 
--- static void ShowDemoWindowLayout()
--- {
---     if (!r.ImGui_CollapsingHeader("Layout & Scrolling"))
---         return;
---
---     if (r.ImGui_TreeNode("Child windows"))
---     {
---         HelpMarker("Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window.");
---         static bool disable_mouse_wheel = false;
---         static bool disable_menu = false;
---         r.ImGui_Checkbox("Disable Mouse Wheel", &disable_mouse_wheel);
---         r.ImGui_Checkbox("Disable Menu", &disable_menu);
---
---         // Child 1: no border, enable horizontal scrollbar
---         {
---             ImGuiWindowFlags window_flags = ImGuiWindowFlags_HorizontalScrollbar;
---             if (disable_mouse_wheel)
---                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
---             r.ImGui_BeginChild("ChildL", ImVec2(r.ImGui_GetWindowContentRegionWidth() * 0.5f, 260), false, window_flags);
---             for (int i = 0; i < 100; i++)
---                 r.ImGui_Text("%04d: scrollable region", i);
---             r.ImGui_EndChild();
---         }
---
---         r.ImGui_SameLine();
---
---         // Child 2: rounded border
---         {
---             ImGuiWindowFlags window_flags = ImGuiWindowFlags_None;
---             if (disable_mouse_wheel)
---                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
---             if (!disable_menu)
---                 window_flags |= ImGuiWindowFlags_MenuBar;
---             r.ImGui_PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
---             r.ImGui_BeginChild("ChildR", ImVec2(0, 260), true, window_flags);
---             if (!disable_menu && r.ImGui_BeginMenuBar())
---             {
---                 if (r.ImGui_BeginMenu("Menu"))
---                 {
---                     ShowExampleMenuFile();
---                     r.ImGui_EndMenu();
---                 }
---                 r.ImGui_EndMenuBar();
---             }
---             if (r.ImGui_BeginTable("split", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_NoSavedSettings))
---             {
---                 for (int i = 0; i < 100; i++)
---                 {
---                     char buf[32];
---                     sprintf(buf, "%03d", i);
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Button(buf, ImVec2(-FLT_MIN, 0.0f));
---                 }
---                 r.ImGui_EndTable();
---             }
---             r.ImGui_EndChild();
---             r.ImGui_PopStyleVar();
---         }
---
---         r.ImGui_Separator();
---
---         // Demonstrate a few extra things
---         // - Changing ImGuiCol_ChildBg (which is transparent black in default styles)
---         // - Using SetCursorPos() to position child window (the child window is an item from the POV of parent window)
---         //   You can also call SetNextWindowPos() to position the child window. The parent window will effectively
---         //   layout from this position.
---         // - Using r.ImGui_GetItemRectMin/Max() to query the "item" state (because the child window is an item from
---         //   the POV of the parent window). See 'Demo->Querying Status (Active/Focused/Hovered etc.)' for details.
---         {
---             static int offset_x = 0;
---             r.ImGui_SetNextItemWidth(100);
---             r.ImGui_DragInt("Offset X", &offset_x, 1.0f, -1000, 1000);
---
---             r.ImGui_SetCursorPosX(r.ImGui_GetCursorPosX() + (float)offset_x);
---             r.ImGui_PushStyleColor(ImGuiCol_ChildBg, IM_COL32(255, 0, 0, 100));
---             r.ImGui_BeginChild("Red", ImVec2(200, 100), true, ImGuiWindowFlags_None);
---             for (int n = 0; n < 50; n++)
---                 r.ImGui_Text("Some test %d", n);
---             r.ImGui_EndChild();
---             bool child_is_hovered = r.ImGui_IsItemHovered();
---             ImVec2 child_rect_min = r.ImGui_GetItemRectMin();
---             ImVec2 child_rect_max = r.ImGui_GetItemRectMax();
---             r.ImGui_PopStyleColor();
---             r.ImGui_Text("Hovered: %d", child_is_hovered);
---             r.ImGui_Text("Rect of child window is: (%.0f,%.0f) (%.0f,%.0f)", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y);
---         }
---
---         r.ImGui_TreePop();
---     }
---
+function demo.ShowDemoWindowLayout()
+  if not r.ImGui_CollapsingHeader(ctx, 'Layout & Scrolling') then
+    return
+  end
+
+  local rv
+
+  if r.ImGui_TreeNode(ctx, 'Child windows') then
+    demo.HelpMarker('Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window.')
+    rv,layout.child.disable_mouse_wheel = r.ImGui_Checkbox(ctx, 'Disable Mouse Wheel', layout.child.disable_mouse_wheel)
+    rv,layout.child.disable_menu = r.ImGui_Checkbox(ctx, 'Disable Menu', layout.child.disable_menu)
+
+    -- Child 1: no border, enable horizontal scrollbar
+    local window_flags = r.ImGui_WindowFlags_HorizontalScrollbar()
+    if layout.child.disable_mouse_wheel then
+      window_flags = window_flags | r.ImGui_WindowFlags_NoScrollWithMouse()
+    end
+    r.ImGui_BeginChild(ctx, 'ChildL', r.ImGui_GetWindowContentRegionWidth(ctx) * 0.5, 260, false, window_flags)
+    for i = 0, 99 do
+      r.ImGui_Text(ctx, ('%04d: scrollable region'):format(i))
+    end
+    r.ImGui_EndChild(ctx)
+
+    r.ImGui_SameLine(ctx)
+
+    -- Child 2: rounded border
+    window_flags = r.ImGui_WindowFlags_None()
+    if layout.child.disable_mouse_wheel then
+      window_flags = window_flags | r.ImGui_WindowFlags_NoScrollWithMouse()
+    end
+    if not layout.child.disable_menu then
+      window_flags = window_flags | r.ImGui_WindowFlags_MenuBar()
+    end
+    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ChildRounding(), 5.0)
+    r.ImGui_BeginChild(ctx, 'ChildR', 0, 260, true, window_flags)
+    if not layout.child.disable_menu and r.ImGui_BeginMenuBar(ctx) then
+      if r.ImGui_BeginMenu(ctx, 'Menu') then
+        demo.ShowExampleMenuFile()
+        r.ImGui_EndMenu(ctx)
+      end
+      r.ImGui_EndMenuBar(ctx)
+    end
+    if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_Resizable()--[[ | r.ImGuiTableFlags_NoSavedSettings()]]) then
+      for i = 0, 99 do
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Button(ctx, ('%03d'):format(i), -FLT_MIN, 0.0)
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_EndChild(ctx)
+    r.ImGui_PopStyleVar(ctx)
+
+    r.ImGui_Separator(ctx)
+
+    -- Demonstrate a few extra things
+    -- - Changing ImGuiCol_ChildBg (which is transparent black in default styles)
+    -- - Using SetCursorPos() to position child window (the child window is an item from the POV of parent window)
+    --   You can also call SetNextWindowPos() to position the child window. The parent window will effectively
+    --   layout from this position.
+    -- - Using r.ImGui_GetItemRectMin/Max() to query the "item" state (because the child window is an item from
+    --   the POV of the parent window). See 'Demo->Querying Status (Active/Focused/Hovered etc.)' for details.
+    r.ImGui_SetNextItemWidth(ctx, 100)
+    rv,layout.child.offset_x = r.ImGui_DragInt(ctx, 'Offset X', layout.child.offset_x, 1.0, -1000, 1000)
+
+    r.ImGui_SetCursorPosX(ctx, r.ImGui_GetCursorPosX(ctx) + layout.child.offset_x)
+    r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ChildBg(), 0xFF000064)
+    r.ImGui_BeginChild(ctx, 'Red', 200, 100, true, r.ImGui_WindowFlags_None())
+    for n = 0, 49 do
+      r.ImGui_Text(ctx, ('Some test %d'):format(n))
+    end
+    r.ImGui_EndChild(ctx)
+    r.ImGui_PopStyleColor(ctx)
+    local child_is_hovered = r.ImGui_IsItemHovered(ctx)
+    local child_rect_min_x,child_rect_min_y = r.ImGui_GetItemRectMin(ctx)
+    local child_rect_max_x,child_rect_max_y = r.ImGui_GetItemRectMax(ctx)
+    r.ImGui_Text(ctx, ('Hovered: %s'):format(child_is_hovered))
+    r.ImGui_Text(ctx, ('Rect of child window is: (%.0f,%.0f) (%.0f,%.0f)')
+      :format(child_rect_min_x, child_rect_min_y, child_rect_max_x, child_rect_max_y))
+
+    r.ImGui_TreePop(ctx)
+  end
+
 --     if (r.ImGui_TreeNode("Widgets Width"))
 --     {
 --         // Use SetNextItemWidth() to set the width of a single upcoming item.
@@ -3103,7 +3111,7 @@ end
 --
 --         r.ImGui_TreePop();
 --     }
--- }
+end
 --
 -- static void ShowDemoWindowPopups()
 -- {
@@ -6125,84 +6133,75 @@ end
 --         r.ImGui_EndMainMenuBar();
 --     }
 -- }
---
--- // Note that shortcuts are currently provided for display only
--- // (future version will add explicit flags to BeginMenu() to request processing shortcuts)
--- static void ShowExampleMenuFile()
--- {
---     r.ImGui_MenuItem("(demo menu)", NULL, false, false);
---     if (r.ImGui_MenuItem("New")) {}
---     if (r.ImGui_MenuItem("Open", "Ctrl+O")) {}
---     if (r.ImGui_BeginMenu("Open Recent"))
---     {
---         r.ImGui_MenuItem("fish_hat.c");
---         r.ImGui_MenuItem("fish_hat.inl");
---         r.ImGui_MenuItem("fish_hat.h");
---         if (r.ImGui_BeginMenu("More.."))
---         {
---             r.ImGui_MenuItem("Hello");
---             r.ImGui_MenuItem("Sailor");
---             if (r.ImGui_BeginMenu("Recurse.."))
---             {
---                 ShowExampleMenuFile();
---                 r.ImGui_EndMenu();
---             }
---             r.ImGui_EndMenu();
---         }
---         r.ImGui_EndMenu();
---     }
---     if (r.ImGui_MenuItem("Save", "Ctrl+S")) {}
---     if (r.ImGui_MenuItem("Save As..")) {}
---
---     r.ImGui_Separator();
---     if (r.ImGui_BeginMenu("Options"))
---     {
---         static bool enabled = true;
---         r.ImGui_MenuItem("Enabled", "", &enabled);
---         r.ImGui_BeginChild("child", ImVec2(0, 60), true);
---         for (int i = 0; i < 10; i++)
---             r.ImGui_Text("Scrolling Text %d", i);
---         r.ImGui_EndChild();
---         static float f = 0.5f;
---         static int n = 0;
---         r.ImGui_SliderFloat("Value", &f, 0.0f, 1.0f);
---         r.ImGui_InputFloat("Input", &f, 0.1f);
---         r.ImGui_Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
---         r.ImGui_EndMenu();
---     }
---
---     if (r.ImGui_BeginMenu("Colors"))
---     {
---         float sz = r.ImGui_GetTextLineHeight();
---         for (int i = 0; i < ImGuiCol_COUNT; i++)
---         {
---             const char* name = r.ImGui_GetStyleColorName((ImGuiCol)i);
---             ImVec2 p = r.ImGui_GetCursorScreenPos();
---             r.ImGui_GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), r.ImGui_GetColorU32((ImGuiCol)i));
---             r.ImGui_Dummy(ImVec2(sz, sz));
---             r.ImGui_SameLine();
---             r.ImGui_MenuItem(name);
---         }
---         r.ImGui_EndMenu();
---     }
---
---     // Here we demonstrate appending again to the "Options" menu (which we already created above)
---     // Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
---     // In a real code-base using it would make senses to use this feature from very different code locations.
---     if (r.ImGui_BeginMenu("Options")) // <-- Append!
---     {
---         static bool b = true;
---         r.ImGui_Checkbox("SomeOption", &b);
---         r.ImGui_EndMenu();
---     }
---
---     if (r.ImGui_BeginMenu("Disabled", false)) // Disabled
---     {
---         IM_ASSERT(0);
---     }
---     if (r.ImGui_MenuItem("Checked", NULL, true)) {}
---     if (r.ImGui_MenuItem("Quit", "Alt+F4")) {}
--- }
+
+-- Note that shortcuts are currently provided for display only
+-- (future version will add explicit flags to BeginMenu() to request processing shortcuts)
+function demo.ShowExampleMenuFile()
+  local rv
+
+  r.ImGui_MenuItem(ctx, '(demo menu)', nil, false, false)
+  if r.ImGui_MenuItem(ctx, 'New') then end
+  if r.ImGui_MenuItem(ctx, 'Open', 'Ctrl+O') then end
+  if r.ImGui_BeginMenu(ctx, 'Open Recent') then
+    r.ImGui_MenuItem(ctx, 'fish_hat.c');
+    r.ImGui_MenuItem(ctx, 'fish_hat.inl');
+    r.ImGui_MenuItem(ctx, 'fish_hat.h');
+    if r.ImGui_BeginMenu(ctx,'More..') then
+      r.ImGui_MenuItem(ctx, 'Hello')
+      r.ImGui_MenuItem(ctx, 'Sailor')
+      if r.ImGui_BeginMenu(ctx, 'Recurse..') then
+        demo.ShowExampleMenuFile()
+        r.ImGui_EndMenu(ctx)
+      end
+      r.ImGui_EndMenu(ctx)
+      end
+    r.ImGui_EndMenu(ctx)
+  end
+  if r.ImGui_MenuItem(ctx, 'Save', 'Ctrl+S') then end
+  if r.ImGui_MenuItem(ctx, 'Save As..') then end
+
+  r.ImGui_Separator(ctx)
+  if r.ImGui_BeginMenu(ctx, 'Options') then
+    rv,demo.menu.enabled = r.ImGui_MenuItem(ctx, 'Enabled', "", demo.menu.enabled)
+    r.ImGui_BeginChild(ctx, 'child', 0, 60, true)
+    for i = 0, 9 do
+      r.ImGui_Text(ctx, ('Scrolling Text %d'):format(i))
+    end
+    r.ImGui_EndChild(ctx)
+    rv,demo.menu.f = r.ImGui_SliderDouble(ctx, 'Value', demo.menu.f, 0.0, 1.0)
+    rv,demo.menu.f = r.ImGui_InputDouble(ctx, 'Input', demo.menu.f, 0.1)
+    rv,demo.menu.n = r.ImGui_Combo(ctx, 'Combo', demo.menu.n, 'Yes\31No\31Maybe\31')
+    r.ImGui_EndMenu(ctx)
+  end
+
+  -- TODO
+  -- if r.ImGui_BeginMenu(ctx, 'Colors') then
+  --   local sz = r.ImGui_GetTextLineHeight(ctx)
+  --   for i = 0, ImGuiCol_COUNT - 1 do
+  --     local name = r.ImGui_GetStyleColorName(i)
+  --     local x,y = r.ImGui_GetCursorScreenPos(ctx)
+  --     r.ImGui_DrawList_AddRectFilled(x, y, x + sz, y + sz, r.ImGui_GetColor(ctx, i))
+  --     r.ImGui_Dummy(ctx, sz, sz)
+  --     r.ImGui_SameLine(ctx)
+  --     r.ImGui_MenuItem(ctx, name)
+  --   end
+  --   r.ImGui_EndMenu(ctx)
+  -- end
+
+  -- Here we demonstrate appending again to the "Options" menu (which we already created above)
+  -- Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
+  -- In a real code-base using it would make senses to use this feature from very different code locations.
+  if r.ImGui_BeginMenu(ctx, 'Options') then -- <-- Append!
+    rv,demo.menu.b = r.ImGui_Checkbox(ctx, 'SomeOption', demo.menu.b)
+    r.ImGui_EndMenu(ctx)
+  end
+
+  if r.ImGui_BeginMenu(ctx, 'Disabled', false) then -- Disabled
+    error('never called')
+  end
+  if r.ImGui_MenuItem(ctx, 'Checked', nil, true) then end
+  if r.ImGui_MenuItem(ctx, 'Quit', 'Alt+F4') then end
+end
 --
 -- //-----------------------------------------------------------------------------
 -- // [SECTION] Example App: Debug Console / ShowExampleAppConsole()

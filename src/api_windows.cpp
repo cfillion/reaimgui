@@ -114,3 +114,15 @@ Default values: cond = ImGui_Cond_Always)",
 // DEFINE_API(void, SetNextWindowCollapsed(bool collapsed, ImGuiCond cond = 0);                 // set next window collapsed state. call before Begin()
 // DEFINE_API(void, SetNextWindowFocus();                                                       // set next window to be focused / top-most. call before Begin()
 // DEFINE_API(void, SetNextWindowBgAlpha(float alpha);                                          // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
+
+
+    IMGUI_API ImVec2        GetContentRegionAvail();                                        // == GetContentRegionMax() - GetCursorPos()
+    IMGUI_API ImVec2        GetContentRegionMax();                                          // current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates
+    IMGUI_API ImVec2        GetWindowContentRegionMin();                                    // content boundaries min (roughly (0,0)-Scroll), in window coordinates
+    IMGUI_API ImVec2        GetWindowContentRegionMax();                                    // content boundaries max (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates
+DEFINE_API(double, GetWindowContentRegionWidth, ((ImGui_Context*,ctx)),
+"",
+{
+  ENTER_CONTEXT(ctx, 0.0);
+  return ImGui::GetWindowContentRegionWidth();
+});

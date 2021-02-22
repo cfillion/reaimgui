@@ -83,12 +83,42 @@ DEFINE_API(void, GetCursorPos, ((ImGui_Context*,ctx))
   if(API_W(y)) *API_W(y) = pos.y;
 });
 
+DEFINE_API(double, GetCursorPosX, ((ImGui_Context*,ctx)),
+"Cursor X position in window",
+{
+  ENTER_CONTEXT(ctx, 0.0);
+  return ImGui::GetCursorPosX();
+});
+
+DEFINE_API(double, GetCursorPosY, ((ImGui_Context*,ctx)),
+"Cursor Y position in window",
+{
+  ENTER_CONTEXT(ctx, 0.0);
+  return ImGui::GetCursorPosY();
+});
+
 DEFINE_API(void, SetCursorPos, ((ImGui_Context*,ctx))
 ((double,x))((double,y)),
 "Cursor position in window",
 {
   ENTER_CONTEXT(ctx);
   ImGui::SetCursorPos(ImVec2(x, y));
+});
+
+DEFINE_API(void, SetCursorPosX, ((ImGui_Context*,ctx))
+((double,local_x)),
+"Cursor X position in window",
+{
+  ENTER_CONTEXT(ctx);
+  ImGui::SetCursorPosX(local_x);
+});
+
+DEFINE_API(void, SetCursorPosY, ((ImGui_Context*,ctx))
+((double,local_x)),
+"Cursor Y position in window",
+{
+  ENTER_CONTEXT(ctx);
+  ImGui::SetCursorPosY(local_x);
 });
 
     // IMGUI_API ImVec2        GetCursorStartPos();                                            // initial cursor position in window coordinates
