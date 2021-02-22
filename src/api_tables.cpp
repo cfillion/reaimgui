@@ -29,7 +29,7 @@ The typical call flow is:
        --------------------------------------------------------------------------------------------------------
 - 5. Call EndTable())",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
 
   return ImGui::BeginTable(strId, column,
     valueOr(API_RO(flags), 0),
@@ -44,7 +44,7 @@ The typical call flow is:
 DEFINE_API(void, EndTable, ((ImGui_Context*,ctx)),
 "Only call EndTable() if BeginTable() returns true!",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::EndTable();
 });
 
@@ -54,7 +54,7 @@ R"(Append into the first cell of a new row.
 
 Default values: rowFlags = ImGui_TableRowFlags_None, minRowHeight = 0.0)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::TableNextRow(valueOr(API_RO(rowFlags), ImGuiTableRowFlags_None),
     valueOr(API_RO(minRowHeight), 0.0));
 });
@@ -62,7 +62,7 @@ Default values: rowFlags = ImGui_TableRowFlags_None, minRowHeight = 0.0)",
 DEFINE_API(bool, TableNextColumn, ((ImGui_Context*,ctx)),
 "Append into the next column (or first column of next row if currently in last column). Return true when column is visible.",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::TableNextColumn();
 });
 

@@ -15,7 +15,7 @@ tip: the ColorEdit* functions have a little color square that can be left-clicke
 
 Default values: flags = 0)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
 
   ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeColorEditFlags(flags);
@@ -36,7 +36,7 @@ DEFINE_API(bool, ColorPicker, ((ImGui_Context*,ctx))
 ((int*,API_RO(flags)))((int*,API_RO(refCol))),
 "Default values: flags = ImGui_ColorEditFlags_None, refCol = nil",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
 
   ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeColorEditFlags(flags);
@@ -65,7 +65,7 @@ R"(Display a color square/button, hover for details, return true when pressed.
 
 Default values: flags = ImGui_ColorEditFlags_None, width = 0.0, height = 0.0)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
 
   ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
   sanitizeColorEditFlags(flags);
@@ -81,7 +81,7 @@ DEFINE_API(void, SetColorEditOptions, ((ImGui_Context*,ctx))
 ((int,flags)),
 "Picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   sanitizeColorEditFlags(flags);
   ImGui::SetColorEditOptions(flags);
 });

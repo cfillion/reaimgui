@@ -12,7 +12,7 @@
 #ifdef _WIN32
 #  include <windows.h>
 #else
-#  include <swell/swell.h>
+#  include <swell/swell-types.h>
 #endif
 
 class Window;
@@ -23,6 +23,7 @@ struct ImGuiContext;
 class Context {
 public:
   static bool exists(Context *);
+  static Context *check(Context *);
   static size_t count();
   static void heartbeat();
 

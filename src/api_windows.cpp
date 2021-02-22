@@ -14,7 +14,7 @@ R"(Push window to the stack and start appending to it. See ImGui_End.
   [Important: due to legacy reason, this is inconsistent with most other functions such as BeginMenu/EndMenu, BeginPopup/EndPopup, etc. where the EndXXX call should only be called if the corresponding BeginXXX function returned true. Begin and BeginChild are the only odd ones out. Will be fixed in a future update.]
 - Note that the bottom of window stack always contains a window called "Debug".)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGuiWindowFlags flags { valueOr(API_RO(windowFlags), 0) };
   flags |= ImGuiWindowFlags_NoSavedSettings;
   return ImGui::Begin(name, API_RWO(open), flags);
@@ -23,7 +23,7 @@ R"(Push window to the stack and start appending to it. See ImGui_End.
 DEFINE_API(void, End, ((ImGui_Context*,ctx)),
 R"(Pop window from the stack. See ImGui_Begin.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::End();
 });
 
@@ -40,7 +40,7 @@ R"(Use child windows to begin into a self-contained independent scrolling/clippi
 
 Default values: width = 0.0, height = 0.0, border = false, flags = ImGui_WindowFlags_None)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::BeginChild(str_id,
     ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)),
     valueOr(API_RO(border), false), valueOr(API_RO(flags), ImGuiWindowFlags_None));
@@ -49,21 +49,21 @@ Default values: width = 0.0, height = 0.0, border = false, flags = ImGui_WindowF
 DEFINE_API(void, EndChild, ((ImGui_Context*,ctx)),
 "See ImGui_BeginChild.",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::EndChild();
 });
 
 DEFINE_API(bool, IsWindowAppearing, ((ImGui_Context*,ctx)),
 "",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::IsWindowAppearing();
 });
 
 DEFINE_API(bool, IsWindowCollapsed, ((ImGui_Context*,ctx)),
 "",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::IsWindowCollapsed();
 });
 
@@ -73,7 +73,7 @@ R"(Is current window focused? or its root/child, depending on flags. see flags f
 
 Default values: flags = ImGui_FocusedFlags_None)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::IsWindowFocused(valueOr(API_RO(flags), ImGuiFocusedFlags_None));
 });
 
@@ -83,7 +83,7 @@ R"(Is current window hovered (and typically: not blocked by a popup/modal)? see 
 
 Default values: flags = ImGui_HoveredFlags_None)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::IsWindowHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
 });
 
@@ -94,7 +94,7 @@ R"(Set next window position. Call before Begin(). Use pivot=(0.5f,0.5f) to cente
 
 Default values: cond = ImGui_Cond_Always, pivotX = 0.0, pivotY = 0.0)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::SetNextWindowPos(ImVec2(x, y), valueOr(API_RO(cond), ImGuiCond_Always),
     ImVec2(valueOr(API_RO(pivotX), 0.0), valueOr(API_RO(pivotY), 0.0)));
 });
@@ -105,7 +105,7 @@ R"(Set next window size. set axis to 0.0f to force an auto-fit on this axis. Cal
 
 Default values: cond = ImGui_Cond_Always)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::SetNextWindowSize(ImVec2(x, y), valueOr(API_RO(cond), ImGuiCond_Always));
 });
 
@@ -123,6 +123,6 @@ Default values: cond = ImGui_Cond_Always)",
 DEFINE_API(double, GetWindowContentRegionWidth, ((ImGui_Context*,ctx)),
 "",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::GetWindowContentRegionWidth();
 });

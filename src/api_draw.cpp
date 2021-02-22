@@ -13,7 +13,7 @@ DEFINE_API(void, DrawList_AddRect, ((ImGui_Context*,ctx))
 ((double*,API_RO(thickness))),
 "Default values: rounding = 0.0, roundingCorners = ImGui_DrawCornerFlags_All, thickness = 1.0",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImDrawList *drawList { ImGui::GetWindowDrawList() };
   drawList->AddRect(ImVec2(fromX, fromY), ImVec2(toX, toY), Color::rgba2abgr(colorRGBA),
     valueOr(API_RO(rounding), 0.0), valueOr(API_RO(roundingCorners), ImDrawCornerFlags_All),
@@ -25,7 +25,7 @@ DEFINE_API(void, DrawList_AddRectFilled, ((ImGui_Context*,ctx))
 ((double*,API_RO(rounding)))((int*,API_RO(roundingCorners))),
 "Default values: rounding = 0.0, roundingCorners = ImGui_DrawCornerFlags_All, thickness = 1.0",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImDrawList *drawList { ImGui::GetWindowDrawList() };
   drawList->AddRectFilled(ImVec2(fromX, fromY), ImVec2(toX, toY), Color::rgba2abgr(colorRGBA),
     valueOr(API_RO(rounding), 0.0), valueOr(API_RO(roundingCorners), ImDrawCornerFlags_All));

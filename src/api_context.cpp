@@ -17,7 +17,7 @@ R"(Create a new Dear ImGui context and OS window. The context will remain active
 DEFINE_API(void, DestroyContext, ((ImGui_Context*, ctx)),
 R"(Close and free the resources used by a context.)",
 {
-  ensureContext(ctx);
+  Context::check(ctx);
   delete ctx;
 });
 
@@ -30,14 +30,14 @@ R"(Return whether the context is still active.)",
 DEFINE_API(void *, GetNativeHwnd, ((ImGui_Context*, ctx)),
 R"(Return the native handle for the context's OS window.)",
 {
-  ensureContext(ctx);
+  Context::check(ctx);
   return ctx->window()->nativeHandle();
 });
 
 DEFINE_API(bool, IsCloseRequested, ((ImGui_Context*, ctx)),
 R"(Return whether the user has requested closing the OS window since the previous frame.)",
 {
-  ensureContext(ctx);
+  Context::check(ctx);
   return ctx->isCloseRequested();
 });
 
@@ -47,7 +47,7 @@ R"(Return whether the user has requested closing the OS window since the previou
 //
 // See SetWindowClearColor.)",
 // {
-//   ensureContext(ctx);
+//   Context::check(ctx);
 //   return ctx->clearColor().pack(false);
 // });
 //
@@ -56,21 +56,21 @@ R"(Return whether the user has requested closing the OS window since the previou
 //
 // See GetClearColor.)",
 // {
-//   ensureContext(ctx);
+//   Context::check(ctx);
 //   ctx->setClearColor(Color(rgb, false));
 // });
 
 DEFINE_API(double, GetTime, ((ImGui_Context*,ctx)),
 "Get global imgui time. Incremented every frame.",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::GetTime();
 });
 
 DEFINE_API(double, GetDeltaTime, ((ImGui_Context*,ctx)),
 "Time elapsed since last frame, in seconds.",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::GetIO().DeltaTime;
 });
 
@@ -78,7 +78,7 @@ DEFINE_API(void, ShowAboutWindow, ((ImGui_Context*,ctx))
 ((bool*,API_RWO(open))),
 "Create About window. Display Dear ImGui version, credits and build/system information.",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::ShowAboutWindow(API_RWO(open));
 });
 
@@ -86,7 +86,7 @@ DEFINE_API(void, ShowMetricsWindow, ((ImGui_Context*,ctx))
 ((bool*,API_RWO(open))),
 "Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc.",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::ShowMetricsWindow(API_RWO(open));
 });
 

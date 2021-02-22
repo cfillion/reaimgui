@@ -1,32 +1,32 @@
 #include "api_helper.hpp"
 
-#include <imgui/imgui.h>
+#include "context.hpp"
 
 DEFINE_API(bool, BeginMenuBar, ((ImGui_Context*,ctx)),
 R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag set on parent window). See ImGui_EndMenuBar.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::BeginMenuBar();
 });
 
 DEFINE_API(void, EndMenuBar, ((ImGui_Context*,ctx)),
 R"(Only call EndMenuBar() if BeginMenuBar() returns true! See ImGui_BeginMenuBar.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::EndMenuBar();
 });
 
 DEFINE_API(bool, BeginMainMenuBar, ((ImGui_Context*,ctx)),
 R"(Create a menu bar at the top of the screen and append to it.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::BeginMainMenuBar();
 });
 
 DEFINE_API(void, EndMainMenuBar, ((ImGui_Context*,ctx)),
 R"(Only call EndMainMenuBar() if BeginMainMenuBar() returns true! See ImGui_BeginMainMenuBar.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::EndMainMenuBar();
 });
 
@@ -36,14 +36,14 @@ R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_
 
 'enabled' is true by default.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::BeginMenu(label, valueOr(API_RO(enabled), true));
 });
 
 DEFINE_API(void, EndMenu, ((ImGui_Context*,ctx)),
 R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BeginMenu.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::EndMenu();
 });
 
@@ -54,7 +54,7 @@ R"(Return true when activated. Shortcuts are displayed for convenience but not p
 
 'enabled' is true by default.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   nullIfEmpty(API_RO(shortcut));
 
   return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(selected),

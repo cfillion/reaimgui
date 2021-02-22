@@ -37,7 +37,7 @@ R"(The BeginCombo()/EndCombo() api allows you to manage your contents and select
 
 Default values: flags = ImGui_ComboFlags_None)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
 
   return ImGui::BeginCombo(label, previewValue,
     valueOr(API_RO(flags), ImGuiComboFlags_None));
@@ -46,7 +46,7 @@ Default values: flags = ImGui_ComboFlags_None)",
 DEFINE_API(void, EndCombo, ((ImGui_Context*,ctx)),
 "Only call EndCombo() if BeginCombo() returns true!",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::EndCombo();
 });
 
@@ -57,7 +57,7 @@ R"(Helper over BeginCombo()/EndCombo() for convenience purpose. Use \31 (ASCII U
 
 Default values: popupMaxHeightInItems = -1)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   makeNullSeparated(items);
 
   return ImGui::Combo(label, API_RW(currentItem), items,
@@ -73,7 +73,7 @@ Use \31 (ASCII Unit Separator) to separate items within the string and to termin
 
 'heightInItems' defaults to -1.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   makeNullSeparated(items);
 
   const auto &strings { nullSeparatedToVector(items) };
@@ -94,7 +94,7 @@ Default values: width = 0, height = 0
 
 See ImGui_EndListBox.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
 
   return ImGui::BeginListBox(label,
     ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
@@ -105,6 +105,6 @@ R"(Only call EndListBox() if BeginListBox() returned true!
 
 See ImGui_BeginListBox.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::EndListBox();
 });

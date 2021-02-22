@@ -6,14 +6,14 @@ R"(Create and append into a TabBar.
 
 Default values: flags = ImGui_TabBarFlags_None)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::BeginTabBar(str_id, valueOr(API_RO(flags), ImGuiTabBarFlags_None));
 });
 
 DEFINE_API(void, EndTabBar, ((ImGui_Context*,ctx)),
 "Only call EndTabBar() if BeginTabBar() returns true!",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::EndTabBar();
 });
 
@@ -24,7 +24,7 @@ R"(Create a Tab. Returns true if the Tab is selected.
 Default values: flags = ImGui_TabItemFlags_None
 'open' is read/write.)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::BeginTabItem(label, API_RWO(open),
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
 });
@@ -32,7 +32,7 @@ Default values: flags = ImGui_TabItemFlags_None
 DEFINE_API(void, EndTabItem, ((ImGui_Context*,ctx)),
 "Only call EndTabItem() if BeginTabItem() returns true!",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   ImGui::EndTabItem();
 });
 
@@ -42,7 +42,7 @@ R"(Create a Tab behaving like a button. return true when clicked. cannot be sele
 
 Default values: flags = ImGui_TabItemFlags_None)",
 {
-  ensureContext(ctx)->enterFrame();
+  Context::check(ctx)->enterFrame();
   return ImGui::TabItemButton(label,
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
 });
