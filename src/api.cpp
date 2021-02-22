@@ -8,7 +8,11 @@ using namespace std::string_literals;
 
 #define KEY(prefix) (prefix "_ImGui_"s + name)
 
-std::list<const API *> g_funcs;
+static auto &knownFuncs()
+{
+  static std::list<const API *> funcs;
+  return funcs;
+}
 
 API::API(const char *name, void *cImpl, void *reascriptImpl, void *definition)
   : m_regs {
@@ -17,12 +21,12 @@ API::API(const char *name, void *cImpl, void *reascriptImpl, void *definition)
       { KEY("APIdef"), definition },
     }
 {
-  g_funcs.push_back(this);
+  knownFuncs().push_back(this);
 }
 
 API::~API()
 {
-  g_funcs.remove(this);
+  knownFuncs().remove(this);
 }
 
 void API::RegInfo::announce() const
@@ -32,7 +36,7 @@ void API::RegInfo::announce() const
 
 void API::registerAll()
 {
-  for(const API *func : g_funcs) {
+  for(const API *func : knownFuncs()) {
     for(const RegInfo &reg : func->m_regs)
       reg.announce();
   }
@@ -40,7 +44,7 @@ void API::registerAll()
 
 void API::unregisterAll()
 {
-  for(const API *func : g_funcs) {
+  for(const API *func : knownFuncs()) {
     for(RegInfo reg : func->m_regs) {
       reg.key.insert(reg.key.begin(), '-');
       reg.announce();
