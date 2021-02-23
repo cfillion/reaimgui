@@ -11,13 +11,24 @@ You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemH
     ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
 });
 
-DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)(const char*,label),
-"button with FramePadding=(0,0) to easily embed within text",
+DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
+(const char*,label),
+"Button with FramePadding=(0,0) to easily embed within text",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::SmallButton(label);
 });
-// IMGUI_API bool          InvisibleButton(const char* str_id, const ImVec2& size, ImGuiButtonFlags flags = 0); // flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.)
+
+DEFINE_API(bool, InvisibleButton, (ImGui_Context*,ctx)
+(const char*,str_id)(double,w)(double,h)(int*,API_RO(flags)),
+R"(Flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).
+
+Default values: flags = ImGui_ButtonFlags_None)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::InvisibleButton(str_id, ImVec2(w, h),
+    valueOr(API_RO(flags), ImGuiButtonFlags_None));
+});
 
 DEFINE_API(bool, ArrowButton, (ImGui_Context*,ctx)
 (const char*,str_id)(int,dir),

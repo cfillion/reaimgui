@@ -119,7 +119,15 @@ DEFINE_API(void, SetCursorPosY, (ImGui_Context*,ctx)
   ImGui::SetCursorPosY(local_x);
 });
 
-    // IMGUI_API ImVec2        GetCursorStartPos();                                            // initial cursor position in window coordinates
+DEFINE_API(void, GetCursorStartPos, (ImGui_Context*,ctx)
+(double*,API_W(x))(double*,API_W(y)),
+"Initial cursor position in window coordinates",
+{
+  Context::check(ctx)->enterFrame();
+  const ImVec2 &pos { ImGui::GetCursorStartPos() };
+  if(API_W(x)) *API_W(x) = pos.x;
+  if(API_W(y)) *API_W(y) = pos.y;
+});
 
 DEFINE_API(void, GetCursorScreenPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -159,5 +167,39 @@ DEFINE_API(double, GetTextLineHeightWithSpacing, (ImGui_Context*,ctx),
   Context::check(ctx)->enterFrame();
   return ImGui::GetTextLineHeightWithSpacing();
 });
-    // IMGUI_API float         GetFrameHeight();                                               // ~ FontSize + style.FramePadding.y * 2
-    // IMGUI_API float         GetFrameHeightWithSpacing();                                    // ~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)
+
+DEFINE_API(double, GetFrameHeight, (ImGui_Context*,ctx),
+"~ FontSize + style.FramePadding.y * 2",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::GetFrameHeight();
+});
+
+DEFINE_API(double, GetFrameHeightWithSpacing, (ImGui_Context*,ctx),
+"~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::GetFrameHeightWithSpacing();
+});
+
+// Clipping
+DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
+(double,clip_rect_min_x)(double,clip_rect_min_y)
+(double,clip_rect_max_x)(double,clip_rect_max_y)
+(bool,intersect_with_current_clip_rect),
+"Mouse hovering is affected by ImGui::PushClipRect() calls, unlike direct calls to ImDrawList::PushClipRect() which are render only. See ImGui_PopClipRect.",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PushClipRect(
+    ImVec2(clip_rect_min_x, clip_rect_min_y),
+    ImVec2(clip_rect_max_x, clip_rect_max_y),
+    intersect_with_current_clip_rect
+  );
+});
+
+DEFINE_API(void, PopClipRect, (ImGui_Context*,ctx),
+"See ImGui_PushClipRect",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PopClipRect();
+});

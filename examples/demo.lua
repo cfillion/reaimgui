@@ -588,12 +588,12 @@ label:\n"
     items  = { 'Item One', 'Item Two', 'Item Three', 'Item Four', 'Item Five' },
   },
   query = {
-    item_type  = 1,
-    b          = false,
-    color      = 0xFF8000FF,
-    str        = '',
-    current    = 1,
-    d4a        = { 1.0, 0.5, 0.0, 1.0 },
+    item_type   = 1,
+    b           = false,
+    color       = 0xFF8000FF,
+    str         = '',
+    current     = 1,
+    d4a         = { 1.0, 0.5, 0.0, 1.0 },
     embed_all_inside_a_child_window = false,
     test_window = false,
   },
@@ -604,6 +604,40 @@ layout = {
     disable_mouse_wheel = false,
     disable_menu        = false,
     offset_x            = 0,
+  },
+  width = {
+    d = 0.0,
+    show_indented_items = true,
+  },
+  horizontal = {
+    c1 = false, c2 = false, c3 = false, c4 = false,
+    d0 = 1.0, d1 = 2.0, d2 = 3.0,
+    item = -1,
+    selection = { 0, 1, 2, 3 },
+  },
+  scrolling = {
+    track_item       = 50,
+    enable_track     = true,
+    enable_extra_decorations = false,
+    scroll_to_off_px = 0.0,
+    scroll_to_pos_px = 200.0,
+    lines = 7,
+    show_horizontal_contents_size_demo_window = false,
+  },
+  horizontal_window = {
+    show_h_scrollbar      = true,
+    show_button           = true,
+    show_tree_nodes       = true,
+    show_text_wrapped     = false,
+    show_columns          = true,
+    show_tab_bar          = true,
+    show_child            = false,
+    explicit_content_size = false,
+    contents_size_x       = 300.0,
+  },
+  clipping = {
+    size   = { 100.0, 100.0 },
+    offset = {  30.0,  30.0 },
   },
 }
 
@@ -619,6 +653,7 @@ local plot2_funcs   = {
   function(i) return (i & 1) == 1 and 1.0 or -1.0 end, --saw
 }
 local raw_hsv       = reaper.new_array(4)
+local group_values  = reaper.new_array({ 0.5, 0.20, 0.80, 0.60, 0.25 })
 
 function demo.ShowDemoWindowWidgets()
   if not r.ImGui_CollapsingHeader(ctx, 'Widgets') then
@@ -947,7 +982,7 @@ function demo.ShowDemoWindowWidgets()
 
       rv,widgets.text.wrap_width = r.ImGui_SliderDouble(ctx, 'Wrap width', widgets.text.wrap_width, -20, 600, '%.0f')
 
---             ImDrawList* draw_list = r.ImGui_GetWindowDrawList();
+      local draw_list = r.ImGui_GetWindowDrawList(ctx)
       for n = 0, 1 do
         r.ImGui_Text(ctx, ('Test paragraph %d:'):format(n))
 
@@ -967,8 +1002,8 @@ function demo.ShowDemoWindowWidgets()
         -- Draw actual text bounding box, following by marker of our expected limit (should not overlap!)
         local text_min_x, text_min_y = r.ImGui_GetItemRectMin(ctx)
         local text_max_x, text_max_y = r.ImGui_GetItemRectMax(ctx)
-        r.ImGui_DrawList_AddRect(ctx, text_min_x, text_min_y, text_max_x, text_max_y, 0xFFFF00FF)
-        r.ImGui_DrawList_AddRectFilled(ctx, marker_min_x, marker_min_y, marker_max_x, marker_max_y, 0xFF00FFFF)
+        r.ImGui_DrawList_AddRect(draw_list, text_min_x, text_min_y, text_max_x, text_max_y, 0xFFFF00FF)
+        r.ImGui_DrawList_AddRectFilled(draw_list, marker_min_x, marker_min_y, marker_max_x, marker_max_y, 0xFF00FFFF)
 
         r.ImGui_PopTextWrapPos(ctx)
       end
@@ -976,7 +1011,7 @@ function demo.ShowDemoWindowWidgets()
       r.ImGui_TreePop(ctx)
     end
 
-    -- Not supported by the default built-in font
+    -- Not supported by the default built-in font TODO
     -- if r.ImGui_TreeNode(ctx, 'UTF-8 Text') then
     --   -- UTF-8 test with Japanese characters
     --   -- (Needs a suitable font? Try "Google Noto" or "Arial Unicode". See docs/FONTS.md for details.)
@@ -2438,681 +2473,654 @@ function demo.ShowDemoWindowLayout()
     r.ImGui_TreePop(ctx)
   end
 
---     if (r.ImGui_TreeNode("Widgets Width"))
---     {
---         // Use SetNextItemWidth() to set the width of a single upcoming item.
---         // Use PushItemWidth()/PopItemWidth() to set the width of a group of items.
---         // In real code use you'll probably want to choose width values that are proportional to your font size
---         // e.g. Using '20.0f * GetFontSize()' as width instead of '200.0f', etc.
---
---         static float f = 0.0f;
---         static bool show_indented_items = true;
---         r.ImGui_Checkbox("Show indented items", &show_indented_items);
---
---         r.ImGui_Text("SetNextItemWidth/PushItemWidth(100)");
---         r.ImGui_SameLine(); HelpMarker("Fixed width.");
---         r.ImGui_PushItemWidth(100);
---         r.ImGui_DragFloat("float##1b", &f);
---         if (show_indented_items)
---         {
---             r.ImGui_Indent();
---             r.ImGui_DragFloat("float (indented)##1b", &f);
---             r.ImGui_Unindent();
---         }
---         r.ImGui_PopItemWidth();
---
---         r.ImGui_Text("SetNextItemWidth/PushItemWidth(-100)");
---         r.ImGui_SameLine(); HelpMarker("Align to right edge minus 100");
---         r.ImGui_PushItemWidth(-100);
---         r.ImGui_DragFloat("float##2a", &f);
---         if (show_indented_items)
---         {
---             r.ImGui_Indent();
---             r.ImGui_DragFloat("float (indented)##2b", &f);
---             r.ImGui_Unindent();
---         }
---         r.ImGui_PopItemWidth();
---
---         r.ImGui_Text("SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5f)");
---         r.ImGui_SameLine(); HelpMarker("Half of available width.\n(~ right-cursor_pos)\n(works within a column set)");
---         r.ImGui_PushItemWidth(r.ImGui_GetContentRegionAvail().x * 0.5f);
---         r.ImGui_DragFloat("float##3a", &f);
---         if (show_indented_items)
---         {
---             r.ImGui_Indent();
---             r.ImGui_DragFloat("float (indented)##3b", &f);
---             r.ImGui_Unindent();
---         }
---         r.ImGui_PopItemWidth();
---
---         r.ImGui_Text("SetNextItemWidth/PushItemWidth(-GetContentRegionAvail().x * 0.5f)");
---         r.ImGui_SameLine(); HelpMarker("Align to right edge minus half");
---         r.ImGui_PushItemWidth(-r.ImGui_GetContentRegionAvail().x * 0.5f);
---         r.ImGui_DragFloat("float##4a", &f);
---         if (show_indented_items)
---         {
---             r.ImGui_Indent();
---             r.ImGui_DragFloat("float (indented)##4b", &f);
---             r.ImGui_Unindent();
---         }
---         r.ImGui_PopItemWidth();
---
---         // Demonstrate using PushItemWidth to surround three items.
---         // Calling SetNextItemWidth() before each of them would have the same effect.
---         r.ImGui_Text("SetNextItemWidth/PushItemWidth(-FLT_MIN)");
---         r.ImGui_SameLine(); HelpMarker("Align to right edge");
---         r.ImGui_PushItemWidth(-FLT_MIN);
---         r.ImGui_DragFloat("##float5a", &f);
---         if (show_indented_items)
---         {
---             r.ImGui_Indent();
---             r.ImGui_DragFloat("float (indented)##5b", &f);
---             r.ImGui_Unindent();
---         }
---         r.ImGui_PopItemWidth();
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Basic Horizontal Layout"))
---     {
---         r.ImGui_TextWrapped("(Use r.ImGui_SameLine() to keep adding items to the right of the preceding item)");
---
---         // Text
---         r.ImGui_Text("Two items: Hello"); r.ImGui_SameLine();
---         r.ImGui_TextColored(ImVec4(1,1,0,1), "Sailor");
---
---         // Adjust spacing
---         r.ImGui_Text("More spacing: Hello"); r.ImGui_SameLine(0, 20);
---         r.ImGui_TextColored(ImVec4(1,1,0,1), "Sailor");
---
---         // Button
---         r.ImGui_AlignTextToFramePadding();
---         r.ImGui_Text("Normal buttons"); r.ImGui_SameLine();
---         r.ImGui_Button("Banana"); r.ImGui_SameLine();
---         r.ImGui_Button("Apple"); r.ImGui_SameLine();
---         r.ImGui_Button("Corniflower");
---
---         // Button
---         r.ImGui_Text("Small buttons"); r.ImGui_SameLine();
---         r.ImGui_SmallButton("Like this one"); r.ImGui_SameLine();
---         r.ImGui_Text("can fit within a text block.");
---
---         // Aligned to arbitrary position. Easy/cheap column.
---         r.ImGui_Text("Aligned");
---         r.ImGui_SameLine(150); r.ImGui_Text("x=150");
---         r.ImGui_SameLine(300); r.ImGui_Text("x=300");
---         r.ImGui_Text("Aligned");
---         r.ImGui_SameLine(150); r.ImGui_SmallButton("x=150");
---         r.ImGui_SameLine(300); r.ImGui_SmallButton("x=300");
---
---         // Checkbox
---         static bool c1 = false, c2 = false, c3 = false, c4 = false;
---         r.ImGui_Checkbox("My", &c1); r.ImGui_SameLine();
---         r.ImGui_Checkbox("Tailor", &c2); r.ImGui_SameLine();
---         r.ImGui_Checkbox("Is", &c3); r.ImGui_SameLine();
---         r.ImGui_Checkbox("Rich", &c4);
---
---         // Various
---         static float f0 = 1.0f, f1 = 2.0f, f2 = 3.0f;
---         r.ImGui_PushItemWidth(80);
---         const char* items[] = { "AAAA", "BBBB", "CCCC", "DDDD" };
---         static int item = -1;
---         r.ImGui_Combo("Combo", &item, items, IM_ARRAYSIZE(items)); r.ImGui_SameLine();
---         r.ImGui_SliderFloat("X", &f0, 0.0f, 5.0f); r.ImGui_SameLine();
---         r.ImGui_SliderFloat("Y", &f1, 0.0f, 5.0f); r.ImGui_SameLine();
---         r.ImGui_SliderFloat("Z", &f2, 0.0f, 5.0f);
---         r.ImGui_PopItemWidth();
---
---         r.ImGui_PushItemWidth(80);
---         r.ImGui_Text("Lists:");
---         static int selection[4] = { 0, 1, 2, 3 };
---         for (int i = 0; i < 4; i++)
---         {
---             if (i > 0) r.ImGui_SameLine();
---             r.ImGui_PushID(i);
---             r.ImGui_ListBox("", &selection[i], items, IM_ARRAYSIZE(items));
---             r.ImGui_PopID();
---             //if (r.ImGui_IsItemHovered()) r.ImGui_SetTooltip("ListBox %d hovered", i);
---         }
---         r.ImGui_PopItemWidth();
---
---         // Dummy
---         ImVec2 button_sz(40, 40);
---         r.ImGui_Button("A", button_sz); r.ImGui_SameLine();
---         r.ImGui_Dummy(button_sz); r.ImGui_SameLine();
---         r.ImGui_Button("B", button_sz);
---
---         // Manually wrapping
---         // (we should eventually provide this as an automatic layout feature, but for now you can do it manually)
---         r.ImGui_Text("Manually wrapping:");
---         ImGuiStyle& style = r.ImGui_GetStyle();
---         int buttons_count = 20;
---         float window_visible_x2 = r.ImGui_GetWindowPos().x + r.ImGui_GetWindowContentRegionMax().x;
---         for (int n = 0; n < buttons_count; n++)
---         {
---             r.ImGui_PushID(n);
---             r.ImGui_Button("Box", button_sz);
---             float last_button_x2 = r.ImGui_GetItemRectMax().x;
---             float next_button_x2 = last_button_x2 + style.ItemSpacing.x + button_sz.x; // Expected position if next button was on same line
---             if (n + 1 < buttons_count && next_button_x2 < window_visible_x2)
---                 r.ImGui_SameLine();
---             r.ImGui_PopID();
---         }
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Groups"))
---     {
---         HelpMarker(
---             "BeginGroup() basically locks the horizontal position for new line. "
---             "EndGroup() bundles the whole group so that you can use \"item\" functions such as "
---             "IsItemHovered()/IsItemActive() or SameLine() etc. on the whole group.");
---         r.ImGui_BeginGroup();
---         {
---             r.ImGui_BeginGroup();
---             r.ImGui_Button("AAA");
---             r.ImGui_SameLine();
---             r.ImGui_Button("BBB");
---             r.ImGui_SameLine();
---             r.ImGui_BeginGroup();
---             r.ImGui_Button("CCC");
---             r.ImGui_Button("DDD");
---             r.ImGui_EndGroup();
---             r.ImGui_SameLine();
---             r.ImGui_Button("EEE");
---             r.ImGui_EndGroup();
---             if (r.ImGui_IsItemHovered())
---                 r.ImGui_SetTooltip("First group hovered");
---         }
---         // Capture the group size and create widgets using the same size
---         ImVec2 size = r.ImGui_GetItemRectSize();
---         const float values[5] = { 0.5f, 0.20f, 0.80f, 0.60f, 0.25f };
---         r.ImGui_PlotHistogram("##values", values, IM_ARRAYSIZE(values), 0, NULL, 0.0f, 1.0f, size);
---
---         r.ImGui_Button("ACTION", ImVec2((size.x - r.ImGui_GetStyle().ItemSpacing.x) * 0.5f, size.y));
---         r.ImGui_SameLine();
---         r.ImGui_Button("REACTION", ImVec2((size.x - r.ImGui_GetStyle().ItemSpacing.x) * 0.5f, size.y));
---         r.ImGui_EndGroup();
---         r.ImGui_SameLine();
---
---         r.ImGui_Button("LEVERAGE\nBUZZWORD", size);
---         r.ImGui_SameLine();
---
---         if (r.ImGui_BeginListBox("List", size))
---         {
---             r.ImGui_Selectable("Selected", true);
---             r.ImGui_Selectable("Not Selected", false);
---             r.ImGui_EndListBox();
---         }
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Text Baseline Alignment"))
---     {
---         {
---             r.ImGui_BulletText("Text baseline:");
---             r.ImGui_SameLine(); HelpMarker(
---                 "This is testing the vertical alignment that gets applied on text to keep it aligned with widgets. "
---                 "Lines only composed of text or \"small\" widgets use less vertical space than lines with framed widgets.");
---             r.ImGui_Indent();
---
---             r.ImGui_Text("KO Blahblah"); r.ImGui_SameLine();
---             r.ImGui_Button("Some framed item"); r.ImGui_SameLine();
---             HelpMarker("Baseline of button will look misaligned with text..");
---
---             // If your line starts with text, call AlignTextToFramePadding() to align text to upcoming widgets.
---             // (because we don't know what's coming after the Text() statement, we need to move the text baseline
---             // down by FramePadding.y ahead of time)
---             r.ImGui_AlignTextToFramePadding();
---             r.ImGui_Text("OK Blahblah"); r.ImGui_SameLine();
---             r.ImGui_Button("Some framed item"); r.ImGui_SameLine();
---             HelpMarker("We call AlignTextToFramePadding() to vertically align the text baseline by +FramePadding.y");
---
---             // SmallButton() uses the same vertical padding as Text
---             r.ImGui_Button("TEST##1"); r.ImGui_SameLine();
---             r.ImGui_Text("TEST"); r.ImGui_SameLine();
---             r.ImGui_SmallButton("TEST##2");
---
---             // If your line starts with text, call AlignTextToFramePadding() to align text to upcoming widgets.
---             r.ImGui_AlignTextToFramePadding();
---             r.ImGui_Text("Text aligned to framed item"); r.ImGui_SameLine();
---             r.ImGui_Button("Item##1"); r.ImGui_SameLine();
---             r.ImGui_Text("Item"); r.ImGui_SameLine();
---             r.ImGui_SmallButton("Item##2"); r.ImGui_SameLine();
---             r.ImGui_Button("Item##3");
---
---             r.ImGui_Unindent();
---         }
---
---         r.ImGui_Spacing();
---
---         {
---             r.ImGui_BulletText("Multi-line text:");
---             r.ImGui_Indent();
---             r.ImGui_Text("One\nTwo\nThree"); r.ImGui_SameLine();
---             r.ImGui_Text("Hello\nWorld"); r.ImGui_SameLine();
---             r.ImGui_Text("Banana");
---
---             r.ImGui_Text("Banana"); r.ImGui_SameLine();
---             r.ImGui_Text("Hello\nWorld"); r.ImGui_SameLine();
---             r.ImGui_Text("One\nTwo\nThree");
---
---             r.ImGui_Button("HOP##1"); r.ImGui_SameLine();
---             r.ImGui_Text("Banana"); r.ImGui_SameLine();
---             r.ImGui_Text("Hello\nWorld"); r.ImGui_SameLine();
---             r.ImGui_Text("Banana");
---
---             r.ImGui_Button("HOP##2"); r.ImGui_SameLine();
---             r.ImGui_Text("Hello\nWorld"); r.ImGui_SameLine();
---             r.ImGui_Text("Banana");
---             r.ImGui_Unindent();
---         }
---
---         r.ImGui_Spacing();
---
---         {
---             r.ImGui_BulletText("Misc items:");
---             r.ImGui_Indent();
---
---             // SmallButton() sets FramePadding to zero. Text baseline is aligned to match baseline of previous Button.
---             r.ImGui_Button("80x80", ImVec2(80, 80));
---             r.ImGui_SameLine();
---             r.ImGui_Button("50x50", ImVec2(50, 50));
---             r.ImGui_SameLine();
---             r.ImGui_Button("Button()");
---             r.ImGui_SameLine();
---             r.ImGui_SmallButton("SmallButton()");
---
---             // Tree
---             const float spacing = r.ImGui_GetStyle().ItemInnerSpacing.x;
---             r.ImGui_Button("Button##1");
---             r.ImGui_SameLine(0.0f, spacing);
---             if (r.ImGui_TreeNode("Node##1"))
---             {
---                 // Placeholder tree data
---                 for (int i = 0; i < 6; i++)
---                     r.ImGui_BulletText("Item %d..", i);
---                 r.ImGui_TreePop();
---             }
---
---             // Vertically align text node a bit lower so it'll be vertically centered with upcoming widget.
---             // Otherwise you can use SmallButton() (smaller fit).
---             r.ImGui_AlignTextToFramePadding();
---
---             // Common mistake to avoid: if we want to SameLine after TreeNode we need to do it before we add
---             // other contents below the node.
---             bool node_open = r.ImGui_TreeNode("Node##2");
---             r.ImGui_SameLine(0.0f, spacing); r.ImGui_Button("Button##2");
---             if (node_open)
---             {
---                 // Placeholder tree data
---                 for (int i = 0; i < 6; i++)
---                     r.ImGui_BulletText("Item %d..", i);
---                 r.ImGui_TreePop();
---             }
---
---             // Bullet
---             r.ImGui_Button("Button##3");
---             r.ImGui_SameLine(0.0f, spacing);
---             r.ImGui_BulletText("Bullet text");
---
---             r.ImGui_AlignTextToFramePadding();
---             r.ImGui_BulletText("Node");
---             r.ImGui_SameLine(0.0f, spacing); r.ImGui_Button("Button##4");
---             r.ImGui_Unindent();
---         }
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Scrolling"))
---     {
---         // Vertical scroll functions
---         HelpMarker("Use SetScrollHereY() or SetScrollFromPosY() to scroll to a given vertical position.");
---
---         static int track_item = 50;
---         static bool enable_track = true;
---         static bool enable_extra_decorations = false;
---         static float scroll_to_off_px = 0.0f;
---         static float scroll_to_pos_px = 200.0f;
---
---         r.ImGui_Checkbox("Decoration", &enable_extra_decorations);
---
---         r.ImGui_Checkbox("Track", &enable_track);
---         r.ImGui_PushItemWidth(100);
---         r.ImGui_SameLine(140); enable_track |= r.ImGui_DragInt("##item", &track_item, 0.25f, 0, 99, "Item = %d");
---
---         bool scroll_to_off = r.ImGui_Button("Scroll Offset");
---         r.ImGui_SameLine(140); scroll_to_off |= r.ImGui_DragFloat("##off", &scroll_to_off_px, 1.00f, 0, FLT_MAX, "+%.0f px");
---
---         bool scroll_to_pos = r.ImGui_Button("Scroll To Pos");
---         r.ImGui_SameLine(140); scroll_to_pos |= r.ImGui_DragFloat("##pos", &scroll_to_pos_px, 1.00f, -10, FLT_MAX, "X/Y = %.0f px");
---         r.ImGui_PopItemWidth();
---
---         if (scroll_to_off || scroll_to_pos)
---             enable_track = false;
---
---         ImGuiStyle& style = r.ImGui_GetStyle();
---         float child_w = (r.ImGui_GetContentRegionAvail().x - 4 * style.ItemSpacing.x) / 5;
---         if (child_w < 1.0f)
---             child_w = 1.0f;
---         r.ImGui_PushID("##VerticalScrolling");
---         for (int i = 0; i < 5; i++)
---         {
---             if (i > 0) r.ImGui_SameLine();
---             r.ImGui_BeginGroup();
---             const char* names[] = { "Top", "25%", "Center", "75%", "Bottom" };
---             r.ImGui_TextUnformatted(names[i]);
---
---             const ImGuiWindowFlags child_flags = enable_extra_decorations ? ImGuiWindowFlags_MenuBar : 0;
---             const ImGuiID child_id = r.ImGui_GetID((void*)(intptr_t)i);
---             const bool child_is_visible = r.ImGui_BeginChild(child_id, ImVec2(child_w, 200.0f), true, child_flags);
---             if (r.ImGui_BeginMenuBar())
---             {
---                 r.ImGui_TextUnformatted("abc");
---                 r.ImGui_EndMenuBar();
---             }
---             if (scroll_to_off)
---                 r.ImGui_SetScrollY(scroll_to_off_px);
---             if (scroll_to_pos)
---                 r.ImGui_SetScrollFromPosY(r.ImGui_GetCursorStartPos().y + scroll_to_pos_px, i * 0.25f);
---             if (child_is_visible) // Avoid calling SetScrollHereY when running with culled items
---             {
---                 for (int item = 0; item < 100; item++)
---                 {
---                     if (enable_track && item == track_item)
---                     {
---                         r.ImGui_TextColored(ImVec4(1, 1, 0, 1), "Item %d", item);
---                         r.ImGui_SetScrollHereY(i * 0.25f); // 0.0f:top, 0.5f:center, 1.0f:bottom
---                     }
---                     else
---                     {
---                         r.ImGui_Text("Item %d", item);
---                     }
---                 }
---             }
---             float scroll_y = r.ImGui_GetScrollY();
---             float scroll_max_y = r.ImGui_GetScrollMaxY();
---             r.ImGui_EndChild();
---             r.ImGui_Text("%.0f/%.0f", scroll_y, scroll_max_y);
---             r.ImGui_EndGroup();
---         }
---         r.ImGui_PopID();
---
---         // Horizontal scroll functions
---         r.ImGui_Spacing();
---         HelpMarker(
---             "Use SetScrollHereX() or SetScrollFromPosX() to scroll to a given horizontal position.\n\n"
---             "Because the clipping rectangle of most window hides half worth of WindowPadding on the "
---             "left/right, using SetScrollFromPosX(+1) will usually result in clipped text whereas the "
---             "equivalent SetScrollFromPosY(+1) wouldn't.");
---         r.ImGui_PushID("##HorizontalScrolling");
---         for (int i = 0; i < 5; i++)
---         {
---             float child_height = r.ImGui_GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0f;
---             ImGuiWindowFlags child_flags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
---             ImGuiID child_id = r.ImGui_GetID((void*)(intptr_t)i);
---             bool child_is_visible = r.ImGui_BeginChild(child_id, ImVec2(-100, child_height), true, child_flags);
---             if (scroll_to_off)
---                 r.ImGui_SetScrollX(scroll_to_off_px);
---             if (scroll_to_pos)
---                 r.ImGui_SetScrollFromPosX(r.ImGui_GetCursorStartPos().x + scroll_to_pos_px, i * 0.25f);
---             if (child_is_visible) // Avoid calling SetScrollHereY when running with culled items
---             {
---                 for (int item = 0; item < 100; item++)
---                 {
---                     if (enable_track && item == track_item)
---                     {
---                         r.ImGui_TextColored(ImVec4(1, 1, 0, 1), "Item %d", item);
---                         r.ImGui_SetScrollHereX(i * 0.25f); // 0.0f:left, 0.5f:center, 1.0f:right
---                     }
---                     else
---                     {
---                         r.ImGui_Text("Item %d", item);
---                     }
---                     r.ImGui_SameLine();
---                 }
---             }
---             float scroll_x = r.ImGui_GetScrollX();
---             float scroll_max_x = r.ImGui_GetScrollMaxX();
---             r.ImGui_EndChild();
---             r.ImGui_SameLine();
---             const char* names[] = { "Left", "25%", "Center", "75%", "Right" };
---             r.ImGui_Text("%s\n%.0f/%.0f", names[i], scroll_x, scroll_max_x);
---             r.ImGui_Spacing();
---         }
---         r.ImGui_PopID();
---
---         // Miscellaneous Horizontal Scrolling Demo
---         HelpMarker(
---             "Horizontal scrolling for a window is enabled via the ImGuiWindowFlags_HorizontalScrollbar flag.\n\n"
---             "You may want to also explicitly specify content width by using SetNextWindowContentWidth() before Begin().");
---         static int lines = 7;
---         r.ImGui_SliderInt("Lines", &lines, 1, 15);
---         r.ImGui_PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
---         r.ImGui_PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2.0f, 1.0f));
---         ImVec2 scrolling_child_size = ImVec2(0, r.ImGui_GetFrameHeightWithSpacing() * 7 + 30);
---         r.ImGui_BeginChild("scrolling", scrolling_child_size, true, ImGuiWindowFlags_HorizontalScrollbar);
---         for (int line = 0; line < lines; line++)
---         {
---             // Display random stuff. For the sake of this trivial demo we are using basic Button() + SameLine()
---             // If you want to create your own time line for a real application you may be better off manipulating
---             // the cursor position yourself, aka using SetCursorPos/SetCursorScreenPos to position the widgets
---             // yourself. You may also want to use the lower-level ImDrawList API.
---             int num_buttons = 10 + ((line & 1) ? line * 9 : line * 3);
---             for (int n = 0; n < num_buttons; n++)
---             {
---                 if (n > 0) r.ImGui_SameLine();
---                 r.ImGui_PushID(n + line * 1000);
---                 char num_buf[16];
---                 sprintf(num_buf, "%d", n);
---                 const char* label = (!(n % 15)) ? "FizzBuzz" : (!(n % 3)) ? "Fizz" : (!(n % 5)) ? "Buzz" : num_buf;
---                 float hue = n * 0.05f;
---                 r.ImGui_PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(hue, 0.6f, 0.6f));
---                 r.ImGui_PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(hue, 0.7f, 0.7f));
---                 r.ImGui_PushStyleColor(ImGuiCol_ButtonActive, (ImVec4)ImColor::HSV(hue, 0.8f, 0.8f));
---                 r.ImGui_Button(label, ImVec2(40.0f + sinf((float)(line + n)) * 20.0f, 0.0f));
---                 r.ImGui_PopStyleColor(3);
---                 r.ImGui_PopID();
---             }
---         }
---         float scroll_x = r.ImGui_GetScrollX();
---         float scroll_max_x = r.ImGui_GetScrollMaxX();
---         r.ImGui_EndChild();
---         r.ImGui_PopStyleVar(2);
---         float scroll_x_delta = 0.0f;
---         r.ImGui_SmallButton("<<");
---         if (r.ImGui_IsItemActive())
---             scroll_x_delta = -r.ImGui_GetIO().DeltaTime * 1000.0f;
---         r.ImGui_SameLine();
---         r.ImGui_Text("Scroll from code"); r.ImGui_SameLine();
---         r.ImGui_SmallButton(">>");
---         if (r.ImGui_IsItemActive())
---             scroll_x_delta = +r.ImGui_GetIO().DeltaTime * 1000.0f;
---         r.ImGui_SameLine();
---         r.ImGui_Text("%.0f/%.0f", scroll_x, scroll_max_x);
---         if (scroll_x_delta != 0.0f)
---         {
---             // Demonstrate a trick: you can use Begin to set yourself in the context of another window
---             // (here we are already out of your child window)
---             r.ImGui_BeginChild("scrolling");
---             r.ImGui_SetScrollX(r.ImGui_GetScrollX() + scroll_x_delta);
---             r.ImGui_EndChild();
---         }
---         r.ImGui_Spacing();
---
---         static bool show_horizontal_contents_size_demo_window = false;
---         r.ImGui_Checkbox("Show Horizontal contents size demo window", &show_horizontal_contents_size_demo_window);
---
---         if (show_horizontal_contents_size_demo_window)
---         {
---             static bool show_h_scrollbar = true;
---             static bool show_button = true;
---             static bool show_tree_nodes = true;
---             static bool show_text_wrapped = false;
---             static bool show_columns = true;
---             static bool show_tab_bar = true;
---             static bool show_child = false;
---             static bool explicit_content_size = false;
---             static float contents_size_x = 300.0f;
---             if (explicit_content_size)
---                 r.ImGui_SetNextWindowContentSize(ImVec2(contents_size_x, 0.0f));
---             r.ImGui_Begin("Horizontal contents size demo window", &show_horizontal_contents_size_demo_window, show_h_scrollbar ? ImGuiWindowFlags_HorizontalScrollbar : 0);
---             r.ImGui_PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 0));
---             r.ImGui_PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 0));
---             HelpMarker("Test of different widgets react and impact the work rectangle growing when horizontal scrolling is enabled.\n\nUse 'Metrics->Tools->Show windows rectangles' to visualize rectangles.");
---             r.ImGui_Checkbox("H-scrollbar", &show_h_scrollbar);
---             r.ImGui_Checkbox("Button", &show_button);            // Will grow contents size (unless explicitly overwritten)
---             r.ImGui_Checkbox("Tree nodes", &show_tree_nodes);    // Will grow contents size and display highlight over full width
---             r.ImGui_Checkbox("Text wrapped", &show_text_wrapped);// Will grow and use contents size
---             r.ImGui_Checkbox("Columns", &show_columns);          // Will use contents size
---             r.ImGui_Checkbox("Tab bar", &show_tab_bar);          // Will use contents size
---             r.ImGui_Checkbox("Child", &show_child);              // Will grow and use contents size
---             r.ImGui_Checkbox("Explicit content size", &explicit_content_size);
---             r.ImGui_Text("Scroll %.1f/%.1f %.1f/%.1f", r.ImGui_GetScrollX(), r.ImGui_GetScrollMaxX(), r.ImGui_GetScrollY(), r.ImGui_GetScrollMaxY());
---             if (explicit_content_size)
---             {
---                 r.ImGui_SameLine();
---                 r.ImGui_SetNextItemWidth(100);
---                 r.ImGui_DragFloat("##csx", &contents_size_x);
---                 ImVec2 p = r.ImGui_GetCursorScreenPos();
---                 r.ImGui_GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + 10, p.y + 10), IM_COL32_WHITE);
---                 r.ImGui_GetWindowDrawList()->AddRectFilled(ImVec2(p.x + contents_size_x - 10, p.y), ImVec2(p.x + contents_size_x, p.y + 10), IM_COL32_WHITE);
---                 r.ImGui_Dummy(ImVec2(0, 10));
---             }
---             r.ImGui_PopStyleVar(2);
---             r.ImGui_Separator();
---             if (show_button)
---             {
---                 r.ImGui_Button("this is a 300-wide button", ImVec2(300, 0));
---             }
---             if (show_tree_nodes)
---             {
---                 bool open = true;
---                 if (r.ImGui_TreeNode("this is a tree node"))
---                 {
---                     if (r.ImGui_TreeNode("another one of those tree node..."))
---                     {
---                         r.ImGui_Text("Some tree contents");
---                         r.ImGui_TreePop();
---                     }
---                     r.ImGui_TreePop();
---                 }
---                 r.ImGui_CollapsingHeader("CollapsingHeader", &open);
---             }
---             if (show_text_wrapped)
---             {
---                 r.ImGui_TextWrapped("This text should automatically wrap on the edge of the work rectangle.");
---             }
---             if (show_columns)
---             {
---                 r.ImGui_Text("Tables:");
---                 if (r.ImGui_BeginTable("table", 4, ImGuiTableFlags_Borders))
---                 {
---                     for (int n = 0; n < 4; n++)
---                     {
---                         r.ImGui_TableNextColumn();
---                         r.ImGui_Text("Width %.2f", r.ImGui_GetContentRegionAvail().x);
---                     }
---                     r.ImGui_EndTable();
---                 }
---                 r.ImGui_Text("Columns:");
---                 r.ImGui_Columns(4);
---                 for (int n = 0; n < 4; n++)
---                 {
---                     r.ImGui_Text("Width %.2f", r.ImGui_GetColumnWidth());
---                     r.ImGui_NextColumn();
---                 }
---                 r.ImGui_Columns(1);
---             }
---             if (show_tab_bar && r.ImGui_BeginTabBar("Hello"))
---             {
---                 if (r.ImGui_BeginTabItem("OneOneOne")) { r.ImGui_EndTabItem(); }
---                 if (r.ImGui_BeginTabItem("TwoTwoTwo")) { r.ImGui_EndTabItem(); }
---                 if (r.ImGui_BeginTabItem("ThreeThreeThree")) { r.ImGui_EndTabItem(); }
---                 if (r.ImGui_BeginTabItem("FourFourFour")) { r.ImGui_EndTabItem(); }
---                 r.ImGui_EndTabBar();
---             }
---             if (show_child)
---             {
---                 r.ImGui_BeginChild("child", ImVec2(0, 0), true);
---                 r.ImGui_EndChild();
---             }
---             r.ImGui_End();
---         }
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Clipping"))
---     {
---         static ImVec2 size(100.0f, 100.0f);
---         static ImVec2 offset(30.0f, 30.0f);
---         r.ImGui_DragFloat2("size", (float*)&size, 0.5f, 1.0f, 200.0f, "%.0f");
---         r.ImGui_TextWrapped("(Click and drag to scroll)");
---
---         for (int n = 0; n < 3; n++)
---         {
---             if (n > 0)
---                 r.ImGui_SameLine();
---             r.ImGui_PushID(n);
---             r.ImGui_BeginGroup(); // Lock X position
---
---             r.ImGui_InvisibleButton("##empty", size);
---             if (r.ImGui_IsItemActive() && r.ImGui_IsMouseDragging(ImGuiMouseButton_Left))
---             {
---                 offset.x += r.ImGui_GetIO().MouseDelta.x;
---                 offset.y += r.ImGui_GetIO().MouseDelta.y;
---             }
---             const ImVec2 p0 = r.ImGui_GetItemRectMin();
---             const ImVec2 p1 = r.ImGui_GetItemRectMax();
---             const char* text_str = "Line 1 hello\nLine 2 clip me!";
---             const ImVec2 text_pos = ImVec2(p0.x + offset.x, p0.y + offset.y);
---             ImDrawList* draw_list = r.ImGui_GetWindowDrawList();
---
---             switch (n)
---             {
---             case 0:
---                 HelpMarker(
---                     "Using r.ImGui_PushClipRect():\n"
---                     "Will alter ImGui hit-testing logic + ImDrawList rendering.\n"
---                     "(use this if you want your clipping rectangle to affect interactions)");
---                 r.ImGui_PushClipRect(p0, p1, true);
---                 draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
---                 draw_list->AddText(text_pos, IM_COL32_WHITE, text_str);
---                 r.ImGui_PopClipRect();
---                 break;
---             case 1:
---                 HelpMarker(
---                     "Using ImDrawList::PushClipRect():\n"
---                     "Will alter ImDrawList rendering only.\n"
---                     "(use this as a shortcut if you are only using ImDrawList calls)");
---                 draw_list->PushClipRect(p0, p1, true);
---                 draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
---                 draw_list->AddText(text_pos, IM_COL32_WHITE, text_str);
---                 draw_list->PopClipRect();
---                 break;
---             case 2:
---                 HelpMarker(
---                     "Using ImDrawList::AddText() with a fine ClipRect:\n"
---                     "Will alter only this specific ImDrawList::AddText() rendering.\n"
---                     "(this is often used internally to avoid altering the clipping rectangle and minimize draw calls)");
---                 ImVec4 clip_rect(p0.x, p0.y, p1.x, p1.y); // AddText() takes a ImVec4* here so let's convert.
---                 draw_list->AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
---                 draw_list->AddText(r.ImGui_GetFont(), r.ImGui_GetFontSize(), text_pos, IM_COL32_WHITE, text_str, NULL, 0.0f, &clip_rect);
---                 break;
---             }
---             r.ImGui_EndGroup();
---             r.ImGui_PopID();
---         }
---
---         r.ImGui_TreePop();
---     }
+  if r.ImGui_TreeNode(ctx, 'Widgets Width') then
+    -- Use SetNextItemWidth() to set the width of a single upcoming item.
+    -- Use PushItemWidth()/PopItemWidth() to set the width of a group of items.
+    -- In real code use you'll probably want to choose width values that are proportional to your font size
+    -- e.g. Using '20.0f * GetFontSize()' as width instead of '200.0f', etc.
+
+    rv,layout.width.show_indented_items = r.ImGui_Checkbox(ctx, 'Show indented items', layout.width.show_indented_items)
+
+    r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(100)')
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Fixed width.')
+    r.ImGui_PushItemWidth(ctx, 100)
+    rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float##1b', layout.width.d)
+    if layout.width.show_indented_items then
+      r.ImGui_Indent(ctx)
+      rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float (indented)##1b', layout.width.d)
+      r.ImGui_Unindent(ctx)
+    end
+    r.ImGui_PopItemWidth(ctx)
+
+    r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(-100)')
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Align to right edge minus 100')
+    r.ImGui_PushItemWidth(ctx, -100)
+    rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float##2a', layout.width.d)
+    if layout.width.show_indented_items then
+      r.ImGui_Indent(ctx)
+      rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float (indented)##2b', layout.width.d)
+      r.ImGui_Unindent(ctx)
+    end
+    r.ImGui_PopItemWidth(ctx)
+
+    r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5f)')
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Half of available width.\n(~ right-cursor_pos)\n(works within a column set)')
+    r.ImGui_PushItemWidth(ctx, ({r.ImGui_GetContentRegionAvail(ctx)})[1] * 0.5)
+    rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float##3a', layout.width.d)
+    if layout.width.show_indented_items then
+      r.ImGui_Indent(ctx)
+      rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float (indented)##3b', layout.width.d)
+      r.ImGui_Unindent(ctx)
+    end
+    r.ImGui_PopItemWidth(ctx)
+
+    r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(-GetContentRegionAvail().x * 0.5f)')
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Align to right edge minus half')
+    r.ImGui_PushItemWidth(ctx, -({r.ImGui_GetContentRegionAvail(ctx)})[1] * 0.5)
+    rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float##4a', layout.width.d)
+    if layout.width.show_indented_items then
+      r.ImGui_Indent(ctx)
+      rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float (indented)##4b', layout.width.d)
+      r.ImGui_Unindent(ctx)
+    end
+    r.ImGui_PopItemWidth(ctx)
+
+    -- Demonstrate using PushItemWidth to surround three items.
+    -- Calling SetNextItemWidth() before each of them would have the same effect.
+    r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(-FLT_MIN)')
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Align to right edge')
+    r.ImGui_PushItemWidth(ctx, -FLT_MIN)
+    rv,layout.width.d = r.ImGui_DragDouble(ctx, '##float5a', layout.width.d)
+    if layout.width.show_indented_items then
+      r.ImGui_Indent(ctx)
+      rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float (indented)##5b', layout.width.d)
+      r.ImGui_Unindent(ctx)
+    end
+    r.ImGui_PopItemWidth(ctx)
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Basic Horizontal Layout') then
+    r.ImGui_TextWrapped(ctx, '(Use r.ImGui_SameLine() to keep adding items to the right of the preceding item)');
+
+    -- Text
+    r.ImGui_Text(ctx, 'Two items: Hello'); r.ImGui_SameLine(ctx)
+    r.ImGui_TextColored(ctx, 0xFFFF00FF, 'Sailor')
+
+    -- Adjust spacing
+    r.ImGui_Text(ctx, 'More spacing: Hello'); r.ImGui_SameLine(ctx, 0, 20)
+    r.ImGui_TextColored(ctx, 0xFFFF00FF, 'Sailor')
+
+    -- Button
+    r.ImGui_AlignTextToFramePadding(ctx)
+    r.ImGui_Text(ctx, 'Normal buttons'); r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'Banana'); r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'Apple'); r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'Corniflower')
+
+    -- Button
+    r.ImGui_Text(ctx, 'Small buttons'); r.ImGui_SameLine(ctx)
+    r.ImGui_SmallButton(ctx, 'Like this one'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'can fit within a text block.')
+
+    -- Aligned to arbitrary position. Easy/cheap column.
+    r.ImGui_Text(ctx, 'Aligned')
+    r.ImGui_SameLine(ctx, 150); r.ImGui_Text(ctx, 'x=150')
+    r.ImGui_SameLine(ctx, 300); r.ImGui_Text(ctx, 'x=300')
+    r.ImGui_Text(ctx, 'Aligned')
+    r.ImGui_SameLine(ctx, 150); r.ImGui_SmallButton(ctx, 'x=150')
+    r.ImGui_SameLine(ctx, 300); r.ImGui_SmallButton(ctx, 'x=300')
+
+    -- Checkbox
+    rv,layout.horizontal.c1 = r.ImGui_Checkbox(ctx, 'My',     layout.horizontal.c1); r.ImGui_SameLine(ctx)
+    rv,layout.horizontal.c2 = r.ImGui_Checkbox(ctx, 'Tailor', layout.horizontal.c2); r.ImGui_SameLine(ctx)
+    rv,layout.horizontal.c3 = r.ImGui_Checkbox(ctx, 'Is',     layout.horizontal.c3); r.ImGui_SameLine(ctx)
+    rv,layout.horizontal.c4 = r.ImGui_Checkbox(ctx, 'Rich',   layout.horizontal.c4)
+
+    -- Various
+    r.ImGui_PushItemWidth(ctx, 80)
+    local items = 'AAAA\31BBBB\31CCCC\31DDDD\31'
+    rv,layout.horizontal.item = r.ImGui_Combo(ctx, 'Combo', layout.horizontal.item, items);   r.ImGui_SameLine(ctx)
+    rv,layout.horizontal.d0 = r.ImGui_SliderDouble(ctx, 'X', layout.horizontal.d0, 0.0, 5.0); r.ImGui_SameLine(ctx)
+    rv,layout.horizontal.d1 = r.ImGui_SliderDouble(ctx, 'Y', layout.horizontal.d1, 0.0, 5.0); r.ImGui_SameLine(ctx)
+    rv,layout.horizontal.d2 = r.ImGui_SliderDouble(ctx, 'Z', layout.horizontal.d2, 0.0, 5.0)
+    r.ImGui_PopItemWidth(ctx)
+
+    r.ImGui_PushItemWidth(ctx, 80)
+    r.ImGui_Text(ctx, 'Lists:')
+    for i,sel in ipairs(layout.horizontal.selection) do
+      if i > 1 then r.ImGui_SameLine(ctx) end
+      r.ImGui_PushID(ctx, i)
+      rv,layout.horizontal.selection[i] = r.ImGui_ListBox(ctx, '', sel, items)
+      r.ImGui_PopID(ctx)
+      --if r.ImGui_IsItemHovered(ctx) then r.ImGui_SetTooltip(ctx, ('ListBox %d hovered'):format(i)) end
+    end
+    r.ImGui_PopItemWidth(ctx)
+
+    -- Dummy
+    local button_sz = { 40, 40 }
+    r.ImGui_Button(ctx, 'A', table.unpack(button_sz)); r.ImGui_SameLine(ctx)
+    r.ImGui_Dummy(ctx, table.unpack(button_sz)); r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx,'B', table.unpack(button_sz))
+
+    -- Manually wrapping
+    -- (we should eventually provide this as an automatic layout feature, but for now you can do it manually)
+    r.ImGui_Text(ctx, 'Manually wrapping:')
+    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[2]
+    local buttons_count = 20
+    local window_visible_x2 = ({r.ImGui_GetWindowPos(ctx)})[1] + ({r.ImGui_GetWindowContentRegionMax(ctx)})[1]
+    for n = 0, buttons_count - 1 do
+      r.ImGui_PushID(ctx, n)
+      r.ImGui_Button(ctx, 'Box', table.unpack(button_sz))
+      local last_button_x2 = r.ImGui_GetItemRectMax(ctx)
+      local next_button_x2 = last_button_x2 + item_spacing_x + button_sz[1] -- Expected position if next button was on same line
+      if n + 1 < buttons_count and next_button_x2 < window_visible_x2 then
+        r.ImGui_SameLine(ctx)
+      end
+      r.ImGui_PopID(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Groups') then
+    demo.HelpMarker(
+      'BeginGroup() basically locks the horizontal position for new line. \z
+       EndGroup() bundles the whole group so that you can use "item" functions such as \z
+       IsItemHovered()/IsItemActive() or SameLine() etc. on the whole group.')
+    r.ImGui_BeginGroup(ctx)
+    r.ImGui_BeginGroup(ctx)
+    r.ImGui_Button(ctx, 'AAA')
+    r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'BBB')
+    r.ImGui_SameLine(ctx)
+    r.ImGui_BeginGroup(ctx)
+    r.ImGui_Button(ctx, 'CCC')
+    r.ImGui_Button(ctx, 'DDD')
+    r.ImGui_EndGroup(ctx)
+    r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'EEE')
+    r.ImGui_EndGroup(ctx)
+    if r.ImGui_IsItemHovered(ctx) then
+      r.ImGui_SetTooltip(ctx, 'First group hovered')
+    end
+
+    -- Capture the group size and create widgets using the same size
+    local size = {r.ImGui_GetItemRectSize(ctx)}
+    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[2]
+
+    r.ImGui_PlotHistogram(ctx, '##values', group_values, 0, nil, 0.0, 1.0, table.unpack(size))
+
+    r.ImGui_Button(ctx, 'ACTION', (size[1] - item_spacing_x) * 0.5, size[2])
+    r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'REACTION', (size[1] - item_spacing_x) * 0.5, size[2])
+    r.ImGui_EndGroup(ctx)
+    r.ImGui_SameLine(ctx)
+
+    r.ImGui_Button(ctx, 'LEVERAGE\nBUZZWORD', table.unpack(size))
+    r.ImGui_SameLine(ctx)
+
+    if r.ImGui_BeginListBox(ctx, 'List', table.unpack(size)) then
+      r.ImGui_Selectable(ctx, 'Selected', true)
+      r.ImGui_Selectable(ctx, 'Not Selected', false)
+      r.ImGui_EndListBox(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Text Baseline Alignment') then
+    r.ImGui_BulletText(ctx, 'Text baseline:')
+    r.ImGui_SameLine(ctx); demo.HelpMarker(
+      'This is testing the vertical alignment that gets applied on text to keep it aligned with widgets. \z
+       Lines only composed of text or "small" widgets use less vertical space than lines with framed widgets.')
+    r.ImGui_Indent(ctx)
+
+    r.ImGui_Text(ctx, 'KO Blahblah'); r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'Some framed item'); r.ImGui_SameLine(ctx)
+    demo.HelpMarker('Baseline of button will look misaligned with text..')
+
+    -- If your line starts with text, call AlignTextToFramePadding() to align text to upcoming widgets.
+    -- (because we don't know what's coming after the Text() statement, we need to move the text baseline
+    -- down by FramePadding.y ahead of time)
+    r.ImGui_AlignTextToFramePadding(ctx)
+    r.ImGui_Text(ctx, 'OK Blahblah'); r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'Some framed item'); r.ImGui_SameLine(ctx)
+    demo.HelpMarker('We call AlignTextToFramePadding() to vertically align the text baseline by +FramePadding.y')
+
+    -- SmallButton() uses the same vertical padding as Text
+    r.ImGui_Button(ctx, 'TEST##1'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'TEST'); r.ImGui_SameLine(ctx)
+    r.ImGui_SmallButton(ctx, 'TEST##2')
+
+    -- If your line starts with text, call AlignTextToFramePadding() to align text to upcoming widgets.
+    r.ImGui_AlignTextToFramePadding(ctx)
+    r.ImGui_Text(ctx, 'Text aligned to framed item'); r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'Item##1'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Item'); r.ImGui_SameLine(ctx)
+    r.ImGui_SmallButton(ctx, 'Item##2'); r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'Item##3')
+
+    r.ImGui_Unindent(ctx)
+
+    r.ImGui_Spacing(ctx)
+
+    r.ImGui_BulletText(ctx, 'Multi-line text:')
+    r.ImGui_Indent(ctx)
+    r.ImGui_Text(ctx, 'One\nTwo\nThree'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Banana')
+
+    r.ImGui_Text(ctx, 'Banana'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'One\nTwo\nThree')
+
+    r.ImGui_Button(ctx, 'HOP##1'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Banana'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Banana')
+
+    r.ImGui_Button(ctx, 'HOP##2'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Banana')
+    r.ImGui_Unindent(ctx)
+
+    r.ImGui_Spacing(ctx)
+
+    r.ImGui_BulletText(ctx, 'Misc items:')
+    r.ImGui_Indent(ctx)
+
+    -- SmallButton() sets FramePadding to zero. Text baseline is aligned to match baseline of previous Button.
+    r.ImGui_Button(ctx, '80x80', 80, 80)
+    r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, '50x50', 50, 50)
+    r.ImGui_SameLine(ctx)
+    r.ImGui_Button(ctx, 'Button()')
+    r.ImGui_SameLine(ctx)
+    r.ImGui_SmallButton(ctx, 'SmallButton()')
+
+    -- Tree
+    local spacing = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[2]
+    r.ImGui_Button(ctx, 'Button##1')
+    r.ImGui_SameLine(ctx, 0.0, spacing)
+    if r.ImGui_TreeNode(ctx, 'Node##1') then
+      -- Placeholder tree data
+      for i = 0, 5 do
+        r.ImGui_BulletText(ctx, ('Item %d..'):format(i))
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    -- Vertically align text node a bit lower so it'll be vertically centered with upcoming widget.
+    -- Otherwise you can use SmallButton() (smaller fit).
+    r.ImGui_AlignTextToFramePadding(ctx)
+
+    -- Common mistake to avoid: if we want to SameLine after TreeNode we need to do it before we add
+    -- other contents below the node.
+    local node_open = r.ImGui_TreeNode(ctx, 'Node##2')
+    r.ImGui_SameLine(ctx, 0.0, spacing); r.ImGui_Button(ctx, 'Button##2')
+    if node_open then
+      -- Placeholder tree data
+      for i = 0, 5 do
+        r.ImGui_BulletText(ctx, ('Item %d..'):format(i))
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
+    -- Bullet
+    r.ImGui_Button(ctx, 'Button##3')
+    r.ImGui_SameLine(ctx, 0.0, spacing)
+    r.ImGui_BulletText(ctx, 'Bullet text')
+
+    r.ImGui_AlignTextToFramePadding(ctx)
+    r.ImGui_BulletText(ctx, 'Node')
+    r.ImGui_SameLine(ctx, 0.0, spacing); r.ImGui_Button(ctx, 'Button##4')
+    r.ImGui_Unindent(ctx)
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Scrolling') then
+    -- Vertical scroll functions
+    demo.HelpMarker('Use SetScrollHereY() or SetScrollFromPosY() to scroll to a given vertical position.')
+
+    rv,layout.scrolling.enable_extra_decorations = r.ImGui_Checkbox(ctx, 'Decoration', layout.scrolling.enable_extra_decorations)
+
+    rv,layout.scrolling.enable_track = r.ImGui_Checkbox(ctx, 'Track', layout.scrolling.enable_track)
+    r.ImGui_PushItemWidth(ctx, 100)
+    r.ImGui_SameLine(ctx, 140)
+    rv,layout.scrolling.track_item = r.ImGui_DragInt(ctx, '##item', layout.scrolling.track_item, 0.25, 0, 99, 'Item = %d')
+    if rv then
+      layout.scrolling.enable_track = true
+    end
+
+    local scroll_to_off = r.ImGui_Button(ctx, 'Scroll Offset')
+    r.ImGui_SameLine(ctx, 140)
+    rv,layout.scrolling.scroll_to_off_px = r.ImGui_DragDouble(ctx, '##off', layout.scrolling.scroll_to_off_px, 1.00, 0, FLT_MAX, '+%.0f px')
+    if rv then
+      scroll_to_off = true
+    end
+
+    local scroll_to_pos = r.ImGui_Button(ctx, 'Scroll To Pos')
+    r.ImGui_SameLine(ctx, 140)
+    rv,layout.scrolling.scroll_to_pos_px = r.ImGui_DragDouble(ctx, '##pos', layout.scrolling.scroll_to_pos_px, 1.00, -10, FLT_MAX, 'X/Y = %.0f px')
+    if rv then
+      scroll_to_pos = true
+    end
+    r.ImGui_PopItemWidth(ctx)
+
+    if scroll_to_off or scroll_to_pos then
+      layout.scrolling.enable_track = false
+    end
+
+    local names = { "Top", "25%", "Center", "75%", "Bottom" }
+    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[2]
+    local child_w = (({r.ImGui_GetContentRegionAvail(ctx)})[1] - 4 * item_spacing_x) / #names
+    local child_flags = layout.scrolling.enable_extra_decorations and r.ImGui_WindowFlags_MenuBar() or r.ImGui_WindowFlags_None()
+    if child_w < 1.0 then
+      child_w = 1.0
+    end
+    r.ImGui_PushID(ctx, '##VerticalScrolling')
+    for i,name in ipairs(names) do
+      if i > 1 then r.ImGui_SameLine(ctx) end
+      r.ImGui_BeginGroup(ctx)
+      r.ImGui_Text(ctx, name)
+
+      local child_is_visible = r.ImGui_BeginChild(ctx, i, child_w, 200.0, true, child_flags)
+      if r.ImGui_BeginMenuBar(ctx) then
+        r.ImGui_Text(ctx, 'abc')
+        r.ImGui_EndMenuBar(ctx)
+      end
+      if scroll_to_off then
+        r.ImGui_SetScrollY(ctx, layout.scrolling.scroll_to_off_px)
+      end
+      if scroll_to_pos then
+        r.ImGui_SetScrollFromPosY(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[2] + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
+      end
+      if child_is_visible then -- Avoid calling SetScrollHereY when running with culled items
+        for item = 0, 99 do
+          if layout.scrolling.enable_track and item == layout.scrolling.track_item then
+            r.ImGui_TextColored(ctx, 0xFFFF00FF, ('Item %d'):format(item))
+            r.ImGui_SetScrollHereY(ctx, (i - 1) * 0.25) -- 0.0f:top, 0.5f:center, 1.0f:bottom
+          else
+            r.ImGui_Text(ctx, ('Item %d'):format(item))
+          end
+        end
+      end
+      local scroll_y = r.ImGui_GetScrollY(ctx)
+      local scroll_max_y = r.ImGui_GetScrollMaxY(ctx)
+      r.ImGui_EndChild(ctx)
+      r.ImGui_Text(ctx, ('%.0f/%.0f'):format(scroll_y, scroll_max_y))
+      r.ImGui_EndGroup(ctx)
+    end
+    r.ImGui_PopID(ctx)
+
+    -- Horizontal scroll functions
+    r.ImGui_Spacing(ctx)
+    demo.HelpMarker(
+      "Use SetScrollHereX() or SetScrollFromPosX() to scroll to a given horizontal position.\n\n\z
+       Because the clipping rectangle of most window hides half worth of WindowPadding on the \z
+       left/right, using SetScrollFromPosX(+1) will usually result in clipped text whereas the \z
+       equivalent SetScrollFromPosY(+1) wouldn't.")
+    r.ImGui_PushID(ctx, '##HorizontalScrolling')
+    local scrollbar_size = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ScrollbarSize())})[2]
+    local window_padding_y = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_WindowPadding())})[3]
+    local child_height = r.ImGui_GetTextLineHeight(ctx) + scrollbar_size + window_padding_y * 2.0
+    local child_flags = r.ImGui_WindowFlags_HorizontalScrollbar()
+    if layout.scrolling.enable_extra_decorations then
+      child_flags = child_flags | r.ImGui_WindowFlags_AlwaysVerticalScrollbar()
+    end
+    for i,name in ipairs(names) do
+      local child_is_visible = r.ImGui_BeginChild(ctx, i, -100, child_height, true, child_flags)
+      if scroll_to_off then
+        r.ImGui_SetScrollX(layout.scrolling.scroll_to_off_px)
+      end
+      if scroll_to_pos then
+        r.ImGui_SetScrollFromPosX(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[1] + scroll_to_pos_px, (i - 1) * 0.25)
+      end
+      if child_is_visible then -- Avoid calling SetScrollHereY when running with culled items
+        for item = 0, 99 do
+          if layout.scrolling.enable_track and item == layout.scrolling.track_item then
+            r.ImGui_TextColored(ctx, 0xFFFF00FF, ('Item %d'):format(item))
+            r.ImGui_SetScrollHereX(ctx, (i - 1) * 0.25) -- 0.0f:left, 0.5f:center, 1.0f:right
+          else
+            r.ImGui_Text(ctx, ('Item %d'):format(item))
+          end
+          r.ImGui_SameLine(ctx)
+        end
+      end
+      local scroll_x = r.ImGui_GetScrollX(ctx)
+      local scroll_max_x = r.ImGui_GetScrollMaxX(ctx)
+      r.ImGui_EndChild(ctx)
+      r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, ('%s\n%.0f/%.0f'):format(name, scroll_x, scroll_max_x))
+      r.ImGui_Spacing(ctx)
+    end
+    r.ImGui_PopID(ctx)
+
+    -- Miscellaneous Horizontal Scrolling Demo
+    demo.HelpMarker(
+      'Horizontal scrolling for a window is enabled via the ImGuiWindowFlags_HorizontalScrollbar flag.\n\n\z
+       You may want to also explicitly specify content width by using SetNextWindowContentWidth() before Begin().')
+    rv,layout.scrolling.lines = r.ImGui_SliderInt(ctx, 'Lines', layout.scrolling.lines, 1, 15)
+    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FrameRounding(), 3.0)
+    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), 2.0, 1.0)
+    local scrolling_child_width = r.ImGui_GetFrameHeightWithSpacing(ctx) * 7 + 30
+    r.ImGui_BeginChild(ctx, 'scrolling', 0, scrolling_child_width, true, r.ImGui_WindowFlags_HorizontalScrollbar())
+    for line = 0, layout.scrolling.lines - 1 do
+      -- Display random stuff. For the sake of this trivial demo we are using basic Button() + SameLine()
+      -- If you want to create your own time line for a real application you may be better off manipulating
+      -- the cursor position yourself, aka using SetCursorPos/SetCursorScreenPos to position the widgets
+      -- yourself. You may also want to use the lower-level ImDrawList API.
+      local num_buttons = 10 + ((line & 1 ~= 0) and line * 9 or line * 3)
+      for n = 0, num_buttons - 1 do
+        if n > 0 then r.ImGui_SameLine(ctx) end
+        r.ImGui_PushID(ctx, n + line * 1000)
+        local label
+        if n % 15 == 0 then
+          label = 'FizzBuzz'
+        elseif n % 3 == 0 then
+          label = 'Fizz'
+        elseif n % 5 == 0 then
+          label = 'Buzz'
+        else
+          label = tostring(n)
+        end
+        local hue = n * 0.05;
+        local button_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.6, 0.6, 1.0)
+        local hovered_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.7, 0.7, 1.0)
+        local active_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.8, 0.8, 1.0)
+        r.ImGui_PushStyleColor(ctx, r.ImGui_Col_Button(), button_color)
+        r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonHovered(), hovered_color)
+        r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonActive(), active_color)
+        r.ImGui_Button(ctx, label, 40.0 + math.sin(line + n) * 20.0, 0.0)
+        r.ImGui_PopStyleColor(ctx, 3)
+        r.ImGui_PopID(ctx)
+      end
+    end
+    local scroll_x = r.ImGui_GetScrollX(ctx)
+    local scroll_max_x = r.ImGui_GetScrollMaxX(ctx)
+    r.ImGui_EndChild(ctx)
+    r.ImGui_PopStyleVar(ctx, 2)
+    local scroll_x_delta = 0.0
+    r.ImGui_SmallButton(ctx, '<<')
+    if r.ImGui_IsItemActive(ctx) then
+      scroll_x_delta = (0 - r.ImGui_GetDeltaTime(ctx)) * 1000.0
+    end
+    r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Scroll from code'); r.ImGui_SameLine(ctx)
+    r.ImGui_SmallButton(ctx, '>>')
+    if r.ImGui_IsItemActive(ctx) then
+      scroll_x_delta = r.ImGui_GetDeltaTime(ctx) * 1000.0
+    end
+    r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, ('%.0f/%.0f'):format(scroll_x, scroll_max_x))
+    if scroll_x_delta ~= 0.0 then
+      -- Demonstrate a trick: you can use Begin to set yourself in the context of another window
+      -- (here we are already out of your child window)
+      r.ImGui_BeginChild(ctx, 'scrolling')
+      r.ImGui_SetScrollX(ctx, r.ImGui_GetScrollX(ctx) + scroll_x_delta)
+      r.ImGui_EndChild(ctx)
+    end
+    r.ImGui_Spacing(ctx)
+
+    rv,layout.scrolling.show_horizontal_contents_size_demo_window =
+      r.ImGui_Checkbox(ctx, 'Show Horizontal contents size demo window',
+      layout.scrolling.show_horizontal_contents_size_demo_window)
+
+    if layout.scrolling.show_horizontal_contents_size_demo_window then
+      if layout.horizontal_window.explicit_content_size then
+        r.ImGui_SetNextWindowContentSize(ctx, layout.horizontal_window.contents_size_x, 0.0)
+      end
+      rv,layout.scrolling.show_horizontal_contents_size_demo_window =
+        r.ImGui_Begin(ctx, 'Horizontal contents size demo window',
+          layout.scrolling.show_horizontal_contents_size_demo_window,
+          layout.horizontal_window.show_h_scrollbar and r.ImGui_WindowFlags_HorizontalScrollbar() or r.ImGui_WindowFlags_None())
+      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 2, 0)
+      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), 2, 0)
+      demo.HelpMarker("Test of different widgets react and impact the work rectangle growing when horizontal scrolling is enabled.\n\nUse 'Metrics->Tools->Show windows rectangles' to visualize rectangles.")
+      rv,layout.horizontal_window.show_h_scrollbar =
+        r.ImGui_Checkbox(ctx, 'H-scrollbar', layout.horizontal_window.show_h_scrollbar)
+      rv,layout.horizontal_window.show_button =
+        r.ImGui_Checkbox(ctx, 'Button', layout.horizontal_window.show_button)             -- Will grow contents size (unless explicitly overwritten)
+      rv,layout.horizontal_window.show_tree_nodes =
+        r.ImGui_Checkbox(ctx, 'Tree nodes', layout.horizontal_window.show_tree_nodes)     -- Will grow contents size and display highlight over full width
+      rv,layout.horizontal_window.show_text_wrapped =
+        r.ImGui_Checkbox(ctx, 'Text wrapped', layout.horizontal_window.show_text_wrapped) -- Will grow and use contents size
+      rv,layout.horizontal_window.show_columns =
+        r.ImGui_Checkbox(ctx, 'Columns', layout.horizontal_window.show_columns)           -- Will use contents size
+      rv,layout.horizontal_window.show_tab_bar =
+        r.ImGui_Checkbox(ctx, 'Tab bar', layout.horizontal_window.show_tab_bar)           -- Will use contents size
+      rv,layout.horizontal_window.show_child =
+        r.ImGui_Checkbox(ctx, 'Child', layout.horizontal_window.show_child)               -- Will grow and use contents size
+      rv,layout.horizontal_window.explicit_content_size =
+        r.ImGui_Checkbox(ctx, 'Explicit content size', layout.horizontal_window.explicit_content_size)
+      r.ImGui_Text(ctx, ('Scroll %.1f/%.1f %.1f/%.1f'):format(r.ImGui_GetScrollX(ctx), r.ImGui_GetScrollMaxX(ctx), r.ImGui_GetScrollY(ctx), r.ImGui_GetScrollMaxY(ctx)))
+      if layout.horizontal_window.explicit_content_size then
+        r.ImGui_SameLine(ctx)
+        r.ImGui_SetNextItemWidth(ctx, 100)
+        rv,layout.horizontal_window.contents_size_x =
+          r.ImGui_DragDouble(ctx, '##csx', layout.horizontal_window.contents_size_x)
+        local x, y = r.ImGui_GetCursorScreenPos(ctx)
+        local draw_list = r.ImGui_GetWindowDrawList(ctx)
+        r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + 10, y + 10, 0xFFFFFFFF)
+        r.ImGui_DrawList_AddRectFilled(draw_list, x + layout.horizontal_window.contents_size_x - 10, y, x + layout.horizontal_window.contents_size_x, y + 10, 0xFFFFFFFF)
+        r.ImGui_Dummy(ctx, 0, 10)
+      end
+      r.ImGui_PopStyleVar(ctx, 2)
+      r.ImGui_Separator(ctx)
+      if layout.horizontal_window.show_button then
+        r.ImGui_Button(ctx, 'this is a 300-wide button', 300, 0)
+      end
+      if layout.horizontal_window.show_tree_nodes then
+        local open = true
+        if r.ImGui_TreeNode(ctx, 'this is a tree node') then
+          if r.ImGui_TreeNode(ctx, 'another one of those tree node...') then
+            r.ImGui_Text(ctx, 'Some tree contents')
+            r.ImGui_TreePop(ctx)
+          end
+          r.ImGui_TreePop(ctx)
+        end
+        r.ImGui_CollapsingHeader(ctx, 'CollapsingHeader', open)
+      end
+      if layout.horizontal_window.show_text_wrapped then
+        r.ImGui_TextWrapped(ctx, 'This text should automatically wrap on the edge of the work rectangle.')
+      end
+      if layout.horizontal_window.show_columns then
+        r.ImGui_Text(ctx, 'Tables:')
+        if r.ImGui_BeginTable(ctx, 'table', 4, r.ImGui_TableFlags_Borders()) then
+          for n = 0, 3 do
+            r.ImGui_TableNextColumn(ctx)
+            r.ImGui_Text(ctx, ('Width %.2f'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+          end
+          r.ImGui_EndTable(ctx)
+        end
+        -- r.ImGui_Text(ctx, 'Columns:')
+        -- r.ImGui_Columns(ctx, 4)
+        -- for n = 0, 3 do
+        --   r.ImGui_Text(ctx, ('Width %.2f'):format(r.ImGui_GetColumnWidth()))
+        --   r.ImGui_NextColumn(ctx)
+        -- end
+        -- r.ImGui_Columns(ctx, 1)
+      end
+      if layout.horizontal_window.show_tab_bar and r.ImGui_BeginTabBar(ctx, 'Hello') then
+        if r.ImGui_BeginTabItem(ctx, 'OneOneOne') then r.ImGui_EndTabItem(ctx) end
+        if r.ImGui_BeginTabItem(ctx, 'TwoTwoTwo') then r.ImGui_EndTabItem(ctx) end
+        if r.ImGui_BeginTabItem(ctx, 'ThreeThreeThree') then r.ImGui_EndTabItem(ctx) end
+        if r.ImGui_BeginTabItem(ctx, 'FourFourFour') then r.ImGui_EndTabItem(ctx) end
+        r.ImGui_EndTabBar(ctx)
+      end
+      if layout.horizontal_window.show_child then
+        r.ImGui_BeginChild(ctx, 'child', 0, 0, true)
+        r.ImGui_EndChild(ctx)
+      end
+      r.ImGui_End(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Clipping') then
+    rv,layout.clipping.size[1],layout.clipping.size[2] =
+      r.ImGui_DragDouble2(ctx, 'size', layout.clipping.size[1], layout.clipping.size[2],
+      0.5, 1.0, 200.0, "%.0f")
+    r.ImGui_TextWrapped(ctx, '(Click and drag to scroll)')
+
+    for n = 0, 2 do
+      if n > 0 then r.ImGui_SameLine(ctx) end
+      r.ImGui_PushID(ctx, n)
+      r.ImGui_BeginGroup(ctx) -- Lock X position
+
+      r.ImGui_InvisibleButton(ctx, '##empty', table.unpack(layout.clipping.size))
+      if r.ImGui_IsItemActive(ctx) and r.ImGui_IsMouseDragging(ctx, r.ImGui_MouseButton_Left()) then
+        local mouse_delta = {r.ImGui_GetMouseDelta(ctx)}
+        layout.clipping.offset[1] = layout.clipping.offset[1] + mouse_delta[1]
+        layout.clipping.offset[2] = layout.clipping.offset[2] + mouse_delta[2]
+      end
+      local p0 = {r.ImGui_GetItemRectMin(ctx)}
+      local p1 = {r.ImGui_GetItemRectMax(ctx)}
+      local text_str = "Line 1 hello\nLine 2 clip me!"
+      local text_pos = { p0[1] + layout.clipping.offset[1], p0[2] + layout.clipping.offset[2] }
+
+      local draw_list = r.ImGui_GetWindowDrawList(ctx)
+      if n == 0 then
+        demo.HelpMarker(
+          'Using r.ImGui_PushClipRect():\n\z
+           Will alter ImGui hit-testing logic + ImDrawList rendering.\n\z
+           (use this if you want your clipping rectangle to affect interactions)')
+        r.ImGui_PushClipRect(ctx, p0[1], p0[2], p1[1], p1[2], true)
+        r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
+        r.ImGui_DrawList_AddText(draw_list, text_pos[1], text_pos[2], 0xffffffff, text_str)
+        r.ImGui_PopClipRect(ctx)
+      elseif n == 1 then
+        demo.HelpMarker(
+          'Using ImDrawList::PushClipRect():\n\z
+           Will alter ImDrawList rendering only.\n\z
+           (use this as a shortcut if you are only using ImDrawList calls)')
+        r.ImGui_DrawList_PushClipRect(draw_list, p0[1], p0[2], p1[1], p1[2], true)
+        r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
+        r.ImGui_DrawList_AddText(draw_list, text_pos[1], text_pos[2], 0xffffffff, text_str)
+        r.ImGui_DrawList_PopClipRect(draw_list)
+      -- TODO
+      -- elseif n == 2 then
+      --   demo.HelpMarker(
+      --     'Using ImDrawList::AddText() with a fine ClipRect:\n\z
+      --      Will alter only this specific ImDrawList::AddText() rendering.\n\z
+      --      (this is often used internally to avoid altering the clipping rectangle and minimize draw calls)')
+      --   local clip_rect = { p0[1], p0[2], p1[1], p1[2] }
+      --   r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
+      --   r.ImGui_DrawList_AddTextEx(draw_list, r.ImGui_GetFont(ctx), r.ImGui_GetFontSize(ctx),
+      --     text_pos[1], text_pos[2], 0xffffffff, text_str, nil, 0.0, table.unpack(clip_rect))
+      end
+      r.ImGui_EndGroup(ctx)
+      r.ImGui_PopID(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
 end
---
+
 -- static void ShowDemoWindowPopups()
 -- {
 --     if (!r.ImGui_CollapsingHeader("Popups & Modal windows"))

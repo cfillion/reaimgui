@@ -19,19 +19,37 @@ DEFINE_API(bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
 // IMGUI_API bool          IsAnyMouseDown();                                                   // is any mouse button held?
 // IMGUI_API ImVec2        GetMousePos();                                                      // shortcut to ImGui::GetIO().MousePos provided by user, to be consistent with other calls
 // IMGUI_API ImVec2        GetMousePosOnOpeningCurrentPopup();                                 // retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to avoid user backing that value themselves)
-// IMGUI_API bool          IsMouseDragging(ImGuiMouseButton button, float lock_threshold = -1.0f);         // is mouse dragging? (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold)
+
+DEFINE_API(bool, IsMouseDragging, (ImGui_Context*,ctx)
+(int,button)(double*,API_RO(lock_threshold)),
+R"(Is mouse dragging? (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
+
+Default values: lock_threshold = -1.0)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::IsMouseDragging(button, valueOr(API_RO(lock_threshold), -1.0));
+});
+
+DEFINE_API(void, GetMouseDelta, (ImGui_Context*,ctx)
+(double*,API_W(x))(double*,API_W(y)),
+"Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.",
+{
+  Context::check(ctx)->enterFrame();
+  const ImVec2 &delta { ImGui::GetIO().MouseDelta };
+  *API_W(x) = delta.x, *API_W(y) = delta.y;
+});
 
 DEFINE_API(void, GetMouseDragDelta, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y))
-(int*,API_RO(button))(double*,API_RO(lockThreshold)),
+(int*,API_RO(button))(double*,API_RO(lock_threshold)),
 R"(Return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0f until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold).
 
-Default values: button = ImGui_MouseButton_Left, lockThreshold = -1.0)",
+Default values: button = ImGui_MouseButton_Left, lock_threshold = -1.0)",
 {
   Context::check(ctx)->enterFrame();
   const ImVec2 &delta {
     ImGui::GetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left),
-      valueOr(API_RO(lockThreshold), -1.0))
+      valueOr(API_RO(lock_threshold), -1.0))
   };
   *API_W(x) = delta.x, *API_W(y) = delta.y;
 });
