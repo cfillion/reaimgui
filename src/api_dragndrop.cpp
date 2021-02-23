@@ -32,7 +32,7 @@ Default values: cond = ImGui_Cond_Always)",
   if(!isUserType(type))
     return false;
 
-  return ImGui::SetDragDropPayload(type, data, data ? strlen(data) + 1 : 0,
+  return ImGui::SetDragDropPayload(type, data, data ? strlen(data) : 0,
     valueOr(API_RO(cond), ImGuiCond_Always));
 });
 
@@ -69,14 +69,17 @@ Default values: flags = ImGui_DragDropFlags_None)",
   if(!payload)
     return false;
 
-  const char *strData { static_cast<const char *>(payload->Data) };
-  if(strData[payload->DataSize] != '\0')
-    return false; // payload somehow is not a null terminated string
-
-  if(payload->DataSize > API_WBIG_SZ(payload))
-    realloc_cmd_ptr(&API_WBIG(payload), &API_WBIG_SZ(payload), payload->DataSize);
-
-  snprintf(API_WBIG(payload), API_WBIG_SZ(payload), "%s", strData);
+  int newSize {};
+  if(payload->DataSize > API_WBIG_SZ(payload) &&
+      realloc_cmd_ptr(&API_WBIG(payload), &newSize, payload->DataSize)) {
+    // output buffer is no longer null terminated!
+    std::memcpy(API_WBIG(payload), payload->Data, newSize);
+  }
+  else {
+    const int limit { std::min(API_WBIG_SZ(payload) - 1, payload->DataSize) };
+    std::memcpy(API_WBIG(payload), payload->Data, limit);
+    API_WBIG(payload)[limit] = '\0';
+  }
 
   return true;
 });

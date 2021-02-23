@@ -46,13 +46,15 @@ using ImGui_Context = Context; // user-facing alias
 
 #define NO_ARGS ()
 
-#define API_RO(var)      var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
-#define API_RW(var)      var##InOut      // read/write
-#define API_W(var)       var##Out        // write
+#define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
+#define API_RW(var)       var##InOut      // read/write
+#define API_W(var)        var##Out        // write
 // Not using varInOutOptional because REAPER refuses to give them as null
-#define API_RWO(var)     var##InOptional // read/write, optional/nullable
-#define API_WBIG(var)    var##OutNeedBig    // write, resizable (realloc_cmd_ptr)
-#define API_WBIG_SZ(var) var##OutNeedBig_sz // size of previous API_BIG buffer
+#define API_RWO(var)      var##InOptional // read/write, optional/nullable
+#define API_RWBIG(var)    var##InOutNeedBig    // read/write, resizable (realloc_cmd_ptr)
+#define API_RWBIG_SZ(var) var##InOutNeedBig_sz // size of previous API_RWBIG buffer
+#define API_WBIG(var)     var##OutNeedBig
+#define API_WBIG_SZ(var)  var##OutNeedBig_sz
 
 template<typename T, typename Y>
 inline T valueOr(const T *ptr, const Y fallback)

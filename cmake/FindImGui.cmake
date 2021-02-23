@@ -26,6 +26,7 @@ add_library(imgui
   ${ImGui_INCLUDE_DIR}/imgui_draw.cpp
   ${ImGui_INCLUDE_DIR}/imgui_tables.cpp
   ${ImGui_INCLUDE_DIR}/imgui_widgets.cpp
+  ${ImGui_INCLUDE_DIR}/misc/cpp/imgui_stdlib.cpp
 )
 
 target_compile_features(imgui PRIVATE cxx_std_17)

@@ -1,14 +1,21 @@
 #include "api_helper.hpp"
 
+#include <imgui/misc/cpp/imgui_stdlib.h>
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
 #include <reaper_plugin_secrets.h>   // reaper_array
 
-static int inputTextCallback(ImGuiInputTextCallbackData *data)
+static void copyToBuffer(const std::string &value, char *buf, const size_t bufSize)
 {
-  if(data->EventFlag == ImGuiInputTextFlags_CallbackResize)
-    realloc_cmd_ptr(&data->Buf, &data->BufSize, data->BufSize);
-
-  return 0;
+  int newSize {};
+  if(value.size() >= bufSize && realloc_cmd_ptr(&buf, &newSize, value.size())) {
+    // the buffer is no longer null-terminated after using realloc_cmd_ptr!
+    std::memcpy(buf, value.c_str(), newSize);
+  }
+  else {
+    const size_t limit { std::min(bufSize - 1, value.size()) };
+    std::memcpy(buf, value.c_str(), limit);
+    buf[limit] = '\0';
+  }
 }
 
 static void sanitizeInputTextFlags(ImGuiInputTextFlags &flags)
@@ -32,7 +39,7 @@ static void sanitizeSliderFlags(ImGuiSliderFlags &flags)
 
 // Widgets: Input with Keyboard
 DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
-(const char*,label)(char*,API_WBIG(buf))(int,API_WBIG_SZ(buf))
+(const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags)),
 "Default values: flags = ImGui_InputTextFlags_None",
 {
@@ -40,33 +47,36 @@ DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
-  flags |= ImGuiInputTextFlags_CallbackResize;
 
-  return ImGui::InputText(label, API_WBIG(buf), API_WBIG_SZ(buf),
-    flags, &inputTextCallback, nullptr);
+  std::string value { API_RWBIG(buf) };
+  const bool rv = ImGui::InputText(label, &value, flags, nullptr, nullptr);
+  copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
+  return rv;
 });
 
 DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
-(const char*,label)(char*,API_WBIG(buf))(int,API_WBIG_SZ(buf))
+(const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (double*,API_RO(width))(double*,API_RO(height))
 (int*,API_RO(flags)),
-"Default values: width = 0, height = 0, flags = ImGui_InputTextFlags_None",
+"Default values: width = 0.0, height = 0.0, flags = ImGui_InputTextFlags_None",
 {
   Context::check(ctx)->enterFrame();
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
-  flags |= ImGuiInputTextFlags_CallbackResize;
 
-  return ImGui::InputTextMultiline(label, API_WBIG(buf), API_WBIG_SZ(buf),
+  std::string value { API_RWBIG(buf) };
+  const bool rv = ImGui::InputTextMultiline(label, &value,
     ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)),
     valueOr(API_RO(flags), ImGuiInputTextFlags_None),
-    &inputTextCallback, nullptr);
+    nullptr, nullptr);
+  copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
+  return rv;
 });
 
 DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 (const char*,label)(const char*,hint)
-(char*,API_WBIG(buf))(int,API_WBIG_SZ(buf))
+(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags)),
 "Default values: flags = ImGui_InputTextFlags_None",
 {
@@ -74,10 +84,11 @@ DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
-  flags |= ImGuiInputTextFlags_CallbackResize;
 
-  return ImGui::InputTextWithHint(label, hint, API_WBIG(buf), API_WBIG_SZ(buf),
-    flags, &inputTextCallback, nullptr);
+  std::string value { API_RWBIG(buf) };
+  const bool rv = ImGui::InputTextWithHint(label, hint, &value, flags, nullptr, nullptr);
+  copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
+  return rv;
 });
 
 DEFINE_API(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
