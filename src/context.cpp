@@ -6,52 +6,10 @@
 #include <cassert>
 #include <reaper_plugin_functions.h>
 #include <reaper_plugin_secrets.h>
-#include <unordered_set>
-
-struct Heartbeat {
-  Heartbeat()
-  {
-    plugin_register("timer", reinterpret_cast<void *>(&Context::heartbeat));
-  }
-
-  ~Heartbeat()
-  {
-    plugin_register("-timer", reinterpret_cast<void *>(&Context::heartbeat));
-  }
-};
-
-static std::unordered_set<Context *> g_ctx;
-
-bool Context::exists(Context *win)
-{
-  return g_ctx.count(win) > 0;
-}
-
-size_t Context::count()
-{
-  return g_ctx.size();
-}
-
-void Context::heartbeat()
-{
-  auto it = g_ctx.begin();
-
-  while(it != g_ctx.end()) {
-    Context *ctx = *it++;
-
-    if(ctx->m_closeReq)
-      ctx->m_closeReq = false;
-
-    if(ctx->m_inFrame)
-      ctx->endFrame(true);
-    else
-      delete ctx;
-  }
-}
 
 Context *Context::check(Context *ctx)
 {
-  if(exists(ctx))
+  if(Resource::exists(ctx))
     return ctx;
 
   char message[255];
@@ -65,19 +23,11 @@ Context::Context(const char *title,
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_imgui { nullptr, &ImGui::DestroyContext }
 {
-  static std::weak_ptr<Heartbeat> g_heartbeat;
-
-  if(g_heartbeat.expired())
-    g_heartbeat = m_heartbeat = std::make_shared<Heartbeat>();
-  else
-    m_heartbeat = g_heartbeat.lock();
-
   setupImGui();
 
   const RECT rect { x, y, x + w, y + h };
   m_window = std::make_unique<Window>(title, rect, this);
   AttachWindowTopmostButton(m_window->nativeHandle());
-  g_ctx.emplace(this);
 }
 
 void Context::setupImGui()
@@ -128,8 +78,17 @@ Context::~Context()
 
   if(m_inFrame)
     endFrame(false);
+}
 
-  g_ctx.erase(this);
+void Context::heartbeat()
+{
+  if(m_closeReq)
+    m_closeReq = false;
+
+  if(m_inFrame)
+    endFrame(true);
+  else
+    delete this;
 }
 
 void Context::beginFrame()

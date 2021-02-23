@@ -86,8 +86,11 @@ DEFINE_ENUM(MouseButton_Left, "");
 DEFINE_ENUM(MouseButton_Right, "");
 DEFINE_ENUM(MouseButton_Middle, "");
 
-// typedef int ImGuiMouseCursor;       // -> enum ImGuiMouseCursor_     // Enum: A mouse cursor identifier
-// typedef int ImGuiSortDirection;     // -> enum ImGuiSortDirection_   // Enum: A sorting direction (ascending or descending)
+// ImGuiMouseCursor
+// Enum: A sorting direction (ascending or descending)
+DEFINE_ENUM(SortDirection_None,       "");
+DEFINE_ENUM(SortDirection_Ascending,  "Ascending = 0->9, A->Z etc.");
+DEFINE_ENUM(SortDirection_Descending, "Descending = 9->0, Z->A etc.");
 
 // ImGuiStyleVar
 // Enum: A variable identifier for styling
@@ -116,7 +119,22 @@ DEFINE_ENUM(StyleVar_TabRounding,         "Radius of upper corners of a tab. Set
 DEFINE_ENUM(StyleVar_ButtonTextAlign,     "Alignment of button text when button is larger than text. Defaults to (0.5f, 0.5f) (centered).");
 DEFINE_ENUM(StyleVar_SelectableTextAlign, "Alignment of selectable text. Defaults to (0.0f, 0.0f) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.");
 
-// typedef int ImGuiTableBgTarget;     // -> enum ImGuiTableBgTarget_   // Enum: A color target for TableSetBgColor()
+// ImGuiTableBgTarget
+DEFINE_ENUM(TableBgTarget_None, R"(Enum: A color target for TableSetBgColor()
+
+Background colors are rendering in 3 layers:
+ - Layer 0: draw with RowBg0 color if set, otherwise draw with ColumnBg0 if set.
+ - Layer 1: draw with RowBg1 color if set, otherwise draw with ColumnBg1 if set.
+ - Layer 2: draw with CellBg color if set.
+
+The purpose of the two row/columns layers is to let you decide if a background color changes should override or blend with the existing color.
+When using ImGuiTableFlags_RowBg on the table, each row has the RowBg0 color automatically set for odd/even rows.
+If you set the color of RowBg0 target, your color will override the existing RowBg0 color.
+If you set the color of RowBg1 or ColumnBg1 target, your color will blend over the RowBg0 color.)");
+DEFINE_ENUM(TableBgTarget_RowBg0, "Set row background color 0 (generally used for background, automatically set when ImGuiTableFlags_RowBg is used)");
+DEFINE_ENUM(TableBgTarget_RowBg1, "Set row background color 1 (generally used for selection marking)");
+DEFINE_ENUM(TableBgTarget_CellBg, "Set cell background color (top-most color)");
+
 // typedef int ImDrawCornerFlags;      // -> enum ImDrawCornerFlags_    // Flags: for ImDrawList::AddRect(), AddRectFilled() etc.
 // typedef int ImDrawListFlags;        // -> enum ImDrawListFlags_      // Flags: for ImDrawList
 // typedef int ImFontAtlasFlags;       // -> enum ImFontAtlasFlags_     // Flags: for ImFontAtlas build
@@ -339,8 +357,36 @@ DEFINE_ENUM(TableFlags_ScrollY,                    "Enable vertical scrolling. R
 DEFINE_ENUM(TableFlags_SortMulti,                  "Hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).");
 DEFINE_ENUM(TableFlags_SortTristate,               "Allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).");
 
-// typedef int ImGuiTableColumnFlags;  // -> enum ImGuiTableColumnFlags_// Flags: For TableSetupColumn()
-// typedef int ImGuiTableRowFlags;     // -> enum ImGuiTableRowFlags_   // Flags: For TableNextRow()
+// ImGuiTableColumnFlags
+// Flags: For TableSetupColumn()
+DEFINE_ENUM(TableColumnFlags_None,                 "");
+// Input configuration flags
+DEFINE_ENUM(TableColumnFlags_DefaultHide,          "Default as a hidden/disabled column.");
+DEFINE_ENUM(TableColumnFlags_DefaultSort,          "Default as a sorting column.");
+DEFINE_ENUM(TableColumnFlags_WidthStretch,         "Column will stretch. Preferable with horizontal scrolling disabled (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).");
+DEFINE_ENUM(TableColumnFlags_WidthFixed,           "Column will not stretch. Preferable with horizontal scrolling enabled (default if table sizing policy is _SizingFixedFit and table is resizable).");
+DEFINE_ENUM(TableColumnFlags_NoResize,             "Disable manual resizing.");
+DEFINE_ENUM(TableColumnFlags_NoReorder,            "Disable manual reordering this column, this will also prevent other columns from crossing over this column.");
+DEFINE_ENUM(TableColumnFlags_NoHide,               "Disable ability to hide/disable this column.");
+DEFINE_ENUM(TableColumnFlags_NoClip,               "Disable clipping for this column (all NoClip columns will render in a same draw command).");
+DEFINE_ENUM(TableColumnFlags_NoSort,               "Disable ability to sort on this field (even if ImGui_TableFlags_Sortable is set on the table).");
+DEFINE_ENUM(TableColumnFlags_NoSortAscending,      "Disable ability to sort in the ascending direction.");
+DEFINE_ENUM(TableColumnFlags_NoSortDescending,     "Disable ability to sort in the descending direction.");
+DEFINE_ENUM(TableColumnFlags_NoHeaderWidth,        "Disable header text width contribution to automatic column width.");
+DEFINE_ENUM(TableColumnFlags_PreferSortAscending,  "Make the initial sort direction Ascending when first sorting on this column (default).");
+DEFINE_ENUM(TableColumnFlags_PreferSortDescending, "Make the initial sort direction Descending when first sorting on this column.");
+DEFINE_ENUM(TableColumnFlags_IndentEnable,         "Use current Indent value when entering cell (default for column 0).");
+DEFINE_ENUM(TableColumnFlags_IndentDisable,        "Ignore current Indent value when entering cell (default for columns > 0). Indentation changes _within_ the cell will still be honored.");
+// Output status flags, read-only via TableGetColumnFlags()
+DEFINE_ENUM(TableColumnFlags_IsEnabled,            "Status: is enabled == not hidden by user/api (referred to as \"Hide\" in _DefaultHide and _NoHide) flags.");
+DEFINE_ENUM(TableColumnFlags_IsVisible,            "Status: is visible == is enabled AND not clipped by scrolling.");
+DEFINE_ENUM(TableColumnFlags_IsSorted,             "Status: is currently part of the sort specs");
+DEFINE_ENUM(TableColumnFlags_IsHovered,            "Status: is hovered by mouse");
+
+// ImGuiTableRowFlags
+// Flags: For TableNextRow()
+DEFINE_ENUM(TableRowFlags_None,    "");
+DEFINE_ENUM(TableRowFlags_Headers, "Identify header row (set default background color + width of its contents accounted different for auto column width)");
 
 // ImGuiTreeNodeFlags
 // Flags for TreeNode(), TreeNodeEx(), CollapsingHeader()

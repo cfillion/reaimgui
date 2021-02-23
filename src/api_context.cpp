@@ -2,16 +2,11 @@
 
 #include "window.hpp"
 
-constexpr size_t MAX_INSTANCES { 99 };
-
 DEFINE_API(ImGui_Context*, CreateContext,
 (const char*, title)(int, x)(int, y)(int, w)(int, h),
 R"(Create a new Dear ImGui context and OS window. The context will remain active as long as it is used every timer cycle.)",
 {
-  if(Context::count() >= MAX_INSTANCES)
-    throw reascript_error { "exceeded maximum limit" };
-
-  return new Context(title, x, y, w, h);
+  return new Context { title, x, y, w, h };
 });
 
 DEFINE_API(void, DestroyContext, (ImGui_Context*, ctx),
@@ -98,11 +93,4 @@ DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
 {
   Context::check(ctx)->enterFrame();
   ImGui::ShowMetricsWindow(API_RWO(open));
-});
-
-// TODO: move somewhere else? (not context-related)
-DEFINE_API(double, FLT_MIN, NO_ARGS,
-"",
-{
-  return FLT_MIN;
 });

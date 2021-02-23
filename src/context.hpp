@@ -2,10 +2,10 @@
 #define REAIMGUI_CONTEXT_HPP
 
 #include "color.hpp"
+#include "resource.hpp"
 
 #include <array>
 #include <chrono>
-#include <memory>
 
 #include <imgui/imgui.h>
 
@@ -16,16 +16,12 @@
 #endif
 
 class Window;
-struct Heartbeat;
 struct ImFontAtlas;
 struct ImGuiContext;
 
-class Context {
+class Context : public Resource {
 public:
-  static bool exists(Context *);
   static Context *check(Context *);
-  static size_t count();
-  static void heartbeat();
 
   Context(const char *title, int x, int y, int w, int h);
   Context(const Context &) = delete;
@@ -47,6 +43,9 @@ public:
 
   HCURSOR cursor() const { return m_cursor; }
   Window *window() const { return m_window.get(); }
+
+protected:
+  void heartbeat() override;
 
 private:
   enum ButtonState {
@@ -73,7 +72,6 @@ private:
 
   std::unique_ptr<ImGuiContext, void(*)(ImGuiContext*)> m_imgui;
   std::unique_ptr<Window> m_window; // must be after m_imgui for correct destruction
-  std::shared_ptr<Heartbeat> m_heartbeat;
   std::shared_ptr<ImFontAtlas> m_fontAtlas;
 };
 

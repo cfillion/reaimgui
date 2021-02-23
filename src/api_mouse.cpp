@@ -6,7 +6,15 @@
 // - Dragging operations are only reported after mouse has moved a certain distance away from the initial clicking position (see 'lock_threshold' and 'io.MouseDraggingThreshold')
 // IMGUI_API bool          IsMouseDown(ImGuiMouseButton button);                               // is mouse button held?
 // IMGUI_API bool          IsMouseClicked(ImGuiMouseButton button, bool repeat = false);       // did mouse button clicked? (went from !Down to Down)
-// IMGUI_API bool          IsMouseReleased(ImGuiMouseButton button);                           // did mouse button released? (went from Down to !Down)
+
+DEFINE_API(bool, IsMouseReleased, (ImGui_Context*,ctx)
+(int,button),
+"Did mouse button released? (went from Down to !Down)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::IsMouseReleased(button);
+});
+
 DEFINE_API(bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
 (int,button),
 "Did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)",

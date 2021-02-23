@@ -47,9 +47,15 @@ demo = {
   },
 }
 
+widgets = {}
+layout  = {}
+popups  = {}
+tables  = {}
+
 local r = reaper
+local FLT_MIN, FLT_MAX = 1.17549e-38, 3.40282e+38
+
 local ctx = r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 720)
-local FLT_MIN = r.ImGui_FLT_MIN()
 
 function demo.loop()
   if r.ImGui_IsCloseRequested(ctx) then
@@ -417,7 +423,7 @@ function demo.ShowDemoWindow(open)
   demo.ShowDemoWindowWidgets()
   demo.ShowDemoWindowLayout()
   demo.ShowDemoWindowPopups()
-  -- demo.ShowDemoWindowTables()
+  demo.ShowDemoWindowTables()
   -- demo.ShowDemoWindowMisc()
 
   -- End of ShowDemoWindow()
@@ -3376,1539 +3382,1582 @@ function demo.ShowDemoWindowPopups()
   end
 end
 
--- // Dummy data structure that we use for the Table demo.
--- // (pre-C++11 doesn't allow us to instantiate ImVector<MyItem> template if this structure if defined inside the demo function)
--- namespace
--- {
--- // We are passing our own identifier to TableSetupColumn() to facilitate identifying columns in the sorting code.
--- // This identifier will be passed down into ImGuiTableSortSpec::ColumnUserID.
--- // But it is possible to omit the user id parameter of TableSetupColumn() and just use the column index instead! (ImGuiTableSortSpec::ColumnIndex)
--- // If you don't use sorting, you will generally never care about giving column an ID!
--- enum MyItemColumnID
--- {
---     MyItemColumnID_ID,
---     MyItemColumnID_Name,
---     MyItemColumnID_Action,
---     MyItemColumnID_Quantity,
---     MyItemColumnID_Description
--- };
---
--- struct MyItem
--- {
---     int         ID;
---     const char* Name;
---     int         Quantity;
---
---     // We have a problem which is affecting _only this demo_ and should not affect your code:
---     // As we don't rely on std:: or other third-party library to compile dear imgui, we only have reliable access to qsort(),
---     // however qsort doesn't allow passing user data to comparing function.
---     // As a workaround, we are storing the sort specs in a static/global for the comparing function to access.
---     // In your own use case you would probably pass the sort specs to your sorting/comparing functions directly and not use a global.
---     // We could technically call r.ImGui_TableGetSortSpecs() in CompareWithSortSpecs(), but considering that this function is called
---     // very often by the sorting algorithm it would be a little wasteful.
---     static const ImGuiTableSortSpecs* s_current_sort_specs;
---
---     // Compare function to be used by qsort()
---     static int IMGUI_CDECL CompareWithSortSpecs(const void* lhs, const void* rhs)
---     {
---         const MyItem* a = (const MyItem*)lhs;
---         const MyItem* b = (const MyItem*)rhs;
---         for (int n = 0; n < s_current_sort_specs->SpecsCount; n++)
---         {
---             // Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
---             // We could also choose to identify columns based on their index (sort_spec->ColumnIndex), which is simpler!
---             const ImGuiTableColumnSortSpecs* sort_spec = &s_current_sort_specs->Specs[n];
---             int delta = 0;
---             switch (sort_spec->ColumnUserID)
---             {
---             case MyItemColumnID_ID:             delta = (a->ID - b->ID);                break;
---             case MyItemColumnID_Name:           delta = (strcmp(a->Name, b->Name));     break;
---             case MyItemColumnID_Quantity:       delta = (a->Quantity - b->Quantity);    break;
---             case MyItemColumnID_Description:    delta = (strcmp(a->Name, b->Name));     break;
---             default: IM_ASSERT(0); break;
---             }
---             if (delta > 0)
---                 return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? +1 : -1;
---             if (delta < 0)
---                 return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : +1;
---         }
---
---         // qsort() is instable so always return a way to differenciate items.
---         // Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
---         return (a->ID - b->ID);
---     }
--- };
--- const ImGuiTableSortSpecs* MyItem::s_current_sort_specs = NULL;
--- }
---
--- // Make the UI compact because there are so many fields
--- static void PushStyleCompact()
--- {
---     ImGuiStyle& style = r.ImGui_GetStyle();
---     r.ImGui_PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(style.FramePadding.x, (float)(int)(style.FramePadding.y * 0.60f)));
---     r.ImGui_PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, (float)(int)(style.ItemSpacing.y * 0.60f)));
--- }
---
--- static void PopStyleCompact()
--- {
---     r.ImGui_PopStyleVar(2);
--- }
---
--- // Show a combo box with a choice of sizing policies
--- static void EditTableSizingFlags(ImGuiTableFlags* p_flags)
--- {
---     struct EnumDesc { ImGuiTableFlags Value; const char* Name; const char* Tooltip; };
---     static const EnumDesc policies[] =
---     {
---         { ImGuiTableFlags_None,               "Default",                            "Use default sizing policy:\n- ImGuiTableFlags_SizingFixedFit if ScrollX is on or if host window has ImGuiWindowFlags_AlwaysAutoResize.\n- ImGuiTableFlags_SizingStretchSame otherwise." },
---         { ImGuiTableFlags_SizingFixedFit,     "ImGuiTableFlags_SizingFixedFit",     "Columns default to _WidthFixed (if resizable) or _WidthAuto (if not resizable), matching contents width." },
---         { ImGuiTableFlags_SizingFixedSame,    "ImGuiTableFlags_SizingFixedSame",    "Columns are all the same width, matching the maximum contents width.\nImplicitly disable ImGuiTableFlags_Resizable and enable ImGuiTableFlags_NoKeepColumnsVisible." },
---         { ImGuiTableFlags_SizingStretchProp,  "ImGuiTableFlags_SizingStretchProp",  "Columns default to _WidthStretch with weights proportional to their widths." },
---         { ImGuiTableFlags_SizingStretchSame,  "ImGuiTableFlags_SizingStretchSame",  "Columns default to _WidthStretch with same weights." }
---     };
---     int idx;
---     for (idx = 0; idx < IM_ARRAYSIZE(policies); idx++)
---         if (policies[idx].Value == (*p_flags & ImGuiTableFlags_SizingMask_))
---             break;
---     const char* preview_text = (idx < IM_ARRAYSIZE(policies)) ? policies[idx].Name + (idx > 0 ? strlen("ImGuiTableFlags") : 0) : "";
---     if (r.ImGui_BeginCombo("Sizing Policy", preview_text))
---     {
---         for (int n = 0; n < IM_ARRAYSIZE(policies); n++)
---             if (r.ImGui_Selectable(policies[n].Name, idx == n))
---                 *p_flags = (*p_flags & ~ImGuiTableFlags_SizingMask_) | policies[n].Value;
---         r.ImGui_EndCombo();
---     }
---     r.ImGui_SameLine();
---     r.ImGui_TextDisabled("(?)");
---     if (r.ImGui_IsItemHovered())
---     {
---         r.ImGui_BeginTooltip();
---         r.ImGui_PushTextWrapPos(r.ImGui_GetFontSize() * 50.0f);
---         for (int m = 0; m < IM_ARRAYSIZE(policies); m++)
---         {
---             r.ImGui_Separator();
---             r.ImGui_Text("%s:", policies[m].Name);
---             r.ImGui_Separator();
---             r.ImGui_SetCursorPosX(r.ImGui_GetCursorPosX() + r.ImGui_GetStyle().IndentSpacing * 0.5f);
---             r.ImGui_TextUnformatted(policies[m].Tooltip);
---         }
---         r.ImGui_PopTextWrapPos();
---         r.ImGui_EndTooltip();
---     }
--- }
---
--- static void EditTableColumnsFlags(ImGuiTableColumnFlags* p_flags)
--- {
---     r.ImGui_CheckboxFlags("_DefaultHide", p_flags, ImGuiTableColumnFlags_DefaultHide);
---     r.ImGui_CheckboxFlags("_DefaultSort", p_flags, ImGuiTableColumnFlags_DefaultSort);
---     if (r.ImGui_CheckboxFlags("_WidthStretch", p_flags, ImGuiTableColumnFlags_WidthStretch))
---         *p_flags &= ~(ImGuiTableColumnFlags_WidthMask_ ^ ImGuiTableColumnFlags_WidthStretch);
---     if (r.ImGui_CheckboxFlags("_WidthFixed", p_flags, ImGuiTableColumnFlags_WidthFixed))
---         *p_flags &= ~(ImGuiTableColumnFlags_WidthMask_ ^ ImGuiTableColumnFlags_WidthFixed);
---     r.ImGui_CheckboxFlags("_NoResize", p_flags, ImGuiTableColumnFlags_NoResize);
---     r.ImGui_CheckboxFlags("_NoReorder", p_flags, ImGuiTableColumnFlags_NoReorder);
---     r.ImGui_CheckboxFlags("_NoHide", p_flags, ImGuiTableColumnFlags_NoHide);
---     r.ImGui_CheckboxFlags("_NoClip", p_flags, ImGuiTableColumnFlags_NoClip);
---     r.ImGui_CheckboxFlags("_NoSort", p_flags, ImGuiTableColumnFlags_NoSort);
---     r.ImGui_CheckboxFlags("_NoSortAscending", p_flags, ImGuiTableColumnFlags_NoSortAscending);
---     r.ImGui_CheckboxFlags("_NoSortDescending", p_flags, ImGuiTableColumnFlags_NoSortDescending);
---     r.ImGui_CheckboxFlags("_NoHeaderWidth", p_flags, ImGuiTableColumnFlags_NoHeaderWidth);
---     r.ImGui_CheckboxFlags("_PreferSortAscending", p_flags, ImGuiTableColumnFlags_PreferSortAscending);
---     r.ImGui_CheckboxFlags("_PreferSortDescending", p_flags, ImGuiTableColumnFlags_PreferSortDescending);
---     r.ImGui_CheckboxFlags("_IndentEnable", p_flags, ImGuiTableColumnFlags_IndentEnable); r.ImGui_SameLine(); HelpMarker("Default for column 0");
---     r.ImGui_CheckboxFlags("_IndentDisable", p_flags, ImGuiTableColumnFlags_IndentDisable); r.ImGui_SameLine(); HelpMarker("Default for column >0");
--- }
---
--- static void ShowTableColumnsStatusFlags(ImGuiTableColumnFlags flags)
--- {
---     r.ImGui_CheckboxFlags("_IsEnabled", &flags, ImGuiTableColumnFlags_IsEnabled);
---     r.ImGui_CheckboxFlags("_IsVisible", &flags, ImGuiTableColumnFlags_IsVisible);
---     r.ImGui_CheckboxFlags("_IsSorted", &flags, ImGuiTableColumnFlags_IsSorted);
---     r.ImGui_CheckboxFlags("_IsHovered", &flags, ImGuiTableColumnFlags_IsHovered);
--- }
---
--- static void ShowDemoWindowTables()
--- {
---     //r.ImGui_SetNextItemOpen(true, ImGuiCond_Once);
---     if (!r.ImGui_CollapsingHeader("Tables & Columns"))
---         return;
---
---     // Using those as a base value to create width/height that are factor of the size of our font
---     const float TEXT_BASE_WIDTH = r.ImGui_CalcTextSize("A").x;
---     const float TEXT_BASE_HEIGHT = r.ImGui_GetTextLineHeightWithSpacing();
---
---     r.ImGui_PushID("Tables");
---
---     int open_action = -1;
---     if (r.ImGui_Button("Open all"))
---         open_action = 1;
---     r.ImGui_SameLine();
---     if (r.ImGui_Button("Close all"))
---         open_action = 0;
---     r.ImGui_SameLine();
---
---     // Options
---     static bool disable_indent = false;
---     r.ImGui_Checkbox("Disable tree indentation", &disable_indent);
---     r.ImGui_SameLine();
---     HelpMarker("Disable the indenting of tree nodes so demo tables can use the full window width.");
---     r.ImGui_Separator();
---     if (disable_indent)
---         r.ImGui_PushStyleVar(ImGuiStyleVar_IndentSpacing, 0.0f);
---
---     // About Styling of tables
---     // Most settings are configured on a per-table basis via the flags passed to BeginTable() and TableSetupColumns APIs.
---     // There are however a few settings that a shared and part of the ImGuiStyle structure:
---     //   style.CellPadding                          // Padding within each cell
---     //   style.Colors[ImGuiCol_TableHeaderBg]       // Table header background
---     //   style.Colors[ImGuiCol_TableBorderStrong]   // Table outer and header borders
---     //   style.Colors[ImGuiCol_TableBorderLight]    // Table inner borders
---     //   style.Colors[ImGuiCol_TableRowBg]          // Table row background when ImGuiTableFlags_RowBg is enabled (even rows)
---     //   style.Colors[ImGuiCol_TableRowBgAlt]       // Table row background when ImGuiTableFlags_RowBg is enabled (odds rows)
---
---     // Demos
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Basic"))
---     {
---         // Here we will showcase three different ways to output a table.
---         // They are very simple variations of a same thing!
---
---         // [Method 1] Using TableNextRow() to create a new row, and TableSetColumnIndex() to select the column.
---         // In many situations, this is the most flexible and easy to use pattern.
---         HelpMarker("Using TableNextRow() + calling TableSetColumnIndex() _before_ each cell, in a loop.");
---         if (r.ImGui_BeginTable("table1", 3))
---         {
---             for (int row = 0; row < 4; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("Row %d Column %d", row, column);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---
---         // [Method 2] Using TableNextColumn() called multiple times, instead of using a for loop + TableSetColumnIndex().
---         // This is generally more convenient when you have code manually submitting the contents of each columns.
---         HelpMarker("Using TableNextRow() + calling TableNextColumn() _before_ each cell, manually.");
---         if (r.ImGui_BeginTable("table2", 3))
---         {
---             for (int row = 0; row < 4; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 r.ImGui_TableNextColumn();
---                 r.ImGui_Text("Row %d", row);
---                 r.ImGui_TableNextColumn();
---                 r.ImGui_Text("Some contents");
---                 r.ImGui_TableNextColumn();
---                 r.ImGui_Text("123.456");
---             }
---             r.ImGui_EndTable();
---         }
---
---         // [Method 3] We call TableNextColumn() _before_ each cell. We never call TableNextRow(),
---         // as TableNextColumn() will automatically wrap around and create new roes as needed.
---         // This is generally more convenient when your cells all contains the same type of data.
---         HelpMarker(
---             "Only using TableNextColumn(), which tends to be convenient for tables where every cells contains the same type of contents.\n"
---             "This is also more similar to the old NextColumn() function of the Columns API, and provided to facilitate the Columns->Tables API transition.");
---         if (r.ImGui_BeginTable("table3", 3))
---         {
---             for (int item = 0; item < 14; item++)
---             {
---                 r.ImGui_TableNextColumn();
---                 r.ImGui_Text("Item %d", item);
---             }
---             r.ImGui_EndTable();
---         }
---
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Borders, background"))
---     {
---         // Expose a few Borders related flags interactively
---         enum ContentsType { CT_Text, CT_FillButton };
---         static ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
---         static bool display_headers = false;
---         static int contents_type = CT_Text;
---
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_RowBg", &flags, ImGuiTableFlags_RowBg);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Borders", &flags, ImGuiTableFlags_Borders);
---         r.ImGui_SameLine(); HelpMarker("ImGuiTableFlags_Borders\n = ImGuiTableFlags_BordersInnerV\n | ImGuiTableFlags_BordersOuterV\n | ImGuiTableFlags_BordersInnerV\n | ImGuiTableFlags_BordersOuterH");
---         r.ImGui_Indent();
---
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersH", &flags, ImGuiTableFlags_BordersH);
---         r.ImGui_Indent();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersOuterH", &flags, ImGuiTableFlags_BordersOuterH);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersInnerH", &flags, ImGuiTableFlags_BordersInnerH);
---         r.ImGui_Unindent();
---
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersV", &flags, ImGuiTableFlags_BordersV);
---         r.ImGui_Indent();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersOuterV", &flags, ImGuiTableFlags_BordersOuterV);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersInnerV", &flags, ImGuiTableFlags_BordersInnerV);
---         r.ImGui_Unindent();
---
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersOuter", &flags, ImGuiTableFlags_BordersOuter);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersInner", &flags, ImGuiTableFlags_BordersInner);
---         r.ImGui_Unindent();
---
---         r.ImGui_AlignTextToFramePadding(); r.ImGui_Text("Cell contents:");
---         r.ImGui_SameLine(); r.ImGui_RadioButton("Text", &contents_type, CT_Text);
---         r.ImGui_SameLine(); r.ImGui_RadioButton("FillButton", &contents_type, CT_FillButton);
---         r.ImGui_Checkbox("Display headers", &display_headers);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody); r.ImGui_SameLine(); HelpMarker("Disable vertical borders in columns Body (borders will always appears in Headers");
---         PopStyleCompact();
---
---         if (r.ImGui_BeginTable("table1", 3, flags))
---         {
---             // Display headers so we can inspect their interaction with borders.
---             // (Headers are not the main purpose of this section of the demo, so we are not elaborating on them too much. See other sections for details)
---             if (display_headers)
---             {
---                 r.ImGui_TableSetupColumn("One");
---                 r.ImGui_TableSetupColumn("Two");
---                 r.ImGui_TableSetupColumn("Three");
---                 r.ImGui_TableHeadersRow();
---             }
---
---             for (int row = 0; row < 5; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     char buf[32];
---                     sprintf(buf, "Hello %d,%d", column, row);
---                     if (contents_type == CT_Text)
---                         r.ImGui_TextUnformatted(buf);
---                     else if (contents_type)
---                         r.ImGui_Button(buf, ImVec2(-FLT_MIN, 0.0f));
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Resizable, stretch"))
---     {
---         // By default, if we don't enable ScrollX the sizing policy for each columns is "Stretch"
---         // Each columns maintain a sizing weight, and they will occupy all available width.
---         static ImGuiTableFlags flags = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody;
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersV", &flags, ImGuiTableFlags_BordersV);
---         r.ImGui_SameLine(); HelpMarker("Using the _Resizable flag automatically enables the _BordersInnerV flag as well, this is why the resize borders are still showing when unchecking this.");
---         PopStyleCompact();
---
---         if (r.ImGui_BeginTable("table1", 3, flags))
---         {
---             for (int row = 0; row < 5; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("Hello %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Resizable, fixed"))
---     {
---         // Here we use ImGuiTableFlags_SizingFixedFit (even though _ScrollX is not set)
---         // So columns will adopt the "Fixed" policy and will maintain a fixed width regardless of the whole available width (unless table is small)
---         // If there is not enough available width to fit all columns, they will however be resized down.
---         // FIXME-TABLE: Providing a stretch-on-init would make sense especially for tables which don't have saved settings
---         HelpMarker(
---             "Using _Resizable + _SizingFixedFit flags.\n"
---             "Fixed-width columns generally makes more sense if you want to use horizontal scrolling.\n\n"
---             "Double-click a column border to auto-fit the column to its contents.");
---         PushStyleCompact();
---         static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_ContextMenuInBody;
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoHostExtendX", &flags, ImGuiTableFlags_NoHostExtendX);
---         PopStyleCompact();
---
---         if (r.ImGui_BeginTable("table1", 3, flags))
---         {
---             for (int row = 0; row < 5; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("Hello %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Resizable, mixed"))
---     {
---         HelpMarker(
---             "Using TableSetupColumn() to alter resizing policy on a per-column basis.\n\n"
---             "When combining Fixed and Stretch columns, generally you only want one, maybe two trailing columns to use _WidthStretch.");
---         static ImGuiTableFlags flags = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
---
---         if (r.ImGui_BeginTable("table1", 3, flags))
---         {
---             r.ImGui_TableSetupColumn("AAA", ImGuiTableColumnFlags_WidthFixed);
---             r.ImGui_TableSetupColumn("BBB", ImGuiTableColumnFlags_WidthFixed);
---             r.ImGui_TableSetupColumn("CCC", ImGuiTableColumnFlags_WidthStretch);
---             r.ImGui_TableHeadersRow();
---             for (int row = 0; row < 5; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("%s %d,%d", (column == 2) ? "Stretch" : "Fixed", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         if (r.ImGui_BeginTable("table2", 6, flags))
---         {
---             r.ImGui_TableSetupColumn("AAA", ImGuiTableColumnFlags_WidthFixed);
---             r.ImGui_TableSetupColumn("BBB", ImGuiTableColumnFlags_WidthFixed);
---             r.ImGui_TableSetupColumn("CCC", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_DefaultHide);
---             r.ImGui_TableSetupColumn("DDD", ImGuiTableColumnFlags_WidthStretch);
---             r.ImGui_TableSetupColumn("EEE", ImGuiTableColumnFlags_WidthStretch);
---             r.ImGui_TableSetupColumn("FFF", ImGuiTableColumnFlags_WidthStretch | ImGuiTableColumnFlags_DefaultHide);
---             r.ImGui_TableHeadersRow();
---             for (int row = 0; row < 5; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 6; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("%s %d,%d", (column >= 3) ? "Stretch" : "Fixed", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Reorderable, hideable, with headers"))
---     {
---         HelpMarker(
---             "Click and drag column headers to reorder columns.\n\n"
---             "Right-click on a header to open a context menu.");
---         static ImGuiTableFlags flags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV;
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Reorderable", &flags, ImGuiTableFlags_Reorderable);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Hideable", &flags, ImGuiTableFlags_Hideable);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoBordersInBodyUntilResize", &flags, ImGuiTableFlags_NoBordersInBodyUntilResize); r.ImGui_SameLine(); HelpMarker("Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers)");
---         PopStyleCompact();
---
---         if (r.ImGui_BeginTable("table1", 3, flags))
---         {
---             // Submit columns name with TableSetupColumn() and call TableHeadersRow() to create a row with a header in each column.
---             // (Later we will show how TableSetupColumn() has other uses, optional flags, sizing weight etc.)
---             r.ImGui_TableSetupColumn("One");
---             r.ImGui_TableSetupColumn("Two");
---             r.ImGui_TableSetupColumn("Three");
---             r.ImGui_TableHeadersRow();
---             for (int row = 0; row < 6; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("Hello %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---
---         // Use outer_size.x == 0.0f instead of default to make the table as tight as possible (only valid when no scrolling and no stretch column)
---         if (r.ImGui_BeginTable("table2", 3, flags | ImGuiTableFlags_SizingFixedFit, ImVec2(0.0f, 0.0f)))
---         {
---             r.ImGui_TableSetupColumn("One");
---             r.ImGui_TableSetupColumn("Two");
---             r.ImGui_TableSetupColumn("Three");
---             r.ImGui_TableHeadersRow();
---             for (int row = 0; row < 6; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("Fixed %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Padding"))
---     {
---         // First example: showcase use of padding flags and effect of BorderOuterV/BorderInnerV on X padding.
---         // We don't expose BorderOuterH/BorderInnerH here because they have no effect on X padding.
---         HelpMarker(
---             "We often want outer padding activated when any using features which makes the edges of a column visible:\n"
---             "e.g.:\n"
---             "- BorderOuterV\n"
---             "- any form of row selection\n"
---             "Because of this, activating BorderOuterV sets the default to PadOuterX. Using PadOuterX or NoPadOuterX you can override the default.\n\n"
---             "Actual padding values are using style.CellPadding.\n\n"
---             "In this demo we don't show horizontal borders to emphasis how they don't affect default horizontal padding.");
---
---         static ImGuiTableFlags flags1 = ImGuiTableFlags_BordersV;
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_PadOuterX", &flags1, ImGuiTableFlags_PadOuterX);
---         r.ImGui_SameLine(); HelpMarker("Enable outer-most padding (default if ImGuiTableFlags_BordersOuterV is set)");
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoPadOuterX", &flags1, ImGuiTableFlags_NoPadOuterX);
---         r.ImGui_SameLine(); HelpMarker("Disable outer-most padding (default if ImGuiTableFlags_BordersOuterV is not set)");
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoPadInnerX", &flags1, ImGuiTableFlags_NoPadInnerX);
---         r.ImGui_SameLine(); HelpMarker("Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off)");
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersOuterV", &flags1, ImGuiTableFlags_BordersOuterV);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersInnerV", &flags1, ImGuiTableFlags_BordersInnerV);
---         static bool show_headers = false;
---         r.ImGui_Checkbox("show_headers", &show_headers);
---         PopStyleCompact();
---
---         if (r.ImGui_BeginTable("table_padding", 3, flags1))
---         {
---             if (show_headers)
---             {
---                 r.ImGui_TableSetupColumn("One");
---                 r.ImGui_TableSetupColumn("Two");
---                 r.ImGui_TableSetupColumn("Three");
---                 r.ImGui_TableHeadersRow();
---             }
---
---             for (int row = 0; row < 5; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     if (row == 0)
---                     {
---                         r.ImGui_Text("Avail %.2f", r.ImGui_GetContentRegionAvail().x);
---                     }
---                     else
---                     {
---                         char buf[32];
---                         sprintf(buf, "Hello %d,%d", column, row);
---                         r.ImGui_Button(buf, ImVec2(-FLT_MIN, 0.0f));
---                     }
---                     //if (r.ImGui_TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered)
---                     //    r.ImGui_TableSetBgColor(ImGuiTableBgTarget_CellBg, IM_COL32(0, 100, 0, 255));
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---
---         // Second example: set style.CellPadding to (0.0) or a custom value.
---         // FIXME-TABLE: Vertical border effectively not displayed the same way as horizontal one...
---         HelpMarker("Setting style.CellPadding to (0,0) or a custom value.");
---         static ImGuiTableFlags flags2 = ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
---         static ImVec2 cell_padding(0.0f, 0.0f);
---         static bool show_widget_frame_bg = true;
---
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Borders", &flags2, ImGuiTableFlags_Borders);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersH", &flags2, ImGuiTableFlags_BordersH);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersV", &flags2, ImGuiTableFlags_BordersV);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersInner", &flags2, ImGuiTableFlags_BordersInner);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersOuter", &flags2, ImGuiTableFlags_BordersOuter);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_RowBg", &flags2, ImGuiTableFlags_RowBg);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Resizable", &flags2, ImGuiTableFlags_Resizable);
---         r.ImGui_Checkbox("show_widget_frame_bg", &show_widget_frame_bg);
---         r.ImGui_SliderFloat2("CellPadding", &cell_padding.x, 0.0f, 10.0f, "%.0f");
---         PopStyleCompact();
---
---         r.ImGui_PushStyleVar(ImGuiStyleVar_CellPadding, cell_padding);
---         if (r.ImGui_BeginTable("table_padding_2", 3, flags2))
---         {
---             static char text_bufs[3 * 5][16]; // Mini text storage for 3x5 cells
---             static bool init = true;
---             if (!show_widget_frame_bg)
---                 r.ImGui_PushStyleColor(ImGuiCol_FrameBg, 0);
---             for (int cell = 0; cell < 3 * 5; cell++)
---             {
---                 r.ImGui_TableNextColumn();
---                 if (init)
---                     strcpy(text_bufs[cell], "edit me");
---                 r.ImGui_SetNextItemWidth(-FLT_MIN);
---                 r.ImGui_PushID(cell);
---                 r.ImGui_InputText("##cell", text_bufs[cell], IM_ARRAYSIZE(text_bufs[cell]));
---                 r.ImGui_PopID();
---             }
---             if (!show_widget_frame_bg)
---                 r.ImGui_PopStyleColor();
---             init = false;
---             r.ImGui_EndTable();
---         }
---         r.ImGui_PopStyleVar();
---
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Sizing policies"))
---     {
---         static ImGuiTableFlags flags1 = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_RowBg | ImGuiTableFlags_ContextMenuInBody;
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Resizable", &flags1, ImGuiTableFlags_Resizable);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoHostExtendX", &flags1, ImGuiTableFlags_NoHostExtendX);
---         PopStyleCompact();
---
---         static ImGuiTableFlags sizing_policy_flags[4] = { ImGuiTableFlags_SizingFixedFit, ImGuiTableFlags_SizingFixedSame, ImGuiTableFlags_SizingStretchProp, ImGuiTableFlags_SizingStretchSame };
---         for (int table_n = 0; table_n < 4; table_n++)
---         {
---             r.ImGui_PushID(table_n);
---             r.ImGui_SetNextItemWidth(TEXT_BASE_WIDTH * 30);
---             EditTableSizingFlags(&sizing_policy_flags[table_n]);
---
---             // To make it easier to understand the different sizing policy,
---             // For each policy: we display one table where the columns have equal contents width, and one where the columns have different contents width.
---             if (r.ImGui_BeginTable("table1", 3, sizing_policy_flags[table_n] | flags1))
---             {
---                 for (int row = 0; row < 3; row++)
---                 {
---                     r.ImGui_TableNextRow();
---                     r.ImGui_TableNextColumn(); r.ImGui_Text("Oh dear");
---                     r.ImGui_TableNextColumn(); r.ImGui_Text("Oh dear");
---                     r.ImGui_TableNextColumn(); r.ImGui_Text("Oh dear");
---                 }
---                 r.ImGui_EndTable();
---             }
---             if (r.ImGui_BeginTable("table2", 3, sizing_policy_flags[table_n] | flags1))
---             {
---                 for (int row = 0; row < 3; row++)
---                 {
---                     r.ImGui_TableNextRow();
---                     r.ImGui_TableNextColumn(); r.ImGui_Text("AAAA");
---                     r.ImGui_TableNextColumn(); r.ImGui_Text("BBBBBBBB");
---                     r.ImGui_TableNextColumn(); r.ImGui_Text("CCCCCCCCCCCC");
---                 }
---                 r.ImGui_EndTable();
---             }
---             r.ImGui_PopID();
---         }
---
---         r.ImGui_Spacing();
---         r.ImGui_TextUnformatted("Advanced");
---         r.ImGui_SameLine();
---         HelpMarker("This section allows you to interact and see the effect of various sizing policies depending on whether Scroll is enabled and the contents of your columns.");
---
---         enum ContentsType { CT_ShowWidth, CT_ShortText, CT_LongText, CT_Button, CT_FillButton, CT_InputText };
---         static ImGuiTableFlags flags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable;
---         static int contents_type = CT_ShowWidth;
---         static int column_count = 3;
---
---         PushStyleCompact();
---         r.ImGui_PushID("Advanced");
---         r.ImGui_PushItemWidth(TEXT_BASE_WIDTH * 30);
---         EditTableSizingFlags(&flags);
---         r.ImGui_Combo("Contents", &contents_type, "Show width\0Short Text\0Long Text\0Button\0Fill Button\0InputText\0");
---         if (contents_type == CT_FillButton)
---         {
---             r.ImGui_SameLine();
---             HelpMarker("Be mindful that using right-alignment (e.g. size.x = -FLT_MIN) creates a feedback loop where contents width can feed into auto-column width can feed into contents width.");
---         }
---         r.ImGui_DragInt("Columns", &column_count, 0.1f, 1, 64, "%d", ImGuiSliderFlags_AlwaysClamp);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_PreciseWidths", &flags, ImGuiTableFlags_PreciseWidths);
---         r.ImGui_SameLine(); HelpMarker("Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.");
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_ScrollX", &flags, ImGuiTableFlags_ScrollX);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_ScrollY", &flags, ImGuiTableFlags_ScrollY);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoClip", &flags, ImGuiTableFlags_NoClip);
---         r.ImGui_PopItemWidth();
---         r.ImGui_PopID();
---         PopStyleCompact();
---
---         if (r.ImGui_BeginTable("table2", column_count, flags, ImVec2(0.0f, TEXT_BASE_HEIGHT * 7)))
---         {
---             for (int cell = 0; cell < 10 * column_count; cell++)
---             {
---                 r.ImGui_TableNextColumn();
---                 int column = r.ImGui_TableGetColumnIndex();
---                 int row = r.ImGui_TableGetRowIndex();
---
---                 r.ImGui_PushID(cell);
---                 char label[32];
---                 static char text_buf[32] = "";
---                 sprintf(label, "Hello %d,%d", column, row);
---                 switch (contents_type)
---                 {
---                 case CT_ShortText:  r.ImGui_TextUnformatted(label); break;
---                 case CT_LongText:   r.ImGui_Text("Some %s text %d,%d\nOver two lines..", column == 0 ? "long" : "longeeer", column, row); break;
---                 case CT_ShowWidth:  r.ImGui_Text("W: %.1f", r.ImGui_GetContentRegionAvail().x); break;
---                 case CT_Button:     r.ImGui_Button(label); break;
---                 case CT_FillButton: r.ImGui_Button(label, ImVec2(-FLT_MIN, 0.0f)); break;
---                 case CT_InputText:  r.ImGui_SetNextItemWidth(-FLT_MIN); r.ImGui_InputText("##", text_buf, IM_ARRAYSIZE(text_buf)); break;
---                 }
---                 r.ImGui_PopID();
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Vertical scrolling, with clipping"))
---     {
---         HelpMarker("Here we activate ScrollY, which will create a child window container to allow hosting scrollable contents.\n\nWe also demonstrate using ImGuiListClipper to virtualize the submission of many items.");
---         static ImGuiTableFlags flags = ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
---
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_ScrollY", &flags, ImGuiTableFlags_ScrollY);
---         PopStyleCompact();
---
---         // When using ScrollX or ScrollY we need to specify a size for our table container!
---         // Otherwise by default the table will fit all available space, like a BeginChild() call.
---         ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 8);
---         if (r.ImGui_BeginTable("table_scrolly", 3, flags, outer_size))
---         {
---             r.ImGui_TableSetupScrollFreeze(0, 1); // Make top row always visible
---             r.ImGui_TableSetupColumn("One", ImGuiTableColumnFlags_None);
---             r.ImGui_TableSetupColumn("Two", ImGuiTableColumnFlags_None);
---             r.ImGui_TableSetupColumn("Three", ImGuiTableColumnFlags_None);
---             r.ImGui_TableHeadersRow();
---
---             // Demonstrate using clipper for large vertical lists
---             ImGuiListClipper clipper;
---             clipper.Begin(1000);
---             while (clipper.Step())
---             {
---                 for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
---                 {
---                     r.ImGui_TableNextRow();
---                     for (int column = 0; column < 3; column++)
---                     {
---                         r.ImGui_TableSetColumnIndex(column);
---                         r.ImGui_Text("Hello %d,%d", column, row);
---                     }
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Horizontal scrolling"))
---     {
---         HelpMarker(
---             "When ScrollX is enabled, the default sizing policy becomes ImGuiTableFlags_SizingFixedFit, "
---             "as automatically stretching columns doesn't make much sense with horizontal scrolling.\n\n"
---             "Also note that as of the current version, you will almost always want to enable ScrollY along with ScrollX,"
---             "because the container window won't automatically extend vertically to fix contents (this may be improved in future versions).");
---         static ImGuiTableFlags flags = ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable;
---         static int freeze_cols = 1;
---         static int freeze_rows = 1;
---
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_ScrollX", &flags, ImGuiTableFlags_ScrollX);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_ScrollY", &flags, ImGuiTableFlags_ScrollY);
---         r.ImGui_SetNextItemWidth(r.ImGui_GetFrameHeight());
---         r.ImGui_DragInt("freeze_cols", &freeze_cols, 0.2f, 0, 9, NULL, ImGuiSliderFlags_NoInput);
---         r.ImGui_SetNextItemWidth(r.ImGui_GetFrameHeight());
---         r.ImGui_DragInt("freeze_rows", &freeze_rows, 0.2f, 0, 9, NULL, ImGuiSliderFlags_NoInput);
---         PopStyleCompact();
---
---         // When using ScrollX or ScrollY we need to specify a size for our table container!
---         // Otherwise by default the table will fit all available space, like a BeginChild() call.
---         ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 8);
---         if (r.ImGui_BeginTable("table_scrollx", 7, flags, outer_size))
---         {
---             r.ImGui_TableSetupScrollFreeze(freeze_cols, freeze_rows);
---             r.ImGui_TableSetupColumn("Line #", ImGuiTableColumnFlags_NoHide); // Make the first column not hideable to match our use of TableSetupScrollFreeze()
---             r.ImGui_TableSetupColumn("One");
---             r.ImGui_TableSetupColumn("Two");
---             r.ImGui_TableSetupColumn("Three");
---             r.ImGui_TableSetupColumn("Four");
---             r.ImGui_TableSetupColumn("Five");
---             r.ImGui_TableSetupColumn("Six");
---             r.ImGui_TableHeadersRow();
---             for (int row = 0; row < 20; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 7; column++)
---                 {
---                     // Both TableNextColumn() and TableSetColumnIndex() return true when a column is visible or performing width measurement.
---                     // Because here we know that:
---                     // - A) all our columns are contributing the same to row height
---                     // - B) column 0 is always visible,
---                     // We only always submit this one column and can skip others.
---                     // More advanced per-column clipping behaviors may benefit from polling the status flags via TableGetColumnFlags().
---                     if (!r.ImGui_TableSetColumnIndex(column) && column > 0)
---                         continue;
---                     if (column == 0)
---                         r.ImGui_Text("Line %d", row);
---                     else
---                         r.ImGui_Text("Hello world %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---
---         r.ImGui_Spacing();
---         r.ImGui_TextUnformatted("Stretch + ScrollX");
---         r.ImGui_SameLine();
---         HelpMarker(
---             "Showcase using Stretch columns + ScrollX together: "
---             "this is rather unusual and only makes sense when specifying an 'inner_width' for the table!\n"
---             "Without an explicit value, inner_width is == outer_size.x and therefore using Stretch columns + ScrollX together doesn't make sense.");
---         static ImGuiTableFlags flags2 = ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_RowBg | ImGuiTableFlags_ContextMenuInBody;
---         static float inner_width = 1000.0f;
---         PushStyleCompact();
---         r.ImGui_PushID("flags3");
---         r.ImGui_PushItemWidth(TEXT_BASE_WIDTH * 30);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_ScrollX", &flags2, ImGuiTableFlags_ScrollX);
---         r.ImGui_DragFloat("inner_width", &inner_width, 1.0f, 0.0f, FLT_MAX, "%.1f");
---         r.ImGui_PopItemWidth();
---         r.ImGui_PopID();
---         PopStyleCompact();
---         if (r.ImGui_BeginTable("table2", 7, flags2, outer_size, inner_width))
---         {
---             for (int cell = 0; cell < 20 * 7; cell++)
---             {
---                 r.ImGui_TableNextColumn();
---                 r.ImGui_Text("Hello world %d,%d", r.ImGui_TableGetColumnIndex(), r.ImGui_TableGetRowIndex());
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Columns flags"))
---     {
---         // Create a first table just to show all the options/flags we want to make visible in our example!
---         const int column_count = 3;
---         const char* column_names[column_count] = { "One", "Two", "Three" };
---         static ImGuiTableColumnFlags column_flags[column_count] = { ImGuiTableColumnFlags_DefaultSort, ImGuiTableColumnFlags_None, ImGuiTableColumnFlags_DefaultHide };
---         static ImGuiTableColumnFlags column_flags_out[column_count] = { 0, 0, 0 }; // Output from TableGetColumnFlags()
---
---         if (r.ImGui_BeginTable("table_columns_flags_checkboxes", column_count, ImGuiTableFlags_None))
---         {
---             PushStyleCompact();
---             for (int column = 0; column < column_count; column++)
---             {
---                 r.ImGui_TableNextColumn();
---                 r.ImGui_PushID(column);
---                 r.ImGui_AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation
---                 r.ImGui_Text("'%s'", column_names[column]);
---                 r.ImGui_Spacing();
---                 r.ImGui_Text("Input flags:");
---                 EditTableColumnsFlags(&column_flags[column]);
---                 r.ImGui_Spacing();
---                 r.ImGui_Text("Output flags:");
---                 ShowTableColumnsStatusFlags(column_flags_out[column]);
---                 r.ImGui_PopID();
---             }
---             PopStyleCompact();
---             r.ImGui_EndTable();
---         }
---
---         // Create the real table we care about for the example!
---         // We use a scrolling table to be able to showcase the difference between the _IsEnabled and _IsVisible flags above, otherwise in
---         // a non-scrolling table columns are always visible (unless using ImGuiTableFlags_NoKeepColumnsVisible + resizing the parent window down)
---         const ImGuiTableFlags flags
---             = ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY
---             | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV
---             | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable;
---         ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 9);
---         if (r.ImGui_BeginTable("table_columns_flags", column_count, flags, outer_size))
---         {
---             for (int column = 0; column < column_count; column++)
---                 r.ImGui_TableSetupColumn(column_names[column], column_flags[column]);
---             r.ImGui_TableHeadersRow();
---             for (int column = 0; column < column_count; column++)
---                 column_flags_out[column] = r.ImGui_TableGetColumnFlags(column);
---             float indent_step = (float)((int)TEXT_BASE_WIDTH / 2);
---             for (int row = 0; row < 8; row++)
---             {
---                 r.ImGui_Indent(indent_step); // Add some indentation to demonstrate usage of per-column IndentEnable/IndentDisable flags.
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < column_count; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("%s %s", (column == 0) ? "Indented" : "Hello", r.ImGui_TableGetColumnName(column));
---                 }
---             }
---             r.ImGui_Unindent(indent_step * 8.0f);
---
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Columns widths"))
---     {
---         HelpMarker("Using TableSetupColumn() to setup default width.");
---
---         static ImGuiTableFlags flags1 = ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBodyUntilResize;
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Resizable", &flags1, ImGuiTableFlags_Resizable);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoBordersInBodyUntilResize", &flags1, ImGuiTableFlags_NoBordersInBodyUntilResize);
---         PopStyleCompact();
---         if (r.ImGui_BeginTable("table1", 3, flags1))
---         {
---             // We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
---             r.ImGui_TableSetupColumn("one", ImGuiTableColumnFlags_WidthFixed, 100.0f); // Default to 100.0f
---             r.ImGui_TableSetupColumn("two", ImGuiTableColumnFlags_WidthFixed, 200.0f); // Default to 200.0f
---             r.ImGui_TableSetupColumn("three", ImGuiTableColumnFlags_WidthFixed);       // Default to auto
---             r.ImGui_TableHeadersRow();
---             for (int row = 0; row < 4; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     if (row == 0)
---                         r.ImGui_Text("(w: %5.1f)", r.ImGui_GetContentRegionAvail().x);
---                     else
---                         r.ImGui_Text("Hello %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---
---         HelpMarker("Using TableSetupColumn() to setup explicit width.\n\nUnless _NoKeepColumnsVisible is set, fixed columns with set width may still be shrunk down if there's not enough space in the host.");
---
---         static ImGuiTableFlags flags2 = ImGuiTableFlags_None;
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoKeepColumnsVisible", &flags2, ImGuiTableFlags_NoKeepColumnsVisible);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersInnerV", &flags2, ImGuiTableFlags_BordersInnerV);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersOuterV", &flags2, ImGuiTableFlags_BordersOuterV);
---         PopStyleCompact();
---         if (r.ImGui_BeginTable("table2", 4, flags2))
---         {
---             // We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
---             r.ImGui_TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 100.0f);
---             r.ImGui_TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.0f);
---             r.ImGui_TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 30.0f);
---             r.ImGui_TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.0f);
---             for (int row = 0; row < 5; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 4; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     if (row == 0)
---                         r.ImGui_Text("(w: %5.1f)", r.ImGui_GetContentRegionAvail().x);
---                     else
---                         r.ImGui_Text("Hello %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Nested tables"))
---     {
---         HelpMarker("This demonstrate embedding a table into another table cell.");
---
---         if (r.ImGui_BeginTable("table_nested1", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
---         {
---             r.ImGui_TableSetupColumn("A0");
---             r.ImGui_TableSetupColumn("A1");
---             r.ImGui_TableHeadersRow();
---
---             r.ImGui_TableNextColumn();
---             r.ImGui_Text("A0 Row 0");
---             {
---                 float rows_height = TEXT_BASE_HEIGHT * 2;
---                 if (r.ImGui_BeginTable("table_nested2", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
---                 {
---                     r.ImGui_TableSetupColumn("B0");
---                     r.ImGui_TableSetupColumn("B1");
---                     r.ImGui_TableHeadersRow();
---
---                     r.ImGui_TableNextRow(ImGuiTableRowFlags_None, rows_height);
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("B0 Row 0");
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("B0 Row 1");
---                     r.ImGui_TableNextRow(ImGuiTableRowFlags_None, rows_height);
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("B1 Row 0");
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("B1 Row 1");
---
---                     r.ImGui_EndTable();
---                 }
---             }
---             r.ImGui_TableNextColumn(); r.ImGui_Text("A0 Row 1");
---             r.ImGui_TableNextColumn(); r.ImGui_Text("A1 Row 0");
---             r.ImGui_TableNextColumn(); r.ImGui_Text("A1 Row 1");
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Row height"))
---     {
---         HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'style.CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'style.CellPadding.y * 2.0f'.\n\nWe cannot honor a _maximum_ row height as that would requires a unique clipping rectangle per row.");
---         if (r.ImGui_BeginTable("table_row_height", 1, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersInnerV))
---         {
---             for (int row = 0; row < 10; row++)
---             {
---                 float min_row_height = (float)(int)(TEXT_BASE_HEIGHT * 0.30f * row);
---                 r.ImGui_TableNextRow(ImGuiTableRowFlags_None, min_row_height);
---                 r.ImGui_TableNextColumn();
---                 r.ImGui_Text("min_row_height = %.2f", min_row_height);
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Outer size"))
---     {
---         // Showcasing use of ImGuiTableFlags_NoHostExtendX and ImGuiTableFlags_NoHostExtendY
---         // Important to that note how the two flags have slightly different behaviors!
---         r.ImGui_Text("Using NoHostExtendX and NoHostExtendY:");
---         PushStyleCompact();
---         static ImGuiTableFlags flags = ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_ContextMenuInBody | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoHostExtendX;
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoHostExtendX", &flags, ImGuiTableFlags_NoHostExtendX);
---         r.ImGui_SameLine(); HelpMarker("Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.");
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_NoHostExtendY", &flags, ImGuiTableFlags_NoHostExtendY);
---         r.ImGui_SameLine(); HelpMarker("Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.");
---         PopStyleCompact();
---
---         ImVec2 outer_size = ImVec2(0.0f, TEXT_BASE_HEIGHT * 5.5f);
---         if (r.ImGui_BeginTable("table1", 3, flags, outer_size))
---         {
---             for (int row = 0; row < 10; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("Cell %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_SameLine();
---         r.ImGui_Text("Hello!");
---
---         r.ImGui_Spacing();
---
---         r.ImGui_Text("Using explicit size:");
---         if (r.ImGui_BeginTable("table2", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(TEXT_BASE_WIDTH * 30, 0.0f)))
---         {
---             for (int row = 0; row < 5; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("Cell %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_SameLine();
---         if (r.ImGui_BeginTable("table3", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg, ImVec2(TEXT_BASE_WIDTH * 30, 0.0f)))
---         {
---             for (int row = 0; row < 3; row++)
---             {
---                 r.ImGui_TableNextRow(0, TEXT_BASE_HEIGHT * 1.5f);
---                 for (int column = 0; column < 3; column++)
---                 {
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("Cell %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Background color"))
---     {
---         static ImGuiTableFlags flags = ImGuiTableFlags_RowBg;
---         static int row_bg_type = 1;
---         static int row_bg_target = 1;
---         static int cell_bg_type = 1;
---
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_Borders", &flags, ImGuiTableFlags_Borders);
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_RowBg", &flags, ImGuiTableFlags_RowBg);
---         r.ImGui_SameLine(); HelpMarker("ImGuiTableFlags_RowBg automatically sets RowBg0 to alternative colors pulled from the Style.");
---         r.ImGui_Combo("row bg type", (int*)&row_bg_type, "None\0Red\0Gradient\0");
---         r.ImGui_Combo("row bg target", (int*)&row_bg_target, "RowBg0\0RowBg1\0"); r.ImGui_SameLine(); HelpMarker("Target RowBg0 to override the alternating odd/even colors,\nTarget RowBg1 to blend with them.");
---         r.ImGui_Combo("cell bg type", (int*)&cell_bg_type, "None\0Blue\0"); r.ImGui_SameLine(); HelpMarker("We are colorizing cells to B1->C2 here.");
---         IM_ASSERT(row_bg_type >= 0 && row_bg_type <= 2);
---         IM_ASSERT(row_bg_target >= 0 && row_bg_target <= 1);
---         IM_ASSERT(cell_bg_type >= 0 && cell_bg_type <= 1);
---         PopStyleCompact();
---
---         if (r.ImGui_BeginTable("table1", 5, flags))
---         {
---             for (int row = 0; row < 6; row++)
---             {
---                 r.ImGui_TableNextRow();
---
---                 // Demonstrate setting a row background color with 'r.ImGui_TableSetBgColor(ImGuiTableBgTarget_RowBgX, ...)'
---                 // We use a transparent color so we can see the one behind in case our target is RowBg1 and RowBg0 was already targeted by the ImGuiTableFlags_RowBg flag.
---                 if (row_bg_type != 0)
---                 {
---                     ImU32 row_bg_color = r.ImGui_GetColorU32(row_bg_type == 1 ? ImVec4(0.7f, 0.3f, 0.3f, 0.65f) : ImVec4(0.2f + row * 0.1f, 0.2f, 0.2f, 0.65f)); // Flat or Gradient?
---                     r.ImGui_TableSetBgColor(ImGuiTableBgTarget_RowBg0 + row_bg_target, row_bg_color);
---                 }
---
---                 // Fill cells
---                 for (int column = 0; column < 5; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("%c%c", 'A' + row, '0' + column);
---
---                     // Change background of Cells B1->C2
---                     // Demonstrate setting a cell background color with 'r.ImGui_TableSetBgColor(ImGuiTableBgTarget_CellBg, ...)'
---                     // (the CellBg color will be blended over the RowBg and ColumnBg colors)
---                     // We can also pass a column number as a third parameter to TableSetBgColor() and do this outside the column loop.
---                     if (row >= 1 && row <= 2 && column >= 1 && column <= 2 && cell_bg_type == 1)
---                     {
---                         ImU32 cell_bg_color = r.ImGui_GetColorU32(ImVec4(0.3f, 0.3f, 0.7f, 0.65f));
---                         r.ImGui_TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
---                     }
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Tree view"))
---     {
---         static ImGuiTableFlags flags = ImGuiTableFlags_BordersV | ImGuiTableFlags_BordersOuterH | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_NoBordersInBody;
---
---         if (r.ImGui_BeginTable("3ways", 3, flags))
---         {
---             // The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
---             r.ImGui_TableSetupColumn("Name", ImGuiTableColumnFlags_NoHide);
---             r.ImGui_TableSetupColumn("Size", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0f);
---             r.ImGui_TableSetupColumn("Type", ImGuiTableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0f);
---             r.ImGui_TableHeadersRow();
---
---             // Simple storage to output a dummy file-system.
---             struct MyTreeNode
---             {
---                 const char*     Name;
---                 const char*     Type;
---                 int             Size;
---                 int             ChildIdx;
---                 int             ChildCount;
---                 static void DisplayNode(const MyTreeNode* node, const MyTreeNode* all_nodes)
---                 {
---                     r.ImGui_TableNextRow();
---                     r.ImGui_TableNextColumn();
---                     const bool is_folder = (node->ChildCount > 0);
---                     if (is_folder)
---                     {
---                         bool open = r.ImGui_TreeNodeEx(node->Name, ImGuiTreeNodeFlags_SpanFullWidth);
---                         r.ImGui_TableNextColumn();
---                         r.ImGui_TextDisabled("--");
---                         r.ImGui_TableNextColumn();
---                         r.ImGui_TextUnformatted(node->Type);
---                         if (open)
---                         {
---                             for (int child_n = 0; child_n < node->ChildCount; child_n++)
---                                 DisplayNode(&all_nodes[node->ChildIdx + child_n], all_nodes);
---                             r.ImGui_TreePop();
---                         }
---                     }
---                     else
---                     {
---                         r.ImGui_TreeNodeEx(node->Name, ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_Bullet | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_SpanFullWidth);
---                         r.ImGui_TableNextColumn();
---                         r.ImGui_Text("%d", node->Size);
---                         r.ImGui_TableNextColumn();
---                         r.ImGui_TextUnformatted(node->Type);
---                     }
---                 }
---             };
---             static const MyTreeNode nodes[] =
---             {
---                 { "Root",                         "Folder",       -1,       1, 3    }, // 0
---                 { "Music",                        "Folder",       -1,       4, 2    }, // 1
---                 { "Textures",                     "Folder",       -1,       6, 3    }, // 2
---                 { "desktop.ini",                  "System file",  1024,    -1,-1    }, // 3
---                 { "File1_a.wav",                  "Audio file",   123000,  -1,-1    }, // 4
---                 { "File1_b.wav",                  "Audio file",   456000,  -1,-1    }, // 5
---                 { "Image001.png",                 "Image file",   203128,  -1,-1    }, // 6
---                 { "Copy of Image001.png",         "Image file",   203256,  -1,-1    }, // 7
---                 { "Copy of Image001 (Final2).png","Image file",   203512,  -1,-1    }, // 8
---             };
---
---             MyTreeNode::DisplayNode(&nodes[0], nodes);
---
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Item width"))
---     {
---         HelpMarker(
---             "Showcase using PushItemWidth() and how it is preserved on a per-column basis.\n\n"
---             "Note that on auto-resizing non-resizable fixed columns, querying the content width for e.g. right-alignment doesn't make sense.");
---         if (r.ImGui_BeginTable("table_item_width", 3, ImGuiTableFlags_Borders))
---         {
---             r.ImGui_TableSetupColumn("small");
---             r.ImGui_TableSetupColumn("half");
---             r.ImGui_TableSetupColumn("right-align");
---             r.ImGui_TableHeadersRow();
---
---             for (int row = 0; row < 3; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 if (row == 0)
---                 {
---                     // Setup ItemWidth once (instead of setting up every time, which is also possible but less efficient)
---                     r.ImGui_TableSetColumnIndex(0);
---                     r.ImGui_PushItemWidth(TEXT_BASE_WIDTH * 3.0f); // Small
---                     r.ImGui_TableSetColumnIndex(1);
---                     r.ImGui_PushItemWidth(-r.ImGui_GetContentRegionAvail().x * 0.5f);
---                     r.ImGui_TableSetColumnIndex(2);
---                     r.ImGui_PushItemWidth(-FLT_MIN); // Right-aligned
---                 }
---
---                 // Draw our contents
---                 static float dummy_f = 0.0f;
---                 r.ImGui_PushID(row);
---                 r.ImGui_TableSetColumnIndex(0);
---                 r.ImGui_SliderFloat("float0", &dummy_f, 0.0f, 1.0f);
---                 r.ImGui_TableSetColumnIndex(1);
---                 r.ImGui_SliderFloat("float1", &dummy_f, 0.0f, 1.0f);
---                 r.ImGui_TableSetColumnIndex(2);
---                 r.ImGui_SliderFloat("float2", &dummy_f, 0.0f, 1.0f);
---                 r.ImGui_PopID();
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     // Demonstrate using TableHeader() calls instead of TableHeadersRow()
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Custom headers"))
---     {
---         const int COLUMNS_COUNT = 3;
---         if (r.ImGui_BeginTable("table_custom_headers", COLUMNS_COUNT, ImGuiTableFlags_Borders | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable))
---         {
---             r.ImGui_TableSetupColumn("Apricot");
---             r.ImGui_TableSetupColumn("Banana");
---             r.ImGui_TableSetupColumn("Cherry");
---
---             // Dummy entire-column selection storage
---             // FIXME: It would be nice to actually demonstrate full-featured selection using those checkbox.
---             static bool column_selected[3] = {};
---
---             // Instead of calling TableHeadersRow() we'll submit custom headers ourselves
---             r.ImGui_TableNextRow(ImGuiTableRowFlags_Headers);
---             for (int column = 0; column < COLUMNS_COUNT; column++)
---             {
---                 r.ImGui_TableSetColumnIndex(column);
---                 const char* column_name = r.ImGui_TableGetColumnName(column); // Retrieve name passed to TableSetupColumn()
---                 r.ImGui_PushID(column);
---                 r.ImGui_PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
---                 r.ImGui_Checkbox("##checkall", &column_selected[column]);
---                 r.ImGui_PopStyleVar();
---                 r.ImGui_SameLine(0.0f, r.ImGui_GetStyle().ItemInnerSpacing.x);
---                 r.ImGui_TableHeader(column_name);
---                 r.ImGui_PopID();
---             }
---
---             for (int row = 0; row < 5; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < 3; column++)
---                 {
---                     char buf[32];
---                     sprintf(buf, "Cell %d,%d", column, row);
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Selectable(buf, column_selected[column]);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
---     // Demonstrate creating custom context menus inside columns, while playing it nice with context menus provided by TableHeadersRow()/TableHeader()
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Context menus"))
---     {
---         HelpMarker("By default, right-clicking over a TableHeadersRow()/TableHeader() line will open the default context-menu.\nUsing ImGuiTableFlags_ContextMenuInBody we also allow right-clicking over columns body.");
---         static ImGuiTableFlags flags1 = ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders | ImGuiTableFlags_ContextMenuInBody;
---
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_ContextMenuInBody", &flags1, ImGuiTableFlags_ContextMenuInBody);
---         PopStyleCompact();
---
---         // Context Menus: first example
---         // [1.1] Right-click on the TableHeadersRow() line to open the default table context menu.
---         // [1.2] Right-click in columns also open the default table context menu (if ImGuiTableFlags_ContextMenuInBody is set)
---         const int COLUMNS_COUNT = 3;
---         if (r.ImGui_BeginTable("table_context_menu", COLUMNS_COUNT, flags1))
---         {
---             r.ImGui_TableSetupColumn("One");
---             r.ImGui_TableSetupColumn("Two");
---             r.ImGui_TableSetupColumn("Three");
---
---             // [1.1]] Right-click on the TableHeadersRow() line to open the default table context menu.
---             r.ImGui_TableHeadersRow();
---
---             // Submit dummy contents
---             for (int row = 0; row < 4; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < COLUMNS_COUNT; column++)
---                 {
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("Cell %d,%d", column, row);
---                 }
---             }
---             r.ImGui_EndTable();
---         }
---
---         // Context Menus: second example
---         // [2.1] Right-click on the TableHeadersRow() line to open the default table context menu.
---         // [2.2] Right-click on the ".." to open a custom popup
---         // [2.3] Right-click in columns to open another custom popup
---         HelpMarker("Demonstrate mixing table context menu (over header), item context button (over button) and custom per-colum context menu (over column body).");
---         ImGuiTableFlags flags2 = ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders;
---         if (r.ImGui_BeginTable("table_context_menu_2", COLUMNS_COUNT, flags2))
---         {
---             r.ImGui_TableSetupColumn("One");
---             r.ImGui_TableSetupColumn("Two");
---             r.ImGui_TableSetupColumn("Three");
---
---             // [2.1] Right-click on the TableHeadersRow() line to open the default table context menu.
---             r.ImGui_TableHeadersRow();
---             for (int row = 0; row < 4; row++)
---             {
---                 r.ImGui_TableNextRow();
---                 for (int column = 0; column < COLUMNS_COUNT; column++)
---                 {
---                     // Submit dummy contents
---                     r.ImGui_TableSetColumnIndex(column);
---                     r.ImGui_Text("Cell %d,%d", column, row);
---                     r.ImGui_SameLine();
---
---                     // [2.2] Right-click on the ".." to open a custom popup
---                     r.ImGui_PushID(row * COLUMNS_COUNT + column);
---                     r.ImGui_SmallButton("..");
---                     if (r.ImGui_BeginPopupContextItem())
---                     {
---                         r.ImGui_Text("This is the popup for Button(\"..\") in Cell %d,%d", column, row);
---                         if (r.ImGui_Button("Close"))
---                             r.ImGui_CloseCurrentPopup();
---                         r.ImGui_EndPopup();
---                     }
---                     r.ImGui_PopID();
---                 }
---             }
---
---             // [2.3] Right-click anywhere in columns to open another custom popup
---             // (instead of testing for !IsAnyItemHovered() we could also call OpenPopup() with ImGuiPopupFlags_NoOpenOverExistingPopup
---             // to manage popup priority as the popups triggers, here "are we hovering a column" are overlapping)
---             int hovered_column = -1;
---             for (int column = 0; column < COLUMNS_COUNT + 1; column++)
---             {
---                 r.ImGui_PushID(column);
---                 if (r.ImGui_TableGetColumnFlags(column) & ImGuiTableColumnFlags_IsHovered)
---                     hovered_column = column;
---                 if (hovered_column == column && !r.ImGui_IsAnyItemHovered() && r.ImGui_IsMouseReleased(1))
---                     r.ImGui_OpenPopup("MyPopup");
---                 if (r.ImGui_BeginPopup("MyPopup"))
---                 {
---                     if (column == COLUMNS_COUNT)
---                         r.ImGui_Text("This is a custom popup for unused space after the last column.");
---                     else
---                         r.ImGui_Text("This is a custom popup for Column %d", column);
---                     if (r.ImGui_Button("Close"))
---                         r.ImGui_CloseCurrentPopup();
---                     r.ImGui_EndPopup();
---                 }
---                 r.ImGui_PopID();
---             }
---
---             r.ImGui_EndTable();
---             r.ImGui_Text("Hovered column: %d", hovered_column);
---         }
---         r.ImGui_TreePop();
---     }
---
---     // Demonstrate creating multiple tables with the same ID
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Synced instances"))
---     {
---         HelpMarker("Multiple tables with the same identifier will share their settings, width, visibility, order etc.");
---         for (int n = 0; n < 3; n++)
---         {
---             char buf[32];
---             sprintf(buf, "Synced Table %d", n);
---             bool open = r.ImGui_CollapsingHeader(buf, ImGuiTreeNodeFlags_DefaultOpen);
---             if (open && r.ImGui_BeginTable("Table", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoSavedSettings))
---             {
---                 r.ImGui_TableSetupColumn("One");
---                 r.ImGui_TableSetupColumn("Two");
---                 r.ImGui_TableSetupColumn("Three");
---                 r.ImGui_TableHeadersRow();
---                 for (int cell = 0; cell < 9; cell++)
---                 {
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("this cell %d", cell);
---                 }
---                 r.ImGui_EndTable();
---             }
---         }
---         r.ImGui_TreePop();
---     }
---
---     // Demonstrate using Sorting facilities
---     // This is a simplified version of the "Advanced" example, where we mostly focus on the code necessary to handle sorting.
---     // Note that the "Advanced" example also showcase manually triggering a sort (e.g. if item quantities have been modified)
---     static const char* template_items_names[] =
---     {
---         "Banana", "Apple", "Cherry", "Watermelon", "Grapefruit", "Strawberry", "Mango",
---         "Kiwi", "Orange", "Pineapple", "Blueberry", "Plum", "Coconut", "Pear", "Apricot"
---     };
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Sorting"))
---     {
---         // Create item list
---         static ImVector<MyItem> items;
---         if (items.Size == 0)
---         {
---             items.resize(50, MyItem());
---             for (int n = 0; n < items.Size; n++)
---             {
---                 const int template_n = n % IM_ARRAYSIZE(template_items_names);
---                 MyItem& item = items[n];
---                 item.ID = n;
---                 item.Name = template_items_names[template_n];
---                 item.Quantity = (n * n - n) % 20; // Assign default quantities
---             }
---         }
---
---         // Options
---         static ImGuiTableFlags flags =
---             ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable | ImGuiTableFlags_Sortable | ImGuiTableFlags_SortMulti
---             | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter | ImGuiTableFlags_BordersV | ImGuiTableFlags_NoBordersInBody
---             | ImGuiTableFlags_ScrollY;
---         PushStyleCompact();
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_SortMulti", &flags, ImGuiTableFlags_SortMulti);
---         r.ImGui_SameLine(); HelpMarker("When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).");
---         r.ImGui_CheckboxFlags("ImGuiTableFlags_SortTristate", &flags, ImGuiTableFlags_SortTristate);
---         r.ImGui_SameLine(); HelpMarker("When sorting is enabled: allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).");
---         PopStyleCompact();
---
---         if (r.ImGui_BeginTable("table_sorting", 4, flags, ImVec2(0.0f, TEXT_BASE_HEIGHT * 15), 0.0f))
---         {
---             // Declare columns
---             // We use the "user_id" parameter of TableSetupColumn() to specify a user id that will be stored in the sort specifications.
---             // This is so our sort function can identify a column given our own identifier. We could also identify them based on their index!
---             // Demonstrate using a mixture of flags among available sort-related flags:
---             // - ImGuiTableColumnFlags_DefaultSort
---             // - ImGuiTableColumnFlags_NoSort / ImGuiTableColumnFlags_NoSortAscending / ImGuiTableColumnFlags_NoSortDescending
---             // - ImGuiTableColumnFlags_PreferSortAscending / ImGuiTableColumnFlags_PreferSortDescending
---             r.ImGui_TableSetupColumn("ID",       ImGuiTableColumnFlags_DefaultSort          | ImGuiTableColumnFlags_WidthFixed,   0.0f, MyItemColumnID_ID);
---             r.ImGui_TableSetupColumn("Name",                                                  ImGuiTableColumnFlags_WidthFixed,   0.0f, MyItemColumnID_Name);
---             r.ImGui_TableSetupColumn("Action",   ImGuiTableColumnFlags_NoSort               | ImGuiTableColumnFlags_WidthFixed,   0.0f, MyItemColumnID_Action);
---             r.ImGui_TableSetupColumn("Quantity", ImGuiTableColumnFlags_PreferSortDescending | ImGuiTableColumnFlags_WidthStretch, 0.0f, MyItemColumnID_Quantity);
---             r.ImGui_TableSetupScrollFreeze(0, 1); // Make row always visible
---             r.ImGui_TableHeadersRow();
---
---             // Sort our data if sort specs have been changed!
---             if (ImGuiTableSortSpecs* sorts_specs = r.ImGui_TableGetSortSpecs())
---                 if (sorts_specs->SpecsDirty)
---                 {
---                     MyItem::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
---                     if (items.Size > 1)
---                         qsort(&items[0], (size_t)items.Size, sizeof(items[0]), MyItem::CompareWithSortSpecs);
---                     MyItem::s_current_sort_specs = NULL;
---                     sorts_specs->SpecsDirty = false;
---                 }
---
---             // Demonstrate using clipper for large vertical lists
---             ImGuiListClipper clipper;
---             clipper.Begin(items.Size);
---             while (clipper.Step())
---                 for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
---                 {
---                     // Display a data item
---                     MyItem* item = &items[row_n];
---                     r.ImGui_PushID(item->ID);
---                     r.ImGui_TableNextRow();
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("%04d", item->ID);
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_TextUnformatted(item->Name);
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_SmallButton("None");
---                     r.ImGui_TableNextColumn();
---                     r.ImGui_Text("%d", item->Quantity);
---                     r.ImGui_PopID();
---                 }
---             r.ImGui_EndTable();
---         }
---         r.ImGui_TreePop();
---     }
---
+local MyItemColumnID_ID          = 4
+local MyItemColumnID_Name        = 5
+local MyItemColumnID_Quantity    = 6
+local MyItemColumnID_Description = 7
+
+function demo.CompareTableItems(a, b)
+  local next_id = 0
+  while true do
+    local ok, col_user_id, col_idx, sort_order, sort_direction = r.ImGui_TableGetColumnSortSpecs(ctx, next_id)
+    if not ok then break end
+    next_id = next_id + 1
+
+    -- Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
+    -- We could also choose to identify columns based on their index (col_idx), which is simpler!
+    local key
+    if col_user_id == MyItemColumnID_ID then
+      key = 'id'
+    elseif col_user_id == MyItemColumnID_Name then
+      key = 'name'
+    elseif col_user_id == MyItemColumnID_Quantity then
+      key = 'quantity'
+    elseif col_user_id == MyItemColumnID_Description then
+      key = 'description'
+    else
+      error('unknown user column ID')
+    end
+
+    local is_ascending = sort_direction == r.ImGui_SortDirection_Ascending()
+    if a[key] < b[key] then
+      return is_ascending
+    elseif a[key] > b[key] then
+      return not is_ascending
+    end
+  end
+
+  -- table.sort is instable so always return a way to differenciate items.
+  -- Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
+  return a.id < b.id
+end
+
+-- Make the UI compact because there are so many fields
+function demo.PushStyleCompact()
+  local frame_padding = {r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_FramePadding())}
+  local item_spacing = {r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_FramePadding())}
+  r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), frame_padding[1], frame_padding[2] * 0.60)
+  r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), item_spacing[1], item_spacing[2] * 0.60)
+end
+
+function demo.PopStyleCompact()
+  r.ImGui_PopStyleVar(ctx, 2)
+end
+
+-- Show a combo box with a choice of sizing policies
+function demo.EditTableSizingFlags(flags)
+  local policies = {
+    {
+      value   = r.ImGui_TableFlags_None(),
+      name    = 'Default',
+      tooltip = 'Use default sizing policy:\n- ImGuiTableFlags_SizingFixedFit if ScrollX is on or if host window has ImGuiWindowFlags_AlwaysAutoResize.\n- ImGuiTableFlags_SizingStretchSame otherwise.',
+    },
+    {
+      value   = r.ImGui_TableFlags_SizingFixedFit(),
+      name    = 'ImGuiTableFlags_SizingFixedFit',
+      tooltip = 'Columns default to _WidthFixed (if resizable) or _WidthAuto (if not resizable), matching contents width.',
+    },
+    {
+      value   = r.ImGui_TableFlags_SizingFixedSame(),
+      name    = 'ImGuiTableFlags_SizingFixedSame',
+      tooltip = 'Columns are all the same width, matching the maximum contents width.\nImplicitly disable ImGuiTableFlags_Resizable and enable ImGuiTableFlags_NoKeepColumnsVisible.',
+    },
+    {
+      value   = r.ImGui_TableFlags_SizingStretchProp(),
+      name    = 'ImGuiTableFlags_SizingStretchProp',
+      tooltip = 'Columns default to _WidthStretch with weights proportional to their widths.',
+    },
+    {
+      value   = r.ImGui_TableFlags_SizingStretchSame(),
+      name    = 'ImGuiTableFlags_SizingStretchSame',
+      tooltip = 'Columns default to _WidthStretch with same weights.',
+    },
+  }
+
+  local sizing_mask = r.ImGui_TableFlags_SizingFixedFit()    |
+                      r.ImGui_TableFlags_SizingFixedSame()   |
+                      r.ImGui_TableFlags_SizingStretchProp() |
+                      r.ImGui_TableFlags_SizingStretchSame()
+  local idx = 1
+  while idx < #policies do
+    if policies[idx].value == (flags & sizing_mask) then
+      break
+    end
+    idx = idx + 1
+  end
+  local preview_text = ''
+  if idx <= #policies then
+    preview_text = policies[idx].name
+    if idx > 1 then
+      preview_text = preview_text:sub(('ImGuiTableFlags'):len() + 1)
+    end
+  end
+  if r.ImGui_BeginCombo(ctx, 'Sizing Policy', preview_text) then
+    for n,policy in ipairs(policies) do
+      if r.ImGui_Selectable(ctx, policy.name, idx == n) then
+        flags = (flags & ~sizing_mask) | policy.value
+      end
+    end
+    r.ImGui_EndCombo(ctx)
+  end
+  r.ImGui_SameLine(ctx)
+  r.ImGui_TextDisabled(ctx, '(?)')
+  if r.ImGui_IsItemHovered(ctx) then
+    r.ImGui_BeginTooltip(ctx)
+    r.ImGui_PushTextWrapPos(ctx, r.ImGui_GetFontSize(ctx) * 50.0)
+    for m,policy in ipairs(policies) do
+      r.ImGui_Separator(ctx)
+      r.ImGui_Text(ctx, ('%s:'):format(policy.name))
+      r.ImGui_Separator(ctx)
+      local indent_spacing = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_IndentSpacing())
+      r.ImGui_SetCursorPosX(ctx, r.ImGui_GetCursorPosX(ctx) + indent_spacing * 0.5)
+      r.ImGui_Text(ctx, policy.tooltip)
+    end
+    r.ImGui_PopTextWrapPos(ctx)
+    r.ImGui_EndTooltip(ctx)
+  end
+
+  return flags
+end
+
+function demo.EditTableColumnsFlags(flags)
+  local rv
+  local width_mask = r.ImGui_TableColumnFlags_WidthStretch() |
+                     r.ImGui_TableColumnFlags_WidthFixed()
+
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_DefaultHide', flags, r.ImGui_TableColumnFlags_DefaultHide())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_DefaultSort', flags, r.ImGui_TableColumnFlags_DefaultSort())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_WidthStretch', flags, r.ImGui_TableColumnFlags_WidthStretch())
+  if rv then
+    flags = flags & ~(width_mask ^ r.ImGui_TableColumnFlags_WidthStretch())
+  end
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_WidthFixed', flags, r.ImGui_TableColumnFlags_WidthFixed())
+  if rv then
+    flags = flags & ~(width_mask ^ r.ImGui_TableColumnFlags_WidthFixed())
+  end
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoResize', flags, r.ImGui_TableColumnFlags_NoResize());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoReorder', flags, r.ImGui_TableColumnFlags_NoReorder());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoHide', flags, r.ImGui_TableColumnFlags_NoHide());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoClip', flags, r.ImGui_TableColumnFlags_NoClip());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoSort', flags, r.ImGui_TableColumnFlags_NoSort());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoSortAscending', flags, r.ImGui_TableColumnFlags_NoSortAscending());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoSortDescending', flags, r.ImGui_TableColumnFlags_NoSortDescending());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoHeaderWidth', flags, r.ImGui_TableColumnFlags_NoHeaderWidth());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_PreferSortAscending', flags, r.ImGui_TableColumnFlags_PreferSortAscending());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_PreferSortDescending', flags, r.ImGui_TableColumnFlags_PreferSortDescending());
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_IndentEnable', flags, r.ImGui_TableColumnFlags_IndentEnable()); r.ImGui_SameLine(ctx); demo.HelpMarker("Default for column 0")
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_IndentDisable', flags, r.ImGui_TableColumnFlags_IndentDisable()); r.ImGui_SameLine(ctx); demo.HelpMarker("Default for column >0")
+
+  return flags
+end
+
+function demo.ShowTableColumnsStatusFlags(flags)
+  r.ImGui_CheckboxFlags(ctx, '_IsEnabled', flags, r.ImGui_TableColumnFlags_IsEnabled())
+  r.ImGui_CheckboxFlags(ctx, '_IsVisible', flags, r.ImGui_TableColumnFlags_IsVisible())
+  r.ImGui_CheckboxFlags(ctx, '_IsSorted',  flags, r.ImGui_TableColumnFlags_IsSorted())
+  r.ImGui_CheckboxFlags(ctx, '_IsHovered', flags, r.ImGui_TableColumnFlags_IsHovered())
+end
+
+function demo.ShowDemoWindowTables()
+  -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once())
+  if not r.ImGui_CollapsingHeader(ctx, 'Tables & Columns') then
+    return
+  end
+
+  local rv
+
+  -- Using those as a base value to create width/height that are factor of the size of our font
+  -- local TEXT_BASE_WIDTH  = r.ImGui_CalcTextSize(ctx, 'A') TODO
+  local TEXT_BASE_WIDTH  = 7
+  local TEXT_BASE_HEIGHT = r.ImGui_GetTextLineHeightWithSpacing(ctx)
+
+  r.ImGui_PushID(ctx, 'Tables')
+
+  local open_action = -1
+  if r.ImGui_Button(ctx, 'Open all') then
+    open_action = 1;
+  end
+  r.ImGui_SameLine(ctx)
+  if r.ImGui_Button(ctx, 'Close all') then
+    open_action = 0;
+  end
+  r.ImGui_SameLine(ctx)
+
+  if tables.disable_indent == nil then
+    tables.disable_indent = false
+  end
+
+  -- Options
+  rv,tables.disable_indent = r.ImGui_Checkbox(ctx, 'Disable tree indentation', tables.disable_indent)
+  r.ImGui_SameLine(ctx)
+  demo.HelpMarker('Disable the indenting of tree nodes so demo tables can use the full window width.')
+  r.ImGui_Separator(ctx)
+  if tables.disable_indent then
+    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_IndentSpacing(), 0.0)
+  end
+
+  -- About Styling of tables
+  -- Most settings are configured on a per-table basis via the flags passed to BeginTable() and TableSetupColumns APIs.
+  -- There are however a few settings that a shared and part of the ImGuiStyle structure:
+  --   style.CellPadding                          // Padding within each cell
+  --   style.Colors[ImGuiCol_TableHeaderBg]       // Table header background
+  --   style.Colors[ImGuiCol_TableBorderStrong]   // Table outer and header borders
+  --   style.Colors[ImGuiCol_TableBorderLight]    // Table inner borders
+  --   style.Colors[ImGuiCol_TableRowBg]          // Table row background when ImGuiTableFlags_RowBg is enabled (even rows)
+  --   style.Colors[ImGuiCol_TableRowBgAlt]       // Table row background when ImGuiTableFlags_RowBg is enabled (odds rows)
+
+  local function DoOpenAction()
+    if open_action ~= -1 then
+      r.ImGui_SetNextItemOpen(ctx, open_action ~= 0)
+    end
+  end
+
+  -- Demos
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Basic') then
+    -- Here we will showcase three different ways to output a table.
+    -- They are very simple variations of a same thing!
+
+    -- [Method 1] Using TableNextRow() to create a new row, and TableSetColumnIndex() to select the column.
+    -- In many situations, this is the most flexible and easy to use pattern.
+    demo.HelpMarker('Using TableNextRow() + calling TableSetColumnIndex() _before_ each cell, in a loop.')
+    if r.ImGui_BeginTable(ctx, 'table1', 3) then
+      for row = 0, 3 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('Row %d Column %d'):format(row, column))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+
+    -- [Method 2] Using TableNextColumn() called multiple times, instead of using a for loop + TableSetColumnIndex().
+    -- This is generally more convenient when you have code manually submitting the contents of each columns.
+    demo.HelpMarker('Using TableNextRow() + calling TableNextColumn() _before_ each cell, manually.')
+    if r.ImGui_BeginTable(ctx, 'table2', 3) then
+      for row = 0, 3 do
+        r.ImGui_TableNextRow(ctx)
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, ('Row %d'):format(row))
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, 'Some contents')
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, '123.456')
+      end
+      r.ImGui_EndTable(ctx)
+    end
+
+    -- [Method 3] We call TableNextColumn() _before_ each cell. We never call TableNextRow(),
+    -- as TableNextColumn() will automatically wrap around and create new roes as needed.
+    -- This is generally more convenient when your cells all contains the same type of data.
+    demo.HelpMarker(
+      "Only using TableNextColumn(), which tends to be convenient for tables where every cells contains the same type of contents.\n\z
+       This is also more similar to the old NextColumn() function of the Columns API, and provided to facilitate the Columns->Tables API transition.")
+    if r.ImGui_BeginTable(ctx, 'table3', 3) then
+      for item = 0, 13 do
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, ('Item %d'):format(item))
+      end
+      r.ImGui_EndTable(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Borders, background') then
+    if not tables.borders_bg then
+      tables.borders_bg = {
+        flags = r.ImGui_TableFlags_Borders() | r.ImGui_TableFlags_RowBg(),
+        display_headers = false,
+        contents_type = 0,
+      }
+    end
+    -- Expose a few Borders related flags interactively
+
+    demo.PushStyleCompact()
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.borders_bg.flags, r.ImGui_TableFlags_RowBg())
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.borders_bg.flags, r.ImGui_TableFlags_Borders())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('ImGuiTableFlags_Borders\n = ImGuiTableFlags_BordersInnerV\n | ImGuiTableFlags_BordersOuterV\n | ImGuiTableFlags_BordersInnerV\n | ImGuiTableFlags_BordersOuterH')
+    r.ImGui_Indent(ctx)
+
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.borders_bg.flags, r.ImGui_TableFlags_BordersH())
+    r.ImGui_Indent(ctx)
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterH', tables.borders_bg.flags, r.ImGui_TableFlags_BordersOuterH())
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerH', tables.borders_bg.flags, r.ImGui_TableFlags_BordersInnerH())
+    r.ImGui_Unindent(ctx)
+
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.borders_bg.flags, r.ImGui_TableFlags_BordersV())
+    r.ImGui_Indent(ctx)
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.borders_bg.flags, r.ImGui_TableFlags_BordersOuterV())
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.borders_bg.flags, r.ImGui_TableFlags_BordersInnerV())
+    r.ImGui_Unindent(ctx)
+
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuter', tables.borders_bg.flags, r.ImGui_TableFlags_BordersOuter())
+    rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInner', tables.borders_bg.flags, r.ImGui_TableFlags_BordersInner())
+    r.ImGui_Unindent(ctx)
+
+    r.ImGui_AlignTextToFramePadding(ctx); r.ImGui_Text(ctx, 'Cell contents:')
+    r.ImGui_SameLine(ctx); rv,tables.borders_bg.contents_type = r.ImGui_RadioButtonEx(ctx, 'Text', tables.borders_bg.contents_type, 0)
+    r.ImGui_SameLine(ctx); rv,tables.borders_bg.contents_type = r.ImGui_RadioButtonEx(ctx, 'FillButton', tables.borders_bg.contents_type, 1)
+    rv,tables.borders_bg.display_headers = r.ImGui_Checkbox(ctx, 'Display headers', tables.borders_bg.display_headers)
+    -- rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.borders_bg.flags, r.ImGui_TableFlags_NoBordersInBody()); r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body (borders will always appears in Headers');
+    demo.PopStyleCompact()
+
+    if r.ImGui_BeginTable(ctx, 'table1', 3, tables.borders_bg.flags) then
+      -- Display headers so we can inspect their interaction with borders.
+      -- (Headers are not the main purpose of this section of the demo, so we are not elaborating on them too much. See other sections for details)
+      if tables.borders_bg.display_headers then
+        r.ImGui_TableSetupColumn(ctx, 'One')
+        r.ImGui_TableSetupColumn(ctx, 'Two')
+        r.ImGui_TableSetupColumn(ctx, 'Three')
+        r.ImGui_TableHeadersRow(ctx)
+      end
+
+      for row = 0, 4 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          local buf = ('Hello %d,%d'):format(column, row)
+          if tables.borders_bg.contents_type == 0 then
+            r.ImGui_Text(ctx, buf)
+          else
+            r.ImGui_Button(ctx, buf, -FLT_MIN, 0.0)
+          end
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Resizable, stretch') then
+    if not tables.resz_stretch then
+      tables.resz_stretch = {
+        flags = r.ImGui_TableFlags_SizingStretchSame() |
+                r.ImGui_TableFlags_Resizable() |
+                r.ImGui_TableFlags_BordersOuter() |
+                r.ImGui_TableFlags_BordersV() |
+                r.ImGui_TableFlags_ContextMenuInBody(),
+      }
+    end
+
+    -- By default, if we don't enable ScrollX the sizing policy for each columns is "Stretch"
+    -- Each columns maintain a sizing weight, and they will occupy all available width.
+    demo.PushStyleCompact()
+    rv,tables.resz_stretch.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.resz_stretch.flags, r.ImGui_TableFlags_Resizable())
+    rv,tables.resz_stretch.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.resz_stretch.flags, r.ImGui_TableFlags_BordersV())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Using the _Resizable flag automatically enables the _BordersInnerV flag as well, this is why the resize borders are still showing when unchecking this.')
+    demo.PopStyleCompact()
+
+    if r.ImGui_BeginTable(ctx, 'table1', 3, tables.resz_stretch.flags) then
+      for row = 0, 4 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('Hello %d,%d'):format(column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Resizable, fixed') then
+    if not tables.resz_fixed then
+      tables.resz_fixed = {
+        flags = r.ImGui_TableFlags_SizingFixedFit() |
+                r.ImGui_TableFlags_Resizable() |
+                r.ImGui_TableFlags_BordersOuter() |
+                r.ImGui_TableFlags_BordersV() |
+                r.ImGui_TableFlags_ContextMenuInBody(),
+      }
+    end
+
+    -- Here we use ImGuiTableFlags_SizingFixedFit (even though _ScrollX is not set)
+    -- So columns will adopt the "Fixed" policy and will maintain a fixed width regardless of the whole available width (unless table is small)
+    -- If there is not enough available width to fit all columns, they will however be resized down.
+    -- FIXME-TABLE: Providing a stretch-on-init would make sense especially for tables which don't have saved settings
+    demo.HelpMarker(
+      'Using _Resizable + _SizingFixedFit flags.\n\z
+       Fixed-width columns generally makes more sense if you want to use horizontal scrolling.\n\n\z
+       Double-click a column border to auto-fit the column to its contents.')
+    demo.PushStyleCompact()
+    rv,tables.resz_fixed.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.resz_fixed.flags, r.ImGui_TableFlags_NoHostExtendX())
+    demo.PopStyleCompact()
+
+    if r.ImGui_BeginTable(ctx, 'table1', 3, tables.resz_fixed.flags) then
+      for row = 0, 4 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('Hello %d,%d'):format(column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, "Resizable, mixed") then
+    if not tables.resz_mixed then
+      tables.resz_mixed = {
+        flags = r.ImGui_TableFlags_SizingFixedFit() |
+                r.ImGui_TableFlags_RowBg() | r.ImGui_TableFlags_Borders() |
+                r.ImGui_TableFlags_Resizable() |
+                r.ImGui_TableFlags_Reorderable() | r.ImGui_TableFlags_Hideable()
+      }
+    end
+    demo.HelpMarker(
+      'Using TableSetupColumn() to alter resizing policy on a per-column basis.\n\n\z
+       When combining Fixed and Stretch columns, generally you only want one, maybe two trailing columns to use _WidthStretch.')
+
+    if r.ImGui_BeginTable(ctx, 'table1', 3, tables.resz_mixed.flags) then
+      r.ImGui_TableSetupColumn(ctx, 'AAA', r.ImGui_TableColumnFlags_WidthFixed())
+      r.ImGui_TableSetupColumn(ctx, 'BBB', r.ImGui_TableColumnFlags_WidthFixed())
+      r.ImGui_TableSetupColumn(ctx, 'CCC', r.ImGui_TableColumnFlags_WidthStretch())
+      r.ImGui_TableHeadersRow(ctx)
+      for row = 0, 4 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('%s %d,%d'):format(column == 2 and 'Stretch' or 'Fixed', column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    if r.ImGui_BeginTable(ctx, 'table2', 6, tables.resz_mixed.flags) then
+      r.ImGui_TableSetupColumn(ctx, 'AAA', r.ImGui_TableColumnFlags_WidthFixed())
+      r.ImGui_TableSetupColumn(ctx, 'BBB', r.ImGui_TableColumnFlags_WidthFixed())
+      r.ImGui_TableSetupColumn(ctx, 'CCC', r.ImGui_TableColumnFlags_WidthFixed() | r.ImGui_TableColumnFlags_DefaultHide())
+      r.ImGui_TableSetupColumn(ctx, 'DDD', r.ImGui_TableColumnFlags_WidthStretch())
+      r.ImGui_TableSetupColumn(ctx, 'EEE', r.ImGui_TableColumnFlags_WidthStretch())
+      r.ImGui_TableSetupColumn(ctx, 'FFF', r.ImGui_TableColumnFlags_WidthStretch() | r.ImGui_TableColumnFlags_DefaultHide())
+      r.ImGui_TableHeadersRow(ctx)
+      for row = 0, 4 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 5 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('%s %d,%d'):format(column >= 3 and 'Stretch' or 'Fixed', column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Reorderable, hideable, with headers') then
+    if not tables.reorder then
+      tables.reorder = {
+        flags = r.ImGui_TableFlags_Resizable() |
+                r.ImGui_TableFlags_Reorderable() |
+                r.ImGui_TableFlags_Hideable() |
+                r.ImGui_TableFlags_BordersOuter() |
+                r.ImGui_TableFlags_BordersV()
+      }
+    end
+
+    demo.HelpMarker(
+      'Click and drag column headers to reorder columns.\n\n\z
+       Right-click on a header to open a context menu.')
+    demo.PushStyleCompact()
+    rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.reorder.flags, r.ImGui_TableFlags_Resizable())
+    rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Reorderable', tables.reorder.flags, r.ImGui_TableFlags_Reorderable())
+    rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Hideable', tables.reorder.flags, r.ImGui_TableFlags_Hideable())
+    -- rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.reorder.flags, r.ImGui_TableFlags_NoBordersInBody())
+    -- rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.reorder.flags, r.ImGui_TableFlags_NoBordersInBodyUntilResize()); r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers)')
+    demo.PopStyleCompact()
+
+    if r.ImGui_BeginTable(ctx, 'table1', 3, tables.reorder.flags) then
+      -- Submit columns name with TableSetupColumn() and call TableHeadersRow() to create a row with a header in each column.
+      -- (Later we will show how TableSetupColumn() has other uses, optional flags, sizing weight etc.)
+      r.ImGui_TableSetupColumn(ctx, 'One')
+      r.ImGui_TableSetupColumn(ctx, 'Two')
+      r.ImGui_TableSetupColumn(ctx, 'Three')
+      r.ImGui_TableHeadersRow(ctx)
+      for row = 0, 5 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('Hello %d,%d'):format(column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+
+    -- Use outer_size.x == 0.0f instead of default to make the table as tight as possible (only valid when no scrolling and no stretch column)
+    if r.ImGui_BeginTable(ctx, 'table2', 3, tables.reorder.flags | r.ImGui_TableFlags_SizingFixedFit(), 0.0, 0.0) then
+      r.ImGui_TableSetupColumn(ctx, 'One')
+      r.ImGui_TableSetupColumn(ctx, 'Two')
+      r.ImGui_TableSetupColumn(ctx, 'Three')
+      r.ImGui_TableHeadersRow(ctx)
+      for row = 0, 5 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('Fixed %d,%d'):format(column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Padding') then
+    if not tables.padding then
+      tables.padding = {
+        flags1 = r.ImGui_TableFlags_BordersV(),
+        show_headers = false,
+
+        flags2 = r.ImGui_TableFlags_Borders() | r.ImGui_TableFlags_RowBg(),
+        cell_padding = { 0.0, 0.0 },
+        show_widget_frame_bg = true,
+        text_bufs = {}, -- Mini text storage for 3x5 cells
+      }
+
+      for i = 1, 3*5 do
+        tables.padding.text_bufs[i] = 'edit me'
+      end
+    end
+
+    -- First example: showcase use of padding flags and effect of BorderOuterV/BorderInnerV on X padding.
+    -- We don't expose BorderOuterH/BorderInnerH here because they have no effect on X padding.
+    demo.HelpMarker(
+      "We often want outer padding activated when any using features which makes the edges of a column visible:\n\z
+       e.g.:\n\z
+       - BorderOuterV\n\z
+       - any form of row selection\n\z
+       Because of this, activating BorderOuterV sets the default to PadOuterX. Using PadOuterX or NoPadOuterX you can override the default.\n\n\z
+       Actual padding values are using style.CellPadding.\n\n\z
+       In this demo we don't show horizontal borders to emphasis how they don't affect default horizontal padding.")
+
+    demo.PushStyleCompact()
+    rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_PadOuterX', tables.padding.flags1, r.ImGui_TableFlags_PadOuterX())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Enable outer-most padding (default if ImGuiTableFlags_BordersOuterV is set)');
+    rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadOuterX', tables.padding.flags1, r.ImGui_TableFlags_NoPadOuterX())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Disable outer-most padding (default if ImGuiTableFlags_BordersOuterV is not set)');
+    rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadInnerX', tables.padding.flags1, r.ImGui_TableFlags_NoPadInnerX())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off)')
+    rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.padding.flags1, r.ImGui_TableFlags_BordersOuterV())
+    rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.padding.flags1, r.ImGui_TableFlags_BordersInnerV())
+    rv,tables.padding.show_headers = r.ImGui_Checkbox(ctx, 'show_headers', tables.padding.show_headers)
+    demo.PopStyleCompact()
+
+    if r.ImGui_BeginTable(ctx, 'table_padding', 3, tables.padding.flags1) then
+      if tables.padding.show_headers then
+        r.ImGui_TableSetupColumn(ctx, 'One')
+        r.ImGui_TableSetupColumn(ctx, 'Two')
+        r.ImGui_TableSetupColumn(ctx, 'Three')
+        r.ImGui_TableHeadersRow(ctx)
+      end
+
+      for row = 0, 4 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          if row == 0 then
+            r.ImGui_Text(ctx, ('Avail %.2f'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+          else
+            local buf = ('Hello %d,%d'):format(column, row)
+            r.ImGui_Button(ctx, buf, -FLT_MIN, 0.0)
+          end
+          --if (r.ImGui_TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered)
+          --  r.ImGui_TableSetBgColor(ImGuiTableBgTarget_CellBg, IM_COL32(0, 100, 0, 255));
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+
+    -- Second example: set style.CellPadding to (0.0) or a custom value.
+    -- FIXME-TABLE: Vertical border effectively not displayed the same way as horizontal one...
+    demo.HelpMarker('Setting style.CellPadding to (0,0) or a custom value.')
+
+    demo.PushStyleCompact()
+    rv,tables.padding.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.padding.flags2, r.ImGui_TableFlags_Borders())
+    rv,tables.padding.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.padding.flags2, r.ImGui_TableFlags_BordersH())
+    rv,tables.padding.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.padding.flags2, r.ImGui_TableFlags_BordersV())
+    rv,tables.padding.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInner', tables.padding.flags2, r.ImGui_TableFlags_BordersInner())
+    rv,tables.padding.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuter', tables.padding.flags2, r.ImGui_TableFlags_BordersOuter())
+    rv,tables.padding.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.padding.flags2, r.ImGui_TableFlags_RowBg())
+    rv,tables.padding.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.padding.flags2, r.ImGui_TableFlags_Resizable())
+    rv,tables.padding.show_widget_frame_bg = r.ImGui_Checkbox(ctx, 'show_widget_frame_bg', tables.padding.show_widget_frame_bg)
+    rv,tables.padding.cell_padding[1],tables.padding.cell_padding[2] =
+      r.ImGui_SliderDouble2(ctx, 'CellPadding', tables.padding.cell_padding[1],
+      tables.padding.cell_padding[2], 0.0, 10.0, '%.0f')
+    demo.PopStyleCompact()
+
+    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_CellPadding(), table.unpack(tables.padding.cell_padding))
+    if r.ImGui_BeginTable(ctx, 'table_padding_2', 3, tables.padding.flags2) then
+      if not tables.padding.show_widget_frame_bg then
+        r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBg(), 0)
+      end
+      for cell = 1, 3 * 5 do
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_SetNextItemWidth(ctx, -FLT_MIN)
+        r.ImGui_PushID(ctx, cell)
+        rv,tables.padding.text_bufs[cell] = r.ImGui_InputText(ctx, '##cell', tables.padding.text_bufs[cell])
+        r.ImGui_PopID(ctx)
+      end
+      if not tables.padding.show_widget_frame_bg then
+        r.ImGui_PopStyleColor(ctx)
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_PopStyleVar(ctx)
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Sizing policies') then
+    if not tables.sz_policies then
+      tables.sz_policies = {
+        flags1 = r.ImGui_TableFlags_BordersV()      |
+                 r.ImGui_TableFlags_BordersOuterH() |
+                 r.ImGui_TableFlags_RowBg()         |
+                 r.ImGui_TableFlags_ContextMenuInBody(),
+        sizing_policy_flags = {
+          r.ImGui_TableFlags_SizingFixedFit(),
+          r.ImGui_TableFlags_SizingFixedSame(),
+          r.ImGui_TableFlags_SizingStretchProp(),
+          r.ImGui_TableFlags_SizingStretchSame(),
+        },
+
+        flags2 = r.ImGui_TableFlags_ScrollY() |
+                 r.ImGui_TableFlags_Borders() |
+                 r.ImGui_TableFlags_RowBg()   |
+                 r.ImGui_TableFlags_Resizable(),
+        contents_type = 0,
+        column_count  = 3,
+        text_buf      = '',
+      }
+    end
+
+    demo.PushStyleCompact()
+    rv,tables.sz_policies.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.sz_policies.flags1, r.ImGui_TableFlags_Resizable())
+    rv,tables.sz_policies.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.sz_policies.flags1, r.ImGui_TableFlags_NoHostExtendX())
+    demo.PopStyleCompact()
+
+    for table_n,sizing_flags in ipairs(tables.sz_policies.sizing_policy_flags) do
+      r.ImGui_PushID(ctx, table_n)
+      r.ImGui_SetNextItemWidth(ctx, TEXT_BASE_WIDTH * 30)
+      sizing_flags = demo.EditTableSizingFlags(sizing_flags)
+      tables.sz_policies.sizing_policy_flags[table_n] = sizing_flags
+
+      -- To make it easier to understand the different sizing policy,
+      -- For each policy: we display one table where the columns have equal contents width, and one where the columns have different contents width.
+      if r.ImGui_BeginTable(ctx, 'table1', 3, sizing_flags | tables.sz_policies.flags1) then
+        for row = 0, 2 do
+          r.ImGui_TableNextRow(ctx)
+          r.ImGui_TableNextColumn(ctx); r.ImGui_Text(ctx, 'Oh dear')
+          r.ImGui_TableNextColumn(ctx); r.ImGui_Text(ctx, 'Oh dear')
+          r.ImGui_TableNextColumn(ctx); r.ImGui_Text(ctx, 'Oh dear')
+        end
+        r.ImGui_EndTable(ctx)
+      end
+      if r.ImGui_BeginTable(ctx, 'table2', 3, sizing_flags | tables.sz_policies.flags1) then
+        for row = 0, 2 do
+          r.ImGui_TableNextRow(ctx)
+          r.ImGui_TableNextColumn(ctx); r.ImGui_Text(ctx, 'AAAA')
+          r.ImGui_TableNextColumn(ctx); r.ImGui_Text(ctx, 'BBBBBBBB')
+          r.ImGui_TableNextColumn(ctx); r.ImGui_Text(ctx, 'CCCCCCCCCCCC')
+        end
+        r.ImGui_EndTable(ctx)
+      end
+      r.ImGui_PopID(ctx)
+    end
+
+    r.ImGui_Spacing(ctx)
+    r.ImGui_Text(ctx, 'Advanced')
+    r.ImGui_SameLine(ctx)
+    demo.HelpMarker('This section allows you to interact and see the effect of various sizing policies depending on whether Scroll is enabled and the contents of your columns.')
+
+    demo.PushStyleCompact()
+    r.ImGui_PushID(ctx, 'Advanced')
+    r.ImGui_PushItemWidth(ctx, TEXT_BASE_WIDTH * 30)
+    tables.sz_policies.flags2 = demo.EditTableSizingFlags(tables.sz_policies.flags2)
+    rv,tables.sz_policies.contents_type = r.ImGui_Combo(ctx, 'Contents', tables.sz_policies.contents_type, 'Show width\31Short Text\31Long Text\31Button\31Fill Button\31InputText\31')
+    if tables.sz_policies.contents_type == 4 then -- fill button
+      r.ImGui_SameLine(ctx)
+      demo.HelpMarker('Be mindful that using right-alignment (e.g. size.x = -FLT_MIN) creates a feedback loop where contents width can feed into auto-column width can feed into contents width.');
+    end
+    rv,tables.sz_policies.column_count = r.ImGui_DragInt(ctx, 'Columns', tables.sz_policies.column_count, 0.1, 1, 64, '%d', r.ImGui_SliderFlags_AlwaysClamp())
+    rv,tables.sz_policies.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.sz_policies.flags2, r.ImGui_TableFlags_Resizable())
+    rv,tables.sz_policies.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_PreciseWidths', tables.sz_policies.flags2, r.ImGui_TableFlags_PreciseWidths())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.')
+    rv,tables.sz_policies.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.sz_policies.flags2, r.ImGui_TableFlags_ScrollX())
+    rv,tables.sz_policies.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.sz_policies.flags2, r.ImGui_TableFlags_ScrollY())
+    rv,tables.sz_policies.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoClip', tables.sz_policies.flags2, r.ImGui_TableFlags_NoClip())
+    r.ImGui_PopItemWidth(ctx)
+    r.ImGui_PopID(ctx)
+    demo.PopStyleCompact()
+
+    if r.ImGui_BeginTable(ctx, 'table2', tables.sz_policies.column_count, tables.sz_policies.flags2, 0.0, TEXT_BASE_HEIGHT * 7) then
+      for cell = 1, 10 * tables.sz_policies.column_count do
+        r.ImGui_TableNextColumn(ctx)
+        local column = r.ImGui_TableGetColumnIndex(ctx)
+        local row = r.ImGui_TableGetRowIndex(ctx)
+
+        r.ImGui_PushID(ctx, cell)
+        local label = ('Hello %d,%d'):format(column, row)
+        local contents_type = tables.sz_policies.contents_type
+        if contents_type == 1 then -- short text
+          r.ImGui_Text(ctx, label)
+        elseif contents_type == 2 then -- long text
+          r.ImGui_Text(ctx, ('Some %s text %d,%d\nOver two lines..'):format(column == 0 and 'long' or 'longeeer', column, row))
+        elseif contents_type == 0 then -- show width
+          r.ImGui_Text(ctx, ('W: %.1f'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+        elseif contents_type == 3 then -- button
+          r.ImGui_Button(ctx, label)
+        elseif contents_type == 4 then -- fill button
+          r.ImGui_Button(ctx, label, -FLT_MIN, 0.0)
+        elseif contents_type == 5 then -- input text
+          r.ImGui_SetNextItemWidth(ctx, -FLT_MIN)
+          rv,tables.sz_policies.text_buf = r.ImGui_InputText(ctx, '##', tables.sz_policies.text_buf)
+        end
+        r.ImGui_PopID(ctx)
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Vertical scrolling, with clipping') then
+    if not tables.vertical then
+      tables.vertical = {
+        flags = r.ImGui_TableFlags_ScrollY()      |
+                r.ImGui_TableFlags_RowBg()        |
+                r.ImGui_TableFlags_BordersOuter() |
+                r.ImGui_TableFlags_BordersV()     |
+                r.ImGui_TableFlags_Resizable()    |
+                r.ImGui_TableFlags_Reorderable()  |
+                r.ImGui_TableFlags_Hideable(),
+      }
+    end
+
+    demo.HelpMarker('Here we activate ScrollY, which will create a child window container to allow hosting scrollable contents.\n\nWe also demonstrate using ImGuiListClipper to virtualize the submission of many items.');
+
+    demo.PushStyleCompact()
+    rv,tables.vertical.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.vertical.flags, r.ImGui_TableFlags_ScrollY())
+    demo.PopStyleCompact()
+
+    -- When using ScrollX or ScrollY we need to specify a size for our table container!
+    -- Otherwise by default the table will fit all available space, like a BeginChild() call.
+    local outer_size = { 0.0, TEXT_BASE_HEIGHT * 8 }
+    if r.ImGui_BeginTable(ctx, 'table_scrolly', 3, tables.vertical.flags, table.unpack(outer_size)) then
+      r.ImGui_TableSetupScrollFreeze(ctx, 0, 1); -- Make top row always visible
+      r.ImGui_TableSetupColumn(ctx, 'One', r.ImGui_TableColumnFlags_None())
+      r.ImGui_TableSetupColumn(ctx, 'Two', r.ImGui_TableColumnFlags_None())
+      r.ImGui_TableSetupColumn(ctx, 'Three', r.ImGui_TableColumnFlags_None())
+      r.ImGui_TableHeadersRow(ctx)
+
+      -- Demonstrate using clipper for large vertical lists
+      local clipper = r.ImGui_CreateListClipper(ctx)
+      r.ImGui_ListClipper_Begin(clipper, 1000)
+      while r.ImGui_ListClipper_Step(clipper) do
+        local display_start = r.ImGui_ListClipper_GetDisplayStart(clipper)
+        local display_end   = r.ImGui_ListClipper_GetDisplayEnd(clipper)
+        for row = display_start, display_end - 1 do
+          r.ImGui_TableNextRow(ctx)
+          for column = 0, 2 do
+            r.ImGui_TableSetColumnIndex(ctx, column)
+            r.ImGui_Text(ctx, ('Hello %d,%d'):format(column, row))
+          end
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Horizontal scrolling') then
+    if not tables.horizontal then
+      tables.horizontal = {
+        flags1 = r.ImGui_TableFlags_ScrollX()      |
+                 r.ImGui_TableFlags_ScrollY()      |
+                 r.ImGui_TableFlags_RowBg()        |
+                 r.ImGui_TableFlags_BordersOuter() |
+                 r.ImGui_TableFlags_BordersV()     |
+                 r.ImGui_TableFlags_Resizable()    |
+                 r.ImGui_TableFlags_Reorderable()  |
+                 r.ImGui_TableFlags_Hideable(),
+        freeze_cols = 1,
+        freeze_rows = 1,
+
+        flags2 = r.ImGui_TableFlags_SizingStretchSame() |
+                 r.ImGui_TableFlags_ScrollX()           |
+                 r.ImGui_TableFlags_ScrollY()           |
+                 r.ImGui_TableFlags_BordersOuter()      |
+                 r.ImGui_TableFlags_RowBg()             |
+                 r.ImGui_TableFlags_ContextMenuInBody(),
+        inner_width = 1000.0,
+      }
+    end
+
+    demo.HelpMarker(
+      "When ScrollX is enabled, the default sizing policy becomes ImGuiTableFlags_SizingFixedFit, \z
+       as automatically stretching columns doesn't make much sense with horizontal scrolling.\n\n\z
+       Also note that as of the current version, you will almost always want to enable ScrollY along with ScrollX,\z
+       because the container window won't automatically extend vertically to fix contents (this may be improved in future versions).")
+
+    demo.PushStyleCompact()
+    rv,tables.horizontal.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.horizontal.flags1, r.ImGui_TableFlags_Resizable())
+    rv,tables.horizontal.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.horizontal.flags1, r.ImGui_TableFlags_ScrollX())
+    rv,tables.horizontal.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.horizontal.flags1, r.ImGui_TableFlags_ScrollY())
+    r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFrameHeight(ctx))
+    rv,tables.horizontal.freeze_cols = r.ImGui_DragInt(ctx, 'freeze_cols', tables.horizontal.freeze_cols, 0.2, 0, 9, nil, r.ImGui_SliderFlags_NoInput())
+    r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFrameHeight(ctx))
+    rv,tables.horizontal.freeze_rows = r.ImGui_DragInt(ctx, 'freeze_rows', tables.horizontal.freeze_rows, 0.2, 0, 9, nil, r.ImGui_SliderFlags_NoInput())
+    demo.PopStyleCompact()
+
+    -- When using ScrollX or ScrollY we need to specify a size for our table container!
+    -- Otherwise by default the table will fit all available space, like a BeginChild() call.
+    local outer_size = { 0.0, TEXT_BASE_HEIGHT * 8 }
+    if r.ImGui_BeginTable(ctx, 'table_scrollx', 7, tables.horizontal.flags1, table.unpack(outer_size)) then
+      r.ImGui_TableSetupScrollFreeze(ctx, tables.horizontal.freeze_cols, tables.horizontal.freeze_rows)
+      r.ImGui_TableSetupColumn(ctx, 'Line #', r.ImGui_TableColumnFlags_NoHide()) -- Make the first column not hideable to match our use of TableSetupScrollFreeze()
+      r.ImGui_TableSetupColumn(ctx, 'One')
+      r.ImGui_TableSetupColumn(ctx, 'Two')
+      r.ImGui_TableSetupColumn(ctx, 'Three')
+      r.ImGui_TableSetupColumn(ctx, 'Four')
+      r.ImGui_TableSetupColumn(ctx, 'Five')
+      r.ImGui_TableSetupColumn(ctx, 'Six')
+      r.ImGui_TableHeadersRow(ctx)
+      for row = 0, 19 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 6 do
+          -- Both TableNextColumn() and TableSetColumnIndex() return true when a column is visible or performing width measurement.
+          -- Because here we know that:
+          -- - A) all our columns are contributing the same to row height
+          -- - B) column 0 is always visible,
+          -- We only always submit this one column and can skip others.
+          -- More advanced per-column clipping behaviors may benefit from polling the status flags via TableGetColumnFlags().
+          if r.ImGui_TableSetColumnIndex(ctx, column) or column == 0 then
+            if column == 0 then
+              r.ImGui_Text(ctx, ('Line %d'):format(row))
+            else
+              r.ImGui_Text(ctx, ('Hello world %d,%d'):format(column, row))
+            end
+          end
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+
+    r.ImGui_Spacing(ctx)
+    r.ImGui_Text(ctx, 'Stretch + ScrollX')
+    r.ImGui_SameLine(ctx)
+    demo.HelpMarker(
+      "Showcase using Stretch columns + ScrollX together: \z
+       this is rather unusual and only makes sense when specifying an 'inner_width' for the table!\n\z
+       Without an explicit value, inner_width is == outer_size.x and therefore using Stretch columns + ScrollX together doesn't make sense.")
+    demo.PushStyleCompact()
+    r.ImGui_PushID(ctx, 'flags3')
+    r.ImGui_PushItemWidth(ctx, TEXT_BASE_WIDTH * 30)
+    rv,tables.horizontal.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.horizontal.flags2, r.ImGui_TableFlags_ScrollX())
+    rv,tables.horizontal.inner_width = r.ImGui_DragDouble(ctx, 'inner_width', tables.horizontal.inner_width, 1.0, 0.0, FLT_MAX, '%.1f')
+    r.ImGui_PopItemWidth(ctx)
+    r.ImGui_PopID(ctx)
+    demo.PopStyleCompact()
+    if r.ImGui_BeginTable(ctx, 'table2', 7, tables.horizontal.flags2, outer_size[1], outer_size[2], tables.horizontal.inner_width) then
+      for cell = 1, 20 * 7 do
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, ('Hello world %d,%d'):format(r.ImGui_TableGetColumnIndex(ctx), r.ImGui_TableGetRowIndex(ctx)))
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Columns flags') then
+    if not tables.col_flags then
+      tables.col_flags = {
+        columns = {
+          { name='One',   flags=r.ImGui_TableColumnFlags_DefaultSort(), flags_out=0 },
+          { name='Two',   flags=r.ImGui_TableColumnFlags_None(),        flags_out=0 },
+          { name='Three', flags=r.ImGui_TableColumnFlags_DefaultHide(), flags_out=0 },
+        },
+      }
+    end
+
+    -- Create a first table just to show all the options/flags we want to make visible in our example!
+    if r.ImGui_BeginTable(ctx, 'table_columns_flags_checkboxes', #tables.col_flags.columns, r.ImGui_TableFlags_None()) then
+      demo.PushStyleCompact()
+      for i,column in ipairs(tables.col_flags.columns) do
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_PushID(ctx, i)
+        r.ImGui_AlignTextToFramePadding(ctx) -- FIXME-TABLE: Workaround for wrong text baseline propagation
+        r.ImGui_Text(ctx, ("'%s'"):format(column.name))
+        r.ImGui_Spacing(ctx)
+        r.ImGui_Text(ctx, 'Input flags:')
+        column.flags = demo.EditTableColumnsFlags(column.flags)
+        r.ImGui_Spacing(ctx)
+        r.ImGui_Text(ctx, 'Output flags:')
+        demo.ShowTableColumnsStatusFlags(column.flags_out)
+        r.ImGui_PopID(ctx)
+      end
+      demo.PopStyleCompact()
+      r.ImGui_EndTable(ctx)
+    end
+
+    -- Create the real table we care about for the example!
+    -- We use a scrolling table to be able to showcase the difference between the _IsEnabled and _IsVisible flags above, otherwise in
+    -- a non-scrolling table columns are always visible (unless using ImGuiTableFlags_NoKeepColumnsVisible + resizing the parent window down)
+    local flags = r.ImGui_TableFlags_SizingFixedFit() |
+                  r.ImGui_TableFlags_ScrollX()        |
+                  r.ImGui_TableFlags_ScrollY()        |
+                  r.ImGui_TableFlags_RowBg()          |
+                  r.ImGui_TableFlags_BordersOuter()   |
+                  r.ImGui_TableFlags_BordersV()       |
+                  r.ImGui_TableFlags_Resizable()      |
+                  r.ImGui_TableFlags_Reorderable()    |
+                  r.ImGui_TableFlags_Hideable()       |
+                  r.ImGui_TableFlags_Sortable()
+    local outer_size = { 0.0, TEXT_BASE_HEIGHT * 9 }
+    if r.ImGui_BeginTable(ctx, 'table_columns_flags', #tables.col_flags.columns, flags, table.unpack(outer_size)) then
+      for i,column in ipairs(tables.col_flags.columns) do
+        r.ImGui_TableSetupColumn(ctx, column.name, column.flags)
+      end
+      r.ImGui_TableHeadersRow(ctx)
+      for i,column in ipairs(tables.col_flags.columns) do
+        column.flags_out = r.ImGui_TableGetColumnFlags(ctx, i - 1)
+      end
+      local indent_step = TEXT_BASE_WIDTH / 2
+      for row = 0, 7 do
+        r.ImGui_Indent(ctx, indent_step); -- Add some indentation to demonstrate usage of per-column IndentEnable/IndentDisable flags.
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, #tables.col_flags.columns - 1 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('%s %s'):format(column == 0 and 'Indented' or 'Hello', r.ImGui_TableGetColumnName(ctx, column)))
+        end
+      end
+      r.ImGui_Unindent(ctx, indent_step * 8.0)
+
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Columns widths') then
+    if not tables.col_widths then
+      tables.col_widths = {
+        flags1 = r.ImGui_TableFlags_Borders(), --|
+                 -- r.ImGui_TableFlags_NoBordersInBodyUntilResize(),
+        flags2 = r.ImGui_TableFlags_None(),
+      }
+    end
+    demo.HelpMarker('Using TableSetupColumn() to setup default width.')
+
+    demo.PushStyleCompact()
+    rv,tables.col_widths.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.col_widths.flags1, r.ImGui_TableFlags_Resizable())
+    -- rv,tables.col_widths.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.col_widths.flags1, r.ImGui_TableFlags_NoBordersInBodyUntilResize())
+    demo.PopStyleCompact()
+    if r.ImGui_BeginTable(ctx, 'table1', 3, tables.col_widths.flags1) then
+      -- We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
+      r.ImGui_TableSetupColumn(ctx, 'one', r.ImGui_TableColumnFlags_WidthFixed(), 100.0) -- Default to 100.0f
+      r.ImGui_TableSetupColumn(ctx, 'two', r.ImGui_TableColumnFlags_WidthFixed(), 200.0) -- Default to 200.0f
+      r.ImGui_TableSetupColumn(ctx, 'three', r.ImGui_TableColumnFlags_WidthFixed());     -- Default to auto
+      r.ImGui_TableHeadersRow(ctx)
+      for row = 0, 3 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          if row == 0 then
+            r.ImGui_Text(ctx, ('(w: %5.1f)'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+          else
+            r.ImGui_Text(ctx, ('Hello %d,%d'):format(column, row))
+          end
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+
+    demo.HelpMarker("Using TableSetupColumn() to setup explicit width.\n\nUnless _NoKeepColumnsVisible is set, fixed columns with set width may still be shrunk down if there's not enough space in the host.")
+
+    demo.PushStyleCompact()
+    rv,tables.col_widths.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoKeepColumnsVisible', tables.col_widths.flags2, r.ImGui_TableFlags_NoKeepColumnsVisible())
+    rv,tables.col_widths.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.col_widths.flags2, r.ImGui_TableFlags_BordersInnerV())
+    rv,tables.col_widths.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.col_widths.flags2, r.ImGui_TableFlags_BordersOuterV())
+    demo.PopStyleCompact()
+    if r.ImGui_BeginTable(ctx, 'table2', 4, tables.col_widths.flags2) then
+      -- We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
+      r.ImGui_TableSetupColumn(ctx, '', r.ImGui_TableColumnFlags_WidthFixed(), 100.0);
+      r.ImGui_TableSetupColumn(ctx, '', r.ImGui_TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 15.0)
+      r.ImGui_TableSetupColumn(ctx, '', r.ImGui_TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 30.0)
+      r.ImGui_TableSetupColumn(ctx, '', r.ImGui_TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 15.0)
+      for row = 0, 4 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 3 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          if row == 0 then
+            r.ImGui_Text(ctx, ('(w: %5.1f)'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+          else
+            r.ImGui_Text(ctx, ('Hello %d,%d'):format(column, row))
+          end
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Nested tables') then
+    demo.HelpMarker('This demonstrate embedding a table into another table cell.')
+
+    local flags = r.ImGui_TableFlags_Borders() | r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_Reorderable() | r.ImGui_TableFlags_Hideable()
+    if r.ImGui_BeginTable(ctx, 'table_nested1', 2, flags) then
+      r.ImGui_TableSetupColumn(ctx, 'A0')
+      r.ImGui_TableSetupColumn(ctx, 'A1')
+      r.ImGui_TableHeadersRow(ctx)
+
+      r.ImGui_TableNextColumn(ctx)
+      r.ImGui_Text(ctx, 'A0 Row 0')
+
+      local rows_height = TEXT_BASE_HEIGHT * 2
+      if r.ImGui_BeginTable(ctx, 'table_nested2', 2, flags) then
+        r.ImGui_TableSetupColumn(ctx, 'B0')
+        r.ImGui_TableSetupColumn(ctx, 'B1')
+        r.ImGui_TableHeadersRow(ctx)
+
+        r.ImGui_TableNextRow(ctx, r.ImGui_TableRowFlags_None(), rows_height)
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, 'B0 Row 0')
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, 'B0 Row 1')
+        r.ImGui_TableNextRow(ctx, r.ImGui_TableRowFlags_None(), rows_height)
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, 'B1 Row 0')
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, 'B1 Row 1')
+
+        r.ImGui_EndTable(ctx)
+      end
+
+      r.ImGui_TableNextColumn(ctx); r.ImGui_Text(ctx, 'A0 Row 1')
+      r.ImGui_TableNextColumn(ctx); r.ImGui_Text(ctx, 'A1 Row 0')
+      r.ImGui_TableNextColumn(ctx); r.ImGui_Text(ctx, 'A1 Row 1')
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Row height') then
+    demo.HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'style.CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'style.CellPadding.y * 2.0f'.\n\nWe cannot honor a _maximum_ row height as that would requires a unique clipping rectangle per row.");
+    if r.ImGui_BeginTable(ctx, 'table_row_height', 1, r.ImGui_TableFlags_BordersOuter() | r.ImGui_TableFlags_BordersInnerV()) then
+      for row = 0, 9 do
+        local min_row_height = TEXT_BASE_HEIGHT * 0.30 * row
+        r.ImGui_TableNextRow(ctx, r.ImGui_TableRowFlags_None(), min_row_height)
+        r.ImGui_TableNextColumn(ctx)
+        r.ImGui_Text(ctx, ('min_row_height = %.2f'):format(min_row_height))
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Outer size') then
+    if not tables.outer_sz then
+      tables.outer_sz = {
+        flags = r.ImGui_TableFlags_Borders() |
+                r.ImGui_TableFlags_Resizable() |
+                r.ImGui_TableFlags_ContextMenuInBody() |
+                r.ImGui_TableFlags_RowBg() |
+                r.ImGui_TableFlags_SizingFixedFit() |
+                r.ImGui_TableFlags_NoHostExtendX(),
+      }
+    end
+
+    -- Showcasing use of ImGuiTableFlags_NoHostExtendX and ImGuiTableFlags_NoHostExtendY
+    -- Important to that note how the two flags have slightly different behaviors!
+    r.ImGui_Text(ctx, 'Using NoHostExtendX and NoHostExtendY:')
+    demo.PushStyleCompact()
+    rv,tables.outer_sz.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.outer_sz.flags, r.ImGui_TableFlags_NoHostExtendX())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.')
+    rv,tables.outer_sz.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendY', tables.outer_sz.flags, r.ImGui_TableFlags_NoHostExtendY())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.')
+    demo.PopStyleCompact()
+
+    local outer_size = { 0.0, TEXT_BASE_HEIGHT * 5.5 }
+    if r.ImGui_BeginTable(ctx, 'table1', 3, tables.outer_sz.flags, table.unpack(outer_size)) then
+      for row = 0, 9 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, ('Cell %d,%d'):format(column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, 'Hello!')
+
+    r.ImGui_Spacing(ctx)
+
+    local flags = r.ImGui_TableFlags_Borders() | r.ImGui_TableFlags_RowBg()
+    r.ImGui_Text(ctx, 'Using explicit size:')
+    if r.ImGui_BeginTable(ctx, 'table2', 3, flags, TEXT_BASE_WIDTH * 30, 0.0) then
+      for row = 0, 4 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, ('Cell %d,%d'):format(column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_SameLine(ctx)
+    if r.ImGui_BeginTable(ctx, 'table3', 3, flags, TEXT_BASE_WIDTH * 30, 0.0) then
+      for row = 0, 2 do
+        r.ImGui_TableNextRow(ctx, 0, TEXT_BASE_HEIGHT * 1.5)
+        for column = 0, 2 do
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, ('Cell %d,%d'):format(column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Background color') then
+    if not tables.bg_col then
+      tables.bg_col = {
+        flags         = r.ImGui_TableFlags_RowBg(),
+        row_bg_type   = 1,
+        row_bg_target = 1,
+        cell_bg_type  = 1,
+      }
+    end
+
+    demo.PushStyleCompact()
+    rv,tables.bg_col.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.bg_col.flags, r.ImGui_TableFlags_Borders())
+    rv,tables.bg_col.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.bg_col.flags, r.ImGui_TableFlags_RowBg())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('ImGuiTableFlags_RowBg automatically sets RowBg0 to alternative colors pulled from the Style.')
+    rv,tables.bg_col.row_bg_type = r.ImGui_Combo(ctx, 'row bg type', tables.bg_col.row_bg_type, "None\31Red\31Gradient\31")
+    rv,tables.bg_col.row_bg_target = r.ImGui_Combo(ctx, 'row bg target', tables.bg_col.row_bg_target, "RowBg0\31RowBg1\31"); r.ImGui_SameLine(ctx); demo.HelpMarker('Target RowBg0 to override the alternating odd/even colors,\nTarget RowBg1 to blend with them.')
+    rv,tables.bg_col.cell_bg_type = r.ImGui_Combo(ctx, 'cell bg type', tables.bg_col.cell_bg_type, 'None\31Blue\31'); r.ImGui_SameLine(ctx); demo.HelpMarker('We are colorizing cells to B1->C2 here.')
+    demo.PopStyleCompact()
+
+    if r.ImGui_BeginTable(ctx, 'table1', 5, tables.bg_col.flags) then
+      for row = 0, 5 do
+        r.ImGui_TableNextRow(ctx)
+
+        -- Demonstrate setting a row background color with 'r.ImGui_TableSetBgColor(ImGuiTableBgTarget_RowBgX, ...)'
+        -- We use a transparent color so we can see the one behind in case our target is RowBg1 and RowBg0 was already targeted by the ImGuiTableFlags_RowBg flag.
+        if tables.bg_col.row_bg_type ~= 0 then
+          local row_bg_color
+          if tables.bg_col.row_bg_type == 1 then -- flat
+            row_bg_color = 0xb34d4da6
+          else -- gradient
+            row_bg_color = 0x333333a6
+            row_bg_color = row_bg_color + (demo.round((row * 0.1) * 0xFF) << 24)
+          end
+          r.ImGui_TableSetBgColor(ctx, r.ImGui_TableBgTarget_RowBg0() + tables.bg_col.row_bg_target, row_bg_color)
+        end
+
+        -- Fill cells
+        for column = 0, 4 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('%c%c'):format(string.byte('A') + row, string.byte('0') + column))
+
+          -- Change background of Cells B1->C2
+          -- Demonstrate setting a cell background color with 'r.ImGui_TableSetBgColor(ImGuiTableBgTarget_CellBg, ...)'
+          -- (the CellBg color will be blended over the RowBg and ColumnBg colors)
+          -- We can also pass a column number as a third parameter to TableSetBgColor() and do this outside the column loop.
+          if row >= 1 and row <= 2 and column >= 1 and column <= 2 and tables.bg_col.cell_bg_type == 1 then
+            r.ImGui_TableSetBgColor(ctx, r.ImGui_TableBgTarget_CellBg(), 0x4d4db3a6)
+          end
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Tree view') then
+    local flags = r.ImGui_TableFlags_BordersV()      |
+                  r.ImGui_TableFlags_BordersOuterH() |
+                  r.ImGui_TableFlags_Resizable()     |
+                  r.ImGui_TableFlags_RowBg()--         |
+                  -- r.ImGui_TableFlags_NoBordersInBody()
+
+    if r.ImGui_BeginTable(ctx, '3ways', 3, flags) then
+      -- The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
+      r.ImGui_TableSetupColumn(ctx, 'Name', r.ImGui_TableColumnFlags_NoHide())
+      r.ImGui_TableSetupColumn(ctx, 'Size', r.ImGui_TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 12.0)
+      r.ImGui_TableSetupColumn(ctx, 'Type', r.ImGui_TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 18.0)
+      r.ImGui_TableHeadersRow(ctx)
+
+      -- Simple storage to output a dummy file-system.
+      local nodes = {
+        { name="Root",                          type="Folder",      size=-1,     child_idx= 1,  child_count= 3 }, -- 0
+        { name="Music",                         type="Folder",      size=-1,     child_idx= 4,  child_count= 2 }, -- 1
+        { name="Textures",                      type="Folder",      size=-1,     child_idx= 6,  child_count= 3 }, -- 2
+        { name="desktop.ini",                   type="System file", size= 1024,   child_idx=-1, child_count=-1 }, -- 3
+        { name="File1_a.wav",                   type="Audio file",  size= 123000, child_idx=-1, child_count=-1 }, -- 4
+        { name="File1_b.wav",                   type="Audio file",  size= 456000, child_idx=-1, child_count=-1 }, -- 5
+        { name="Image001.png",                  type="Image file",  size= 203128, child_idx=-1, child_count=-1 }, -- 6
+        { name="Copy of Image001.png",          type="Image file",  size= 203256, child_idx=-1, child_count=-1 }, -- 7
+        { name="Copy of Image001 (Final2).png", type="Image file",  size= 203512, child_idx=-1, child_count=-1 }, -- 8
+      }
+
+      local function DisplayNode(node)
+        r.ImGui_TableNextRow(ctx)
+        r.ImGui_TableNextColumn(ctx)
+        local is_folder = node.child_count > 0
+        if is_folder then
+          local open = r.ImGui_TreeNode(ctx, node.name, r.ImGui_TreeNodeFlags_SpanFullWidth())
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_TextDisabled(ctx, '--')
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, node.type)
+          if open then
+            for child_n = 1, node.child_count do
+              DisplayNode(nodes[node.child_idx + child_n])
+            end
+            r.ImGui_TreePop(ctx)
+          end
+        else
+          r.ImGui_TreeNode(ctx, node.name, r.ImGui_TreeNodeFlags_Leaf() | r.ImGui_TreeNodeFlags_Bullet() | r.ImGui_TreeNodeFlags_NoTreePushOnOpen() | r.ImGui_TreeNodeFlags_SpanFullWidth())
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, ('%d'):format(node.size))
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, node.type)
+        end
+      end
+
+      DisplayNode(nodes[1])
+
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Item width') then
+    if not tables.item_width then
+      tables.item_width = {
+        dummy_d = 0.0,
+      }
+    end
+
+    demo.HelpMarker(
+      "Showcase using PushItemWidth() and how it is preserved on a per-column basis.\n\n\z
+       Note that on auto-resizing non-resizable fixed columns, querying the content width for e.g. right-alignment doesn't make sense.")
+    if r.ImGui_BeginTable(ctx, 'table_item_width', 3, r.ImGui_TableFlags_Borders()) then
+      r.ImGui_TableSetupColumn(ctx, 'small')
+      r.ImGui_TableSetupColumn(ctx, 'half')
+      r.ImGui_TableSetupColumn(ctx, 'right-align')
+      r.ImGui_TableHeadersRow(ctx)
+
+      for row = 0, 2 do
+        r.ImGui_TableNextRow(ctx)
+        if row == 0 then
+          -- Setup ItemWidth once (instead of setting up every time, which is also possible but less efficient)
+          r.ImGui_TableSetColumnIndex(ctx, 0)
+          r.ImGui_PushItemWidth(ctx, TEXT_BASE_WIDTH * 3.0) -- Small
+          r.ImGui_TableSetColumnIndex(ctx, 1)
+          r.ImGui_PushItemWidth(ctx, 0 - ({r.ImGui_GetContentRegionAvail(ctx)})[1] * 0.5)
+          r.ImGui_TableSetColumnIndex(ctx, 2)
+          r.ImGui_PushItemWidth(ctx, -FLT_MIN) -- Right-aligned
+        end
+
+        -- Draw our contents
+        r.ImGui_PushID(ctx, row)
+        r.ImGui_TableSetColumnIndex(ctx, 0)
+        rv,tables.item_width.dummy_d = r.ImGui_SliderDouble(ctx, 'double0', tables.item_width.dummy_d, 0.0, 1.0)
+        r.ImGui_TableSetColumnIndex(ctx, 1)
+        rv,tables.item_width.dummy_d = r.ImGui_SliderDouble(ctx, 'double1', tables.item_width.dummy_d, 0.0, 1.0)
+        r.ImGui_TableSetColumnIndex(ctx, 2)
+        rv,tables.item_width.dummy_d = r.ImGui_SliderDouble(ctx, 'double2', tables.item_width.dummy_d, 0.0, 1.0)
+        r.ImGui_PopID(ctx)
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  -- Demonstrate using TableHeader() calls instead of TableHeadersRow()
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Custom headers') then
+    if not tables.headers then
+      tables.headers = {
+        column_selected = { false, false, false },
+      }
+    end
+
+    local COLUMNS_COUNT = 3
+    if r.ImGui_BeginTable(ctx, 'table_custom_headers', COLUMNS_COUNT, r.ImGui_TableFlags_Borders() | r.ImGui_TableFlags_Reorderable() | r.ImGui_TableFlags_Hideable()) then
+      r.ImGui_TableSetupColumn(ctx, 'Apricot')
+      r.ImGui_TableSetupColumn(ctx, 'Banana')
+      r.ImGui_TableSetupColumn(ctx, 'Cherry')
+
+      -- Instead of calling TableHeadersRow() we'll submit custom headers ourselves
+      r.ImGui_TableNextRow(ctx, r.ImGui_TableRowFlags_Headers())
+      for column = 0, COLUMNS_COUNT - 1 do
+        r.ImGui_TableSetColumnIndex(ctx, column)
+        local column_name = r.ImGui_TableGetColumnName(ctx, column) -- Retrieve name passed to TableSetupColumn()
+        r.ImGui_PushID(ctx, column)
+        r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), 0, 0)
+        rv,tables.headers.column_selected[column + 1] =
+          r.ImGui_Checkbox(ctx, '##checkall', tables.headers.column_selected[column + 1])
+        r.ImGui_PopStyleVar(ctx)
+        r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1])
+        r.ImGui_TableHeader(ctx, column_name)
+        r.ImGui_PopID(ctx)
+      end
+
+      for row = 0, 4 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, 2 do
+          local buf = ('Cell %d,%d'):format(column, row)
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Selectable(ctx, buf, tables.headers.column_selected[column + 1])
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  -- Demonstrate creating custom context menus inside columns, while playing it nice with context menus provided by TableHeadersRow()/TableHeader()
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Context menus') then
+    if not tables.ctx_menus then
+      tables.ctx_menus = {
+        flags1 = r.ImGui_TableFlags_Resizable()   |
+                 r.ImGui_TableFlags_Reorderable() |
+                 r.ImGui_TableFlags_Hideable()    |
+                 r.ImGui_TableFlags_Borders()     |
+                 r.ImGui_TableFlags_ContextMenuInBody()
+      }
+    end
+    demo.HelpMarker('By default, right-clicking over a TableHeadersRow()/TableHeader() line will open the default context-menu.\nUsing ImGuiTableFlags_ContextMenuInBody we also allow right-clicking over columns body.')
+
+    demo.PushStyleCompact()
+    rv,tables.ctx_menus.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ContextMenuInBody', tables.ctx_menus.flags1, r.ImGui_TableFlags_ContextMenuInBody())
+    demo.PopStyleCompact()
+
+    -- Context Menus: first example
+    -- [1.1] Right-click on the TableHeadersRow() line to open the default table context menu.
+    -- [1.2] Right-click in columns also open the default table context menu (if ImGuiTableFlags_ContextMenuInBody is set)
+    local COLUMNS_COUNT = 3
+    if r.ImGui_BeginTable(ctx, 'table_context_menu', COLUMNS_COUNT, tables.ctx_menus.flags1) then
+      r.ImGui_TableSetupColumn(ctx, 'One')
+      r.ImGui_TableSetupColumn(ctx, 'Two')
+      r.ImGui_TableSetupColumn(ctx, 'Three')
+
+      -- [1.1]] Right-click on the TableHeadersRow() line to open the default table context menu.
+      r.ImGui_TableHeadersRow(ctx)
+
+      -- Submit dummy contents
+      for row = 0, 3 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, COLUMNS_COUNT - 1 do
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('Cell %d,%d'):format(column, row))
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+
+    -- Context Menus: second example
+    -- [2.1] Right-click on the TableHeadersRow() line to open the default table context menu.
+    -- [2.2] Right-click on the ".." to open a custom popup
+    -- [2.3] Right-click in columns to open another custom popup
+    demo.HelpMarker('Demonstrate mixing table context menu (over header), item context button (over button) and custom per-colum context menu (over column body).')
+    local flags2 = r.ImGui_TableFlags_Resizable()      |
+                   r.ImGui_TableFlags_SizingFixedFit() |
+                   r.ImGui_TableFlags_Reorderable()    |
+                   r.ImGui_TableFlags_Hideable()       |
+                   r.ImGui_TableFlags_Borders()
+    if r.ImGui_BeginTable(ctx, 'table_context_menu_2', COLUMNS_COUNT, flags2) then
+      r.ImGui_TableSetupColumn(ctx, 'One')
+      r.ImGui_TableSetupColumn(ctx, 'Two')
+      r.ImGui_TableSetupColumn(ctx, 'Three')
+
+      -- [2.1] Right-click on the TableHeadersRow() line to open the default table context menu.
+      r.ImGui_TableHeadersRow(ctx)
+      for row = 0, 3 do
+        r.ImGui_TableNextRow(ctx)
+        for column = 0, COLUMNS_COUNT - 1 do
+          -- Submit dummy contents
+          r.ImGui_TableSetColumnIndex(ctx, column)
+          r.ImGui_Text(ctx, ('Cell %d,%d'):format(column, row))
+          r.ImGui_SameLine(ctx)
+
+          -- [2.2] Right-click on the ".." to open a custom popup
+          r.ImGui_PushID(ctx, row * COLUMNS_COUNT + column)
+          r.ImGui_SmallButton(ctx, "..")
+          if r.ImGui_BeginPopupContextItem(ctx) then
+            r.ImGui_Text(ctx, ('This is the popup for Button("..") in Cell %d,%d'):format(column, row))
+            if r.ImGui_Button(ctx, 'Close') then
+              r.ImGui_CloseCurrentPopup(ctx)
+            end
+            r.ImGui_EndPopup(ctx)
+          end
+          r.ImGui_PopID(ctx)
+        end
+      end
+
+      -- [2.3] Right-click anywhere in columns to open another custom popup
+      -- (instead of testing for !IsAnyItemHovered() we could also call OpenPopup() with ImGuiPopupFlags_NoOpenOverExistingPopup
+      -- to manage popup priority as the popups triggers, here "are we hovering a column" are overlapping)
+      local hovered_column = -1
+      for column = 0, COLUMNS_COUNT do
+        r.ImGui_PushID(ctx, column)
+        if (r.ImGui_TableGetColumnFlags(ctx, column) & r.ImGui_TableColumnFlags_IsHovered()) ~= 0 then
+          hovered_column = column
+        end
+        if hovered_column == column and not r.ImGui_IsAnyItemHovered(ctx) and r.ImGui_IsMouseReleased(ctx, 1) then
+          r.ImGui_OpenPopup(ctx, 'MyPopup')
+        end
+        if r.ImGui_BeginPopup(ctx, 'MyPopup') then
+          if column == COLUMNS_COUNT then
+            r.ImGui_Text(ctx, 'This is a custom popup for unused space after the last column.')
+          else
+            r.ImGui_Text(ctx, ('This is a custom popup for Column %d'):format(column))
+          end
+          if r.ImGui_Button(ctx, 'Close') then
+            r.ImGui_CloseCurrentPopup(ctx)
+          end
+          r.ImGui_EndPopup(ctx)
+        end
+        r.ImGui_PopID(ctx)
+      end
+
+      r.ImGui_EndTable(ctx)
+      r.ImGui_Text(ctx, ('Hovered column: %d'):format(hovered_column))
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  -- Demonstrate creating multiple tables with the same ID
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Synced instances') then
+    demo.HelpMarker('Multiple tables with the same identifier will share their settings, width, visibility, order etc.')
+    local flags = r.ImGui_TableFlags_Resizable() |
+                  r.ImGui_TableFlags_Reorderable() |
+                  r.ImGui_TableFlags_Hideable() |
+                  r.ImGui_TableFlags_Borders() |
+                  r.ImGui_TableFlags_SizingFixedFit()-- |
+                  --r.ImGui_TableFlags_NoSavedSettings()
+    for n = 0, 2 do
+      local buf = ('Synced Table %d'):format(n)
+      local open = r.ImGui_CollapsingHeader(ctx, buf, nil, r.ImGui_TreeNodeFlags_DefaultOpen())
+      if open and r.ImGui_BeginTable(ctx, 'Table', 3, flags) then
+        r.ImGui_TableSetupColumn(ctx, 'One')
+        r.ImGui_TableSetupColumn(ctx, 'Two')
+        r.ImGui_TableSetupColumn(ctx, 'Three')
+        r.ImGui_TableHeadersRow(ctx)
+        for cell = 0, 9 do
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, ('this cell %d'):format(cell))
+        end
+        r.ImGui_EndTable(ctx)
+      end
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
+  -- Demonstrate using Sorting facilities
+  -- This is a simplified version of the "Advanced" example, where we mostly focus on the code necessary to handle sorting.
+  -- Note that the "Advanced" example also showcase manually triggering a sort (e.g. if item quantities have been modified)
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Sorting') then
+    local template_items_names = {
+      'Banana', 'Apple', 'Cherry', 'Watermelon', 'Grapefruit', 'Strawberry', 'Mango',
+      'Kiwi', 'Orange', 'Pineapple', 'Blueberry', 'Plum', 'Coconut', 'Pear', 'Apricot'
+    }
+
+    if not tables.sorting then
+      tables.sorting = {
+        flags = r.ImGui_TableFlags_Resizable()       |
+                r.ImGui_TableFlags_Reorderable()     |
+                r.ImGui_TableFlags_Hideable()        |
+                r.ImGui_TableFlags_Sortable()        |
+                r.ImGui_TableFlags_SortMulti()       |
+                r.ImGui_TableFlags_RowBg()           |
+                r.ImGui_TableFlags_BordersOuter()    |
+                r.ImGui_TableFlags_BordersV()        |
+                -- r.ImGui_TableFlags_NoBordersInBody() |
+                r.ImGui_TableFlags_ScrollY(),
+        items = {},
+      }
+
+      -- Create item list
+      for n = 0, 49 do
+        local template_n = n % #template_items_names
+        local item = {
+          id = n,
+          name = template_items_names[template_n + 1],
+          quantity = (n * n - n) % 20, -- Assign default quantities
+        }
+        table.insert(tables.sorting.items, item)
+      end
+    end
+
+    -- Options
+    demo.PushStyleCompact()
+    rv,tables.sorting.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_SortMulti', tables.sorting.flags, r.ImGui_TableFlags_SortMulti())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).')
+    rv,tables.sorting.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_SortTristate', tables.sorting.flags, r.ImGui_TableFlags_SortTristate())
+    r.ImGui_SameLine(ctx); demo.HelpMarker('When sorting is enabled: allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).')
+    demo.PopStyleCompact()
+
+    if r.ImGui_BeginTable(ctx, 'table_sorting', 4, tables.sorting.flags, 0.0, TEXT_BASE_HEIGHT * 15, 0.0) then
+      -- Declare columns
+      -- We use the "user_id" parameter of TableSetupColumn() to specify a user id that will be stored in the sort specifications.
+      -- This is so our sort function can identify a column given our own identifier. We could also identify them based on their index!
+      -- Demonstrate using a mixture of flags among available sort-related flags:
+      -- - ImGuiTableColumnFlags_DefaultSort
+      -- - ImGuiTableColumnFlags_NoSort / ImGuiTableColumnFlags_NoSortAscending / ImGuiTableColumnFlags_NoSortDescending
+      -- - ImGuiTableColumnFlags_PreferSortAscending / ImGuiTableColumnFlags_PreferSortDescending
+      r.ImGui_TableSetupColumn(ctx, 'ID',       r.ImGui_TableColumnFlags_DefaultSort()          | r.ImGui_TableColumnFlags_WidthFixed(),   0.0, MyItemColumnID_ID)
+      r.ImGui_TableSetupColumn(ctx, 'Name',                                                       r.ImGui_TableColumnFlags_WidthFixed(),   0.0, MyItemColumnID_Name)
+      r.ImGui_TableSetupColumn(ctx, 'Action',   r.ImGui_TableColumnFlags_NoSort()               | r.ImGui_TableColumnFlags_WidthFixed(),   0.0, MyItemColumnID_Action)
+      r.ImGui_TableSetupColumn(ctx, 'Quantity', r.ImGui_TableColumnFlags_PreferSortDescending() | r.ImGui_TableColumnFlags_WidthStretch(), 0.0, MyItemColumnID_Quantity)
+      r.ImGui_TableSetupScrollFreeze(ctx, 0, 1) -- Make row always visible
+      r.ImGui_TableHeadersRow(ctx)
+
+      -- Sort our data if sort specs have been changed!
+      if r.ImGui_TableNeedSort(ctx) then
+        table.sort(tables.sorting.items, demo.CompareTableItems)
+      end
+
+      -- Demonstrate using clipper for large vertical lists
+      local clipper = r.ImGui_CreateListClipper(ctx)
+      r.ImGui_ListClipper_Begin(clipper, #tables.sorting.items)
+      while r.ImGui_ListClipper_Step(clipper) do
+        local display_start = r.ImGui_ListClipper_GetDisplayStart(clipper)
+        local display_end   = r.ImGui_ListClipper_GetDisplayEnd(clipper)
+        for row_n = display_start, display_end - 1 do
+          -- Display a data item
+          local item = tables.sorting.items[row_n + 1]
+          r.ImGui_PushID(ctx, item.id)
+          r.ImGui_TableNextRow(ctx)
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, ('%04d'):format(item.id))
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, item.name)
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_SmallButton(ctx, 'None')
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, ('%d'):format(item.quantity))
+          r.ImGui_PopID(ctx)
+        end
+      end
+      r.ImGui_EndTable(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+
 --     //r.ImGui_SetNextItemOpen(true, ImGuiCond_Once); // [DEBUG]
 --     if (open_action != -1)
 --         r.ImGui_SetNextItemOpen(open_action != 0);
@@ -5215,14 +5264,15 @@ end
 --         r.ImGui_TreePop();
 --     }
 --
---     r.ImGui_PopID();
---
+  r.ImGui_PopID(ctx)
+
 --     ShowDemoWindowColumns();
---
---     if (disable_indent)
---         r.ImGui_PopStyleVar();
--- }
---
+
+  if tables.disable_indent then
+    r.ImGui_PopStyleVar(ctx)
+  end
+end
+
 -- // Demonstrate old/legacy Columns API!
 -- // [2020: Columns are under-featured and not maintained. Prefer using the more flexible and powerful BeginTable() API!]
 -- static void ShowDemoWindowColumns()

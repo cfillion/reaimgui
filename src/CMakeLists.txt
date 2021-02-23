@@ -12,6 +12,7 @@ add_library(${PROJECT_NAME} SHARED
   api_input.cpp
   api_item.cpp
   api_layout.cpp
+  api_listclipper.cpp
   api_lists.cpp
   api_menus.cpp
   api_mouse.cpp
@@ -30,6 +31,7 @@ add_library(${PROJECT_NAME} SHARED
   context.cpp
   main.cpp
   opengl_renderer.cpp
+  resource.cpp
   window.cpp
 )
 

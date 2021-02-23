@@ -76,9 +76,26 @@ DEFINE_API(bool, IsItemToggledOpen, (ImGui_Context*,ctx),
   return ImGui::IsItemToggledOpen();
 });
 
-// IMGUI_API bool          IsAnyItemHovered();                                                 // is any item hovered?
-// IMGUI_API bool          IsAnyItemActive();                                                  // is any item active?
-// IMGUI_API bool          IsAnyItemFocused();                                                 // is any item focused?
+DEFINE_API(bool, IsAnyItemHovered, (ImGui_Context*,ctx),
+"is any item hovered?",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::IsAnyItemHovered();
+});
+
+DEFINE_API(bool, IsAnyItemActive, (ImGui_Context*,ctx),
+"is any item active?",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::IsAnyItemActive();
+});
+
+DEFINE_API(bool, IsAnyItemFocused, (ImGui_Context*,ctx),
+"is any item focused?",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::IsAnyItemFocused();
+});
 
 DEFINE_API(void, GetItemRectMin, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),

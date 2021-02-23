@@ -71,7 +71,7 @@ R"(This is an helper over BeginListBox()/EndListBox() for convenience purpose. T
 
 Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
 
-'heightInItems' defaults to -1.)",
+Default values: heightInItems = -1)",
 {
   Context::check(ctx)->enterFrame();
   makeNullSeparated(items);

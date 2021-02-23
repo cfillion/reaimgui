@@ -15,18 +15,18 @@ The typical call flow is:
 - 3. Optionally call TableSetupScrollFreeze() to request scroll freezing of columns/rows.
 - 4. Optionally call TableHeadersRow() to submit a header row. Names are pulled from TableSetupColumn() data.
 - 5. Populate contents:
-   - In most situations you can use TableNextRow() + TableSetColumnIndex(N) to start appending into a column.
-   - If you are using tables as a sort of grid, where every columns is holding the same type of contents,
-     you may prefer using TableNextColumn() instead of TableNextRow() + TableSetColumnIndex().
-     TableNextColumn() will automatically wrap-around into the next row if needed.
-   - IMPORTANT: Comparatively to the old Columns() API, we need to call TableNextColumn() for the first column!
-   - Summary of possible call flow:
-       --------------------------------------------------------------------------------------------------------
-       TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
-       TableNextRow() -> TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
-                         TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
-       TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
-       --------------------------------------------------------------------------------------------------------
+   - In most situations you can use TableNextRow() + TableSetColumnIndex(N) to start appending into a column.
+   - If you are using tables as a sort of grid, where every columns is holding the same type of contents,
+     you may prefer using TableNextColumn() instead of TableNextRow() + TableSetColumnIndex().
+     TableNextColumn() will automatically wrap-around into the next row if needed.
+   - IMPORTANT: Comparatively to the old Columns() API, we need to call TableNextColumn() for the first column!
+   - Summary of possible call flow:
+       --------------------------------------------------------------------------------------------------------
+       TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
+       TableNextRow() -> TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
+                         TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
+       TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
+       --------------------------------------------------------------------------------------------------------
 - 5. Call EndTable())",
 {
   Context::check(ctx)->enterFrame();
@@ -66,35 +66,148 @@ DEFINE_API(bool, TableNextColumn, (ImGui_Context*,ctx),
   return ImGui::TableNextColumn();
 });
 
-    // IMGUI_API bool          TableSetColumnIndex(int column_n);          // append into the specified column. Return true when column is visible.
+DEFINE_API(bool, TableSetColumnIndex, (ImGui_Context*,ctx)
+(int,column_n),
+"Append into the specified column. Return true when column is visible.",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::TableSetColumnIndex(column_n);
+});
     // // Tables: Headers & Columns declaration
-    // // - Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
     // // - Use TableHeadersRow() to create a header row and automatically submit a TableHeader() for each column.
     // //   Headers are required to perform: reordering, sorting, and opening the context menu.
     // //   The context menu can also be made available in columns body using ImGuiTableFlags_ContextMenuInBody.
     // // - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
     // //   some advanced use cases (e.g. adding custom widgets in header row).
     // // - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
-    // IMGUI_API void          TableSetupColumn(const char* label, ImGuiTableColumnFlags flags = 0, float init_width_or_weight = 0.0f, ImU32 user_id = 0);
-    // IMGUI_API void          TableSetupScrollFreeze(int cols, int rows); // lock columns/rows so they stay visible when scrolled.
-    // IMGUI_API void          TableHeadersRow();                          // submit all headers cells based on data provided to TableSetupColumn() + submit context menu
-    // IMGUI_API void          TableHeader(const char* label);             // submit one header cell manually (rarely used)
-    // // Tables: Sorting
-    // // - Call TableGetSortSpecs() to retrieve latest sort specs for the table. NULL when not sorting.
-    // // - When 'SpecsDirty == true' you should sort your data. It will be true when sorting specs have changed
-    // //   since last call, or the first time. Make sure to set 'SpecsDirty = false' after sorting, else you may
-    // //   wastefully sort your data every frame!
-    // // - Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
-    // IMGUI_API ImGuiTableSortSpecs* TableGetSortSpecs();                        // get latest sort specs for the table (NULL if not sorting).
-    // // Tables: Miscellaneous functions
-    // // - Functions args 'int column_n' treat the default value of -1 as the same as passing the current column index.
-    // IMGUI_API int                   TableGetColumnCount();                      // return number of columns (value passed to BeginTable)
-    // IMGUI_API int                   TableGetColumnIndex();                      // return current column index.
-    // IMGUI_API int                   TableGetRowIndex();                         // return current row index.
-    // IMGUI_API const char*           TableGetColumnName(int column_n = -1);      // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
-    // IMGUI_API ImGuiTableColumnFlags TableGetColumnFlags(int column_n = -1);     // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
-    // IMGUI_API void                  TableSetBgColor(ImGuiTableBgTarget target, ImU32 color, int column_n = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
-    //
+DEFINE_API(void, TableSetupColumn, (ImGui_Context*,ctx)
+(const char*,label)(int*,API_RO(flags))(double*,API_RO(init_width_or_weight))
+(int*,API_RO(user_id)),
+R"(Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
+
+Default values: flags = ImGui_TableColumnFlags_None, float init_width_or_weight = 0.0, user_id = 0)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::TableSetupColumn(label,
+    valueOr(API_RO(flags), ImGuiTableColumnFlags_None),
+    valueOr(API_RO(init_width_or_weight), 0.0), valueOr(API_RO(user_id), 0));
+});
+
+DEFINE_API(void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
+(int,cols)(int,rows),
+"Lock columns/rows so they stay visible when scrolled.",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::TableSetupScrollFreeze(cols, rows);
+});
+
+DEFINE_API(void, TableHeadersRow, (ImGui_Context*,ctx),
+"Submit all headers cells based on data provided to TableSetupColumn() + submit context menu",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::TableHeadersRow();
+});
+
+DEFINE_API(void, TableHeader, (ImGui_Context*,ctx)
+(const char*,label),
+"Submit one header cell manually (rarely used). See ImGui_TableSetColumn",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::TableHeader(label);
+});
+
+DEFINE_API(bool, TableNeedSort, (ImGui_Context*,ctx),
+"Return true once when sorting specs have changed since last call, or the first time. See ImGui_TableSortSpecs_GetColumnSpecs.",
+{
+  Context::check(ctx)->enterFrame();
+  if(ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() }) {
+    const bool needSort { specs->SpecsDirty };
+    specs->SpecsDirty = false;
+    return needSort;
+  }
+
+  return false;
+});
+
+DEFINE_API(bool, TableGetColumnSortSpecs, (ImGui_Context*,ctx)
+(int,id)
+(int*,API_W(column_user_id))(int*,API_W(column_index))
+(int*,API_W(sort_order))(int*,API_W(sort_direction)),
+R"(Sorting specification for one column of a table. Call while incrementing id from 0 until false is returned.
+
+ColumnUserID:  User id of the column (if specified by a TableSetupColumn() call)
+ColumnIndex:   Index of the column
+SortOrder:     Index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
+SortDirection: ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
+
+See ImGui_TableNeedSort.)",
+{
+  Context::check(ctx)->enterFrame();
+
+  const ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() };
+  if(!specs || id >= specs->SpecsCount)
+    return false;
+
+  const ImGuiTableColumnSortSpecs &spec { specs->Specs[id] };
+  if(API_W(column_user_id)) *API_W(column_user_id) = spec.ColumnUserID;
+  if(API_W(column_index))   *API_W(column_index)   = spec.ColumnIndex;
+  if(API_W(sort_order))     *API_W(sort_order)     = spec.SortOrder;
+  if(API_W(sort_direction)) *API_W(sort_direction) = spec.SortDirection;
+  return true;
+});
+
+DEFINE_API(int, TableGetColumnCount, (ImGui_Context*,ctx),
+"Return number of columns (value passed to BeginTable)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::TableGetColumnCount();
+});
+
+DEFINE_API(int, TableGetColumnIndex, (ImGui_Context*,ctx),
+"Return current column index.",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::TableGetColumnIndex();
+});
+
+DEFINE_API(int, TableGetRowIndex, (ImGui_Context*,ctx),
+"Return current row index.",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::TableGetRowIndex();
+});
+
+DEFINE_API(const char*, TableGetColumnName, (ImGui_Context*,ctx)
+(int*,API_RO(column_n)),
+R"(Return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
+
+Default values: volumn_n = -1)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::TableGetColumnName(valueOr(API_RO(column_n), -1));
+});
+
+DEFINE_API(int, TableGetColumnFlags, (ImGui_Context*,ctx)
+(int*,API_RO(column_n)),
+R"(Return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
+
+Default values: volumn_n = -1)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::TableGetColumnFlags(valueOr(API_RO(column_n), -1));
+});
+
+DEFINE_API(void, TableSetBgColor, (ImGui_Context*,ctx)
+(int,target)(int,color_rgba)(int*,API_RO(column_n)),
+R"(Change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
+
+Default values: column_n = -1)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::TableSetBgColor(target,
+    Color::rgba2abgr(color_rgba), valueOr(API_RO(column_n), -1));
+});
+
     // // Legacy Columns API (2020: prefer using Tables!)
     // // - You can also use SameLine(pos_x) to mimic simplified columns.
     // IMGUI_API void          Columns(int count = 1, const char* id = NULL, bool border = true);

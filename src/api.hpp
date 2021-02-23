@@ -30,7 +30,7 @@ struct ReaScriptAPI;
 template<typename R, typename... Args>
 struct ReaScriptAPI<R(*)(Args...)>
 {
-  static void *applyVarArg(R(*fn)(Args...), void **argv, const int argc)
+  static const void *applyVarArg(R(*fn)(Args...), void **argv, const int argc)
   {
     if(static_cast<size_t>(argc) < sizeof...(Args))
       return nullptr;
@@ -51,7 +51,7 @@ struct ReaScriptAPI<R(*)(Args...)>
       // cast numbers to have the same size as a pointer to avoid warnings
       using IntPtrR = std::conditional_t<std::is_pointer_v<R>, R, intptr_t>;
       const auto value { static_cast<IntPtrR>(std::apply(fn, args)) };
-      return reinterpret_cast<void *>(value);
+      return reinterpret_cast<const void *>(value);
     }
   }
 
@@ -73,7 +73,7 @@ private:
 };
 
 template<auto fn>
-void *InvokeReaScriptAPI(void **argv, int argc)
+const void *InvokeReaScriptAPI(void **argv, int argc)
 {
   return ReaScriptAPI<decltype(fn)>::applyVarArg(fn, argv, argc);
 }
