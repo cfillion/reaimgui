@@ -3,16 +3,16 @@
 DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
 R"(Popups, Modals
- - They block normal mouse hovering detection (and therefore most mouse interactions) behind them.
- - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
- - Their visibility state (~bool) is held internally instead of being held by the programmer as we are used to with regular Begin*() calls.
- - The 3 properties above are related: we need to retain popup visibility state in the library because popups may be closed as any time.
- - You can bypass the hovering restriction by using ImGuiHoveredFlags_AllowWhenBlockedByPopup when calling IsItemHovered() or IsWindowHovered().
- - IMPORTANT: Popup identifiers are relative to the current ID stack, so OpenPopup and BeginPopup generally needs to be at the same level of the stack.
-   This is sometimes leading to confusing mistakes. May rework this in the future.
-Popups: begin/end functions
- - BeginPopup(): query popup state, if open start appending into the window. Call EndPopup() afterwards. ImGuiWindowFlags are forwarded to the window.
- - BeginPopupModal(): block every interactions behind the window, cannot be closed by user, add a dimming background, has a title bar.
+- They block normal mouse hovering detection (and therefore most mouse interactions) behind them.
+- If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
+- Their visibility state (~bool) is held internally instead of being held by the programmer as we are used to with regular Begin*() calls.
+- The 3 properties above are related: we need to retain popup visibility state in the library because popups may be closed as any time.
+- You can bypass the hovering restriction by using ImGuiHoveredFlags_AllowWhenBlockedByPopup when calling IsItemHovered() or IsWindowHovered().
+- IMPORTANT: Popup identifiers are relative to the current ID stack, so OpenPopup and BeginPopup generally needs to be at the same level of the stack.
+  This is sometimes leading to confusing mistakes. May rework this in the future.
+opups: begin/end functions
+
+Query popup state, if open start appending into the window. Call EndPopup() afterwards. ImGuiWindowFlags are forwarded to the window.
 
 Return true if the popup is open, and you can start outputting to it.
 
@@ -22,7 +22,17 @@ Default values: flags = ImGui_WindowFlags_None)",
   return ImGui::BeginPopup(str_id, valueOr(API_RO(flags), ImGuiWindowFlags_None));
 });
 
-// IMGUI_API bool          BeginPopupModal(const char* name, bool* p_open = NULL, ImGuiWindowFlags flags = 0); // return true if the modal is open, and you can start outputting to it.
+DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
+(const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
+R"(Block every interactions behind the window, cannot be closed by user, add a dimming background, has a title bar. Return true if the modal is open, and you can start outputting to it. See ImGui_BeginPopup.
+
+Default values: flags = ImGui_WindowFlags_None)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::BeginPopupModal(name, API_RWO(p_open),
+    valueOr(API_RO(flags), ImGuiWindowFlags_None));
+});
+
 DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
 "only call EndPopup() if BeginPopupXXX() returns true!",
 {
@@ -48,8 +58,25 @@ Default values: flags = ImGui_PopupFlags_None)",
   ImGui::OpenPopup(str_id, valueOr(API_RO(flags), ImGuiPopupFlags_None));
 });
 
-IMGUI_API void          OpenPopupOnItemClick(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);   // helper to open popup when clicked on last item. return true when just opened. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
-IMGUI_API void          CloseCurrentPopup();                                                                // manually close the popup we have begin-ed into.
+DEFINE_API(void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
+(const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
+R"(Helper to open popup when clicked on last item. return true when just opened. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
+
+Default values: str_id = nil, popup_plags = ImGui_PopupFlags_MouseButtonRight)",
+{
+  Context::check(ctx)->enterFrame();
+  nullIfEmpty(API_RO(str_id));
+
+  ImGui::OpenPopupOnItemClick(API_RO(str_id),
+    valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
+});
+
+DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
+"Manually close the popup we have begin-ed into.",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::CloseCurrentPopup();
+});
 
 // Popups: open+begin combined functions helpers
 //  - Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.g. hovering an item and right-clicking.

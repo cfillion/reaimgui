@@ -123,14 +123,14 @@ DEFINE_API(double, GetWindowHeight, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetNextWindowPos, (ImGui_Context*,ctx)
 (double,x)(double,y)(int*,API_RO(cond))
-(double*,API_RO(pivotX))(double*,API_RO(pivotY)),
+(double*,API_RO(pivot_x))(double*,API_RO(pivot_y)),
 R"(Set next window position. Call before Begin(). Use pivot=(0.5f,0.5f) to center on given point, etc.
 
-Default values: cond = ImGui_Cond_Always, pivotX = 0.0, pivotY = 0.0)",
+Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
 {
   Context::check(ctx)->enterFrame();
   ImGui::SetNextWindowPos(ImVec2(x, y), valueOr(API_RO(cond), ImGuiCond_Always),
-    ImVec2(valueOr(API_RO(pivotX), 0.0), valueOr(API_RO(pivotY), 0.0)));
+    ImVec2(valueOr(API_RO(pivot_x), 0.0), valueOr(API_RO(pivot_y), 0.0)));
 });
 
 DEFINE_API(void, SetNextWindowSize, (ImGui_Context*,ctx)

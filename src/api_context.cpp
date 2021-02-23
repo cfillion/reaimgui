@@ -74,6 +74,16 @@ DEFINE_API(double, GetDeltaTime, (ImGui_Context*,ctx),
   return ImGui::GetIO().DeltaTime;
 });
 
+DEFINE_API(void, GetDisplaySize, (ImGui_Context*,ctx)
+(double*,API_W(w))(double*,API_W(h)),
+"",
+{
+  Context::check(ctx)->enterFrame();
+  const ImVec2 &size { ImGui::GetIO().DisplaySize };
+  if(API_W(w)) *API_W(w) = size.x;
+  if(API_W(h)) *API_W(h) = size.y;
+});
+
 DEFINE_API(void, ShowAboutWindow, (ImGui_Context*,ctx)
 (bool*,API_RWO(open)),
 "Create About window. Display Dear ImGui version, credits and build/system information.",

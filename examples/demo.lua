@@ -416,7 +416,7 @@ function demo.ShowDemoWindow(open)
   -- All demo contents
   demo.ShowDemoWindowWidgets()
   demo.ShowDemoWindowLayout()
-  -- demo.ShowDemoWindowPopups()
+  demo.ShowDemoWindowPopups()
   -- demo.ShowDemoWindowTables()
   -- demo.ShowDemoWindowMisc()
 
@@ -638,6 +638,22 @@ layout = {
   clipping = {
     size   = { 100.0, 100.0 },
     offset = {  30.0,  30.0 },
+  },
+}
+
+popups = {
+  popups = {
+    selected_fish = -1,
+    toggles = { true, false, false, false, false },
+  },
+  context = {
+    value = 0.5,
+    name  = 'Label1',
+  },
+  modal = {
+    dont_ask_me_next_time = false,
+    item  = 1,
+    color = 0x66b30080,
   },
 }
 
@@ -3121,253 +3137,245 @@ function demo.ShowDemoWindowLayout()
   end
 end
 
--- static void ShowDemoWindowPopups()
--- {
---     if (!r.ImGui_CollapsingHeader("Popups & Modal windows"))
---         return;
---
---     // The properties of popups windows are:
---     // - They block normal mouse hovering detection outside them. (*)
---     // - Unless modal, they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
---     // - Their visibility state (~bool) is held internally by Dear ImGui instead of being held by the programmer as
---     //   we are used to with regular Begin() calls. User can manipulate the visibility state by calling OpenPopup().
---     // (*) One can use IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) to bypass it and detect hovering even
---     //     when normally blocked by a popup.
---     // Those three properties are connected. The library needs to hold their visibility state BECAUSE it can close
---     // popups at any time.
---
---     // Typical use for regular windows:
---     //   bool my_tool_is_active = false; if (r.ImGui_Button("Open")) my_tool_is_active = true; [...] if (my_tool_is_active) Begin("My Tool", &my_tool_is_active) { [...] } End();
---     // Typical use for popups:
---     //   if (r.ImGui_Button("Open")) r.ImGui_OpenPopup("MyPopup"); if (r.ImGui_BeginPopup("MyPopup") { [...] EndPopup(); }
---
---     // With popups we have to go through a library call (here OpenPopup) to manipulate the visibility state.
---     // This may be a bit confusing at first but it should quickly make sense. Follow on the examples below.
---
---     if (r.ImGui_TreeNode("Popups"))
---     {
---         r.ImGui_TextWrapped(
---             "When a popup is active, it inhibits interacting with windows that are behind the popup. "
---             "Clicking outside the popup closes it.");
---
---         static int selected_fish = -1;
---         const char* names[] = { "Bream", "Haddock", "Mackerel", "Pollock", "Tilefish" };
---         static bool toggles[] = { true, false, false, false, false };
---
---         // Simple selection popup (if you want to show the current selection inside the Button itself,
---         // you may want to build a string using the "###" operator to preserve a constant ID with a variable label)
---         if (r.ImGui_Button("Select.."))
---             r.ImGui_OpenPopup("my_select_popup");
---         r.ImGui_SameLine();
---         r.ImGui_TextUnformatted(selected_fish == -1 ? "<None>" : names[selected_fish]);
---         if (r.ImGui_BeginPopup("my_select_popup"))
---         {
---             r.ImGui_Text("Aquarium");
---             r.ImGui_Separator();
---             for (int i = 0; i < IM_ARRAYSIZE(names); i++)
---                 if (r.ImGui_Selectable(names[i]))
---                     selected_fish = i;
---             r.ImGui_EndPopup();
---         }
---
---         // Showing a menu with toggles
---         if (r.ImGui_Button("Toggle.."))
---             r.ImGui_OpenPopup("my_toggle_popup");
---         if (r.ImGui_BeginPopup("my_toggle_popup"))
---         {
---             for (int i = 0; i < IM_ARRAYSIZE(names); i++)
---                 r.ImGui_MenuItem(names[i], "", &toggles[i]);
---             if (r.ImGui_BeginMenu("Sub-menu"))
---             {
---                 r.ImGui_MenuItem("Click me");
---                 r.ImGui_EndMenu();
---             }
---
---             r.ImGui_Separator();
---             r.ImGui_Text("Tooltip here");
---             if (r.ImGui_IsItemHovered())
---                 r.ImGui_SetTooltip("I am a tooltip over a popup");
---
---             if (r.ImGui_Button("Stacked Popup"))
---                 r.ImGui_OpenPopup("another popup");
---             if (r.ImGui_BeginPopup("another popup"))
---             {
---                 for (int i = 0; i < IM_ARRAYSIZE(names); i++)
---                     r.ImGui_MenuItem(names[i], "", &toggles[i]);
---                 if (r.ImGui_BeginMenu("Sub-menu"))
---                 {
---                     r.ImGui_MenuItem("Click me");
---                     if (r.ImGui_Button("Stacked Popup"))
---                         r.ImGui_OpenPopup("another popup");
---                     if (r.ImGui_BeginPopup("another popup"))
---                     {
---                         r.ImGui_Text("I am the last one here.");
---                         r.ImGui_EndPopup();
---                     }
---                     r.ImGui_EndMenu();
---                 }
---                 r.ImGui_EndPopup();
---             }
---             r.ImGui_EndPopup();
---         }
---
---         // Call the more complete ShowExampleMenuFile which we use in various places of this demo
---         if (r.ImGui_Button("File Menu.."))
---             r.ImGui_OpenPopup("my_file_popup");
---         if (r.ImGui_BeginPopup("my_file_popup"))
---         {
---             ShowExampleMenuFile();
---             r.ImGui_EndPopup();
---         }
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Context menus"))
---     {
---         // BeginPopupContextItem() is a helper to provide common/simple popup behavior of essentially doing:
---         //    if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
---         //       OpenPopup(id);
---         //    return BeginPopup(id);
---         // For more advanced uses you may want to replicate and customize this code.
---         // See details in BeginPopupContextItem().
---         static float value = 0.5f;
---         r.ImGui_Text("Value = %.3f (<-- right-click here)", value);
---         if (r.ImGui_BeginPopupContextItem("item context menu"))
---         {
---             if (r.ImGui_Selectable("Set to zero")) value = 0.0f;
---             if (r.ImGui_Selectable("Set to PI")) value = 3.1415f;
---             r.ImGui_SetNextItemWidth(-1); // -FLT_MIN in v1.81?
---             r.ImGui_DragFloat("##Value", &value, 0.1f, 0.0f, 0.0f);
---             r.ImGui_EndPopup();
---         }
---
---         // We can also use OpenPopupOnItemClick() which is the same as BeginPopupContextItem() but without the
---         // Begin() call. So here we will make it that clicking on the text field with the right mouse button (1)
---         // will toggle the visibility of the popup above.
---         r.ImGui_Text("(You can also right-click me to open the same popup as above.)");
---         r.ImGui_OpenPopupOnItemClick("item context menu", 1);
---
---         // When used after an item that has an ID (e.g.Button), we can skip providing an ID to BeginPopupContextItem().
---         // BeginPopupContextItem() will use the last item ID as the popup ID.
---         // In addition here, we want to include your editable label inside the button label.
---         // We use the ### operator to override the ID (read FAQ about ID for details)
---         static char name[32] = "Label1";
---         char buf[64];
---         sprintf(buf, "Button: %s###Button", name); // ### operator override ID ignoring the preceding label
---         r.ImGui_Button(buf);
---         if (r.ImGui_BeginPopupContextItem())
---         {
---             r.ImGui_Text("Edit name:");
---             r.ImGui_InputText("##edit", name, IM_ARRAYSIZE(name));
---             if (r.ImGui_Button("Close"))
---                 r.ImGui_CloseCurrentPopup();
---             r.ImGui_EndPopup();
---         }
---         r.ImGui_SameLine(); r.ImGui_Text("(<-- right-click here)");
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Modals"))
---     {
---         r.ImGui_TextWrapped("Modal windows are like popups but the user cannot close them by clicking outside.");
---
---         if (r.ImGui_Button("Delete.."))
---             r.ImGui_OpenPopup("Delete?");
---
---         // Always center this window when appearing
---         //v1.80 ImVec2 center(r.ImGui_GetIO().DisplaySize.x * 0.5f, r.ImGui_GetIO().DisplaySize.y * 0.5f);
---         ImVec2 center = ImGui::GetMainViewport()->GetCenter();
---         r.ImGui_SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
---
---         if (r.ImGui_BeginPopupModal("Delete?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
---         {
---             r.ImGui_Text("All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n");
---             r.ImGui_Separator();
---
---             //static int unused_i = 0;
---             //r.ImGui_Combo("Combo", &unused_i, "Delete\0Delete harder\0");
---
---             static bool dont_ask_me_next_time = false;
---             r.ImGui_PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
---             r.ImGui_Checkbox("Don't ask me next time", &dont_ask_me_next_time);
---             r.ImGui_PopStyleVar();
---
---             if (r.ImGui_Button("OK", ImVec2(120, 0))) { r.ImGui_CloseCurrentPopup(); }
---             r.ImGui_SetItemDefaultFocus();
---             r.ImGui_SameLine();
---             if (r.ImGui_Button("Cancel", ImVec2(120, 0))) { r.ImGui_CloseCurrentPopup(); }
---             r.ImGui_EndPopup();
---         }
---
---         if (r.ImGui_Button("Stacked modals.."))
---             r.ImGui_OpenPopup("Stacked 1");
---         if (r.ImGui_BeginPopupModal("Stacked 1", NULL, ImGuiWindowFlags_MenuBar))
---         {
---             if (r.ImGui_BeginMenuBar())
---             {
---                 if (r.ImGui_BeginMenu("File"))
---                 {
---                     if (r.ImGui_MenuItem("Some menu item")) {}
---                     r.ImGui_EndMenu();
---                 }
---                 r.ImGui_EndMenuBar();
---             }
---             r.ImGui_Text("Hello from Stacked The First\nUsing style.Colors[ImGuiCol_ModalWindowDimBg] behind it.");
---
---             // Testing behavior of widgets stacking their own regular popups over the modal.
---             static int item = 1;
---             static float color[4] = { 0.4f, 0.7f, 0.0f, 0.5f };
---             r.ImGui_Combo("Combo", &item, "aaaa\0bbbb\0cccc\0dddd\0eeee\0\0");
---             r.ImGui_ColorEdit4("color", color);
---
---             if (r.ImGui_Button("Add another modal.."))
---                 r.ImGui_OpenPopup("Stacked 2");
---
---             // Also demonstrate passing a bool* to BeginPopupModal(), this will create a regular close button which
---             // will close the popup. Note that the visibility state of popups is owned by imgui, so the input value
---             // of the bool actually doesn't matter here.
---             bool unused_open = true;
---             if (r.ImGui_BeginPopupModal("Stacked 2", &unused_open))
---             {
---                 r.ImGui_Text("Hello from Stacked The Second!");
---                 if (r.ImGui_Button("Close"))
---                     r.ImGui_CloseCurrentPopup();
---                 r.ImGui_EndPopup();
---             }
---
---             if (r.ImGui_Button("Close"))
---                 r.ImGui_CloseCurrentPopup();
---             r.ImGui_EndPopup();
---         }
---
---         r.ImGui_TreePop();
---     }
---
---     if (r.ImGui_TreeNode("Menus inside a regular window"))
---     {
---         r.ImGui_TextWrapped("Below we are testing adding menu items to a regular window. It's rather unusual but should work!");
---         r.ImGui_Separator();
---
---         // Note: As a quirk in this very specific example, we want to differentiate the parent of this menu from the
---         // parent of the various popup menus above. To do so we are encloding the items in a PushID()/PopID() block
---         // to make them two different menusets. If we don't, opening any popup above and hovering our menu here would
---         // open it. This is because once a menu is active, we allow to switch to a sibling menu by just hovering on it,
---         // which is the desired behavior for regular menus.
---         r.ImGui_PushID("foo");
---         r.ImGui_MenuItem("Menu item", "CTRL+M");
---         if (r.ImGui_BeginMenu("Menu inside a regular window"))
---         {
---             ShowExampleMenuFile();
---             r.ImGui_EndMenu();
---         }
---         r.ImGui_PopID();
---         r.ImGui_Separator();
---         r.ImGui_TreePop();
---     }
--- }
---
+function demo.ShowDemoWindowPopups()
+  if not r.ImGui_CollapsingHeader(ctx, 'Popups & Modal windows') then
+    return
+  end
+
+  local rv
+
+  -- The properties of popups windows are:
+  -- - They block normal mouse hovering detection outside them. (*)
+  -- - Unless modal, they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
+  -- - Their visibility state (~bool) is held internally by Dear ImGui instead of being held by the programmer as
+  --   we are used to with regular Begin() calls. User can manipulate the visibility state by calling OpenPopup().
+  -- (*) One can use IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) to bypass it and detect hovering even
+  --     when normally blocked by a popup.
+  -- Those three properties are connected. The library needs to hold their visibility state BECAUSE it can close
+  -- popups at any time.
+
+  -- Typical use for regular windows:
+  --   bool my_tool_is_active = false; if (r.ImGui_Button("Open")) my_tool_is_active = true; [...] if (my_tool_is_active) Begin("My Tool", &my_tool_is_active) { [...] } End();
+  -- Typical use for popups:
+  --   if (r.ImGui_Button("Open")) r.ImGui_OpenPopup("MyPopup"); if (r.ImGui_BeginPopup("MyPopup") { [...] EndPopup(); }
+
+  -- With popups we have to go through a library call (here OpenPopup) to manipulate the visibility state.
+  -- This may be a bit confusing at first but it should quickly make sense. Follow on the examples below.
+
+  if r.ImGui_TreeNode(ctx, 'Popups') then
+    r.ImGui_TextWrapped(ctx,
+      'When a popup is active, it inhibits interacting with windows that are behind the popup. \z
+       Clicking outside the popup closes it.');
+
+    local names = { 'Bream', 'Haddock', 'Mackerel', 'Pollock', 'Tilefish' }
+
+    -- Simple selection popup (if you want to show the current selection inside the Button itself,
+    -- you may want to build a string using the "###" operator to preserve a constant ID with a variable label)
+    if r.ImGui_Button(ctx, 'Select..') then
+      r.ImGui_OpenPopup(ctx, 'my_select_popup')
+    end
+    r.ImGui_SameLine(ctx)
+    r.ImGui_Text(ctx, names[popups.popups.selected_fish] or '<None>')
+    if r.ImGui_BeginPopup(ctx, 'my_select_popup') then
+      r.ImGui_Text(ctx, 'Aquarium')
+      r.ImGui_Separator(ctx)
+      for i,fish in ipairs(names) do
+        if r.ImGui_Selectable(ctx, fish) then
+          popups.popups.selected_fish = i
+        end
+      end
+      r.ImGui_EndPopup(ctx)
+    end
+
+    -- Showing a menu with toggles
+    if r.ImGui_Button(ctx, 'Toggle..') then
+      r.ImGui_OpenPopup(ctx, 'my_toggle_popup')
+    end
+    if r.ImGui_BeginPopup(ctx, 'my_toggle_popup') then
+      for i,fish in ipairs(names) do
+        rv,popups.popups.toggles[i] = r.ImGui_MenuItem(ctx, fish, '', popups.popups.toggles[i]);
+      end
+      if r.ImGui_BeginMenu(ctx, 'Sub-menu') then
+        r.ImGui_MenuItem(ctx, 'Click me')
+        r.ImGui_EndMenu(ctx)
+      end
+
+      r.ImGui_Separator(ctx)
+      r.ImGui_Text(ctx, 'Tooltip here')
+      if r.ImGui_IsItemHovered(ctx) then
+        r.ImGui_SetTooltip(ctx, 'I am a tooltip over a popup')
+      end
+
+      if r.ImGui_Button(ctx, 'Stacked Popup') then
+        r.ImGui_OpenPopup(ctx, 'another popup')
+      end
+      if r.ImGui_BeginPopup(ctx, 'another popup') then
+        for i,fish in ipairs(names) do
+          rv,popups.popups.toggles[i] = r.ImGui_MenuItem(ctx, fish, '', popups.popups.toggles[i])
+        end
+        if r.ImGui_BeginMenu(ctx, 'Sub-menu') then
+          r.ImGui_MenuItem(ctx, 'Click me');
+          if r.ImGui_Button(ctx, 'Stacked Popup') then
+            r.ImGui_OpenPopup(ctx, 'another popup')
+          end
+          if r.ImGui_BeginPopup(ctx, 'another popup') then
+            r.ImGui_Text(ctx, 'I am the last one here.')
+            r.ImGui_EndPopup(ctx)
+          end
+          r.ImGui_EndMenu(ctx)
+        end
+        r.ImGui_EndPopup(ctx)
+      end
+      r.ImGui_EndPopup(ctx)
+    end
+
+    -- Call the more complete ShowExampleMenuFile which we use in various places of this demo
+    if r.ImGui_Button(ctx, 'File Menu..') then
+      r.ImGui_OpenPopup(ctx, 'my_file_popup')
+    end
+    if r.ImGui_BeginPopup(ctx, 'my_file_popup') then
+      demo.ShowExampleMenuFile()
+      r.ImGui_EndPopup(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Context menus') then
+    -- BeginPopupContextItem() is a helper to provide common/simple popup behavior of essentially doing:
+    --    if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
+    --       OpenPopup(id);
+    --    return BeginPopup(id);
+    -- For more advanced uses you may want to replicate and customize this code.
+    -- See details in BeginPopupContextItem().
+    r.ImGui_Text(ctx, ('Value = %.6f (<-- right-click here)'):format(popups.context.value))
+    if r.ImGui_BeginPopupContextItem(ctx, 'item context menu') then
+      if r.ImGui_Selectable(ctx, 'Set to zero') then popups.context.value = 0.0      end
+      if r.ImGui_Selectable(ctx, 'Set to PI')   then popups.context.value = 3.141592 end
+      r.ImGui_SetNextItemWidth(ctx, -FLT_MIN)
+      rv,popups.context.value = r.ImGui_DragDouble(ctx, '##Value', popups.context.value, 0.1, 0.0, 0.0)
+      r.ImGui_EndPopup(ctx)
+    end
+
+    -- We can also use OpenPopupOnItemClick() which is the same as BeginPopupContextItem() but without the
+    -- Begin() call. So here we will make it that clicking on the text field with the right mouse button (1)
+    -- will toggle the visibility of the popup above.
+    r.ImGui_Text(ctx, '(You can also right-click me to open the same popup as above.)')
+    r.ImGui_OpenPopupOnItemClick(ctx, 'item context menu', 1)
+
+    -- When used after an item that has an ID (e.g.Button), we can skip providing an ID to BeginPopupContextItem().
+    -- BeginPopupContextItem() will use the last item ID as the popup ID.
+    -- In addition here, we want to include your editable label inside the button label.
+    -- We use the ### operator to override the ID (read FAQ about ID for details)
+    r.ImGui_Button(ctx, ("Button: %s###Button"):format(popups.context.name)) -- ### operator override ID ignoring the preceding label
+    if r.ImGui_BeginPopupContextItem(ctx) then
+      r.ImGui_Text(ctx, 'Edit name:')
+      rv,popups.context.name = r.ImGui_InputText(ctx, '##edit', popups.context.name)
+      if r.ImGui_Button(ctx, 'Close') then
+        r.ImGui_CloseCurrentPopup(ctx)
+      end
+      r.ImGui_EndPopup(ctx)
+    end
+    r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '(<-- right-click here)')
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Modals') then
+    r.ImGui_TextWrapped(ctx, 'Modal windows are like popups but the user cannot close them by clicking outside.')
+
+    if r.ImGui_Button(ctx, 'Delete..') then
+      r.ImGui_OpenPopup(ctx, 'Delete?')
+    end
+
+    -- Always center this window when appearing
+    local display_size = {r.ImGui_GetDisplaySize(ctx)}
+    local center = { display_size[1] * 0.5, display_size[2] * 0.5 }
+    -- ImVec2 center = ImGui::GetMainViewport()->GetCenter(); TODO
+    r.ImGui_SetNextWindowPos(ctx, center[1], center[2], r.ImGui_Cond_Appearing(), 0.5, 0.5)
+
+    if r.ImGui_BeginPopupModal(ctx, 'Delete?', nil, r.ImGui_WindowFlags_AlwaysAutoResize()) then
+      r.ImGui_Text(ctx, 'All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n')
+      r.ImGui_Separator(ctx)
+
+      --static int unused_i = 0;
+      --r.ImGui_Combo("Combo", &unused_i, "Delete\0Delete harder\0");
+
+      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), 0, 0)
+      rv,popups.modal.dont_ask_me_next_time =
+        r.ImGui_Checkbox(ctx, "Don't ask me next time", popups.modal.dont_ask_me_next_time)
+      r.ImGui_PopStyleVar(ctx)
+
+      if r.ImGui_Button(ctx, 'OK', 120, 0) then r.ImGui_CloseCurrentPopup(ctx) end
+      r.ImGui_SetItemDefaultFocus(ctx)
+      r.ImGui_SameLine(ctx)
+      if r.ImGui_Button(ctx, 'Cancel', 120, 0) then r.ImGui_CloseCurrentPopup(ctx) end
+      r.ImGui_EndPopup(ctx)
+    end
+
+    if r.ImGui_Button(ctx, 'Stacked modals..') then
+      r.ImGui_OpenPopup(ctx, 'Stacked 1')
+    end
+    if r.ImGui_BeginPopupModal(ctx, 'Stacked 1', nil, r.ImGui_WindowFlags_MenuBar()) then
+      if r.ImGui_BeginMenuBar(ctx) then
+        if r.ImGui_BeginMenu(ctx, 'File') then
+          if r.ImGui_MenuItem(ctx, 'Some menu item') then end
+          r.ImGui_EndMenu(ctx)
+        end
+        r.ImGui_EndMenuBar(ctx)
+      end
+      r.ImGui_Text(ctx, 'Hello from Stacked The First\nUsing style.Colors[ImGuiCol_ModalWindowDimBg] behind it.')
+
+      -- Testing behavior of widgets stacking their own regular popups over the modal.
+      rv,popups.modal.item  = r.ImGui_Combo(ctx, 'Combo', popups.modal.item, 'aaaa\31bbbb\31cccc\31dddd\31eeee\31')
+      rv,popups.modal.color = r.ImGui_ColorEdit(ctx, 'color', popups.modal.color)
+
+      if r.ImGui_Button(ctx, 'Add another modal..') then
+        r.ImGui_OpenPopup(ctx, 'Stacked 2')
+      end
+
+      -- Also demonstrate passing a bool* to BeginPopupModal(), this will create a regular close button which
+      -- will close the popup. Note that the visibility state of popups is owned by imgui, so the input value
+      -- of the bool actually doesn't matter here.
+      local unused_open = true
+      if r.ImGui_BeginPopupModal(ctx, 'Stacked 2', unused_open) then
+        r.ImGui_Text(ctx, 'Hello from Stacked The Second!')
+        if r.ImGui_Button(ctx, 'Close') then
+          r.ImGui_CloseCurrentPopup(ctx)
+        end
+        r.ImGui_EndPopup(ctx)
+      end
+
+      if r.ImGui_Button(ctx, 'Close') then
+        r.ImGui_CloseCurrentPopup(ctx)
+      end
+      r.ImGui_EndPopup(ctx)
+    end
+
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Menus inside a regular window') then
+    r.ImGui_TextWrapped(ctx, "Below we are testing adding menu items to a regular window. It's rather unusual but should work!")
+    r.ImGui_Separator(ctx)
+
+    -- Note: As a quirk in this very specific example, we want to differentiate the parent of this menu from the
+    -- parent of the various popup menus above. To do so we are encloding the items in a PushID()/PopID() block
+    -- to make them two different menusets. If we don't, opening any popup above and hovering our menu here would
+    -- open it. This is because once a menu is active, we allow to switch to a sibling menu by just hovering on it,
+    -- which is the desired behavior for regular menus.
+    r.ImGui_PushID(ctx, 'foo')
+    r.ImGui_MenuItem(ctx, 'Menu item', 'CTRL+M')
+    if r.ImGui_BeginMenu(ctx, 'Menu inside a regular window') then
+      demo.ShowExampleMenuFile()
+      r.ImGui_EndMenu(ctx)
+    end
+    r.ImGui_PopID(ctx)
+    r.ImGui_Separator(ctx)
+    r.ImGui_TreePop(ctx)
+  end
+end
+
 -- // Dummy data structure that we use for the Table demo.
 -- // (pre-C++11 doesn't allow us to instantiate ImVector<MyItem> template if this structure if defined inside the demo function)
 -- namespace
