@@ -53,7 +53,7 @@ DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
   return ImGui::GetFontSize();
 });
 
-DEFINE_API(bool, PushStyleVar, (ImGui_Context*,ctx)
+DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
 (int,varIdx)(double,val1)(double*,API_RO(val2)),
 "See ImGui_StyleVar_* for possible values of 'varIdx'.",
 {
@@ -61,18 +61,18 @@ DEFINE_API(bool, PushStyleVar, (ImGui_Context*,ctx)
 
   switch(styleVarType(varIdx)) {
   case StyleVarType::Unknown:
-    return false;
+    throw reascript_error { "unknown style variable" };
   case StyleVarType::Float:
+    if(API_RO(val2))
+      throw reascript_error { "second value ignored for this variable" };
     ImGui::PushStyleVar(varIdx, val1);
-    return true;
+    break;
   case StyleVarType::ImVec2:
     if(!API_RO(val2))
-      return false;
+      throw reascript_error { "this variable requires two values" };
     ImGui::PushStyleVar(varIdx, ImVec2(val1, *API_RO(val2)));
-    return true;
+    break;
   }
-
-  return false;
 });
 
 DEFINE_API(void, PopStyleVar, (ImGui_Context*,ctx)
@@ -86,22 +86,18 @@ Default values: count = 1)",
   ImGui::PopStyleVar(valueOr(API_RO(count), 1));
 });
 
-#define CASE_FLOAT_VAR(var)   \
-  case ImGuiStyleVar_##var:   \
-    if(!API_W(val1))          \
-      return false;           \
-    *API_W(val1) = style.var; \
-    return true;
+#define CASE_FLOAT_VAR(var)                   \
+  case ImGuiStyleVar_##var:                   \
+    if(API_W(val1)) *API_W(val1) = style.var; \
+    break;
 
-#define CASE_IMVEC2_VAR(var)         \
-  case ImGuiStyleVar_##var:          \
-    if(!API_W(val1) || !API_W(val2)) \
-      return false;                  \
-    *API_W(val1) = style.var.x;      \
-    *API_W(val2) = style.var.y;      \
-    return true;
+#define CASE_IMVEC2_VAR(var)                    \
+  case ImGuiStyleVar_##var:                     \
+    if(API_W(val1)) *API_W(val1) = style.var.x; \
+    if(API_W(val2)) *API_W(val2) = style.var.y; \
+    break;
 
-DEFINE_API(bool, GetStyleVar, (ImGui_Context*,ctx)
+DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 (int,varIdx)(double*,API_W(val1))(double*,API_W(val2)),
 "",
 {
@@ -136,7 +132,7 @@ DEFINE_API(bool, GetStyleVar, (ImGui_Context*,ctx)
   CASE_IMVEC2_VAR(WindowMinSize)
   CASE_IMVEC2_VAR(WindowTitleAlign)
   default:
-    return false;
+    throw reascript_error { "unknown style variable" };
   }
 });
 

@@ -718,7 +718,7 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_SameLine(ctx)
 
     -- Arrow buttons with Repeater
-    local rv,spacing = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())
+    local spacing = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())
     r.ImGui_PushButtonRepeat(ctx, true)
     if r.ImGui_ArrowButton(ctx, '##left', r.ImGui_Dir_Left()) then
       widgets.basic.counter = widgets.basic.counter - 1
@@ -1688,7 +1688,7 @@ function demo.ShowDemoWindowWidgets()
     -- Typically we would use (-1.0f,0.0f) or (-FLT_MIN,0.0f) to use all available width,
     -- or (width,0.0f) for a specified width. (0.0f,0.0f) uses ItemWidth.
     r.ImGui_ProgressBar(ctx, widgets.plots.progress, 0.0, 0.0)
-    r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[2])
+    r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1])
     r.ImGui_Text(ctx, 'Progress Bar')
 
     local progress_saturated = demo.clamp(widgets.plots.progress, 0.0, 1.0);
@@ -1747,7 +1747,7 @@ function demo.ShowDemoWindowWidgets()
     end
 
     local open_popup = r.ImGui_ColorButton(ctx, 'MyColor##3b', widgets.colors.rgba, misc_flags)
-    r.ImGui_SameLine(ctx, 0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[2])
+    r.ImGui_SameLine(ctx, 0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1])
     open_popup = r.ImGui_Button(ctx, 'Palette') or open_popup
     if open_popup then
       r.ImGui_OpenPopup(ctx, 'mypicker')
@@ -1778,7 +1778,7 @@ function demo.ShowDemoWindowWidgets()
       for n,c in ipairs(widgets.colors.saved_palette) do
         r.ImGui_PushID(ctx, n)
         if ((n - 1) % 8) ~= 0 then
-          r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[3])
+          r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[2])
         end
 
         if r.ImGui_ColorButton(ctx, '##palette', c, palette_button_flags, 20, 20) then
@@ -2623,7 +2623,7 @@ function demo.ShowDemoWindowLayout()
     -- Manually wrapping
     -- (we should eventually provide this as an automatic layout feature, but for now you can do it manually)
     r.ImGui_Text(ctx, 'Manually wrapping:')
-    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[2]
+    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[1]
     local buttons_count = 20
     local window_visible_x2 = ({r.ImGui_GetWindowPos(ctx)})[1] + ({r.ImGui_GetWindowContentRegionMax(ctx)})[1]
     for n = 0, buttons_count - 1 do
@@ -2664,7 +2664,7 @@ function demo.ShowDemoWindowLayout()
 
     -- Capture the group size and create widgets using the same size
     local size = {r.ImGui_GetItemRectSize(ctx)}
-    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[2]
+    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[1]
 
     r.ImGui_PlotHistogram(ctx, '##values', group_values, 0, nil, 0.0, 1.0, table.unpack(size))
 
@@ -2757,7 +2757,7 @@ function demo.ShowDemoWindowLayout()
     r.ImGui_SmallButton(ctx, 'SmallButton()')
 
     -- Tree
-    local spacing = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[2]
+    local spacing = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1]
     r.ImGui_Button(ctx, 'Button##1')
     r.ImGui_SameLine(ctx, 0.0, spacing)
     if r.ImGui_TreeNode(ctx, 'Node##1') then
@@ -2831,7 +2831,7 @@ function demo.ShowDemoWindowLayout()
     end
 
     local names = { "Top", "25%", "Center", "75%", "Bottom" }
-    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[2]
+    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[1]
     local child_w = (({r.ImGui_GetContentRegionAvail(ctx)})[1] - 4 * item_spacing_x) / #names
     local child_flags = layout.scrolling.enable_extra_decorations and r.ImGui_WindowFlags_MenuBar() or r.ImGui_WindowFlags_None()
     if child_w < 1.0 then
@@ -2880,8 +2880,8 @@ function demo.ShowDemoWindowLayout()
        left/right, using SetScrollFromPosX(+1) will usually result in clipped text whereas the \z
        equivalent SetScrollFromPosY(+1) wouldn't.")
     r.ImGui_PushID(ctx, '##HorizontalScrolling')
-    local scrollbar_size = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ScrollbarSize())})[2]
-    local window_padding_y = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_WindowPadding())})[3]
+    local scrollbar_size = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ScrollbarSize())})[1]
+    local window_padding_y = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_WindowPadding())})[2]
     local child_height = r.ImGui_GetTextLineHeight(ctx) + scrollbar_size + window_padding_y * 2.0
     local child_flags = r.ImGui_WindowFlags_HorizontalScrollbar()
     if layout.scrolling.enable_extra_decorations then
