@@ -16,11 +16,11 @@ R"(Close and free the resources used by a context.)",
   delete ctx;
 });
 
-DEFINE_API(bool, IsContextValid, (ImGui_Context*, ctx),
-R"(Return whether the context is still active.)",
-{
-  return Context::exists(ctx);
-});
+// DEFINE_API(bool, IsContextValid, (ImGui_Context*, ctx),
+// R"(Return whether the context is still active.)",
+// {
+//   return Resource::exists(ctx); // TODO: generalize IsContextValid to IsValid(void* resource, const char* type)?
+// });
 
 DEFINE_API(void *, GetNativeHwnd, (ImGui_Context*, ctx),
 R"(Return the native handle for the context's OS window.)",

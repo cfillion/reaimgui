@@ -21,7 +21,7 @@ private:
 
 ImGuiListClipper *ListClipper::use(ListClipper *lc)
 {
-  if(Resource::exists(lc) && Context::exists(lc->m_ctx)) {
+  if(Resource::exists(lc) && Resource::exists(lc->m_ctx)) {
     lc->m_ctx->enterFrame();
     return &lc->m_imlc;
   }

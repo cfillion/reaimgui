@@ -24,11 +24,11 @@ public:
 private:
   static void tick()
   {
-    auto it = g_rsx.begin();
+    auto it { g_rsx.begin() };
 
     while(it != g_rsx.end()) {
-      Resource *rs = *it++;
-      rs->heartbeat(); // expected to delete rs sometimes
+      Resource *rs { *it++ };
+      rs->heartbeat(); // may delete rs
     }
   }
 };
@@ -53,7 +53,8 @@ Resource::~Resource()
   g_rsx.erase(this);
 }
 
-bool Resource::exists(Resource *rs)
+template<>
+bool Resource::exists<Resource>(Resource *rs)
 {
   return g_rsx.count(rs) > 0;
 }

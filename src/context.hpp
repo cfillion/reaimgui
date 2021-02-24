@@ -24,7 +24,6 @@ public:
   static Context *check(Context *);
 
   Context(const char *title, int x, int y, int w, int h);
-  Context(const Context &) = delete;
   ~Context();
 
   void setCloseRequested(bool req = true) { m_closeReq = req; }

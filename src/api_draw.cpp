@@ -19,17 +19,17 @@ struct ImGui_DrawList {
   {
     Context *ctx;
 
-    if(Context::exists(ctx = encode<Context>(drawList, Window))) {
+    if(Resource::exists(ctx = encode<Context>(drawList, Window))) {
       ctx->enterFrame();
       return ImGui::GetWindowDrawList();
     }
 
-    if(Context::exists(ctx = encode<Context>(drawList, Background))) {
+    if(Resource::exists(ctx = encode<Context>(drawList, Background))) {
       ctx->enterFrame();
       return ImGui::GetBackgroundDrawList();
     }
 
-    if(Context::exists(ctx = encode<Context>(drawList, Foreground))) {
+    if(Resource::exists(ctx = encode<Context>(drawList, Foreground))) {
       ctx->enterFrame();
       return ImGui::GetForegroundDrawList();
     }
