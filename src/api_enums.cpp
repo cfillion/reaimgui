@@ -256,7 +256,7 @@ DEFINE_ENUM(SelectableFlags_DontClosePopups,  "Clicking this don't close parent 
 DEFINE_ENUM(SelectableFlags_SpanAllColumns,   "Selectable frame can span all columns (text will still fit in current column)");
 DEFINE_ENUM(SelectableFlags_AllowDoubleClick, "Generate press events on double clicks too");
 DEFINE_ENUM(SelectableFlags_Disabled,         "Cannot be selected, display grayed out text");
-// DEFINE_ENUM(SelectableFlags_AllowItemOverlap, "(WIP) Hit testing to allow subsequent widgets to overlap this one");
+DEFINE_ENUM(SelectableFlags_AllowItemOverlap, "Hit testing to allow subsequent widgets to overlap this one");
 
 // ImGuiSliderFlags
 // for DragFloat(), DragInt(), SliderFloat(), SliderInt() etc.

@@ -116,16 +116,20 @@ DEFINE_API(void, TableHeader, (ImGui_Context*,ctx)
   ImGui::TableHeader(label);
 });
 
-DEFINE_API(bool, TableNeedSort, (ImGui_Context*,ctx),
-"Return true once when sorting specs have changed since last call, or the first time. See ImGui_TableSortSpecs_GetColumnSpecs.",
+DEFINE_API(bool, TableNeedSort, (ImGui_Context*,ctx)
+(bool*,API_W(has_specs)),
+"Return true once when sorting specs have changed since last call, or the first time. 'has_specs' is false when not sorting. See ImGui_TableSortSpecs_GetColumnSpecs.",
 {
   Context::check(ctx)->enterFrame();
   if(ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() }) {
+    if(API_W(has_specs)) *API_W(has_specs) = true;
+
     const bool needSort { specs->SpecsDirty };
     specs->SpecsDirty = false;
     return needSort;
   }
 
+  if(API_W(has_specs)) *API_W(has_specs) = false;
   return false;
 });
 

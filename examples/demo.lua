@@ -3404,7 +3404,7 @@ function demo.CompareTableItems(a, b)
     elseif col_user_id == MyItemColumnID_Quantity then
       key = 'quantity'
     elseif col_user_id == MyItemColumnID_Description then
-      key = 'description'
+      key = 'name'
     else
       error('unknown user column ID')
     end
@@ -4869,13 +4869,12 @@ function demo.ShowDemoWindowTables()
   -- Demonstrate using Sorting facilities
   -- This is a simplified version of the "Advanced" example, where we mostly focus on the code necessary to handle sorting.
   -- Note that the "Advanced" example also showcase manually triggering a sort (e.g. if item quantities have been modified)
+  local template_items_names = {
+    'Banana', 'Apple', 'Cherry', 'Watermelon', 'Grapefruit', 'Strawberry', 'Mango',
+    'Kiwi', 'Orange', 'Pineapple', 'Blueberry', 'Plum', 'Coconut', 'Pear', 'Apricot'
+  }
   DoOpenAction()
   if r.ImGui_TreeNode(ctx, 'Sorting') then
-    local template_items_names = {
-      'Banana', 'Apple', 'Cherry', 'Watermelon', 'Grapefruit', 'Strawberry', 'Mango',
-      'Kiwi', 'Orange', 'Pineapple', 'Blueberry', 'Plum', 'Coconut', 'Pear', 'Apricot'
-    }
-
     if not tables.sorting then
       tables.sorting = {
         flags = r.ImGui_TableFlags_Resizable()       |
@@ -4958,315 +4957,301 @@ function demo.ShowDemoWindowTables()
     r.ImGui_TreePop(ctx)
   end
 
---     //r.ImGui_SetNextItemOpen(true, ImGuiCond_Once); // [DEBUG]
---     if (open_action != -1)
---         r.ImGui_SetNextItemOpen(open_action != 0);
---     if (r.ImGui_TreeNode("Advanced"))
---     {
---         static ImGuiTableFlags flags =
---             ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable
---             | ImGuiTableFlags_Sortable | ImGuiTableFlags_SortMulti
---             | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders | ImGuiTableFlags_NoBordersInBody
---             | ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY
---             | ImGuiTableFlags_SizingFixedFit;
---
---         enum ContentsType { CT_Text, CT_Button, CT_SmallButton, CT_FillButton, CT_Selectable, CT_SelectableSpanRow };
---         static int contents_type = CT_SelectableSpanRow;
---         const char* contents_type_names[] = { "Text", "Button", "SmallButton", "FillButton", "Selectable", "Selectable (span row)" };
---         static int freeze_cols = 1;
---         static int freeze_rows = 1;
---         static int items_count = IM_ARRAYSIZE(template_items_names) * 2;
---         static ImVec2 outer_size_value = ImVec2(0.0f, TEXT_BASE_HEIGHT * 12);
---         static float row_min_height = 0.0f; // Auto
---         static float inner_width_with_scroll = 0.0f; // Auto-extend
---         static bool outer_size_enabled = true;
---         static bool show_headers = true;
---         static bool show_wrapped_text = false;
---         //static ImGuiTextFilter filter;
---         //r.ImGui_SetNextItemOpen(true, ImGuiCond_Once); // FIXME-TABLE: Enabling this results in initial clipped first pass on table which tend to affects column sizing
---         if (r.ImGui_TreeNode("Options"))
---         {
---             // Make the UI compact because there are so many fields
---             PushStyleCompact();
---             r.ImGui_PushItemWidth(TEXT_BASE_WIDTH * 28.0f);
---
---             if (r.ImGui_TreeNodeEx("Features:", ImGuiTreeNodeFlags_DefaultOpen))
---             {
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_Resizable", &flags, ImGuiTableFlags_Resizable);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_Reorderable", &flags, ImGuiTableFlags_Reorderable);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_Hideable", &flags, ImGuiTableFlags_Hideable);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_Sortable", &flags, ImGuiTableFlags_Sortable);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_NoSavedSettings", &flags, ImGuiTableFlags_NoSavedSettings);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_ContextMenuInBody", &flags, ImGuiTableFlags_ContextMenuInBody);
---                 r.ImGui_TreePop();
---             }
---
---             if (r.ImGui_TreeNodeEx("Decorations:", ImGuiTreeNodeFlags_DefaultOpen))
---             {
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_RowBg", &flags, ImGuiTableFlags_RowBg);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersV", &flags, ImGuiTableFlags_BordersV);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersOuterV", &flags, ImGuiTableFlags_BordersOuterV);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersInnerV", &flags, ImGuiTableFlags_BordersInnerV);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersH", &flags, ImGuiTableFlags_BordersH);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersOuterH", &flags, ImGuiTableFlags_BordersOuterH);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_BordersInnerH", &flags, ImGuiTableFlags_BordersInnerH);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_NoBordersInBody", &flags, ImGuiTableFlags_NoBordersInBody); r.ImGui_SameLine(); HelpMarker("Disable vertical borders in columns Body (borders will always appears in Headers");
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_NoBordersInBodyUntilResize", &flags, ImGuiTableFlags_NoBordersInBodyUntilResize); r.ImGui_SameLine(); HelpMarker("Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers)");
---                 r.ImGui_TreePop();
---             }
---
---             if (r.ImGui_TreeNodeEx("Sizing:", ImGuiTreeNodeFlags_DefaultOpen))
---             {
---                 EditTableSizingFlags(&flags);
---                 r.ImGui_SameLine(); HelpMarker("In the Advanced demo we override the policy of each column so those table-wide settings have less effect that typical.");
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_NoHostExtendX", &flags, ImGuiTableFlags_NoHostExtendX);
---                 r.ImGui_SameLine(); HelpMarker("Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.");
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_NoHostExtendY", &flags, ImGuiTableFlags_NoHostExtendY);
---                 r.ImGui_SameLine(); HelpMarker("Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.");
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_NoKeepColumnsVisible", &flags, ImGuiTableFlags_NoKeepColumnsVisible);
---                 r.ImGui_SameLine(); HelpMarker("Only available if ScrollX is disabled.");
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_PreciseWidths", &flags, ImGuiTableFlags_PreciseWidths);
---                 r.ImGui_SameLine(); HelpMarker("Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.");
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_NoClip", &flags, ImGuiTableFlags_NoClip);
---                 r.ImGui_SameLine(); HelpMarker("Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with ScrollFreeze options.");
---                 r.ImGui_TreePop();
---             }
---
---             if (r.ImGui_TreeNodeEx("Padding:", ImGuiTreeNodeFlags_DefaultOpen))
---             {
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_PadOuterX", &flags, ImGuiTableFlags_PadOuterX);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_NoPadOuterX", &flags, ImGuiTableFlags_NoPadOuterX);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_NoPadInnerX", &flags, ImGuiTableFlags_NoPadInnerX);
---                 r.ImGui_TreePop();
---             }
---
---             if (r.ImGui_TreeNodeEx("Scrolling:", ImGuiTreeNodeFlags_DefaultOpen))
---             {
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_ScrollX", &flags, ImGuiTableFlags_ScrollX);
---                 r.ImGui_SameLine();
---                 r.ImGui_SetNextItemWidth(r.ImGui_GetFrameHeight());
---                 r.ImGui_DragInt("freeze_cols", &freeze_cols, 0.2f, 0, 9, NULL, ImGuiSliderFlags_NoInput);
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_ScrollY", &flags, ImGuiTableFlags_ScrollY);
---                 r.ImGui_SameLine();
---                 r.ImGui_SetNextItemWidth(r.ImGui_GetFrameHeight());
---                 r.ImGui_DragInt("freeze_rows", &freeze_rows, 0.2f, 0, 9, NULL, ImGuiSliderFlags_NoInput);
---                 r.ImGui_TreePop();
---             }
---
---             if (r.ImGui_TreeNodeEx("Sorting:", ImGuiTreeNodeFlags_DefaultOpen))
---             {
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_SortMulti", &flags, ImGuiTableFlags_SortMulti);
---                 r.ImGui_SameLine(); HelpMarker("When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).");
---                 r.ImGui_CheckboxFlags("ImGuiTableFlags_SortTristate", &flags, ImGuiTableFlags_SortTristate);
---                 r.ImGui_SameLine(); HelpMarker("When sorting is enabled: allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).");
---                 r.ImGui_TreePop();
---             }
---
---             if (r.ImGui_TreeNodeEx("Other:", ImGuiTreeNodeFlags_DefaultOpen))
---             {
---                 r.ImGui_Checkbox("show_headers", &show_headers);
---                 r.ImGui_Checkbox("show_wrapped_text", &show_wrapped_text);
---
---                 r.ImGui_DragFloat2("##OuterSize", &outer_size_value.x);
---                 r.ImGui_SameLine(0.0f, r.ImGui_GetStyle().ItemInnerSpacing.x);
---                 r.ImGui_Checkbox("outer_size", &outer_size_enabled);
---                 r.ImGui_SameLine();
---                 HelpMarker("If scrolling is disabled (ScrollX and ScrollY not set):\n"
---                     "- The table is output directly in the parent window.\n"
---                     "- OuterSize.x < 0.0f will right-align the table.\n"
---                     "- OuterSize.x = 0.0f will narrow fit the table unless there are any Stretch column.\n"
---                     "- OuterSize.y then becomes the minimum size for the table, which will extend vertically if there are more rows (unless NoHostExtendY is set).");
---
---                 // From a user point of view we will tend to use 'inner_width' differently depending on whether our table is embedding scrolling.
---                 // To facilitate toying with this demo we will actually pass 0.0f to the BeginTable() when ScrollX is disabled.
---                 r.ImGui_DragFloat("inner_width (when ScrollX active)", &inner_width_with_scroll, 1.0f, 0.0f, FLT_MAX);
---
---                 r.ImGui_DragFloat("row_min_height", &row_min_height, 1.0f, 0.0f, FLT_MAX);
---                 r.ImGui_SameLine(); HelpMarker("Specify height of the Selectable item.");
---
---                 r.ImGui_DragInt("items_count", &items_count, 0.1f, 0, 9999);
---                 r.ImGui_Combo("items_type (first column)", &contents_type, contents_type_names, IM_ARRAYSIZE(contents_type_names));
---                 //filter.Draw("filter");
---                 r.ImGui_TreePop();
---             }
---
---             r.ImGui_PopItemWidth();
---             PopStyleCompact();
---             r.ImGui_Spacing();
---             r.ImGui_TreePop();
---         }
---
---         // Recreate/reset item list if we changed the number of items
---         static ImVector<MyItem> items;
---         static ImVector<int> selection;
---         static bool items_need_sort = false;
---         if (items.Size != items_count)
---         {
---             items.resize(items_count, MyItem());
---             for (int n = 0; n < items_count; n++)
---             {
---                 const int template_n = n % IM_ARRAYSIZE(template_items_names);
---                 MyItem& item = items[n];
---                 item.ID = n;
---                 item.Name = template_items_names[template_n];
---                 item.Quantity = (template_n == 3) ? 10 : (template_n == 4) ? 20 : 0; // Assign default quantities
---             }
---         }
---
---         const ImDrawList* parent_draw_list = r.ImGui_GetWindowDrawList();
---         const int parent_draw_list_draw_cmd_count = parent_draw_list->CmdBuffer.Size;
---         ImVec2 table_scroll_cur, table_scroll_max; // For debug display
---         const ImDrawList* table_draw_list = NULL;  // "
---
---         const float inner_width_to_use = (flags & ImGuiTableFlags_ScrollX) ? inner_width_with_scroll : 0.0f;
---         if (r.ImGui_BeginTable("table_advanced", 6, flags, outer_size_enabled ? outer_size_value : ImVec2(0, 0), inner_width_to_use))
---         {
---             // Declare columns
---             // We use the "user_id" parameter of TableSetupColumn() to specify a user id that will be stored in the sort specifications.
---             // This is so our sort function can identify a column given our own identifier. We could also identify them based on their index!
---             r.ImGui_TableSetupColumn("ID",           ImGuiTableColumnFlags_DefaultSort | ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoHide, 0.0f, MyItemColumnID_ID);
---             r.ImGui_TableSetupColumn("Name",         ImGuiTableColumnFlags_WidthFixed, 0.0f, MyItemColumnID_Name);
---             r.ImGui_TableSetupColumn("Action",       ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed, 0.0f, MyItemColumnID_Action);
---             r.ImGui_TableSetupColumn("Quantity",     ImGuiTableColumnFlags_PreferSortDescending, 0.0f, MyItemColumnID_Quantity);
---             r.ImGui_TableSetupColumn("Description",  (flags & ImGuiTableFlags_NoHostExtendX) ? 0 : ImGuiTableColumnFlags_WidthStretch, 0.0f, MyItemColumnID_Description);
---             r.ImGui_TableSetupColumn("Hidden",       ImGuiTableColumnFlags_DefaultHide | ImGuiTableColumnFlags_NoSort);
---             r.ImGui_TableSetupScrollFreeze(freeze_cols, freeze_rows);
---
---             // Sort our data if sort specs have been changed!
---             ImGuiTableSortSpecs* sorts_specs = r.ImGui_TableGetSortSpecs();
---             if (sorts_specs && sorts_specs->SpecsDirty)
---                 items_need_sort = true;
---             if (sorts_specs && items_need_sort && items.Size > 1)
---             {
---                 MyItem::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
---                 qsort(&items[0], (size_t)items.Size, sizeof(items[0]), MyItem::CompareWithSortSpecs);
---                 MyItem::s_current_sort_specs = NULL;
---                 sorts_specs->SpecsDirty = false;
---             }
---             items_need_sort = false;
---
---             // Take note of whether we are currently sorting based on the Quantity field,
---             // we will use this to trigger sorting when we know the data of this column has been modified.
---             const bool sorts_specs_using_quantity = (r.ImGui_TableGetColumnFlags(3) & ImGuiTableColumnFlags_IsSorted) != 0;
---
---             // Show headers
---             if (show_headers)
---                 r.ImGui_TableHeadersRow();
---
---             // Show data
---             // FIXME-TABLE FIXME-NAV: How we can get decent up/down even though we have the buttons here?
---             r.ImGui_PushButtonRepeat(true);
--- #if 1
---             // Demonstrate using clipper for large vertical lists
---             ImGuiListClipper clipper;
---             clipper.Begin(items.Size);
---             while (clipper.Step())
---             {
---                 for (int row_n = clipper.DisplayStart; row_n < clipper.DisplayEnd; row_n++)
--- #else
---             // Without clipper
---             {
---                 for (int row_n = 0; row_n < items.Size; row_n++)
--- #endif
---                 {
---                     MyItem* item = &items[row_n];
---                     //if (!filter.PassFilter(item->Name))
---                     //    continue;
---
---                     const bool item_is_selected = selection.contains(item->ID);
---                     r.ImGui_PushID(item->ID);
---                     r.ImGui_TableNextRow(ImGuiTableRowFlags_None, row_min_height);
---                     r.ImGui_TableNextColumn();
---
---                     // For the demo purpose we can select among different type of items submitted in the first column
---                     char label[32];
---                     sprintf(label, "%04d", item->ID);
---                     if (contents_type == CT_Text)
---                         r.ImGui_TextUnformatted(label);
---                     else if (contents_type == CT_Button)
---                         r.ImGui_Button(label);
---                     else if (contents_type == CT_SmallButton)
---                         r.ImGui_SmallButton(label);
---                     else if (contents_type == CT_FillButton)
---                         r.ImGui_Button(label, ImVec2(-FLT_MIN, 0.0f));
---                     else if (contents_type == CT_Selectable || contents_type == CT_SelectableSpanRow)
---                     {
---                         ImGuiSelectableFlags selectable_flags = (contents_type == CT_SelectableSpanRow) ? ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap : ImGuiSelectableFlags_None;
---                         if (r.ImGui_Selectable(label, item_is_selected, selectable_flags, ImVec2(0, row_min_height)))
---                         {
---                             if (r.ImGui_GetIO().KeyCtrl)
---                             {
---                                 if (item_is_selected)
---                                     selection.find_erase_unsorted(item->ID);
---                                 else
---                                     selection.push_back(item->ID);
---                             }
---                             else
---                             {
---                                 selection.clear();
---                                 selection.push_back(item->ID);
---                             }
---                         }
---                     }
---
---                     if (r.ImGui_TableNextColumn())
---                         r.ImGui_TextUnformatted(item->Name);
---
---                     // Here we demonstrate marking our data set as needing to be sorted again if we modified a quantity,
---                     // and we are currently sorting on the column showing the Quantity.
---                     // To avoid triggering a sort while holding the button, we only trigger it when the button has been released.
---                     // You will probably need a more advanced system in your code if you want to automatically sort when a specific entry changes.
---                     if (r.ImGui_TableNextColumn())
---                     {
---                         if (r.ImGui_SmallButton("Chop")) { item->Quantity += 1; }
---                         if (sorts_specs_using_quantity && r.ImGui_IsItemDeactivated()) { items_need_sort = true; }
---                         r.ImGui_SameLine();
---                         if (r.ImGui_SmallButton("Eat")) { item->Quantity -= 1; }
---                         if (sorts_specs_using_quantity && r.ImGui_IsItemDeactivated()) { items_need_sort = true; }
---                     }
---
---                     if (r.ImGui_TableNextColumn())
---                         r.ImGui_Text("%d", item->Quantity);
---
---                     r.ImGui_TableNextColumn();
---                     if (show_wrapped_text)
---                         r.ImGui_TextWrapped("Lorem ipsum dolor sit amet");
---                     else
---                         r.ImGui_Text("Lorem ipsum dolor sit amet");
---
---                     if (r.ImGui_TableNextColumn())
---                         r.ImGui_Text("1234");
---
---                     r.ImGui_PopID();
---                 }
---             }
---             r.ImGui_PopButtonRepeat();
---
---             // Store some info to display debug details below
---             table_scroll_cur = ImVec2(r.ImGui_GetScrollX(), r.ImGui_GetScrollY());
---             table_scroll_max = ImVec2(r.ImGui_GetScrollMaxX(), r.ImGui_GetScrollMaxY());
---             table_draw_list = r.ImGui_GetWindowDrawList();
---             r.ImGui_EndTable();
---         }
---         static bool show_debug_details = false;
---         r.ImGui_Checkbox("Debug details", &show_debug_details);
---         if (show_debug_details && table_draw_list)
---         {
---             r.ImGui_SameLine(0.0f, 0.0f);
---             const int table_draw_list_draw_cmd_count = table_draw_list->CmdBuffer.Size;
---             if (table_draw_list == parent_draw_list)
---                 r.ImGui_Text(": DrawCmd: +%d (in same window)",
---                     table_draw_list_draw_cmd_count - parent_draw_list_draw_cmd_count);
---             else
---                 r.ImGui_Text(": DrawCmd: +%d (in child window), Scroll: (%.f/%.f) (%.f/%.f)",
---                     table_draw_list_draw_cmd_count - 1, table_scroll_cur.x, table_scroll_max.x, table_scroll_cur.y, table_scroll_max.y);
---         }
---         r.ImGui_TreePop();
---     }
---
+  -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once()) -- [DEBUG]
+  DoOpenAction()
+  if r.ImGui_TreeNode(ctx, 'Advanced') then
+    if not tables.advanced then
+      tables.advanced = {
+        items = {},
+        flags = r.ImGui_TableFlags_Resizable()       |
+                r.ImGui_TableFlags_Reorderable()     |
+                r.ImGui_TableFlags_Hideable()        |
+                r.ImGui_TableFlags_Sortable()        |
+                r.ImGui_TableFlags_SortMulti()       |
+                r.ImGui_TableFlags_RowBg()           |
+                r.ImGui_TableFlags_Borders()         |
+                -- r.ImGui_TableFlags_NoBordersInBody() |
+                r.ImGui_TableFlags_ScrollX()         |
+                r.ImGui_TableFlags_ScrollY()         |
+                r.ImGui_TableFlags_SizingFixedFit(),
+        contents_type           = 5, -- selectable span row
+        freeze_cols             = 1,
+        freeze_rows             = 1,
+        items_count             = #template_items_names * 2,
+        outer_size_value        = { 0.0, TEXT_BASE_HEIGHT * 12 },
+        row_min_height          = 0.0, -- Auto
+        inner_width_with_scroll = 0.0, -- Auto-extend
+        outer_size_enabled      = true,
+        show_headers            = true,
+        show_wrapped_text       = false,
+        items_need_sort         = false,
+      }
+    end
+
+    -- //static ImGuiTextFilter filter;
+    -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once()) -- FIXME-TABLE: Enabling this results in initial clipped first pass on table which tend to affects column sizing
+    if r.ImGui_TreeNode(ctx, 'Options') then
+      -- Make the UI compact because there are so many fields
+      demo.PushStyleCompact()
+      r.ImGui_PushItemWidth(ctx, TEXT_BASE_WIDTH * 28.0)
+
+      if r.ImGui_TreeNode(ctx, 'Features:', r.ImGui_TreeNodeFlags_DefaultOpen()) then
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.advanced.flags, r.ImGui_TableFlags_Resizable())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Reorderable', tables.advanced.flags, r.ImGui_TableFlags_Reorderable())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Hideable', tables.advanced.flags, r.ImGui_TableFlags_Hideable())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Sortable', tables.advanced.flags, r.ImGui_TableFlags_Sortable())
+        -- rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoSavedSettings', tables.advanced.flags, r.ImGui_TableFlags_NoSavedSettings())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ContextMenuInBody', tables.advanced.flags, r.ImGui_TableFlags_ContextMenuInBody())
+        r.ImGui_TreePop(ctx)
+      end
+
+      if r.ImGui_TreeNode(ctx, 'Decorations:', r.ImGui_TreeNodeFlags_DefaultOpen()) then
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.advanced.flags, r.ImGui_TableFlags_RowBg())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.advanced.flags, r.ImGui_TableFlags_BordersV())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.advanced.flags, r.ImGui_TableFlags_BordersOuterV())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.advanced.flags, r.ImGui_TableFlags_BordersInnerV())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.advanced.flags, r.ImGui_TableFlags_BordersH())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterH', tables.advanced.flags, r.ImGui_TableFlags_BordersOuterH())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerH', tables.advanced.flags, r.ImGui_TableFlags_BordersInnerH())
+        -- rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.advanced.flags, r.ImGui_TableFlags_NoBordersInBody()) r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body (borders will always appears in Headers')
+        -- rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.advanced.flags, r.ImGui_TableFlags_NoBordersInBodyUntilResize()) r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers)')
+        r.ImGui_TreePop(ctx)
+      end
+
+      if r.ImGui_TreeNode(ctx, 'Sizing:', r.ImGui_TreeNodeFlags_DefaultOpen()) then
+        tables.advanced.flags = demo.EditTableSizingFlags(tables.advanced.flags)
+        r.ImGui_SameLine(ctx); demo.HelpMarker('In the Advanced demo we override the policy of each column so those table-wide settings have less effect that typical.');
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.advanced.flags, r.ImGui_TableFlags_NoHostExtendX())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.');
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendY', tables.advanced.flags, r.ImGui_TableFlags_NoHostExtendY())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.');
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoKeepColumnsVisible', tables.advanced.flags, r.ImGui_TableFlags_NoKeepColumnsVisible())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Only available if ScrollX is disabled.');
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_PreciseWidths', tables.advanced.flags, r.ImGui_TableFlags_PreciseWidths())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.')
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoClip', tables.advanced.flags, r.ImGui_TableFlags_NoClip())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with ScrollFreeze options.')
+        r.ImGui_TreePop(ctx)
+      end
+
+      if r.ImGui_TreeNode(ctx, 'Padding:', r.ImGui_TreeNodeFlags_DefaultOpen()) then
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_PadOuterX',   tables.advanced.flags, r.ImGui_TableFlags_PadOuterX())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadOuterX', tables.advanced.flags, r.ImGui_TableFlags_NoPadOuterX())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadInnerX', tables.advanced.flags, r.ImGui_TableFlags_NoPadInnerX())
+        r.ImGui_TreePop(ctx)
+      end
+
+      if r.ImGui_TreeNode(ctx, 'Scrolling:', r.ImGui_TreeNodeFlags_DefaultOpen()) then
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.advanced.flags, r.ImGui_TableFlags_ScrollX())
+        r.ImGui_SameLine(ctx)
+        r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFrameHeight(ctx))
+        rv,tables.advanced.freeze_cols = r.ImGui_DragInt(ctx, 'freeze_cols', tables.advanced.freeze_cols, 0.2, 0, 9, nil, r.ImGui_SliderFlags_NoInput())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.advanced.flags, r.ImGui_TableFlags_ScrollY())
+        r.ImGui_SameLine(ctx)
+        r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFrameHeight(ctx))
+        rv,tables.advanced.freeze_rows = r.ImGui_DragInt(ctx, 'freeze_rows', tables.advanced.freeze_rows, 0.2, 0, 9, nil, r.ImGui_SliderFlags_NoInput())
+        r.ImGui_TreePop(ctx)
+      end
+
+      if r.ImGui_TreeNode(ctx, 'Sorting:', r.ImGui_TreeNodeFlags_DefaultOpen()) then
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_SortMulti', tables.advanced.flags, r.ImGui_TableFlags_SortMulti())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).')
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_SortTristate', tables.advanced.flags, r.ImGui_TableFlags_SortTristate())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('When sorting is enabled: allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).')
+        r.ImGui_TreePop(ctx)
+      end
+
+      if r.ImGui_TreeNode(ctx, 'Other:', r.ImGui_TreeNodeFlags_DefaultOpen()) then
+        rv,tables.advanced.show_headers = r.ImGui_Checkbox(ctx, 'show_headers', tables.advanced.show_headers)
+        rv,tables.advanced.show_wrapped_text = r.ImGui_Checkbox(ctx, 'show_wrapped_text', tables.advanced.show_wrapped_text)
+
+        rv,tables.advanced.outer_size_value[1],tables.advanced.outer_size_value[2] =
+          r.ImGui_DragDouble2(ctx, '##OuterSize', table.unpack(tables.advanced.outer_size_value))
+        r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1]);
+        rv,tables.advanced.outer_size_enabled = r.ImGui_Checkbox(ctx, 'outer_size', tables.advanced.outer_size_enabled)
+        r.ImGui_SameLine(ctx)
+        demo.HelpMarker(
+          'If scrolling is disabled (ScrollX and ScrollY not set):\n\z
+           - The table is output directly in the parent window.\n\z
+           - OuterSize.x < 0.0f will right-align the table.\n\z
+           - OuterSize.x = 0.0f will narrow fit the table unless there are any Stretch column.\n\z
+           - OuterSize.y then becomes the minimum size for the table, which will extend vertically if there are more rows (unless NoHostExtendY is set).')
+
+        -- From a user point of view we will tend to use 'inner_width' differently depending on whether our table is embedding scrolling.
+        -- To facilitate toying with this demo we will actually pass 0.0f to the BeginTable() when ScrollX is disabled.
+        rv,tables.advanced.inner_width_with_scroll = r.ImGui_DragDouble(ctx, 'inner_width (when ScrollX active)', tables.advanced.inner_width_with_scroll, 1.0, 0.0, FLT_MAX)
+
+        rv,tables.advanced.row_min_height = r.ImGui_DragDouble(ctx, 'row_min_height', tables.advanced.row_min_height, 1.0, 0.0, FLT_MAX)
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Specify height of the Selectable item.')
+
+        rv,tables.advanced.items_count = r.ImGui_DragInt(ctx, 'items_count', tables.advanced.items_count, 0.1, 0, 9999)
+        rv,tables.advanced.contents_type = r.ImGui_Combo(ctx, 'items_type (first column)', tables.advanced.contents_type,
+          'Text\31Button\31SmallButton\31FillButton\31Selectable\31Selectable (span row)\31')
+        -- //filter.Draw('filter');
+        r.ImGui_TreePop(ctx)
+      end
+
+      r.ImGui_PopItemWidth(ctx)
+      demo.PopStyleCompact()
+      r.ImGui_Spacing(ctx)
+      r.ImGui_TreePop(ctx)
+    end
+
+    -- Recreate/reset item list if we changed the number of items
+    if #tables.advanced.items ~= tables.advanced.items_count then
+      tables.advanced.items = {}
+      for n = 0, tables.advanced.items_count - 1 do
+        local template_n = n % #template_items_names
+        local item = {
+          id = n,
+          name = template_items_names[template_n + 1],
+          quantity = template_n == 3 and 10 or (template_n == 4 and 20 or 0), -- Assign default quantities
+        }
+        table.insert(tables.advanced.items, item)
+      end
+    end
+
+    -- const ImDrawList* parent_draw_list = r.ImGui_GetWindowDrawList();
+    -- const int parent_draw_list_draw_cmd_count = parent_draw_list->CmdBuffer.Size;
+    -- local table_scroll_cur, table_scroll_max, table_draw_list -- For debug display
+
+    local inner_width_to_use = (tables.advanced.flags & r.ImGui_TableFlags_ScrollX()) ~= 0 and tables.advanced.inner_width_with_scroll or 0.0
+    local w, h = 0, 0
+    if tables.advanced.outer_size_enabled then
+      w, h = table.unpack(tables.advanced.outer_size_value)
+    end
+    if r.ImGui_BeginTable(ctx, 'table_advanced', 6, tables.advanced.flags, w, h, inner_width_to_use) then
+      -- Declare columns
+      -- We use the "user_id" parameter of TableSetupColumn() to specify a user id that will be stored in the sort specifications.
+      -- This is so our sort function can identify a column given our own identifier. We could also identify them based on their index!
+      r.ImGui_TableSetupColumn(ctx, 'ID',           r.ImGui_TableColumnFlags_DefaultSort() | r.ImGui_TableColumnFlags_WidthFixed() | r.ImGui_TableColumnFlags_NoHide(), 0.0, MyItemColumnID_ID)
+      r.ImGui_TableSetupColumn(ctx, 'Name',         r.ImGui_TableColumnFlags_WidthFixed(), 0.0, MyItemColumnID_Name)
+      r.ImGui_TableSetupColumn(ctx, 'Action',       r.ImGui_TableColumnFlags_NoSort() | r.ImGui_TableColumnFlags_WidthFixed(), 0.0, MyItemColumnID_Action)
+      r.ImGui_TableSetupColumn(ctx, 'Quantity',     r.ImGui_TableColumnFlags_PreferSortDescending(), 0.0, MyItemColumnID_Quantity)
+      r.ImGui_TableSetupColumn(ctx, 'Description',  (tables.advanced.flags & r.ImGui_TableFlags_NoHostExtendX()) ~= 0 and 0 or r.ImGui_TableColumnFlags_WidthStretch(), 0.0, MyItemColumnID_Description)
+      r.ImGui_TableSetupColumn(ctx, 'Hidden',       r.ImGui_TableColumnFlags_DefaultHide() | r.ImGui_TableColumnFlags_NoSort())
+      r.ImGui_TableSetupScrollFreeze(ctx, tables.advanced.freeze_cols, tables.advanced.freeze_rows)
+
+      -- Sort our data if sort specs have been changed!
+      local specs_dirty, has_specs = r.ImGui_TableNeedSort(ctx)
+      if has_specs and (specs_dirty or tables.advanced.items_need_sort) then
+        table.sort(tables.advanced.items, demo.CompareTableItems)
+        tables.advanced.items_need_sort = false
+      end
+
+      -- Take note of whether we are currently sorting based on the Quantity field,
+      -- we will use this to trigger sorting when we know the data of this column has been modified.
+      local sorts_specs_using_quantity = (r.ImGui_TableGetColumnFlags(ctx, 3) & r.ImGui_TableColumnFlags_IsSorted()) ~= 0
+
+      -- Show headers
+      if tables.advanced.show_headers then
+        r.ImGui_TableHeadersRow(ctx)
+      end
+
+      -- Show data
+      r.ImGui_PushButtonRepeat(ctx, true)
+
+      -- Demonstrate using clipper for large vertical lists
+      local clipper = r.ImGui_CreateListClipper(ctx)
+      r.ImGui_ListClipper_Begin(clipper, #tables.advanced.items)
+      while r.ImGui_ListClipper_Step(clipper) do
+        local display_start = r.ImGui_ListClipper_GetDisplayStart(clipper)
+        local display_end   = r.ImGui_ListClipper_GetDisplayEnd(clipper)
+        for row_n = display_start, display_end - 1 do
+          local item = tables.advanced.items[row_n + 1]
+          -- //if (!filter.PassFilter(item->Name))
+          -- //    continue;
+
+          r.ImGui_PushID(ctx, item.id);
+          r.ImGui_TableNextRow(ctx, r.ImGui_TableRowFlags_None(), tables.advanced.row_min_height)
+          r.ImGui_TableNextColumn(ctx)
+
+          -- For the demo purpose we can select among different type of items submitted in the first column
+          local label = ('%04d'):format(item.id)
+          local contents_type = tables.advanced.contents_type
+          if contents_type == 0 then -- text
+              r.ImGui_Text(ctx, label)
+          elseif contents_type == 1 then -- button
+              r.ImGui_Button(ctx, label)
+          elseif contents_type == 2 then -- small button
+              r.ImGui_SmallButton(ctx, label)
+          elseif contents_type == 3 then -- fill button
+              r.ImGui_Button(ctx, label, -FLT_MIN, 0.0)
+          elseif contents_type == 4 or contents_type == 5 then -- selectable/selectable (span row)
+            local selectable_flags = contents_type == 5 and r.ImGui_SelectableFlags_SpanAllColumns() | r.ImGui_SelectableFlags_AllowItemOverlap() or r.ImGui_SelectableFlags_None()
+            if r.ImGui_Selectable(ctx, label, item.is_selected, selectable_flags, 0, tables.advanced.row_min_height) then
+              if true then
+              -- if r.ImGui_GetIO().KeyCtrl then TODO
+              --   item.is_selected = not item.is_selected
+              -- else
+                for _,it in ipairs(tables.advanced.items) do
+                  it.is_selected = it == item
+                end
+              end
+            end
+          end
+
+          if r.ImGui_TableNextColumn(ctx) then
+            r.ImGui_Text(ctx, item.name)
+          end
+
+          -- Here we demonstrate marking our data set as needing to be sorted again if we modified a quantity,
+          -- and we are currently sorting on the column showing the Quantity.
+          -- To avoid triggering a sort while holding the button, we only trigger it when the button has been released.
+          -- You will probably need a more advanced system in your code if you want to automatically sort when a specific entry changes.
+          if r.ImGui_TableNextColumn(ctx) then
+            if r.ImGui_SmallButton(ctx, 'Chop') then item.quantity = item.quantity + 1 end
+            if sorts_specs_using_quantity and r.ImGui_IsItemDeactivated(ctx) then tables.advanced.items_need_sort = true end
+            r.ImGui_SameLine(ctx)
+            if r.ImGui_SmallButton(ctx, 'Eat')  then item.quantity = item.quantity - 1 end
+            if sorts_specs_using_quantity and r.ImGui_IsItemDeactivated(ctx) then tables.advanced.items_need_sort = true end
+          end
+
+          if r.ImGui_TableNextColumn(ctx) then
+            r.ImGui_Text(ctx, ('%d'):format(item.quantity))
+          end
+
+          r.ImGui_TableNextColumn(ctx)
+          if tables.advanced.show_wrapped_text then
+            r.ImGui_TextWrapped(ctx, 'Lorem ipsum dolor sit amet')
+          else
+            r.ImGui_Text(ctx, 'Lorem ipsum dolor sit amet')
+          end
+
+          if r.ImGui_TableNextColumn(ctx) then
+            r.ImGui_Text(ctx, '1234')
+          end
+
+          r.ImGui_PopID(ctx)
+        end
+      end
+      r.ImGui_PopButtonRepeat(ctx)
+
+      -- Store some info to display debug details below
+      -- table_scroll_cur = { r.ImGui_GetScrollX(ctx), r.ImGui_GetScrollY(ctx) }
+      -- table_scroll_max = { r.ImGui_GetScrollMaxX(ctx), r.ImGui_GetScrollMaxY(ctx) }
+      -- table_draw_list  = r.ImGui_GetWindowDrawList(ctx)
+      r.ImGui_EndTable(ctx)
+    end
+    -- static bool show_debug_details = false;
+    -- r.ImGui_Checkbox("Debug details", &show_debug_details);
+    -- if (show_debug_details && table_draw_list)
+    -- {
+    --     r.ImGui_SameLine(0.0f, 0.0f);
+    --     const int table_draw_list_draw_cmd_count = table_draw_list->CmdBuffer.Size;
+    --     if (table_draw_list == parent_draw_list)
+    --         r.ImGui_Text(": DrawCmd: +%d (in same window)",
+    --             table_draw_list_draw_cmd_count - parent_draw_list_draw_cmd_count);
+    --     else
+    --         r.ImGui_Text(": DrawCmd: +%d (in child window), Scroll: (%.f/%.f) (%.f/%.f)",
+    --             table_draw_list_draw_cmd_count - 1, table_scroll_cur.x, table_scroll_max.x, table_scroll_cur.y, table_scroll_max.y);
+    -- }
+    r.ImGui_TreePop(ctx)
+  end
+
   r.ImGui_PopID(ctx)
 
---     ShowDemoWindowColumns();
+  -- demo.ShowDemoWindowColumns()
 
   if tables.disable_indent then
     r.ImGui_PopStyleVar(ctx)
