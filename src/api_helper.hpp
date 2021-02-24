@@ -16,35 +16,33 @@ using ImGui_Context = Context; // user-facing alias
 #define DOCARGS(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
 
-#define API_CATCH(name, except) catch(const except &e) { \
-  API::handleError(#name, e);                            \
-  if constexpr (!std::is_void_v<T>) return {};           \
-}
-
-// The function is defined as a template to enable constexpr condition branch
-// discording for the default return value when rescuing from exceptions.
-#define DEFINE_API(type, name, args, help, ...)                       \
-  template<typename T>                                                \
-  T API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _,                    \
-    BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)))                              \
-  try __VA_ARGS__                                                     \
-  API_CATCH(name, reascript_error)                                    \
-  API_CATCH(name, imgui_error)                                        \
-                                                                      \
-  static API API_reg_##name { #name,                                  \
-    reinterpret_cast<void *>(&API_##name<type>),                      \
-    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name<type>>), \
-    reinterpret_cast<void *>(const_cast<char *>(                      \
-      #type "\0"                                                      \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE,                      \
-        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                      \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                      \
-        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                      \
-      help                                                            \
-    ))                                                                \
+#define API_CATCH(name, type, except) \
+  catch(const except &e) {            \
+    API::handleError(#name, e);       \
+    return static_cast<type>(0);      \
   }
 
-#define NO_ARGS ()
+#define DEFINE_API(type, name, args, help, ...)                 \
+  type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _,           \
+    BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)))                        \
+  try __VA_ARGS__                                               \
+  API_CATCH(name, type, reascript_error)                        \
+  API_CATCH(name, type, imgui_error)                            \
+                                                                \
+  static API API_reg_##name { #name,                            \
+    reinterpret_cast<void *>(&API_##name),                      \
+    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>), \
+    reinterpret_cast<void *>(const_cast<char *>(                \
+      #type "\0"                                                \
+      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE,                \
+        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
+      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                \
+        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
+      help                                                      \
+    ))                                                          \
+  }
+
+#define NO_ARGS (,)
 
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write

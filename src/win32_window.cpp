@@ -4,6 +4,7 @@
 #include "dllimport.hpp"
 #include "opengl_renderer.hpp"
 
+#include <cassert>
 #include <GL/gl3w.h>
 #include <GL/wglext.h>
 #include <ShellScalingApi.h> // GetDpiForMonitor

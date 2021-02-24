@@ -1,7 +1,7 @@
 #include "api_helper.hpp"
 
 struct ImGui_DrawList {
-  enum Key {
+  enum Key : uint64_t {
     Window     = 0x77696e646f77646c, // WINDOWDL
     Background = 0x6267646c6267646c, // BGDLBGDL
     Foreground = 0x6667646c6667646c, // FGDLFGDL
