@@ -1,216 +1,295 @@
-/************************************************
-** Copyright (C) 2006-2012, Cockos Incorporated
-*/
+#ifndef REAPER_COLORTHEME_H
+#define REAPER_COLORTHEME_H
 
-#ifndef _REAPER_COLORTHEME_H_
-#define _REAPER_COLORTHEME_H_
-
-#define NUM_ENVELOPE_COLORS 6+10
-typedef struct
-{
-  // NOTE: DO NOT REMOVE/INSERT IN THIS STRUCT. ONLY ADD.
-  LOGFONT timeline_font,  mediaitem_font, label_font, label_font2;
-  int timeline_fontcolor;
-  int mediaitem_fontcolor;
-  int itembgcolor;
-  int DEPRRECATED_itembgselcolor;
-  int timeline_bgcolor;
-  int timeline_selbgcolor;
-  int itemfadescolor;
-  int itemfadedgecolor;
-  int envelopecolors[NUM_ENVELOPE_COLORS];
-  int trackbgs[2];
-  int DEPRECATED_trackbgsel[2];
-  int peaks[2]; // body of peaks when not selected, even/odd
-  int DEPRECATED_peaksel[2];
-  int offlinetext;
-  int seltrack, seltrack2;
-  int cursor;
-  int grid_lines[2];
-  int marker;
-  int item_grouphl;
-  int region;
-  int itembgsel[2];
-  int DEPRECATED_peaksedgecolor;
-
-  int main_bg;
-  int main_text;
-  int main_3d[2];
-  int main_editbk;
-  // NOTE: DO NOT REMOVE/INSERT IN THIS STRUCT. ONLY ADD.
-
-  int timesigmarker;
-
-  int vu_dointerlace;
-  int vu_bottom;
-  int vu_mid;
-  int vu_top;
-  int vu_clip;
-  int vu_intcol;
-
-  int DEPRECATED_fader_tint[2];
-
-  int button_bg;
-
-  int fader_armed_bg[2];
-
-  int grid_startofbeat;
-
-  int fader_armed_butnotrec;
-
-  int mixerbg_color, tracklistbg_color;
-
-  int main_textshadow;
-
-  int midi_rulerbg;
-  int midi_rulerfg;
-  int midi_grid[3];
-  int midi_trackbg[2];
-  int midi_endpt;
-  int midi_notebg;
-  int midi_notefg;
-  int midi_itemctls;
-  int midi_editcursor;
-  int midi_pkey[3];
-  int DEPRECATED_midi_pkeytext;
-
-  int docker_shadow; // defaults to GetSysColor(COLOR_3DDKSHADOW)
-  int docker_selface;  // GSC_mainwnd(COLOR_3DFACE)
-  int docker_unselface; // GSC_mainwnd(COLOR_3DSHADOW)
-  int docker_text; //GSC_mainwnd(COLOR_BTNTEXT)
-  int docker_bg; // Getsyscolor(COLOR_3DDKSHADOW)
-
-  int mcp_fx_normal;
-  int mcp_fx_bypassed;
-  int mcp_fx_offlined;
-
-  int mcp_sends_normal;
-  int mcp_sends_muted;
-  int mcp_send_levels;
-
-  int env_mute_track, env_mute_sends;
-
-  int peakssel2[2]; // body of peaks when selected, even/odd
-  int itembgcolor2;
-  int DEPRECATED_itembgselcolor2;
-  int DEPRECATED_peaksedgecolor2;
-
-  int timeline_selbgcolor2;
-
-  int trackpanel_text[2];
-
-  int midi_offscreennote,midi_offscreennotesel;
-  int env_item_vol,env_item_pan,env_item_mute;
-
-  int group_colors[32];
-
-  int marquee_fill,marquee_outline;
-
-  int midi_notemute[2];
-
-  int timesel_drawmode;
-  int marquee_drawmode;
-  int itembg_drawmode;
-
-  int ruler_lane_bgcolor[3];  // region, marker, TS
-  int ruler_lane_textcolor[3]; // region, marker, TS
-
-  int mediaitem_fontcolor_sel;
-
-  int mediaitem_fontcolor_floating[2]; 
-
-  int peaksedge[2]; // edge of peaks when not selected, even/odd
-  int peaksedge_sel[2]; // edge of peaks when selected, even/odd
-
-  int midi_inline_trackbg[2];
-
-  int vu_midi;
-
-  int fadezone_drawmode;  // quiet zone
-  int fadezone_color;     // quiet zone
-
-  int cursor_altblink;
-
-  int playcursor_drawmode;
-  int playcursor_color;
-
-  int itemfadedgecolor_drawmode;
-
-  int guideline_color;
-  int guideline_drawmode;
-
-  int fadearea_drawmode;  // full area (not just quiet zone)
-  int fadearea_color;     // full area (not just quiet zone)
-
-  int midi_noteon_flash;
-
+// Extracted by scraping the theme element finder dialog (v6.24rc7)
+struct ColorTheme {
+  int _unknown0[60];
+  int timeline_foreground;
+  int media_item_label;
+  int media_item_background_odd_tracks;
+  int media_explorer_selection_edge; // v6
+  int timeline_background;
+  int time_selection_color;
+  int media_item_fade_volume_controls;
+  int media_item_edges_of_controls;
+  int envelope_volume_pre_fx;
+  int envelope_volume;
+  int envelope_pan_pre_fx;
+  int envelope_pan;
+  int envelope_master_playrate;
+  int envelope_master_tempo;
+  int envelope_send_volume;
+  int envelope_send_pan;
+  int envelope_send_volume_2;
+  int envelope_send_pan_2;
+  int envelope_audio_hardware_output_volume;
+  int envelope_audio_hardware_output_pan;
+  int envelope_fx_parameter[4];
+  int track_background_odd_tracks;
+  int track_background_even_tracks;
+  int media_explorer_selection;
+  int _unknown1;
+  int media_item_peaks_odd_tracks;
+  int media_item_peaks_even_tracks;
+  int list_scrollbar_track_panel; // v6
+  int list_scrollbar_mixer_panel; // v6
+  int media_item_offline_text;
+  int selected_track_control_panel_background;
+  int unselected_track_control_panel_background_enabled_with_a_checkbox_above;
+  int edit_cursor;
+  int grid_lines_in_between_beats;
+  int grid_lines_start_of_measure;
+  int markers;
+  int media_item_edge_when_selected_via_grouping;
+  int regions;
+  int media_item_background_selected_odd_tracks;
+  int media_item_background_selected_even_tracks;
+  int envelope_trim_volume;
+  int window_background;
+  int window_text;
+  int main_window_3d_highlight;
+  int main_window_3d_shadow;
+  int window_edit_background;
+  int time_signature_change_marker;
+  int _unknown2;
+  int vu_meter_bottom;
+  int vu_meter_middle;
+  int vu_meter_top;
+  int vu_meter_clip_indicator;
+  int vu_meter_interlace_edge_color;
+  int midi_editor_cc_lane_button_text;  // v6
+  int midi_editor_cc_lane_button_arrow; // v6
+  int button_background;
+  int fader_background_when_automation_recording;
+  int fader_background_when_automation_playing;
+  int grid_lines_start_of_beats;
+  int fader_background_when_in_inactive_touch_latch;
+  int empty_mixer_list_area;
+  int empty_track_list_area;
+  int main_window_text_shadow_ignored_if_too_close_to_text_color;
+  int midi_editor_ruler_background;
+  int midi_editor_ruler_text;
+  int midi_editor_grid_line_between_beats;
+  int midi_editor_grid_line_start_of_measure;
+  int midi_editor_grid_line_start_of_beats;
+  int midi_editor_background_color_naturals;
+  int midi_editor_background_color_sharps_flats;
+  int midi_editor_end_marker;
+  int midi_editor_note_unselected_midi_note_colormap_overrides;
+  int midi_editor_note_selected_midi_note_colormap_overrides;
+  int midi_editor_note_controls;
+  int midi_editor_cursor;
+  int midi_piano_key_color_naturals_background_sharps_flats_text;
+  int midi_piano_key_color_sharps_flats_background_naturals_text;
+  int midi_piano_key_color_selected;
+  int _unknown3;
+  int tab_control_shadow;
+  int tab_control_selected_tab;
+  int tab_control_unselected_tab;
+  int tab_control_text;
+  int tab_control_background;
+  int fx_insert_text_normal;
+  int fx_insert_text_bypassed;
+  int fx_insert_text_offline;
+  int sends_text_normal;
+  int sends_text_muted;
+  int sends_level;
+  int envelope_mute;
+  int envelope_send_mute;
+  int media_item_peaks_when_selected_odd_tracks;
+  int media_item_peaks_when_selected_even_tracks;
+  int media_item_background_even_tracks;
+  int window_list_highlighted_text;          // v6
+  int window_list_highlighted_selected_text; // v6
+  int timeline_background_in_loop_points;
+  int track_panel_text;
+  int track_panel_selected_text;
+  int midi_editor_note_offscreen;
+  int midi_editor_note_offscreen_selected;
+  int envelope_item_take_volume;
+  int envelope_item_take_pan;
+  int envelope_item_take_mute;
+  int group_low[32];
+  int marquee_fill;
+  int marquee_outline;
+  int midi_editor_note_muted_unselected_midi_note_colormap_overrides;
+  int midi_editor_note_muted_selected_midi_note_colormap_overrides;
+  int _unknown4[3];
+  int region_lane_background;
+  int marker_lane_background;
+  int time_signature_lane_background;
+  int region_lane_text;
+  int marker_lane_text;
+  int time_signature_lane_text;
+  int media_item_label_selected;
+  int floating_media_item_label;
+  int floating_media_item_label_selected;
+  int media_item_peaks_edge_highlight_odd_tracks;
+  int media_item_peaks_edge_highlight_even_tracks;
+  int media_item_peaks_edge_highlight_when_selected_odd_tracks;
+  int media_item_peaks_edge_highlight_when_selected_even_tracks;
+  int midi_inline_background_color_naturals;
+  int midi_inline_background_color_sharps_flats;
+  int vu_meter_midi_activity;
+  int _unknown5;
+  int media_item_fade_quiet_zone_fill_color;
+  int edit_cursor_alternate;
+  int _unknown6;
+  int play_cursor;
+  int _unknown7;
+  int editing_guide_line_color;
+  int _unknown8[2];
+  int media_item_fade_full_area_fill_color;
+  int midi_piano_key_note_on_flash;
   int toolbar_button_text;
-
-  int toolbararmed_color;
-  int toolbararmed_drawmode;
-
-  int track_divline[2];
-  int envlane_divline[2];
-
-  int mcp_sends_midihw;
-
-  int tcp_locked_drawmode;
-  int tcp_locked_color;
-
-  int selitem_tag; // use only if 0x80000000
-  int activetake_tag;  // use only if 0x80000000
-
-  int midifont_col_dark;
-  int midifont_col_light;
-
-  int midioct;
-  int midioct_inline;
-
-  int midi_selbgcol;
-  int midi_selbgmode;
-
-  int arrange_bg;
-
-  int mcp_fxparm_normal;
-  int mcp_fxparm_bypassed;
-  int mcp_fxparm_offlined;
-
-  int env_item_pitch;
-
-  int main_resize_color;
-
-  LOGFONT transport_status_font;
-  int transport_status_font_color;
-  int transport_status_bg_color;
-
-  // inherits from main_*
-  int transport_editbk;
-  int main_bg2; // actual main window / transport bg
-  int main_text2;  // actual main window / transport text
-
-  int toolbar_button_text_on;
-  int toolbar_frame;
-
-  int vu_ind_very_bot;
-  int vu_ind_bot;
-  int vu_ind_mid;
-  int vu_ind_top;
-
-  int io_text; // overrides for i/o window
-  int io_3d[2];
-
-  int marqueezoom_fill,marqueezoom_outline,marqueezoom_drawmode;
-
-//JFB found by reverse eng. --->
-  int unknown_1[7];
-  int genlist_bg;
-  int genlist_fg;
-  int genlist_gridlines;
-  int genlist_sel[2];
-  int genlist_selinactive[2];
-//JFB <---
-
-  // NOTE: DO NOT REMOVE/INSERT IN THIS STRUCT. ONLY ADD.
-} ColorTheme;
+  int toolbar_button_armed_color;
+  int _unknown9;
+  int track_divider_line_odd_tracks;
+  int track_divider_line_even_tracks;
+  int envelope_lane_divider_line_odd_tracks;
+  int envelope_lane_divider_line_even_tracks;
+  int sends_text_midi_hardware;
+  int _unknown10;
+  int locked_track_control_panel_overlay_color;
+  int selected_media_item_bar_color;
+  int active_media_item_take_bar_color;
+  int midi_editor_note_text_and_control_color_dark;
+  int midi_editor_note_text_and_control_color_light;
+  int midi_editor_octave_line_color;
+  int midi_inline_octave_line_color;
+  int midi_editor_time_selection_color;
+  int _unknown11;
+  int empty_arrange_view_area;
+  int fx_parameter_text_normal;
+  int fx_parameter_text_bypassed;
+  int fx_parameter_text_offline;
+  int envelope_item_take_pitch;
+  int main_window_pane_resize_mouseover;
+  int _unknown12[15];
+  int transport_status_text;
+  int transport_status_background;
+  int transport_edit_background;
+  int main_window_transport_background;
+  int main_window_transport_text;
+  int toolbar_button_enabled_text;
+  int toolbar_frame_when_floating_or_docked;
+  int vu_indicator_no_signal;
+  int vu_indicator_low_signal;
+  int vu_indicator_med_signal;
+  int vu_indicator_hot_signal;
+  int i_o_window_text;
+  int i_o_window_3d_highlight;
+  int i_o_window_3d_shadow;
+  int marquee_zoom_fill;
+  int marquee_zoom_outline;
+  int _unknown13;
+  int midi_list_editor_background;
+  int midi_list_editor_text;
+  int midi_list_editor_grid_lines;
+  int midi_list_editor_selected_row;
+  int midi_list_editor_selected_text;
+  int midi_list_editor_selected_row_inactive;
+  int midi_list_editor_selected_text_inactive;
+  int window_list_background;
+  int window_list_text;
+  int window_list_grid_lines;
+  int window_list_selected_row;
+  int window_list_selected_text;
+  int window_list_selected_row_inactive;
+  int window_list_selected_text_inactive;
+  int tab_control_background_in_windows;
+  int _unknown14[120];
+  int media_item_peaks_when_active_in_crossfade_editor_fade_out;
+  int media_item_peaks_when_active_in_crossfade_editor_fade_in;
+  int routing_matrix_row_highlight;
+  int routing_matrix_column_highlight;
+  int media_item_stretch_marker_line;
+  int _unknown15;
+  int media_item_stretch_marker_text;
+  int media_item_stretch_marker_handle_1x;
+  int media_item_stretch_marker_handle_gt_1x;
+  int media_item_stretch_marker_handle_lt_1x;
+  int media_item_stretch_marker_handle_edge;
+  int midi_list_editor_background_secondary;
+  int midi_list_editor_text_secondary;
+  int midi_list_editor_selected_row_secondary;
+  int midi_list_editor_selected_text_secondary;
+  int midi_editor_background_color_selected_pitch_naturals;
+  int midi_editor_background_color_selected_pitch_sharps_flats;
+  int midi_editor_background_color_out_of_bounds_naturals;
+  int midi_editor_background_color_out_of_bounds_sharps_flats;
+  int project_play_rate_control_when_not_1_0;
+  int timeline_foreground_secondary_markings;
+  int tab_control_text_selected_tab;
+  int media_item_transient_guide_handle;
+  int envelope_unselected_automation_item;
+  int midi_notation_editor_background;
+  int midi_notation_editor_staff_notation_text;
+  int midi_notation_editor_selected_staff_notation_text;
+  int midi_notation_editor_time_selection;
+  int midi_notation_editor_loop_points_selected_pitch;
+  int time_signature_marker_selected_background;
+  int group_high[32];
+  int empty_arrange_view_area_vertical_grid_shading;
+#ifdef REAPER_COLORTHEME_V6
+  int track_background_odd_tracks_copy0;
+  int track_background_even_tracks_copy0;
+  int track_divider_line_even_tracks_copy0;
+  int track_divider_line_odd_tracks_copy0;
+  int empty_arrange_view_area_copy0;
+  int empty_arrange_view_area_vertical_grid_shading_copy0;
+  int _unknown16;
+  int wiring_background_grid_lines;
+  int wiring_background;
+  int wiring_box_border;
+  int wiring_box_background;
+  int wiring_box_foreground;
+  int wiring_record_section_background;
+  int wiring_record_section_foreground;
+  int wiring_media;
+  int wiring_receives;
+  int wiring_sends;
+  int wiring_system_hardware_outputs;
+  int wiring_system_record_inputs;
+  int wiring_horizontal_pin_connections;
+  int wiring_pins_normal;
+  int wiring_pins_connected;
+  int wiring_pins_disconnected;
+  int wiring_fader;
+  int wiring_master_parent;
+  int wiring_master_parent_wire_border;
+  int wiring_master_parent_to_master_wire;
+  int wiring_master_parent_to_parent_folder_wire;
+  int wiring_send_hanging_wire;
+  int wiring_hardware_output_wire;
+  int wiring_record_input_wire;
+#else
+  int _unknown_v5_0[7];
+  // the remaining colors are not at the same memory location in v5 vs v6!
+#endif
+  int midi_piano_pane_background;
+  int _unknown17[6];
+  int midi_editor_cc_horizontal_center_line;
+  int midi_editor_cc_horizontal_line;
+  int _unknown18[2];
+  int midi_editor_cc_lane_add_remove_buttons;
+#ifdef REAPER_COLORTHEME_V6
+  int _unknown19[120];
+  int midi_editor_note_text_and_control_color_unselected_dark;
+  int midi_editor_note_text_and_control_color_unselected_light;
+  int _unknown20[2];
+  int media_item_take_marker;
+  int razor_edit_area_fill;
+  int razor_edit_area_outline;
+  int _unknown21[2];
+  int list_scrollbar_mouseover_track_panel;
+  int list_scrollbar_mouseover_mixer_panel;
+  int _unknown22[4];
+  int selected_track_background_odd_tracks;
+  int selected_track_background_even_tracks;
+  int selected_track_background_odd_tracks_copy0;
+  int selected_track_background_even_tracks_copy0;
+#endif
+};
 
 #endif
