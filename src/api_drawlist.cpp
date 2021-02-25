@@ -56,13 +56,16 @@ DEFINE_API(ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
   return ImGui_DrawList::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Foreground);
 });
 
-    // Primitives
-    // - For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
-    // - For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).
-    //   In older versions (until Dear ImGui 1.77) the AddCircle functions defaulted to num_segments == 12.
-    //   In future versions we will use textures to provide cheaper and higher-quality circles.
-    //   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
-    // IMGUI_API void  AddLine(const ImVec2& p1, const ImVec2& p2, ImU32 col, float thickness = 1.0f);
+DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
+(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
+(int,color_rgba)(double*,API_RO(thickness)),
+"Default values: thickness = 1.0",
+{
+  ImDrawList *drawList { ImGui_DrawList::get(draw_list) };
+  drawList->AddLine(ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
+    Color::rgba2abgr(color_rgba), valueOr(API_RO(thickness), 1.0));
+});
+
 DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
 (double,from_x)(double,from_y)(double,to_x)(double,to_y)(int,color_rgba)
 (double*,API_RO(rounding))(int*,API_RO(rounding_corners))
@@ -92,6 +95,8 @@ DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
     // IMGUI_API void  AddQuadFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, const ImVec2& p4, ImU32 col);
     // IMGUI_API void  AddTriangle(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col, float thickness = 1.0f);
     // IMGUI_API void  AddTriangleFilled(const ImVec2& p1, const ImVec2& p2, const ImVec2& p3, ImU32 col);
+
+    // - For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).
     // IMGUI_API void  AddCircle(const ImVec2& center, float radius, ImU32 col, int num_segments = 0, float thickness = 1.0f);
     // IMGUI_API void  AddCircleFilled(const ImVec2& center, float radius, ImU32 col, int num_segments = 0);
     // IMGUI_API void  AddNgon(const ImVec2& center, float radius, ImU32 col, int num_segments, float thickness = 1.0f);

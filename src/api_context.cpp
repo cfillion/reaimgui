@@ -2,6 +2,17 @@
 
 #include "window.hpp"
 
+DEFINE_API(void, GetVersion,
+(char*,API_W(reaimgui_version))(int,API_W_SZ(reaimgui_version))
+(char*,API_W(imgui_version))(int,API_W_SZ(imgui_version)),
+"",
+{
+  if(API_W(reaimgui_version))
+    snprintf(API_W(reaimgui_version), API_W_SZ(reaimgui_version), "%s", "0.1"); // TODO
+  if(API_W(imgui_version))
+    snprintf(API_W(imgui_version), API_W_SZ(imgui_version), "%s", IMGUI_VERSION);
+});
+
 DEFINE_API(ImGui_Context*, CreateContext,
 (const char*, title)(int, x)(int, y)(int, w)(int, h),
 R"(Create a new Dear ImGui context and OS window. The context will remain active as long as it is used every timer cycle.)",
@@ -103,6 +114,17 @@ Defaut values: repeat=false")",
   return ImGui::IsMouseClicked(button, valueOr(API_RO(repeat), false));
 });
 
+DEFINE_API(void, GetMouseClickedPos, (ImGui_Context*,ctx)
+(int,button)(double*,API_W(x))(double*,API_W(y)),
+"",
+{
+  Context::check(ctx)->enterFrame();
+  IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(ImGuiIO::MouseDownDuration));
+  const ImVec2 &pos { ImGui::GetIO().MouseClickedPos[button] };
+  if(API_W(x)) *API_W(x) = pos.x;
+  if(API_W(y)) *API_W(y) = pos.y;
+});
+
 DEFINE_API(bool, IsMouseReleased, (ImGui_Context*,ctx)
 (int,button),
 "Did mouse button released? (went from Down to !Down)",
@@ -159,7 +181,6 @@ DEFINE_API(void, GetMousePos, (ImGui_Context*,ctx)
 "",
 {
   Context::check(ctx)->enterFrame();
-
   const ImVec2 &pos { ImGui::GetIO().MousePos };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
@@ -170,7 +191,6 @@ DEFINE_API(void, GetMousePosOnOpeningCurrentPopup, (ImGui_Context*,ctx)
 "Retrieve mouse position at the time of opening popup we have BeginPopup() into (helper to avoid user backing that value themselves)",
 {
   Context::check(ctx)->enterFrame();
-
   const ImVec2 &pos { ImGui::GetMousePosOnOpeningCurrentPopup() };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
@@ -224,7 +244,8 @@ Default values: button = ImGui_MouseButton_Left, lock_threshold = -1.0)",
     ImGui::GetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left),
       valueOr(API_RO(lock_threshold), -1.0))
   };
-  *API_W(x) = delta.x, *API_W(y) = delta.y;
+  if(API_W(x)) *API_W(x) = delta.x;
+  if(API_W(y)) *API_W(y) = delta.y;
 });
 
 DEFINE_API(void, ResetMouseDragDelta, (ImGui_Context*,ctx)
@@ -235,6 +256,83 @@ DEFINE_API(void, ResetMouseDragDelta, (ImGui_Context*,ctx)
   ImGui::ResetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left));
 });
 
-// IMGUI_API ImGuiMouseCursor GetMouseCursor();                                                // get desired cursor type, reset in ImGui::NewFrame(), this is updated during the frame. valid before Render(). If you use software rendering by setting io.MouseDrawCursor ImGui will render those for you
-// IMGUI_API void          SetMouseCursor(ImGuiMouseCursor cursor_type);                       // set desired cursor type
+DEFINE_API(int, GetMouseCursor, (ImGui_Context*,ctx),
+"Get desired cursor type, reset every frame. This is updated during the frame.",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::GetMouseCursor();
+});
+
+DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
+(int,cursor_type),
+"Set desired cursor type",
+{
+  Context::check(ctx)->enterFrame();
+  IM_ASSERT(cursor_type >= 0 && cursor_type < ImGuiMouseCursor_COUNT);
+  ImGui::SetMouseCursor(cursor_type);
+});
+
 // IMGUI_API void          CaptureMouseFromApp(bool want_capture_mouse_value = true);          // attention: misleading name! manually override io.WantCaptureMouse flag next frame (said flag is entirely left for your application to handle). This is equivalent to setting "io.WantCaptureMouse = want_capture_mouse_value;" after the next NewFrame() call.
+
+// IMGUI_API int           GetKeyIndex(ImGuiKey imgui_key);                                    // map ImGuiKey_* values into user's key index. == io.KeyMap[key]
+
+DEFINE_API(bool, IsKeyDown, (ImGui_Context*,ctx)
+(int,key_code),
+"Is key being held.",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::IsKeyDown(key_code);
+});
+
+DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
+(int,key_code),
+"Duration the keyboard key has been down (0.0f == just pressed)",
+{
+  Context::check(ctx)->enterFrame();
+  IM_ASSERT(key_code >= 0 && key_code < IM_ARRAYSIZE(ImGuiIO::KeysDownDuration));
+  return ImGui::GetIO().KeysDownDuration[key_code];
+});
+
+DEFINE_API(bool, IsKeyPressed, (ImGui_Context*,ctx)
+(int,key_code)(bool*,API_RO(repeat)),
+R"(Was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
+
+Default values: repeat=true)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::IsKeyPressed(key_code, valueOr(API_RO(repeat), true));
+});
+
+DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
+(int,key_code),
+"Was key released (went from Down to !Down)?",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::IsKeyReleased(key_code);
+});
+
+DEFINE_API(void, GetKeyboardModifiers, (ImGui_Context*,ctx)
+(bool*,API_W(ctrl))(bool*,API_W(shift))(bool*,API_W(alt))(bool*,API_W(super)),
+"",
+{
+  Context::check(ctx)->enterFrame();
+  const ImGuiIO &io { ImGui::GetIO() };
+  if(API_W(ctrl))  *API_W(ctrl)  = io.KeyCtrl;
+  if(API_W(shift)) *API_W(shift) = io.KeyShift;
+  if(API_W(alt))   *API_W(alt)   = io.KeyAlt;
+  if(API_W(super)) *API_W(super) = io.KeySuper;
+});
+
+DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
+(int,idx)(int*,API_W(unicode_char)),
+"Read from ImGui's character input queue. Call with increasing idx until false is returned.",
+{
+  Context::check(ctx)->enterFrame();
+  const ImGuiIO &io { ImGui::GetIO() };
+  if(idx >= 0 && idx < io.InputQueueCharacters.Size) {
+    if(API_W(unicode_char)) *API_W(unicode_char) = io.InputQueueCharacters[idx];
+    return true;
+  }
+
+  return false;
+});

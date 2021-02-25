@@ -47,6 +47,7 @@ using ImGui_Context = Context; // user-facing alias
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write
 #define API_W(var)        var##Out        // write
+#define API_W_SZ(var)     var##Out_sz     // write
 // Not using varInOutOptional because REAPER refuses to give them as null
 #define API_RWO(var)      var##InOptional // read/write, optional/nullable
 #define API_RWBIG(var)    var##InOutNeedBig    // read/write, resizable (realloc_cmd_ptr)

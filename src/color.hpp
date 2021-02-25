@@ -9,6 +9,7 @@ struct ImVec4;
 class Color {
 public:
   static uint32_t rgba2abgr(const uint32_t rgba);
+  static uint32_t abgr2rgba(const uint32_t abgr) { return rgba2abgr(abgr); }
   static Color fromTheme(const uint32_t themeColor);
 
   Color(); // opaque black

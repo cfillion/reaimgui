@@ -53,24 +53,39 @@ DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
   return ImGui::GetFontSize();
 });
 
+DEFINE_API(void, CalcTextSize, (ImGui_Context*,ctx)
+(const char*,text)(double*,API_W(w))(double*,API_W(h))
+(bool*,API_RO(hide_text_after_double_hash))(double*,API_RO(wrap_width)),
+"Default values: hide_text_after_double_hash = false, float wrap_width = -1.0",
+{
+  Context::check(ctx)->enterFrame();
+  const ImVec2 &size {
+    ImGui::CalcTextSize(text, nullptr,
+      valueOr(API_RO(hide_text_after_double_hash), false),
+      valueOr(API_RO(wrap_width), -1.0))
+  };
+  if(API_W(w)) *API_W(w) = size.x;
+  if(API_W(h)) *API_W(h) = size.y;
+});
+
 DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
-(int,varIdx)(double,val1)(double*,API_RO(val2)),
-"See ImGui_StyleVar_* for possible values of 'varIdx'.",
+(int,var_idx)(double,val1)(double*,API_RO(val2)),
+"See ImGui_StyleVar_* for possible values of 'var_idx'.",
 {
   Context::check(ctx)->enterFrame();
 
-  switch(styleVarType(varIdx)) {
+  switch(styleVarType(var_idx)) {
   case StyleVarType::Unknown:
     throw reascript_error { "unknown style variable" };
   case StyleVarType::Float:
     if(API_RO(val2))
       throw reascript_error { "second value ignored for this variable" };
-    ImGui::PushStyleVar(varIdx, val1);
+    ImGui::PushStyleVar(var_idx, val1);
     break;
   case StyleVarType::ImVec2:
     if(!API_RO(val2))
       throw reascript_error { "this variable requires two values" };
-    ImGui::PushStyleVar(varIdx, ImVec2(val1, *API_RO(val2)));
+    ImGui::PushStyleVar(var_idx, ImVec2(val1, *API_RO(val2)));
     break;
   }
 });
@@ -82,7 +97,6 @@ R"(Reset a style variable.
 Default values: count = 1)",
 {
   Context::check(ctx)->enterFrame();
-
   ImGui::PopStyleVar(valueOr(API_RO(count), 1));
 });
 
@@ -98,14 +112,14 @@ Default values: count = 1)",
     break;
 
 DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
-(int,varIdx)(double*,API_W(val1))(double*,API_W(val2)),
+(int,var_idx)(double*,API_W(val1))(double*,API_W(val2)),
 "",
 {
-  Context::check(ctx)->enterFrame(); // TODO: don't start a frame
+  Context::check(ctx)->enterFrame();
 
   const ImGuiStyle &style { ImGui::GetStyle() };
 
-  switch(varIdx) {
+  switch(var_idx) {
   CASE_FLOAT_VAR(Alpha)
   CASE_FLOAT_VAR(ChildBorderSize)
   CASE_FLOAT_VAR(ChildRounding)
@@ -140,20 +154,36 @@ DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 #undef CASE_IMVEC2_VAR
 
 // IMGUI_API ImVec2        GetFontTexUvWhitePixel();                                       // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
-// IMGUI_API ImU32         GetColorU32(ImGuiCol idx, float alpha_mul = 1.0f);              // retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value suitable for ImDrawList
+
+DEFINE_API(int, GetColor, (ImGui_Context*,ctx)
+(int,col_idx)(double*,API_RO(alpha_mul)),
+R"(Retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value (RGBA).
+
+Default values: alpha_mul = 1.0)",
+{
+  Context::check(ctx)->enterFrame();
+  IM_ASSERT(col_idx >= 0 && col_idx < ImGuiCol_COUNT);
+  return Color::abgr2rgba(ImGui::GetColorU32(col_idx, valueOr(API_RO(alpha_mul), 1.0)));
+});
+
+// IMGUI_API ImU32         GetColorU32(ImGuiCol idx, float alpha_mul = 1.0f);              // 
 // IMGUI_API ImU32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 // IMGUI_API ImU32         GetColorU32(ImU32 col);                                         // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
 // IMGUI_API const ImVec4& GetStyleColorVec4(ImGuiCol idx);                                // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
 
-DEFINE_API(bool, PushStyleColor, (ImGui_Context*,ctx)
-(int,idx)(int,rgba),
+DEFINE_API(const char*, GetStyleColorName, (int,col_idx),
+"Get a string corresponding to the enum value (for display, saving, etc.).",
+{
+  return ImGui::GetStyleColorName(col_idx);
+});
+
+DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
+(int,col_idx)(int,rgba),
 "Modify a style color. always use this if you modify the style after NewFrame().",
 {
   Context::check(ctx)->enterFrame();
-  if(idx < 0 || idx >= ImGuiCol_COUNT)
-    return false; // out of range!
-  ImGui::PushStyleColor(idx, ImVec4{Color(rgba)});
-  return true;
+  IM_ASSERT(col_idx >= 0 && col_idx < ImGuiCol_COUNT);
+  ImGui::PushStyleColor(col_idx, ImVec4{Color(rgba)});
 });
 
 DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
@@ -161,7 +191,6 @@ DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
 "Default values: count = 1",
 {
   Context::check(ctx)->enterFrame();
-  // TODO harden
   ImGui::PopStyleColor(valueOr(API_RO(count), 1));
 });
 

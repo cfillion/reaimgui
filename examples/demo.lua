@@ -54,6 +54,7 @@ widgets = {}
 layout  = {}
 popups  = {}
 tables  = {}
+misc    = {}
 
 local r = reaper
 local FLT_MIN, FLT_MAX = 1.17549e-38, 3.40282e+38
@@ -250,37 +251,37 @@ function demo.ShowDemoWindow(open)
     if r.ImGui_BeginMenu(ctx, 'Examples') then
       rv,show_app.main_menu_bar =
         r.ImGui_MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
-      -- rv,show_app.console =
-      --   r.ImGui_MenuItem(ctx, 'Console', nil, show_app.console)
-      -- rv,show_app.log =
-      --   r.ImGui_MenuItem(ctx, 'Log', nil, show_app.log)
-      -- rv,show_app.layout =
-      --   r.ImGui_MenuItem(ctx, 'Simple layout',nil, show_app.layout)
-      -- rv,show_app.property_editor =
-      --   r.ImGui_MenuItem(ctx, 'Property editor', nil, show_app.property_editor)
-      -- rv,show_app.long_text =
-      --   r.ImGui_MenuItem(ctx, 'Long text display', nil, show_app.long_text)
-      -- rv,show_app.auto_resize =
-      --   r.ImGui_MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize)
-      -- rv,show_app.constrained_resize =
-      --   r.ImGui_MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize)
-      -- rv,show_app.simple_overlay =
-      --   r.ImGui_MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay)
-      -- rv,show_app.fullscreen =
-      --   r.ImGui_MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen)
-      -- rv,show_app.window_titles =
-      --   r.ImGui_MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
-      -- rv,show_app.custom_rendering =
-      --   r.ImGui_MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
-      -- rv,show_app.documents =
-      --   r.ImGui_MenuItem(ctx, 'Documents', nil, show_app.documents)
+      rv,show_app.console =
+        r.ImGui_MenuItem(ctx, 'Console', nil, show_app.console, false)
+      rv,show_app.log =
+        r.ImGui_MenuItem(ctx, 'Log', nil, show_app.log, false)
+      rv,show_app.layout =
+        r.ImGui_MenuItem(ctx, 'Simple layout',nil, show_app.layout, false)
+      rv,show_app.property_editor =
+        r.ImGui_MenuItem(ctx, 'Property editor', nil, show_app.property_editor, false)
+      rv,show_app.long_text =
+        r.ImGui_MenuItem(ctx, 'Long text display', nil, show_app.long_text, false)
+      rv,show_app.auto_resize =
+        r.ImGui_MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize, false)
+      rv,show_app.constrained_resize =
+        r.ImGui_MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize, false)
+      rv,show_app.simple_overlay =
+        r.ImGui_MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay, false)
+      rv,show_app.fullscreen =
+        r.ImGui_MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen, false)
+      rv,show_app.window_titles =
+        r.ImGui_MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles, false)
+      rv,show_app.custom_rendering =
+        r.ImGui_MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering, false)
+      rv,show_app.documents =
+        r.ImGui_MenuItem(ctx, 'Documents', nil, show_app.documents, false)
       r.ImGui_EndMenu(ctx)
     end
     if r.ImGui_BeginMenu(ctx, 'Tools') then
       rv,show_app.metrics =
         r.ImGui_MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
-      -- rv,show_app.style_editor =
-      --   r.ImGui_MenuItem(ctx, 'Style Editor', nil, show_app.style_editor)
+      rv,show_app.style_editor =
+        r.ImGui_MenuItem(ctx, 'Style Editor', nil, show_app.style_editor, false)
       rv,show_app.about =
         r.ImGui_MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
       r.ImGui_EndMenu(ctx)
@@ -288,9 +289,10 @@ function demo.ShowDemoWindow(open)
     r.ImGui_EndMenuBar(ctx)
   end
 
-  local IMGUI_VERSION = 'FOOBAR' -- TODO
-  r.ImGui_Text(ctx, ('dear imgui says hello. (%s)'):format(IMGUI_VERSION));
-  r.ImGui_Spacing(ctx);
+  local REAIMGUI_VERSION, IMGUI_VERSION = r.ImGui_GetVersion()
+  r.ImGui_Text(ctx, ('ReaImGui says do re mi. (%s)'):format(REAIMGUI_VERSION))
+  r.ImGui_Text(ctx, ('dear imgui says hello. (%s)'):format(IMGUI_VERSION))
+  r.ImGui_Spacing(ctx)
 
   if r.ImGui_CollapsingHeader(ctx, 'Help') then
     r.ImGui_Text(ctx, 'ABOUT THIS DEMO:')
@@ -721,10 +723,9 @@ function demo.ShowDemoWindowWidgets()
       if node_clicked ~= -1 then
         -- Update selection state
         -- (process outside of tree loop to avoid visual inconsistencies during the clicking frame)
-        -- if r.ImGui_GetIO().KeyCtrl then TODO
-        --   widgets.trees.selection_mask ^= (1 << node_clicked)           -- CTRL+click to toggle
-        if false then
-        else-- if (widgets.trees.selection_mask & (1 << node_clicked)) == 0 -- Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
+        if ({r.ImGui_GetKeyboardModifiers(ctx)})[1] then -- CTRL+click to toggle
+          widgets.trees.selection_mask = widgets.trees.selection_mask ~ (1 << node_clicked)
+        elseif widgets.trees.selection_mask & (1 << node_clicked) == 0 then -- Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
           widgets.trees.selection_mask = (1 << node_clicked)              -- Click to single-select
         end
       end
@@ -1086,11 +1087,11 @@ function demo.ShowDemoWindowWidgets()
       demo.HelpMarker('Hold CTRL and click to select multiple items.')
       for i,sel in ipairs(widgets.selectables.multiple) do
         if r.ImGui_Selectable(ctx, ('Object %d'):format(i-1), sel) then
-          -- if not r.ImGui_GetIO().KeyCtrl then -- Clear selection when CTRL is not held TODO
-          --   for j = 1, #multiple do
-          --     widgets.selectables.multiple[j] = false
-          --   end
-          -- end
+          if not ({r.ImGui_GetKeyboardModifiers(ctx)})[1] then -- Clear selection when CTRL is not held
+            for j = 1, #widgets.selectables.multiple do
+              widgets.selectables.multiple[j] = false
+            end
+          end
           widgets.selectables.multiple[i] = not sel
         end
       end
@@ -3627,8 +3628,7 @@ function demo.ShowDemoWindowTables()
   local rv
 
   -- Using those as a base value to create width/height that are factor of the size of our font
-  -- local TEXT_BASE_WIDTH  = r.ImGui_CalcTextSize(ctx, 'A') TODO
-  local TEXT_BASE_WIDTH  = 7
+  local TEXT_BASE_WIDTH  = r.ImGui_CalcTextSize(ctx, 'A')
   local TEXT_BASE_HEIGHT = r.ImGui_GetTextLineHeightWithSpacing(ctx)
 
   r.ImGui_PushID(ctx, 'Tables')
@@ -5250,10 +5250,9 @@ function demo.ShowDemoWindowTables()
           elseif contents_type == 4 or contents_type == 5 then -- selectable/selectable (span row)
             local selectable_flags = contents_type == 5 and r.ImGui_SelectableFlags_SpanAllColumns() | r.ImGui_SelectableFlags_AllowItemOverlap() or r.ImGui_SelectableFlags_None()
             if r.ImGui_Selectable(ctx, label, item.is_selected, selectable_flags, 0, tables.advanced.row_min_height) then
-              if true then
-              -- if r.ImGui_GetIO().KeyCtrl then TODO
-              --   item.is_selected = not item.is_selected
-              -- else
+              if ({r.ImGui_GetKeyboardModifiers(ctx)})[1] then
+                item.is_selected = not item.is_selected
+              else
                 for _,it in ipairs(tables.advanced.items) do
                   it.is_selected = it == item
                 end
@@ -5528,6 +5527,8 @@ end
 -- }
 
 function demo.ShowDemoWindowMisc()
+  local rv
+
 --     if (r.ImGui_CollapsingHeader("Filtering"))
 --     {
 --         // Helper class to easy setup a text filter.
@@ -5574,7 +5575,7 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_Text(ctx, 'Mouse down:')
       for _,button in ipairs(buttons) do
         local duration = r.ImGui_GetMouseDownDuration(ctx, button)
-        if duration > 0.0 then
+        if duration >= 0.0 then
           r.ImGui_SameLine(ctx)
           r.ImGui_Text(ctx, ('b%d (%.02f secs)'):format(button, duration))
         end
@@ -5584,19 +5585,40 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_Text(ctx, 'Mouse released:'); MouseState(r.ImGui_IsMouseReleased)
       r.ImGui_Text(ctx, ('Mouse wheel: %.1f'):format(r.ImGui_GetMouseWheel(ctx)))
 
-      -- r.ImGui_Text("Keys down:");      for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (io.KeysDownDuration[i] >= 0.0f)     { r.ImGui_SameLine(); r.ImGui_Text("%d (0x%X) (%.02f secs)", i, i, io.KeysDownDuration[i]); }
-      -- r.ImGui_Text("Keys pressed:");   for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (r.ImGui_IsKeyPressed(i))             { r.ImGui_SameLine(); r.ImGui_Text("%d (0x%X)", i, i); }
-      -- r.ImGui_Text("Keys release:");   for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (r.ImGui_IsKeyReleased(i))            { r.ImGui_SameLine(); r.ImGui_Text("%d (0x%X)", i, i); }
-      -- r.ImGui_Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
+      local max_key = 512
+      r.ImGui_Text(ctx, 'Keys down:')
+      for i = 0, max_key - 1 do
+        local duration = r.ImGui_GetKeyDownDuration(ctx, i)
+        if duration >= 0.0 then
+          r.ImGui_SameLine(ctx)
+          r.ImGui_Text(ctx, ('%d (0x%X) (%.02f secs)'):format(i, i, duration))
+        end
+      end
+      local function KeyboardState(stateFunc)
+        for i = 0, max_key - 1 do
+          if stateFunc(ctx, i) then
+            r.ImGui_SameLine(ctx)
+            r.ImGui_Text(ctx, ('%d (0x%X)'):format(i, i))
+          end
+        end
+      end
+      r.ImGui_Text(ctx, 'Keys pressed:'); KeyboardState(r.ImGui_IsKeyPressed)
+      r.ImGui_Text(ctx, 'Keys release:'); KeyboardState(r.ImGui_IsKeyReleased)
+      local ctrl, shift, alt, super = r.ImGui_GetKeyboardModifiers(ctx)
+      r.ImGui_Text(ctx, ('Keys mods: %s%s%s%s'):format(
+        ctrl  and 'CTRL '  or '',
+        shift and 'SHIFT ' or '',
+        alt   and 'ALT '   or '',
+        super and 'SUPER ' or ''))
 
       r.ImGui_Text(ctx, 'Chars queue:')
       local next_id = 0
       while true do
-        local rv, c = r.ImGui_EnumInputQueueCharacters(ctx, next_id)
+        local rv, c = r.ImGui_GetInputQueueCharacter(ctx, next_id)
         if not rv then break end
         next_id = next_id + 1
         r.ImGui_SameLine(ctx)
-        rImGui_Text(ctx, ("'%s' (0x%04X"):format(utf8.char(c), c))
+        r.ImGui_Text(ctx, ("'%s' (0x%04X)"):format(utf8.char(c), c))
       end
 
       -- r.ImGui_Text("NavInputs down:");     for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputs[i] > 0.0f)              { r.ImGui_SameLine(); r.ImGui_Text("[%d] %.2f", i, io.NavInputs[i]); }
@@ -5614,111 +5636,122 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_TreePop(ctx)
     end
 
-    -- if (r.ImGui_TreeNode("Tabbing"))
-    -- {
-    --     r.ImGui_Text("Use TAB/SHIFT+TAB to cycle through keyboard editable fields.");
-    --     static char buf[32] = "hello";
-    --     r.ImGui_InputText("1", buf, IM_ARRAYSIZE(buf));
-    --     r.ImGui_InputText("2", buf, IM_ARRAYSIZE(buf));
-    --     r.ImGui_InputText("3", buf, IM_ARRAYSIZE(buf));
-    --     r.ImGui_PushAllowKeyboardFocus(false);
-    --     r.ImGui_InputText("4 (tab skip)", buf, IM_ARRAYSIZE(buf));
-    --     //r.ImGui_SameLine(); HelpMarker("Use r.ImGui_PushAllowKeyboardFocus(bool) to disable tabbing through certain widgets.");
-    --     r.ImGui_PopAllowKeyboardFocus();
-    --     r.ImGui_InputText("5", buf, IM_ARRAYSIZE(buf));
-    --     r.ImGui_TreePop();
-    -- }
-    --
-    -- if (r.ImGui_TreeNode("Focus from code"))
-    -- {
-    --     bool focus_1 = r.ImGui_Button("Focus on 1"); r.ImGui_SameLine();
-    --     bool focus_2 = r.ImGui_Button("Focus on 2"); r.ImGui_SameLine();
-    --     bool focus_3 = r.ImGui_Button("Focus on 3");
-    --     int has_focus = 0;
-    --     static char buf[128] = "click on a button to set focus";
-    --
-    --     if (focus_1) r.ImGui_SetKeyboardFocusHere();
-    --     r.ImGui_InputText("1", buf, IM_ARRAYSIZE(buf));
-    --     if (r.ImGui_IsItemActive()) has_focus = 1;
-    --
-    --     if (focus_2) r.ImGui_SetKeyboardFocusHere();
-    --     r.ImGui_InputText("2", buf, IM_ARRAYSIZE(buf));
-    --     if (r.ImGui_IsItemActive()) has_focus = 2;
-    --
-    --     r.ImGui_PushAllowKeyboardFocus(false);
-    --     if (focus_3) r.ImGui_SetKeyboardFocusHere();
-    --     r.ImGui_InputText("3 (tab skip)", buf, IM_ARRAYSIZE(buf));
-    --     if (r.ImGui_IsItemActive()) has_focus = 3;
-    --     r.ImGui_PopAllowKeyboardFocus();
-    --
-    --     if (has_focus)
-    --         r.ImGui_Text("Item with focus: %d", has_focus);
-    --     else
-    --         r.ImGui_Text("Item with focus: <none>");
-    --
-    --     // Use >= 0 parameter to SetKeyboardFocusHere() to focus an upcoming item
-    --     static float f3[3] = { 0.0f, 0.0f, 0.0f };
-    --     int focus_ahead = -1;
-    --     if (r.ImGui_Button("Focus on X")) { focus_ahead = 0; } r.ImGui_SameLine();
-    --     if (r.ImGui_Button("Focus on Y")) { focus_ahead = 1; } r.ImGui_SameLine();
-    --     if (r.ImGui_Button("Focus on Z")) { focus_ahead = 2; }
-    --     if (focus_ahead != -1) r.ImGui_SetKeyboardFocusHere(focus_ahead);
-    --     r.ImGui_SliderFloat3("Float3", &f3[0], 0.0f, 1.0f);
-    --
-    --     r.ImGui_TextWrapped("NB: Cursor & selection are preserved when refocusing last used item in code.");
-    --     r.ImGui_TreePop();
-    -- }
-    --
-    -- if (r.ImGui_TreeNode("Dragging"))
-    -- {
-    --     r.ImGui_TextWrapped("You can use r.ImGui_GetMouseDragDelta(0) to query for the dragged amount on any widget.");
-    --     for (int button = 0; button < 3; button++)
-    --     {
-    --         r.ImGui_Text("IsMouseDragging(%d):", button);
-    --         r.ImGui_Text("  w/ default threshold: %d,", r.ImGui_IsMouseDragging(button));
-    --         r.ImGui_Text("  w/ zero threshold: %d,", r.ImGui_IsMouseDragging(button, 0.0f));
-    --         r.ImGui_Text("  w/ large threshold: %d,", r.ImGui_IsMouseDragging(button, 20.0f));
-    --     }
-    --
-    --     r.ImGui_Button("Drag Me");
-    --     if (r.ImGui_IsItemActive())
-    --         r.ImGui_GetForegroundDrawList()->AddLine(io.MouseClickedPos[0], io.MousePos, r.ImGui_GetColorU32(ImGuiCol_Button), 4.0f); // Draw a line between the button and the mouse cursor
-    --
-    --     // Drag operations gets "unlocked" when the mouse has moved past a certain threshold
-    --     // (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
-    --     // threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
-    --     ImVec2 value_raw = r.ImGui_GetMouseDragDelta(0, 0.0f);
-    --     ImVec2 value_with_lock_threshold = r.ImGui_GetMouseDragDelta(0);
-    --     ImVec2 mouse_delta = io.MouseDelta;
-    --     r.ImGui_Text("GetMouseDragDelta(0):");
-    --     r.ImGui_Text("  w/ default threshold: (%.1f, %.1f)", value_with_lock_threshold.x, value_with_lock_threshold.y);
-    --     r.ImGui_Text("  w/ zero threshold: (%.1f, %.1f)", value_raw.x, value_raw.y);
-    --     r.ImGui_Text("io.MouseDelta: (%.1f, %.1f)", mouse_delta.x, mouse_delta.y);
-    --     r.ImGui_TreePop();
-    -- }
-    --
-    -- if (r.ImGui_TreeNode("Mouse cursors"))
-    -- {
-    --     const char* mouse_cursors_names[] = { "Arrow", "TextInput", "ResizeAll", "ResizeNS", "ResizeEW", "ResizeNESW", "ResizeNWSE", "Hand", "NotAllowed" };
-    --     IM_ASSERT(IM_ARRAYSIZE(mouse_cursors_names) == ImGuiMouseCursor_COUNT);
-    --
-    --     ImGuiMouseCursor current = r.ImGui_GetMouseCursor();
-    --     r.ImGui_Text("Current mouse cursor = %d: %s", current, mouse_cursors_names[current]);
-    --     r.ImGui_Text("Hover to see mouse cursors:");
-    --     r.ImGui_SameLine(); HelpMarker(
-    --         "Your application can render a different mouse cursor based on what r.ImGui_GetMouseCursor() returns. "
-    --         "If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, "
-    --         "otherwise your backend needs to handle it.");
-    --     for (int i = 0; i < ImGuiMouseCursor_COUNT; i++)
-    --     {
-    --         char label[32];
-    --         sprintf(label, "Mouse cursor %d: %s", i, mouse_cursors_names[i]);
-    --         r.ImGui_Bullet(); r.ImGui_Selectable(label, false);
-    --         if (r.ImGui_IsItemHovered())
-    --             r.ImGui_SetMouseCursor(i);
-    --     }
-    --     r.ImGui_TreePop();
-    -- }
+    if r.ImGui_TreeNode(ctx, 'Tabbing') then
+      if not misc.tabbing then
+        misc.tabbing = {
+          buf = 'hello',
+        }
+      end
+
+      r.ImGui_Text(ctx, 'Use TAB/SHIFT+TAB to cycle through keyboard editable fields.')
+      rv,misc.tabbing.buf = r.ImGui_InputText(ctx, '1', misc.tabbing.buf)
+      rv,misc.tabbing.buf = r.ImGui_InputText(ctx, '2', misc.tabbing.buf)
+      rv,misc.tabbing.buf = r.ImGui_InputText(ctx, '3', misc.tabbing.buf)
+      r.ImGui_PushAllowKeyboardFocus(ctx, false)
+      rv,misc.tabbing.buf = r.ImGui_InputText(ctx, '4 (tab skip)', misc.tabbing.buf)
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker('Use r.ImGui_PushAllowKeyboardFocus(bool) to disable tabbing through certain widgets.')
+      r.ImGui_PopAllowKeyboardFocus(ctx)
+      rv,misc.tabbing.buf = r.ImGui_InputText(ctx, '5', misc.tabbing.buf)
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Focus from code') then
+      if not misc.focus then
+        misc.focus = {
+          buf = 'click on a button to set focus',
+          d3  = { 0.0, 0.0, 0.0 }
+        }
+      end
+
+      local focus_1 = r.ImGui_Button(ctx, 'Focus on 1'); r.ImGui_SameLine(ctx)
+      local focus_2 = r.ImGui_Button(ctx, 'Focus on 2'); r.ImGui_SameLine(ctx)
+      local focus_3 = r.ImGui_Button(ctx, 'Focus on 3')
+      local has_focus = 0
+
+      if focus_1 then r.ImGui_SetKeyboardFocusHere(ctx) end
+      rv,misc.focus.buf = r.ImGui_InputText(ctx, '1', misc.focus.buf)
+      if r.ImGui_IsItemActive(ctx) then has_focus = 1 end
+
+      if focus_2 then r.ImGui_SetKeyboardFocusHere(ctx) end
+      rv,misc.focus.buf = r.ImGui_InputText(ctx, '2', misc.focus.buf)
+      if r.ImGui_IsItemActive(ctx) then has_focus = 2 end
+
+      r.ImGui_PushAllowKeyboardFocus(ctx, false)
+      if focus_3 then r.ImGui_SetKeyboardFocusHere(ctx) end
+      rv,misc.focus.buf = r.ImGui_InputText(ctx, '3 (tab skip)', misc.focus.buf)
+      if r.ImGui_IsItemActive(ctx) then has_focus = 3 end
+      r.ImGui_PopAllowKeyboardFocus(ctx)
+
+      if has_focus > 0 then
+        r.ImGui_Text(ctx, ('Item with focus: %d'):format(has_focus))
+      else
+        r.ImGui_Text(ctx, 'Item with focus: <none>')
+      end
+
+      -- Use >= 0 parameter to SetKeyboardFocusHere() to focus an upcoming item
+      local focus_ahead = -1
+      if r.ImGui_Button(ctx, 'Focus on X') then focus_ahead = 0 end r.ImGui_SameLine(ctx)
+      if r.ImGui_Button(ctx, 'Focus on Y') then focus_ahead = 1 end r.ImGui_SameLine(ctx)
+      if r.ImGui_Button(ctx, 'Focus on Z') then focus_ahead = 2 end
+      if focus_ahead ~= -1 then r.ImGui_SetKeyboardFocusHere(ctx, focus_ahead) end
+      rv,misc.focus.d3[1],misc.focus.d3[2],misc.focus.d3[3] =
+        r.ImGui_SliderDouble3(ctx, 'Float3', misc.focus.d3[1], misc.focus.d3[2], misc.focus.d3[3], 0.0, 1.0)
+
+      r.ImGui_TextWrapped(ctx, 'NB: Cursor & selection are preserved when refocusing last used item in code.')
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Dragging') then
+      r.ImGui_TextWrapped(ctx, 'You can use r.ImGui_GetMouseDragDelta(0) to query for the dragged amount on any widget.')
+      for button = 0, 2 do
+        r.ImGui_Text(ctx, ('IsMouseDragging(%d):'):format(button))
+        r.ImGui_Text(ctx, ('  w/ default threshold: %s,'):format(r.ImGui_IsMouseDragging(ctx, button)))
+        r.ImGui_Text(ctx, ('  w/ zero threshold: %s,'):format(r.ImGui_IsMouseDragging(ctx, button, 0.0)))
+        r.ImGui_Text(ctx, ('  w/ large threshold: %s,'):format(r.ImGui_IsMouseDragging(ctx, button, 20.0)))
+      end
+
+      r.ImGui_Button(ctx, 'Drag Me')
+      if r.ImGui_IsItemActive(ctx) then
+        -- Draw a line between the button and the mouse cursor
+        local draw_list = r.ImGui_GetForegroundDrawList(ctx)
+        local mouse_pos = { r.ImGui_GetMousePos(ctx) }
+        local click_pos = { r.ImGui_GetMouseClickedPos(ctx, 0) }
+        local color = r.ImGui_GetColor(ctx, r.ImGui_Col_Button())
+        r.ImGui_DrawList_AddLine(draw_list, click_pos[1], click_pos[2], mouse_pos[1], mouse_pos[2], color, 4.0)
+      end
+
+      -- Drag operations gets "unlocked" when the mouse has moved past a certain threshold
+      -- (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
+      -- threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
+      local value_raw = { r.ImGui_GetMouseDragDelta(ctx, 0, 0, r.ImGui_MouseButton_Left(), 0.0) }
+      local value_with_lock_threshold = { r.ImGui_GetMouseDragDelta(ctx, 0, 0, r.ImGui_MouseButton_Left()) }
+      local mouse_delta = { r.ImGui_GetMouseDelta(ctx) }
+      r.ImGui_Text(ctx, 'GetMouseDragDelta(0):')
+      r.ImGui_Text(ctx, ('  w/ default threshold: (%.1f, %.1f)'):format(table.unpack(value_with_lock_threshold)))
+      r.ImGui_Text(ctx, ('  w/ zero threshold: (%.1f, %.1f)'):format(table.unpack(value_raw)))
+      r.ImGui_Text(ctx, ('GetMouseDelta() (%.1f, %.1f)'):format(table.unpack(mouse_delta)))
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Mouse cursors') then
+      local mouse_cursors_names = { 'Arrow', 'TextInput', 'ResizeAll', 'ResizeNS', 'ResizeEW', 'ResizeNESW', 'ResizeNWSE', 'Hand', 'NotAllowed' }
+
+      local current = r.ImGui_GetMouseCursor(ctx)
+      r.ImGui_Text(ctx, ('Current mouse cursor = %d: %s'):format(current, mouse_cursors_names[current + 1]))
+      r.ImGui_Text(ctx, 'Hover to see mouse cursors:')
+      r.ImGui_SameLine(ctx); demo.HelpMarker(
+        'Your application can render a different mouse cursor based on what r.ImGui_GetMouseCursor() returns. \z
+         If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, \z
+         otherwise your backend needs to handle it.')
+      for i,name in ipairs(mouse_cursors_names) do
+        local label = ('Mouse cursor %d: %s'):format(i - 1, name)
+        r.ImGui_Bullet(ctx); r.ImGui_Selectable(ctx, label, false)
+        if r.ImGui_IsItemHovered(ctx) then
+          r.ImGui_SetMouseCursor(ctx, i - 1)
+        end
+      end
+      r.ImGui_TreePop(ctx)
+    end
   end
 end
 
@@ -5792,19 +5825,19 @@ function demo.ShowExampleMenuFile()
     r.ImGui_EndMenu(ctx)
   end
 
-  -- TODO
-  -- if r.ImGui_BeginMenu(ctx, 'Colors') then
-  --   local sz = r.ImGui_GetTextLineHeight(ctx)
-  --   for i = 0, ImGuiCol_COUNT - 1 do
-  --     local name = r.ImGui_GetStyleColorName(i)
-  --     local x,y = r.ImGui_GetCursorScreenPos(ctx)
-  --     r.ImGui_DrawList_AddRectFilled(x, y, x + sz, y + sz, r.ImGui_GetColor(ctx, i))
-  --     r.ImGui_Dummy(ctx, sz, sz)
-  --     r.ImGui_SameLine(ctx)
-  --     r.ImGui_MenuItem(ctx, name)
-  --   end
-  --   r.ImGui_EndMenu(ctx)
-  -- end
+  if r.ImGui_BeginMenu(ctx, 'Colors') then
+    local sz = r.ImGui_GetTextLineHeight(ctx)
+    local draw_list = r.ImGui_GetWindowDrawList(ctx)
+    for i = 0, r.ImGui_Col_ModalWindowDimBg() do
+      local name = r.ImGui_GetStyleColorName(i)
+      local x, y = r.ImGui_GetCursorScreenPos(ctx)
+      r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + sz, y + sz, r.ImGui_GetColor(ctx, i))
+      r.ImGui_Dummy(ctx, sz, sz)
+      r.ImGui_SameLine(ctx)
+      r.ImGui_MenuItem(ctx, name)
+    end
+    r.ImGui_EndMenu(ctx)
+  end
 
   -- Here we demonstrate appending again to the "Options" menu (which we already created above)
   -- Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.

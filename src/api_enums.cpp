@@ -87,6 +87,19 @@ DEFINE_ENUM(MouseButton_Right, "");
 DEFINE_ENUM(MouseButton_Middle, "");
 
 // ImGuiMouseCursor
+// Enumeration for GetMouseCursor()
+// DEFINE_ENUM(MouseCursor_None,       "");
+DEFINE_ENUM(MouseCursor_Arrow,      "");
+DEFINE_ENUM(MouseCursor_TextInput,  "When hovering over InputText, etc.");
+DEFINE_ENUM(MouseCursor_ResizeAll,  "(Unused by Dear ImGui functions)");
+DEFINE_ENUM(MouseCursor_ResizeNS,   "When hovering over an horizontal border");
+DEFINE_ENUM(MouseCursor_ResizeEW,   "When hovering over a vertical border or a column");
+DEFINE_ENUM(MouseCursor_ResizeNESW, "When hovering over the bottom-left corner of a window");
+DEFINE_ENUM(MouseCursor_ResizeNWSE, "When hovering over the bottom-right corner of a window");
+DEFINE_ENUM(MouseCursor_Hand,       "(Unused by Dear ImGui functions. Use for e.g. hyperlinks)");
+DEFINE_ENUM(MouseCursor_NotAllowed, "When hovering something with disallowed interaction. Usually a crossed circle.");
+
+// ImGuiSortDirection
 // Enum: A sorting direction (ascending or descending)
 DEFINE_ENUM(SortDirection_None,       "");
 DEFINE_ENUM(SortDirection_Ascending,  "Ascending = 0->9, A->Z etc.");
