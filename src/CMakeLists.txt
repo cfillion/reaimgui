@@ -27,6 +27,9 @@ add_library(${PROJECT_NAME} SHARED
   api_tables.cpp
   api_widgets.cpp
   api_windows.cpp
+
+  # devel
+  dev_theme.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
