@@ -10,8 +10,6 @@ Index of this file:
 // - sub section: ShowDemoWindowPopups()
 // - sub section: ShowDemoWindowTables()
 // - sub section: ShowDemoWindowMisc()
-// [SECTION] About Window / ShowAboutWindow()
-// [SECTION] Style Editor / ShowStyleEditor()
 // [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
 // [SECTION] Example App: Debug Console / ShowExampleAppConsole()
 // [SECTION] Example App: Debug Log / ShowExampleAppLog()
@@ -28,23 +26,28 @@ Index of this file:
 
 --]]
 
---[[
-// Play it nice with Windows users (Update: May 2018, Notepad now supports Unix-style carriage returns!)
-#ifdef _WIN32
-#define IM_NEWLINE  "\r\n"
-#else
-#define IM_NEWLINE  "\n"
-#endif
---]]
-
+-- Global data storage
 demo = {
   open = true,
+
   menu = {
     enabled = true,
     f = 0.5,
     n = 0,
     b = true,
   },
+
+  -- Window flags (accessible from the "Configuration" section)
+  no_titlebar       = false,
+  no_scrollbar      = false,
+  no_menu           = false,
+  no_move           = false,
+  no_resize         = false,
+  no_collapse       = false,
+  no_close          = false,
+  no_nav            = false,
+  no_background     = false,
+  no_bring_to_front = false,
 }
 
 widgets = {}
@@ -54,6 +57,8 @@ tables  = {}
 
 local r = reaper
 local FLT_MIN, FLT_MAX = 1.17549e-38, 3.40282e+38
+
+-- Hajime!
 
 local ctx = r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 720)
 
@@ -68,12 +73,6 @@ function demo.loop()
   end
 
   r.defer(demo.loop)
-end
-
-function demo.clamp(v, mn, mx)
-  if v < mn then return mn end
-  if v > mx then return mx end
-  return v
 end
 
 -------------------------------------------------------------------------------
@@ -103,6 +102,12 @@ end
 
 function demo.round(n)
   return math.floor(n + .5)
+end
+
+function demo.clamp(v, mn, mx)
+  if v < mn then return mn end
+  if v > mx then return mx end
+  return v
 end
 
 -- Helper to display basic user controls.
@@ -167,18 +172,6 @@ show_app = {
   metrics      = false,
   -- style_editor = false
   about        = false,
-
-  -- Window flags (accessible from the "Configuration" section)
-  no_titlebar = false,
-  no_scrollbar = false,
-  no_menu = false,
-  no_move = false,
-  no_resize = false,
-  no_collapse = false,
-  no_close = false,
-  no_nav = false,
-  no_background = false,
-  no_bring_to_front = false,
 }
 
 -- Demonstrate most Dear ImGui features (this is big function!)
@@ -187,19 +180,19 @@ show_app = {
 function demo.ShowDemoWindow(open)
   local rv
 
-  if show_app.main_menu_bar      then show_app.main_menu_bar      = ShowExampleAppMainMenuBar()       end
-  if show_app.documents          then show_app.documents          = ShowExampleAppDocuments()         end
-  if show_app.console            then show_app.console            = ShowExampleAppConsole()           end
-  if show_app.log                then show_app.log                = ShowExampleAppLog()               end
-  if show_app.layout             then show_app.layout             = ShowExampleAppLayout()            end
-  if show_app.property_editor    then show_app.property_editor    = ShowExampleAppPropertyEditor()    end
-  if show_app.long_text          then show_app.long_text          = ShowExampleAppLongText()          end
-  if show_app.auto_resize        then show_app.auto_resize        = ShowExampleAppAutoResize()        end
-  if show_app.constrained_resize then show_app.constrained_resize = ShowExampleAppConstrainedResize() end
-  if show_app.simple_overlay     then show_app.simple_overlay     = ShowExampleAppSimpleOverlay()     end
-  if show_app.fullscreen         then show_app.fullscreen         = ShowExampleAppFullscreen()        end
-  if show_app.window_titles      then show_app.window_titles      = ShowExampleAppWindowTitles()      end
-  if show_app.custom_rendering   then show_app.custom_rendering   = ShowExampleAppCustomRendering()   end
+  if show_app.main_menu_bar      then                               demo.ShowExampleAppMainMenuBar()       end
+  if show_app.documents          then show_app.documents          = demo.ShowExampleAppDocuments()         end
+  if show_app.console            then show_app.console            = demo.ShowExampleAppConsole()           end
+  if show_app.log                then show_app.log                = demo.ShowExampleAppLog()               end
+  if show_app.layout             then show_app.layout             = demo.ShowExampleAppLayout()            end
+  if show_app.property_editor    then show_app.property_editor    = demo.ShowExampleAppPropertyEditor()    end
+  if show_app.long_text          then show_app.long_text          = demo.ShowExampleAppLongText()          end
+  if show_app.auto_resize        then show_app.auto_resize        = demo.ShowExampleAppAutoResize()        end
+  if show_app.constrained_resize then show_app.constrained_resize = demo.ShowExampleAppConstrainedResize() end
+  if show_app.simple_overlay     then show_app.simple_overlay     = demo.ShowExampleAppSimpleOverlay()     end
+  if show_app.fullscreen         then show_app.fullscreen         = demo.ShowExampleAppFullscreen()        end
+  if show_app.window_titles      then show_app.window_titles      = demo.ShowExampleAppWindowTitles()      end
+  if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
 
   if show_app.metrics then show_app.metrics = r.ImGui_ShowMetricsWindow(ctx, show_app.metrics) end
   if show_app.about   then show_app.about   = r.ImGui_ShowAboutWindow(ctx, show_app.about)     end
@@ -257,37 +250,37 @@ function demo.ShowDemoWindow(open)
     if r.ImGui_BeginMenu(ctx, 'Examples') then
       rv,show_app.main_menu_bar =
         r.ImGui_MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
-      rv,show_app.console =
-        r.ImGui_MenuItem(ctx, 'Console', nil, show_app.console)
-      rv,show_app.log =
-        r.ImGui_MenuItem(ctx, 'Log', nil, show_app.log)
-      rv,show_app.layout =
-        r.ImGui_MenuItem(ctx, 'Simple layout',nil, show_app.layout)
-      rv,show_app.property_editor =
-        r.ImGui_MenuItem(ctx, 'Property editor', nil, show_app.property_editor)
-      rv,show_app.long_text =
-        r.ImGui_MenuItem(ctx, 'Long text display', nil, show_app.long_text)
-      rv,show_app.auto_resize =
-        r.ImGui_MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize)
-      rv,show_app.constrained_resize =
-        r.ImGui_MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize)
-      rv,show_app.simple_overlay =
-        r.ImGui_MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay)
-      rv,show_app.fullscreen =
-        r.ImGui_MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen)
-      rv,show_app.window_titles =
-        r.ImGui_MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
-      rv,show_app.custom_rendering =
-        r.ImGui_MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
-      rv,show_app.documents =
-        r.ImGui_MenuItem(ctx, 'Documents', nil, show_app.documents)
+      -- rv,show_app.console =
+      --   r.ImGui_MenuItem(ctx, 'Console', nil, show_app.console)
+      -- rv,show_app.log =
+      --   r.ImGui_MenuItem(ctx, 'Log', nil, show_app.log)
+      -- rv,show_app.layout =
+      --   r.ImGui_MenuItem(ctx, 'Simple layout',nil, show_app.layout)
+      -- rv,show_app.property_editor =
+      --   r.ImGui_MenuItem(ctx, 'Property editor', nil, show_app.property_editor)
+      -- rv,show_app.long_text =
+      --   r.ImGui_MenuItem(ctx, 'Long text display', nil, show_app.long_text)
+      -- rv,show_app.auto_resize =
+      --   r.ImGui_MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize)
+      -- rv,show_app.constrained_resize =
+      --   r.ImGui_MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize)
+      -- rv,show_app.simple_overlay =
+      --   r.ImGui_MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay)
+      -- rv,show_app.fullscreen =
+      --   r.ImGui_MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen)
+      -- rv,show_app.window_titles =
+      --   r.ImGui_MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
+      -- rv,show_app.custom_rendering =
+      --   r.ImGui_MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
+      -- rv,show_app.documents =
+      --   r.ImGui_MenuItem(ctx, 'Documents', nil, show_app.documents)
       r.ImGui_EndMenu(ctx)
     end
     if r.ImGui_BeginMenu(ctx, 'Tools') then
       rv,show_app.metrics =
         r.ImGui_MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
-      rv,show_app.style_editor =
-        r.ImGui_MenuItem(ctx, 'Style Editor', nil, show_app.style_editor)
+      -- rv,show_app.style_editor =
+      --   r.ImGui_MenuItem(ctx, 'Style Editor', nil, show_app.style_editor)
       rv,show_app.about =
         r.ImGui_MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
       r.ImGui_EndMenu(ctx)
@@ -424,258 +417,13 @@ function demo.ShowDemoWindow(open)
   demo.ShowDemoWindowLayout()
   demo.ShowDemoWindowPopups()
   demo.ShowDemoWindowTables()
-  -- demo.ShowDemoWindowMisc()
+  demo.ShowDemoWindowMisc()
 
   -- End of ShowDemoWindow()
   r.ImGui_PopItemWidth(ctx)
   r.ImGui_End(ctx)
   return open
 end
-
-widgets = {
-  basic = {
-    clicked = 0,
-    check   = true,
-    radio   = 0,
-    counter = 0,
-    curitem = 0,
-    str0    = 'Hello, world!',
-    str1    = '',
-    i0      = 123,
-    i1      = 50,
-    i2      = 42,
-    i3      = 0,
-    d0      = 999999.00000001,
-    d1      = 1e10,
-    d2      = 1.00,
-    d3      = 0.0067,
-    d4      = 0.123,
-    d5      = 0.0,
-    elem    = 1,
-    col1    = 0xff0033,  -- 0xRRGGBB
-    col2    = 0x66b2007f,-- 0xRRGGBBAA
-    listcur = 0,
-  },
-  trees = {
-    base_flags = r.ImGui_TreeNodeFlags_OpenOnArrow() |
-                 r.ImGui_TreeNodeFlags_OpenOnDoubleClick() |
-                 r.ImGui_TreeNodeFlags_SpanAvailWidth(),
-    align_label_with_current_x_position = false,
-    test_drag_and_drop = false,
-    selection_mask = 1 << 2,
-  },
-  cheads = {
-    closable_group = true,
-  },
-  text = {
-    wrap_width = 200.0,
-    utf8 = '日本語',
-  },
-  combos = {
-    flags = r.ImGui_ComboFlags_None(),
-    current_item1 = 1,
-    current_item2 = 0,
-    current_item3 = -1,
-  },
-  lists = {
-   current_idx = 1,
-  },
-  selectables = {
-    basic    = { false, false, false, false, false },
-    single   = -1,
-    multiple = { false, false, false, false, false },
-    sameline = { false, false, false },
-    columns  = { false, false, false, false, false, false, false, false, false, false },
-    grid     = {
-      { true,  false, false, false },
-      { false, true,  false, false },
-      { false, false, true,  false },
-      { false, false, false, true  },
-    },
-    align    = {
-      { true,  false, true  },
-      { false, true , false },
-      { true,  false, true  },
-    },
-  },
-  input = {
-    multiline = {
-      text = [[/*
- The Pentium F00F bug, shorthand for F0 0F C7 C8,
- the hexadecimal encoding of one offending instruction,
- more formally, the invalid operand with locked CMPXCHG8B
- instruction bug, is a design flaw in the majority of
- Intel Pentium, Pentium MMX, and Pentium OverDrive
- processors (all in the P5 microarchitecture).
-*/\n\n"
-label:\n"
-	lock cmpxchg8b eax
-]],
-    },
-    flags = r.ImGui_InputTextFlags_AllowTabInput(),
-    buf = { '', '', '', '', '' },
-    password = 'hunter2',
-  },
-  tabs = {
-    flags1  = r.ImGui_TabBarFlags_Reorderable(),
-    opened  = { true, true, true, true },
-    flags2  = r.ImGui_TabBarFlags_AutoSelectNewTabs() |
-              r.ImGui_TabBarFlags_Reorderable() |
-              r.ImGui_TabBarFlags_FittingPolicyResizeDown(),
-    active  = { 1, 2, 3 },
-    next_id = 4,
-    show_leading_button  = true,
-    show_trailing_button = true,
-  },
-  plots = {
-    animate = true,
-    plot1 = {
-      offset       = 1,
-      refresh_time = 0.0,
-      phase        = 0.0,
-    },
-    plot2 = {
-      func = 0,
-      size = 70,
-      fill = true,
-    },
-    progress     = 0.0,
-    progress_dir = 1,
-  },
-  colors = {
-    rgba               = 0x72909ac8,
-    alpha_preview      = true,
-    alpha_half_preview = false,
-    drag_and_drop      = true,
-    options_menu       = true,
-    saved_palette      = nil, -- filled later
-    backup_color       = nil,
-    no_border          = false,
-    alpha              = true,
-    alpha_bar          = true,
-    side_preview       = true,
-    ref_color          = false,
-    ref_color_rgba     = 0xff00ff80,
-    display_mode       = 0,
-    picker_mode        = 0,
-    hsva               = 0x3bffffff,
-  },
-  sliders = {
-    flags    = r.ImGui_SliderFlags_None(),
-    drag_d   = 0.5,
-    drag_i   = 50,
-    slider_d = 0.5,
-    slider_i = 50,
-  },
-  range = {
-    begin_f = 10.0,
-    end_f   = 90.0,
-    begin_i = 100,
-    end_i   = 1000,
-  },
-  multi_component = {
-    vec4d = { 0.10, 0.20, 0.30, 0.44 },
-    vec4i = { 1, 5, 100, 255 },
-  },
-  vsliders = {
-    int_value = 0,
-    values    = { 0.0,  0.60, 0.35, 0.9, 0.70, 0.20, 0.0 },
-    values2   = { 0.20, 0.80, 0.40, 0.25 },
-  },
-  dragdrop = {
-    color1 = 0xFF0033,
-    color2 = 0x66B30080,
-    mode   = 0,
-    names  = {
-      'Bobby', 'Beatrice', 'Betty',
-      'Brianna', 'Barry', 'Bernard',
-      'Bibi', 'Blaine', 'Bryn',
-    },
-    items  = { 'Item One', 'Item Two', 'Item Three', 'Item Four', 'Item Five' },
-  },
-  query = {
-    item_type   = 1,
-    b           = false,
-    color       = 0xFF8000FF,
-    str         = '',
-    current     = 1,
-    d4a         = { 1.0, 0.5, 0.0, 1.0 },
-    embed_all_inside_a_child_window = false,
-    test_window = false,
-  },
-}
-
-layout = {
-  child = {
-    disable_mouse_wheel = false,
-    disable_menu        = false,
-    offset_x            = 0,
-  },
-  width = {
-    d = 0.0,
-    show_indented_items = true,
-  },
-  horizontal = {
-    c1 = false, c2 = false, c3 = false, c4 = false,
-    d0 = 1.0, d1 = 2.0, d2 = 3.0,
-    item = -1,
-    selection = { 0, 1, 2, 3 },
-  },
-  scrolling = {
-    track_item       = 50,
-    enable_track     = true,
-    enable_extra_decorations = false,
-    scroll_to_off_px = 0.0,
-    scroll_to_pos_px = 200.0,
-    lines = 7,
-    show_horizontal_contents_size_demo_window = false,
-  },
-  horizontal_window = {
-    show_h_scrollbar      = true,
-    show_button           = true,
-    show_tree_nodes       = true,
-    show_text_wrapped     = false,
-    show_columns          = true,
-    show_tab_bar          = true,
-    show_child            = false,
-    explicit_content_size = false,
-    contents_size_x       = 300.0,
-  },
-  clipping = {
-    size   = { 100.0, 100.0 },
-    offset = {  30.0,  30.0 },
-  },
-}
-
-popups = {
-  popups = {
-    selected_fish = -1,
-    toggles = { true, false, false, false, false },
-  },
-  context = {
-    value = 0.5,
-    name  = 'Label1',
-  },
-  modal = {
-    dont_ask_me_next_time = false,
-    item  = 1,
-    color = 0x66b30080,
-  },
-}
-
-local tooltip_curve = reaper.new_array({ 0.6,  0.1,  1.0,  0.5, 0.92, 0.1, 0.2 })
-local vec4a         = reaper.new_array({ 0.10, 0.20, 0.30, 0.44 })
-local frame_times   = reaper.new_array({ 0.6,  0.1,  1.0,  0.5, 0.92, 0.1, 0.2 })
-local PLOT1_SIZE    = 90
-local plot1         = reaper.new_array(PLOT1_SIZE)
-plot1.clear()
-local plot2         = reaper.new_array(1)
-local plot2_funcs   = {
-  function(i) return math.sin(i * 0.1) end, -- sin
-  function(i) return (i & 1) == 1 and 1.0 or -1.0 end, --saw
-}
-local raw_hsv       = reaper.new_array(4)
-local group_values  = reaper.new_array({ 0.5, 0.20, 0.80, 0.60, 0.25 })
 
 function demo.ShowDemoWindowWidgets()
   if not r.ImGui_CollapsingHeader(ctx, 'Widgets') then
@@ -685,6 +433,34 @@ function demo.ShowDemoWindowWidgets()
   local rv
 
   if r.ImGui_TreeNode(ctx, 'Basic') then
+    if not widgets.basic then
+      widgets.basic = {
+        clicked = 0,
+        check   = true,
+        radio   = 0,
+        counter = 0,
+        tooltip = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 }),
+        curitem = 0,
+        str0    = 'Hello, world!',
+        str1    = '',
+        vec4a   = reaper.new_array({ 0.10, 0.20, 0.30, 0.44 }),
+        i0      = 123,
+        i1      = 50,
+        i2      = 42,
+        i3      = 0,
+        d0      = 999999.00000001,
+        d1      = 1e10,
+        d2      = 1.00,
+        d3      = 0.0067,
+        d4      = 0.123,
+        d5      = 0.0,
+        elem    = 1,
+        col1    = 0xff0033,   -- 0xRRGGBB
+        col2    = 0x66b2007f, -- 0xRRGGBBAA
+        listcur = 0,
+      }
+    end
+
     if r.ImGui_Button(ctx, 'Button') then
       widgets.basic.clicked = widgets.basic.clicked + 1
     end
@@ -747,7 +523,7 @@ function demo.ShowDemoWindowWidgets()
     if r.ImGui_IsItemHovered(ctx) then
       r.ImGui_BeginTooltip(ctx)
       r.ImGui_Text(ctx, 'I am a fancy tooltip')
-      r.ImGui_PlotLines(ctx, 'Curve', tooltip_curve, 0)
+      r.ImGui_PlotLines(ctx, 'Curve', widgets.basic.tooltip, 0)
       r.ImGui_EndTooltip(ctx)
     end
 
@@ -787,7 +563,7 @@ function demo.ShowDemoWindowWidgets()
       'You can input value using the scientific notation,\n' ..
       '  e.g. "1e+8" becomes "100000000".')
 
-    r.ImGui_InputDoubleN(ctx, 'input reaper.array', vec4a)
+    r.ImGui_InputDoubleN(ctx, 'input reaper.array', widgets.basic.vec4a)
 
     rv,widgets.basic.i1 = r.ImGui_DragInt(ctx, 'drag int', widgets.basic.i1, 1)
     r.ImGui_SameLine(ctx); demo.HelpMarker(
@@ -853,6 +629,17 @@ function demo.ShowDemoWindowWidgets()
 --     //        r.ImGui_Text("This will be displayed only once.");
 
   if r.ImGui_TreeNode(ctx, 'Trees') then
+    if not widgets.trees then
+      widgets.trees = {
+        base_flags = r.ImGui_TreeNodeFlags_OpenOnArrow() |
+                    r.ImGui_TreeNodeFlags_OpenOnDoubleClick() |
+                    r.ImGui_TreeNodeFlags_SpanAvailWidth(),
+        align_label_with_current_x_position = false,
+        test_drag_and_drop = false,
+        selection_mask = 1 << 2,
+      }
+    end
+
     if r.ImGui_TreeNode(ctx, 'Basic trees') then
       for i = 0, 4 do
         -- Use SetNextItemOpen() so set the default state of a node to be open. We could
@@ -953,6 +740,12 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Collapsing Headers') then
+    if not widgets.cheads then
+      widgets.cheads = {
+        closable_group = true,
+      }
+    end
+
     rv,widgets.cheads.closable_group = r.ImGui_Checkbox(ctx, 'Show 2nd header', widgets.cheads.closable_group)
 
     if r.ImGui_CollapsingHeader(ctx, 'Header', nil, r.ImGui_TreeNodeFlags_None()) then
@@ -986,6 +779,13 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Text') then
+    if not widgets.text then
+      widgets.text = {
+        wrap_width = 200.0,
+        utf8 = '日本語',
+      }
+    end
+
     if r.ImGui_TreeNode(ctx, 'Colorful Text') then
       -- Using shortcut. You can use PushStyleColor()/PopStyleColor() for more flexibility.
       r.ImGui_TextColored(ctx, 0xFF00FFFF, 'Pink')
@@ -1127,6 +927,15 @@ function demo.ShowDemoWindowWidgets()
 --     }
 
   if r.ImGui_TreeNode(ctx, 'Combo') then
+    if not widgets.combos then
+      widgets.combos = {
+        flags = r.ImGui_ComboFlags_None(),
+        current_item1 = 1,
+        current_item2 = 0,
+        current_item3 = -1,
+      }
+    end
+
     rv,widgets.combos.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiComboFlags_PopupAlignLeft', widgets.combos.flags, r.ImGui_ComboFlags_PopupAlignLeft())
     r.ImGui_SameLine(ctx); demo.HelpMarker('Only makes a difference if the popup is larger than the combo')
 
@@ -1177,10 +986,17 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'List boxes') then
+    if not widgets.lists then
+      widgets.lists = { current_idx = 1 }
+    end
+
     -- Using the generic BeginListBox() API, you have full control over how to display the combo contents.
     -- (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
     -- stored in the object itself, etc.)
-    local items = { 'AAAA', 'BBBB', 'CCCC', 'DDDD', 'EEEE', 'FFFF', 'GGGG', 'HHHH', 'IIII', 'JJJJ', 'KKKK', 'LLLLLLL', 'MMMM', 'OOOOOOO' }
+    local items = {
+      'AAAA', 'BBBB', 'CCCC', 'DDDD', 'EEEE', 'FFFF', 'GGGG',
+      'HHHH', 'IIII', 'JJJJ', 'KKKK', 'LLLLLLL', 'MMMM', 'OOOOOOO'
+    }
     if r.ImGui_BeginListBox(ctx, 'listbox 1') then
       for n,v in ipairs(items) do
         local is_selected = widgets.lists.current_idx == n
@@ -1217,6 +1033,27 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Selectables') then
+    if not widgets.selectables then
+      widgets.selectables = {
+        basic    = { false, false, false, false, false },
+        single   = -1,
+        multiple = { false, false, false, false, false },
+        sameline = { false, false, false },
+        columns  = { false, false, false, false, false, false, false, false, false, false },
+        grid     = {
+          { true,  false, false, false },
+          { false, true,  false, false },
+          { false, false, true,  false },
+          { false, false, false, true  },
+        },
+        align    = {
+          { true,  false, true  },
+          { false, true , false },
+          { true,  false, true  },
+        },
+      }
+    end
+
     -- Selectable() has 2 overloads:
     -- - The one taking "bool selected" as a read-only selection information.
     --   When Selectable() has been clicked it returns true and you can alter selection state accordingly.
@@ -1356,6 +1193,27 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Text Input') then
+    if not widgets.input then
+      widgets.input = {
+        multiline = {
+          text = [[/*
+ The Pentium F00F bug, shorthand for F0 0F C7 C8,
+ the hexadecimal encoding of one offending instruction,
+ more formally, the invalid operand with locked CMPXCHG8B
+ instruction bug, is a design flaw in the majority of
+ Intel Pentium, Pentium MMX, and Pentium OverDrive
+ processors (all in the P5 microarchitecture).
+*/\n\n"
+label:\n"
+	lock cmpxchg8b eax
+]],
+        },
+        flags = r.ImGui_InputTextFlags_AllowTabInput(),
+        buf = { '', '', '', '', '' },
+        password = 'hunter2',
+      }
+    end
+
     if r.ImGui_TreeNode(ctx, 'Multi-line Text Input') then
       rv,widgets.input.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_ReadOnly', widgets.input.multiline.flags, r.ImGui_InputTextFlags_ReadOnly());
       rv,widgets.input.multiline.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiInputTextFlags_AllowTabInput', widgets.input.multiline.flags, r.ImGui_InputTextFlags_AllowTabInput());
@@ -1497,8 +1355,22 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Tabs') then
-    local fittingPolicyMask = r.ImGui_TabBarFlags_FittingPolicyResizeDown() |
-                              r.ImGui_TabBarFlags_FittingPolicyScroll()
+    if not widgets.tabs then
+      widgets.tabs = {
+        flags1  = r.ImGui_TabBarFlags_Reorderable(),
+        opened  = { true, true, true, true },
+        flags2  = r.ImGui_TabBarFlags_AutoSelectNewTabs() |
+                  r.ImGui_TabBarFlags_Reorderable() |
+                  r.ImGui_TabBarFlags_FittingPolicyResizeDown(),
+        active  = { 1, 2, 3 },
+        next_id = 4,
+        show_leading_button  = true,
+        show_trailing_button = true,
+      }
+    end
+
+    local fitting_policy_mask = r.ImGui_TabBarFlags_FittingPolicyResizeDown() |
+                                r.ImGui_TabBarFlags_FittingPolicyScroll()
 
     if r.ImGui_TreeNode(ctx, 'Basic') then
       if r.ImGui_BeginTabBar(ctx, 'MyTabBar', r.ImGui_TabBarFlags_None()) then
@@ -1527,14 +1399,14 @@ function demo.ShowDemoWindowWidgets()
       rv,widgets.tabs.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_TabListPopupButton', widgets.tabs.flags1, r.ImGui_TabBarFlags_TabListPopupButton())
       rv,widgets.tabs.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_NoCloseWithMiddleMouseButton', widgets.tabs.flags1, r.ImGui_TabBarFlags_NoCloseWithMiddleMouseButton())
 
-      if widgets.tabs.flags1 & fittingPolicyMask == 0 then
+      if widgets.tabs.flags1 & fitting_policy_mask == 0 then
         widgets.tabs.flags1 = widgets.tabs.flags1 | r.ImGui_TabBarFlags_FittingPolicyResizeDown() -- was FittingPolicyDefault_
       end
       if r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyResizeDown', widgets.tabs.flags1, r.ImGui_TabBarFlags_FittingPolicyResizeDown()) then
-        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fittingPolicyMask | r.ImGui_TabBarFlags_FittingPolicyResizeDown()
+        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fitting_policy_mask | r.ImGui_TabBarFlags_FittingPolicyResizeDown()
       end
       if r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyScroll', widgets.tabs.flags1, r.ImGui_TabBarFlags_FittingPolicyScroll()) then
-        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fittingPolicyMask | r.ImGui_TabBarFlags_FittingPolicyScroll()
+        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fitting_policy_mask | r.ImGui_TabBarFlags_FittingPolicyScroll()
       end
 
       -- Tab Bar
@@ -1575,10 +1447,10 @@ function demo.ShowDemoWindowWidgets()
       -- Expose some other flags which are useful to showcase how they interact with Leading/Trailing tabs
       rv,widgets.tabs.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_TabListPopupButton', widgets.tabs.flags2, r.ImGui_TabBarFlags_TabListPopupButton())
       if r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyResizeDown', widgets.tabs.flags2, r.ImGui_TabBarFlags_FittingPolicyResizeDown()) then
-        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fittingPolicyMask | r.ImGui_TabBarFlags_FittingPolicyResizeDown()
+        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fitting_policy_mask | r.ImGui_TabBarFlags_FittingPolicyResizeDown()
       end
       if r.ImGui_CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyScroll', widgets.tabs.flags2, r.ImGui_TabBarFlags_FittingPolicyScroll()) then
-        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fittingPolicyMask | r.ImGui_TabBarFlags_FittingPolicyScroll()
+        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fitting_policy_mask | r.ImGui_TabBarFlags_FittingPolicyScroll()
       end
 
       if r.ImGui_BeginTabBar(ctx, 'MyTabBar', widgets.tabs.flags2) then
@@ -1630,16 +1502,44 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Plots Widgets') then
+    local PLOT1_SIZE = 90
+    local plot2_funcs   = {
+      function(i) return math.sin(i * 0.1) end, -- sin
+      function(i) return (i & 1) == 1 and 1.0 or -1.0 end, --saw
+    }
+
+    if not widgets.plots then
+      widgets.plots = {
+        animate = true,
+        frame_times = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 }),
+        plot1 = {
+          offset       = 1,
+          refresh_time = 0.0,
+          phase        = 0.0,
+          data         = reaper.new_array(PLOT1_SIZE),
+        },
+        plot2 = {
+          func = 0,
+          size = 70,
+          fill = true,
+          data = reaper.new_array(1),
+        },
+        progress     = 0.0,
+        progress_dir = 1,
+      }
+      widgets.plots.plot1.data.clear()
+    end
+
     rv,widgets.plots.animate = r.ImGui_Checkbox(ctx, 'Animate', widgets.plots.animate)
 
-    r.ImGui_PlotLines(ctx, 'Frame Times', frame_times)
+    r.ImGui_PlotLines(ctx, 'Frame Times', widgets.plots.frame_times)
 
     -- Fill an array of contiguous float values to plot
     if not widgets.plots.animate or widgets.plots.plot1.refresh_time == 0.0 then
       widgets.plots.plot1.refresh_time = r.ImGui_GetTime(ctx)
     end
     while widgets.plots.plot1.refresh_time < r.ImGui_GetTime(ctx) do -- Create data at fixed 60 Hz rate for the demo
-      plot1[widgets.plots.plot1.offset] = math.cos(widgets.plots.plot1.phase)
+      widgets.plots.plot1.data[widgets.plots.plot1.offset] = math.cos(widgets.plots.plot1.phase)
       widgets.plots.plot1.offset = (widgets.plots.plot1.offset % PLOT1_SIZE) + 1
       widgets.plots.plot1.phase = widgets.plots.plot1.phase + (0.10 * widgets.plots.plot1.offset)
       widgets.plots.plot1.refresh_time = widgets.plots.plot1.refresh_time + (1.0 / 60.0)
@@ -1649,14 +1549,14 @@ function demo.ShowDemoWindowWidgets()
     -- (in this example, we will display an average value)
     local average = 0.0
     for n = 1, PLOT1_SIZE do
-      average = average + plot1[n]
+      average = average + widgets.plots.plot1.data[n]
     end
     average = average / PLOT1_SIZE
 
     local overlay = ('avg %f'):format(average)
-    r.ImGui_PlotLines(ctx, 'Lines', plot1, widgets.plots.plot1.offset - 1, overlay, -1.0, 1.0, 0, 80.0)
+    r.ImGui_PlotLines(ctx, 'Lines', widgets.plots.plot1.data, widgets.plots.plot1.offset - 1, overlay, -1.0, 1.0, 0, 80.0)
 
-    r.ImGui_PlotHistogram(ctx, 'Histogram', frame_times, 0, nil, 0.0, 1.0, 0, 80.0)
+    r.ImGui_PlotHistogram(ctx, 'Histogram', widgets.plots.frame_times, 0, nil, 0.0, 1.0, 0, 80.0)
     r.ImGui_Separator(ctx)
 
     r.ImGui_SetNextItemWidth(ctx, 100)
@@ -1668,14 +1568,14 @@ function demo.ShowDemoWindowWidgets()
     -- Use functions to generate output
     if funcChanged or rv or widgets.plots.plot2.fill then
       widgets.plots.plot2.fill = false -- fill the first time
-      plot2 = reaper.new_array(widgets.plots.plot2.size)
+      widgets.plots.plot2.data = reaper.new_array(widgets.plots.plot2.size)
       for n = 1, widgets.plots.plot2.size do
-        plot2[n] = plot2_funcs[widgets.plots.plot2.func + 1](n - 1)
+        widgets.plots.plot2.data[n] = plot2_funcs[widgets.plots.plot2.func + 1](n - 1)
       end
     end
 
-    r.ImGui_PlotLines(ctx, 'Lines', plot2, 0, nil, -1.0, 1.0, 0, 80)
-    r.ImGui_PlotHistogram(ctx, 'Histogram', plot2, 0, nil, -1.0, 1.0, 0, 80)
+    r.ImGui_PlotLines(ctx, 'Lines', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
+    r.ImGui_PlotHistogram(ctx, 'Histogram', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
     r.ImGui_Separator(ctx)
 
     -- Animate a simple progress bar
@@ -1705,6 +1605,28 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Color/Picker Widgets') then
+    if not widgets.colors then
+      widgets.colors = {
+        rgba               = 0x72909ac8,
+        alpha_preview      = true,
+        alpha_half_preview = false,
+        drag_and_drop      = true,
+        options_menu       = true,
+        saved_palette      = nil, -- filled later
+        backup_color       = nil,
+        no_border          = false,
+        alpha              = true,
+        alpha_bar          = true,
+        side_preview       = true,
+        ref_color          = false,
+        ref_color_rgba     = 0xff00ff80,
+        display_mode       = 0,
+        picker_mode        = 0,
+        hsva               = 0x3bffffff,
+        raw_hsv            = reaper.new_array(4),
+      }
+    end
+
     -- static bool hdr = false;
     rv,widgets.colors.alpha_preview      = r.ImGui_Checkbox(ctx, 'With Alpha Preview',      widgets.colors.alpha_preview)
     rv,widgets.colors.alpha_half_preview = r.ImGui_Checkbox(ctx, 'With Half Alpha Preview', widgets.colors.alpha_half_preview)
@@ -1885,6 +1807,7 @@ function demo.ShowDemoWindowWidgets()
     rv,widgets.colors.hsva = r.ImGui_ColorEdit(ctx, 'HSV shown as HSV##1', widgets.colors.hsva,
       r.ImGui_ColorEditFlags_DisplayHSV() | r.ImGui_ColorEditFlags_InputHSV() | r.ImGui_ColorEditFlags_Float())
 
+    local raw_hsv = widgets.colors.raw_hsv
     raw_hsv[1] = (widgets.colors.hsva >> 24 & 0xFF) / 255.0 -- H
     raw_hsv[2] = (widgets.colors.hsva >> 16 & 0xFF) / 255.0 -- S
     raw_hsv[3] = (widgets.colors.hsva >>  8 & 0xFF) / 255.0 -- V
@@ -1901,6 +1824,16 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Drag/Slider Flags') then
+    if not widgets.sliders then
+      widgets.sliders = {
+        flags    = r.ImGui_SliderFlags_None(),
+        drag_d   = 0.5,
+        drag_i   = 50,
+        slider_d = 0.5,
+        slider_i = 50,
+      }
+    end
+
     -- Demonstrate using advanced flags for DragXXX and SliderXXX functions. Note that the flags are the same!
     rv,widgets.sliders.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiSliderFlags_AlwaysClamp', widgets.sliders.flags, r.ImGui_SliderFlags_AlwaysClamp())
     r.ImGui_SameLine(ctx); demo.HelpMarker('Always clamp value to min/max bounds (if any) when input manually with CTRL+Click.')
@@ -1930,6 +1863,15 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Range Widgets') then
+    if not widgets.range then
+      widgets.range = {
+        begin_f = 10.0,
+        end_f   = 90.0,
+        begin_i = 100,
+        end_i   = 1000,
+      }
+    end
+
     rv,widgets.range.begin_f,widgets.range.end_f = r.ImGui_DragFloatRange2(ctx, 'range float', widgets.range.begin_f, widgets.range.end_f, 0.25, 0.0, 100.0, 'Min: %.1f %%', "Max: %.1f %%", r.ImGui_SliderFlags_AlwaysClamp())
     rv,widgets.range.begin_i,widgets.range.end_i = r.ImGui_DragIntRange2(ctx, 'range int', widgets.range.begin_i, widgets.range.end_i, 5, 0, 1000, 'Min: %d units', "Max: %d units")
     rv,widgets.range.begin_i,widgets.range.end_i = r.ImGui_DragIntRange2(ctx, 'range int (no bounds)', widgets.range.begin_i, widgets.range.end_i, 5, 0, 0, 'Min: %d units', "Max: %d units")
@@ -2055,6 +1997,14 @@ function demo.ShowDemoWindowWidgets()
 --     }
 
   if r.ImGui_TreeNode(ctx, 'Multi-component Widgets') then
+    if not widgets.multi_component then
+      widgets.multi_component = {
+        vec4d = { 0.10, 0.20, 0.30, 0.44 },
+        vec4i = { 1, 5, 100, 255 },
+        vec4a = reaper.new_array({ 0.10, 0.20, 0.30, 0.44 }),
+      }
+    end
+
     local vec4d = widgets.multi_component.vec4d
     local vec4i = widgets.multi_component.vec4i
 
@@ -2082,18 +2032,26 @@ function demo.ShowDemoWindowWidgets()
     rv,vec4i[1],vec4i[2],vec4i[3],vec4i[4] = r.ImGui_SliderInt4(ctx, 'slider int4', vec4i[1], vec4i[2], vec4i[3], vec4i[4], 0, 255)
     r.ImGui_Spacing(ctx)
 
-    r.ImGui_InputDoubleN(ctx, 'input reaper.array', vec4a)
-    r.ImGui_DragDoubleN(ctx, 'drag reaper.array', vec4a)
-    r.ImGui_SliderDoubleN(ctx, 'slider reaper.array', vec4a, 0.0, 1.0)
+    r.ImGui_InputDoubleN(ctx, 'input reaper.array', input.multi_component.vec4a)
+    r.ImGui_DragDoubleN(ctx, 'drag reaper.array', input.multi_component.vec4a, 0.01, 0.0, 1.0)
+    r.ImGui_SliderDoubleN(ctx, 'slider reaper.array', input.multi_component.vec4a, 0.0, 1.0)
 
     r.ImGui_TreePop(ctx)
   end
 
   if r.ImGui_TreeNode(ctx, 'Vertical Sliders') then
+    if not widgets.vsliders then
+      widgets.vsliders = {
+        int_value = 0,
+        values    = { 0.0,  0.60, 0.35, 0.9, 0.70, 0.20, 0.0 },
+        values2   = { 0.20, 0.80, 0.40, 0.25 },
+      }
+    end
+
     local spacing = 4
     r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), spacing, spacing)
 
-    rv,widgets.sliders.int_value = r.ImGui_VSliderInt(ctx, '##int', 18, 160, widgets.vsliders.int_value, 0, 5)
+    rv,widgets.vsliders.int_value = r.ImGui_VSliderInt(ctx, '##int', 18, 160, widgets.vsliders.int_value, 0, 5)
     r.ImGui_SameLine(ctx)
 
     r.ImGui_PushID(ctx, 'set1')
@@ -2156,6 +2114,20 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Drag and Drop') then
+    if not widgets.dragdrop then
+      widgets.dragdrop = {
+        color1 = 0xFF0033,
+        color2 = 0x66B30080,
+        mode   = 0,
+        names  = {
+          'Bobby', 'Beatrice', 'Betty',
+          'Brianna', 'Barry', 'Bernard',
+          'Bibi', 'Blaine', 'Bryn',
+        },
+        items  = { 'Item One', 'Item Two', 'Item Three', 'Item Four', 'Item Five' },
+      }
+    end
+
     if r.ImGui_TreeNode(ctx, 'Drag and drop in standard widgets') then
       -- ColorEdit widgets automatically act as drag source and drag target.
       -- They are using standardized payload types accessible using
@@ -2240,6 +2212,19 @@ function demo.ShowDemoWindowWidgets()
   end
 
   if r.ImGui_TreeNode(ctx, 'Querying Status (Edited/Active/Focused/Hovered etc.)') then
+    if not widgets.query then
+      widgets.query = {
+        item_type   = 1,
+        b           = false,
+        color       = 0xFF8000FF,
+        str         = '',
+        current     = 1,
+        d4a         = { 1.0, 0.5, 0.0, 1.0 },
+        embed_all_inside_a_child_window = false,
+        test_window = false,
+      }
+    end
+
     -- Select an item type
     rv,widgets.query.item_type = r.ImGui_Combo(ctx, 'Item Type', widgets.query.item_type,
       'Text\31Button\31Button (w/ repeat)\31Checkbox\31SliderDouble\31\z
@@ -2421,6 +2406,14 @@ function demo.ShowDemoWindowLayout()
   local rv
 
   if r.ImGui_TreeNode(ctx, 'Child windows') then
+    if not layout.child then
+      layout.child = {
+        disable_mouse_wheel = false,
+        disable_menu        = false,
+        offset_x            = 0,
+      }
+    end
+
     demo.HelpMarker('Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window.')
     rv,layout.child.disable_mouse_wheel = r.ImGui_Checkbox(ctx, 'Disable Mouse Wheel', layout.child.disable_mouse_wheel)
     rv,layout.child.disable_menu = r.ImGui_Checkbox(ctx, 'Disable Menu', layout.child.disable_menu)
@@ -2496,6 +2489,13 @@ function demo.ShowDemoWindowLayout()
   end
 
   if r.ImGui_TreeNode(ctx, 'Widgets Width') then
+    if not layout.width then
+      layout.width = {
+        d = 0.0,
+        show_indented_items = true,
+      }
+    end
+
     -- Use SetNextItemWidth() to set the width of a single upcoming item.
     -- Use PushItemWidth()/PopItemWidth() to set the width of a group of items.
     -- In real code use you'll probably want to choose width values that are proportional to your font size
@@ -2564,6 +2564,15 @@ function demo.ShowDemoWindowLayout()
   end
 
   if r.ImGui_TreeNode(ctx, 'Basic Horizontal Layout') then
+    if not layout.horizontal then
+      layout.horizontal = {
+        c1 = false, c2 = false, c3 = false, c4 = false,
+        d0 = 1.0, d1 = 2.0, d2 = 3.0,
+        item = -1,
+        selection = { 0, 1, 2, 3 },
+      }
+    end
+
     r.ImGui_TextWrapped(ctx, '(Use r.ImGui_SameLine() to keep adding items to the right of the preceding item)');
 
     -- Text
@@ -2647,6 +2656,12 @@ function demo.ShowDemoWindowLayout()
   end
 
   if r.ImGui_TreeNode(ctx, 'Groups') then
+    if not widgets.groups then
+      widgets.groups = {
+        values = reaper.new_array({ 0.5, 0.20, 0.80, 0.60, 0.25 }),
+      }
+    end
+
     demo.HelpMarker(
       'BeginGroup() basically locks the horizontal position for new line. \z
        EndGroup() bundles the whole group so that you can use "item" functions such as \z
@@ -2672,7 +2687,7 @@ function demo.ShowDemoWindowLayout()
     local size = {r.ImGui_GetItemRectSize(ctx)}
     local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[1]
 
-    r.ImGui_PlotHistogram(ctx, '##values', group_values, 0, nil, 0.0, 1.0, table.unpack(size))
+    r.ImGui_PlotHistogram(ctx, '##values', widgets.groups.values, 0, nil, 0.0, 1.0, table.unpack(size))
 
     r.ImGui_Button(ctx, 'ACTION', (size[1] - item_spacing_x) * 0.5, size[2])
     r.ImGui_SameLine(ctx)
@@ -2804,6 +2819,18 @@ function demo.ShowDemoWindowLayout()
   end
 
   if r.ImGui_TreeNode(ctx, 'Scrolling') then
+    if not layout.scrolling then
+      layout.scrolling = {
+        track_item       = 50,
+        enable_track     = true,
+        enable_extra_decorations = false,
+        scroll_to_off_px = 0.0,
+        scroll_to_pos_px = 200.0,
+        lines = 7,
+        show_horizontal_contents_size_demo_window = false,
+      }
+    end
+
     -- Vertical scroll functions
     demo.HelpMarker('Use SetScrollHereY() or SetScrollFromPosY() to scroll to a given vertical position.')
 
@@ -2992,6 +3019,20 @@ function demo.ShowDemoWindowLayout()
       layout.scrolling.show_horizontal_contents_size_demo_window)
 
     if layout.scrolling.show_horizontal_contents_size_demo_window then
+      if not layout.horizontal_window then
+        layout.horizontal_window = {
+          show_h_scrollbar      = true,
+          show_button           = true,
+          show_tree_nodes       = true,
+          show_text_wrapped     = false,
+          show_columns          = true,
+          show_tab_bar          = true,
+          show_child            = false,
+          explicit_content_size = false,
+          contents_size_x       = 300.0,
+        }
+      end
+
       if layout.horizontal_window.explicit_content_size then
         r.ImGui_SetNextWindowContentSize(ctx, layout.horizontal_window.contents_size_x, 0.0)
       end
@@ -3084,6 +3125,13 @@ function demo.ShowDemoWindowLayout()
   end
 
   if r.ImGui_TreeNode(ctx, 'Clipping') then
+    if not layout.clipping then
+      layout.clipping = {
+        size   = { 100.0, 100.0 },
+        offset = {  30.0,  30.0 },
+      }
+    end
+
     rv,layout.clipping.size[1],layout.clipping.size[2] =
       r.ImGui_DragDouble2(ctx, 'size', layout.clipping.size[1], layout.clipping.size[2],
       0.5, 1.0, 200.0, "%.0f")
@@ -3169,6 +3217,13 @@ function demo.ShowDemoWindowPopups()
   -- This may be a bit confusing at first but it should quickly make sense. Follow on the examples below.
 
   if r.ImGui_TreeNode(ctx, 'Popups') then
+    if not popups.popups then
+      popups.popups = {
+        selected_fish = -1,
+        toggles = { true, false, false, false, false },
+      }
+    end
+
     r.ImGui_TextWrapped(ctx,
       'When a popup is active, it inhibits interacting with windows that are behind the popup. \z
        Clicking outside the popup closes it.');
@@ -3248,6 +3303,13 @@ function demo.ShowDemoWindowPopups()
   end
 
   if r.ImGui_TreeNode(ctx, 'Context menus') then
+    if not popups.context then
+      popups.context = {
+        value = 0.5,
+        name  = 'Label1',
+      }
+    end
+
     -- BeginPopupContextItem() is a helper to provide common/simple popup behavior of essentially doing:
     --    if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
     --       OpenPopup(id);
@@ -3288,6 +3350,14 @@ function demo.ShowDemoWindowPopups()
   end
 
   if r.ImGui_TreeNode(ctx, 'Modals') then
+    if not popups.modal then
+      popups.modal = {
+        dont_ask_me_next_time = false,
+        item  = 1,
+        color = 0x66b30080,
+      }
+    end
+
     r.ImGui_TextWrapped(ctx, 'Modal windows are like popups but the user cannot close them by clicking outside.')
 
     if r.ImGui_Button(ctx, 'Delete..') then
@@ -5456,9 +5526,8 @@ end
 --
 --     r.ImGui_TreePop();
 -- }
---
--- static void ShowDemoWindowMisc()
--- {
+
+function demo.ShowDemoWindowMisc()
 --     if (r.ImGui_CollapsingHeader("Filtering"))
 --     {
 --         // Helper class to easy setup a text filter.
@@ -5475,715 +5544,213 @@ end
 --             if (filter.PassFilter(lines[i]))
 --                 r.ImGui_BulletText("%s", lines[i]);
 --     }
---
---     if (r.ImGui_CollapsingHeader("Inputs, Navigation & Focus"))
---     {
---         ImGuiIO& io = r.ImGui_GetIO();
---
---         // Display ImGuiIO output flags
---         r.ImGui_Text("WantCaptureMouse: %d", io.WantCaptureMouse);
---         r.ImGui_Text("WantCaptureKeyboard: %d", io.WantCaptureKeyboard);
---         r.ImGui_Text("WantTextInput: %d", io.WantTextInput);
---         r.ImGui_Text("WantSetMousePos: %d", io.WantSetMousePos);
---         r.ImGui_Text("NavActive: %d, NavVisible: %d", io.NavActive, io.NavVisible);
---
---         // Display Keyboard/Mouse state
---         if (r.ImGui_TreeNode("Keyboard, Mouse & Navigation State"))
---         {
---             if (r.ImGui_IsMousePosValid())
---                 r.ImGui_Text("Mouse pos: (%g, %g)", io.MousePos.x, io.MousePos.y);
---             else
---                 r.ImGui_Text("Mouse pos: <INVALID>");
---             r.ImGui_Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
---             r.ImGui_Text("Mouse down:");     for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) if (io.MouseDownDuration[i] >= 0.0f)   { r.ImGui_SameLine(); r.ImGui_Text("b%d (%.02f secs)", i, io.MouseDownDuration[i]); }
---             r.ImGui_Text("Mouse clicked:");  for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) if (r.ImGui_IsMouseClicked(i))          { r.ImGui_SameLine(); r.ImGui_Text("b%d", i); }
---             r.ImGui_Text("Mouse dblclick:"); for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) if (r.ImGui_IsMouseDoubleClicked(i))    { r.ImGui_SameLine(); r.ImGui_Text("b%d", i); }
---             r.ImGui_Text("Mouse released:"); for (int i = 0; i < IM_ARRAYSIZE(io.MouseDown); i++) if (r.ImGui_IsMouseReleased(i))         { r.ImGui_SameLine(); r.ImGui_Text("b%d", i); }
---             r.ImGui_Text("Mouse wheel: %.1f", io.MouseWheel);
---
---             r.ImGui_Text("Keys down:");      for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (io.KeysDownDuration[i] >= 0.0f)     { r.ImGui_SameLine(); r.ImGui_Text("%d (0x%X) (%.02f secs)", i, i, io.KeysDownDuration[i]); }
---             r.ImGui_Text("Keys pressed:");   for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (r.ImGui_IsKeyPressed(i))             { r.ImGui_SameLine(); r.ImGui_Text("%d (0x%X)", i, i); }
---             r.ImGui_Text("Keys release:");   for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (r.ImGui_IsKeyReleased(i))            { r.ImGui_SameLine(); r.ImGui_Text("%d (0x%X)", i, i); }
---             r.ImGui_Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
---             r.ImGui_Text("Chars queue:");    for (int i = 0; i < io.InputQueueCharacters.Size; i++) { ImWchar c = io.InputQueueCharacters[i]; r.ImGui_SameLine();  r.ImGui_Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? (char)c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
---
---             r.ImGui_Text("NavInputs down:");     for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputs[i] > 0.0f)              { r.ImGui_SameLine(); r.ImGui_Text("[%d] %.2f", i, io.NavInputs[i]); }
---             r.ImGui_Text("NavInputs pressed:");  for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] == 0.0f) { r.ImGui_SameLine(); r.ImGui_Text("[%d]", i); }
---             r.ImGui_Text("NavInputs duration:"); for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] >= 0.0f) { r.ImGui_SameLine(); r.ImGui_Text("[%d] %.2f", i, io.NavInputsDownDuration[i]); }
---
---             r.ImGui_Button("Hovering me sets the\nkeyboard capture flag");
---             if (r.ImGui_IsItemHovered())
---                 r.ImGui_CaptureKeyboardFromApp(true);
---             r.ImGui_SameLine();
---             r.ImGui_Button("Holding me clears the\nthe keyboard capture flag");
---             if (r.ImGui_IsItemActive())
---                 r.ImGui_CaptureKeyboardFromApp(false);
---
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Tabbing"))
---         {
---             r.ImGui_Text("Use TAB/SHIFT+TAB to cycle through keyboard editable fields.");
---             static char buf[32] = "hello";
---             r.ImGui_InputText("1", buf, IM_ARRAYSIZE(buf));
---             r.ImGui_InputText("2", buf, IM_ARRAYSIZE(buf));
---             r.ImGui_InputText("3", buf, IM_ARRAYSIZE(buf));
---             r.ImGui_PushAllowKeyboardFocus(false);
---             r.ImGui_InputText("4 (tab skip)", buf, IM_ARRAYSIZE(buf));
---             //r.ImGui_SameLine(); HelpMarker("Use r.ImGui_PushAllowKeyboardFocus(bool) to disable tabbing through certain widgets.");
---             r.ImGui_PopAllowKeyboardFocus();
---             r.ImGui_InputText("5", buf, IM_ARRAYSIZE(buf));
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Focus from code"))
---         {
---             bool focus_1 = r.ImGui_Button("Focus on 1"); r.ImGui_SameLine();
---             bool focus_2 = r.ImGui_Button("Focus on 2"); r.ImGui_SameLine();
---             bool focus_3 = r.ImGui_Button("Focus on 3");
---             int has_focus = 0;
---             static char buf[128] = "click on a button to set focus";
---
---             if (focus_1) r.ImGui_SetKeyboardFocusHere();
---             r.ImGui_InputText("1", buf, IM_ARRAYSIZE(buf));
---             if (r.ImGui_IsItemActive()) has_focus = 1;
---
---             if (focus_2) r.ImGui_SetKeyboardFocusHere();
---             r.ImGui_InputText("2", buf, IM_ARRAYSIZE(buf));
---             if (r.ImGui_IsItemActive()) has_focus = 2;
---
---             r.ImGui_PushAllowKeyboardFocus(false);
---             if (focus_3) r.ImGui_SetKeyboardFocusHere();
---             r.ImGui_InputText("3 (tab skip)", buf, IM_ARRAYSIZE(buf));
---             if (r.ImGui_IsItemActive()) has_focus = 3;
---             r.ImGui_PopAllowKeyboardFocus();
---
---             if (has_focus)
---                 r.ImGui_Text("Item with focus: %d", has_focus);
---             else
---                 r.ImGui_Text("Item with focus: <none>");
---
---             // Use >= 0 parameter to SetKeyboardFocusHere() to focus an upcoming item
---             static float f3[3] = { 0.0f, 0.0f, 0.0f };
---             int focus_ahead = -1;
---             if (r.ImGui_Button("Focus on X")) { focus_ahead = 0; } r.ImGui_SameLine();
---             if (r.ImGui_Button("Focus on Y")) { focus_ahead = 1; } r.ImGui_SameLine();
---             if (r.ImGui_Button("Focus on Z")) { focus_ahead = 2; }
---             if (focus_ahead != -1) r.ImGui_SetKeyboardFocusHere(focus_ahead);
---             r.ImGui_SliderFloat3("Float3", &f3[0], 0.0f, 1.0f);
---
---             r.ImGui_TextWrapped("NB: Cursor & selection are preserved when refocusing last used item in code.");
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Dragging"))
---         {
---             r.ImGui_TextWrapped("You can use r.ImGui_GetMouseDragDelta(0) to query for the dragged amount on any widget.");
---             for (int button = 0; button < 3; button++)
---             {
---                 r.ImGui_Text("IsMouseDragging(%d):", button);
---                 r.ImGui_Text("  w/ default threshold: %d,", r.ImGui_IsMouseDragging(button));
---                 r.ImGui_Text("  w/ zero threshold: %d,", r.ImGui_IsMouseDragging(button, 0.0f));
---                 r.ImGui_Text("  w/ large threshold: %d,", r.ImGui_IsMouseDragging(button, 20.0f));
---             }
---
---             r.ImGui_Button("Drag Me");
---             if (r.ImGui_IsItemActive())
---                 r.ImGui_GetForegroundDrawList()->AddLine(io.MouseClickedPos[0], io.MousePos, r.ImGui_GetColorU32(ImGuiCol_Button), 4.0f); // Draw a line between the button and the mouse cursor
---
---             // Drag operations gets "unlocked" when the mouse has moved past a certain threshold
---             // (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
---             // threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
---             ImVec2 value_raw = r.ImGui_GetMouseDragDelta(0, 0.0f);
---             ImVec2 value_with_lock_threshold = r.ImGui_GetMouseDragDelta(0);
---             ImVec2 mouse_delta = io.MouseDelta;
---             r.ImGui_Text("GetMouseDragDelta(0):");
---             r.ImGui_Text("  w/ default threshold: (%.1f, %.1f)", value_with_lock_threshold.x, value_with_lock_threshold.y);
---             r.ImGui_Text("  w/ zero threshold: (%.1f, %.1f)", value_raw.x, value_raw.y);
---             r.ImGui_Text("io.MouseDelta: (%.1f, %.1f)", mouse_delta.x, mouse_delta.y);
---             r.ImGui_TreePop();
---         }
---
---         if (r.ImGui_TreeNode("Mouse cursors"))
---         {
---             const char* mouse_cursors_names[] = { "Arrow", "TextInput", "ResizeAll", "ResizeNS", "ResizeEW", "ResizeNESW", "ResizeNWSE", "Hand", "NotAllowed" };
---             IM_ASSERT(IM_ARRAYSIZE(mouse_cursors_names) == ImGuiMouseCursor_COUNT);
---
---             ImGuiMouseCursor current = r.ImGui_GetMouseCursor();
---             r.ImGui_Text("Current mouse cursor = %d: %s", current, mouse_cursors_names[current]);
---             r.ImGui_Text("Hover to see mouse cursors:");
---             r.ImGui_SameLine(); HelpMarker(
---                 "Your application can render a different mouse cursor based on what r.ImGui_GetMouseCursor() returns. "
---                 "If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, "
---                 "otherwise your backend needs to handle it.");
---             for (int i = 0; i < ImGuiMouseCursor_COUNT; i++)
---             {
---                 char label[32];
---                 sprintf(label, "Mouse cursor %d: %s", i, mouse_cursors_names[i]);
---                 r.ImGui_Bullet(); r.ImGui_Selectable(label, false);
---                 if (r.ImGui_IsItemHovered())
---                     r.ImGui_SetMouseCursor(i);
---             }
---             r.ImGui_TreePop();
---         }
---     }
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] About Window / ShowAboutWindow()
--- // Access from Dear ImGui Demo -> Tools -> About
--- //-----------------------------------------------------------------------------
---
--- void r.ImGui_ShowAboutWindow(bool* p_open)
--- {
---     if (!r.ImGui_Begin("About Dear ImGui", p_open, ImGuiWindowFlags_AlwaysAutoResize))
---     {
---         r.ImGui_End();
---         return;
---     }
---     r.ImGui_Text("Dear ImGui %s", r.ImGui_GetVersion());
---     r.ImGui_Separator();
---     r.ImGui_Text("By Omar Cornut and all Dear ImGui contributors.");
---     r.ImGui_Text("Dear ImGui is licensed under the MIT License, see LICENSE for more information.");
---
---     static bool show_config_info = false;
---     r.ImGui_Checkbox("Config/Build Information", &show_config_info);
---     if (show_config_info)
---     {
---         ImGuiIO& io = r.ImGui_GetIO();
---         ImGuiStyle& style = r.ImGui_GetStyle();
---
---         bool copy_to_clipboard = r.ImGui_Button("Copy to clipboard");
---         ImVec2 child_size = ImVec2(0, r.ImGui_GetTextLineHeightWithSpacing() * 18);
---         r.ImGui_BeginChildFrame(r.ImGui_GetID("cfg_infos"), child_size, ImGuiWindowFlags_NoMove);
---         if (copy_to_clipboard)
---         {
---             r.ImGui_LogToClipboard();
---             r.ImGui_LogText("```\n"); // Back quotes will make text appears without formatting when pasting on GitHub
---         }
---
---         r.ImGui_Text("Dear ImGui %s (%d)", IMGUI_VERSION, IMGUI_VERSION_NUM);
---         r.ImGui_Separator();
---         r.ImGui_Text("sizeof(size_t): %d, sizeof(ImDrawIdx): %d, sizeof(ImDrawVert): %d", (int)sizeof(size_t), (int)sizeof(ImDrawIdx), (int)sizeof(ImDrawVert));
---         r.ImGui_Text("define: __cplusplus=%d", (int)__cplusplus);
--- #ifdef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
---         r.ImGui_Text("define: IMGUI_DISABLE_OBSOLETE_FUNCTIONS");
--- #endif
--- #ifdef IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS
---         r.ImGui_Text("define: IMGUI_DISABLE_WIN32_DEFAULT_CLIPBOARD_FUNCTIONS");
--- #endif
--- #ifdef IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
---         r.ImGui_Text("define: IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS");
--- #endif
--- #ifdef IMGUI_DISABLE_WIN32_FUNCTIONS
---         r.ImGui_Text("define: IMGUI_DISABLE_WIN32_FUNCTIONS");
--- #endif
--- #ifdef IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS
---         r.ImGui_Text("define: IMGUI_DISABLE_DEFAULT_FORMAT_FUNCTIONS");
--- #endif
--- #ifdef IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS
---         r.ImGui_Text("define: IMGUI_DISABLE_DEFAULT_MATH_FUNCTIONS");
--- #endif
--- #ifdef IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS
---         r.ImGui_Text("define: IMGUI_DISABLE_DEFAULT_FILE_FUNCTIONS");
--- #endif
--- #ifdef IMGUI_DISABLE_FILE_FUNCTIONS
---         r.ImGui_Text("define: IMGUI_DISABLE_FILE_FUNCTIONS");
--- #endif
--- #ifdef IMGUI_DISABLE_DEFAULT_ALLOCATORS
---         r.ImGui_Text("define: IMGUI_DISABLE_DEFAULT_ALLOCATORS");
--- #endif
--- #ifdef IMGUI_USE_BGRA_PACKED_COLOR
---         r.ImGui_Text("define: IMGUI_USE_BGRA_PACKED_COLOR");
--- #endif
--- #ifdef _WIN32
---         r.ImGui_Text("define: _WIN32");
--- #endif
--- #ifdef _WIN64
---         r.ImGui_Text("define: _WIN64");
--- #endif
--- #ifdef __linux__
---         r.ImGui_Text("define: __linux__");
--- #endif
--- #ifdef __APPLE__
---         r.ImGui_Text("define: __APPLE__");
--- #endif
--- #ifdef _MSC_VER
---         r.ImGui_Text("define: _MSC_VER=%d", _MSC_VER);
--- #endif
--- #ifdef _MSVC_LANG
---         r.ImGui_Text("define: _MSVC_LANG=%d", (int)_MSVC_LANG);
--- #endif
--- #ifdef __MINGW32__
---         r.ImGui_Text("define: __MINGW32__");
--- #endif
--- #ifdef __MINGW64__
---         r.ImGui_Text("define: __MINGW64__");
--- #endif
--- #ifdef __GNUC__
---         r.ImGui_Text("define: __GNUC__=%d", (int)__GNUC__);
--- #endif
--- #ifdef __clang_version__
---         r.ImGui_Text("define: __clang_version__=%s", __clang_version__);
--- #endif
---         r.ImGui_Separator();
---         r.ImGui_Text("io.BackendPlatformName: %s", io.BackendPlatformName ? io.BackendPlatformName : "NULL");
---         r.ImGui_Text("io.BackendRendererName: %s", io.BackendRendererName ? io.BackendRendererName : "NULL");
---         r.ImGui_Text("io.ConfigFlags: 0x%08X", io.ConfigFlags);
---         if (io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard)        r.ImGui_Text(" NavEnableKeyboard");
---         if (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad)         r.ImGui_Text(" NavEnableGamepad");
---         if (io.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos)     r.ImGui_Text(" NavEnableSetMousePos");
---         if (io.ConfigFlags & ImGuiConfigFlags_NavNoCaptureKeyboard)     r.ImGui_Text(" NavNoCaptureKeyboard");
---         if (io.ConfigFlags & ImGuiConfigFlags_NoMouse)                  r.ImGui_Text(" NoMouse");
---         if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)      r.ImGui_Text(" NoMouseCursorChange");
---         if (io.MouseDrawCursor)                                         r.ImGui_Text("io.MouseDrawCursor");
---         if (io.ConfigMacOSXBehaviors)                                   r.ImGui_Text("io.ConfigMacOSXBehaviors");
---         if (io.ConfigInputTextCursorBlink)                              r.ImGui_Text("io.ConfigInputTextCursorBlink");
---         if (io.ConfigWindowsResizeFromEdges)                            r.ImGui_Text("io.ConfigWindowsResizeFromEdges");
---         if (io.ConfigWindowsMoveFromTitleBarOnly)                       r.ImGui_Text("io.ConfigWindowsMoveFromTitleBarOnly");
---         if (io.ConfigMemoryCompactTimer >= 0.0f)                        r.ImGui_Text("io.ConfigMemoryCompactTimer = %.1f", io.ConfigMemoryCompactTimer);
---         r.ImGui_Text("io.BackendFlags: 0x%08X", io.BackendFlags);
---         if (io.BackendFlags & ImGuiBackendFlags_HasGamepad)             r.ImGui_Text(" HasGamepad");
---         if (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors)        r.ImGui_Text(" HasMouseCursors");
---         if (io.BackendFlags & ImGuiBackendFlags_HasSetMousePos)         r.ImGui_Text(" HasSetMousePos");
---         if (io.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset)   r.ImGui_Text(" RendererHasVtxOffset");
---         r.ImGui_Separator();
---         r.ImGui_Text("io.Fonts: %d fonts, Flags: 0x%08X, TexSize: %d,%d", io.Fonts->Fonts.Size, io.Fonts->Flags, io.Fonts->TexWidth, io.Fonts->TexHeight);
---         r.ImGui_Text("io.DisplaySize: %.2f,%.2f", io.DisplaySize.x, io.DisplaySize.y);
---         r.ImGui_Text("io.DisplayFramebufferScale: %.2f,%.2f", io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
---         r.ImGui_Separator();
---         r.ImGui_Text("style.WindowPadding: %.2f,%.2f", style.WindowPadding.x, style.WindowPadding.y);
---         r.ImGui_Text("style.WindowBorderSize: %.2f", style.WindowBorderSize);
---         r.ImGui_Text("style.FramePadding: %.2f,%.2f", style.FramePadding.x, style.FramePadding.y);
---         r.ImGui_Text("style.FrameRounding: %.2f", style.FrameRounding);
---         r.ImGui_Text("style.FrameBorderSize: %.2f", style.FrameBorderSize);
---         r.ImGui_Text("style.ItemSpacing: %.2f,%.2f", style.ItemSpacing.x, style.ItemSpacing.y);
---         r.ImGui_Text("style.ItemInnerSpacing: %.2f,%.2f", style.ItemInnerSpacing.x, style.ItemInnerSpacing.y);
---
---         if (copy_to_clipboard)
---         {
---             r.ImGui_LogText("\n```\n");
---             r.ImGui_LogFinish();
---         }
---         r.ImGui_EndChildFrame();
---     }
---     r.ImGui_End();
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Style Editor / ShowStyleEditor()
--- //-----------------------------------------------------------------------------
--- // - ShowStyleSelector()
--- // - ShowFontSelector()
--- // - ShowStyleEditor()
--- //-----------------------------------------------------------------------------
---
--- // Demo helper function to select among default colors. See ShowStyleEditor() for more advanced options.
--- // Here we use the simplified Combo() api that packs items into a single literal string.
--- // Useful for quick combo boxes where the choices are known locally.
--- bool r.ImGui_ShowStyleSelector(const char* label)
--- {
---     static int style_idx = -1;
---     if (r.ImGui_Combo(label, &style_idx, "Dark\0Light\0Classic\0"))
---     {
---         switch (style_idx)
---         {
---         case 0: r.ImGui_StyleColorsDark(); break;
---         case 1: r.ImGui_StyleColorsLight(); break;
---         case 2: r.ImGui_StyleColorsClassic(); break;
---         }
---         return true;
---     }
---     return false;
--- }
---
--- // Demo helper function to select among loaded fonts.
--- // Here we use the regular BeginCombo()/EndCombo() api which is more the more flexible one.
--- void r.ImGui_ShowFontSelector(const char* label)
--- {
---     ImGuiIO& io = r.ImGui_GetIO();
---     ImFont* font_current = r.ImGui_GetFont();
---     if (r.ImGui_BeginCombo(label, font_current->GetDebugName()))
---     {
---         for (int n = 0; n < io.Fonts->Fonts.Size; n++)
---         {
---             ImFont* font = io.Fonts->Fonts[n];
---             r.ImGui_PushID((void*)font);
---             if (r.ImGui_Selectable(font->GetDebugName(), font == font_current))
---                 io.FontDefault = font;
---             r.ImGui_PopID();
---         }
---         r.ImGui_EndCombo();
---     }
---     r.ImGui_SameLine();
---     HelpMarker(
---         "- Load additional fonts with io.Fonts->AddFontFromFileTTF().\n"
---         "- The font atlas is built when calling io.Fonts->GetTexDataAsXXXX() or io.Fonts->Build().\n"
---         "- Read FAQ and docs/FONTS.md for more details.\n"
---         "- If you need to add/remove fonts at runtime (e.g. for DPI change), do it before calling NewFrame().");
--- }
---
--- // [Internal] Display details for a single font, called by ShowStyleEditor().
--- static void NodeFont(ImFont* font)
--- {
---     ImGuiIO& io = r.ImGui_GetIO();
---     ImGuiStyle& style = r.ImGui_GetStyle();
---     bool font_details_opened = r.ImGui_TreeNode(font, "Font: \"%s\"\n%.2f px, %d glyphs, %d file(s)",
---         font->ConfigData ? font->ConfigData[0].Name : "", font->FontSize, font->Glyphs.Size, font->ConfigDataCount);
---     r.ImGui_SameLine(); if (r.ImGui_SmallButton("Set as default")) { io.FontDefault = font; }
---     if (!font_details_opened)
---         return;
---
---     r.ImGui_PushFont(font);
---     r.ImGui_Text("The quick brown fox jumps over the lazy dog");
---     r.ImGui_PopFont();
---     r.ImGui_DragFloat("Font scale", &font->Scale, 0.005f, 0.3f, 2.0f, "%.1f");   // Scale only this font
---     r.ImGui_SameLine(); HelpMarker(
---         "Note than the default embedded font is NOT meant to be scaled.\n\n"
---         "Font are currently rendered into bitmaps at a given size at the time of building the atlas. "
---         "You may oversample them to get some flexibility with scaling. "
---         "You can also render at multiple sizes and select which one to use at runtime.\n\n"
---         "(Glimmer of hope: the atlas system will be rewritten in the future to make scaling more flexible.)");
---     r.ImGui_Text("Ascent: %f, Descent: %f, Height: %f", font->Ascent, font->Descent, font->Ascent - font->Descent);
---     r.ImGui_Text("Fallback character: '%c' (U+%04X)", font->FallbackChar, font->FallbackChar);
---     r.ImGui_Text("Ellipsis character: '%c' (U+%04X)", font->EllipsisChar, font->EllipsisChar);
---     const int surface_sqrt = (int)sqrtf((float)font->MetricsTotalSurface);
---     r.ImGui_Text("Texture Area: about %d px ~%dx%d px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
---     for (int config_i = 0; config_i < font->ConfigDataCount; config_i++)
---         if (font->ConfigData)
---             if (const ImFontConfig* cfg = &font->ConfigData[config_i])
---                 r.ImGui_BulletText("Input %d: \'%s\', Oversample: (%d,%d), PixelSnapH: %d, Offset: (%.1f,%.1f)",
---                     config_i, cfg->Name, cfg->OversampleH, cfg->OversampleV, cfg->PixelSnapH, cfg->GlyphOffset.x, cfg->GlyphOffset.y);
---     if (r.ImGui_TreeNode("Glyphs", "Glyphs (%d)", font->Glyphs.Size))
---     {
---         // Display all glyphs of the fonts in separate pages of 256 characters
---         const ImU32 glyph_col = r.ImGui_GetColorU32(ImGuiCol_Text);
---         for (unsigned int base = 0; base <= IM_UNICODE_CODEPOINT_MAX; base += 256)
---         {
---             // Skip ahead if a large bunch of glyphs are not present in the font (test in chunks of 4k)
---             // This is only a small optimization to reduce the number of iterations when IM_UNICODE_MAX_CODEPOINT
---             // is large // (if ImWchar==ImWchar32 we will do at least about 272 queries here)
---             if (!(base & 4095) && font->IsGlyphRangeUnused(base, base + 4095))
---             {
---                 base += 4096 - 256;
---                 continue;
---             }
---
---             int count = 0;
---             for (unsigned int n = 0; n < 256; n++)
---                 if (font->FindGlyphNoFallback((ImWchar)(base + n)))
---                     count++;
---             if (count <= 0)
---                 continue;
---             if (!r.ImGui_TreeNode((void*)(intptr_t)base, "U+%04X..U+%04X (%d %s)", base, base + 255, count, count > 1 ? "glyphs" : "glyph"))
---                 continue;
---             float cell_size = font->FontSize * 1;
---             float cell_spacing = style.ItemSpacing.y;
---             ImVec2 base_pos = r.ImGui_GetCursorScreenPos();
---             ImDrawList* draw_list = r.ImGui_GetWindowDrawList();
---             for (unsigned int n = 0; n < 256; n++)
---             {
---                 // We use ImFont::RenderChar as a shortcut because we don't have UTF-8 conversion functions
---                 // available here and thus cannot easily generate a zero-terminated UTF-8 encoded string.
---                 ImVec2 cell_p1(base_pos.x + (n % 16) * (cell_size + cell_spacing), base_pos.y + (n / 16) * (cell_size + cell_spacing));
---                 ImVec2 cell_p2(cell_p1.x + cell_size, cell_p1.y + cell_size);
---                 const ImFontGlyph* glyph = font->FindGlyphNoFallback((ImWchar)(base + n));
---                 draw_list->AddRect(cell_p1, cell_p2, glyph ? IM_COL32(255, 255, 255, 100) : IM_COL32(255, 255, 255, 50));
---                 if (glyph)
---                     font->RenderChar(draw_list, cell_size, cell_p1, glyph_col, (ImWchar)(base + n));
---                 if (glyph && r.ImGui_IsMouseHoveringRect(cell_p1, cell_p2))
---                 {
---                     r.ImGui_BeginTooltip();
---                     r.ImGui_Text("Codepoint: U+%04X", base + n);
---                     r.ImGui_Separator();
---                     r.ImGui_Text("Visible: %d", glyph->Visible);
---                     r.ImGui_Text("AdvanceX: %.1f", glyph->AdvanceX);
---                     r.ImGui_Text("Pos: (%.2f,%.2f)->(%.2f,%.2f)", glyph->X0, glyph->Y0, glyph->X1, glyph->Y1);
---                     r.ImGui_Text("UV: (%.3f,%.3f)->(%.3f,%.3f)", glyph->U0, glyph->V0, glyph->U1, glyph->V1);
---                     r.ImGui_EndTooltip();
---                 }
---             }
---             r.ImGui_Dummy(ImVec2((cell_size + cell_spacing) * 16, (cell_size + cell_spacing) * 16));
---             r.ImGui_TreePop();
---         }
---         r.ImGui_TreePop();
---     }
---     r.ImGui_TreePop();
--- }
---
--- void r.ImGui_ShowStyleEditor(ImGuiStyle* ref)
--- {
---     // You can pass in a reference ImGuiStyle structure to compare to, revert to and save to
---     // (without a reference style pointer, we will use one compared locally as a reference)
---     ImGuiStyle& style = r.ImGui_GetStyle();
---     static ImGuiStyle ref_saved_style;
---
---     // Default to using internal storage as reference
---     static bool init = true;
---     if (init && ref == NULL)
---         ref_saved_style = style;
---     init = false;
---     if (ref == NULL)
---         ref = &ref_saved_style;
---
---     r.ImGui_PushItemWidth(r.ImGui_GetWindowWidth() * 0.50f);
---
---     if (r.ImGui_ShowStyleSelector("Colors##Selector"))
---         ref_saved_style = style;
---     r.ImGui_ShowFontSelector("Fonts##Selector");
---
---     // Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0f or 1.0f)
---     if (r.ImGui_SliderFloat("FrameRounding", &style.FrameRounding, 0.0f, 12.0f, "%.0f"))
---         style.GrabRounding = style.FrameRounding; // Make GrabRounding always the same value as FrameRounding
---     { bool border = (style.WindowBorderSize > 0.0f); if (r.ImGui_Checkbox("WindowBorder", &border)) { style.WindowBorderSize = border ? 1.0f : 0.0f; } }
---     r.ImGui_SameLine();
---     { bool border = (style.FrameBorderSize > 0.0f);  if (r.ImGui_Checkbox("FrameBorder",  &border)) { style.FrameBorderSize  = border ? 1.0f : 0.0f; } }
---     r.ImGui_SameLine();
---     { bool border = (style.PopupBorderSize > 0.0f);  if (r.ImGui_Checkbox("PopupBorder",  &border)) { style.PopupBorderSize  = border ? 1.0f : 0.0f; } }
---
---     // Save/Revert button
---     if (r.ImGui_Button("Save Ref"))
---         *ref = ref_saved_style = style;
---     r.ImGui_SameLine();
---     if (r.ImGui_Button("Revert Ref"))
---         style = *ref;
---     r.ImGui_SameLine();
---     HelpMarker(
---         "Save/Revert in local non-persistent storage. Default Colors definition are not affected. "
---         "Use \"Export\" below to save them somewhere.");
---
---     r.ImGui_Separator();
---
---     if (r.ImGui_BeginTabBar("##tabs", ImGuiTabBarFlags_None))
---     {
---         if (r.ImGui_BeginTabItem("Sizes"))
---         {
---             r.ImGui_Text("Main");
---             r.ImGui_SliderFloat2("WindowPadding", (float*)&style.WindowPadding, 0.0f, 20.0f, "%.0f");
---             r.ImGui_SliderFloat2("FramePadding", (float*)&style.FramePadding, 0.0f, 20.0f, "%.0f");
---             r.ImGui_SliderFloat2("CellPadding", (float*)&style.CellPadding, 0.0f, 20.0f, "%.0f");
---             r.ImGui_SliderFloat2("ItemSpacing", (float*)&style.ItemSpacing, 0.0f, 20.0f, "%.0f");
---             r.ImGui_SliderFloat2("ItemInnerSpacing", (float*)&style.ItemInnerSpacing, 0.0f, 20.0f, "%.0f");
---             r.ImGui_SliderFloat2("TouchExtraPadding", (float*)&style.TouchExtraPadding, 0.0f, 10.0f, "%.0f");
---             r.ImGui_SliderFloat("IndentSpacing", &style.IndentSpacing, 0.0f, 30.0f, "%.0f");
---             r.ImGui_SliderFloat("ScrollbarSize", &style.ScrollbarSize, 1.0f, 20.0f, "%.0f");
---             r.ImGui_SliderFloat("GrabMinSize", &style.GrabMinSize, 1.0f, 20.0f, "%.0f");
---             r.ImGui_Text("Borders");
---             r.ImGui_SliderFloat("WindowBorderSize", &style.WindowBorderSize, 0.0f, 1.0f, "%.0f");
---             r.ImGui_SliderFloat("ChildBorderSize", &style.ChildBorderSize, 0.0f, 1.0f, "%.0f");
---             r.ImGui_SliderFloat("PopupBorderSize", &style.PopupBorderSize, 0.0f, 1.0f, "%.0f");
---             r.ImGui_SliderFloat("FrameBorderSize", &style.FrameBorderSize, 0.0f, 1.0f, "%.0f");
---             r.ImGui_SliderFloat("TabBorderSize", &style.TabBorderSize, 0.0f, 1.0f, "%.0f");
---             r.ImGui_Text("Rounding");
---             r.ImGui_SliderFloat("WindowRounding", &style.WindowRounding, 0.0f, 12.0f, "%.0f");
---             r.ImGui_SliderFloat("ChildRounding", &style.ChildRounding, 0.0f, 12.0f, "%.0f");
---             r.ImGui_SliderFloat("FrameRounding", &style.FrameRounding, 0.0f, 12.0f, "%.0f");
---             r.ImGui_SliderFloat("PopupRounding", &style.PopupRounding, 0.0f, 12.0f, "%.0f");
---             r.ImGui_SliderFloat("ScrollbarRounding", &style.ScrollbarRounding, 0.0f, 12.0f, "%.0f");
---             r.ImGui_SliderFloat("GrabRounding", &style.GrabRounding, 0.0f, 12.0f, "%.0f");
---             r.ImGui_SliderFloat("LogSliderDeadzone", &style.LogSliderDeadzone, 0.0f, 12.0f, "%.0f");
---             r.ImGui_SliderFloat("TabRounding", &style.TabRounding, 0.0f, 12.0f, "%.0f");
---             r.ImGui_Text("Alignment");
---             r.ImGui_SliderFloat2("WindowTitleAlign", (float*)&style.WindowTitleAlign, 0.0f, 1.0f, "%.2f");
---             int window_menu_button_position = style.WindowMenuButtonPosition + 1;
---             if (r.ImGui_Combo("WindowMenuButtonPosition", (int*)&window_menu_button_position, "None\0Left\0Right\0"))
---                 style.WindowMenuButtonPosition = window_menu_button_position - 1;
---             r.ImGui_Combo("ColorButtonPosition", (int*)&style.ColorButtonPosition, "Left\0Right\0");
---             r.ImGui_SliderFloat2("ButtonTextAlign", (float*)&style.ButtonTextAlign, 0.0f, 1.0f, "%.2f");
---             r.ImGui_SameLine(); HelpMarker("Alignment applies when a button is larger than its text content.");
---             r.ImGui_SliderFloat2("SelectableTextAlign", (float*)&style.SelectableTextAlign, 0.0f, 1.0f, "%.2f");
---             r.ImGui_SameLine(); HelpMarker("Alignment applies when a selectable is larger than its text content.");
---             r.ImGui_Text("Safe Area Padding");
---             r.ImGui_SameLine(); HelpMarker("Adjust if you cannot see the edges of your screen (e.g. on a TV where scaling has not been configured).");
---             r.ImGui_SliderFloat2("DisplaySafeAreaPadding", (float*)&style.DisplaySafeAreaPadding, 0.0f, 30.0f, "%.0f");
---             r.ImGui_EndTabItem();
---         }
---
---         if (r.ImGui_BeginTabItem("Colors"))
---         {
---             static int output_dest = 0;
---             static bool output_only_modified = true;
---             if (r.ImGui_Button("Export"))
---             {
---                 if (output_dest == 0)
---                     r.ImGui_LogToClipboard();
---                 else
---                     r.ImGui_LogToTTY();
---                 r.ImGui_LogText("ImVec4* colors = r.ImGui_GetStyle().Colors;" IM_NEWLINE);
---                 for (int i = 0; i < ImGuiCol_COUNT; i++)
---                 {
---                     const ImVec4& col = style.Colors[i];
---                     const char* name = r.ImGui_GetStyleColorName(i);
---                     if (!output_only_modified || memcmp(&col, &ref->Colors[i], sizeof(ImVec4)) != 0)
---                         r.ImGui_LogText("colors[ImGuiCol_%s]%*s= ImVec4(%.2ff, %.2ff, %.2ff, %.2ff);" IM_NEWLINE,
---                             name, 23 - (int)strlen(name), "", col.x, col.y, col.z, col.w);
---                 }
---                 r.ImGui_LogFinish();
---             }
---             r.ImGui_SameLine(); r.ImGui_SetNextItemWidth(120); r.ImGui_Combo("##output_type", &output_dest, "To Clipboard\0To TTY\0");
---             r.ImGui_SameLine(); r.ImGui_Checkbox("Only Modified Colors", &output_only_modified);
---
---             static ImGuiTextFilter filter;
---             filter.Draw("Filter colors", r.ImGui_GetFontSize() * 16);
---
---             static ImGuiColorEditFlags alpha_flags = 0;
---             if (r.ImGui_RadioButton("Opaque", alpha_flags == ImGuiColorEditFlags_None))             { alpha_flags = ImGuiColorEditFlags_None; } r.ImGui_SameLine();
---             if (r.ImGui_RadioButton("Alpha",  alpha_flags == ImGuiColorEditFlags_AlphaPreview))     { alpha_flags = ImGuiColorEditFlags_AlphaPreview; } r.ImGui_SameLine();
---             if (r.ImGui_RadioButton("Both",   alpha_flags == ImGuiColorEditFlags_AlphaPreviewHalf)) { alpha_flags = ImGuiColorEditFlags_AlphaPreviewHalf; } r.ImGui_SameLine();
---             HelpMarker(
---                 "In the color list:\n"
---                 "Left-click on color square to open color picker,\n"
---                 "Right-click to open edit options menu.");
---
---             r.ImGui_BeginChild("##colors", ImVec2(0, 0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar | ImGuiWindowFlags_NavFlattened);
---             r.ImGui_PushItemWidth(-160);
---             for (int i = 0; i < ImGuiCol_COUNT; i++)
---             {
---                 const char* name = r.ImGui_GetStyleColorName(i);
---                 if (!filter.PassFilter(name))
---                     continue;
---                 r.ImGui_PushID(i);
---                 r.ImGui_ColorEdit4("##color", (float*)&style.Colors[i], ImGuiColorEditFlags_AlphaBar | alpha_flags);
---                 if (memcmp(&style.Colors[i], &ref->Colors[i], sizeof(ImVec4)) != 0)
---                 {
---                     // Tips: in a real user application, you may want to merge and use an icon font into the main font,
---                     // so instead of "Save"/"Revert" you'd use icons!
---                     // Read the FAQ and docs/FONTS.md about using icon fonts. It's really easy and super convenient!
---                     r.ImGui_SameLine(0.0f, style.ItemInnerSpacing.x); if (r.ImGui_Button("Save")) { ref->Colors[i] = style.Colors[i]; }
---                     r.ImGui_SameLine(0.0f, style.ItemInnerSpacing.x); if (r.ImGui_Button("Revert")) { style.Colors[i] = ref->Colors[i]; }
---                 }
---                 r.ImGui_SameLine(0.0f, style.ItemInnerSpacing.x);
---                 r.ImGui_TextUnformatted(name);
---                 r.ImGui_PopID();
---             }
---             r.ImGui_PopItemWidth();
---             r.ImGui_EndChild();
---
---             r.ImGui_EndTabItem();
---         }
---
---         if (r.ImGui_BeginTabItem("Fonts"))
---         {
---             ImGuiIO& io = r.ImGui_GetIO();
---             ImFontAtlas* atlas = io.Fonts;
---             HelpMarker("Read FAQ and docs/FONTS.md for details on font loading.");
---             r.ImGui_PushItemWidth(120);
---             for (int i = 0; i < atlas->Fonts.Size; i++)
---             {
---                 ImFont* font = atlas->Fonts[i];
---                 r.ImGui_PushID(font);
---                 NodeFont(font);
---                 r.ImGui_PopID();
---             }
---             if (r.ImGui_TreeNode("Atlas texture", "Atlas texture (%dx%d pixels)", atlas->TexWidth, atlas->TexHeight))
---             {
---                 ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
---                 ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f);
---                 r.ImGui_Image(atlas->TexID, ImVec2((float)atlas->TexWidth, (float)atlas->TexHeight), ImVec2(0, 0), ImVec2(1, 1), tint_col, border_col);
---                 r.ImGui_TreePop();
---             }
---
---             // Post-baking font scaling. Note that this is NOT the nice way of scaling fonts, read below.
---             // (we enforce hard clamping manually as by default DragFloat/SliderFloat allows CTRL+Click text to get out of bounds).
---             const float MIN_SCALE = 0.3f;
---             const float MAX_SCALE = 2.0f;
---             HelpMarker(
---                 "Those are old settings provided for convenience.\n"
---                 "However, the _correct_ way of scaling your UI is currently to reload your font at the designed size, "
---                 "rebuild the font atlas, and call style.ScaleAllSizes() on a reference ImGuiStyle structure.\n"
---                 "Using those settings here will give you poor quality results.");
---             static float window_scale = 1.0f;
---             if (r.ImGui_DragFloat("window scale", &window_scale, 0.005f, MIN_SCALE, MAX_SCALE, "%.2f", ImGuiSliderFlags_AlwaysClamp)) // Scale only this window
---                 r.ImGui_SetWindowFontScale(window_scale);
---             r.ImGui_DragFloat("global scale", &io.FontGlobalScale, 0.005f, MIN_SCALE, MAX_SCALE, "%.2f", ImGuiSliderFlags_AlwaysClamp); // Scale everything
---             r.ImGui_PopItemWidth();
---
---             r.ImGui_EndTabItem();
---         }
---
---         if (r.ImGui_BeginTabItem("Rendering"))
---         {
---             r.ImGui_Checkbox("Anti-aliased lines", &style.AntiAliasedLines);
---             r.ImGui_SameLine();
---             HelpMarker("When disabling anti-aliasing lines, you'll probably want to disable borders in your style as well.");
---
---             r.ImGui_Checkbox("Anti-aliased lines use texture", &style.AntiAliasedLinesUseTex);
---             r.ImGui_SameLine();
---             HelpMarker("Faster lines using texture data. Require backend to render with bilinear filtering (not point/nearest filtering).");
---
---             r.ImGui_Checkbox("Anti-aliased fill", &style.AntiAliasedFill);
---             r.ImGui_PushItemWidth(100);
---             r.ImGui_DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.10f, 10.0f, "%.2f");
---             if (style.CurveTessellationTol < 0.10f) style.CurveTessellationTol = 0.10f;
---
---             // When editing the "Circle Segment Max Error" value, draw a preview of its effect on auto-tessellated circles.
---             r.ImGui_DragFloat("Circle Segment Max Error", &style.CircleSegmentMaxError, 0.01f, 0.10f, 10.0f, "%.2f");
---             if (r.ImGui_IsItemActive())
---             {
---                 r.ImGui_SetNextWindowPos(r.ImGui_GetCursorScreenPos());
---                 r.ImGui_BeginTooltip();
---                 ImVec2 p = r.ImGui_GetCursorScreenPos();
---                 ImDrawList* draw_list = r.ImGui_GetWindowDrawList();
---                 float RAD_MIN = 10.0f, RAD_MAX = 80.0f;
---                 float off_x = 10.0f;
---                 for (int n = 0; n < 7; n++)
---                 {
---                     const float rad = RAD_MIN + (RAD_MAX - RAD_MIN) * (float)n / (7.0f - 1.0f);
---                     draw_list->AddCircle(ImVec2(p.x + off_x + rad, p.y + RAD_MAX), rad, r.ImGui_GetColorU32(ImGuiCol_Text), 0);
---                     off_x += 10.0f + rad * 2.0f;
---                 }
---                 r.ImGui_Dummy(ImVec2(off_x, RAD_MAX * 2.0f));
---                 r.ImGui_EndTooltip();
---             }
---             r.ImGui_SameLine();
---             HelpMarker("When drawing circle primitives with \"num_segments == 0\" tesselation will be calculated automatically.");
---
---             r.ImGui_DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20f, 1.0f, "%.2f"); // Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
---             r.ImGui_PopItemWidth();
---
---             r.ImGui_EndTabItem();
---         }
---
---         r.ImGui_EndTabBar();
---     }
---
---     r.ImGui_PopItemWidth();
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
--- //-----------------------------------------------------------------------------
--- // - ShowExampleAppMainMenuBar()
--- // - ShowExampleMenuFile()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate creating a "main" fullscreen menu bar and populating it.
--- // Note the difference between BeginMainMenuBar() and BeginMenuBar():
--- // - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
--- // - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
--- static void ShowExampleAppMainMenuBar()
--- {
---     if (r.ImGui_BeginMainMenuBar())
---     {
---         if (r.ImGui_BeginMenu("File"))
---         {
---             ShowExampleMenuFile();
---             r.ImGui_EndMenu();
---         }
---         if (r.ImGui_BeginMenu("Edit"))
---         {
---             if (r.ImGui_MenuItem("Undo", "CTRL+Z")) {}
---             if (r.ImGui_MenuItem("Redo", "CTRL+Y", false, false)) {}  // Disabled item
---             r.ImGui_Separator();
---             if (r.ImGui_MenuItem("Cut", "CTRL+X")) {}
---             if (r.ImGui_MenuItem("Copy", "CTRL+C")) {}
---             if (r.ImGui_MenuItem("Paste", "CTRL+V")) {}
---             r.ImGui_EndMenu();
---         }
---         r.ImGui_EndMainMenuBar();
---     }
--- }
+
+  if r.ImGui_CollapsingHeader(ctx, 'Inputs, Navigation & Focus') then
+    -- Display ImGuiIO output flags
+    -- r.ImGui_Text("WantCaptureMouse: %d", io.WantCaptureMouse);
+    -- r.ImGui_Text("WantCaptureKeyboard: %d", io.WantCaptureKeyboard);
+    -- r.ImGui_Text("WantTextInput: %d", io.WantTextInput);
+    -- r.ImGui_Text("WantSetMousePos: %d", io.WantSetMousePos);
+    -- r.ImGui_Text("NavActive: %d, NavVisible: %d", io.NavActive, io.NavVisible);
+
+    -- Display Keyboard/Mouse state
+    if r.ImGui_TreeNode(ctx, 'Keyboard, Mouse & Navigation State') then
+      if r.ImGui_IsMousePosValid(ctx) then
+        r.ImGui_Text(ctx, ('Mouse pos: (%g, %g)'):format(r.ImGui_GetMousePos(ctx)))
+      else
+        r.ImGui_Text(ctx, 'Mouse pos: <INVALID>')
+      end
+      r.ImGui_Text(ctx, ('Mouse delta: (%g, %g)'):format(r.ImGui_GetMouseDelta(ctx)))
+
+      local buttons = { r.ImGui_MouseButton_Left(), r.ImGui_MouseButton_Right(), r.ImGui_MouseButton_Middle() }
+      local function MouseState(stateFunc)
+        for _,button in ipairs(buttons) do
+          if stateFunc(ctx, button) then
+            r.ImGui_SameLine(ctx)
+            r.ImGui_Text(ctx, ('b%d'):format(button))
+          end
+        end
+      end
+      r.ImGui_Text(ctx, 'Mouse down:')
+      for _,button in ipairs(buttons) do
+        local duration = r.ImGui_GetMouseDownDuration(ctx, button)
+        if duration > 0.0 then
+          r.ImGui_SameLine(ctx)
+          r.ImGui_Text(ctx, ('b%d (%.02f secs)'):format(button, duration))
+        end
+      end
+      r.ImGui_Text(ctx, 'Mouse clicked:');  MouseState(r.ImGui_IsMouseClicked)
+      r.ImGui_Text(ctx, 'Mouse dblclick:'); MouseState(r.ImGui_IsMouseDoubleClicked)
+      r.ImGui_Text(ctx, 'Mouse released:'); MouseState(r.ImGui_IsMouseReleased)
+      r.ImGui_Text(ctx, ('Mouse wheel: %.1f'):format(r.ImGui_GetMouseWheel(ctx)))
+
+      -- r.ImGui_Text("Keys down:");      for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (io.KeysDownDuration[i] >= 0.0f)     { r.ImGui_SameLine(); r.ImGui_Text("%d (0x%X) (%.02f secs)", i, i, io.KeysDownDuration[i]); }
+      -- r.ImGui_Text("Keys pressed:");   for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (r.ImGui_IsKeyPressed(i))             { r.ImGui_SameLine(); r.ImGui_Text("%d (0x%X)", i, i); }
+      -- r.ImGui_Text("Keys release:");   for (int i = 0; i < IM_ARRAYSIZE(io.KeysDown); i++) if (r.ImGui_IsKeyReleased(i))            { r.ImGui_SameLine(); r.ImGui_Text("%d (0x%X)", i, i); }
+      -- r.ImGui_Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
+
+      r.ImGui_Text(ctx, 'Chars queue:')
+      local next_id = 0
+      while true do
+        local rv, c = r.ImGui_EnumInputQueueCharacters(ctx, next_id)
+        if not rv then break end
+        next_id = next_id + 1
+        r.ImGui_SameLine(ctx)
+        rImGui_Text(ctx, ("'%s' (0x%04X"):format(utf8.char(c), c))
+      end
+
+      -- r.ImGui_Text("NavInputs down:");     for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputs[i] > 0.0f)              { r.ImGui_SameLine(); r.ImGui_Text("[%d] %.2f", i, io.NavInputs[i]); }
+      -- r.ImGui_Text("NavInputs pressed:");  for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] == 0.0f) { r.ImGui_SameLine(); r.ImGui_Text("[%d]", i); }
+      -- r.ImGui_Text("NavInputs duration:"); for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] >= 0.0f) { r.ImGui_SameLine(); r.ImGui_Text("[%d] %.2f", i, io.NavInputsDownDuration[i]); }
+
+      -- r.ImGui_Button("Hovering me sets the\nkeyboard capture flag");
+      -- if (r.ImGui_IsItemHovered())
+      --     r.ImGui_CaptureKeyboardFromApp(true);
+      -- r.ImGui_SameLine();
+      -- r.ImGui_Button("Holding me clears the\nthe keyboard capture flag");
+      -- if (r.ImGui_IsItemActive())
+      --     r.ImGui_CaptureKeyboardFromApp(false);
+
+      r.ImGui_TreePop(ctx)
+    end
+
+    -- if (r.ImGui_TreeNode("Tabbing"))
+    -- {
+    --     r.ImGui_Text("Use TAB/SHIFT+TAB to cycle through keyboard editable fields.");
+    --     static char buf[32] = "hello";
+    --     r.ImGui_InputText("1", buf, IM_ARRAYSIZE(buf));
+    --     r.ImGui_InputText("2", buf, IM_ARRAYSIZE(buf));
+    --     r.ImGui_InputText("3", buf, IM_ARRAYSIZE(buf));
+    --     r.ImGui_PushAllowKeyboardFocus(false);
+    --     r.ImGui_InputText("4 (tab skip)", buf, IM_ARRAYSIZE(buf));
+    --     //r.ImGui_SameLine(); HelpMarker("Use r.ImGui_PushAllowKeyboardFocus(bool) to disable tabbing through certain widgets.");
+    --     r.ImGui_PopAllowKeyboardFocus();
+    --     r.ImGui_InputText("5", buf, IM_ARRAYSIZE(buf));
+    --     r.ImGui_TreePop();
+    -- }
+    --
+    -- if (r.ImGui_TreeNode("Focus from code"))
+    -- {
+    --     bool focus_1 = r.ImGui_Button("Focus on 1"); r.ImGui_SameLine();
+    --     bool focus_2 = r.ImGui_Button("Focus on 2"); r.ImGui_SameLine();
+    --     bool focus_3 = r.ImGui_Button("Focus on 3");
+    --     int has_focus = 0;
+    --     static char buf[128] = "click on a button to set focus";
+    --
+    --     if (focus_1) r.ImGui_SetKeyboardFocusHere();
+    --     r.ImGui_InputText("1", buf, IM_ARRAYSIZE(buf));
+    --     if (r.ImGui_IsItemActive()) has_focus = 1;
+    --
+    --     if (focus_2) r.ImGui_SetKeyboardFocusHere();
+    --     r.ImGui_InputText("2", buf, IM_ARRAYSIZE(buf));
+    --     if (r.ImGui_IsItemActive()) has_focus = 2;
+    --
+    --     r.ImGui_PushAllowKeyboardFocus(false);
+    --     if (focus_3) r.ImGui_SetKeyboardFocusHere();
+    --     r.ImGui_InputText("3 (tab skip)", buf, IM_ARRAYSIZE(buf));
+    --     if (r.ImGui_IsItemActive()) has_focus = 3;
+    --     r.ImGui_PopAllowKeyboardFocus();
+    --
+    --     if (has_focus)
+    --         r.ImGui_Text("Item with focus: %d", has_focus);
+    --     else
+    --         r.ImGui_Text("Item with focus: <none>");
+    --
+    --     // Use >= 0 parameter to SetKeyboardFocusHere() to focus an upcoming item
+    --     static float f3[3] = { 0.0f, 0.0f, 0.0f };
+    --     int focus_ahead = -1;
+    --     if (r.ImGui_Button("Focus on X")) { focus_ahead = 0; } r.ImGui_SameLine();
+    --     if (r.ImGui_Button("Focus on Y")) { focus_ahead = 1; } r.ImGui_SameLine();
+    --     if (r.ImGui_Button("Focus on Z")) { focus_ahead = 2; }
+    --     if (focus_ahead != -1) r.ImGui_SetKeyboardFocusHere(focus_ahead);
+    --     r.ImGui_SliderFloat3("Float3", &f3[0], 0.0f, 1.0f);
+    --
+    --     r.ImGui_TextWrapped("NB: Cursor & selection are preserved when refocusing last used item in code.");
+    --     r.ImGui_TreePop();
+    -- }
+    --
+    -- if (r.ImGui_TreeNode("Dragging"))
+    -- {
+    --     r.ImGui_TextWrapped("You can use r.ImGui_GetMouseDragDelta(0) to query for the dragged amount on any widget.");
+    --     for (int button = 0; button < 3; button++)
+    --     {
+    --         r.ImGui_Text("IsMouseDragging(%d):", button);
+    --         r.ImGui_Text("  w/ default threshold: %d,", r.ImGui_IsMouseDragging(button));
+    --         r.ImGui_Text("  w/ zero threshold: %d,", r.ImGui_IsMouseDragging(button, 0.0f));
+    --         r.ImGui_Text("  w/ large threshold: %d,", r.ImGui_IsMouseDragging(button, 20.0f));
+    --     }
+    --
+    --     r.ImGui_Button("Drag Me");
+    --     if (r.ImGui_IsItemActive())
+    --         r.ImGui_GetForegroundDrawList()->AddLine(io.MouseClickedPos[0], io.MousePos, r.ImGui_GetColorU32(ImGuiCol_Button), 4.0f); // Draw a line between the button and the mouse cursor
+    --
+    --     // Drag operations gets "unlocked" when the mouse has moved past a certain threshold
+    --     // (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
+    --     // threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
+    --     ImVec2 value_raw = r.ImGui_GetMouseDragDelta(0, 0.0f);
+    --     ImVec2 value_with_lock_threshold = r.ImGui_GetMouseDragDelta(0);
+    --     ImVec2 mouse_delta = io.MouseDelta;
+    --     r.ImGui_Text("GetMouseDragDelta(0):");
+    --     r.ImGui_Text("  w/ default threshold: (%.1f, %.1f)", value_with_lock_threshold.x, value_with_lock_threshold.y);
+    --     r.ImGui_Text("  w/ zero threshold: (%.1f, %.1f)", value_raw.x, value_raw.y);
+    --     r.ImGui_Text("io.MouseDelta: (%.1f, %.1f)", mouse_delta.x, mouse_delta.y);
+    --     r.ImGui_TreePop();
+    -- }
+    --
+    -- if (r.ImGui_TreeNode("Mouse cursors"))
+    -- {
+    --     const char* mouse_cursors_names[] = { "Arrow", "TextInput", "ResizeAll", "ResizeNS", "ResizeEW", "ResizeNESW", "ResizeNWSE", "Hand", "NotAllowed" };
+    --     IM_ASSERT(IM_ARRAYSIZE(mouse_cursors_names) == ImGuiMouseCursor_COUNT);
+    --
+    --     ImGuiMouseCursor current = r.ImGui_GetMouseCursor();
+    --     r.ImGui_Text("Current mouse cursor = %d: %s", current, mouse_cursors_names[current]);
+    --     r.ImGui_Text("Hover to see mouse cursors:");
+    --     r.ImGui_SameLine(); HelpMarker(
+    --         "Your application can render a different mouse cursor based on what r.ImGui_GetMouseCursor() returns. "
+    --         "If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, "
+    --         "otherwise your backend needs to handle it.");
+    --     for (int i = 0; i < ImGuiMouseCursor_COUNT; i++)
+    --     {
+    --         char label[32];
+    --         sprintf(label, "Mouse cursor %d: %s", i, mouse_cursors_names[i]);
+    --         r.ImGui_Bullet(); r.ImGui_Selectable(label, false);
+    --         if (r.ImGui_IsItemHovered())
+    --             r.ImGui_SetMouseCursor(i);
+    --     }
+    --     r.ImGui_TreePop();
+    -- }
+  end
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
+-------------------------------------------------------------------------------
+-- - ShowExampleAppMainMenuBar()
+-- - ShowExampleMenuFile()
+-------------------------------------------------------------------------------
+
+-- Demonstrate creating a "main" fullscreen menu bar and populating it.
+-- Note the difference between BeginMainMenuBar() and BeginMenuBar():
+-- - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
+-- - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
+function demo.ShowExampleAppMainMenuBar()
+  if r.ImGui_BeginMainMenuBar(ctx) then
+    if r.ImGui_BeginMenu(ctx, 'File') then
+      demo.ShowExampleMenuFile()
+      r.ImGui_EndMenu(ctx)
+    end
+    if r.ImGui_BeginMenu(ctx, 'Edit') then
+      if r.ImGui_MenuItem(ctx, 'Undo', 'CTRL+Z') then end
+      if r.ImGui_MenuItem(ctx, 'Redo', 'CTRL+Y', false, false) then end -- Disabled item
+      r.ImGui_Separator(ctx)
+      if r.ImGui_MenuItem(ctx, 'Cut', 'CTRL+X') then end
+      if r.ImGui_MenuItem(ctx, 'Copy', 'CTRL+C') then end
+      if r.ImGui_MenuItem(ctx, 'Paste', 'CTRL+V') then end
+      r.ImGui_EndMenu(ctx)
+    end
+    r.ImGui_EndMainMenuBar(ctx)
+  end
+end
 
 -- Note that shortcuts are currently provided for display only
 -- (future version will add explicit flags to BeginMenu() to request processing shortcuts)
@@ -6253,7 +5820,7 @@ function demo.ShowExampleMenuFile()
   if r.ImGui_MenuItem(ctx, 'Checked', nil, true) then end
   if r.ImGui_MenuItem(ctx, 'Quit', 'Alt+F4') then end
 end
---
+
 -- //-----------------------------------------------------------------------------
 -- // [SECTION] Example App: Debug Console / ShowExampleAppConsole()
 -- //-----------------------------------------------------------------------------
