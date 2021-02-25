@@ -2,8 +2,6 @@
 
 #include <imgui/imgui.h>
 
-// Cannot name 'open' as 'openInOutOptional' (and have it listed in the docs as
-// a return value) because REAPER would always make it non-null.
 DEFINE_API(bool, Begin, (ImGui_Context*,ctx)
 (const char*, name)(bool*, API_RWO(open))(int*, API_RO(windowFlags)),
 R"(Push window to the stack and start appending to it. See ImGui_End.
@@ -51,6 +49,27 @@ DEFINE_API(void, EndChild, (ImGui_Context*,ctx),
 {
   Context::check(ctx)->enterFrame();
   ImGui::EndChild();
+});
+
+DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
+"Begin/append a tooltip window. to create full-featured tooltip (with any kind of items).",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::BeginTooltip();
+});
+
+DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
+"",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::EndTooltip();
+});
+
+DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
+"Set a text-only tooltip, typically use with ImGui_IsItemHovered(). override any previous call to SetTooltip().",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::SetTooltip("%s", text);
 });
 
 DEFINE_API(bool, IsWindowAppearing, (ImGui_Context*,ctx),

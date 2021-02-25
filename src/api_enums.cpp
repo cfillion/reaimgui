@@ -410,7 +410,7 @@ DEFINE_ENUM(TreeNodeFlags_SpanFullWidth,        "Extend hit box to the left-most
 
 // ImGuiWindowFlags
 // for Begin(), BeginChild()
-DEFINE_ENUM(WindowFlags_None,                      "Default flag. See #ImGui_Begin.");
+DEFINE_ENUM(WindowFlags_None,                      "Default flag. See ImGui_Begin.");
 DEFINE_ENUM(WindowFlags_NoTitleBar,                "Disable title-bar");
 DEFINE_ENUM(WindowFlags_NoResize,                  "Disable user resizing with the lower-right grip");
 DEFINE_ENUM(WindowFlags_NoMove,                    "Disable user moving the window");

@@ -9,8 +9,6 @@ R"(Popups, Modals
 - The 3 properties above are related: we need to retain popup visibility state in the library because popups may be closed as any time.
 - You can bypass the hovering restriction by using ImGuiHoveredFlags_AllowWhenBlockedByPopup when calling IsItemHovered() or IsWindowHovered().
 - IMPORTANT: Popup identifiers are relative to the current ID stack, so OpenPopup and BeginPopup generally needs to be at the same level of the stack.
-  This is sometimes leading to confusing mistakes. May rework this in the future.
-opups: begin/end functions
 
 Query popup state, if open start appending into the window. Call EndPopup() afterwards. ImGuiWindowFlags are forwarded to the window.
 
@@ -40,17 +38,12 @@ DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
   ImGui::EndPopup();
 });
 
-// Popups: open/close functions
-//  - OpenPopup(): set popup state to open. ImGuiPopupFlags are available for opening options.
-//  - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
-//  - CloseCurrentPopup(): use inside the BeginPopup()/EndPopup() scope to close manually.
-//  - CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activated (FIXME: need some options).
-//  - Use ImGuiPopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
 DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
-R"(Set popup state to open (don't call every frame!).
+R"(Set popup state to open (don't call every frame!). ImGuiPopupFlags are available for opening options.
 
 If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
+Use ImGuiPopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
 
 Default values: flags = ImGui_PopupFlags_None)",
 {
@@ -72,15 +65,14 @@ Default values: str_id = nil, popup_plags = ImGui_PopupFlags_MouseButtonRight)",
 });
 
 DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
-"Manually close the popup we have begin-ed into.",
+R"(Manually close the popup we have begin-ed into. Use inside the BeginPopup()/EndPopup() scope to close manually.
+
+CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activateda)",
 {
   Context::check(ctx)->enterFrame();
   ImGui::CloseCurrentPopup();
 });
 
-// Popups: open+begin combined functions helpers
-//  - Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.g. hovering an item and right-clicking.
-//  - They are convenient to easily create context menus, hence the name.
 DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(flags)),
 R"(This is a helper to handle the simplest case of associating one named popup to one given widget. You can pass a NULL str_id to use the identifier of the last item. This is essentially the same as calling OpenPopupOnItemClick() + BeginPopup() but written to avoid computing the ID twice because BeginPopupContextXXX functions may be called very frequently.

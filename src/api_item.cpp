@@ -1,7 +1,22 @@
 #include "api_helper.hpp"
 
-// - Most of the functions are referring to the last/previous item we submitted.
-// - See Demo Window under "Widgets->Querying Status" for an interactive visualization of most of those functions.
+DEFINE_API(void, PushID, (ImGui_Context*,ctx)
+(const char*,str_id),
+R"(Push string into the ID stack. Read the FAQ for more details about how ID are handled in dear imgui.
+If you are creating widgets in a loop you most likely want to push a unique identifier (e.g. object pointer, loop index) to uniquely differentiate them.
+You can also use the "Label##foobar" syntax within widget label to distinguish them from each others.)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PushID(str_id);
+});
+
+DEFINE_API(void, PopID, (ImGui_Context*,ctx),
+"Pop from the ID stack.",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PopID();
+});
+
 DEFINE_API(bool, IsItemHovered, (ImGui_Context*,ctx)(int*,API_RO(flags)),
 R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGui_HoveredFlags_* for more options.
 
@@ -127,7 +142,12 @@ DEFINE_API(void, GetItemRectSize, (ImGui_Context*,ctx)
   if(API_W(h)) *API_W(h) = rect.y;
 });
 
-// IMGUI_API void          SetItemAllowOverlap(); // allow last item to be overlapped by a subsequent item. sometimes useful with invisible buttons, selectables, etc. to catch unused area.
+DEFINE_API(void, SetItemAllowOverlap, (ImGui_Context*,ctx),
+"Allow last item to be overlapped by a subsequent item. sometimes useful with invisible buttons, selectables, etc. to catch unused area.",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::SetItemAllowOverlap();
+});
 
 // Focus, Activation
 DEFINE_API(void, SetItemDefaultFocus, (ImGui_Context*,ctx),
@@ -148,3 +168,86 @@ Default values: offset = 0)",
   Context::check(ctx)->enterFrame();
   ImGui::SetKeyboardFocusHere(valueOr(API_RO(offset), 0));
 });
+
+DEFINE_API(void, PushAllowKeyboardFocus, (ImGui_Context*,ctx)
+(bool,allowKeyboardFocus),
+"Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it for certain widgets",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PushAllowKeyboardFocus(allowKeyboardFocus);
+});
+
+DEFINE_API(void, PopAllowKeyboardFocus, (ImGui_Context*,ctx),
+"See ImGui_PushAllowKeyboardFocus",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PopAllowKeyboardFocus();
+});
+
+DEFINE_API(void, PushButtonRepeat, (ImGui_Context*,ctx)
+(bool,repeat),
+"In 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call IsItemActive() after any Button() to tell if the button is held in the current frame.",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PushButtonRepeat(repeat);
+});
+
+
+DEFINE_API(void, PopButtonRepeat, (ImGui_Context*,ctx),
+"See ImGui_PushButtonRepeat",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PopButtonRepeat();
+});
+
+DEFINE_API(void, PushTextWrapPos, (ImGui_Context*,ctx)
+(double*,API_RO(wrapLocalPosX)),
+R"(Push word-wrapping position for Text*() commands. < 0.0f: no wrapping; 0.0f: wrap to end of window (or column); > 0.0f: wrap at 'wrap_pos_x' position in window local space.
+
+Default values: wrapLocalPosX = 0.0)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PushTextWrapPos(valueOr(API_RO(wrapLocalPosX), 0.0));
+});
+
+DEFINE_API(void, PopTextWrapPos, (ImGui_Context*,ctx),
+"",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PopTextWrapPos();
+});
+
+// Parameters stacks (current window)
+DEFINE_API(void, PushItemWidth, (ImGui_Context*,ctx)
+(double,itemWidth),
+R"(Push width of items for common large "item+label" widgets. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side). 0.0f = default to ~2/3 of windows width,)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PushItemWidth(itemWidth);
+});
+
+DEFINE_API(void, PopItemWidth, (ImGui_Context*,ctx),
+"See ImGui_PushItemWidth",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PopItemWidth();
+});
+
+DEFINE_API(void, SetNextItemOpen, (ImGui_Context*,ctx)
+(bool,isOpen)(int*,API_RO(cond)),
+R"(Set next TreeNode/CollapsingHeader open state. Can also be done with the ImGui_TreeNodeFlags_DefaultOpen flag.
+
+'cond' is ImGui_Cond_Always by default.)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::SetNextItemOpen(isOpen, valueOr(API_RO(cond), ImGuiCond_Always));
+});
+
+DEFINE_API(void, SetNextItemWidth, (ImGui_Context*,ctx)
+(double,itemWidth),
+R"(Set width of the _next_ common large "item+label" widget. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side))",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::SetNextItemWidth(itemWidth);
+});
+// IMGUI_API float         CalcItemWidth();                                                // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.

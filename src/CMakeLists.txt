@@ -3,36 +3,30 @@ include(CheckLinkerFlag)
 include(FindPkgConfig)
 
 add_library(${PROJECT_NAME} SHARED
+  # backend
   api.cpp
-  api_colors.cpp
-  api_context.cpp
-  api_dragndrop.cpp
-  api_draw.cpp
-  api_enums.cpp
-  api_input.cpp
-  api_item.cpp
-  api_layout.cpp
-  api_listclipper.cpp
-  api_lists.cpp
-  api_menus.cpp
-  api_mouse.cpp
-  api_plots.cpp
-  api_popup.cpp
-  api_stack.cpp
-  api_style.cpp
-  api_tables.cpp
-  api_tabs.cpp
-  api_text.cpp
-  api_tooltips.cpp
-  api_trees.cpp
-  api_widgets.cpp
-  api_windows.cpp
   color.cpp
   context.cpp
   main.cpp
   opengl_renderer.cpp
   resource.cpp
   window.cpp
+
+  # binding
+  api_context.cpp
+  api_dragndrop.cpp
+  api_drawlist.cpp
+  api_enums.cpp
+  api_input.cpp
+  api_item.cpp
+  api_layout.cpp
+  api_listclipper.cpp
+  api_plots.cpp
+  api_popups.cpp
+  api_style.cpp
+  api_tables.cpp
+  api_widgets.cpp
+  api_windows.cpp
 )
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)

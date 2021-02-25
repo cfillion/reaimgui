@@ -3,6 +3,7 @@
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
 #include <reaper_plugin_secrets.h>   // reaper_array
+#include <vector>
 
 static void copyToBuffer(const std::string &value, char *buf, const size_t bufSize)
 {
@@ -31,13 +32,6 @@ static void sanitizeInputTextFlags(ImGuiInputTextFlags &flags)
   );
 }
 
-static void sanitizeSliderFlags(ImGuiSliderFlags &flags)
-{
-  // dear imgui will assert if these bits are set
-  flags &= ~ImGuiSliderFlags_InvalidMask_;
-}
-
-// Widgets: Input with Keyboard
 DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags)),
@@ -242,7 +236,12 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
     API_RO(format), flags);
 });
 
-// Widgets: Drag Sliders
+static void sanitizeSliderFlags(ImGuiSliderFlags &flags)
+{
+  // dear imgui will assert if these bits are set
+  flags &= ~ImGuiSliderFlags_InvalidMask_;
+}
+
 DEFINE_API(bool, DragInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(value))(double*,API_RO(valueSpeed))
 (double*,API_RO(valueMin))(double*,API_RO(valueMax))
@@ -680,4 +679,194 @@ DEFINE_API(bool, VSliderDouble, (ImGui_Context*,ctx)
   return ImGui::VSliderScalar(label, ImVec2(width, height),
     ImGuiDataType_Double, API_RW(value), &valueMin, &valueMax,
     API_RO(format) ? API_RO(format) : "%.6f", flags);
+});
+
+static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
+{
+  flags &= ~ImGuiColorEditFlags_HDR; // enforce 0.0..1.0 limits
+}
+
+DEFINE_API(bool, ColorEdit, (ImGui_Context*,ctx)
+(const char*,label)(int*,API_RW(rgba))(int*,API_RO(flags)),
+R"(Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xXXRRGGBB (XX is ignored and will not be modified).
+
+tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
+
+Default values: flags = 0)",
+{
+  Context::check(ctx)->enterFrame();
+
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  sanitizeColorEditFlags(flags);
+
+  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+  float col[4];
+  Color(*API_RW(rgba), alpha).unpack(col);
+  const bool ret { ImGui::ColorEdit4(label, col, flags) };
+
+  // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
+  *API_RW(rgba) = Color{col}.pack(alpha, *API_RW(rgba));
+
+  return ret;
+});
+
+DEFINE_API(bool, ColorPicker, (ImGui_Context*,ctx)
+(const char*,label)(int*,API_RW(rgba))(int*,API_RO(flags))(int*,API_RO(refCol)),
+"Default values: flags = ImGui_ColorEditFlags_None, refCol = nil",
+{
+  Context::check(ctx)->enterFrame();
+
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  sanitizeColorEditFlags(flags);
+
+  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+
+  float col[4], refCol[4];
+  Color(*API_RW(rgba), alpha).unpack(col);
+  if(API_RO(refCol))
+    Color(*API_RO(refCol), alpha).unpack(refCol);
+
+  const bool ret {
+    ImGui::ColorPicker4(label, col, flags, API_RO(refCol) ? refCol : nullptr)
+  };
+
+  // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
+  *API_RW(rgba) = Color{col}.pack(alpha, *API_RW(rgba));
+
+  return ret;
+});
+
+DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)
+(const char*,desc_id)(int*,API_RW(rgba))(int*,API_RO(flags))
+(double*,API_RO(width))(double*,API_RO(height)),
+R"(Display a color square/button, hover for details, return true when pressed.
+
+Default values: flags = ImGui_ColorEditFlags_None, width = 0.0, height = 0.0)",
+{
+  Context::check(ctx)->enterFrame();
+
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  sanitizeColorEditFlags(flags);
+
+  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+  const ImVec4 col { Color(*API_RW(rgba), alpha) };
+
+  return ImGui::ColorButton(desc_id, col, flags,
+    ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
+});
+
+DEFINE_API(void, SetColorEditOptions, (ImGui_Context*,ctx)
+(int,flags),
+"Picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.",
+{
+  Context::check(ctx)->enterFrame();
+  sanitizeColorEditFlags(flags);
+  ImGui::SetColorEditOptions(flags);
+});
+
+// Allowing ReaScripts to input a null-separated string would be unsafe.
+// REAPER's buf, buf_sz mechanism does not handle strings containing null
+// bytes, so the user would have to specify the size manually. This would
+// enable reading from arbitrary memory locations.
+static void makeNullSeparated(char *list)
+{
+  constexpr char ITEM_SEP { '\x1f' }; // ASCII Unit Separator
+  const auto len { strlen(list) };
+
+  if(len < 1 || list[len - 1] != ITEM_SEP || list[len] != '\0')
+    throw reascript_error { "items are not terminated with \\31 (unit separator)" };
+
+  for(char *p { list }; *p; ++p) {
+    if(*p == ITEM_SEP)
+      *p = '\0';
+  }
+}
+
+static std::vector<const char *> nullSeparatedToVector(const char *list)
+{
+  std::vector<const char *> strings;
+  while(*list) {
+    strings.push_back(list);
+    list += strlen(list) + 1;
+  }
+  return strings;
+}
+
+// Widgets: Combo Box
+DEFINE_API(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
+(const char*,previewValue)(int*,API_RO(flags)),
+R"(The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() items.
+
+Default values: flags = ImGui_ComboFlags_None)",
+{
+  Context::check(ctx)->enterFrame();
+
+  return ImGui::BeginCombo(label, previewValue,
+    valueOr(API_RO(flags), ImGuiComboFlags_None));
+});
+
+DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
+"Only call EndCombo() if BeginCombo() returns true!",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::EndCombo();
+});
+
+DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
+(const char*,label)(int*,API_RW(currentItem))(char*,items)
+(int*,API_RO(popupMaxHeightInItems)),
+R"(Helper over BeginCombo()/EndCombo() for convenience purpose. Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
+
+Default values: popupMaxHeightInItems = -1)",
+{
+  Context::check(ctx)->enterFrame();
+  makeNullSeparated(items);
+
+  return ImGui::Combo(label, API_RW(currentItem), items,
+    valueOr(API_RO(popupMaxHeightInItems), -1));
+});
+
+// Widgets: List Boxes
+DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
+(int*,API_RW(currentItem))(char*,items)(int*,API_RO(heightInItems)),
+R"(This is an helper over BeginListBox()/EndListBox() for convenience purpose. This is analoguous to how Combos are created.
+
+Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
+
+Default values: heightInItems = -1)",
+{
+  Context::check(ctx)->enterFrame();
+  makeNullSeparated(items);
+
+  const auto &strings { nullSeparatedToVector(items) };
+  return ImGui::ListBox(label, API_RW(currentItem), strings.data(), strings.size(),
+    valueOr(API_RO(heightInItems), -1));
+});
+
+DEFINE_API(bool, BeginListBox, (ImGui_Context*,ctx)
+(const char*,label)(double*,API_RO(width))(double*,API_RO(height)),
+R"(Open a framed scrolling region.  This is essentially a thin wrapper to using BeginChild/EndChild with some stylistic changes.
+
+The BeginListBox()/EndListBox() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() or any items.
+
+- Choose frame width:   width  > 0.0: custom  /  width  < 0.0 or -FLT_MIN: right-align   /  width  = 0.0 (default): use current ItemWidth
+- Choose frame height:  height > 0.0: custom  /  height < 0.0 or -FLT_MIN: bottom-align  /  height = 0.0 (default): arbitrary default height which can fit ~7 items
+
+Default values: width = 0, height = 0
+
+See ImGui_EndListBox.)",
+{
+  Context::check(ctx)->enterFrame();
+
+  return ImGui::BeginListBox(label,
+    ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
+});
+
+DEFINE_API(void, EndListBox, (ImGui_Context*,ctx),
+R"(Only call EndListBox() if BeginListBox() returned true!
+
+See ImGui_BeginListBox.)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::EndListBox();
 });

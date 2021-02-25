@@ -1,5 +1,63 @@
 #include "api_helper.hpp"
 
+DEFINE_API(void, Text, (ImGui_Context*,ctx)
+(const char*,text),
+"",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::TextUnformatted(text);
+});
+
+DEFINE_API(void, TextColored, (ImGui_Context*,ctx)
+(int,colorRGBA)(const char*,text),
+"Shortcut for PushStyleColor(ImGuiCol_Text, color); Text(text); PopStyleColor();",
+{
+  Context::check(ctx)->enterFrame();
+
+  ImVec4 color { Color(colorRGBA) };
+  ImGui::PushStyleColor(ImGuiCol_Text, color);
+  ImGui::TextUnformatted(text);
+  ImGui::PopStyleColor();
+});
+
+DEFINE_API(void, TextDisabled, (ImGui_Context*,ctx)
+(const char*,text),
+"",
+{
+  Context::check(ctx)->enterFrame();
+  const ImGuiStyle &style { ImGui::GetStyle() };
+  ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
+  ImGui::TextUnformatted(text);
+  ImGui::PopStyleColor();
+});
+
+DEFINE_API(void, TextWrapped, (ImGui_Context*,ctx)
+(const char*,text),
+"Shortcut for PushTextWrapPos(0.0f); Text(fmt, ...); PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::PushTextWrapPos(0.0f);
+  ImGui::TextUnformatted(text);
+  ImGui::PopTextWrapPos();
+});
+
+DEFINE_API(void, LabelText, (ImGui_Context*,ctx)
+(const char*,label)(const char*,text),
+"Display text+label aligned the same way as value+label widgets",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::LabelText(label, "%s", text);
+});
+
+DEFINE_API(void, BulletText, (ImGui_Context*,ctx)
+(const char*,text),
+"Shortcut for Bullet()+Text()",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::Bullet();
+  ImGui::TextUnformatted(text);
+});
+
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(width))(double*,API_RO(height)),
 R"(Most widgets return true when the value has been changed or when pressed/selected
@@ -112,3 +170,159 @@ Default values: flags = ImGui_SelectableFlags_None, width = 0.0, height = 0.0)",
     valueOr(API_RO(flags), ImGuiSelectableFlags_None),
     ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
 });
+
+DEFINE_API(bool, TreeNode, (ImGui_Context*,ctx)
+(const char*, label)(int*,API_RO(flags)),
+"TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::TreeNodeEx(label, valueOr(API_RO(flags), 0));
+});
+
+DEFINE_API(bool, TreeNodeEx, (ImGui_Context*,ctx)
+(const char*, str_id)(const char*, label)(int*,API_RO(flags)),
+"Helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet(). See ImGui_TreeNode.",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::TreeNodeEx(str_id, valueOr(API_RO(flags), 0), "%s", label);
+});
+
+DEFINE_API(void, TreePush, (ImGui_Context*,ctx)
+(const char*,str_id),
+"~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::TreePush(str_id);
+});
+
+DEFINE_API(void, TreePop, (ImGui_Context*,ctx),
+"Unindent()+PopId()",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::TreePop();
+});
+
+DEFINE_API(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
+"Horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::GetTreeNodeToLabelSpacing();
+});
+
+DEFINE_API(bool, CollapsingHeader, (ImGui_Context*,ctx)
+(const char*, label)(bool*,API_RWO(visible))(int*,API_RO(flags)),
+R"(If returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
+
+When 'visible' is provided: if 'true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if 'false' don't display the header.)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::CollapsingHeader(label, API_RWO(visible), valueOr(API_RO(flags), 0));
+});
+
+DEFINE_API(bool, BeginMenuBar, (ImGui_Context*,ctx),
+R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag set on parent window). See ImGui_EndMenuBar.)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::BeginMenuBar();
+});
+
+DEFINE_API(void, EndMenuBar, (ImGui_Context*,ctx),
+R"(Only call EndMenuBar() if BeginMenuBar() returns true! See ImGui_BeginMenuBar.)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::EndMenuBar();
+});
+
+DEFINE_API(bool, BeginMainMenuBar, (ImGui_Context*,ctx),
+R"(Create a menu bar at the top of the screen and append to it.)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::BeginMainMenuBar();
+});
+
+DEFINE_API(void, EndMainMenuBar, (ImGui_Context*,ctx),
+R"(Only call EndMainMenuBar() if BeginMainMenuBar() returns true! See ImGui_BeginMainMenuBar.)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::EndMainMenuBar();
+});
+
+DEFINE_API(bool, BeginMenu, (ImGui_Context*,ctx)
+(const char*, label)(bool*, API_RO(enabled)),
+R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_EndMenu.
+
+'enabled' is true by default.)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::BeginMenu(label, valueOr(API_RO(enabled), true));
+});
+
+DEFINE_API(void, EndMenu, (ImGui_Context*,ctx),
+R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BeginMenu.)",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::EndMenu();
+});
+
+DEFINE_API(bool, MenuItem, (ImGui_Context*,ctx)
+(const char*, label)(const char*, API_RO(shortcut))
+(bool*, API_RWO(selected))(bool*, API_RO(enabled)),
+R"(Return true when activated. Shortcuts are displayed for convenience but not processed by ImGui at the moment. Toggle state is written to 'selected' when provided.
+
+'enabled' is true by default.)",
+{
+  Context::check(ctx)->enterFrame();
+  nullIfEmpty(API_RO(shortcut));
+
+  return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(selected),
+    valueOr(API_RO(enabled), true));
+});
+
+DEFINE_API(bool, BeginTabBar, (ImGui_Context*,ctx)
+(const char*,str_id)(int*,API_RO(flags)),
+R"(Create and append into a TabBar.
+
+Default values: flags = ImGui_TabBarFlags_None)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::BeginTabBar(str_id, valueOr(API_RO(flags), ImGuiTabBarFlags_None));
+});
+
+DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
+"Only call EndTabBar() if BeginTabBar() returns true!",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::EndTabBar();
+});
+
+DEFINE_API(bool, BeginTabItem, (ImGui_Context*,ctx)
+(const char*,label)(bool*,API_RWO(open))(int*,API_RO(flags)),
+R"(Create a Tab. Returns true if the Tab is selected.
+
+Default values: flags = ImGui_TabItemFlags_None
+'open' is read/write.)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::BeginTabItem(label, API_RWO(open),
+    valueOr(API_RO(flags), ImGuiTabItemFlags_None));
+});
+
+DEFINE_API(void, EndTabItem, (ImGui_Context*,ctx),
+"Only call EndTabItem() if BeginTabItem() returns true!",
+{
+  Context::check(ctx)->enterFrame();
+  ImGui::EndTabItem();
+});
+
+DEFINE_API(bool, TabItemButton, (ImGui_Context*,ctx)
+(const char*,label)(int*,API_RO(flags)),
+R"(Create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
+
+Default values: flags = ImGui_TabItemFlags_None)",
+{
+  Context::check(ctx)->enterFrame();
+  return ImGui::TabItemButton(label,
+    valueOr(API_RO(flags), ImGuiTabItemFlags_None));
+});
+
+// IMGUI_API void          SetTabItemClosed(const char* tab_or_docked_window_label);           // notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
