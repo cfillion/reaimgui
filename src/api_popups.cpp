@@ -74,7 +74,7 @@ CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activat
 });
 
 DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
-(const char*,API_RO(str_id))(int*,API_RO(flags)),
+(const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
 R"(This is a helper to handle the simplest case of associating one named popup to one given widget. You can pass a NULL str_id to use the identifier of the last item. This is essentially the same as calling OpenPopupOnItemClick() + BeginPopup() but written to avoid computing the ID twice because BeginPopupContextXXX functions may be called very frequently.
 
 Open+begin popup when clicked on last item. if you can pass a NULL str_id only if the previous item had an id. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here.
@@ -86,11 +86,35 @@ Open+begin popup when clicked on last item. if you can pass a NULL str_id only i
   nullIfEmpty(API_RO(str_id));
 
   return ImGui::BeginPopupContextItem(API_RO(str_id),
-    valueOr(API_RO(flags), ImGuiPopupFlags_MouseButtonRight));
+    valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
 });
 
-IMGUI_API bool          BeginPopupContextWindow(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);// open+begin popup when clicked on current window.
-IMGUI_API bool          BeginPopupContextVoid(const char* str_id = NULL, ImGuiPopupFlags popup_flags = 1);  // open+begin popup when clicked in void (where there are no windows).
+DEFINE_API(bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
+(const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
+R"(Open+begin popup when clicked on current window.
+
+Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
+{
+  Context::check(ctx)->enterFrame();
+  nullIfEmpty(API_RO(str_id));
+
+  return ImGui::BeginPopupContextWindow(API_RO(str_id),
+    valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
+});
+
+DEFINE_API(bool, BeginPopupContextVoid, (ImGui_Context*,ctx)
+(const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
+R"(Open+begin popup when clicked in void (where there are no windows).
+
+Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
+{
+  Context::check(ctx)->enterFrame();
+  nullIfEmpty(API_RO(str_id));
+
+  return ImGui::BeginPopupContextVoid(API_RO(str_id),
+    valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
+});
+
 // Popups: test function
 //  - IsPopupOpen(): return true if the popup is open at the current BeginPopup() level of the popup stack.
 //  - IsPopupOpen() with ImGuiPopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.

@@ -260,7 +260,18 @@ DEFINE_ENUM(InputTextFlags_CharsScientific,     "Allow 0123456789.+-*/eE (Scient
 // DEFINE_ENUM(InputTextFlags_NoMarkEdited,        "For internal use by functions using InputText() before reformatting data");
 
 // typedef int ImGuiKeyModFlags;       // -> enum ImGuiKeyModFlags_     // Flags: for io.KeyMods (Ctrl/Shift/Alt/Super)
-// typedef int ImGuiPopupFlags;        // -> enum ImGuiPopupFlags_      // Flags: for OpenPopup*(), BeginPopupContext*(), IsPopupOpen()
+
+// ImGuiPopupFlags
+// Flags: for OpenPopup*(), BeginPopupContext*(), IsPopupOpen()
+DEFINE_ENUM(PopupFlags_None,                    "");
+DEFINE_ENUM(PopupFlags_MouseButtonLeft,         "For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGuiMouseButton_Left)");
+DEFINE_ENUM(PopupFlags_MouseButtonRight,        "For BeginPopupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as ImGuiMouseButton_Right)");
+DEFINE_ENUM(PopupFlags_MouseButtonMiddle,       "For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGuiMouseButton_Middle)");
+DEFINE_ENUM(PopupFlags_NoOpenOverExistingPopup, "For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup at the same level of the popup stack");
+DEFINE_ENUM(PopupFlags_NoOpenOverItems,         "For BeginPopupContextWindow(): don't return true when hovering items, only when hovering empty space");
+DEFINE_ENUM(PopupFlags_AnyPopupId,              "For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.");
+DEFINE_ENUM(PopupFlags_AnyPopupLevel,           "For IsPopupOpen(): search/test at any level of the popup stack (default test in the current level)");
+DEFINE_ENUM(PopupFlags_AnyPopup,                "ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel");
 
 // ImGuiSelectableFlags
 // Flags: for Selectable()

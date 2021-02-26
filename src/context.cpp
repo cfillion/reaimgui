@@ -76,6 +76,10 @@ Context::~Context()
 {
   ImGui::SetCurrentContext(m_imgui.get());
 
+  // Announce to REAPER the window is no longer going to be valid
+  // (safe to call even when not docked)
+  DockWindowRemove(m_window->nativeHandle());
+
   if(m_inFrame)
     endFrame(false);
 }

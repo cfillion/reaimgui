@@ -61,7 +61,11 @@ local FLT_MIN, FLT_MAX = 1.17549e-38, 3.40282e+38
 
 -- Hajime!
 
-local ctx = r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 720)
+function demo.CreateContext()
+  return r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 720)
+end
+
+local ctx = demo.CreateContext()
 
 function demo.loop()
   if r.ImGui_IsCloseRequested(ctx) then
@@ -218,12 +222,31 @@ function demo.ShowDemoWindow(open)
   local p_open, new_open = open
   if demo.no_close          then p_open = nil end -- Don't pass our bool* to Begin
 
+  local reset_ctx = false
+  if r.ImGui_BeginPopupContextVoid(ctx, "dock") then
+    local hwnd = r.ImGui_GetNativeHwnd(ctx)
+    local dock, isFloatingDocker = reaper.DockIsChildOfDock(hwnd)
+    if r.ImGui_MenuItem(ctx, 'Duck in docker', nil, dock ~= -1) then
+      if dock == -1 then
+        r.DockWindowAdd(hwnd, 'ReaImGui Demo', 0, true)
+      else
+        reset_ctx = true
+      end
+    end
+    r.ImGui_EndPopup(ctx)
+  end
+  if reset_ctx then
+    -- create a new OS window for undocking
+    r.ImGui_DestroyContext(ctx)
+    ctx = demo.CreateContext()
+  end
+
   -- We specify a default position/size in case there's no data in the .ini file.
   -- We only do it to make the demo applications a little more welcoming, but typically this isn't required.
   -- v1.81 TODO const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
   -- ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 20), ImGuiCond_FirstUseEver);
-  r.ImGui_SetNextWindowPos(ctx, 20, 20, r.ImGui_Cond_FirstUseEver());
-  r.ImGui_SetNextWindowSize(ctx, 550, 680, r.ImGui_Cond_FirstUseEver());
+  r.ImGui_SetNextWindowPos(ctx, 20, 20, r.ImGui_Cond_FirstUseEver())
+  r.ImGui_SetNextWindowSize(ctx, 550, 680, r.ImGui_Cond_FirstUseEver())
 
   -- Main body of the Demo window starts here.
   rv, new_open = r.ImGui_Begin(ctx, 'Dear ImGui Demo', p_open, window_flags)

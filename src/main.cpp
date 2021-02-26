@@ -15,6 +15,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
 
   const ApiImport funcs[] {
     IMPORT(AttachWindowTopmostButton),
+    IMPORT(DockWindowRemove),
     IMPORT(GetColorThemeStruct),
     IMPORT(GetMainHwnd),
     IMPORT(plugin_getapi),
