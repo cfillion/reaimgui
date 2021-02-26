@@ -311,16 +311,11 @@ DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
   return ImGui::IsKeyReleased(key_code);
 });
 
-DEFINE_API(void, GetKeyboardModifiers, (ImGui_Context*,ctx)
-(bool*,API_W(ctrl))(bool*,API_W(shift))(bool*,API_W(alt))(bool*,API_W(super)),
-"",
+DEFINE_API(int, GetKeyMods, (ImGui_Context*,ctx),
+"Ctrl/Shift/Alt/Super. See ImGui_KeyModFlags_*.",
 {
   Context::check(ctx)->enterFrame();
-  const ImGuiIO &io { ImGui::GetIO() };
-  if(API_W(ctrl))  *API_W(ctrl)  = io.KeyCtrl;
-  if(API_W(shift)) *API_W(shift) = io.KeyShift;
-  if(API_W(alt))   *API_W(alt)   = io.KeyAlt;
-  if(API_W(super)) *API_W(super) = io.KeySuper;
+  return ImGui::GetIO().KeyMods;
 });
 
 DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)

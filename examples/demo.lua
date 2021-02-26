@@ -746,7 +746,7 @@ function demo.ShowDemoWindowWidgets()
       if node_clicked ~= -1 then
         -- Update selection state
         -- (process outside of tree loop to avoid visual inconsistencies during the clicking frame)
-        if ({r.ImGui_GetKeyboardModifiers(ctx)})[1] then -- CTRL+click to toggle
+        if (r.ImGui_GetKeyMods(ctx) & r.ImGui_KeyModFlags_Ctrl()) ~= 0 then -- CTRL+click to toggle
           widgets.trees.selection_mask = widgets.trees.selection_mask ~ (1 << node_clicked)
         elseif widgets.trees.selection_mask & (1 << node_clicked) == 0 then -- Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
           widgets.trees.selection_mask = (1 << node_clicked)              -- Click to single-select
@@ -1110,7 +1110,7 @@ function demo.ShowDemoWindowWidgets()
       demo.HelpMarker('Hold CTRL and click to select multiple items.')
       for i,sel in ipairs(widgets.selectables.multiple) do
         if r.ImGui_Selectable(ctx, ('Object %d'):format(i-1), sel) then
-          if not ({r.ImGui_GetKeyboardModifiers(ctx)})[1] then -- Clear selection when CTRL is not held
+          if not (r.ImGui_GetKeyMods(ctx) & r.ImGui_KeyModFlags_Ctrl()) ~= 0 then -- Clear selection when CTRL is not held
             for j = 1, #widgets.selectables.multiple do
               widgets.selectables.multiple[j] = false
             end
@@ -5273,7 +5273,7 @@ function demo.ShowDemoWindowTables()
           elseif contents_type == 4 or contents_type == 5 then -- selectable/selectable (span row)
             local selectable_flags = contents_type == 5 and r.ImGui_SelectableFlags_SpanAllColumns() | r.ImGui_SelectableFlags_AllowItemOverlap() or r.ImGui_SelectableFlags_None()
             if r.ImGui_Selectable(ctx, label, item.is_selected, selectable_flags, 0, tables.advanced.row_min_height) then
-              if ({r.ImGui_GetKeyboardModifiers(ctx)})[1] then
+              if (r.ImGui_GetKeyMods(ctx) & r.ImGui_KeyModFlags_Ctrl()) ~= 0 then
                 item.is_selected = not item.is_selected
               else
                 for _,it in ipairs(tables.advanced.items) do
@@ -5627,12 +5627,12 @@ function demo.ShowDemoWindowMisc()
       end
       r.ImGui_Text(ctx, 'Keys pressed:'); KeyboardState(r.ImGui_IsKeyPressed)
       r.ImGui_Text(ctx, 'Keys release:'); KeyboardState(r.ImGui_IsKeyReleased)
-      local ctrl, shift, alt, super = r.ImGui_GetKeyboardModifiers(ctx)
+      local mods = r.ImGui_GetKeyMods(ctx)
       r.ImGui_Text(ctx, ('Keys mods: %s%s%s%s'):format(
-        ctrl  and 'CTRL '  or '',
-        shift and 'SHIFT ' or '',
-        alt   and 'ALT '   or '',
-        super and 'SUPER ' or ''))
+        (mods & r.ImGui_KeyModFlags_Ctrl())  ~= 0  and 'CTRL '   or '',
+        (mods & r.ImGui_KeyModFlags_Shift()) ~= 0  and 'SHIFT '  or '',
+        (mods & r.ImGui_KeyModFlags_Alt())   ~= 0  and 'ALT '    or '',
+        (mods & r.ImGui_KeyModFlags_Super()) ~= 0  and 'SUPER '  or ''))
 
       r.ImGui_Text(ctx, 'Chars queue:')
       local next_id = 0

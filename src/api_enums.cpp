@@ -259,7 +259,14 @@ DEFINE_ENUM(InputTextFlags_CharsScientific,     "Allow 0123456789.+-*/eE (Scient
 // DEFINE_ENUM(InputTextFlags_Multiline,           "For internal use by InputTextMultiline()");
 // DEFINE_ENUM(InputTextFlags_NoMarkEdited,        "For internal use by functions using InputText() before reformatting data");
 
-// typedef int ImGuiKeyModFlags;       // -> enum ImGuiKeyModFlags_     // Flags: for io.KeyMods (Ctrl/Shift/Alt/Super)
+// ImGuiKeyModFlags
+// Flags: for io.KeyMods (Ctrl/Shift/Alt/Super)
+DEFINE_ENUM(KeyModFlags_None,  "");
+DEFINE_ENUM(KeyModFlags_Ctrl,  "");
+DEFINE_ENUM(KeyModFlags_Shift, "");
+DEFINE_ENUM(KeyModFlags_Alt,   "");
+DEFINE_ENUM(KeyModFlags_Super, "");
+
 
 // ImGuiPopupFlags
 // Flags: for OpenPopup*(), BeginPopupContext*(), IsPopupOpen()
