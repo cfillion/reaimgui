@@ -17,7 +17,6 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(AttachWindowTopmostButton),
     IMPORT(GetColorThemeStruct),
     IMPORT(GetMainHwnd),
-    IMPORT(GSC_mainwnd),
     IMPORT(plugin_getapi),
     IMPORT(plugin_register),
     IMPORT(realloc_cmd_ptr),
