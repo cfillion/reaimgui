@@ -80,6 +80,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   plugin_register("accelerator", &m_impl->accel);
 
   ImGuiIO &io { ImGui::GetIO() };
+  io.ConfigMacOSXBehaviors = false; // don't swap Cmd/Ctrl, SWELl already does it
   io.BackendPlatformName = "reaper_imgui_cocoa";
   io.KeyMap[ImGuiKey_Tab]         = kVK_Tab;
   io.KeyMap[ImGuiKey_LeftArrow]   = kVK_LeftArrow;
