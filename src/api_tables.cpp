@@ -85,7 +85,7 @@ DEFINE_API(void, TableSetupColumn, (ImGui_Context*,ctx)
 (int*,API_RO(user_id)),
 R"(Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
 
-Default values: flags = ImGui_TableColumnFlags_None, float init_width_or_weight = 0.0, user_id = 0)",
+Default values: flags = ImGui_TableColumnFlags_None, init_width_or_weight = 0.0, user_id = 0)",
 {
   Context::check(ctx)->enterFrame();
   ImGui::TableSetupColumn(label,
@@ -185,7 +185,7 @@ DEFINE_API(const char*, TableGetColumnName, (ImGui_Context*,ctx)
 (int*,API_RO(column_n)),
 R"(Return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
 
-Default values: volumn_n = -1)",
+Default values: column_n = -1)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::TableGetColumnName(valueOr(API_RO(column_n), -1));
@@ -195,7 +195,7 @@ DEFINE_API(int, TableGetColumnFlags, (ImGui_Context*,ctx)
 (int*,API_RO(column_n)),
 R"(Return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
 
-Default values: volumn_n = -1)",
+Default values: column_n = -1)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::TableGetColumnFlags(valueOr(API_RO(column_n), -1));

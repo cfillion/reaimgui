@@ -1760,7 +1760,7 @@ label:\n"
 
     r.ImGui_Text(ctx, 'Color button only:')
     rv,widgets.colors.no_border = r.ImGui_Checkbox(ctx, 'ImGuiColorEditFlags_NoBorder', widgets.colors.no_border)
-    rv,widgets.colors.rgba = r.ImGui_ColorButton(ctx, 'MyColor##3c', widgets.colors.rgba,
+    r.ImGui_ColorButton(ctx, 'MyColor##3c', widgets.colors.rgba,
       misc_flags | (widgets.colors.no_border and r.ImGui_ColorEditFlags_NoBorder() or 0),
       80, 80)
 

@@ -40,13 +40,13 @@ DEFINE_API(bool, IsItemFocused, (ImGui_Context*,ctx),
   return ImGui::IsItemFocused();
 });
 
-DEFINE_API(bool, IsItemClicked, (ImGui_Context*,ctx)(int*,API_RO(mouseButton)),
+DEFINE_API(bool, IsItemClicked, (ImGui_Context*,ctx)(int*,API_RO(mouse_button)),
 R"(Is the last item clicked? (e.g. button/node just clicked on) == IsMouseClicked(mouse_button) && IsItemHovered().
 
-Default values: mousebutton = ImGui_MouseButton_Left)",
+Default values: mouse_button = ImGui_MouseButton_Left)",
 {
   Context::check(ctx)->enterFrame();
-  return ImGui::IsItemClicked(valueOr(API_RO(mouseButton), ImGuiMouseButton_Left));
+  return ImGui::IsItemClicked(valueOr(API_RO(mouse_button), ImGuiMouseButton_Left));
 });
 
 DEFINE_API(bool, IsItemVisible, (ImGui_Context*,ctx),

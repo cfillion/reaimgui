@@ -33,7 +33,7 @@ R"(Close and free the resources used by a context.)",
 //   return Resource::exists(ctx); // TODO: generalize IsContextValid to IsValid(void* resource, const char* type)?
 // });
 
-DEFINE_API(void *, GetNativeHwnd, (ImGui_Context*, ctx),
+DEFINE_API(void*, GetNativeHwnd, (ImGui_Context*, ctx),
 R"(Return the native handle for the context's OS window.)",
 {
   Context::check(ctx);
@@ -145,7 +145,7 @@ DEFINE_API(bool, IsMouseHoveringRect, (ImGui_Context*,ctx)
 (double,left)(double,top)(double,right)(double,bottom)(bool*,API_RO(clip)),
 R"(Is mouse hovering given bounding rect (in screen space). clipped by current clipping settings, but disregarding of other consideration of focus/window ordering/popup-block.
 
-Default values: clip=true)",
+Default values: clip = true)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::IsMouseHoveringRect(
@@ -297,7 +297,7 @@ DEFINE_API(bool, IsKeyPressed, (ImGui_Context*,ctx)
 (int,key_code)(bool*,API_RO(repeat)),
 R"(Was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
 
-Default values: repeat=true)",
+Default values: repeat = true)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::IsKeyPressed(key_code, valueOr(API_RO(repeat), true));

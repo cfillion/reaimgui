@@ -55,7 +55,7 @@ DEFINE_API(void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
 R"(Helper to open popup when clicked on last item. return true when just opened. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
 
-Default values: str_id = nil, popup_plags = ImGui_PopupFlags_MouseButtonRight)",
+Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 {
   Context::check(ctx)->enterFrame();
   nullIfEmpty(API_RO(str_id));
