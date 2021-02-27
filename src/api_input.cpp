@@ -798,7 +798,7 @@ DEFINE_API(void, SetColorEditOptions, (ImGui_Context*,ctx)
 // REAPER's buf, buf_sz mechanism does not handle strings containing null
 // bytes, so the user would have to specify the size manually. This would
 // enable reading from arbitrary memory locations.
-static void makeNullSeparated(char *list)
+static std::vector<const char *> splitString(char *list)
 {
   constexpr char ITEM_SEP { '\x1f' }; // ASCII Unit Separator
   const auto len { strlen(list) };
@@ -806,19 +806,14 @@ static void makeNullSeparated(char *list)
   if(len < 1 || list[len - 1] != ITEM_SEP || list[len] != '\0')
     throw reascript_error { "items are not terminated with \\31 (unit separator)" };
 
-  for(char *p { list }; *p; ++p) {
-    if(*p == ITEM_SEP)
-      *p = '\0';
-  }
-}
-
-static std::vector<const char *> nullSeparatedToVector(const char *list)
-{
   std::vector<const char *> strings;
-  while(*list) {
+
+  do {
     strings.push_back(list);
-    list += strlen(list) + 1;
-  }
+    while(*list != ITEM_SEP) ++list;
+    *list = '\0';
+  } while(*++list);
+
   return strings;
 }
 
@@ -850,9 +845,9 @@ R"(Helper over BeginCombo()/EndCombo() for convenience purpose. Use \31 (ASCII U
 Default values: popupMaxHeightInItems = -1)",
 {
   Context::check(ctx)->enterFrame();
-  makeNullSeparated(items);
 
-  return ImGui::Combo(label, API_RW(currentItem), items,
+  const auto &strings { splitString(items) };
+  return ImGui::Combo(label, API_RW(currentItem), strings.data(), strings.size(),
     valueOr(API_RO(popupMaxHeightInItems), -1));
 });
 
@@ -866,9 +861,8 @@ Use \31 (ASCII Unit Separator) to separate items within the string and to termin
 Default values: heightInItems = -1)",
 {
   Context::check(ctx)->enterFrame();
-  makeNullSeparated(items);
 
-  const auto &strings { nullSeparatedToVector(items) };
+  const auto &strings { splitString(items) };
   return ImGui::ListBox(label, API_RW(currentItem), strings.data(), strings.size(),
     valueOr(API_RO(heightInItems), -1));
 });
