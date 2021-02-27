@@ -623,7 +623,7 @@ function demo.ShowDemoWindowWidgets()
     )
 
     foo = widgets.basic.col1
-    rv,widgets.basic.col1 = r.ImGui_ColorEdit(ctx, 'color 1', widgets.basic.col1, r.ImGui_ColorEditFlags_NoAlpha())
+    rv,widgets.basic.col1 = r.ImGui_ColorEdit3(ctx, 'color 1', widgets.basic.col1)
     r.ImGui_SameLine(ctx); demo.HelpMarker(
       'Click on the color square to open a color picker.\n\z
        Click and hold to use drag and drop.\n\z
@@ -631,7 +631,7 @@ function demo.ShowDemoWindowWidgets()
        CTRL+click on individual component to input value.'
     )
 
-    rv, widgets.basic.col2 = r.ImGui_ColorEdit(ctx, 'color 2', widgets.basic.col2)
+    rv, widgets.basic.col2 = r.ImGui_ColorEdit4(ctx, 'color 2', widgets.basic.col2)
 
     -- Using the _simplified_ one-liner ListBox() api here
     -- See "List boxes" section for examples of how to use the more flexible BeginListBox()/EndListBox() api.
@@ -1669,23 +1669,23 @@ label:\n"
       'Click on the color square to open a color picker.\n\z
        CTRL+click on individual component to input value.\n')
     local argb = demo.RgbaToArgb(widgets.colors.rgba)
-    rv,argb = r.ImGui_ColorEdit(ctx, 'MyColor##1', argb, r.ImGui_ColorEditFlags_NoAlpha() | misc_flags)
+    rv,argb = r.ImGui_ColorEdit3(ctx, 'MyColor##1', argb, misc_flags)
     if rv then
       widgets.colors.rgba = demo.ArgbToRgba(argb)
     end
 
     r.ImGui_Text(ctx, 'Color widget HSV with Alpha:')
-    rv,widgets.colors.rgba = r.ImGui_ColorEdit(ctx, 'MyColor##2', widgets.colors.rgba, r.ImGui_ColorEditFlags_DisplayHSV() | misc_flags)
+    rv,widgets.colors.rgba = r.ImGui_ColorEdit4(ctx, 'MyColor##2', widgets.colors.rgba, r.ImGui_ColorEditFlags_DisplayHSV() | misc_flags)
 
     r.ImGui_Text(ctx, 'Color widget with Float Display:')
-    rv,widgets.colors.rgba = r.ImGui_ColorEdit(ctx, 'MyColor##2f', widgets.colors.rgba, r.ImGui_ColorEditFlags_Float() | misc_flags)
+    rv,widgets.colors.rgba = r.ImGui_ColorEdit4(ctx, 'MyColor##2f', widgets.colors.rgba, r.ImGui_ColorEditFlags_Float() | misc_flags)
 
     r.ImGui_Text(ctx, 'Color button with Picker:')
     r.ImGui_SameLine(ctx); demo.HelpMarker(
       'With the ImGuiColorEditFlags_NoInputs flag you can hide all the slider/text inputs.\n\z
        With the ImGuiColorEditFlags_NoLabel flag you can pass a non-empty label which will only \z
        be used for the tooltip and picker popup.')
-    rv,widgets.colors.rgba = r.ImGui_ColorEdit(ctx, 'MyColor##3', widgets.colors.rgba, r.ImGui_ColorEditFlags_NoInputs() | r.ImGui_ColorEditFlags_NoLabel() | misc_flags);
+    rv,widgets.colors.rgba = r.ImGui_ColorEdit4(ctx, 'MyColor##3', widgets.colors.rgba, r.ImGui_ColorEditFlags_NoInputs() | r.ImGui_ColorEditFlags_NoLabel() | misc_flags);
 
     r.ImGui_Text(ctx, 'Color button with Custom Picker Popup:')
 
@@ -1708,7 +1708,7 @@ label:\n"
     if r.ImGui_BeginPopup(ctx, 'mypicker') then
       r.ImGui_Text(ctx, 'MY CUSTOM COLOR PICKER WITH AN AMAZING PALETTE!')
       r.ImGui_Separator(ctx)
-      rv,widgets.colors.rgba = r.ImGui_ColorPicker(ctx, '##picker', widgets.colors.rgba, misc_flags | r.ImGui_ColorEditFlags_NoSidePreview() | r.ImGui_ColorEditFlags_NoSmallPreview())
+      rv,widgets.colors.rgba = r.ImGui_ColorPicker4(ctx, '##picker', widgets.colors.rgba, misc_flags | r.ImGui_ColorEditFlags_NoSidePreview() | r.ImGui_ColorEditFlags_NoSmallPreview())
       r.ImGui_SameLine(ctx)
 
       r.ImGui_BeginGroup(ctx) -- Lock X position
@@ -1773,7 +1773,7 @@ label:\n"
       rv,widgets.colors.ref_color = r.ImGui_Checkbox(ctx, 'With Ref Color', widgets.colors.ref_color)
       if widgets.colors.ref_color then
         r.ImGui_SameLine(ctx)
-        rv,widgets.colors.ref_color_rgba = r.ImGui_ColorEdit(ctx, '##RefColor',
+        rv,widgets.colors.ref_color_rgba = r.ImGui_ColorEdit4(ctx, '##RefColor',
           widgets.colors.ref_color_rgba, r.ImGui_ColorEditFlags_NoInputs() | misc_flags)
       end
     end
@@ -1799,7 +1799,7 @@ label:\n"
 
     local color = widgets.colors.alpha and widgets.colors.rgba or demo.RgbaToArgb(widgets.colors.rgba)
     local ref_color = widgets.colors.alpha and widgets.colors.ref_color_rgba or demo.RgbaToArgb(widgets.colors.ref_color_rgba)
-    rv,color = r.ImGui_ColorPicker(ctx, 'MyColor##4', color, flags,
+    rv,color = r.ImGui_ColorPicker4(ctx, 'MyColor##4', color, flags,
       widgets.colors.ref_color and ref_color or nil)
     if rv then
       widgets.colors.rgba = widgets.colors.alpha and color or demo.ArgbToRgba(color)
@@ -1826,9 +1826,9 @@ label:\n"
        allows you to store colors as HSV and pass them to ColorEdit and ColorPicker as HSV. This comes with the \z
        added benefit that you can manipulate hue values with the picker even when saturation or value are zero.')
     r.ImGui_Text(ctx, 'Color widget with InputHSV:')
-    rv,widgets.colors.hsva = r.ImGui_ColorEdit(ctx, 'HSV shown as RGB##1', widgets.colors.hsva,
+    rv,widgets.colors.hsva = r.ImGui_ColorEdit4(ctx, 'HSV shown as RGB##1', widgets.colors.hsva,
       r.ImGui_ColorEditFlags_DisplayRGB() | r.ImGui_ColorEditFlags_InputHSV() | r.ImGui_ColorEditFlags_Float())
-    rv,widgets.colors.hsva = r.ImGui_ColorEdit(ctx, 'HSV shown as HSV##1', widgets.colors.hsva,
+    rv,widgets.colors.hsva = r.ImGui_ColorEdit4(ctx, 'HSV shown as HSV##1', widgets.colors.hsva,
       r.ImGui_ColorEditFlags_DisplayHSV() | r.ImGui_ColorEditFlags_InputHSV() | r.ImGui_ColorEditFlags_Float())
 
     local raw_hsv = widgets.colors.raw_hsv
@@ -2159,8 +2159,8 @@ label:\n"
       -- to allow your own widgets to use colors in their drag and drop interaction.
       -- Also see 'Demo->Widgets->Color/Picker Widgets->Palette' demo.
       demo.HelpMarker('You can drag from the color squares.')
-      rv,widgets.dragdrop.color1 = r.ImGui_ColorEdit(ctx, 'color 1', widgets.dragdrop.color1, r.ImGui_ColorEditFlags_NoAlpha())
-      rv,widgets.dragdrop.color2 = r.ImGui_ColorEdit(ctx, 'color 2', widgets.dragdrop.color2)
+      rv,widgets.dragdrop.color1 = r.ImGui_ColorEdit3(ctx, 'color 1', widgets.dragdrop.color1)
+      rv,widgets.dragdrop.color2 = r.ImGui_ColorEdit4(ctx, 'color 2', widgets.dragdrop.color2)
       r.ImGui_TreePop(ctx)
     end
 
@@ -2291,7 +2291,7 @@ label:\n"
       rv,d4a[1],d4a[2],d4a[3] = r.ImGui_InputDouble3(ctx, 'ITEM: InputDouble3', d4a[1], d4a[2], d4a[3])
     end
     if item_type == 8  then -- Testing multi-component items (IsItemXXX flags are reported merged)
-      rv,widgets.query.color = r.ImGui_ColorEdit(ctx, 'ITEM: ColorEdit', widgets.query.color)
+      rv,widgets.query.color = r.ImGui_ColorEdit4(ctx, 'ITEM: ColorEdit', widgets.query.color)
     end
     if item_type == 9  then -- Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
       rv = r.ImGui_MenuItem(ctx, 'ITEM: MenuItem')
@@ -3428,7 +3428,7 @@ function demo.ShowDemoWindowPopups()
 
       -- Testing behavior of widgets stacking their own regular popups over the modal.
       rv,popups.modal.item  = r.ImGui_Combo(ctx, 'Combo', popups.modal.item, 'aaaa\31bbbb\31cccc\31dddd\31eeee\31')
-      rv,popups.modal.color = r.ImGui_ColorEdit(ctx, 'color', popups.modal.color)
+      rv,popups.modal.color = r.ImGui_ColorEdit4(ctx, 'color', popups.modal.color)
 
       if r.ImGui_Button(ctx, 'Add another modal..') then
         r.ImGui_OpenPopup(ctx, 'Stacked 2')

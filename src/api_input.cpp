@@ -686,13 +686,13 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
   flags &= ~ImGuiColorEditFlags_HDR; // enforce 0.0..1.0 limits
 }
 
-DEFINE_API(bool, ColorEdit, (ImGui_Context*,ctx)
+DEFINE_API(bool, ColorEdit4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(rgba))(int*,API_RO(flags)),
 R"(Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xXXRRGGBB (XX is ignored and will not be modified).
 
 tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
 
-Default values: flags = 0)",
+Default values: flags = ImGui_ColorEditFlags_None)",
 {
   Context::check(ctx)->enterFrame();
 
@@ -710,7 +710,23 @@ Default values: flags = 0)",
   return ret;
 });
 
-DEFINE_API(bool, ColorPicker, (ImGui_Context*,ctx)
+DEFINE_API(bool, ColorEdit3, (ImGui_Context*,ctx)
+(const char*,label)(int*,API_RW(rgb))(int*,API_RO(flags)),
+R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.
+
+tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
+
+Default values: flags = ImGui_ColorEditFlags_None)",
+{
+  // unneeded, only to show Edit3 in the error message instead of Edit4
+  Context::check(ctx)->enterFrame();
+
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  flags |= ImGuiColorEditFlags_NoAlpha;
+  return API_ColorEdit4(ctx, label, API_RW(rgb), &flags);
+});
+
+DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(rgba))(int*,API_RO(flags))(int*,API_RO(refCol)),
 "Default values: flags = ImGui_ColorEditFlags_None, refCol = nil",
 {
@@ -734,6 +750,20 @@ DEFINE_API(bool, ColorPicker, (ImGui_Context*,ctx)
   *API_RW(rgba) = Color{col}.pack(alpha, *API_RW(rgba));
 
   return ret;
+});
+
+DEFINE_API(bool, ColorPicker3, (ImGui_Context*,ctx)
+(const char*,label)(int*,API_RW(rgb))(int*,API_RO(flags)),
+R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.
+
+Default values: flags = ImGui_ColorEditFlags_None)",
+{
+  // unneeded, only to show Picker3 in the error message instead of Picker4
+  Context::check(ctx)->enterFrame();
+
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  flags |= ImGuiColorEditFlags_NoAlpha;
+  return API_ColorPicker4(ctx, label, API_RW(rgb), &flags, nullptr);
 });
 
 DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)

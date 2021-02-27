@@ -73,9 +73,6 @@ NATIVE_ONLY = [
 RENAMES = {
   'bool ImGui::RadioButton(const char*, int*, int)' => 'RadioButtonEx',
   'ImU32 ImGui::GetColorU32(ImGuiCol, float)'       => 'GetColor',
-
-  'bool ImGui::ColorEdit4(const char*, float[4], ImGuiColorEditFlags)' => 'ColorEdit',
-  'bool ImGui::ColorPicker4(const char*, float[4], ImGuiColorEditFlags, const float*)' => 'ColorPicker',
 }
 
 # these functions were not ported 1:1
@@ -85,7 +82,7 @@ OVERRIDES = {
   'bool ImGui::SetDragDropPayload(const char*, const void*, size_t, ImGuiCond)'   => 'bool SetDragDropPayload(const char*, const char*, int*)',
 
   # float ref_col[] -> int* ref_col
-  'bool ImGui::ColorPicker4(const char*, float[4], ImGuiColorEditFlags, const float*)' => 'bool ColorPicker(const char*, int*, int*, int*)',
+  'bool ImGui::ColorPicker4(const char*, float[4], ImGuiColorEditFlags, const float*)' => 'bool ColorPicker4(const char*, int*, int*, int*)',
 
   # (float* array, int array_size) -> reaper_array*
   'void ImGui::PlotLines(const char*, const float*, int, int, const char*, float, float, ImVec2, int)' => 'void PlotLines(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
