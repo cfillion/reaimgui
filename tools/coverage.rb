@@ -24,6 +24,7 @@ NATIVE_ONLY = [
   'ImFont* ImGui::GetFont()',
   'void ImGui::PushFont(ImFont*)',
   'void ImGui::PopFont()',
+  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)',
 
   'void ImGui::ShowDemoWindow(bool*)',
   'void ImGui::ShowUserGuide()',
@@ -42,6 +43,9 @@ NATIVE_ONLY = [
   'bool ImGui::CollapsingHeader(const char*, ImGuiTreeNodeFlags)',
   'bool ImGui::TreeNode(const char*)',
   'bool ImGui::TreeNode(const char*, const char*, ...)',
+
+  'void ImDrawList::AddCallback(ImDrawCallback, void*)',
+  'void ImDrawList::AddDrawCmd()',
 
   # only const char* IDs
   'void ImGui::PushID(int)',
@@ -101,13 +105,14 @@ NATIVE_ONLY = [
 
 NATIVE_ONLY_CLASSES = %w[
   ImGuiIO ImFontAtlas ImFont ImDrawData ImDrawListSplitter ImGuiStoragePair
-  ImGuiStyle ImGuiInputTextCallbackData ImFontGlyphRangesBuilder ImGuiTextFilter
+  ImGuiStyle ImGuiInputTextCallbackData ImFontGlyphRangesBuilder
+  ImGuiTextBuffer ImGuiTextFilter
 ]
 
 # these functions were ported using another name (eg. overloads)
 RENAMES = {
-  'bool ImGui::RadioButton(const char*, int*, int)' => 'RadioButtonEx',
-  'ImU32 ImGui::GetColorU32(ImGuiCol, float)'       => 'GetColor',
+  'bool ImGui::RadioButton(const char*, int*, int)'         => 'RadioButtonEx',
+  'ImU32 ImGui::GetColorU32(ImGuiCol, float)'               => 'GetColor',
   'bool ImGui::TreeNodeEx(const char*, ImGuiTreeNodeFlags)' => 'TreeNode',
 }
 
@@ -116,19 +121,21 @@ OVERRIDES = {
   'void ImGui::ColorConvertHSVtoRGB(float, float, float, float&, float&, float&)' => 'int ColorConvertHSVtoRGB(double, double, double, double*)',
   'void ImGui::PushStyleVar(ImGuiStyleVar, const ImVec2&)'                        => 'void PushStyleVar(int, double, double*)',
   'bool ImGui::SetDragDropPayload(const char*, const void*, size_t, ImGuiCond)'   => 'bool SetDragDropPayload(const char*, const char*, int*)',
-  'bool ImGui::TreeNodeEx(const char*, ImGuiTreeNodeFlags, const char*, ...)' => 'bool TreeNodeEx(const char*, const char*, int*)',
+  'bool ImGui::TreeNodeEx(const char*, ImGuiTreeNodeFlags, const char*, ...)'     => 'bool TreeNodeEx(const char*, const char*, int*)',
 
   # float ref_col[] -> int* ref_col
   'bool ImGui::ColorPicker4(const char*, float[4], ImGuiColorEditFlags, const float*)' => 'bool ColorPicker4(const char*, int*, int*, int*)',
 
-  # (float* array, int array_size) -> reaper_array*
-  'void ImGui::PlotLines(const char*, const float*, int, int, const char*, float, float, ImVec2, int)' => 'void PlotLines(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
+  # (array, array_size) -> reaper_array*
+  'void ImGui::PlotLines(const char*, const float*, int, int, const char*, float, float, ImVec2, int)'     => 'void PlotLines(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
   'void ImGui::PlotHistogram(const char*, const float*, int, int, const char*, float, float, ImVec2, int)' => 'void PlotHistogram(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
+  'void ImDrawList::AddPolyline(const ImVec2*, int, ImU32, bool, float)' => 'void DrawList_AddPolyline(reaper_array*, int, bool, double)',
+  'void ImDrawList::AddConvexPolyFilled(const ImVec2*, int, ImU32)'      => 'void DrawList_AddConvexPolyFilled(reaper_array*, int, int)',
 
   # no input text callbacks
-  'bool ImGui::InputText(const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)' => 'bool InputText(const char*, char*, int, int*)',
+  'bool ImGui::InputText(const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)'                         => 'bool InputText(const char*, char*, int, int*)',
   'bool ImGui::InputTextMultiline(const char*, char*, size_t, const ImVec2&, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)' => 'bool InputTextMultiline(const char*, char*, int, double*, double*, int*)',
-  'bool ImGui::InputTextWithHint(const char*, const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)' => 'bool InputTextWithHint(const char*, const char*, char*, int, int*)',
+  'bool ImGui::InputTextWithHint(const char*, const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)'    => 'bool InputTextWithHint(const char*, const char*, char*, int, int*)',
 
   # const char* (null-terminated) -> char* (\31-terminated)
   'bool ImGui::Combo(const char*, int*, const char*, int)' => 'bool Combo(const char*, int*, char*, int*)',
@@ -137,7 +144,7 @@ OVERRIDES = {
   'bool ImGui::ListBox(const char*, int*, const char* const, int, int)' => 'bool ListBox(const char*, int*, char*, int*)',
 
   # no text_end argument
-  'ImVec2 ImGui::CalcTextSize(const char*, const char*, bool, float)' => 'void CalcTextSize(const char*, double*, double*, bool*, double*)',
+  'ImVec2 ImGui::CalcTextSize(const char*, const char*, bool, float)'        => 'void CalcTextSize(const char*, double*, double*, bool*, double*)',
   'void ImDrawList::AddText(const ImVec2&, ImU32, const char*, const char*)' => 'void DrawList_AddText(double, double, int, const char*)',
 }
 
@@ -200,6 +207,7 @@ class Function < Struct.new :type, :name, :args, :namespace, :match
     if normal.args.last == '...'
       fmt = normal.args.find { _1.name == 'fmt' }
       fmt.name = 'text'
+      normal.args.pop
     end
 
     if normal.type == 'ImVec2'
