@@ -5,6 +5,7 @@
 #include "context.hpp"
 
 #include <boost/preprocessor.hpp>
+#include <boost/type_index.hpp>
 #include <cstring> // strlen
 
 using ImGui_Context = Context; // user-facing alias
@@ -67,5 +68,23 @@ inline void nullIfEmpty(const char *&string)
   if(string && !strlen(string))
     string = nullptr;
 }
+
+template<typename T>
+inline void assertValid(const T *ptr)
+{
+  if constexpr (std::is_base_of_v<Resource, T>) {
+    if(Resource::exists(ptr))
+      return;
+  }
+  else if(ptr)
+    return;
+
+  const std::string &typeName { boost::typeindex::type_id<T>().pretty_name() };
+  char message[255];
+  snprintf(message, sizeof(message), "expected %s*, got %p", typeName.c_str(), ptr);
+  throw reascript_error { message };
+}
+
+// #define FRAME_GUARD assertValid(ctx); ctx->enterFrame()
 
 #endif

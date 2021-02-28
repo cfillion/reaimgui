@@ -226,6 +226,7 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
 "Default values: step = nil, format = nil, step_fast = nil, format = '%.3f', flags = ImGui_InputTextFlags_None",
 {
   Context::check(ctx)->enterFrame();
+  assertValid(values);
   nullIfEmpty(API_RO(format));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
@@ -471,6 +472,7 @@ DEFINE_API(bool, DragDoubleN, (ImGui_Context*,ctx)
 "Default values: speed = 1.0, min = nil, max = nil, format = '%.3f', flags = ImGui_SliderFlags_None",
 {
   Context::check(ctx)->enterFrame();
+  assertValid(values);
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
@@ -636,6 +638,7 @@ DEFINE_API(bool, SliderDoubleN, (ImGui_Context*,ctx)
 "Default values: format = '%.3f', flags = ImGui_SliderFlags_None",
 {
   Context::check(ctx)->enterFrame();
+  assertValid(values);
   nullIfEmpty(API_RO(format));
 
   ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };

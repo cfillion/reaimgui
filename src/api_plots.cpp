@@ -17,6 +17,7 @@ DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
 "Default values: values_offset = 0, overlay_text = nil, scale_min = 0.0, scale_max = 0.0, graph_size_w = 0.0, graph_size_h = 0.0",
 {
   Context::check(ctx)->enterFrame();
+  assertValid(values);
   nullIfEmpty(API_RO(overlay_text));
 
   ImGui::PlotLines(label, &getArrayValue, values->data, values->size,
@@ -33,6 +34,7 @@ DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
 "Default values: values_offset = 0, overlay_text = nil, scale_min = FLT_MAX, scale_max = FLT_MAX, graph_size_w = 0.0, graph_size_h = 0.0",
 {
   Context::check(ctx)->enterFrame();
+  assertValid(values);
   nullIfEmpty(API_RO(overlay_text));
 
   ImGui::PlotHistogram(label, &getArrayValue, values->data, values->size,

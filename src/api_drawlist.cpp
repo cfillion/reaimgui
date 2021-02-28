@@ -200,6 +200,8 @@ DEFINE_API(void, DrawList_AddText, (ImGui_DrawList*,draw_list)
 
 static std::vector<ImVec2> makePointsArray(const reaper_array *points)
 {
+  assertValid(points);
+
   if(points->size % 2)
     throw reascript_error { "an odd amount of points was provided (expected x,y pairs)" };
 
