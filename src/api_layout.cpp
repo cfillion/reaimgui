@@ -8,13 +8,13 @@ DEFINE_API(void, Separator, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, SameLine, (ImGui_Context*,ctx)
-(double*,API_RO(offsetFromStartX))(double*,API_RO(spacing)),
+(double*,API_RO(offset_from_start_x))(double*,API_RO(spacing)),
 R"(Call between widgets or groups to layout them horizontally. X position given in window coordinates.
 
-Default values: offsetFromStartX = 0.0, spacing = -1.0.)",
+Default values: offset_from_start_x = 0.0, spacing = -1.0.)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::SameLine(valueOr(API_RO(offsetFromStartX), 0.0),
+  ImGui::SameLine(valueOr(API_RO(offset_from_start_x), 0.0),
     valueOr(API_RO(spacing), -1.0));
 });
 
@@ -32,27 +32,29 @@ DEFINE_API(void, Spacing, (ImGui_Context*,ctx),
   ImGui::Spacing();
 });
 
-DEFINE_API(void, Dummy, (ImGui_Context*,ctx)(double,w)(double,h),
+DEFINE_API(void, Dummy, (ImGui_Context*,ctx)(double,size_w)(double,size_h),
 "Add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::Dummy(ImVec2(w, h));
+  ImGui::Dummy(ImVec2(size_w, size_h));
 });
 
-DEFINE_API(void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indentWidth)),
-R"(Move content position toward the right, by 'indentWidth', or style.IndentSpacing if 'indentWidth' <= 0
+DEFINE_API(void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
+R"(Move content position toward the right, by 'indent_w', or style.IndentSpacing if 'indent_w' <= 0
 
-Default values: indentWidth = 0.0)",
+Default values: indent_w = 0.0)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::Indent(valueOr(API_RO(indentWidth), 0.0));
+  ImGui::Indent(valueOr(API_RO(indent_w), 0.0));
 });
 
-DEFINE_API(void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indentWidth)),
-"Move content position back to the left, by 'indentWidth', or style.IndentSpacing if 'indentWidth' <= 0",
+DEFINE_API(void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
+R"(Move content position back to the left, by 'indent_w', or style.IndentSpacing if 'indent_w' <= 0
+
+Default values: indent_w = 0.0)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::Unindent(valueOr(API_RO(indentWidth), 0.0));
+  ImGui::Unindent(valueOr(API_RO(indent_w), 0.0));
 });
 
 DEFINE_API(void, BeginGroup, (ImGui_Context*,ctx),
@@ -96,11 +98,11 @@ DEFINE_API(double, GetCursorPosY, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, SetCursorPos, (ImGui_Context*,ctx)
-(double,x)(double,y),
+(double,local_pos_x)(double,local_pos_y),
 "Cursor position in window",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::SetCursorPos(ImVec2(x, y));
+  ImGui::SetCursorPos(ImVec2(local_pos_x, local_pos_y));
 });
 
 DEFINE_API(void, SetCursorPosX, (ImGui_Context*,ctx)
@@ -112,11 +114,11 @@ DEFINE_API(void, SetCursorPosX, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(void, SetCursorPosY, (ImGui_Context*,ctx)
-(double,local_x),
+(double,local_y),
 "Cursor Y position in window",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::SetCursorPosY(local_x);
+  ImGui::SetCursorPosY(local_y);
 });
 
 DEFINE_API(void, GetCursorStartPos, (ImGui_Context*,ctx)
@@ -140,11 +142,11 @@ DEFINE_API(void, GetCursorScreenPos, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(void, SetCursorScreenPos, (ImGui_Context*,ctx)
-(double,x)(double,y),
+(double,pos_x)(double,pos_y),
 "Cursor position in absolute screen coordinates [0..io.DisplaySize]",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::SetCursorScreenPos(ImVec2(x, y));
+  ImGui::SetCursorScreenPos(ImVec2(pos_x, pos_y));
 });
 
 DEFINE_API(void, AlignTextToFramePadding, (ImGui_Context*,ctx),

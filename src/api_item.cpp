@@ -170,11 +170,11 @@ Default values: offset = 0)",
 });
 
 DEFINE_API(void, PushAllowKeyboardFocus, (ImGui_Context*,ctx)
-(bool,allowKeyboardFocus),
+(bool,allow_keyboard_focus),
 "Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it for certain widgets",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::PushAllowKeyboardFocus(allowKeyboardFocus);
+  ImGui::PushAllowKeyboardFocus(allow_keyboard_focus);
 });
 
 DEFINE_API(void, PopAllowKeyboardFocus, (ImGui_Context*,ctx),
@@ -201,13 +201,13 @@ DEFINE_API(void, PopButtonRepeat, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, PushTextWrapPos, (ImGui_Context*,ctx)
-(double*,API_RO(wrapLocalPosX)),
+(double*,API_RO(wrap_local_pos_x)),
 R"(Push word-wrapping position for Text*() commands. < 0.0f: no wrapping; 0.0f: wrap to end of window (or column); > 0.0f: wrap at 'wrap_pos_x' position in window local space.
 
-Default values: wrapLocalPosX = 0.0)",
+Default values: wrap_local_pos_x = 0.0)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::PushTextWrapPos(valueOr(API_RO(wrapLocalPosX), 0.0));
+  ImGui::PushTextWrapPos(valueOr(API_RO(wrap_local_pos_x), 0.0));
 });
 
 DEFINE_API(void, PopTextWrapPos, (ImGui_Context*,ctx),
@@ -219,11 +219,11 @@ DEFINE_API(void, PopTextWrapPos, (ImGui_Context*,ctx),
 
 // Parameters stacks (current window)
 DEFINE_API(void, PushItemWidth, (ImGui_Context*,ctx)
-(double,itemWidth),
+(double,item_width),
 R"(Push width of items for common large "item+label" widgets. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side). 0.0f = default to ~2/3 of windows width,)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::PushItemWidth(itemWidth);
+  ImGui::PushItemWidth(item_width);
 });
 
 DEFINE_API(void, PopItemWidth, (ImGui_Context*,ctx),
@@ -234,20 +234,20 @@ DEFINE_API(void, PopItemWidth, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, SetNextItemOpen, (ImGui_Context*,ctx)
-(bool,isOpen)(int*,API_RO(cond)),
+(bool,is_open)(int*,API_RO(cond)),
 R"(Set next TreeNode/CollapsingHeader open state. Can also be done with the ImGui_TreeNodeFlags_DefaultOpen flag.
 
-'cond' is ImGui_Cond_Always by default.)",
+Default values: cond = ImGui_Cond_Always.)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::SetNextItemOpen(isOpen, valueOr(API_RO(cond), ImGuiCond_Always));
+  ImGui::SetNextItemOpen(is_open, valueOr(API_RO(cond), ImGuiCond_Always));
 });
 
 DEFINE_API(void, SetNextItemWidth, (ImGui_Context*,ctx)
-(double,itemWidth),
+(double,item_width),
 R"(Set width of the _next_ common large "item+label" widget. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side))",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::SetNextItemWidth(itemWidth);
+  ImGui::SetNextItemWidth(item_width);
 });
 // IMGUI_API float         CalcItemWidth();                                                // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.

@@ -58,35 +58,35 @@ DEFINE_API(ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
 
 DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
-(int,color_rgba)(double*,API_RO(thickness)),
+(int,col_rgba)(double*,API_RO(thickness)),
 "Default values: thickness = 1.0",
 {
   ImDrawList *drawList { ImGui_DrawList::get(draw_list) };
   drawList->AddLine(ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
-    Color::rgba2abgr(color_rgba), valueOr(API_RO(thickness), 1.0));
+    Color::rgba2abgr(col_rgba), valueOr(API_RO(thickness), 1.0));
 });
 
 DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
-(double,from_x)(double,from_y)(double,to_x)(double,to_y)(int,color_rgba)
+(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
 (double*,API_RO(rounding))(int*,API_RO(rounding_corners))
 (double*,API_RO(thickness)),
 "Default values: rounding = 0.0, rounding_corners = ImGui_DrawCornerFlags_All, thickness = 1.0",
 {
   ImDrawList *drawList { ImGui_DrawList::get(draw_list) };
-  drawList->AddRect(ImVec2(from_x, from_y), ImVec2(to_x, to_y),
-    Color::rgba2abgr(color_rgba), valueOr(API_RO(rounding), 0.0),
+  drawList->AddRect(ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
+    Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.0),
     valueOr(API_RO(rounding_corners), ImDrawCornerFlags_All),
     valueOr(API_RO(thickness), 1.0));
 });
 
 DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
-(double,from_x)(double,from_y)(double,to_x)(double,to_y)(int,color_rgba)
+(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
 (double*,API_RO(rounding))(int*,API_RO(rounding_corners)),
-"Default values: rounding = 0.0, rounding_corners = ImGui_DrawCornerFlags_All, thickness = 1.0",
+"Default values: rounding = 0.0, rounding_corners = ImGui_DrawCornerFlags_All",
 {
   ImDrawList *drawList { ImGui_DrawList::get(draw_list) };
-  drawList->AddRectFilled(ImVec2(from_x, from_y), ImVec2(to_x, to_y),
-    Color::rgba2abgr(color_rgba), valueOr(API_RO(rounding), 0.0),
+  drawList->AddRectFilled(ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
+    Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.0),
     valueOr(API_RO(rounding_corners), ImDrawCornerFlags_All));
 });
 
@@ -103,11 +103,11 @@ DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
     // IMGUI_API void  AddNgonFilled(const ImVec2& center, float radius, ImU32 col, int num_segments);
 
 DEFINE_API(void, DrawList_AddText, (ImGui_DrawList*,draw_list)
-(double,x)(double,y)(int,color_rgba)(const char*,text),
+(double,x)(double,y)(int,col_rgba)(const char*,text),
 "",
 {
   ImDrawList *drawList { ImGui_DrawList::get(draw_list) };
-  drawList->AddText(ImVec2(x, y), Color::rgba2abgr(color_rgba), text);
+  drawList->AddText(ImVec2(x, y), Color::rgba2abgr(col_rgba), text);
 });
 
     // IMGUI_API void  AddText(const ImFont* font, float font_size, const ImVec2& pos, ImU32 col, const char* text_begin, const char* text_end = NULL, float wrap_width = 0.0f, const ImVec4* cpu_fine_clip_rect = NULL);

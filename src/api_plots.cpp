@@ -10,33 +10,33 @@ static float getArrayValue(void *data, const int index)
 
 // Widgets: Data Plotting
 DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
-(const char*,label)(reaper_array*,values)(int*,API_RO(valuesOffset))
-(const char*,API_RO(overlayText))
-(double*,API_RO(scaleMin))(double*,API_RO(scaleMax))
-(double*,API_RO(graphWidth))(double*,API_RO(graphHeight)),
-"",
+(const char*,label)(reaper_array*,values)(int*,API_RO(values_offset))
+(const char*,API_RO(overlay_text))
+(double*,API_RO(scale_min))(double*,API_RO(scale_max))
+(double*,API_RO(graph_size_w))(double*,API_RO(graph_size_h)),
+"Default values: values_offset = 0, overlay_text = nil, scale_min = 0.0, scale_max = 0.0, graph_size_w = 0.0, graph_size_h = 0.0",
 {
   Context::check(ctx)->enterFrame();
-  nullIfEmpty(API_RO(overlayText));
+  nullIfEmpty(API_RO(overlay_text));
 
   ImGui::PlotLines(label, &getArrayValue, values->data, values->size,
-    valueOr(API_RO(valuesOffset), 0), API_RO(overlayText),
-    valueOr(API_RO(scaleMin), FLT_MAX), valueOr(API_RO(scaleMax), FLT_MAX),
-    ImVec2(valueOr(API_RO(graphWidth), 0.0), valueOr(API_RO(graphHeight), 0.0)));
+    valueOr(API_RO(values_offset), 0), API_RO(overlay_text),
+    valueOr(API_RO(scale_min), FLT_MAX), valueOr(API_RO(scale_max), FLT_MAX),
+    ImVec2(valueOr(API_RO(graph_size_w), 0.0), valueOr(API_RO(graph_size_h), 0.0)));
 });
 
 DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
-(const char*,label)(reaper_array*,values)(int*,API_RO(valuesOffset))
-(const char*,API_RO(overlayText))
-(double*,API_RO(scaleMin))(double*,API_RO(scaleMax))
-(double*,API_RO(graphWidth))(double*,API_RO(graphHeight)),
-"",
+(const char*,label)(reaper_array*,values)(int*,API_RO(values_offset))
+(const char*,API_RO(overlay_text))
+(double*,API_RO(scale_min))(double*,API_RO(scale_max))
+(double*,API_RO(graph_size_w))(double*,API_RO(graph_size_h)),
+"Default values: values_offset = 0, overlay_text = nil, scale_min = FLT_MAX, scale_max = FLT_MAX, graph_size_w = 0.0, graph_size_h = 0.0",
 {
   Context::check(ctx)->enterFrame();
-  nullIfEmpty(API_RO(overlayText));
+  nullIfEmpty(API_RO(overlay_text));
 
   ImGui::PlotHistogram(label, &getArrayValue, values->data, values->size,
-    valueOr(API_RO(valuesOffset), 0), API_RO(overlayText),
-    valueOr(API_RO(scaleMin), FLT_MAX), valueOr(API_RO(scaleMax), FLT_MAX),
-    ImVec2(valueOr(API_RO(graphWidth), 0.0), valueOr(API_RO(graphHeight), 0.0)));
+    valueOr(API_RO(values_offset), 0), API_RO(overlay_text),
+    valueOr(API_RO(scale_min), FLT_MAX), valueOr(API_RO(scale_max), FLT_MAX),
+    ImVec2(valueOr(API_RO(graph_size_w), 0.0), valueOr(API_RO(graph_size_h), 0.0)));
 });

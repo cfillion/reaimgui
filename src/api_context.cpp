@@ -48,19 +48,23 @@ R"(Return whether the user has requested closing the OS window since the previou
 });
 
 DEFINE_API(void, ShowAboutWindow, (ImGui_Context*,ctx)
-(bool*,API_RWO(open)),
-"Create About window. Display Dear ImGui version, credits and build/system information.",
+(bool*,API_RWO(p_open)),
+R"(Create About window. Display Dear ImGui version, credits and build/system information.
+
+Default values: p_open = nil)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::ShowAboutWindow(API_RWO(open));
+  ImGui::ShowAboutWindow(API_RWO(p_open));
 });
 
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
-(bool*,API_RWO(open)),
-"Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc.",
+(bool*,API_RWO(p_open)),
+R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc.
+
+Default values: p_open = nil)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::ShowMetricsWindow(API_RWO(open));
+  ImGui::ShowMetricsWindow(API_RWO(p_open));
 });
 
 DEFINE_API(double, GetTime, (ImGui_Context*,ctx),
@@ -108,7 +112,7 @@ DEFINE_API(bool, IsMouseClicked, (ImGui_Context*,ctx)
 (int,button)(bool*,API_RO(repeat)),
 R"(Did mouse button clicked? (went from !Down to Down)
 
-Defaut values: repeat=false")",
+Default values: repeat = false)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::IsMouseClicked(button, valueOr(API_RO(repeat), false));
@@ -142,28 +146,29 @@ DEFINE_API(bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, IsMouseHoveringRect, (ImGui_Context*,ctx)
-(double,left)(double,top)(double,right)(double,bottom)(bool*,API_RO(clip)),
+(double,r_min_x)(double,r_min_y)(double,r_max_x)(double,r_max_y)
+(bool*,API_RO(clip)),
 R"(Is mouse hovering given bounding rect (in screen space). clipped by current clipping settings, but disregarding of other consideration of focus/window ordering/popup-block.
 
 Default values: clip = true)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::IsMouseHoveringRect(
-    ImVec2(left, top), ImVec2(right, bottom),
+    ImVec2(r_min_x, r_min_y), ImVec2(r_max_x, r_max_y),
     valueOr(API_RO(clip), true));
 });
 
 DEFINE_API(bool, IsMousePosValid, (ImGui_Context*,ctx)
-(double*,API_RO(x))(double*,API_RO(y)),
-"",
+(double*,API_RO(mouse_pos_x))(double*,API_RO(mouse_pos_y)),
+"Default values: mouse_pos_x = nil, mouse_pos_y = nil",
 {
   Context::check(ctx)->enterFrame();
 
   ImVec2 pos;
-  const bool customPos { API_RO(x) && API_RO(y) };
+  const bool customPos { API_RO(mouse_pos_x) && API_RO(mouse_pos_y) };
   if(customPos) {
-    pos.x = *API_RO(x);
-    pos.y = *API_RO(y);
+    pos.x = *API_RO(mouse_pos_x);
+    pos.y = *API_RO(mouse_pos_y);
   }
 
   return ImGui::IsMousePosValid(customPos ? &pos : nullptr);

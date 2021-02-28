@@ -1,9 +1,9 @@
 #include "api_helper.hpp"
 
 DEFINE_API(bool, BeginTable, (ImGui_Context*,ctx)
-(const char*,strId)(int, column)(int*,API_RO(flags))
-(double*,API_RO(outerWidth))(double*,API_RO(outerHeight))
-(double*,API_RO(innerWidth)),
+(const char*,str_id)(int, column)(int*,API_RO(flags))
+(double*,API_RO(outer_size_w))(double*,API_RO(outer_size_h))
+(double*,API_RO(inner_width)),
 R"([BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!
 - Full-featured replacement for old Columns API.
 - See Demo->Tables for demo code.
@@ -27,17 +27,19 @@ The typical call flow is:
                          TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
        TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
        --------------------------------------------------------------------------------------------------------
-- 5. Call EndTable())",
+- 5. Call EndTable()
+
+Default values: flags = ImGui_TableFlags_None, outer_size_w = 0.0, outer_size_h = 0.0, inner_width = 0.0)",
 {
   Context::check(ctx)->enterFrame();
 
-  return ImGui::BeginTable(strId, column,
+  return ImGui::BeginTable(str_id, column,
     valueOr(API_RO(flags), 0),
     ImVec2(
-      valueOr(API_RO(outerWidth), 0.0),
-      valueOr(API_RO(outerHeight), 0.0)
+      valueOr(API_RO(outer_size_w), 0.0),
+      valueOr(API_RO(outer_size_h), 0.0)
     ),
-    valueOr(API_RO(innerWidth), 0.0)
+    valueOr(API_RO(inner_width), 0.0)
   );
 });
 
@@ -49,14 +51,14 @@ DEFINE_API(void, EndTable, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, TableNextRow, (ImGui_Context*,ctx)
-(int*,API_RO(rowFlags))(double*,API_RO(minRowHeight)),
+(int*,API_RO(row_flags))(double*,API_RO(min_row_height)),
 R"(Append into the first cell of a new row.
 
-Default values: rowFlags = ImGui_TableRowFlags_None, minRowHeight = 0.0)",
+Default values: row_flags = ImGui_TableRowFlags_None, min_row_height = 0.0)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::TableNextRow(valueOr(API_RO(rowFlags), ImGuiTableRowFlags_None),
-    valueOr(API_RO(minRowHeight), 0.0));
+  ImGui::TableNextRow(valueOr(API_RO(row_flags), ImGuiTableRowFlags_None),
+    valueOr(API_RO(min_row_height), 0.0));
 });
 
 DEFINE_API(bool, TableNextColumn, (ImGui_Context*,ctx),
@@ -211,22 +213,3 @@ Default values: column_n = -1)",
   ImGui::TableSetBgColor(target,
     Color::rgba2abgr(color_rgba), valueOr(API_RO(column_n), -1));
 });
-
-    // // Legacy Columns API (2020: prefer using Tables!)
-    // // - You can also use SameLine(pos_x) to mimic simplified columns.
-    // IMGUI_API void          Columns(int count = 1, const char* id = NULL, bool border = true);
-    // IMGUI_API void          NextColumn();                                                       // next column, defaults to current row or next row if the current row is finished
-    // IMGUI_API int           GetColumnIndex();                                                   // get current column index
-    // IMGUI_API float         GetColumnWidth(int column_index = -1);                              // get column width (in pixels). pass -1 to use current column
-    // IMGUI_API void          SetColumnWidth(int column_index, float width);                      // set column width (in pixels). pass -1 to use current column
-    // IMGUI_API float         GetColumnOffset(int column_index = -1);                             // get position of column line (in pixels, from the left side of the contents region). pass -1 to use current column, otherwise 0..GetColumnsCount() inclusive. column 0 is typically 0.0f
-    // IMGUI_API void          SetColumnOffset(int column_index, float offset_x);                  // set position of column line (in pixels, from the left side of the contents region). pass -1 to use current column
-    // IMGUI_API int           GetColumnsCount();
-    //
-    // // Tab Bars, Tabs
-    // IMGUI_API bool          BeginTabBar(const char* str_id, ImGuiTabBarFlags flags = 0);        // create and append into a TabBar
-    // IMGUI_API void          EndTabBar();                                                        // only call EndTabBar() if BeginTabBar() returns true!
-    // IMGUI_API bool          BeginTabItem(const char* label, bool* p_open = NULL, ImGuiTabItemFlags flags = 0); // create a Tab. Returns true if the Tab is selected.
-    // IMGUI_API void          EndTabItem();                                                       // only call EndTabItem() if BeginTabItem() returns true!
-    // IMGUI_API bool          TabItemButton(const char* label, ImGuiTabItemFlags flags = 0);      // create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
-    // IMGUI_API void          SetTabItemClosed(const char* tab_or_docked_window_label);           // notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.

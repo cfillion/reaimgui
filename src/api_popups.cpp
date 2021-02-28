@@ -24,7 +24,7 @@ DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
 R"(Block every interactions behind the window, cannot be closed by user, add a dimming background, has a title bar. Return true if the modal is open, and you can start outputting to it. See ImGui_BeginPopup.
 
-Default values: flags = ImGui_WindowFlags_None)",
+Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::BeginPopupModal(name, API_RWO(p_open),
@@ -39,16 +39,16 @@ DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
-(const char*,str_id)(int*,API_RO(flags)),
+(const char*,str_id)(int*,API_RO(popup_flags)),
 R"(Set popup state to open (don't call every frame!). ImGuiPopupFlags are available for opening options.
 
 If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
 Use ImGuiPopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
 
-Default values: flags = ImGui_PopupFlags_None)",
+Default values: popup_flags = ImGui_PopupFlags_None)",
 {
   Context::check(ctx)->enterFrame();
-  ImGui::OpenPopup(str_id, valueOr(API_RO(flags), ImGuiPopupFlags_None));
+  ImGui::OpenPopup(str_id, valueOr(API_RO(popup_flags), ImGuiPopupFlags_None));
 });
 
 DEFINE_API(void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
@@ -80,7 +80,9 @@ R"(This is a helper to handle the simplest case of associating one named popup t
 Open+begin popup when clicked on last item. if you can pass a NULL str_id only if the previous item had an id. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here.
 
 - IMPORTANT: Notice that BeginPopupContextXXX takes ImGuiPopupFlags just like OpenPopup() and unlike BeginPopup().
-- IMPORTANT: we exceptionally default their flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGuiPopupFlags_MouseButtonRight.)",
+- IMPORTANT: we exceptionally default their flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGuiPopupFlags_MouseButtonRight.
+
+Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 {
   Context::check(ctx)->enterFrame();
   nullIfEmpty(API_RO(str_id));

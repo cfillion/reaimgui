@@ -56,7 +56,7 @@ DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
 DEFINE_API(void, CalcTextSize, (ImGui_Context*,ctx)
 (const char*,text)(double*,API_W(w))(double*,API_W(h))
 (bool*,API_RO(hide_text_after_double_hash))(double*,API_RO(wrap_width)),
-"Default values: hide_text_after_double_hash = false, float wrap_width = -1.0",
+"Default values: hide_text_after_double_hash = false, wrap_width = -1.0",
 {
   Context::check(ctx)->enterFrame();
   const ImVec2 &size {
@@ -70,7 +70,9 @@ DEFINE_API(void, CalcTextSize, (ImGui_Context*,ctx)
 
 DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,val1)(double*,API_RO(val2)),
-"See ImGui_StyleVar_* for possible values of 'var_idx'.",
+R"(See ImGui_StyleVar_* for possible values of 'var_idx'.
+
+Default values: val2 = nil)",
 {
   Context::check(ctx)->enterFrame();
 
@@ -156,14 +158,14 @@ DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 // IMGUI_API ImVec2        GetFontTexUvWhitePixel();                                       // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
 
 DEFINE_API(int, GetColor, (ImGui_Context*,ctx)
-(int,col_idx)(double*,API_RO(alpha_mul)),
+(int,idx)(double*,API_RO(alpha_mul)),
 R"(Retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value (RGBA).
 
 Default values: alpha_mul = 1.0)",
 {
   Context::check(ctx)->enterFrame();
-  IM_ASSERT(col_idx >= 0 && col_idx < ImGuiCol_COUNT);
-  return Color::abgr2rgba(ImGui::GetColorU32(col_idx, valueOr(API_RO(alpha_mul), 1.0)));
+  IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
+  return Color::abgr2rgba(ImGui::GetColorU32(idx, valueOr(API_RO(alpha_mul), 1.0)));
 });
 
 // IMGUI_API ImU32         GetColorU32(ImGuiCol idx, float alpha_mul = 1.0f);              // 
@@ -178,12 +180,12 @@ DEFINE_API(const char*, GetStyleColorName, (int,col_idx),
 });
 
 DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
-(int,col_idx)(int,rgba),
+(int,idx)(int,col_rgba),
 "Modify a style color. always use this if you modify the style after NewFrame().",
 {
   Context::check(ctx)->enterFrame();
-  IM_ASSERT(col_idx >= 0 && col_idx < ImGuiCol_COUNT);
-  ImGui::PushStyleColor(col_idx, ImVec4{Color(rgba)});
+  IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
+  ImGui::PushStyleColor(idx, ImVec4{Color(col_rgba)});
 });
 
 DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
@@ -196,7 +198,9 @@ DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
 
 DEFINE_API(int, ColorConvertHSVtoRGB,
 (double,h)(double,s)(double,v)(double*,API_RO(alpha)),
-"Return 0x00RRGGBB or, if alpha is provided, 0xRRGGBBAA.",
+R"(Return 0x00RRGGBB or, if alpha is provided, 0xRRGGBBAA.
+
+Default values: alpha = nil)",
 {
   const bool alpha { API_RO(alpha) != nullptr };
   ImVec4 rgba;

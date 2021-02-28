@@ -14,7 +14,9 @@ static bool isUserType(const char *type)
 DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)(int*,API_RO(flags)),
 R"(Call when the current item is active. If this return true, you can call SetDragDropPayload() + EndDragDropSource().
 
-If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).)",
+If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).
+
+Default values: flags = ImGui_DragDropFlags_None)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::BeginDragDropSource(valueOr(API_RO(flags), 0));

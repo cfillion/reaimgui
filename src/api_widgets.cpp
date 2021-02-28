@@ -9,12 +9,12 @@ DEFINE_API(void, Text, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(void, TextColored, (ImGui_Context*,ctx)
-(int,colorRGBA)(const char*,text),
+(int,col_rgba)(const char*,text),
 "Shortcut for PushStyleColor(ImGuiCol_Text, color); Text(text); PopStyleColor();",
 {
   Context::check(ctx)->enterFrame();
 
-  ImVec4 color { Color(colorRGBA) };
+  ImVec4 color { Color(col_rgba) };
   ImGui::PushStyleColor(ImGuiCol_Text, color);
   ImGui::TextUnformatted(text);
   ImGui::PopStyleColor();
@@ -59,14 +59,16 @@ DEFINE_API(void, BulletText, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)
-(const char*,label)(double*,API_RO(width))(double*,API_RO(height)),
+(const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
 R"(Most widgets return true when the value has been changed or when pressed/selected
-You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.)",
+You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.
+
+Default values: size_w = 0.0, size_h = 0.0)",
 {
   Context::check(ctx)->enterFrame();
 
   return ImGui::Button(label,
-    ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
+    ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)));
 });
 
 DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
@@ -78,13 +80,13 @@ DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, InvisibleButton, (ImGui_Context*,ctx)
-(const char*,str_id)(double,w)(double,h)(int*,API_RO(flags)),
+(const char*,str_id)(double,size_w)(double,size_h)(int*,API_RO(flags)),
 R"(Flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).
 
 Default values: flags = ImGui_ButtonFlags_None)",
 {
   Context::check(ctx)->enterFrame();
-  return ImGui::InvisibleButton(str_id, ImVec2(w, h),
+  return ImGui::InvisibleButton(str_id, ImVec2(size_w, size_h),
     valueOr(API_RO(flags), ImGuiButtonFlags_None));
 });
 
@@ -100,21 +102,21 @@ DEFINE_API(bool, ArrowButton, (ImGui_Context*,ctx)
 // IMGUI_API bool          ImageButton(ImTextureID user_texture_id, const ImVec2& size, const ImVec2& uv0 = ImVec2(0, 0),  const ImVec2& uv1 = ImVec2(1,1), int frame_padding = -1, const ImVec4& bg_col = ImVec4(0,0,0,0), const ImVec4& tint_col = ImVec4(1,1,1,1));    // <0 frame_padding uses default frame padding settings. 0 for no padding
 
 DEFINE_API(bool, Checkbox, (ImGui_Context*,ctx)
-(const char*, label)(bool*, API_RW(value)),
+(const char*, label)(bool*, API_RW(v)),
 "",
 {
   Context::check(ctx)->enterFrame();
-  if(!API_RW(value))
+  if(!API_RW(v))
     return false;
-  return ImGui::Checkbox(label, API_RW(value));
+  return ImGui::Checkbox(label, API_RW(v));
 });
 
 DEFINE_API(bool, CheckboxFlags, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(flags))(int,flagsValue), // unsigned int* is broken in REAPER
+(const char*,label)(int*,API_RW(flags))(int,flags_value),
 "",
 {
   Context::check(ctx)->enterFrame();
-  return ImGui::CheckboxFlags(label, API_RW(flags), flagsValue);
+  return ImGui::CheckboxFlags(label, API_RW(flags), flags_value);
 });
 
 DEFINE_API(bool, RadioButton, (ImGui_Context*,ctx)
@@ -126,24 +128,24 @@ R"(Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })",
 });
 
 DEFINE_API(bool, RadioButtonEx, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(value))(int,valueButton),
+(const char*,label)(int*,API_RW(v))(int,v_button),
 "Shortcut to handle RadioButton's example pattern when value is an integer",
 {
   Context::check(ctx)->enterFrame();
-  return ImGui::RadioButton(label, API_RW(value), valueButton);
+  return ImGui::RadioButton(label, API_RW(v), v_button);
 });
 
 DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
 (double,fraction)
-(double*,API_RO(width))(double*,API_RO(height))
+(double*,API_RO(size_arg_w))(double*,API_RO(size_arg_h))
 (const char*,API_RO(overlay)),
-"Default values: width = -FLT_MIN, height = 0.0, overlay = nil",
+"Default values: size_arg_w = -FLT_MIN, size_arg_h = 0.0, overlay = nil",
 {
   Context::check(ctx)->enterFrame();
   nullIfEmpty(API_RO(overlay));
 
   ImGui::ProgressBar(fraction,
-    ImVec2(valueOr(API_RO(width), -FLT_MIN), valueOr(API_RO(height), 0.0)),
+    ImVec2(valueOr(API_RO(size_arg_w), -FLT_MIN), valueOr(API_RO(size_arg_h), 0.0)),
     API_RO(overlay));
 });
 
@@ -155,25 +157,27 @@ DEFINE_API(void, Bullet, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_RWO(selected))
-(int*,API_RO(flags))(double*,API_RO(width))(double*,API_RO(height)),
+(const char*,label)(bool*,API_RWO(p_selected))
+(int*,API_RO(flags))(double*,API_RO(size_w))(double*,API_RO(size_h)),
 R"(A selectable highlights when hovered, and can display another color when selected.
 Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
 
-Default values: flags = ImGui_SelectableFlags_None, width = 0.0, height = 0.0)",
+Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0)",
 {
   Context::check(ctx)->enterFrame();
 
   bool selectedOmitted {};
-  bool *selected { API_RWO(selected) ? API_RWO(selected) : &selectedOmitted };
+  bool *selected { API_RWO(p_selected) ? API_RWO(p_selected) : &selectedOmitted };
   return ImGui::Selectable(label, selected,
     valueOr(API_RO(flags), ImGuiSelectableFlags_None),
-    ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)));
+    ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)));
 });
 
 DEFINE_API(bool, TreeNode, (ImGui_Context*,ctx)
 (const char*, label)(int*,API_RO(flags)),
-"TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.",
+R"(TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
+
+Default values: flags = ImGui_TreeNodeFlags_None)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::TreeNodeEx(label, valueOr(API_RO(flags), 0));
@@ -181,7 +185,9 @@ DEFINE_API(bool, TreeNode, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, TreeNodeEx, (ImGui_Context*,ctx)
 (const char*, str_id)(const char*, label)(int*,API_RO(flags)),
-"Helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet(). See ImGui_TreeNode.",
+R"(Helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet(). See ImGui_TreeNode.
+
+Default values: flags = ImGui_TreeNodeFlags_None)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::TreeNodeEx(str_id, valueOr(API_RO(flags), 0), "%s", label);
@@ -210,13 +216,15 @@ DEFINE_API(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, CollapsingHeader, (ImGui_Context*,ctx)
-(const char*, label)(bool*,API_RWO(visible))(int*,API_RO(flags)),
+(const char*, label)(bool*,API_RWO(p_visible))(int*,API_RO(flags)),
 R"(If returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
 
-When 'visible' is provided: if 'true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if 'false' don't display the header.)",
+When 'visible' is provided: if 'true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if 'false' don't display the header.
+
+Default values: flags = ImGui_TreeNodeFlags_None)",
 {
   Context::check(ctx)->enterFrame();
-  return ImGui::CollapsingHeader(label, API_RWO(visible), valueOr(API_RO(flags), 0));
+  return ImGui::CollapsingHeader(label, API_RWO(p_visible), valueOr(API_RO(flags), 0));
 });
 
 DEFINE_API(bool, BeginMenuBar, (ImGui_Context*,ctx),
@@ -251,7 +259,7 @@ DEFINE_API(bool, BeginMenu, (ImGui_Context*,ctx)
 (const char*, label)(bool*, API_RO(enabled)),
 R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_EndMenu.
 
-'enabled' is true by default.)",
+Default values: enabled = true)",
 {
   Context::check(ctx)->enterFrame();
   return ImGui::BeginMenu(label, valueOr(API_RO(enabled), true));
@@ -266,15 +274,15 @@ R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BeginMenu.)",
 
 DEFINE_API(bool, MenuItem, (ImGui_Context*,ctx)
 (const char*, label)(const char*, API_RO(shortcut))
-(bool*, API_RWO(selected))(bool*, API_RO(enabled)),
+(bool*, API_RWO(p_selected))(bool*, API_RO(enabled)),
 R"(Return true when activated. Shortcuts are displayed for convenience but not processed by ImGui at the moment. Toggle state is written to 'selected' when provided.
 
-'enabled' is true by default.)",
+Default values: enabled = true)",
 {
   Context::check(ctx)->enterFrame();
   nullIfEmpty(API_RO(shortcut));
 
-  return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(selected),
+  return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(p_selected),
     valueOr(API_RO(enabled), true));
 });
 
@@ -296,14 +304,14 @@ DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, BeginTabItem, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_RWO(open))(int*,API_RO(flags)),
+(const char*,label)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
 R"(Create a Tab. Returns true if the Tab is selected.
 
-Default values: flags = ImGui_TabItemFlags_None
+Default values: p_open = nil, flags = ImGui_TabItemFlags_None
 'open' is read/write.)",
 {
   Context::check(ctx)->enterFrame();
-  return ImGui::BeginTabItem(label, API_RWO(open),
+  return ImGui::BeginTabItem(label, API_RWO(p_open),
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
 });
 
