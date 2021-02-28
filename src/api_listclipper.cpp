@@ -56,7 +56,7 @@ Generally what happens is:
 
 The returned clipper object is tied to the context and valid until the next timer tick. See ImGui_ListClipper_Begin.)",
 {
-  Context::check(ctx);
+  assertValid(ctx);
   return new ListClipper { ctx };
 });
 

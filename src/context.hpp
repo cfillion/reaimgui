@@ -21,8 +21,6 @@ struct ImGuiContext;
 
 class Context : public Resource {
 public:
-  static Context *check(Context *);
-
   Context(const char *title, int x, int y, int w, int h);
   ~Context();
 

@@ -49,7 +49,7 @@ static StyleVarType styleVarType(const ImGuiStyleVar var)
 DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
 "Get current font size (= height in pixels) of current font with current scale applied",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::GetFontSize();
 });
 
@@ -58,7 +58,7 @@ DEFINE_API(void, CalcTextSize, (ImGui_Context*,ctx)
 (bool*,API_RO(hide_text_after_double_hash))(double*,API_RO(wrap_width)),
 "Default values: hide_text_after_double_hash = false, wrap_width = -1.0",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   const ImVec2 &size {
     ImGui::CalcTextSize(text, nullptr,
       valueOr(API_RO(hide_text_after_double_hash), false),
@@ -74,7 +74,7 @@ R"(See ImGui_StyleVar_* for possible values of 'var_idx'.
 
 Default values: val2 = nil)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   switch(styleVarType(var_idx)) {
   case StyleVarType::Unknown:
@@ -98,7 +98,7 @@ R"(Reset a style variable.
 
 Default values: count = 1)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::PopStyleVar(valueOr(API_RO(count), 1));
 });
 
@@ -117,7 +117,7 @@ DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double*,API_W(val1))(double*,API_W(val2)),
 "",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   const ImGuiStyle &style { ImGui::GetStyle() };
 
@@ -163,7 +163,7 @@ R"(Retrieve given style color with style alpha applied and optional extra alpha 
 
 Default values: alpha_mul = 1.0)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
   return Color::abgr2rgba(ImGui::GetColorU32(idx, valueOr(API_RO(alpha_mul), 1.0)));
 });
@@ -183,7 +183,7 @@ DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
 (int,idx)(int,col_rgba),
 "Modify a style color. always use this if you modify the style after NewFrame().",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
   ImGui::PushStyleColor(idx, ImVec4{Color(col_rgba)});
 });
@@ -192,7 +192,7 @@ DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
 (int*,API_RO(count)),
 "Default values: count = 1",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::PopStyleColor(valueOr(API_RO(count), 1));
 });
 

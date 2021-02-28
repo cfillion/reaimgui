@@ -4,7 +4,7 @@ DEFINE_API(void, Text, (ImGui_Context*,ctx)
 (const char*,text),
 "",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::TextUnformatted(text);
 });
 
@@ -12,7 +12,7 @@ DEFINE_API(void, TextColored, (ImGui_Context*,ctx)
 (int,col_rgba)(const char*,text),
 "Shortcut for PushStyleColor(ImGuiCol_Text, color); Text(text); PopStyleColor();",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   ImVec4 color { Color(col_rgba) };
   ImGui::PushStyleColor(ImGuiCol_Text, color);
@@ -24,7 +24,7 @@ DEFINE_API(void, TextDisabled, (ImGui_Context*,ctx)
 (const char*,text),
 "",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   const ImGuiStyle &style { ImGui::GetStyle() };
   ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
   ImGui::TextUnformatted(text);
@@ -35,7 +35,7 @@ DEFINE_API(void, TextWrapped, (ImGui_Context*,ctx)
 (const char*,text),
 "Shortcut for PushTextWrapPos(0.0f); Text(fmt, ...); PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::PushTextWrapPos(0.0f);
   ImGui::TextUnformatted(text);
   ImGui::PopTextWrapPos();
@@ -45,7 +45,7 @@ DEFINE_API(void, LabelText, (ImGui_Context*,ctx)
 (const char*,label)(const char*,text),
 "Display text+label aligned the same way as value+label widgets",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::LabelText(label, "%s", text);
 });
 
@@ -53,7 +53,7 @@ DEFINE_API(void, BulletText, (ImGui_Context*,ctx)
 (const char*,text),
 "Shortcut for Bullet()+Text()",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::Bullet();
   ImGui::TextUnformatted(text);
 });
@@ -65,7 +65,7 @@ You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemH
 
 Default values: size_w = 0.0, size_h = 0.0)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   return ImGui::Button(label,
     ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)));
@@ -75,7 +75,7 @@ DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
 (const char*,label),
 "Button with FramePadding=(0,0) to easily embed within text",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::SmallButton(label);
 });
 
@@ -85,7 +85,7 @@ R"(Flexible button behavior without the visuals, frequently useful to build cust
 
 Default values: flags = ImGui_ButtonFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::InvisibleButton(str_id, ImVec2(size_w, size_h),
     valueOr(API_RO(flags), ImGuiButtonFlags_None));
 });
@@ -94,7 +94,7 @@ DEFINE_API(bool, ArrowButton, (ImGui_Context*,ctx)
 (const char*,str_id)(int,dir),
 "Square button with an arrow shape",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::ArrowButton(str_id, dir);
 });
 
@@ -105,7 +105,7 @@ DEFINE_API(bool, Checkbox, (ImGui_Context*,ctx)
 (const char*, label)(bool*, API_RW(v)),
 "",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   if(!API_RW(v))
     return false;
   return ImGui::Checkbox(label, API_RW(v));
@@ -115,7 +115,7 @@ DEFINE_API(bool, CheckboxFlags, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(flags))(int,flags_value),
 "",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::CheckboxFlags(label, API_RW(flags), flags_value);
 });
 
@@ -123,7 +123,7 @@ DEFINE_API(bool, RadioButton, (ImGui_Context*,ctx)
 (const char*,label)(bool,active),
 R"(Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::RadioButton(label, active);
 });
 
@@ -131,7 +131,7 @@ DEFINE_API(bool, RadioButtonEx, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(int,v_button),
 "Shortcut to handle RadioButton's example pattern when value is an integer",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::RadioButton(label, API_RW(v), v_button);
 });
 
@@ -141,7 +141,7 @@ DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
 (const char*,API_RO(overlay)),
 "Default values: size_arg_w = -FLT_MIN, size_arg_h = 0.0, overlay = nil",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   nullIfEmpty(API_RO(overlay));
 
   ImGui::ProgressBar(fraction,
@@ -152,7 +152,7 @@ DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
 DEFINE_API(void, Bullet, (ImGui_Context*,ctx),
 "Draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses.",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::Bullet();
 });
 
@@ -164,7 +164,7 @@ Neighbors selectable extend their highlight bounds in order to leave no gap betw
 
 Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   bool selectedOmitted {};
   bool *selected { API_RWO(p_selected) ? API_RWO(p_selected) : &selectedOmitted };
@@ -179,7 +179,7 @@ R"(TreeNode functions return true when the node is open, in which case you need 
 
 Default values: flags = ImGui_TreeNodeFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TreeNodeEx(label, valueOr(API_RO(flags), 0));
 });
 
@@ -189,7 +189,7 @@ R"(Helper variation to easily decorelate the id from the displayed string. Read 
 
 Default values: flags = ImGui_TreeNodeFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TreeNodeEx(str_id, valueOr(API_RO(flags), 0), "%s", label);
 });
 
@@ -197,21 +197,21 @@ DEFINE_API(void, TreePush, (ImGui_Context*,ctx)
 (const char*,str_id),
 "~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::TreePush(str_id);
 });
 
 DEFINE_API(void, TreePop, (ImGui_Context*,ctx),
 "Unindent()+PopId()",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::TreePop();
 });
 
 DEFINE_API(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
 "Horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::GetTreeNodeToLabelSpacing();
 });
 
@@ -223,35 +223,35 @@ When 'visible' is provided: if 'true' display an additional small close button o
 
 Default values: flags = ImGui_TreeNodeFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::CollapsingHeader(label, API_RWO(p_visible), valueOr(API_RO(flags), 0));
 });
 
 DEFINE_API(bool, BeginMenuBar, (ImGui_Context*,ctx),
 R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag set on parent window). See ImGui_EndMenuBar.)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginMenuBar();
 });
 
 DEFINE_API(void, EndMenuBar, (ImGui_Context*,ctx),
 R"(Only call EndMenuBar() if BeginMenuBar() returns true! See ImGui_BeginMenuBar.)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndMenuBar();
 });
 
 DEFINE_API(bool, BeginMainMenuBar, (ImGui_Context*,ctx),
 R"(Create a menu bar at the top of the screen and append to it.)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginMainMenuBar();
 });
 
 DEFINE_API(void, EndMainMenuBar, (ImGui_Context*,ctx),
 R"(Only call EndMainMenuBar() if BeginMainMenuBar() returns true! See ImGui_BeginMainMenuBar.)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndMainMenuBar();
 });
 
@@ -261,14 +261,14 @@ R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_
 
 Default values: enabled = true)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginMenu(label, valueOr(API_RO(enabled), true));
 });
 
 DEFINE_API(void, EndMenu, (ImGui_Context*,ctx),
 R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BeginMenu.)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndMenu();
 });
 
@@ -279,7 +279,7 @@ R"(Return true when activated. Shortcuts are displayed for convenience but not p
 
 Default values: enabled = true)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   nullIfEmpty(API_RO(shortcut));
 
   return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(p_selected),
@@ -292,14 +292,14 @@ R"(Create and append into a TabBar.
 
 Default values: flags = ImGui_TabBarFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginTabBar(str_id, valueOr(API_RO(flags), ImGuiTabBarFlags_None));
 });
 
 DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
 "Only call EndTabBar() if BeginTabBar() returns true!",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndTabBar();
 });
 
@@ -310,7 +310,7 @@ R"(Create a Tab. Returns true if the Tab is selected.
 Default values: p_open = nil, flags = ImGui_TabItemFlags_None
 'open' is read/write.)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginTabItem(label, API_RWO(p_open),
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
 });
@@ -318,7 +318,7 @@ Default values: p_open = nil, flags = ImGui_TabItemFlags_None
 DEFINE_API(void, EndTabItem, (ImGui_Context*,ctx),
 "Only call EndTabItem() if BeginTabItem() returns true!",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndTabItem();
 });
 
@@ -328,7 +328,7 @@ R"(Create a Tab behaving like a button. return true when clicked. cannot be sele
 
 Default values: flags = ImGui_TabItemFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TabItemButton(label,
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
 });

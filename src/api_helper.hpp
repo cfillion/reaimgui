@@ -70,7 +70,7 @@ inline void nullIfEmpty(const char *&string)
 }
 
 template<typename T>
-inline void assertValid(const T *ptr)
+inline void assertValid(T *ptr)
 {
   if constexpr (std::is_base_of_v<Resource, T>) {
     if(Resource::exists(ptr))
@@ -85,6 +85,6 @@ inline void assertValid(const T *ptr)
   throw reascript_error { message };
 }
 
-// #define FRAME_GUARD assertValid(ctx); ctx->enterFrame()
+#define FRAME_GUARD assertValid(ctx); ctx->enterFrame()
 
 #endif

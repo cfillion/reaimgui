@@ -18,7 +18,7 @@ If you stop calling BeginDragDropSource() the payload is preserved however it wo
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginDragDropSource(valueOr(API_RO(flags), 0));
 });
 
@@ -28,7 +28,7 @@ R"(type is a user defined string of maximum 32 characters. Strings starting with
 
 Default values: cond = ImGui_Cond_Always)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   nullIfEmpty(data);
 
   if(!isUserType(type))
@@ -41,14 +41,14 @@ Default values: cond = ImGui_Cond_Always)",
 DEFINE_API(void, EndDragDropSource, (ImGui_Context*,ctx),
 "Only call EndDragDropSource() if BeginDragDropSource() returns true!",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndDragDropSource();
 });
 
 DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
 "Call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginDragDropTarget();
 });
 
@@ -60,7 +60,7 @@ R"(Accept contents of a given type. If ImGui_DragDropFlags_AcceptBeforeDelivery 
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   if(!isUserType(type))
     return false;
@@ -92,7 +92,7 @@ R"(Accept contents of a RGB color. If ImGui_DragDropFlags_AcceptBeforeDelivery i
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, flags) };
@@ -114,7 +114,7 @@ R"(Accept contents of a RGBA color. If ImGui_DragDropFlags_AcceptBeforeDelivery 
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_4F, flags) };
@@ -133,7 +133,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
 DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
 "Only call EndDragDropTarget() if BeginDragDropTarget() returns true!",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndDragDropTarget();
 });
 

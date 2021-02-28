@@ -16,7 +16,7 @@ Return true if the popup is open, and you can start outputting to it.
 
 Default values: flags = ImGui_WindowFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginPopup(str_id, valueOr(API_RO(flags), ImGuiWindowFlags_None));
 });
 
@@ -26,7 +26,7 @@ R"(Block every interactions behind the window, cannot be closed by user, add a d
 
 Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginPopupModal(name, API_RWO(p_open),
     valueOr(API_RO(flags), ImGuiWindowFlags_None));
 });
@@ -34,7 +34,7 @@ Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
 "only call EndPopup() if BeginPopupXXX() returns true!",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndPopup();
 });
 
@@ -47,7 +47,7 @@ Use ImGuiPopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's 
 
 Default values: popup_flags = ImGui_PopupFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::OpenPopup(str_id, valueOr(API_RO(popup_flags), ImGuiPopupFlags_None));
 });
 
@@ -57,7 +57,7 @@ R"(Helper to open popup when clicked on last item. return true when just opened.
 
 Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
   ImGui::OpenPopupOnItemClick(API_RO(str_id),
@@ -69,7 +69,7 @@ R"(Manually close the popup we have begin-ed into. Use inside the BeginPopup()/E
 
 CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activateda)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::CloseCurrentPopup();
 });
 
@@ -84,7 +84,7 @@ Open+begin popup when clicked on last item. if you can pass a NULL str_id only i
 
 Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
   return ImGui::BeginPopupContextItem(API_RO(str_id),
@@ -97,7 +97,7 @@ R"(Open+begin popup when clicked on current window.
 
 Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
   return ImGui::BeginPopupContextWindow(API_RO(str_id),
@@ -110,7 +110,7 @@ R"(Open+begin popup when clicked in void (where there are no windows).
 
 Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
   return ImGui::BeginPopupContextVoid(API_RO(str_id),

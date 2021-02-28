@@ -14,7 +14,7 @@ R"(Push window to the stack and start appending to it. See ImGui_End.
 
 Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGuiWindowFlags flags { valueOr(API_RO(flags), 0) };
   flags |= ImGuiWindowFlags_NoSavedSettings;
   return ImGui::Begin(name, API_RWO(p_open), flags);
@@ -23,7 +23,7 @@ Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 DEFINE_API(void, End, (ImGui_Context*,ctx),
 R"(Pop window from the stack. See ImGui_Begin.)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::End();
 });
 
@@ -40,7 +40,7 @@ R"(Use child windows to begin into a self-contained independent scrolling/clippi
 
 Default values: size_w = 0.0, size_h = 0.0, border = false, flags = ImGui_WindowFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::BeginChild(str_id,
     ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)),
     valueOr(API_RO(border), false), valueOr(API_RO(flags), ImGuiWindowFlags_None));
@@ -49,42 +49,42 @@ Default values: size_w = 0.0, size_h = 0.0, border = false, flags = ImGui_Window
 DEFINE_API(void, EndChild, (ImGui_Context*,ctx),
 "See ImGui_BeginChild.",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndChild();
 });
 
 DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
 "Begin/append a tooltip window. to create full-featured tooltip (with any kind of items).",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::BeginTooltip();
 });
 
 DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
 "",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndTooltip();
 });
 
 DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
 "Set a text-only tooltip, typically use with ImGui_IsItemHovered(). override any previous call to SetTooltip().",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetTooltip("%s", text);
 });
 
 DEFINE_API(bool, IsWindowAppearing, (ImGui_Context*,ctx),
 "",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::IsWindowAppearing();
 });
 
 DEFINE_API(bool, IsWindowCollapsed, (ImGui_Context*,ctx),
 "",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::IsWindowCollapsed();
 });
 
@@ -94,7 +94,7 @@ R"(Is current window focused? or its root/child, depending on flags. see flags f
 
 Default values: flags = ImGui_FocusedFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::IsWindowFocused(valueOr(API_RO(flags), ImGuiFocusedFlags_None));
 });
 
@@ -104,7 +104,7 @@ R"(Is current window hovered (and typically: not blocked by a popup/modal)? see 
 
 Default values: flags = ImGui_HoveredFlags_None)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::IsWindowHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
 });
 
@@ -112,7 +112,7 @@ DEFINE_API(void, GetWindowPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 "Get current window position in screen space (useful if you want to do your own drawing via the DrawList API)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   const ImVec2 &vec { ImGui::GetWindowPos() };
   if(API_W(x)) *API_W(x) = vec.x;
   if(API_W(y)) *API_W(y) = vec.y;
@@ -122,7 +122,7 @@ DEFINE_API(void, GetWindowSize, (ImGui_Context*,ctx)
 (double*,API_W(w))(double*,API_W(h)),
 "Get current window size",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   const ImVec2 &vec { ImGui::GetWindowSize() };
   if(API_W(w)) *API_W(w) = vec.x;
   if(API_W(h)) *API_W(h) = vec.y;
@@ -131,14 +131,14 @@ DEFINE_API(void, GetWindowSize, (ImGui_Context*,ctx)
 DEFINE_API(double, GetWindowWidth, (ImGui_Context*,ctx),
 "Get current window width (shortcut for ({ImGui_GetWindowSize()})[1])",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::GetWindowWidth();
 });
 
 DEFINE_API(double, GetWindowHeight, (ImGui_Context*,ctx),
 "Get current window height (shortcut for ({ImGui_GetWindowSize()})[2])",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::GetWindowHeight();
 });
 
@@ -149,7 +149,7 @@ R"(Set next window position. Call before Begin(). Use pivot=(0.5,0.5) to center 
 
 Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y),
     valueOr(API_RO(cond), ImGuiCond_Always),
     ImVec2(valueOr(API_RO(pivot_x), 0.0), valueOr(API_RO(pivot_y), 0.0)));
@@ -161,7 +161,7 @@ R"(Set next window size. set axis to 0.0f to force an auto-fit on this axis. Cal
 
 Default values: cond = ImGui_Cond_Always)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetNextWindowSize(ImVec2(size_w, size_h),
     valueOr(API_RO(cond), ImGuiCond_Always));
 });
@@ -172,7 +172,7 @@ DEFINE_API(void, SetNextWindowContentSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h),
 "Set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0f to leave it automatic. call before Begin()",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetNextWindowContentSize(ImVec2(size_w, size_h));
 });
 
@@ -184,7 +184,7 @@ DEFINE_API(void, GetContentRegionAvail, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 "== GetContentRegionMax() - GetCursorPos()",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   const ImVec2 &vec { ImGui::GetContentRegionAvail() };
   if(API_W(x)) *API_W(x) = vec.x;
@@ -195,7 +195,7 @@ DEFINE_API(void, GetContentRegionMax, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 "Current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   const ImVec2 &vec { ImGui::GetContentRegionMax() };
   if(API_W(x)) *API_W(x) = vec.x;
@@ -206,7 +206,7 @@ DEFINE_API(void, GetWindowContentRegionMin, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 "Content boundaries min (roughly (0,0)-Scroll), in window coordinates",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   const ImVec2 &vec { ImGui::GetWindowContentRegionMin() };
   if(API_W(x)) *API_W(x) = vec.x;
@@ -217,7 +217,7 @@ DEFINE_API(void, GetWindowContentRegionMax, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 "Content boundaries max (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   const ImVec2 &vec { ImGui::GetWindowContentRegionMax() };
   if(API_W(x)) *API_W(x) = vec.x;
@@ -227,7 +227,7 @@ DEFINE_API(void, GetWindowContentRegionMax, (ImGui_Context*,ctx)
 DEFINE_API(double, GetWindowContentRegionWidth, (ImGui_Context*,ctx),
 "",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::GetWindowContentRegionWidth();
 });
 
@@ -235,14 +235,14 @@ DEFINE_API(double, GetWindowContentRegionWidth, (ImGui_Context*,ctx),
 DEFINE_API(double, GetScrollX, (ImGui_Context*,ctx),
 "Get scrolling amount [0 .. GetScrollMaxX()]",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::GetScrollX();
 });
 
 DEFINE_API(double, GetScrollY, (ImGui_Context*,ctx),
 "Get scrolling amount [0 .. GetScrollMaxY()]",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::GetScrollY();
 });
 
@@ -250,7 +250,7 @@ DEFINE_API(void, SetScrollX, (ImGui_Context*,ctx)
 (double,scroll_x),
 "Set scrolling amount [0 .. GetScrollMaxX()]",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetScrollX(scroll_x);
 });
 
@@ -258,21 +258,21 @@ DEFINE_API(void, SetScrollY, (ImGui_Context*,ctx)
 (double,scroll_y),
 "Set scrolling amount [0 .. GetScrollMaxY()]",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetScrollY(scroll_y);
 });
 
 DEFINE_API(double, GetScrollMaxX, (ImGui_Context*,ctx),
 "Get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.x",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::GetScrollMaxX();
 });
 
 DEFINE_API(double, GetScrollMaxY, (ImGui_Context*,ctx),
 "Get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::GetScrollMaxY();
 });
 
@@ -282,7 +282,7 @@ R"(Adjust scrolling amount to make current cursor position visible. center_x_rat
 
 Default values: center_x_ratio = 0.5)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetScrollHereX(valueOr(API_RO(center_x_ratio), 0.5));
 });
 
@@ -292,7 +292,7 @@ R"(Adjust scrolling amount to make current cursor position visible. center_y_rat
 
 Default values: center_y_ratio = 0.5)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetScrollHereY(valueOr(API_RO(center_y_ratio), 0.5));
 });
 
@@ -302,7 +302,7 @@ R"(Adjust scrolling amount to make given position visible. Generally GetCursorSt
 
 Default values: center_x_ratio = 0.5)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetScrollFromPosX(local_x, valueOr(API_RO(center_x_ratio), 0.5));
 });
 
@@ -312,6 +312,6 @@ R"(Adjust scrolling amount to make given position visible. Generally GetCursorSt
 
 Default values: center_y_ratio = 0.5)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::SetScrollFromPosY(local_y, valueOr(API_RO(center_y_ratio), 0.5));
 });

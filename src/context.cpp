@@ -7,16 +7,6 @@
 #include <reaper_plugin_functions.h>
 #include <reaper_plugin_secrets.h>
 
-Context *Context::check(Context *ctx)
-{
-  if(Resource::exists(ctx))
-    return ctx;
-
-  char message[255];
-  snprintf(message, sizeof(message), "argument 1: expected ImGui_Context*, got %p", ctx);
-  throw reascript_error { message };
-}
-
 Context::Context(const char *title,
     const int x, const int y, const int w, const int h)
   : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},

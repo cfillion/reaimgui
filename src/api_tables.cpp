@@ -31,7 +31,7 @@ The typical call flow is:
 
 Default values: flags = ImGui_TableFlags_None, outer_size_w = 0.0, outer_size_h = 0.0, inner_width = 0.0)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   return ImGui::BeginTable(str_id, column,
     valueOr(API_RO(flags), 0),
@@ -46,7 +46,7 @@ Default values: flags = ImGui_TableFlags_None, outer_size_w = 0.0, outer_size_h 
 DEFINE_API(void, EndTable, (ImGui_Context*,ctx),
 "Only call EndTable() if BeginTable() returns true!",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::EndTable();
 });
 
@@ -56,7 +56,7 @@ R"(Append into the first cell of a new row.
 
 Default values: row_flags = ImGui_TableRowFlags_None, min_row_height = 0.0)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::TableNextRow(valueOr(API_RO(row_flags), ImGuiTableRowFlags_None),
     valueOr(API_RO(min_row_height), 0.0));
 });
@@ -64,7 +64,7 @@ Default values: row_flags = ImGui_TableRowFlags_None, min_row_height = 0.0)",
 DEFINE_API(bool, TableNextColumn, (ImGui_Context*,ctx),
 "Append into the next column (or first column of next row if currently in last column). Return true when column is visible.",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TableNextColumn();
 });
 
@@ -72,7 +72,7 @@ DEFINE_API(bool, TableSetColumnIndex, (ImGui_Context*,ctx)
 (int,column_n),
 "Append into the specified column. Return true when column is visible.",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TableSetColumnIndex(column_n);
 });
     // // Tables: Headers & Columns declaration
@@ -89,7 +89,7 @@ R"(Use TableSetupColumn() to specify label, resizing policy, default width/weigh
 
 Default values: flags = ImGui_TableColumnFlags_None, init_width_or_weight = 0.0, user_id = 0)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::TableSetupColumn(label,
     valueOr(API_RO(flags), ImGuiTableColumnFlags_None),
     valueOr(API_RO(init_width_or_weight), 0.0), valueOr(API_RO(user_id), 0));
@@ -99,14 +99,14 @@ DEFINE_API(void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
 (int,cols)(int,rows),
 "Lock columns/rows so they stay visible when scrolled.",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::TableSetupScrollFreeze(cols, rows);
 });
 
 DEFINE_API(void, TableHeadersRow, (ImGui_Context*,ctx),
 "Submit all headers cells based on data provided to TableSetupColumn() + submit context menu",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::TableHeadersRow();
 });
 
@@ -114,7 +114,7 @@ DEFINE_API(void, TableHeader, (ImGui_Context*,ctx)
 (const char*,label),
 "Submit one header cell manually (rarely used). See ImGui_TableSetColumn",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::TableHeader(label);
 });
 
@@ -122,7 +122,7 @@ DEFINE_API(bool, TableNeedSort, (ImGui_Context*,ctx)
 (bool*,API_W(has_specs)),
 "Return true once when sorting specs have changed since last call, or the first time. 'has_specs' is false when not sorting. See ImGui_TableSortSpecs_GetColumnSpecs.",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   if(ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() }) {
     if(API_W(has_specs)) *API_W(has_specs) = true;
 
@@ -148,7 +148,7 @@ SortDirection: ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (yo
 
 See ImGui_TableNeedSort.)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
 
   const ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() };
   if(!specs || id >= specs->SpecsCount)
@@ -165,21 +165,21 @@ See ImGui_TableNeedSort.)",
 DEFINE_API(int, TableGetColumnCount, (ImGui_Context*,ctx),
 "Return number of columns (value passed to BeginTable)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TableGetColumnCount();
 });
 
 DEFINE_API(int, TableGetColumnIndex, (ImGui_Context*,ctx),
 "Return current column index.",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TableGetColumnIndex();
 });
 
 DEFINE_API(int, TableGetRowIndex, (ImGui_Context*,ctx),
 "Return current row index.",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TableGetRowIndex();
 });
 
@@ -189,7 +189,7 @@ R"(Return "" if column didn't have a name declared by TableSetupColumn(). Pass -
 
 Default values: column_n = -1)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TableGetColumnName(valueOr(API_RO(column_n), -1));
 });
 
@@ -199,7 +199,7 @@ R"(Return column flags so you can query their Enabled/Visible/Sorted/Hovered sta
 
 Default values: column_n = -1)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   return ImGui::TableGetColumnFlags(valueOr(API_RO(column_n), -1));
 });
 
@@ -209,7 +209,7 @@ R"(Change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for
 
 Default values: column_n = -1)",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   ImGui::TableSetBgColor(target,
     Color::rgba2abgr(color_rgba), valueOr(API_RO(column_n), -1));
 });

@@ -16,7 +16,7 @@ DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
 (double*,API_RO(graph_size_w))(double*,API_RO(graph_size_h)),
 "Default values: values_offset = 0, overlay_text = nil, scale_min = 0.0, scale_max = 0.0, graph_size_w = 0.0, graph_size_h = 0.0",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   assertValid(values);
   nullIfEmpty(API_RO(overlay_text));
 
@@ -33,7 +33,7 @@ DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
 (double*,API_RO(graph_size_w))(double*,API_RO(graph_size_h)),
 "Default values: values_offset = 0, overlay_text = nil, scale_min = FLT_MAX, scale_max = FLT_MAX, graph_size_w = 0.0, graph_size_h = 0.0",
 {
-  Context::check(ctx)->enterFrame();
+  FRAME_GUARD;
   assertValid(values);
   nullIfEmpty(API_RO(overlay_text));
 
