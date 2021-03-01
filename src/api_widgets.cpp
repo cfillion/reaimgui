@@ -217,7 +217,9 @@ DEFINE_API(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
 
 DEFINE_API(bool, CollapsingHeader, (ImGui_Context*,ctx)
 (const char*, label)(bool*,API_RWO(p_visible))(int*,API_RO(flags)),
-R"(If returning 'true' the header is open. doesn't indent nor push on ID stack. user doesn't have to call TreePop().
+R"(CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGui_TreeNodeFlags_NoTreePushOnOpen flag).
+
+This is basically the same as calling TreeNode(label, ImGui_TreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
 
 When 'visible' is provided: if 'true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if 'false' don't display the header.
 

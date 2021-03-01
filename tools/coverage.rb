@@ -61,7 +61,7 @@ NATIVE_ONLY = [
   'bool ImGui::TreeNode(const void*, const char*, ...)',
   'bool ImGui::TreeNodeEx(const void*, ImGuiTreeNodeFlags, const char*, ...)',
 
-  # callbacks
+  # item getter callbacks
   'bool ImGui::Combo(const char*, int*, bool(*items_getter)(void* data, int idx, const char** out_text), void*, int, int)',
   'bool ImGui::ListBox(const char*, int*, bool (*items_getter)(void* data, int idx, const char** out_text), void*, int, int)',
   'void ImGui::PlotLines(const char*, float(*values_getter)(void* data, int idx), void*, int, int, const char*, float, float, ImVec2)',
@@ -101,6 +101,13 @@ NATIVE_ONLY = [
   'float ImGui::GetColumnOffset(int)',
   'void ImGui::SetColumnOffset(int, float)',
   'int ImGui::GetColumnsCount()',
+
+  # primitives allocation
+  'void ImDrawList::PrimReserve(int, int)',
+  'void ImDrawList::PrimUnreserve(int, int)',
+  'void ImDrawList::PrimRect(const ImVec2&, const ImVec2&, ImU32)',
+  'void ImDrawList::PrimRectUV(const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
+  'void ImDrawList::PrimQuadUV(const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
 ]
 
 NATIVE_ONLY_CLASSES = %w[
@@ -109,11 +116,42 @@ NATIVE_ONLY_CLASSES = %w[
   ImGuiTextBuffer ImGuiTextFilter
 ]
 
+NATIVE_ONLY_ENUMS = [
+  /\AInputTextFlags_Callback/,
+  /\ADataType_/,
+  /\ANavInput_/,
+  /\ABackendFlags_/,
+  'Cond_None',          # alias for Cond_Always
+  /\AKey_.+/,           # for GetKeyIndex, not implemented
+  /_NoSavedSettings\z/, # saved settings are not implemented yet
+  'ColorEditFlags_HDR', # not allowed, would break float[4]<->int conversion
+  /\AViewportFlags_/,
+  'MouseCursor_None',   # not implemented under SWELL
+
+  # only for dear imgui's internal use
+  'InputTextFlags_Multiline',
+  'InputTextFlags_NoMarkEdited',
+  /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu)/,
+  /\AColorEditFlags__.+Mask\z/,
+
+  # marked as WIP
+  'TreeNodeFlags_NavLeftJumpsBackHere',
+
+  # marked as alpha, to be moved to style
+  /\ATableFlags_NoBordersInBody/,
+]
+
 # these functions were ported using another name (eg. overloads)
 RENAMES = {
   'bool ImGui::RadioButton(const char*, int*, int)'         => 'RadioButtonEx',
   'ImU32 ImGui::GetColorU32(ImGuiCol, float)'               => 'GetColor',
   'bool ImGui::TreeNodeEx(const char*, ImGuiTreeNodeFlags)' => 'TreeNode',
+}
+
+ARG_RENAMES = {
+  'IsKeyDown' => { 'user_key_index' => 'key_code' },
+  'IsKeyPressed' => { 'user_key_index' => 'key_code' },
+  'IsKeyReleased' => { 'user_key_index' => 'key_code' },
 }
 
 # these functions were not ported 1:1
@@ -466,18 +504,23 @@ reaimgui_funcs.each do |func|
 end
 
 NATIVE_ONLY.each do |sig|
-  unless imgui_funcs.find { _1.sig == sig }
+  unless imgui_funcs.any? { _1.sig == sig }
     warn "function marked as native only not found in dear imgui: #{sig}"
   end
 end
 
+NATIVE_ONLY_ENUMS.each do |rule|
+  reaimgui_enums.select { _1.match? rule }.each do |enum|
+    warn "enum marked as native only but exported anyway: #{enum}"
+  end
+end
 # link dear imgui functions to their corresponding ReaImGui counterparts
 perfect_count = manual_count = missing_overloads = missing_count = skipped_count = 0
 imgui_funcs.each do |imgui_func|
   if imgui_func.name[0] == '_' ||
       NATIVE_ONLY.include?(imgui_func.sig) ||
       NATIVE_ONLY_CLASSES.include?(imgui_func.namespace)
-    skipped_count = skipped_count + 1
+    skipped_count += 1
     next
   end
 
@@ -485,7 +528,7 @@ imgui_funcs.each do |imgui_func|
   expected_sig = OVERRIDES[imgui_func.sig] || imgui_func.normalized.sig
 
   if not candidate
-    missing_count = missing_count + 1
+    missing_count += 1
     warn "not implemented: #{imgui_func.sig}"
     warn "  expected:  #{expected_sig}"
     next
@@ -495,13 +538,13 @@ imgui_funcs.each do |imgui_func|
 
   if perfect_match
     if OVERRIDES.has_key? imgui_func.sig
-      manual_count = manual_count + 1
+      manual_count += 1
     else
-      perfect_count = perfect_count + 1
+      perfect_count += 1
       candidate.match = imgui_func
     end
   else
-    missing_overloads = missing_overloads + 1
+    missing_overloads += 1
 
     warn "not implemented: #{imgui_func.sig}"
     warn "  expected:  #{expected_sig}"
@@ -529,7 +572,7 @@ reaimgui_funcs.each do |func|
 
     imgui_arg = func.match.normalized.args[i]
 
-    unless raw_name == imgui_arg.name
+    unless raw_name == imgui_arg.name || raw_name == ARG_RENAMES[func.name]&.[](imgui_arg.name)
       warn "#{func.name}: argument ##{i+1} of type '#{rea_arg.type}' (#{decoration}) is named '#{raw_name}', expected '#{imgui_arg.name}'"
     end
 
@@ -542,13 +585,28 @@ reaimgui_funcs.each do |func|
     end
   end
 end
-# TODO: check argument names and compare default values
-# TODO: check coverage of enums
+
+skipped_enums = 0
+imgui_enums.each do |im_enum|
+  unless reaimgui_enums.include? im_enum
+    if NATIVE_ONLY_ENUMS.any? { im_enum.match? _1 }
+      skipped_enums += 1
+      next
+    end
+
+    warn "missing enum: #{im_enum}"
+  end
+end
 
 puts
-puts "%d perfect matches, %d manual matches, %d missing overloads, %d missing functions, %d skipped" %
+puts "functions: %d perfect matches, %d manual matches, %d missing overloads, %d not implemented, %d skipped" %
   [perfect_count, manual_count, missing_overloads, missing_count, skipped_count]
 
-puts "%.2f%% complete (%.2f%% total)" %
+puts "functions: %.2f%% complete (%.2f%% total)" %
   [(perfect_count + manual_count).to_f / (imgui_funcs.size - skipped_count) * 100,
    (perfect_count + manual_count).to_f / imgui_funcs.size * 100]
+
+puts "enums:     %d skipped" % skipped_enums
+puts "enums:     %.2f%% complete (%.2f%% total)" %
+  [reaimgui_enums.size.to_f / (imgui_enums.size - skipped_enums) * 100,
+   reaimgui_enums.size.to_f / imgui_enums.size * 100]

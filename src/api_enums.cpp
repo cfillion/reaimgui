@@ -4,7 +4,6 @@
   DEFINE_API(int, name, NO_ARGS, doc, { return ImGui##name; })
 
 // ImGuiCol
-// Enum: A color identifier for styling
 DEFINE_ENUM(Col_Text,                  "");
 DEFINE_ENUM(Col_TextDisabled,          "");
 DEFINE_ENUM(Col_WindowBg,              "Background of normal windows");
@@ -60,9 +59,6 @@ DEFINE_ENUM(Col_NavWindowingDimBg,     "Darken/colorize entire screen behind the
 DEFINE_ENUM(Col_ModalWindowDimBg,      "Darken/colorize entire screen behind a modal window, when one is active");
 
 // ImGuiCond
-// Enumeration for ImGui::SetWindow***(), SetNextWindow***(), SetNextItem***() functions
-// Represent a condition.
-// Important: Treat as a regular enum! Do NOT combine multiple values using binary operators! All the functions above treat 0 as a shortcut to ImGuiCond_Always.
 DEFINE_ENUM(Cond_Always, "No condition (always set the variable)");
 DEFINE_ENUM(Cond_Once, "Set the variable once per runtime session (only the first call will succeed)");
 DEFINE_ENUM(Cond_FirstUseEver, "Set the variable if the object/window has no persistently saved data (no entry in .ini file)");
@@ -81,13 +77,11 @@ DEFINE_ENUM(Dir_Down,  "A cardinal direction");
 // typedef int ImGuiNavInput;          // -> enum ImGuiNavInput_        // Enum: An input identifier for navigation
 
 // ImGuiMouseButton
-// Enum: A mouse button identifier (0=left, 1=right, 2=middle)
-DEFINE_ENUM(MouseButton_Left, "");
-DEFINE_ENUM(MouseButton_Right, "");
+DEFINE_ENUM(MouseButton_Left,   "");
+DEFINE_ENUM(MouseButton_Right,  "");
 DEFINE_ENUM(MouseButton_Middle, "");
 
 // ImGuiMouseCursor
-// Enumeration for GetMouseCursor()
 // DEFINE_ENUM(MouseCursor_None,       "");
 DEFINE_ENUM(MouseCursor_Arrow,      "");
 DEFINE_ENUM(MouseCursor_TextInput,  "When hovering over InputText, etc.");
@@ -100,13 +94,11 @@ DEFINE_ENUM(MouseCursor_Hand,       "(Unused by Dear ImGui functions. Use for e.
 DEFINE_ENUM(MouseCursor_NotAllowed, "When hovering something with disallowed interaction. Usually a crossed circle.");
 
 // ImGuiSortDirection
-// Enum: A sorting direction (ascending or descending)
 DEFINE_ENUM(SortDirection_None,       "");
 DEFINE_ENUM(SortDirection_Ascending,  "Ascending = 0->9, A->Z etc.");
 DEFINE_ENUM(SortDirection_Descending, "Descending = 9->0, Z->A etc.");
 
 // ImGuiStyleVar
-// Enum: A variable identifier for styling
 DEFINE_ENUM(StyleVar_Alpha,               "Global alpha applies to everything in Dear ImGui.");
 DEFINE_ENUM(StyleVar_WindowPadding,       "Padding within a window.");
 DEFINE_ENUM(StyleVar_WindowRounding,      "Radius of window corners rounding. Set to 0.0f to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.");
@@ -152,11 +144,15 @@ DEFINE_ENUM(TableBgTarget_CellBg, "Set cell background color (top-most color)");
 // typedef int ImDrawListFlags;        // -> enum ImDrawListFlags_      // Flags: for ImDrawList
 // typedef int ImFontAtlasFlags;       // -> enum ImFontAtlasFlags_     // Flags: for ImFontAtlas build
 // typedef int ImGuiBackendFlags;      // -> enum ImGuiBackendFlags_    // Flags: for io.BackendFlags
-// typedef int ImGuiButtonFlags;       // -> enum ImGuiButtonFlags_     // Flags: for InvisibleButton()
+
+// ImGuiButtonFlags
+DEFINE_ENUM(ButtonFlags_None,              "Flags: for InvisibleButton()");
+DEFINE_ENUM(ButtonFlags_MouseButtonLeft,   "React on left mouse button (default)");
+DEFINE_ENUM(ButtonFlags_MouseButtonRight,  "React on right mouse button");
+DEFINE_ENUM(ButtonFlags_MouseButtonMiddle, "React on center mouse button");
 
 // ImGuiColorEditFlags
-// Flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()
-DEFINE_ENUM(ColorEditFlags_None,             "");
+DEFINE_ENUM(ColorEditFlags_None,             "Flags for ColorEdit3() / ColorEdit4() / ColorPicker3() / ColorPicker4() / ColorButton()");
 DEFINE_ENUM(ColorEditFlags_NoAlpha,          "ColorEdit, ColorPicker, ColorButton: ignore Alpha component (will only read 3 components from the input pointer).");
 DEFINE_ENUM(ColorEditFlags_NoPicker,         "ColorEdit: disable picker when clicking on color square.");
 DEFINE_ENUM(ColorEditFlags_NoOptions,        "ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.");
@@ -181,12 +177,12 @@ DEFINE_ENUM(ColorEditFlags_PickerHueBar,     "ColorPicker: bar for Hue, rectangl
 DEFINE_ENUM(ColorEditFlags_PickerHueWheel,   "ColorPicker: wheel for Hue, triangle for Sat/Value.");
 DEFINE_ENUM(ColorEditFlags_InputRGB,         "ColorEdit, ColorPicker: input and output data in RGB format.");
 DEFINE_ENUM(ColorEditFlags_InputHSV,         "ColorEdit, ColorPicker: input and output data in HSV format.");
+DEFINE_ENUM(ColorEditFlags__OptionsDefault,  "Defaults Options. You can set application defaults using SetColorEditOptions(). The intent is that you probably don't want to override them in most of your calls. Let the user choose via the option menu and/or call SetColorEditOptions() once during startup.");
 
 // typedef int ImGuiConfigFlags;       // -> enum ImGuiConfigFlags_     // Flags: for io.ConfigFlags
 
 // ImGuiComboFlags
-// Flags for ImGui::BeginCombo()
-DEFINE_ENUM(ComboFlags_None,           "");
+DEFINE_ENUM(ComboFlags_None,           "Flags for ImGui::BeginCombo()");
 DEFINE_ENUM(ComboFlags_PopupAlignLeft, "Align the popup toward the left by default");
 DEFINE_ENUM(ComboFlags_HeightSmall,    "Max ~4 items visible. Tip: If you want your combo popup to be a specific size you can use SetNextWindowSizeConstraints() prior to calling BeginCombo()");
 DEFINE_ENUM(ComboFlags_HeightRegular,  "Max ~8 items visible (default)");
@@ -196,8 +192,7 @@ DEFINE_ENUM(ComboFlags_NoArrowButton,  "Display on the preview box without the s
 DEFINE_ENUM(ComboFlags_NoPreview,      "Display only a square arrow button");
 
 // ImGuiDragDropFlags
-// Flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()
-DEFINE_ENUM(DragDropFlags_None,                     "");
+DEFINE_ENUM(DragDropFlags_None,                     "Flags for ImGui::BeginDragDropSource(), ImGui::AcceptDragDropPayload()");
 // BeginDragDropSource() flags
 DEFINE_ENUM(DragDropFlags_SourceNoPreviewTooltip,   "By default, a successful call to BeginDragDropSource opens a tooltip so you can display a preview or description of the source contents. This flag disable this behavior.");
 DEFINE_ENUM(DragDropFlags_SourceNoDisableHover,     "By default, when dragging we clear data so that IsItemHovered() will return false, to avoid subsequent user code submitting tooltips. This flag disable this behavior so you can still call IsItemHovered() on the source item.");
@@ -212,8 +207,7 @@ DEFINE_ENUM(DragDropFlags_AcceptNoPreviewTooltip,   "Request hiding the BeginDra
 DEFINE_ENUM(DragDropFlags_AcceptPeekOnly,           "For peeking ahead and inspecting the payload before delivery. Equivalent to ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect.");
 
 // ImGuiFocusedFlags
-// Flags for ImGui::IsWindowFocused()
-DEFINE_ENUM(FocusedFlags_None,                "");
+DEFINE_ENUM(FocusedFlags_None,                "Flags for ImGui::IsWindowFocused()");
 DEFINE_ENUM(FocusedFlags_ChildWindows,        "IsWindowFocused(): Return true if any children of the window is focused");
 DEFINE_ENUM(FocusedFlags_RootWindow,          "IsWindowFocused(): Test from root window (top most parent of the current hierarchy)");
 DEFINE_ENUM(FocusedFlags_AnyWindow,           "IsWindowFocused(): Return true if any window is focused. Important: If you are trying to tell how to dispatch your low-level inputs, do NOT use this. Use 'io.WantCaptureMouse' instead! Please read the FAQ!");
@@ -233,8 +227,7 @@ DEFINE_ENUM(HoveredFlags_RectOnly,                     "ImGui_HoveredFlags_Allow
 DEFINE_ENUM(HoveredFlags_RootAndChildWindows,          "ImGui_HoveredFlags_RootWindow | ImGui_HoveredFlags_ChildWindows");
 
 // ImGuiInputTextFlags
-// Most of the ImGuiInputTextFlags flags are only useful for InputText() and not for InputFloatX, InputIntX, InputDouble etc.
-DEFINE_ENUM(InputTextFlags_None,                "");
+DEFINE_ENUM(InputTextFlags_None,                "Most of the ImGuiInputTextFlags flags are only useful for InputText() and not for InputFloatX, InputIntX, InputDouble etc.");
 DEFINE_ENUM(InputTextFlags_CharsDecimal,        "Allow 0123456789.+-*/");
 DEFINE_ENUM(InputTextFlags_CharsHexadecimal,    "Allow 0123456789ABCDEFabcdef");
 DEFINE_ENUM(InputTextFlags_CharsUppercase,      "Turn a..z into A..Z");
@@ -260,7 +253,6 @@ DEFINE_ENUM(InputTextFlags_CharsScientific,     "Allow 0123456789.+-*/eE (Scient
 // DEFINE_ENUM(InputTextFlags_NoMarkEdited,        "For internal use by functions using InputText() before reformatting data");
 
 // ImGuiKeyModFlags
-// Flags: for io.KeyMods (Ctrl/Shift/Alt/Super)
 DEFINE_ENUM(KeyModFlags_None,  "");
 DEFINE_ENUM(KeyModFlags_Ctrl,  "");
 DEFINE_ENUM(KeyModFlags_Shift, "");
@@ -269,8 +261,7 @@ DEFINE_ENUM(KeyModFlags_Super, "");
 
 
 // ImGuiPopupFlags
-// Flags: for OpenPopup*(), BeginPopupContext*(), IsPopupOpen()
-DEFINE_ENUM(PopupFlags_None,                    "");
+DEFINE_ENUM(PopupFlags_None,                    "Flags: for OpenPopup*(), BeginPopupContext*(), IsPopupOpen()");
 DEFINE_ENUM(PopupFlags_MouseButtonLeft,         "For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGuiMouseButton_Left)");
 DEFINE_ENUM(PopupFlags_MouseButtonRight,        "For BeginPopupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as ImGuiMouseButton_Right)");
 DEFINE_ENUM(PopupFlags_MouseButtonMiddle,       "For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGuiMouseButton_Middle)");
@@ -281,8 +272,7 @@ DEFINE_ENUM(PopupFlags_AnyPopupLevel,           "For IsPopupOpen(): search/test 
 DEFINE_ENUM(PopupFlags_AnyPopup,                "ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel");
 
 // ImGuiSelectableFlags
-// Flags: for Selectable()
-DEFINE_ENUM(SelectableFlags_None,             "");
+DEFINE_ENUM(SelectableFlags_None,             "Flags: for Selectable()");
 DEFINE_ENUM(SelectableFlags_DontClosePopups,  "Clicking this don't close parent popup window");
 DEFINE_ENUM(SelectableFlags_SpanAllColumns,   "Selectable frame can span all columns (text will still fit in current column)");
 DEFINE_ENUM(SelectableFlags_AllowDoubleClick, "Generate press events on double clicks too");
@@ -290,16 +280,14 @@ DEFINE_ENUM(SelectableFlags_Disabled,         "Cannot be selected, display graye
 DEFINE_ENUM(SelectableFlags_AllowItemOverlap, "Hit testing to allow subsequent widgets to overlap this one");
 
 // ImGuiSliderFlags
-// for DragFloat(), DragInt(), SliderFloat(), SliderInt() etc.
-DEFINE_ENUM(SliderFlags_None,            "");
+DEFINE_ENUM(SliderFlags_None,            "for DragFloat(), DragInt(), SliderFloat(), SliderInt() etc.");
 DEFINE_ENUM(SliderFlags_AlwaysClamp,     "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
 DEFINE_ENUM(SliderFlags_Logarithmic,     "Make the widget logarithmic (linear otherwise). Consider using ImGuiSliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.");
 DEFINE_ENUM(SliderFlags_NoRoundToFormat, "Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits)");
 DEFINE_ENUM(SliderFlags_NoInput,         "Disable CTRL+Click or Enter key allowing to input text directly into the widget");
 
 // ImGuiTabBarFlags
-// Flags: for BeginTabBar()
-DEFINE_ENUM(TabBarFlags_None,                         "");
+DEFINE_ENUM(TabBarFlags_None,                         "Flags: for BeginTabBar()");
 DEFINE_ENUM(TabBarFlags_Reorderable,                  "Allow manually dragging tabs to re-order them + New tabs are appended at the end of list");
 DEFINE_ENUM(TabBarFlags_AutoSelectNewTabs,            "Automatically select new tabs when they appear");
 DEFINE_ENUM(TabBarFlags_TabListPopupButton,           "Disable buttons to open the tab list popup");
@@ -310,8 +298,7 @@ DEFINE_ENUM(TabBarFlags_FittingPolicyResizeDown,      "Resize tabs when they don
 DEFINE_ENUM(TabBarFlags_FittingPolicyScroll,          "Add scroll buttons when tabs don't fit");
 
 // ImGuiTabItemFlags
-// Flags: for BeginTabItem()
-DEFINE_ENUM(TabItemFlags_None,                         "");
+DEFINE_ENUM(TabItemFlags_None,                         "Flags: for BeginTabItem()");
 DEFINE_ENUM(TabItemFlags_UnsavedDocument,              "Append '*' to title without affecting the ID, as a convenience to avoid using the ### operator. Also: tab is selected on closure and closure is deferred by one frame to allow code to undo it without flicker.");
 DEFINE_ENUM(TabItemFlags_SetSelected,                  "Trigger flag to programmatically make the tab selected when calling BeginTabItem()");
 DEFINE_ENUM(TabItemFlags_NoCloseWithMiddleMouseButton, "Disable behavior of closing tabs (that are submitted with p_open != NULL) with middle mouse button. You can still repro this behavior on user's side with if (IsItemHovered() && IsMouseClicked(2)) *p_open = false.");
@@ -322,30 +309,29 @@ DEFINE_ENUM(TabItemFlags_Leading,                      "Enforce the tab position
 DEFINE_ENUM(TabItemFlags_Trailing,                     "Enforce the tab position to the right of the tab bar (before the scrolling buttons)");
 
 // ImGuiTableFlags
-// for ImGui::BeginTable()
-// - Important! Sizing policies have complex and subtle side effects, more so than you would expect.
-//   Read comments/demos carefully + experiment with live demos to get acquainted with them.
-// - The DEFAULT sizing policies are:
-//    - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has ImGuiWindowFlags_AlwaysAutoResize.
-//    - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
-// - When ScrollX is off:
-//    - Table defaults to ImGuiTableFlags_SizingStretchSame -> all Columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.
-//    - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
-//    - Fixed Columns will generally obtain their requested width (unless the table cannot fit them all).
-//    - Stretch Columns will share the remaining width.
-//    - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
-//      The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
-//      (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
-// - When ScrollX is on:
-//    - Table defaults to ImGuiTableFlags_SizingFixedFit -> all Columns defaults to ImGuiTableColumnFlags_WidthFixed
-//    - Columns sizing policy allowed: Fixed/Auto mostly.
-//    - Fixed Columns can be enlarged as needed. Table will show an horizontal scrollbar if needed.
-//    - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
-//    - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
-//      If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
-// - Read on documentation at the top of imgui_tables.cpp for details.
+DEFINE_ENUM(TableFlags_None, R"(for ImGui::BeginTable()
+- Important! Sizing policies have complex and subtle side effects, more so than you would expect.
+  Read comments/demos carefully + experiment with live demos to get acquainted with them.
+- The DEFAULT sizing policies are:
+   - Default to ImGuiTableFlags_SizingFixedFit    if ScrollX is on, or if host window has ImGuiWindowFlags_AlwaysAutoResize.
+   - Default to ImGuiTableFlags_SizingStretchSame if ScrollX is off.
+- When ScrollX is off:
+   - Table defaults to ImGuiTableFlags_SizingStretchSame -> all Columns defaults to ImGuiTableColumnFlags_WidthStretch with same weight.
+   - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
+   - Fixed Columns will generally obtain their requested width (unless the table cannot fit them all).
+   - Stretch Columns will share the remaining width.
+   - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
+     The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
+     (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
+- When ScrollX is on:
+   - Table defaults to ImGuiTableFlags_SizingFixedFit -> all Columns defaults to ImGuiTableColumnFlags_WidthFixed
+   - Columns sizing policy allowed: Fixed/Auto mostly.
+   - Fixed Columns can be enlarged as needed. Table will show an horizontal scrollbar if needed.
+   - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
+   - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
+     If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
+- Read on documentation at the top of imgui_tables.cpp for details.)");
 // Features
-DEFINE_ENUM(TableFlags_None,                       "");
 DEFINE_ENUM(TableFlags_Resizable,                  "Enable resizing columns.");
 DEFINE_ENUM(TableFlags_Reorderable,                "Enable reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)");
 DEFINE_ENUM(TableFlags_Hideable,                   "Enable hiding/disabling columns in context menu.");
@@ -389,8 +375,7 @@ DEFINE_ENUM(TableFlags_SortMulti,                  "Hold shift when clicking hea
 DEFINE_ENUM(TableFlags_SortTristate,               "Allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).");
 
 // ImGuiTableColumnFlags
-// Flags: For TableSetupColumn()
-DEFINE_ENUM(TableColumnFlags_None,                 "");
+DEFINE_ENUM(TableColumnFlags_None,                 "Flags: For TableSetupColumn()");
 // Input configuration flags
 DEFINE_ENUM(TableColumnFlags_DefaultHide,          "Default as a hidden/disabled column.");
 DEFINE_ENUM(TableColumnFlags_DefaultSort,          "Default as a sorting column.");
@@ -415,13 +400,11 @@ DEFINE_ENUM(TableColumnFlags_IsSorted,             "Status: is currently part of
 DEFINE_ENUM(TableColumnFlags_IsHovered,            "Status: is hovered by mouse");
 
 // ImGuiTableRowFlags
-// Flags: For TableNextRow()
-DEFINE_ENUM(TableRowFlags_None,    "");
+DEFINE_ENUM(TableRowFlags_None,    "Flags: For TableNextRow()");
 DEFINE_ENUM(TableRowFlags_Headers, "Identify header row (set default background color + width of its contents accounted different for auto column width)");
 
 // ImGuiTreeNodeFlags
-// Flags for TreeNode(), TreeNodeEx(), CollapsingHeader()
-DEFINE_ENUM(TreeNodeFlags_None,                 "");
+DEFINE_ENUM(TreeNodeFlags_None,                 "Flags for TreeNode(), TreeNodeEx(), CollapsingHeader()");
 DEFINE_ENUM(TreeNodeFlags_Selected,             "Draw as selected");
 DEFINE_ENUM(TreeNodeFlags_Framed,               "Draw frame with background (e.g. for CollapsingHeader)");
 DEFINE_ENUM(TreeNodeFlags_AllowItemOverlap,     "Hit testing to allow subsequent widgets to overlap this one");
@@ -436,8 +419,7 @@ DEFINE_ENUM(TreeNodeFlags_FramePadding,         "Use FramePadding (even for an u
 DEFINE_ENUM(TreeNodeFlags_SpanAvailWidth,       "Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line. In the future we may refactor the hit system to be front-to-back, allowing natural overlaps and then this can become the default.");
 DEFINE_ENUM(TreeNodeFlags_SpanFullWidth,        "Extend hit box to the left-most and right-most edges (bypass the indented area).");
 // DEFINE_ENUM(TreeNodeFlags_NavLeftJumpsBackHere, "(WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)");
-// DEFINE_ENUM(TreeNodeFlags_NoScrollOnOpen        "FIXME: TODO: Disable automatic scroll on TreePop() if node got just open and contents is not visible")
-// DEFINE_ENUM(ImGuiTreeNodeFlags_CollapsingHeader,"");
+DEFINE_ENUM(TreeNodeFlags_CollapsingHeader,     "");
 
 // ImGuiWindowFlags
 // for Begin(), BeginChild()
