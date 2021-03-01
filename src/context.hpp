@@ -21,6 +21,8 @@ struct ImGuiContext;
 
 class Context : public Resource {
 public:
+  static constexpr const char *api_type_name { "ImGui_Context" };
+
   Context(const char *title, int x, int y, int w, int h);
   ~Context();
 

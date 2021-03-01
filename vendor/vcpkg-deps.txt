@@ -1,1 +1,1 @@
-boost-core boost-preprocessor boost-type-index gl3w
+boost-core boost-preprocessor gl3w

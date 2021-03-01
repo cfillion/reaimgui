@@ -5,6 +5,7 @@
 
 // https://forum.cockos.com/showthread.php?t=211620
 struct reaper_array {
+  static constexpr const char *api_type_name { "reaper_array" };
   const unsigned int size, alloc;
   double data[1];
 };
