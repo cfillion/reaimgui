@@ -335,4 +335,10 @@ Default values: flags = ImGui_TabItemFlags_None)",
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
 });
 
-// IMGUI_API void          SetTabItemClosed(const char* tab_or_docked_window_label);           // notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.
+DEFINE_API(void, SetTabItemClosed, (ImGui_Context*,ctx)
+(const char*,tab_or_docked_window_label),
+"Notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.",
+{
+  FRAME_GUARD;
+  ImGui::SetTabItemClosed(tab_or_docked_window_label);
+});

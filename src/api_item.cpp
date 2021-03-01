@@ -217,7 +217,6 @@ DEFINE_API(void, PopTextWrapPos, (ImGui_Context*,ctx),
   ImGui::PopTextWrapPos();
 });
 
-// Parameters stacks (current window)
 DEFINE_API(void, PushItemWidth, (ImGui_Context*,ctx)
 (double,item_width),
 R"(Push width of items for common large "item+label" widgets. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side). 0.0f = default to ~2/3 of windows width,)",
@@ -250,4 +249,10 @@ R"(Set width of the _next_ common large "item+label" widget. >0.0f: width in pix
   FRAME_GUARD;
   ImGui::SetNextItemWidth(item_width);
 });
-// IMGUI_API float         CalcItemWidth();                                                // width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.
+
+DEFINE_API(double, CalcItemWidth, (ImGui_Context*,ctx),
+"Width of item given pushed settings and current cursor position. NOT necessarily the width of last item unlike most 'Item' functions.",
+{
+  FRAME_GUARD;
+  return ImGui::CalcItemWidth();
+});

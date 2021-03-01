@@ -150,9 +150,10 @@ R"(Set next window position. Call before Begin(). Use pivot=(0.5,0.5) to center 
 Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
 {
   FRAME_GUARD;
-  ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y),
-    valueOr(API_RO(cond), ImGuiCond_Always),
-    ImVec2(valueOr(API_RO(pivot_x), 0.0), valueOr(API_RO(pivot_y), 0.0)));
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  const ImVec2 pivot(valueOr(API_RO(pivot_x), 0.0),
+                     valueOr(API_RO(pivot_y), 0.0));
+  ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y), cond, pivot);
 });
 
 DEFINE_API(void, SetNextWindowSize, (ImGui_Context*,ctx)
@@ -162,23 +163,93 @@ R"(Set next window size. set axis to 0.0f to force an auto-fit on this axis. Cal
 Default values: cond = ImGui_Cond_Always)",
 {
   FRAME_GUARD;
-  ImGui::SetNextWindowSize(ImVec2(size_w, size_h),
-    valueOr(API_RO(cond), ImGuiCond_Always));
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  ImGui::SetNextWindowSize(ImVec2(size_w, size_h), cond);
 });
 
-// DEFINE_API(void, SetNextWindowSizeConstraints(const ImVec2& size_min, const ImVec2& size_max, ImGuiSizeCallback custom_callback = NULL, void* custom_callback_data = NULL); // set next window size limits. use -1,-1 on either X/Y axis to preserve the current size. Sizes will be rounded down. Use callback to apply non-trivial programmatic constraints.
+DEFINE_API(void, SetNextWindowSizeConstraints, (ImGui_Context*,ctx)
+(double,size_min_w)(double,size_min_h)(double,size_max_w)(double,size_max_h),
+"Set next window size limits. use -1,-1 on either X/Y axis to preserve the current size. Sizes will be rounded down.",
+{
+  FRAME_GUARD;
+  ImGui::SetNextWindowSizeConstraints(
+    ImVec2(size_min_w, size_min_h), ImVec2(size_max_w, size_max_h));
+});
 
 DEFINE_API(void, SetNextWindowContentSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h),
-"Set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0f to leave it automatic. call before Begin()",
+"Set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0f to leave it automatic. Call before Begin().",
 {
   FRAME_GUARD;
   ImGui::SetNextWindowContentSize(ImVec2(size_w, size_h));
 });
 
-// DEFINE_API(void, SetNextWindowCollapsed(bool collapsed, ImGuiCond cond = 0);                 // set next window collapsed state. call before Begin()
-// DEFINE_API(void, SetNextWindowFocus();                                                       // set next window to be focused / top-most. call before Begin()
-// DEFINE_API(void, SetNextWindowBgAlpha(float alpha);                                          // set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGuiWindowFlags_NoBackground.
+DEFINE_API(void, SetNextWindowCollapsed, (ImGui_Context*,ctx)
+(bool,collapsed)(int*,API_RO(cond)),
+R"(Set next window collapsed state. Call before Begin().
+
+Default values: cond = ImGui_Cond_Always)",
+{
+  FRAME_GUARD;
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  ImGui::SetNextWindowCollapsed(collapsed, cond);
+});
+
+DEFINE_API(void, SetNextWindowFocus, (ImGui_Context*,ctx),
+"Set next window to be focused / top-most. Call before Begin().",
+{
+  FRAME_GUARD;
+  ImGui::SetNextWindowFocus();
+});
+
+DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
+(double,alpha),
+"Set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGui_WindowFlags_NoBackground.",
+{
+  FRAME_GUARD;
+  ImGui::SetNextWindowBgAlpha(alpha);
+});
+
+DEFINE_API(void, SetWindowPos, (ImGui_Context*,ctx)
+(const char*,name)(double,pos_x)(double,pos_y)(int*,API_RO(cond)),
+R"(Set named window position. See ImGui_SetNextWindowPos.
+
+Default values: cond = ImGui_Cond_Always)",
+{
+  FRAME_GUARD;
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  ImGui::SetWindowPos(name, ImVec2(pos_x, pos_y), cond);
+});
+
+DEFINE_API(void, SetWindowSize, (ImGui_Context*,ctx)
+(const char*,name)(double,size_w)(double,size_h)(int*,API_RO(cond)),
+R"(Set named window size. set axis to 0.0f to force an auto-fit on this axis. See ImGui_SetNextWindowSize.
+
+Default values: cond = ImGui_Cond_Always)",
+{
+  FRAME_GUARD;
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  ImGui::SetWindowSize(name, ImVec2(size_w, size_h), cond);
+});
+
+DEFINE_API(void, SetWindowCollapsed, (ImGui_Context*,ctx)
+(const char*,name)(bool,collapsed)(int*,API_RO(cond)),
+R"(Set named window collapsed state. See ImGui_SetNextWindowCollapsed.
+
+Default values: cond = ImGui_Cond_Always)",
+{
+  FRAME_GUARD;
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  ImGui::SetWindowCollapsed(name, collapsed, cond);
+});
+
+DEFINE_API(void, SetWindowFocus, (ImGui_Context*,ctx)
+(const char*,name),
+"Set named window to be focused / top-most. Use NULL to remove focus. See ImGui_SetNextWindowFocus.",
+{
+  FRAME_GUARD;
+  ImGui::SetWindowFocus(name);
+});
 
 DEFINE_API(void, GetContentRegionAvail, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),

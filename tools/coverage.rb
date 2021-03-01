@@ -47,6 +47,9 @@ NATIVE_ONLY = [
   'void ImDrawList::AddCallback(ImDrawCallback, void*)',
   'void ImDrawList::AddDrawCmd()',
 
+  # equivalent overload implemented as GetColorEx
+  'ImU32 ImGui::GetColorU32(const ImVec4&)',
+
   # only const char* IDs
   'void ImGui::PushID(int)',
   'void ImGui::PushID(const void*)',
@@ -61,7 +64,7 @@ NATIVE_ONLY = [
   'bool ImGui::TreeNode(const void*, const char*, ...)',
   'bool ImGui::TreeNodeEx(const void*, ImGuiTreeNodeFlags, const char*, ...)',
 
-  # item getter callbacks
+  # item getter callback overloads
   'bool ImGui::Combo(const char*, int*, bool(*items_getter)(void* data, int idx, const char** out_text), void*, int, int)',
   'bool ImGui::ListBox(const char*, int*, bool (*items_getter)(void* data, int idx, const char** out_text), void*, int, int)',
   'void ImGui::PlotLines(const char*, float(*values_getter)(void* data, int idx), void*, int, int, const char*, float, float, ImVec2)',
@@ -91,6 +94,10 @@ NATIVE_ONLY = [
   'void ImGui::SetWindowSize(const ImVec2&, ImGuiCond)',
   'void ImGui::SetWindowCollapsed(bool, ImGuiCond)',
   'void ImGui::SetWindowFocus()',
+  'void ImGui::SetWindowFontScale(float)', # old API
+
+  # use the list clipper API instead
+  'void ImGui::CalcListClipping(int, float, int*, int*)',
 
   # legacy Columns API (2020: prefer using Tables!)
   'void ImGui::Columns(int, const char*, bool)',
@@ -108,6 +115,22 @@ NATIVE_ONLY = [
   'void ImDrawList::PrimRect(const ImVec2&, const ImVec2&, ImU32)',
   'void ImDrawList::PrimRectUV(const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
   'void ImDrawList::PrimQuadUV(const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
+
+  # images
+  'ImVec2 ImGui::GetFontTexUvWhitePixel()',
+  'void ImGui::Image(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)',
+  'bool ImGui::ImageButton(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, int, const ImVec4&, const ImVec4&)',
+  'void ImDrawList::PushTextureID(ImTextureID)',
+  'void ImDrawList::PopTextureID()',
+  'void ImDrawList::AddImage(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
+  'void ImDrawList::AddImageQuad(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
+  'void ImDrawList::AddImageRounded(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32, float, ImDrawCornerFlags)',
+
+  # value helpers
+  'void ImGui::Value(const char*, bool)',
+  'void ImGui::Value(const char*, int)',
+  'void ImGui::Value(const char*, unsigned int)',
+  'void ImGui::Value(const char*, float, const char*)',
 ]
 
 NATIVE_ONLY_CLASSES = %w[
@@ -139,6 +162,9 @@ NATIVE_ONLY_ENUMS = [
 
   # marked as alpha, to be moved to style
   /\ATableFlags_NoBordersInBody/,
+
+  # backend internal flags
+  /\AConfigFlags_(IsSRGB|IsTouchScreen)\z/,
 ]
 
 # these functions were ported using another name (eg. overloads)
@@ -146,23 +172,27 @@ RENAMES = {
   'bool ImGui::RadioButton(const char*, int*, int)'         => 'RadioButtonEx',
   'ImU32 ImGui::GetColorU32(ImGuiCol, float)'               => 'GetColor',
   'bool ImGui::TreeNodeEx(const char*, ImGuiTreeNodeFlags)' => 'TreeNode',
+  'ImU32 ImGui::GetColorU32(ImU32)'                         => 'GetColorEx',
+  'const ImVec4& ImGui::GetStyleColorVec4(ImGuiCol)'        => 'GetStyleColor',
 }
 
 ARG_RENAMES = {
-  'IsKeyDown' => { 'user_key_index' => 'key_code' },
-  'IsKeyPressed' => { 'user_key_index' => 'key_code' },
+  'IsKeyDown'     => { 'user_key_index' => 'key_code' },
+  'IsKeyPressed'  => { 'user_key_index' => 'key_code' },
   'IsKeyReleased' => { 'user_key_index' => 'key_code' },
 }
 
-# these functions were not ported 1:1
+# these functions were not ported 1:1 (same name, otherwise add to RENAMES above too!)
 OVERRIDES = {
+  'const char* ImGui::GetVersion()' => 'void GetVersion(char*, int, char*, int)',
   'void ImGui::ColorConvertHSVtoRGB(float, float, float, float&, float&, float&)' => 'int ColorConvertHSVtoRGB(double, double, double, double*)',
   'void ImGui::PushStyleVar(ImGuiStyleVar, const ImVec2&)'                        => 'void PushStyleVar(int, double, double*)',
   'bool ImGui::SetDragDropPayload(const char*, const void*, size_t, ImGuiCond)'   => 'bool SetDragDropPayload(const char*, const char*, int*)',
   'bool ImGui::TreeNodeEx(const char*, ImGuiTreeNodeFlags, const char*, ...)'     => 'bool TreeNodeEx(const char*, const char*, int*)',
 
-  # float ref_col[] -> int* ref_col
+  # color array -> packed int
   'bool ImGui::ColorPicker4(const char*, float[4], ImGuiColorEditFlags, const float*)' => 'bool ColorPicker4(const char*, int*, int*, int*)',
+  'const ImVec4& ImGui::GetStyleColorVec4(ImGuiCol)' => 'int GetStyleColor(int)',
 
   # (array, array_size) -> reaper_array*
   'void ImGui::PlotLines(const char*, const float*, int, int, const char*, float, float, ImVec2, int)'     => 'void PlotLines(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
@@ -170,10 +200,11 @@ OVERRIDES = {
   'void ImDrawList::AddPolyline(const ImVec2*, int, ImU32, bool, float)' => 'void DrawList_AddPolyline(reaper_array*, int, bool, double)',
   'void ImDrawList::AddConvexPolyFilled(const ImVec2*, int, ImU32)'      => 'void DrawList_AddConvexPolyFilled(reaper_array*, int, int)',
 
-  # no input text callbacks
+  # no callbacks
   'bool ImGui::InputText(const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)'                         => 'bool InputText(const char*, char*, int, int*)',
   'bool ImGui::InputTextMultiline(const char*, char*, size_t, const ImVec2&, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)' => 'bool InputTextMultiline(const char*, char*, int, double*, double*, int*)',
   'bool ImGui::InputTextWithHint(const char*, const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)'    => 'bool InputTextWithHint(const char*, const char*, char*, int, int*)',
+  'void ImGui::SetNextWindowSizeConstraints(const ImVec2&, const ImVec2&, ImGuiSizeCallback, void*)' => 'void SetNextWindowSizeConstraints(double, double, double, double)',
 
   # const char* (null-terminated) -> char* (\31-terminated)
   'bool ImGui::Combo(const char*, int*, const char*, int)' => 'bool Combo(const char*, int*, char*, int*)',
@@ -364,7 +395,7 @@ end
 Argument = Struct.new :type, :name, :default, :size
 
 # load ImGui definitions
-IMGUI_FUNC_R  = /IMGUI_API \s+ (?<type>[\w\*\&]+) \s+ (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
+IMGUI_FUNC_R  = /IMGUI_API \s+ (?<type>[\w\*\&\s]+?) \s+ (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
 IMGUI_ARG_R   = /\A(?<type>[\w\*&\s\<\>]+) \s+ (?<name>\w+) (?:\[ (?<size>\d*) \])? (?:\s*=\s*(?<default>.+))?\z/x
 IMGUI_ENUM_R  = /\A\s* ImGui(?<name>[\w_]+) \s* (?:,|=)/x
 IMGUI_CLASS_R = /(?:namespace|struct) (?<name>\w+)/

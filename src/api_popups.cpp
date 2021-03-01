@@ -117,8 +117,16 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
     valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
 });
 
-// Popups: test function
-//  - IsPopupOpen(): return true if the popup is open at the current BeginPopup() level of the popup stack.
-//  - IsPopupOpen() with ImGuiPopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.
-//  - IsPopupOpen() with ImGuiPopupFlags_AnyPopupId + ImGuiPopupFlags_AnyPopupLevel: return true if any popup is open.
-IMGUI_API bool          IsPopupOpen(const char* str_id, ImGuiPopupFlags flags = 0);                         // return true if the popup is open.
+DEFINE_API(bool, IsPopupOpen, (ImGui_Context*,ctx)
+(const char*,str_id)(int*,API_RO(flags)),
+R"(Return true if the popup is open at the current BeginPopup() level of the popup stack.
+
+With ImGuiPopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.
+With ImGuiPopupFlags_AnyPopupId + ImGuiPopupFlags_AnyPopupLevel: return true if any popup is open.
+
+Default values: flags = ImGui_PopupFlags_None)",
+{
+  FRAME_GUARD;
+  const ImGuiPopupFlags flags { valueOr(API_RO(flags), ImGuiPopupFlags_None) };
+  return ImGui::IsPopupOpen(str_id, flags);
+});

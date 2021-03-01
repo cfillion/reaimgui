@@ -168,15 +168,28 @@ Default values: alpha_mul = 1.0)",
   return Color::abgr2rgba(ImGui::GetColorU32(idx, valueOr(API_RO(alpha_mul), 1.0)));
 });
 
-// IMGUI_API ImU32         GetColorU32(ImGuiCol idx, float alpha_mul = 1.0f);              // 
-// IMGUI_API ImU32         GetColorU32(const ImVec4& col);                                 // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
-// IMGUI_API ImU32         GetColorU32(ImU32 col);                                         // retrieve given color with style alpha applied, packed as a 32-bit value suitable for ImDrawList
-// IMGUI_API const ImVec4& GetStyleColorVec4(ImGuiCol idx);                                // retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), otherwise use GetColorU32() to get style color with style alpha baked in.
+DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
+(int,col_rgba),
+"Retrieve given color with style alpha applied, packed as a 32-bit value.",
+{
+  FRAME_GUARD;
+  return Color::abgr2rgba(ImGui::GetColorU32(Color::rgba2abgr(col_rgba)));
+});
 
-DEFINE_API(const char*, GetStyleColorName, (int,col_idx),
+DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
+(int,idx),
+"Retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), Otherwise use GetColor() to get style color with style alpha baked in.",
+{
+  FRAME_GUARD;
+  IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
+  const ImVec4 &col { ImGui::GetStyleColorVec4(idx) };
+  return Color{col}.pack();
+});
+
+DEFINE_API(const char*, GetStyleColorName, (int,idx),
 "Get a string corresponding to the enum value (for display, saving, etc.).",
 {
-  return ImGui::GetStyleColorName(col_idx);
+  return ImGui::GetStyleColorName(idx);
 });
 
 DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
