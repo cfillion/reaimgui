@@ -37,7 +37,7 @@ struct ImGui_DrawList {
       return ImGui::GetForegroundDrawList();
     }
 
-    throw reascript_error { "argument 1: expected ImGui_DrawList*" };
+    throw reascript_error { "expected a valid ImGui_DrawList*" };
   }
 };
 

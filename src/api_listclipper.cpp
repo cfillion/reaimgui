@@ -27,7 +27,7 @@ ImGuiListClipper *ListClipper::use(ListClipper *lc)
   }
 
   char message[255];
-  snprintf(message, sizeof(message), "argument 1: expected ImGui_ListClipper*, got %p", lc);
+  snprintf(message, sizeof(message), "expected a valid ImGui_ListClipper*, got %p", lc);
   throw reascript_error { message };
 }
 
