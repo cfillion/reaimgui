@@ -284,3 +284,81 @@ DEFINE_API(void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
 {
   ImGui_DrawList::get(draw_list)->PopClipRect();
 });
+
+DEFINE_API(void, DrawList_PathClear, (ImGui_DrawList*,draw_list),
+"",
+{
+  ImGui_DrawList::get(draw_list)->PathClear();
+});
+
+DEFINE_API(void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
+(double,pos_x)(double,pos_y),
+"Stateful path API, add points then finish with PathFillConvex() or PathStroke()",
+{
+  ImGui_DrawList::get(draw_list)->PathLineToMergeDuplicate(ImVec2(pos_x, pos_y));
+});
+
+DEFINE_API(void, PathFillConvex, (ImGui_DrawList*,draw_list)
+(int,col_rgba),
+"Note: Anti-aliased filling requires points to be in clockwise order.",
+{
+  ImGui_DrawList::get(draw_list)->PathFillConvex(Color::rgba2abgr(col_rgba));
+});
+
+DEFINE_API(void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
+(int,col_rgba)(bool,closed)(double*,API_RO(thickness)),
+"Default values: thickness = 1.0",
+{
+  ImGui_DrawList::get(draw_list)->PathStroke(
+    Color::rgba2abgr(col_rgba), closed, valueOr(API_RO(thickness), 1.0));
+});
+
+DEFINE_API(void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
+(double,center_x)(double,center_y)(double,radius)(double,a_min)(double,a_max)
+(int*,API_RO(num_segments)),
+"Default values: num_segments = 10",
+{
+  ImGui_DrawList::get(draw_list)->PathArcTo(ImVec2(center_x, center_y),
+    radius, a_min, a_max, valueOr(API_RO(num_segments), 10));
+});
+
+DEFINE_API(void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
+(double,center_x)(double,center_y)(double,radius)
+(int,a_min_of_12)(int,a_max_of_12),
+"Use precomputed angles for a 12 steps circle.",
+{
+  ImGui_DrawList::get(draw_list)->PathArcToFast(
+    ImVec2(center_x, center_y), radius, a_min_of_12, a_max_of_12);
+});
+
+DEFINE_API(void, DrawList_PathBezierCubicCurveTo, (ImGui_DrawList*,draw_list)
+(double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
+(int*,API_RO(num_segments)),
+R"(Cubic Bezier (4 control points)
+
+Default values: num_segments = 0)",
+{
+  ImGui_DrawList::get(draw_list)->PathBezierCubicCurveTo(
+    ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
+    valueOr(API_RO(num_segments), 0));
+});
+
+DEFINE_API(void, DrawList_PathBezierQuadraticCurveTo, (ImGui_DrawList*,draw_list)
+(double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(int*,API_RO(num_segments)),
+R"(Quadratic Bezier (3 control points)
+
+Default values: num_segments = 0)",
+{
+  ImGui_DrawList::get(draw_list)->PathBezierQuadraticCurveTo(
+    ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), valueOr(API_RO(num_segments), 0));
+});
+
+DEFINE_API(void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
+(double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y)
+(double*,API_RO(rounding))(int*,API_RO(rounding_corners)),
+"Default values: rounding = 0.0, rounding_corners = ImGui_DrawCornerFlags_All",
+{
+  ImGui_DrawList::get(draw_list)->PathRect(ImVec2(rect_min_x, rect_min_y),
+    ImVec2(rect_max_x, rect_max_y), valueOr(API_RO(rounding), 0.0),
+    valueOr(API_RO(rounding_corners), ImDrawCornerFlags_All));
+});
