@@ -90,7 +90,7 @@ if(WIN32)
     /PDBALTPATH:%_PDB%
   )
 else()
-  add_compile_options(-fstack-protector-strong -fdiagnostics-color)
+  add_compile_options(-fsigned-char -fstack-protector-strong -fdiagnostics-color)
 endif()
 
 add_subdirectory(src)
