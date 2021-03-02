@@ -81,6 +81,13 @@ DEFINE_API(double, GetDeltaTime, (ImGui_Context*,ctx),
   return ImGui::GetIO().DeltaTime;
 });
 
+DEFINE_API(int, GetFrameCount, (ImGui_Context*,ctx),
+"Get global imgui frame count. incremented by 1 every frame.",
+{
+  FRAME_GUARD;
+  return ImGui::GetFrameCount();
+});
+
 DEFINE_API(void, GetDisplaySize, (ImGui_Context*,ctx)
 (double*,API_W(w))(double*,API_W(h)),
 "",
@@ -276,10 +283,6 @@ DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
   IM_ASSERT(cursor_type >= 0 && cursor_type < ImGuiMouseCursor_COUNT);
   ImGui::SetMouseCursor(cursor_type);
 });
-
-// IMGUI_API void          CaptureMouseFromApp(bool want_capture_mouse_value = true);          // attention: misleading name! manually override io.WantCaptureMouse flag next frame (said flag is entirely left for your application to handle). This is equivalent to setting "io.WantCaptureMouse = want_capture_mouse_value;" after the next NewFrame() call.
-
-// IMGUI_API int           GetKeyIndex(ImGuiKey imgui_key);                                    // map ImGuiKey_* values into user's key index. == io.KeyMap[key]
 
 DEFINE_API(bool, IsKeyDown, (ImGui_Context*,ctx)
 (int,key_code),

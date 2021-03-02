@@ -649,6 +649,25 @@ DEFINE_API(bool, SliderDoubleN, (ImGui_Context*,ctx)
     API_RO(format) ? API_RO(format) : "%.3f", flags);
 });
 
+DEFINE_API(bool, SliderAngle, (ImGui_Context*,ctx)
+(const char*,label)(double*,API_RW(v_rad))(double*,API_RO(v_degrees_min))
+(double*,API_RO(v_degrees_max))(const char*,API_RO(format))(int*,API_RO(flags)),
+"Default values: v_degrees_min = -360.0, v_degrees_max = +360.0, format = '%.0f deg', flags = ImGui_SliderFlags_None",
+{
+  FRAME_GUARD;
+  nullIfEmpty(API_RO(format));
+
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
+  sanitizeSliderFlags(flags);
+
+  float rad = *API_RW(v_rad);
+  const bool rv = ImGui::SliderAngle(label, &rad,
+    valueOr(API_RO(v_degrees_min), -360.0), valueOr(API_RO(v_degrees_max), +360.0),
+    API_RO(format) ? API_RO(format) : "%.0f deg", flags);
+  *API_RW(v_rad) = rad;
+  return rv;
+});
+
 DEFINE_API(bool, VSliderInt, (ImGui_Context*,ctx)
 (const char*,label)(double,size_w)(double,size_h)(int*,API_RW(v))
 (int,v_min)(int,v_max)(const char*,API_RO(format))

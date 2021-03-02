@@ -44,8 +44,6 @@ static StyleVarType styleVarType(const ImGuiStyleVar var)
     return StyleVarType::Unknown;
 }
 
-// IMGUI_API ImFont*       GetFont();                                                      // get current font
-
 DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
 "Get current font size (= height in pixels) of current font with current scale applied",
 {
@@ -154,8 +152,6 @@ DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 
 #undef CASE_FLOAT_VAR
 #undef CASE_IMVEC2_VAR
-
-// IMGUI_API ImVec2        GetFontTexUvWhitePixel();                                       // get UV coordinate for a while pixel, useful to draw custom shapes via the ImDrawList API
 
 DEFINE_API(int, GetColor, (ImGui_Context*,ctx)
 (int,idx)(double*,API_RO(alpha_mul)),

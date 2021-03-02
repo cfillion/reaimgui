@@ -20,6 +20,9 @@ NATIVE_ONLY = [
   'void ImGui::Render()',
   'ImDrawData* ImGui::GetDrawData()',
   'ImDrawListSharedData* ImGui::GetDrawListSharedData()',
+  'ImGuiViewport* ImGui::GetMainViewport()',
+  'void ImGui::CaptureKeyboardFromApp(bool)',
+  'void ImGui::CaptureMouseFromApp(bool)',
 
   'ImFont* ImGui::GetFont()',
   'void ImGui::PushFont(ImFont*)',
@@ -46,6 +49,17 @@ NATIVE_ONLY = [
 
   'void ImDrawList::AddCallback(ImDrawCallback, void*)',
   'void ImDrawList::AddDrawCmd()',
+
+  'void ImGui::SetStateStorage(ImGuiStorage*)',
+  'ImGuiStorage* ImGui::GetStateStorage()',
+  'void ImGui::LoadIniSettingsFromDisk(const char*)',
+  'void ImGui::LoadIniSettingsFromMemory(const char*, size_t)',
+  'void ImGui::SaveIniSettingsToDisk(const char*)',
+  'const char* ImGui::SaveIniSettingsToMemory(size_t*)',
+
+  'ImVec4 ImGui::ColorConvertU32ToFloat4(ImU32)',
+  'ImU32 ImGui::ColorConvertFloat4ToU32(const ImVec4&)',
+  'void ImGui::ColorConvertRGBtoHSV(float, float, float, float&, float&, float&)',
 
   # equivalent overload implemented as GetColorEx
   'ImU32 ImGui::GetColorU32(const ImVec4&)',
@@ -98,6 +112,12 @@ NATIVE_ONLY = [
 
   # use the list clipper API instead
   'void ImGui::CalcListClipping(int, float, int*, int*)',
+
+  # single-component scalar input
+  'bool ImGui::DragScalar(const char*, ImGuiDataType, void*, float, const void*, const void*, const char*, ImGuiSliderFlags)',
+  'bool ImGui::SliderScalar(const char*, ImGuiDataType, void*, const void*, const void*, const char*, ImGuiSliderFlags)',
+  'bool ImGui::VSliderScalar(const char*, const ImVec2&, ImGuiDataType, void*, const void*, const void*, const char*, ImGuiSliderFlags)',
+  'bool ImGui::InputScalar(const char*, ImGuiDataType, void*, const void*, const void*, const char*, ImGuiInputTextFlags)',
 
   # legacy Columns API (2020: prefer using Tables!)
   'void ImGui::Columns(int, const char*, bool)',
@@ -174,6 +194,13 @@ RENAMES = {
   'bool ImGui::TreeNodeEx(const char*, ImGuiTreeNodeFlags)' => 'TreeNode',
   'ImU32 ImGui::GetColorU32(ImU32)'                         => 'GetColorEx',
   'const ImVec4& ImGui::GetStyleColorVec4(ImGuiCol)'        => 'GetStyleColor',
+  'bool ImGui::IsRectVisible(const ImVec2&, const ImVec2&)' => 'IsRectVisibleEx',
+  'ImGuiTableSortSpecs* ImGui::TableGetSortSpecs()'         => 'TableGetColumnSortSpecs',
+
+  # variable-component input only supports double
+  'bool ImGui::DragScalarN(const char*, ImGuiDataType, void*, int, float, const void*, const void*, const char*, ImGuiSliderFlags)' => 'DragDoubleN',
+  'bool ImGui::SliderScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiSliderFlags)'      => 'SliderDoubleN',
+  'bool ImGui::InputScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiInputTextFlags)'    => 'InputDoubleN',
 }
 
 ARG_RENAMES = {
@@ -188,7 +215,9 @@ OVERRIDES = {
   'void ImGui::ColorConvertHSVtoRGB(float, float, float, float&, float&, float&)' => 'int ColorConvertHSVtoRGB(double, double, double, double*)',
   'void ImGui::PushStyleVar(ImGuiStyleVar, const ImVec2&)'                        => 'void PushStyleVar(int, double, double*)',
   'bool ImGui::SetDragDropPayload(const char*, const void*, size_t, ImGuiCond)'   => 'bool SetDragDropPayload(const char*, const char*, int*)',
+  'const ImGuiPayload* ImGui::GetDragDropPayload()'                               => 'bool GetDragDropPayload(char*, int, char*, int, bool*, bool*)',
   'bool ImGui::TreeNodeEx(const char*, ImGuiTreeNodeFlags, const char*, ...)'     => 'bool TreeNodeEx(const char*, const char*, int*)',
+  'ImGuiTableSortSpecs* ImGui::TableGetSortSpecs()'                               => 'bool TableGetColumnSortSpecs(int, int*, int*, int*, int*)',
 
   # color array -> packed int
   'bool ImGui::ColorPicker4(const char*, float[4], ImGuiColorEditFlags, const float*)' => 'bool ColorPicker4(const char*, int*, int*, int*)',
@@ -215,6 +244,13 @@ OVERRIDES = {
   # no text_end argument
   'ImVec2 ImGui::CalcTextSize(const char*, const char*, bool, float)'        => 'void CalcTextSize(const char*, double*, double*, bool*, double*)',
   'void ImDrawList::AddText(const ImVec2&, ImU32, const char*, const char*)' => 'void DrawList_AddText(double, double, int, const char*)',
+
+  'bool ImGui::DragScalarN(const char*, ImGuiDataType, void*, int, float, const void*, const void*, const char*, ImGuiSliderFlags)' => 'bool DragDoubleN(const char*, reaper_array*, double*, double*, double*, const char*, int*)',
+  'bool ImGui::SliderScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiSliderFlags)'      => 'bool SliderDoubleN(const char*, reaper_array*, double, double, const char*, int*)',
+  'bool ImGui::InputScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiInputTextFlags)'    => 'bool InputDoubleN(const char*, reaper_array*, double*, double*, const char*, int*)',
+
+  # drag/drop payload as string
+  'const ImGuiPayload* ImGui::AcceptDragDropPayload(const char*, ImGuiDragDropFlags)' => 'bool AcceptDragDropPayload(const char*, char*, int, int*)',
 }
 
 # argument position & name are checked
@@ -586,7 +622,11 @@ end
 # check argument names and default values
 reaimgui_funcs.each do |func|
   func.args.each_with_index do |rea_arg, i|
-    rea_arg.name =~ REAIMGUI_ARGN_R
+    unless rea_arg.name =~ REAIMGUI_ARGN_R
+      warn "#{func.name}: invalid argument ##{i+1} '#{rea_arg.name}'"
+      next
+    end
+
     raw_name, decoration = $~[:raw_name], $~[:decoration]
 
     unless raw_name =~ /\A[a-z0-9_]+\z/

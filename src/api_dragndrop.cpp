@@ -52,6 +52,21 @@ DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
   return ImGui::BeginDragDropTarget();
 });
 
+static void copyPayload(const ImGuiPayload *payload, char **reabuf, int reabuf_sz)
+{
+  int newSize {};
+  if(payload->DataSize > reabuf_sz &&
+      realloc_cmd_ptr(reabuf, &newSize, payload->DataSize)) {
+    // output buffer is no longer null terminated!
+    std::memcpy(*reabuf, payload->Data, newSize);
+  }
+  else {
+    const int limit { std::min(reabuf_sz - 1, payload->DataSize) };
+    std::memcpy(*reabuf, payload->Data, limit);
+    (*reabuf)[limit] = '\0';
+  }
+}
+
 DEFINE_API(bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
@@ -71,17 +86,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
   if(!payload)
     return false;
 
-  int newSize {};
-  if(payload->DataSize > API_WBIG_SZ(payload) &&
-      realloc_cmd_ptr(&API_WBIG(payload), &newSize, payload->DataSize)) {
-    // output buffer is no longer null terminated!
-    std::memcpy(API_WBIG(payload), payload->Data, newSize);
-  }
-  else {
-    const int limit { std::min(API_WBIG_SZ(payload) - 1, payload->DataSize) };
-    std::memcpy(API_WBIG(payload), payload->Data, limit);
-    API_WBIG(payload)[limit] = '\0';
-  }
+  copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
 
   return true;
 });
@@ -137,4 +142,22 @@ DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
   ImGui::EndDragDropTarget();
 });
 
-    // IMGUI_API const ImGuiPayload*   GetDragDropPayload();                                                           // peek directly into the current payload from anywhere. may return NULL. use ImGuiPayload::IsDataType() to test for the payload type.
+DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
+(char*,API_W(type))(int,API_W_SZ(type))
+(char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
+(bool*,API_W(is_preview))(bool*,API_W(is_delivery)),
+"Peek directly into the current payload from anywhere.",
+{
+  FRAME_GUARD;
+
+  const ImGuiPayload *payload { ImGui::GetDragDropPayload() };
+  if(!payload || payload->DataFrameCount == -1 || !isUserType(payload->DataType))
+    return false;
+
+  snprintf(API_W(type), API_W_SZ(type), "%s", payload->DataType);
+  copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
+  if(API_W(is_preview))  *API_W(is_preview)  = payload->Preview;
+  if(API_W(is_delivery)) *API_W(is_delivery) = payload->Delivery;
+
+  return true;
+});

@@ -184,7 +184,6 @@ DEFINE_API(double, GetFrameHeightWithSpacing, (ImGui_Context*,ctx),
   return ImGui::GetFrameHeightWithSpacing();
 });
 
-// Clipping
 DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
 (double,clip_rect_max_x)(double,clip_rect_max_y)
@@ -204,4 +203,21 @@ DEFINE_API(void, PopClipRect, (ImGui_Context*,ctx),
 {
   FRAME_GUARD;
   ImGui::PopClipRect();
+});
+
+DEFINE_API(bool, IsRectVisible, (ImGui_Context*,ctx)
+(double,size_w)(double,size_h),
+"Test if rectangle (of given size, starting from cursor position) is visible / not clipped.",
+{
+  FRAME_GUARD;
+  return ImGui::IsRectVisible(ImVec2(size_w, size_h));
+});
+
+DEFINE_API(bool, IsRectVisibleEx, (ImGui_Context*,ctx)
+(double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y),
+"Test if rectangle (in screen space) is visible / not clipped. to perform coarse clipping on user's side.",
+{
+  FRAME_GUARD;
+  return ImGui::IsRectVisible(
+    ImVec2(rect_min_x, rect_min_y), ImVec2(rect_max_x, rect_max_y));
 });

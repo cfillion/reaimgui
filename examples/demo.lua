@@ -479,6 +479,7 @@ function demo.ShowDemoWindowWidgets()
         d3      = 0.0067,
         d4      = 0.123,
         d5      = 0.0,
+        angle   = 0.0,
         elem    = 1,
         col1    = 0xff0033,   -- 0xRRGGBB
         col2    = 0x66b2007f, -- 0xRRGGBBAA
@@ -607,8 +608,7 @@ function demo.ShowDemoWindowWidgets()
     rv,widgets.basic.d4 = r.ImGui_SliderDouble(ctx, 'slider double', widgets.basic.d4, 0.0, 1.0, 'ratio = %.3f')
     rv,widgets.basic.d5 = r.ImGui_SliderDouble(ctx, 'slider double (log)', widgets.basic.d5, -10.0, 10.0, '%.4f', r.ImGui_SliderFlags_Logarithmic())
 
---             static float angle = 0.0f;
---             r.ImGui_SliderAngle("slider angle", &angle);
+    rv,widgets.basic.angle = r.ImGui_SliderAngle(ctx, 'slider angle', widgets.basic.angle)
 
     -- Using the format string to display a name instead of an integer.
     -- Here we completely omit '%d' from the format string, so it'll only display a name.
