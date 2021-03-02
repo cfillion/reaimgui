@@ -30,6 +30,7 @@ NATIVE_ONLY = [
   'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)',
 
   'void ImGui::ShowDemoWindow(bool*)',
+  'void ImGui::ShowAboutWindow(bool*)',
   'void ImGui::ShowUserGuide()',
   'void ImGui::ShowStyleEditor(ImGuiStyle*)',
   'bool ImGui::ShowStyleSelector(const char*)',

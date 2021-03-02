@@ -10,6 +10,7 @@ Index of this file:
 // - sub section: ShowDemoWindowPopups()
 // - sub section: ShowDemoWindowTables()
 // - sub section: ShowDemoWindowMisc()
+// [SECTION] About Window / ShowAboutWindow()
 // [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
 // [SECTION] Example App: Debug Console / ShowExampleAppConsole()
 // [SECTION] Example App: Debug Log / ShowExampleAppLog()
@@ -58,6 +59,7 @@ misc    = {}
 
 local r = reaper
 local FLT_MIN, FLT_MAX = 1.17549e-38, 3.40282e+38
+local IMGUI_VERSION, REAIMGUI_VERSION = r.ImGui_GetVersion()
 
 -- Hajime!
 
@@ -200,7 +202,7 @@ function demo.ShowDemoWindow(open)
   if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
 
   if show_app.metrics then show_app.metrics = r.ImGui_ShowMetricsWindow(ctx, show_app.metrics) end
-  if show_app.about   then show_app.about   = r.ImGui_ShowAboutWindow(ctx, show_app.about)     end
+  if show_app.about   then show_app.about   = demo.ShowAboutWindow(show_app.about)     end
   -- if (show_app_style_editor)
   -- {
   --     r.ImGui_Begin("Dear ImGui Style Editor", &show_app_style_editor);
@@ -312,9 +314,7 @@ function demo.ShowDemoWindow(open)
     r.ImGui_EndMenuBar(ctx)
   end
 
-  local REAIMGUI_VERSION, IMGUI_VERSION = r.ImGui_GetVersion()
-  r.ImGui_Text(ctx, ('ReaImGui says do re mi. (%s)'):format(REAIMGUI_VERSION))
-  r.ImGui_Text(ctx, ('dear imgui says hello. (%s)'):format(IMGUI_VERSION))
+  r.ImGui_Text(ctx, ('dear imgui says hello. (%s / %s)'):format(IMGUI_VERSION, REAIMGUI_VERSION))
   r.ImGui_Spacing(ctx)
 
   if r.ImGui_CollapsingHeader(ctx, 'Help') then
@@ -5776,6 +5776,29 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_TreePop(ctx)
     end
   end
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] About Window / ShowAboutWindow()
+-- Access from Dear ImGui Demo -> Tools -> About
+-------------------------------------------------------------------------------
+
+function demo.ShowAboutWindow(p_open)
+  local rv
+
+  rv,p_open = r.ImGui_Begin(ctx, 'About Dear ImGui', p_open, r.ImGui_WindowFlags_AlwaysAutoResize())
+  if not rv then
+    r.ImGui_End(ctx)
+    return p_open
+  end
+  r.ImGui_Text(ctx, ('Dear ImGui %s'):format(IMGUI_VERSION))
+  r.ImGui_Text(ctx, ('reaper_imgui %s'):format(REAIMGUI_VERSION))
+  r.ImGui_Separator(ctx)
+  r.ImGui_Text(ctx, 'By Omar Cornut and all Dear ImGui contributors.')
+  r.ImGui_Text(ctx, 'Dear ImGui is licensed under the MIT License, see LICENSE for more information.')
+  r.ImGui_End(ctx)
+
+  return p_open
 end
 
 -------------------------------------------------------------------------------

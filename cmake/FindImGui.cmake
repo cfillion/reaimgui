@@ -22,7 +22,6 @@ find_package_handle_standard_args(ImGui
 
 add_library(imgui
   ${ImGui_INCLUDE_DIR}/imgui.cpp
-  ${ImGui_INCLUDE_DIR}/imgui_demo.cpp
   ${ImGui_INCLUDE_DIR}/imgui_draw.cpp
   ${ImGui_INCLUDE_DIR}/imgui_tables.cpp
   ${ImGui_INCLUDE_DIR}/imgui_widgets.cpp

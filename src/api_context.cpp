@@ -4,14 +4,14 @@
 #include "window.hpp"
 
 DEFINE_API(void, GetVersion,
-(char*,API_W(reaimgui_version))(int,API_W_SZ(reaimgui_version))
-(char*,API_W(imgui_version))(int,API_W_SZ(imgui_version)),
+(char*,API_W(imgui_version))(int,API_W_SZ(imgui_version))
+(char*,API_W(reaimgui_version))(int,API_W_SZ(reaimgui_version)),
 "",
 {
-  if(API_W(reaimgui_version))
-    snprintf(API_W(reaimgui_version), API_W_SZ(reaimgui_version), "%s", REAIMGUI_VERSION);
   if(API_W(imgui_version))
     snprintf(API_W(imgui_version), API_W_SZ(imgui_version), "%s", IMGUI_VERSION);
+  if(API_W(reaimgui_version))
+    snprintf(API_W(reaimgui_version), API_W_SZ(reaimgui_version), "%s", REAIMGUI_VERSION);
 });
 
 DEFINE_API(ImGui_Context*, CreateContext,
@@ -51,16 +51,6 @@ R"(Return whether the user has requested closing the OS window since the previou
 {
   assertValid(ctx);
   return ctx->isCloseRequested();
-});
-
-DEFINE_API(void, ShowAboutWindow, (ImGui_Context*,ctx)
-(bool*,API_RWO(p_open)),
-R"(Create About window. Display Dear ImGui version, credits and build/system information.
-
-Default values: p_open = nil)",
-{
-  FRAME_GUARD;
-  ImGui::ShowAboutWindow(API_RWO(p_open));
 });
 
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
