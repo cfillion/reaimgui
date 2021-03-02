@@ -77,6 +77,8 @@ function demo.loop()
 
   if demo.open then
     demo.open = demo.ShowDemoWindow(demo.open)
+  else
+    r.ImGui_Text(ctx, 'Bye!')
   end
 
   r.defer(demo.loop)
@@ -184,7 +186,7 @@ show_app = {
 -- Demonstrate most Dear ImGui features (this is big function!)
 -- You may execute this function to experiment with the UI and understand what it does.
 -- You may then search for keywords in the code when you are interested by a specific feature.
-function demo.ShowDemoWindow(open)
+function demo.ShowDemoWindow(p_open)
   local rv
 
   if show_app.main_menu_bar      then                               demo.ShowExampleAppMainMenuBar()       end
@@ -221,7 +223,6 @@ function demo.ShowDemoWindow(open)
   if demo.no_nav            then window_flags = window_flags | r.ImGui_WindowFlags_NoNav()                 end
   if demo.no_background     then window_flags = window_flags | r.ImGui_WindowFlags_NoBackground()          end
   if demo.no_bring_to_front then window_flags = window_flags | r.ImGui_WindowFlags_NoBringToFrontOnFocus() end
-  local p_open, new_open = open
   if demo.no_close          then p_open = nil end -- Don't pass our bool* to Begin
 
   local reset_ctx = false
@@ -251,12 +252,12 @@ function demo.ShowDemoWindow(open)
   r.ImGui_SetNextWindowSize(ctx, 550, 680, r.ImGui_Cond_FirstUseEver())
 
   -- Main body of the Demo window starts here.
-  rv, new_open = r.ImGui_Begin(ctx, 'Dear ImGui Demo', p_open, window_flags)
-  if not demo.no_close then open = new_open end
+  rv,p_open = r.ImGui_Begin(ctx, 'Dear ImGui Demo', p_open, window_flags)
+  if demo.no_close then p_open = true end
   if not rv then
     -- Early out if the window is collapsed, as an optimization.
     r.ImGui_End(ctx)
-    return open
+    return p_open
   end
 
   -- Most "big" widgets share a common width settings by default. See 'Demo->Layout->Widgets Width' for details.
@@ -447,7 +448,7 @@ function demo.ShowDemoWindow(open)
   -- End of ShowDemoWindow()
   r.ImGui_PopItemWidth(ctx)
   r.ImGui_End(ctx)
-  return open
+  return p_open
 end
 
 function demo.ShowDemoWindowWidgets()
