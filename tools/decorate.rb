@@ -1,3 +1,32 @@
+#!/usr/bin/env ruby
+
+SOURCE_FILES = File.join __dir__, '..', 'src', '*.{cpp,hpp,mm}'
+
+REGEX = /\A\/\*.+?\*\/\n/m.freeze
+PREAMBLE = DATA.read.freeze
+
+def process(input)
+  if input.start_with? '/'
+    before = input.hash
+    input.sub! REGEX, PREAMBLE
+    input unless input.hash == before
+  else
+    input.prepend "#{PREAMBLE}\n"
+  end
+end
+
+Dir.glob(SOURCE_FILES).each do |path|
+  File.open path, 'r+t' do |file|
+    output = process file.read
+    next unless output
+
+    file.rewind
+    file.write output
+    file.truncate file.pos
+  end
+end
+
+__END__
 /* ReaImGui: ReaScript binding for dear imgui
  * Copyright (C) 2021  Christian Fillion
  *
@@ -14,41 +43,3 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#ifndef REAIMGUI_DLLIMPORT_HPP
-#define REAIMGUI_DLLIMPORT_HPP
-
-#ifndef _WIN32
-#  error This file is only meant to be included on Windows.
-#endif
-
-#include <windows.h>
-
-template<typename Proc, typename = std::enable_if_t<std::is_function_v<Proc>>>
-class DllImport {
-public:
-  DllImport(const wchar_t *dll, const char *func)
-  {
-    if(m_lib = LoadLibrary(dll))
-      m_proc = reinterpret_cast<Proc *>(GetProcAddress(m_lib, func));
-    else
-      m_proc = nullptr;
-  }
-
-  ~DllImport()
-  {
-    if(m_lib)
-      FreeLibrary(m_lib);
-  }
-
-  operator bool() const { return m_proc != nullptr; }
-
-  template<typename... Args>
-  auto operator()(Args&&... args) const { return m_proc(std::forward<Args>(args)...); }
-
-private:
-  HINSTANCE m_lib;
-  Proc *m_proc;
-};
-
-#endif
