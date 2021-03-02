@@ -1,4 +1,5 @@
 #include "api.hpp"
+#include "version.hpp"
 #include "window.hpp"
 
 #define REAPERAPI_IMPLEMENT
@@ -9,11 +10,24 @@
 
 #define IMPORT(name) { reinterpret_cast<void **>(&name), #name }
 
+#ifdef MessageBox
+#  undef MessageBox
+#  define MessageBox MessageBoxA
+#endif
+
+static void fatalError(const char *message)
+{
+  HWND parent { Splash_GetWnd ? Splash_GetWnd() : nullptr };
+  MessageBox(parent, message, "ReaImGui (reaper_imgui)", MB_OK);
+}
+
 static bool loadAPI(void *(*getFunc)(const char *))
 {
   struct ApiImport { void **ptr; const char *name; };
 
   const ApiImport funcs[] {
+    IMPORT(Splash_GetWnd), // v4.7
+
     IMPORT(AttachWindowTopmostButton),
     IMPORT(DockWindowRemove),
     IMPORT(GetColorThemeStruct),
@@ -29,8 +43,15 @@ static bool loadAPI(void *(*getFunc)(const char *))
   for(const ApiImport &func : funcs) {
     *func.ptr = getFunc(func.name);
 
-    if(*func.ptr == nullptr)
+    if(*func.ptr == nullptr) {
+      char message[1024];
+      snprintf(message, sizeof(message),
+        "ReaImGui v%s is incompatible with this version of REAPER.\n\n"
+        "Unable to import the following API function: %s.",
+        REAIMGUI_VERSION, func.name);
+      fatalError(message);
       return false;
+    }
   }
 
   return true;
@@ -38,7 +59,12 @@ static bool loadAPI(void *(*getFunc)(const char *))
 
 static bool isAlreadyLoaded()
 {
-  // TODO: return true of our API functions have already been registered
+  if(plugin_getapi("ImGui_GetVersion")) {
+    fatalError("More than one copy of ReaImGui is currently installed. "
+               "Only one will be loaded.");
+    return true;
+  }
+
   return false;
 }
 
