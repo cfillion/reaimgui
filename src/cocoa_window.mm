@@ -15,7 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define CreateEvent SWELL_CreateEvent
 #include "window.hpp"
 
 #include "context.hpp"
@@ -24,9 +23,6 @@
 
 #include <WDL/wdltypes.h>
 #include <reaper_plugin_functions.h>
-#undef CreateEvent
-
-#include <Carbon/Carbon.h>
 
 static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
@@ -99,28 +95,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   ImGuiIO &io { ImGui::GetIO() };
   io.ConfigMacOSXBehaviors = false; // don't swap Cmd/Ctrl, SWELl already does it
   io.BackendPlatformName = "reaper_imgui_cocoa";
-  io.KeyMap[ImGuiKey_Tab]         = kVK_Tab;
-  io.KeyMap[ImGuiKey_LeftArrow]   = kVK_LeftArrow;
-  io.KeyMap[ImGuiKey_RightArrow]  = kVK_RightArrow;
-  io.KeyMap[ImGuiKey_UpArrow]     = kVK_UpArrow;
-  io.KeyMap[ImGuiKey_DownArrow]   = kVK_DownArrow;
-  io.KeyMap[ImGuiKey_PageUp]      = kVK_PageUp;
-  io.KeyMap[ImGuiKey_PageDown]    = kVK_PageDown;
-  io.KeyMap[ImGuiKey_Home]        = kVK_Home;
-  io.KeyMap[ImGuiKey_End]         = kVK_End;
-  io.KeyMap[ImGuiKey_Insert]      = kVK_Help;
-  io.KeyMap[ImGuiKey_Delete]      = kVK_ForwardDelete;
-  io.KeyMap[ImGuiKey_Backspace]   = kVK_Delete;
-  io.KeyMap[ImGuiKey_Space]       = kVK_Space;
-  io.KeyMap[ImGuiKey_Enter]       = kVK_Return;
-  io.KeyMap[ImGuiKey_Escape]      = kVK_Escape;
-  io.KeyMap[ImGuiKey_KeyPadEnter] = kVK_Return;
-  io.KeyMap[ImGuiKey_A]           = kVK_ANSI_A;
-  io.KeyMap[ImGuiKey_C]           = kVK_ANSI_C;
-  io.KeyMap[ImGuiKey_V]           = kVK_ANSI_V;
-  io.KeyMap[ImGuiKey_X]           = kVK_ANSI_X;
-  io.KeyMap[ImGuiKey_Y]           = kVK_ANSI_Y;
-  io.KeyMap[ImGuiKey_Z]           = kVK_ANSI_Z;
+  setupMacOSKeyMap(io);
 }
 
 Window::~Window()

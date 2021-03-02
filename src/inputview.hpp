@@ -21,8 +21,17 @@
 #include <AppKit/AppKit.h>
 
 class Context;
+struct ImGuiIO;
+
+void setupMacOSKeyMap(ImGuiIO &);
 
 @interface InputView : NSView<NSTextInputClient>
+{
+  @private
+  NSMutableAttributedString *m_markedText;
+  Context *m_context;
+}
+
 - (instancetype)initWithContext:(Context *)context
                          parent:(NSView *)parent;
 - (BOOL)resignFirstResponder;

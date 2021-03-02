@@ -21,14 +21,11 @@
 
 #include <swell/swell-types.h>
 
+#include <Carbon/Carbon.h> // key code constants
+
 constexpr NSRange kEmptyRange { NSNotFound, 0 };
 
 @implementation InputView
-{
-  NSMutableAttributedString *m_markedText;
-  Context *m_context;
-}
-
 - (instancetype)initWithContext:(Context *)context
                          parent:(NSView *)parent
 {
@@ -199,3 +196,29 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
 {
 }
 @end
+
+void setupMacOSKeyMap(ImGuiIO &io)
+{
+  io.KeyMap[ImGuiKey_Tab]         = kVK_Tab;
+  io.KeyMap[ImGuiKey_LeftArrow]   = kVK_LeftArrow;
+  io.KeyMap[ImGuiKey_RightArrow]  = kVK_RightArrow;
+  io.KeyMap[ImGuiKey_UpArrow]     = kVK_UpArrow;
+  io.KeyMap[ImGuiKey_DownArrow]   = kVK_DownArrow;
+  io.KeyMap[ImGuiKey_PageUp]      = kVK_PageUp;
+  io.KeyMap[ImGuiKey_PageDown]    = kVK_PageDown;
+  io.KeyMap[ImGuiKey_Home]        = kVK_Home;
+  io.KeyMap[ImGuiKey_End]         = kVK_End;
+  io.KeyMap[ImGuiKey_Insert]      = kVK_Help;
+  io.KeyMap[ImGuiKey_Delete]      = kVK_ForwardDelete;
+  io.KeyMap[ImGuiKey_Backspace]   = kVK_Delete;
+  io.KeyMap[ImGuiKey_Space]       = kVK_Space;
+  io.KeyMap[ImGuiKey_Enter]       = kVK_Return;
+  io.KeyMap[ImGuiKey_Escape]      = kVK_Escape;
+  io.KeyMap[ImGuiKey_KeyPadEnter] = kVK_Return;
+  io.KeyMap[ImGuiKey_A]           = kVK_ANSI_A;
+  io.KeyMap[ImGuiKey_C]           = kVK_ANSI_C;
+  io.KeyMap[ImGuiKey_V]           = kVK_ANSI_V;
+  io.KeyMap[ImGuiKey_X]           = kVK_ANSI_X;
+  io.KeyMap[ImGuiKey_Y]           = kVK_ANSI_Y;
+  io.KeyMap[ImGuiKey_Z]           = kVK_ANSI_Z;
+}
