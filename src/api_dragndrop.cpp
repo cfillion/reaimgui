@@ -52,8 +52,10 @@ DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
   return ImGui::BeginDragDropTarget();
 });
 
-static void copyPayload(const ImGuiPayload *payload, char **reabuf, int reabuf_sz)
+static void copyPayload(const ImGuiPayload *payload, char **reabuf, const int reabuf_sz)
 {
+  assertValid(*reabuf);
+
   int newSize {};
   if(payload->DataSize > reabuf_sz &&
       realloc_cmd_ptr(reabuf, &newSize, payload->DataSize)) {
@@ -154,7 +156,8 @@ DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
   if(!payload || payload->DataFrameCount == -1 || !isUserType(payload->DataType))
     return false;
 
-  snprintf(API_W(type), API_W_SZ(type), "%s", payload->DataType);
+  if(API_W(type))
+    snprintf(API_W(type), API_W_SZ(type), "%s", payload->DataType);
   copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
   if(API_W(is_preview))  *API_W(is_preview)  = payload->Preview;
   if(API_W(is_delivery)) *API_W(is_delivery) = payload->Delivery;

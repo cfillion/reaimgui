@@ -38,6 +38,7 @@ DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 "Default values: flags = ImGui_InputTextFlags_None",
 {
   FRAME_GUARD;
+  assertValid(API_RWBIG(buf));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
@@ -55,6 +56,7 @@ DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
 "Default values: width = 0.0, height = 0.0, flags = ImGui_InputTextFlags_None",
 {
   FRAME_GUARD;
+  assertValid(API_RWBIG(buf));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);
@@ -75,6 +77,7 @@ DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 "Default values: flags = ImGui_InputTextFlags_None",
 {
   FRAME_GUARD;
+  assertValid(API_RWBIG(buf));
 
   ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
   sanitizeInputTextFlags(flags);

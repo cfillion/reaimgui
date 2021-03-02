@@ -5,6 +5,7 @@
 #include "context.hpp"
 
 #include <boost/preprocessor.hpp>
+#include <boost/type_index.hpp>
 #include <cstring> // strlen
 
 using ImGui_Context = Context; // user-facing alias
@@ -78,9 +79,15 @@ inline void assertValid(T *ptr)
   else if(ptr)
     return;
 
+  std::string type;
+  if constexpr (std::is_class_v<T>)
+    type = T::api_type_name;
+  else
+    type = boost::typeindex::type_id<T>().pretty_name();
+
   char message[255];
-  snprintf(message, sizeof(message), "expected valid %s*, got %p",
-    T::api_type_name, ptr);
+  snprintf(message, sizeof(message),
+    "expected valid %s*, got %p", type.c_str(), ptr);
   throw reascript_error { message };
 }
 
