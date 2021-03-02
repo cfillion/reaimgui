@@ -1,0 +1,134 @@
+---
+version: "{build}-{branch}"
+stack: ruby 2.7
+
+before_build:
+  - git submodule update --init --depth 1
+build_script:
+  - cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN
+    -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_OSX_DEPLOYMENT_TARGET=$DEPLOY_TARGET
+  - cmake --build build
+test_script:
+  - ruby -E UTF-8 tools/coverage.rb
+
+for:
+  - matrix: { only: [ appveyor_build_worker_image: &linux Ubuntu1804 ] }
+    install: |-
+      set -e
+
+      sudo sed -i '/arch=/! s/^deb/deb [arch=amd64,i386]/' /etc/apt/sources.list
+      awk '
+      $3 !~ /ubuntu\.com/ { next }
+      $1 == "deb" {
+        $2 = "[arch=armhf,arm64]";
+        $3 = "http://ports.ubuntu.com/ubuntu-ports/"
+      } 1' /etc/apt/sources.list | sudo dd of=/etc/apt/sources.list.d/ports.list
+      sudo rm /etc/apt/sources.list.d/microsoft-prod.list
+
+      install-deps() {
+        local arch="$1"; shift
+        local native=("$@")
+        local target=(libboost-dev libepoxy-dev libgtk-3-dev)
+
+        sudo dpkg --add-architecture $arch
+        sudo apt-get update -qq
+        sudo apt-get install -qq aptitude > /dev/null
+        sudo aptitude install -yR ${native[@]} ${target[@]/%/:$arch} > /dev/null
+      }
+
+      case $ARCH in
+      x86_64)
+        install-deps amd64
+        ;;
+      i686)
+        install-deps i386 g++-multilib
+        export TOOLCHAIN=cmake/linux-cross.cmake \
+               TOOLCHAIN_PREFIX=i386-linux-gnu
+        ;;
+      armv7l)
+        install-deps armhf g++-arm-linux-gnueabihf
+        export TOOLCHAIN=cmake/linux-cross.cmake \
+               TOOLCHAIN_PREFIX=arm-linux-gnueabihf
+        ;;
+      aarch64)
+        install-deps arm64 g++-aarch64-linux-gnu
+        export TOOLCHAIN=cmake/linux-cross.cmake \
+               TOOLCHAIN_PREFIX=aarch64-linux-gnu
+        ;;
+      esac
+    artifacts:
+      - path: build/src/reaper_imgui*.so
+
+  - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
+    install:
+      - brew install boost > /dev/null
+
+      - |-
+        case $ARCH in
+        arm64) DEPLOY_TARGET=11.0 XCODE_VERSION=12.3  ;;
+        *)     DEPLOY_TARGET=10.9 XCODE_VERSION=9.4.1 ;;
+        esac
+
+      - sudo xcode-select -s /Applications/Xcode-$XCODE_VERSION.app
+    artifacts:
+      - path: build/src/reaper_imgui*.dylib
+
+  - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2019 ] }
+    cache:
+      - C:\Tools\vcpkg\installed -> vendor\vcpkg-deps.txt
+    install:
+      - set VCPKG_ROOT=C:\Tools\vcpkg
+      - set VCPKG_DEFAULT_TRIPLET=%ARCH%-windows-static
+      - set /p reaimgui-deps=<vendor\vcpkg-deps.txt
+      - vcpkg install %reaimgui-deps%
+      - set PATH=C:\Ruby30\bin;%PATH%
+
+      - if "%ARCH%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+      - if "%ARCH%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+    build_script:
+      - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - cmake --build build
+    artifacts:
+      - path: build\src\reaper_imgui*.dll
+      - path: build\src\reaper_imgui*.pdb
+
+environment:
+  matrix:
+    - job_name: Windows 64-bit
+      appveyor_build_worker_image: *windows
+      ARCH: x64
+    - job_name: Windows 32-bit
+      appveyor_build_worker_image: *windows
+      ARCH: x86
+    - job_name: macOS x86 64-bit
+      appveyor_build_worker_image: macos-mojave
+      ARCH: x86_64
+    - job_name: macOS x86 32-bit
+      appveyor_build_worker_image: macos-mojave
+      ARCH: i386
+    - job_name: macOS ARM 64-bit
+      appveyor_build_worker_image: macos
+      ARCH: arm64
+    - job_name: Linux x86 64-bit
+      appveyor_build_worker_image: *linux
+      ARCH: x86_64
+    - job_name: Linux x86 32-bit
+      appveyor_build_worker_image: *linux
+      ARCH: i686
+    - job_name: Linux ARM 64-bit
+      appveyor_build_worker_image: *linux
+      ARCH: aarch64
+    - job_name: Linux ARM 32-bit
+      appveyor_build_worker_image: *linux
+      ARCH: armv7l
+
+deploy:
+  provider: GitHub
+  draft: true
+  description: ''
+  force_update: true
+  auth_token:
+    secure: S4kQ8Fky507O9XHtcXdQ/Gv1+EB/6iiJQwd/InbZsl5pUdCX0oPWuP9N1B8t5fbl
+  artifact: /.*\.(dll|dylib|so)/
+  on:
+    APPVEYOR_REPO_TAG: true
