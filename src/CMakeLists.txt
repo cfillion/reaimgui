@@ -43,9 +43,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 if(WIN32)
-  # TODO
-  # target_sources(${PROJECT_NAME} PRIVATE buildinfo.rc)
-  target_sources(${PROJECT_NAME} PRIVATE win32_window.cpp)
+  target_sources(${PROJECT_NAME} PRIVATE version.rc win32_window.cpp)
   target_compile_options(${PROJECT_NAME} PUBLIC /W3 /WX /wd4244 /wd4267 /wd4312 /wd4996 /wd5208)
   target_compile_definitions(${PROJECT_NAME} PUBLIC NOMINMAX UNICODE)
 
@@ -95,3 +93,7 @@ if(NOT WIN32)
   find_package(SWELL REQUIRED)
   target_link_libraries(${PROJECT_NAME} SWELL::swell)
 endif()
+
+get_target_property(REAIMGUI_BASENAME ${PROJECT_NAME} OUTPUT_NAME)
+set(REAIMGUI_FILENAME "${REAIMGUI_BASENAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+configure_file(version.hpp.in version.hpp)

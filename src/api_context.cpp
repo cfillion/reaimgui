@@ -1,5 +1,6 @@
 #include "api_helper.hpp"
 
+#include "version.hpp"
 #include "window.hpp"
 
 DEFINE_API(void, GetVersion,
@@ -8,7 +9,7 @@ DEFINE_API(void, GetVersion,
 "",
 {
   if(API_W(reaimgui_version))
-    snprintf(API_W(reaimgui_version), API_W_SZ(reaimgui_version), "%s", "0.1"); // TODO
+    snprintf(API_W(reaimgui_version), API_W_SZ(reaimgui_version), "%s", REAIMGUI_VERSION);
   if(API_W(imgui_version))
     snprintf(API_W(imgui_version), API_W_SZ(imgui_version), "%s", IMGUI_VERSION);
 });
