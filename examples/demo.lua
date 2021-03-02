@@ -62,7 +62,7 @@ local FLT_MIN, FLT_MAX = 1.17549e-38, 3.40282e+38
 -- Hajime!
 
 function demo.CreateContext()
-  return r.ImGui_CreateContext('ImGui Demo', 300, 300, 590, 720)
+  return r.ImGui_CreateContext('ImGui Demo', 590, 720)
 end
 
 local ctx = demo.CreateContext()

@@ -86,6 +86,44 @@ HWND Window::parentHandle()
   return GetMainHwnd();
 }
 
+static RECT getAvailableRect(HWND window)
+{
+  RECT rect;
+  GetWindowRect(window, &rect);
+
+#ifdef _WIN32
+  HMONITOR monitor { MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST) };
+  MONITORINFO minfo { sizeof(minfo) };
+  GetMonitorInfo(monitor, &minfo);
+  RECT &screenRect { minfo.rcWork };
+#else
+  RECT screenRect;
+  SWELL_GetViewPort(&screenRect, &rect, false);
+#endif
+
+  // limit the centering to the monitor containing most of the parent window
+  rect.left   = std::max(rect.left,   rect.left);
+  rect.top    = std::max(rect.top,    rect.top);
+  rect.right  = std::min(rect.right,  rect.right);
+  rect.bottom = std::min(rect.bottom, rect.bottom);
+
+  return rect;
+}
+
+int Window::centerX(const int width)
+{
+  const RECT &parentRect { getAvailableRect(parentHandle()) };
+  const int parentWidth { parentRect.right - parentRect.left };
+  return ((parentWidth - width) / 2) + parentRect.left;
+}
+
+int Window::centerY(const int height)
+{
+  const RECT &parentRect { getAvailableRect(parentHandle()) };
+  const int parentHeight { parentRect.bottom - parentRect.top };
+  return ((parentHeight - height) / 2) + parentRect.top;
+}
+
 void Window::WindowDeleter::operator()(HWND window)
 {
   DestroyWindow(window);

@@ -16,6 +16,10 @@ class Window {
 public:
   static HINSTANCE s_instance;
 
+  // gives a default x/y coordinate to center a window to the arrange view
+  static int centerX(int width);
+  static int centerY(int height);
+
   Window(const char *title, RECT, Context *);
   Window(const Window &) = delete;
   ~Window();
