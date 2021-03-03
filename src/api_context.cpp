@@ -332,6 +332,14 @@ DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
   return ImGui::IsKeyReleased(key_code);
 });
 
+DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
+(int,key_index)(double,repeat_delay)(double,rate),
+"Uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate",
+{
+  FRAME_GUARD;
+  return ImGui::GetKeyPressedAmount(key_index, repeat_delay, rate);
+});
+
 DEFINE_API(int, GetKeyMods, (ImGui_Context*,ctx),
 "Ctrl/Shift/Alt/Super. See ImGui_KeyModFlags_*.",
 {
