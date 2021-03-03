@@ -52,6 +52,7 @@ void Context::setupImGui()
   ImGuiIO &io { ImGui::GetIO() };
   io.IniFilename = nullptr;
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+  io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
 
 #ifndef __APPLE__
   io.KeyMap[ImGuiKey_Tab]         = VK_TAB;
@@ -173,6 +174,9 @@ void Context::updateCursor()
 {
   ImGui::SetCurrentContext(m_imgui.get());
 
+  if(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
+    return;
+
   static HCURSOR nativeCursors[ImGuiMouseCursor_COUNT] {
     LoadCursor(nullptr, IDC_ARROW),
     LoadCursor(nullptr, IDC_IBEAM),
@@ -187,7 +191,6 @@ void Context::updateCursor()
 
   // TODO
   // io.MouseDrawCursor (ImGui-drawn cursor)
-  // ImGuiConfigFlags_NoMouseCursorChange
   // SetCursor(nullptr) does not hide the cursor with SWELL
 
   // ImGui::GetMouseCursor is only valid after a frame, before Render
@@ -281,14 +284,21 @@ void Context::updateMousePos()
   // this is only called from enterFrame, the context is already set
   // ImGui::SetCurrentContext(m_imgui.get());
 
+  ImGuiIO &io { ImGui::GetIO() };
   HWND windowHwnd { m_window->nativeHandle() };
+
+  if(io.WantSetMousePos) {
+    POINT p { static_cast<LONG>(io.MousePos.x),
+              static_cast<LONG>(io.MousePos.y) };
+    ClientToScreen(windowHwnd, &p);
+    SetCursorPos(p.x, p.y);
+    return;
+  }
 
   POINT p;
   GetCursorPos(&p);
   const HWND targetHwnd { WindowFromPoint(p) };
   ScreenToClient(windowHwnd, &p);
-
-  ImGuiIO &io { ImGui::GetIO() };
 
 #ifdef __APPLE__
   // Our InputView overlays SWELL's NSView.

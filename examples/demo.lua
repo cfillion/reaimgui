@@ -27,9 +27,14 @@ Index of this file:
 
 --]]
 
+local r = reaper
+local FLT_MIN, FLT_MAX = 1.17549e-38, 3.40282e+38
+local IMGUI_VERSION, REAIMGUI_VERSION = r.ImGui_GetVersion()
+
 -- Global data storage
 demo = {
   open = true,
+  config = r.ImGui_ConfigFlags_None(),
 
   menu = {
     enabled = true,
@@ -56,10 +61,6 @@ layout  = {}
 popups  = {}
 tables  = {}
 misc    = {}
-
-local r = reaper
-local FLT_MIN, FLT_MAX = 1.17549e-38, 3.40282e+38
-local IMGUI_VERSION, REAIMGUI_VERSION = r.ImGui_GetVersion()
 
 -- Hajime!
 
@@ -339,46 +340,44 @@ function demo.ShowDemoWindow(p_open)
     demo.ShowUserGuide()
   end
 
---     if (r.ImGui_CollapsingHeader("Configuration"))
---     {
---         ImGuiIO& io = r.ImGui_GetIO();
---
---         if (r.ImGui_TreeNode("Configuration##2"))
---         {
---             r.ImGui_CheckboxFlags("io.ConfigFlags: NavEnableKeyboard",    &io.ConfigFlags, ImGuiConfigFlags_NavEnableKeyboard);
---             r.ImGui_SameLine(); HelpMarker("Enable keyboard controls.");
---             r.ImGui_CheckboxFlags("io.ConfigFlags: NavEnableGamepad",     &io.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad);
---             r.ImGui_SameLine(); HelpMarker("Enable gamepad controls. Require backend to set io.BackendFlags |= ImGuiBackendFlags_HasGamepad.\n\nRead instructions in imgui.cpp for details.");
---             r.ImGui_CheckboxFlags("io.ConfigFlags: NavEnableSetMousePos", &io.ConfigFlags, ImGuiConfigFlags_NavEnableSetMousePos);
---             r.ImGui_SameLine(); HelpMarker("Instruct navigation to move the mouse cursor. See comment for ImGuiConfigFlags_NavEnableSetMousePos.");
---             r.ImGui_CheckboxFlags("io.ConfigFlags: NoMouse",              &io.ConfigFlags, ImGuiConfigFlags_NoMouse);
---             if (io.ConfigFlags & ImGuiConfigFlags_NoMouse)
---             {
---                 // The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
---                 if (fmodf((float)r.ImGui_GetTime(), 0.40f) < 0.20f)
---                 {
---                     r.ImGui_SameLine();
---                     r.ImGui_Text("<<PRESS SPACE TO DISABLE>>");
---                 }
---                 if (r.ImGui_IsKeyPressed(r.ImGui_GetKeyIndex(ImGuiKey_Space)))
---                     io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
---             }
---             r.ImGui_CheckboxFlags("io.ConfigFlags: NoMouseCursorChange", &io.ConfigFlags, ImGuiConfigFlags_NoMouseCursorChange);
---             r.ImGui_SameLine(); HelpMarker("Instruct backend to not alter mouse cursor shape and visibility.");
---             r.ImGui_Checkbox("io.ConfigInputTextCursorBlink", &io.ConfigInputTextCursorBlink);
---             r.ImGui_SameLine(); HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting)");
---             r.ImGui_Checkbox("io.ConfigDragClickToInputText", &io.ConfigDragClickToInputText);
---             r.ImGui_SameLine(); HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).");
---             r.ImGui_Checkbox("io.ConfigWindowsResizeFromEdges", &io.ConfigWindowsResizeFromEdges);
---             r.ImGui_SameLine(); HelpMarker("Enable resizing of windows from their edges and from the lower-left corner.\nThis requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback.");
---             r.ImGui_Checkbox("io.ConfigWindowsMoveFromTitleBarOnly", &io.ConfigWindowsMoveFromTitleBarOnly);
---             r.ImGui_Checkbox("io.MouseDrawCursor", &io.MouseDrawCursor);
---             r.ImGui_SameLine(); HelpMarker("Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).");
---             r.ImGui_Text("Also see Style->Rendering for rendering options.");
---             r.ImGui_TreePop();
---             r.ImGui_Separator();
---         }
---
+    if r.ImGui_CollapsingHeader(ctx, 'Configuration') then
+      -- if r.ImGui_TreeNode(ctx, 'Configuration##2') then
+        rv,demo.config = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NavEnableKeyboard', demo.config, r.ImGui_ConfigFlags_NavEnableKeyboard())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Enable keyboard controls.')
+        -- r.ImGui_CheckboxFlags("io.ConfigFlags: NavEnableGamepad",     &io.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad)
+        -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable gamepad controls. Require backend to set io.BackendFlags |= ImGuiBackendFlags_HasGamepad.\n\nRead instructions in imgui.cpp for details.")
+        rv,demo.config = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NavEnableSetMousePos', demo.config, r.ImGui_ConfigFlags_NavEnableSetMousePos())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct navigation to move the mouse cursor.')
+        rv,demo.config = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoMouse', demo.config, r.ImGui_ConfigFlags_NoMouse())
+        if (demo.config & r.ImGui_ConfigFlags_NoMouse()) ~= 0 then
+          -- The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
+          if r.ImGui_GetTime(ctx) % 0.40 < 0.20 then
+            r.ImGui_SameLine(ctx)
+            r.ImGui_Text(ctx, '<<PRESS SPACE TO DISABLE>>')
+          end
+          -- if r.ImGui_IsKeyPressed(ctx, r.ImGui_GetKeyIndex(ctx, r.ImGui_Key_Space())) then TODO
+          rv,char = r.ImGui_GetInputQueueCharacter(ctx, 0)
+          if rv and char == 0x20 then
+            demo.config = demo.config & ~r.ImGui_ConfigFlags_NoMouse()
+          end
+        end
+        rv,demo.config = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', demo.config, r.ImGui_ConfigFlags_NoMouseCursorChange())
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
+        -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTextCursorBlink', &io.ConfigInputTextCursorBlink)
+        -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting)")
+        -- r.ImGui_Checkbox(ctx, 'io.ConfigDragClickToInputText', &io.ConfigDragClickToInputText)
+        -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
+        -- r.ImGui_Checkbox("io.ConfigWindowsResizeFromEdges", &io.ConfigWindowsResizeFromEdges)
+        -- r.ImGui_SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.\nThis requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback.')
+        -- r.ImGui_Checkbox(ctx, 'io.ConfigWindowsMoveFromTitleBarOnly', &io.ConfigWindowsMoveFromTitleBarOnly)
+        -- r.ImGui_Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
+        -- r.ImGui_SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
+        -- r.ImGui_Text(ctx, "Also see Style->Rendering for rendering options.")
+        r.ImGui_SetConfigFlags(ctx, demo.config)
+        -- r.ImGui_TreePop(ctx)
+        -- r.ImGui_Separator(ctx)
+      -- end
+
 --         if (r.ImGui_TreeNode("Backend Flags"))
 --         {
 --             HelpMarker(
@@ -420,7 +419,7 @@ function demo.ShowDemoWindow(p_open)
 --             }
 --             r.ImGui_TreePop();
 --         }
---     }
+  end
 
   if r.ImGui_CollapsingHeader(ctx, 'Window options') then
     if r.ImGui_BeginTable(ctx, 'split', 3) then

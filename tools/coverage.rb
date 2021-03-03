@@ -171,21 +171,16 @@ NATIVE_ONLY_ENUMS = [
   'ColorEditFlags_HDR', # not allowed, would break float[4]<->int conversion
   /\AViewportFlags_/,
   'MouseCursor_None',   # not implemented under SWELL
+  'TreeNodeFlags_NavLeftJumpsBackHere', # marked as WIP
+  /\ATableFlags_NoBordersInBody/,       # marked as alpha, to be moved to style
+  /\AConfigFlags_(NavEnableGamepad|NavNoCaptureKeyboard)\z/, # not implemented
+  /\AConfigFlags_(IsSRGB|IsTouchScreen)\z/, # backend internal flags
 
   # only for dear imgui's internal use
   'InputTextFlags_Multiline',
   'InputTextFlags_NoMarkEdited',
-  /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu)/,
+  /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu)\z/,
   /\AColorEditFlags__.+Mask\z/,
-
-  # marked as WIP
-  'TreeNodeFlags_NavLeftJumpsBackHere',
-
-  # marked as alpha, to be moved to style
-  /\ATableFlags_NoBordersInBody/,
-
-  # backend internal flags
-  /\AConfigFlags_(IsSRGB|IsTouchScreen)\z/,
 ]
 
 # these functions were ported using another name (eg. overloads)
@@ -452,9 +447,7 @@ File.foreach IMGUI_H do |line|
     next
   end
 
-  if line =~ IMGUI_CLASS_R
-    namespace = $~[:name]
-  elsif line =~ IMGUI_FUNC_R
+  if line =~ IMGUI_FUNC_R
     args = split_imgui_args $~[:args]
     imgui_funcs << Function.new($~[:type], $~[:name], args, namespace)
   elsif line =~ IMGUI_ENUM_R
@@ -463,6 +456,8 @@ File.foreach IMGUI_H do |line|
     imgui_enums << $~[:name]
   elsif line.chomp == '#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS'
     in_obsolete = true
+  elsif line =~ IMGUI_CLASS_R
+    namespace = $~[:name]
   end
 end
 

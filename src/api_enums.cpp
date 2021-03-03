@@ -196,7 +196,14 @@ DEFINE_ENUM(ColorEditFlags_InputRGB,         "ColorEdit, ColorPicker: input and 
 DEFINE_ENUM(ColorEditFlags_InputHSV,         "ColorEdit, ColorPicker: input and output data in HSV format.");
 DEFINE_ENUM(ColorEditFlags__OptionsDefault,  "Defaults Options. You can set application defaults using SetColorEditOptions(). The intent is that you probably don't want to override them in most of your calls. Let the user choose via the option menu and/or call SetColorEditOptions() once during startup.");
 
-// typedef int ImGuiConfigFlags;       // -> enum ImGuiConfigFlags_     // Flags: for io.ConfigFlags
+// ImGuiConfigFlags
+DEFINE_ENUM(ConfigFlags_None,                 "Flags for ImGui_SetConfigFlags");
+DEFINE_ENUM(ConfigFlags_NavEnableKeyboard,    "Master keyboard navigation enable flag.");
+// DEFINE_ENUM(ConfigFlags_NavEnableGamepad,     "Master gamepad navigation enable flag. This is mostly to instruct your imgui backend to fill io.NavInputs[]. Backend also needs to set ImGuiBackendFlags_HasGamepad.");
+DEFINE_ENUM(ConfigFlags_NavEnableSetMousePos, "Instruct navigation to move the mouse cursor.");
+// DEFINE_ENUM(ConfigFlags_NavNoCaptureKeyboard, "Instruct navigation to not set the io.WantCaptureKeyboard flag when io.NavActive is set.");
+DEFINE_ENUM(ConfigFlags_NoMouse,              "Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.");
+DEFINE_ENUM(ConfigFlags_NoMouseCursorChange,  "Instruct backend to not alter mouse cursor shape and visibility.");
 
 // ImGuiComboFlags
 DEFINE_ENUM(ComboFlags_None,           "Flags for ImGui::BeginCombo()");

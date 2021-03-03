@@ -70,6 +70,23 @@ R"(Return whether the user has requested closing the OS window since the previou
   return ctx->isCloseRequested();
 });
 
+DEFINE_API(int, GetConfigFlags, (ImGui_Context*,ctx),
+"See ImGui_SetConfigFlags.",
+{
+  assertValid(ctx);
+  ImGuiIO &io { ImGui::GetIO() };
+  return io.ConfigFlags;
+});
+
+DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
+(int,flags),
+"See ImGui_GetConfigFlags, ImGui_ConfigFlags_None.",
+{
+  assertValid(ctx);
+  ImGuiIO &io { ImGui::GetIO() };
+  io.ConfigFlags = flags;
+});
+
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
 (bool*,API_RWO(p_open)),
 R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc.
