@@ -51,10 +51,9 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(GetMainHwnd),
     IMPORT(plugin_getapi),
     IMPORT(plugin_register),
-    IMPORT(realloc_cmd_ptr),
+    IMPORT(realloc_cmd_ptr), // v5.26
     IMPORT(ReaScriptError),
     IMPORT(ShowConsoleMsg),
-    IMPORT(ShowMessageBox),
   };
 
   for(const ApiImport &func : funcs) {
