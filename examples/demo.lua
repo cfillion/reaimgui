@@ -2056,9 +2056,9 @@ label:\n"
     rv,vec4i[1],vec4i[2],vec4i[3],vec4i[4] = r.ImGui_SliderInt4(ctx, 'slider int4', vec4i[1], vec4i[2], vec4i[3], vec4i[4], 0, 255)
     r.ImGui_Spacing(ctx)
 
-    r.ImGui_InputDoubleN(ctx, 'input reaper.array', input.multi_component.vec4a)
-    r.ImGui_DragDoubleN(ctx, 'drag reaper.array', input.multi_component.vec4a, 0.01, 0.0, 1.0)
-    r.ImGui_SliderDoubleN(ctx, 'slider reaper.array', input.multi_component.vec4a, 0.0, 1.0)
+    r.ImGui_InputDoubleN(ctx, 'input reaper.array', widgets.multi_component.vec4a)
+    r.ImGui_DragDoubleN(ctx, 'drag reaper.array', widgets.multi_component.vec4a, 0.01, 0.0, 1.0)
+    r.ImGui_SliderDoubleN(ctx, 'slider reaper.array', widgets.multi_component.vec4a, 0.0, 1.0)
 
     r.ImGui_TreePop(ctx)
   end
