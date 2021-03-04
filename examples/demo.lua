@@ -233,6 +233,7 @@ function demo.ShowDemoWindow(p_open)
     if r.ImGui_MenuItem(ctx, 'Duck in docker', nil, dock ~= -1) then
       if dock == -1 then
         r.DockWindowAdd(hwnd, 'ReaImGui Demo', 0, true)
+        r.DockWindowActivate(hwnd)
       else
         reset_ctx = true
       end
