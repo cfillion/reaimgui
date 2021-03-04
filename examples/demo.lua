@@ -1227,8 +1227,9 @@ function demo.ShowDemoWindowWidgets()
  instruction bug, is a design flaw in the majority of
  Intel Pentium, Pentium MMX, and Pentium OverDrive
  processors (all in the P5 microarchitecture).
-*/\n\n"
-label:\n"
+*/
+
+label:
 	lock cmpxchg8b eax
 ]],
         },
