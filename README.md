@@ -1,4 +1,4 @@
-# ReaImGui: ReaScript binding for dear imgui
+# ReaImGui: ReaScript binding for Dear ImGui
 
 [![Build status](https://ci.appveyor.com/api/projects/status/9umkecgrs4sa8odf/branch/master?svg=true)](https://ci.appveyor.com/project/cfillion/reaimgui/branch/master)
 
@@ -65,7 +65,7 @@ Create and configure a new build tree inside of the `build` directory.
     cmake -B build -DCMAKE_BUILD_TYPE=Debug
 
 Using the [Ninja](https://ninja-build.org/) generator is recommended for
-best performances:
+best performance:
 
     cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug
 
@@ -119,7 +119,7 @@ or `/usr/lib32`.
 
 #### macOS
 
-macOS 10.14 or older, Xcode 9 is required for producing 32-bit builds.
+macOS 10.14 (or older) and Xcode 9 are required for producing 32-bit builds.
 
     cmake -B build \
       -DCMAKE_BUILD_TYPE=Release \
