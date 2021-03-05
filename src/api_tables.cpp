@@ -92,13 +92,7 @@ DEFINE_API(bool, TableSetColumnIndex, (ImGui_Context*,ctx)
   FRAME_GUARD;
   return ImGui::TableSetColumnIndex(column_n);
 });
-    // // Tables: Headers & Columns declaration
-    // // - Use TableHeadersRow() to create a header row and automatically submit a TableHeader() for each column.
-    // //   Headers are required to perform: reordering, sorting, and opening the context menu.
-    // //   The context menu can also be made available in columns body using ImGuiTableFlags_ContextMenuInBody.
-    // // - You may manually submit headers using TableNextRow() + TableHeader() calls, but this is only useful in
-    // //   some advanced use cases (e.g. adding custom widgets in header row).
-    // // - Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when scrolled.
+
 DEFINE_API(void, TableSetupColumn, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags))(double*,API_RO(init_width_or_weight))
 (int*,API_RO(user_id)),

@@ -161,11 +161,8 @@ OpenGLRenderer::~OpenGLRenderer()
 
 void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor)
 {
-  const int fbWidth {
-    static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x)
-  }, fbHeight {
-    static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y)
-  };
+  const int fbWidth  { static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x) },
+            fbHeight { static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y) };
 
   if(fbWidth <= 0 || fbHeight <= 0)
     return; // avoid rendering when minimized
@@ -193,17 +190,21 @@ void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor)
   glUniform1i(m_locations[TexUniLoc], 0); // glActiveTexture(GL_TEXTURE0);
   glUniformMatrix4fv(m_locations[ProjMtxUniLoc], 1, GL_FALSE, &orthoProjection[0][0]);
 
-  const ImVec2 &clipOffset { drawData->DisplayPos };
-  const ImVec2 &clipScale { drawData->FramebufferScale };
+  const ImVec2 &clipOffset { drawData->DisplayPos },
+               &clipScale  { drawData->FramebufferScale };
 
   for(int i = 0; i < drawData->CmdListsCount; ++i) {
-    const ImDrawList *cmdList = drawData->CmdLists[i];
+    const ImDrawList *cmdList { drawData->CmdLists[i] };
 
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr)cmdList->VtxBuffer.Size * (int)sizeof(ImDrawVert), (const GLvoid*)cmdList->VtxBuffer.Data, GL_STREAM_DRAW);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, (GLsizeiptr)cmdList->IdxBuffer.Size * (int)sizeof(ImDrawIdx), (const GLvoid*)cmdList->IdxBuffer.Data, GL_STREAM_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,
+      static_cast<GLsizeiptr>(cmdList->VtxBuffer.Size * sizeof(ImDrawVert)),
+      static_cast<const GLvoid *>(cmdList->VtxBuffer.Data), GL_STREAM_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+      static_cast<GLsizeiptr>(cmdList->IdxBuffer.Size * sizeof(ImDrawIdx)),
+      static_cast<const GLvoid *>(cmdList->IdxBuffer.Data), GL_STREAM_DRAW);
 
     for(int j = 0; j < cmdList->CmdBuffer.Size; ++j) {
-      const ImDrawCmd *cmd = &cmdList->CmdBuffer[j];
+      const ImDrawCmd *cmd { &cmdList->CmdBuffer[j] };
       if(cmd->UserCallback)
         continue; // no need to call the callback, not using them
 
@@ -215,7 +216,7 @@ void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor)
         (cmd->ClipRect.w - clipOffset.y) * clipScale.y,
       };
 
-      if (clipRect.x >= fbWidth || clipRect.y >= fbHeight ||
+      if(clipRect.x >= fbWidth || clipRect.y >= fbHeight ||
           clipRect.z < 0.0f || clipRect.w < 0.0f)
         continue;
 

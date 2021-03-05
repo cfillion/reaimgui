@@ -29,9 +29,9 @@
 
 static std::wstring widen(const char *input, const UINT codepage = CP_UTF8)
 {
-  const int size = MultiByteToWideChar(codepage, 0, input, -1, nullptr, 0) - 1;
+  const int size { MultiByteToWideChar(codepage, 0, input, -1, nullptr, 0) - 1 };
 
-  std::wstring output(size, 0);
+  std::wstring output(size, L'\0');
   MultiByteToWideChar(codepage, 0, input, -1, &output[0], size);
 
   return output;
@@ -64,9 +64,9 @@ static unsigned int getDpiForPoint(const POINT &point)
 
   HMONITOR monitor { MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST) };
 
-  if (_GetDpiForMonitor && monitor) {
+  if(_GetDpiForMonitor && monitor) {
     unsigned int dpiX, dpiY;
-    if (S_OK == _GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY))
+    if(S_OK == _GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY))
       return dpiX;
   }
 

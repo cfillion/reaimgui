@@ -107,7 +107,7 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
     return;
 
   const NSString *characters;
-  if ([string isKindOfClass:[NSAttributedString class]])
+  if([string isKindOfClass:[NSAttributedString class]])
     characters = [string string];
   else
     characters = string;
@@ -117,7 +117,7 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
   while(range.length) {
     uint32_t codepoint {};
 
-    if (![characters getBytes:&codepoint
+    if(![characters getBytes:&codepoint
                    maxLength:sizeof(codepoint)
                   usedLength:nullptr
                     encoding:NSUTF32StringEncoding

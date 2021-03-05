@@ -204,7 +204,7 @@ void Context::updateCursor()
 
 bool Context::anyMouseDown() const
 {
-  for(auto state : m_mouseDown) {
+  for(const auto state : m_mouseDown) {
     if(state & Down)
       return true;
   }
@@ -308,9 +308,9 @@ void Context::updateMousePos()
 #else
   if(targetHwnd == windowHwnd || GetCapture() == windowHwnd)
 #endif
-    io.MousePos = ImVec2(static_cast<float>(p.x), static_cast<float>(p.y));
+    io.MousePos = { static_cast<float>(p.x), static_cast<float>(p.y) };
   else
-    io.MousePos = ImVec2(-FLT_MAX, -FLT_MAX);
+    io.MousePos = { -FLT_MAX, -FLT_MAX };
 }
 
 void Context::mouseWheel(const unsigned int msg, const short delta)

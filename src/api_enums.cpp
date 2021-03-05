@@ -169,10 +169,6 @@ DEFINE_ENUM(Im, DrawCornerFlags_Left,     "");
 DEFINE_ENUM(Im, DrawCornerFlags_Right,    "");
 DEFINE_ENUM(Im, DrawCornerFlags_All,      "In your function calls you may use ~0 (= all bits sets) instead of DrawCornerFlags_All as a convenience");
 
-// typedef int ImDrawListFlags;        // -> enum ImDrawListFlags_      // Flags: for ImDrawList
-// typedef int ImFontAtlasFlags;       // -> enum ImFontAtlasFlags_     // Flags: for ImFontAtlas build
-// typedef int ImGuiBackendFlags;      // -> enum ImGuiBackendFlags_    // Flags: for io.BackendFlags
-
 // ImGuiButtonFlags
 DEFINE_ENUM(ImGui, ButtonFlags_None,              "Flags: for InvisibleButton()");
 DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonLeft,   "React on left mouse button (default)");

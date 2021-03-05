@@ -33,9 +33,9 @@ static auto &knownFuncs()
 
 API::API(const char *name, void *cImpl, void *reascriptImpl, void *definition)
   : m_regs {
-      { KEY("API"), cImpl },
+      { KEY("API"),       cImpl         },
       { KEY("APIvararg"), reascriptImpl },
-      { KEY("APIdef"), definition },
+      { KEY("APIdef"),    definition    },
     }
 {
   knownFuncs().push_back(this);

@@ -72,14 +72,14 @@ Color::Color(const float rgba[4], const bool alpha)
 
 Color::operator ImVec4() const
 {
-  auto [r, g, b, a] { m_store };
-  return ImVec4{r, g, b, a};
+  const auto [r, g, b, a] { m_store };
+  return { r, g, b, a };
 }
 
 uint32_t Color::pack(const bool alpha, const uint32_t extra) const
 {
   uint32_t rgba {}, i {};
-  auto [r, g, b, a] { m_store };
+  const auto [r, g, b, a] { m_store };
 
   if(alpha)
     rgba |= static_cast<uint32_t>(std::round(a * 0xFF)) << (8 * i++);
