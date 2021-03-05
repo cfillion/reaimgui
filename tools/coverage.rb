@@ -165,6 +165,7 @@ NATIVE_ONLY_ENUMS = [
   /\ADataType_/,
   /\ANavInput_/,
   /\ABackendFlags_/,
+  /\AFontAtlasFlags_/,
   'Cond_None',          # alias for Cond_Always
   /\AKey_.+/,           # for GetKeyIndex, not implemented
   /_NoSavedSettings\z/, # saved settings are not implemented yet
@@ -181,6 +182,7 @@ NATIVE_ONLY_ENUMS = [
   'InputTextFlags_NoMarkEdited',
   /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu)\z/,
   /\AColorEditFlags__.+Mask\z/,
+  /\ADrawListFlags_/,
 ]
 
 # these functions were ported using another name (eg. overloads)
@@ -429,7 +431,7 @@ Argument = Struct.new :type, :name, :default, :size
 # load ImGui definitions
 IMGUI_FUNC_R  = /IMGUI_API \s+ (?<type>[\w\*\&\s]+?) \s+ (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
 IMGUI_ARG_R   = /\A(?<type>[\w\*&\s\<\>]+) \s+ (?<name>\w+) (?:\[ (?<size>\d*) \])? (?:\s*=\s*(?<default>.+))?\z/x
-IMGUI_ENUM_R  = /\A\s* ImGui(?<name>[\w_]+) \s* (?:,|=)/x
+IMGUI_ENUM_R  = /\A\s* Im(?:Gui)?(?<name>[\w_]+) \s* (?:,|=)/x
 IMGUI_CLASS_R = /(?:namespace|struct) (?<name>\w+)/
 
 def split_imgui_args(args)
@@ -466,7 +468,7 @@ puts "imgui:    found %d functions, %d enums (total: %d symbols)" %
 
 # load ReaImGui definitions
 REAIMGUI_FUNC_R = /\ADEFINE_API \s*\(\s* (?<type>[\w\s\*]+) \s*,\s* (?<name>[\w]+) \s*,\s* (?<args>.*?) \s*(?<arg_end>,)?\s*(\/|\Z)/x
-REAIMGUI_ENUM_R = /\ADEFINE_ENUM \s*\(\s* (?<name>[\w\*]+) \s*,\s*/x
+REAIMGUI_ENUM_R = /\ADEFINE_ENUM \s*\(\s* (?<prefix>\w+) \s*,\s* (?<name>\w+) \s*,\s*/x
 REAIMGUI_ARGS_R = /\A\s* (?<args>\(.+?\)) \s*(?<arg_end>,)?\s*(\/|\Z)/x
 REAIMGUI_DEFS_R = /\A"?Default values: (?<values>.+?)(?:\.?(?:\).?)?",)?\Z/
 REAIMGUI_DEF_R  = /\A(?<name>[\w_]+) = (?<value>.+)/
