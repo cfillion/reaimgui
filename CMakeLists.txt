@@ -91,6 +91,10 @@ if(WIN32)
   )
 else()
   add_compile_options(-fsigned-char -fstack-protector-strong -fdiagnostics-color)
+
+  if(APPLE)
+    add_link_options(-Wl,-dead_strip)
+  endif()
 endif()
 
 add_subdirectory(src)
