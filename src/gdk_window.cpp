@@ -23,6 +23,7 @@
 #include <cassert>
 #include <epoxy/gl.h>
 #include <gdk/gdk.h>
+#include <lice/lice.h>
 
 #include <swell/swell.h>
 
@@ -33,10 +34,12 @@
 
 struct Window::Impl {
   void initGl();
-  void resizeFbTex();
+  void resizeTextures();
   void teardownGl();
   void checkDockChanged();
   void findOSWindow();
+  bool isDocked() const { return hwnd.get() != windowOwner; }
+  void liceBlit();
 
   HwndPtr hwnd;
   Context *ctx;
@@ -45,6 +48,7 @@ struct Window::Impl {
   GdkGLContext *gl;
   unsigned int tex, fbo;
   OpenGLRenderer *renderer;
+  LICE_MemBitmap pixels; // used when docked
 };
 
 Window::Window(const char *title, RECT rect, Context *ctx)
@@ -113,7 +117,7 @@ void Window::Impl::initGl()
   }
 
   glGenTextures(1, &tex);
-  resizeFbTex(); // binds to the texture and sets its size
+  resizeTextures(); // binds to the texture and sets its size
 
   glGenFramebuffers(1, &fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -124,16 +128,19 @@ void Window::Impl::initGl()
   gdk_gl_context_clear_current();
 }
 
-void Window::Impl::resizeFbTex()
+void Window::Impl::resizeTextures()
 {
   RECT rect;
-  GetClientRect(windowOwner, &rect);
+  GetClientRect(hwnd.get(), &rect);
   const int width  { rect.right - rect.left },
             height { rect.bottom - rect.top };
 
   glBindTexture(GL_TEXTURE_2D, tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
     0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+  pixels.resize(width, height);
+  glPixelStorei(GL_PACK_ROW_LENGTH, pixels.getRowSpan());
 }
 
 void Window::Impl::findOSWindow()
@@ -187,6 +194,7 @@ void Window::drawFrame(ImDrawData *data)
   m_impl->checkDockChanged();
 
   // hidden docker or another docker tab is active
+  // TODO: move IsWindowVisible to Context, don't render at all
   if(!m_impl->window || !IsWindowVisible(m_impl->hwnd.get()))
     return;
 
@@ -194,27 +202,42 @@ void Window::drawFrame(ImDrawData *data)
 
   m_impl->renderer->draw(data, m_impl->ctx->clearColor());
 
-  RECT contextRect, ownerRect;
-  GetWindowRect(m_impl->hwnd.get(), &contextRect);
-  GetWindowRect(m_impl->windowOwner, &ownerRect);
+  if(m_impl->isDocked()) {
+    // REAPER is also drawing to the same GdkWindow so we must share it.
+    // Switch to slower render path, copying pixels into a LICE bitmap.
+    glReadPixels(0, 0, m_impl->pixels.getWidth(), m_impl->pixels.getHeight(),
+      GL_BGRA, GL_UNSIGNED_BYTE, m_impl->pixels.getBits());
+    InvalidateRect(m_impl->hwnd.get(), nullptr, false);
+    gdk_gl_context_clear_current();
+    return;
+  }
 
-  cairo_rectangle_int_t rect {
-    contextRect.left   - ownerRect.left,
-    contextRect.top    - ownerRect.top,
-    contextRect.right  - contextRect.left,
-    contextRect.bottom - contextRect.top
-  };
-
-  cairo_region_t *region { cairo_region_create_rectangle(&rect) };
+  ImGuiIO &io { ImGui::GetIO() };
+  const cairo_region_t *region { gdk_window_get_clip_region(m_impl->window) };
   GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(m_impl->window, region) };
-  cairo_region_destroy(region);
-
   cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
   gdk_cairo_draw_from_gl(cairoContext, m_impl->window, m_impl->tex,
-    GL_TEXTURE, 1, rect.x, rect.y, rect.width, rect.height);
+    GL_TEXTURE, 1, 0, 0, io.DisplaySize.x, io.DisplaySize.y);
   gdk_window_end_draw_frame(m_impl->window, drawContext);
 
   gdk_gl_context_clear_current();
+}
+
+void Window::Impl::liceBlit()
+{
+  PAINTSTRUCT ps;
+  if(!BeginPaint(hwnd.get(), &ps))
+    return;
+
+  LICE_WrapperBitmap flipped { pixels.getBits(),
+    pixels.getWidth(), pixels.getHeight(), pixels.getRowSpan(), true };
+
+  LICE_Blit(ps.hdc->surface, &flipped,
+    ps.hdc->surface_offs.x, ps.hdc->surface_offs.y,
+    0, 0, pixels.getWidth(), pixels.getHeight(), 1.0f,
+    LICE_BLIT_MODE_COPY | LICE_BLIT_IGNORE_SCALING);
+
+  EndPaint(hwnd.get(), &ps);
 }
 
 void Window::endFrame()
@@ -259,7 +282,7 @@ bool Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
   switch(msg) {
   case WM_SIZE:
     gdk_gl_context_make_current(m_impl->gl);
-    m_impl->resizeFbTex();
+    m_impl->resizeTextures();
     gdk_gl_context_clear_current();
     return true;
   case WM_KEYDOWN:
@@ -272,6 +295,10 @@ bool Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
   case WM_KEYUP:
     if(wParam < 256)
       m_impl->ctx->keyInput(wParam, false);
+    return true;
+  case WM_PAINT:
+    if(m_impl->isDocked())
+      m_impl->liceBlit();
     return true;
   }
 

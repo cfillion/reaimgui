@@ -79,6 +79,9 @@ else()
   else()
     target_sources(${PROJECT_NAME} PRIVATE gdk_window.cpp)
 
+    find_package(LICE REQUIRED)
+    target_link_libraries(${PROJECT_NAME} LICE::lice)
+
     pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
     pkg_search_module(GDK REQUIRED IMPORTED_TARGET gdk-3.0)
     target_link_libraries(${PROJECT_NAME} PkgConfig::Epoxy PkgConfig::GDK)

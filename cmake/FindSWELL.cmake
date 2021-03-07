@@ -17,14 +17,15 @@ set(SWELL_RESGEN "${SWELL_DIR}/mac_resgen.php")
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(SWELL REQUIRED_VARS SWELL_DIR)
 
-add_library(swell ${SWELL_DIR}/swell-modstub$<IF:$<BOOL:${APPLE}>,.mm,-generic.cpp>)
+add_library(swell
+  ${SWELL_DIR}/swell-modstub$<IF:$<BOOL:${APPLE}>,.mm,-generic.cpp>)
 
 if(APPLE)
   find_library(APPKIT_LIB AppKit)
   target_link_libraries(swell PUBLIC ${APPKIT_LIB})
 endif()
 
-target_compile_definitions(swell PUBLIC  SWELL_PROVIDED_BY_APP)
+target_compile_definitions(swell PUBLIC SWELL_LICE_GDI SWELL_PROVIDED_BY_APP)
 target_include_directories(swell INTERFACE ${SWELL_INCLUDE_DIR})
 target_link_libraries(swell PUBLIC WDL::WDL)
 
