@@ -43,6 +43,10 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     return 0;
 
   switch(msg) {
+  case WM_ACTIVATE:
+    if(wParam == WA_INACTIVE)
+      ctx->resignFocus();
+    return 0;
   case WM_COMMAND: // docker close button sends WM_COMMAND with IDCANCEL
     if(LOWORD(wParam) != IDCANCEL)
       break;
