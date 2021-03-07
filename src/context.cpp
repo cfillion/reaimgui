@@ -132,7 +132,8 @@ void Context::endFrame(const bool render) try
 {
   ImGui::SetCurrentContext(m_imgui.get());
 
-  if(render) {
+  // IsWindowVisible is false when docked and another tab is active
+  if(render && IsWindowVisible(m_window->nativeHandle())) {
     updateCursor();
     ImGui::Render();
     m_window->drawFrame(ImGui::GetDrawData());

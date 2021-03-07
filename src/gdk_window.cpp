@@ -193,9 +193,7 @@ void Window::drawFrame(ImDrawData *data)
 {
   m_impl->checkDockChanged();
 
-  // hidden docker or another docker tab is active
-  // TODO: move IsWindowVisible to Context, don't render at all
-  if(!m_impl->window || !IsWindowVisible(m_impl->hwnd.get()))
+  if(!m_impl->window) // we're in a hidden docker
     return;
 
   gdk_gl_context_make_current(m_impl->gl);
