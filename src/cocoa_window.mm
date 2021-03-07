@@ -138,6 +138,7 @@ bool Window::handleMessage(const unsigned int msg, WPARAM, LPARAM)
 {
   switch(msg) {
   case WM_SIZE:
+  case WM_PAINT: // update size if it changed while we were docked & inactive
     [m_impl->gl update];
     if(m_impl->lastDrawData)
       drawFrame(m_impl->lastDrawData);
