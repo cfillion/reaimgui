@@ -63,7 +63,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 #  define GET_WHEEL_DELTA_WPARAM GET_Y_LPARAM
 #endif
     ctx->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
-    break;
+    return 0;
   case WM_SETCURSOR:
     if(LOWORD(lParam) == HTCLIENT) {
       SetCursor(ctx->cursor()); // sets the cursor when re-entering the window
