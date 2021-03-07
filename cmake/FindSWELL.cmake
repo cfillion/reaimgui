@@ -25,7 +25,7 @@ if(APPLE)
   target_link_libraries(swell PUBLIC ${APPKIT_LIB})
 endif()
 
-target_compile_definitions(swell PUBLIC SWELL_LICE_GDI SWELL_PROVIDED_BY_APP)
+target_compile_definitions(swell PUBLIC SWELL_PROVIDED_BY_APP)
 target_include_directories(swell INTERFACE ${SWELL_INCLUDE_DIR})
 target_link_libraries(swell PUBLIC WDL::WDL)
 

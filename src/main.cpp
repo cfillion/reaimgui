@@ -54,6 +54,15 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(realloc_cmd_ptr), // v5.26
     IMPORT(ReaScriptError),
     IMPORT(ShowConsoleMsg),
+
+    IMPORT(LICE_CreateBitmap),
+    IMPORT(LICE_ScaledBlit),
+    IMPORT(LICE__Destroy),
+    IMPORT(LICE__GetBits),
+    IMPORT(LICE__GetHeight),
+    IMPORT(LICE__GetRowSpan),
+    IMPORT(LICE__GetWidth),
+    IMPORT(LICE__resize),
   };
 
   for(const ApiImport &func : funcs) {

@@ -23,14 +23,19 @@
 #include <cassert>
 #include <epoxy/gl.h>
 #include <gdk/gdk.h>
-#include <lice/lice.h>
 
 #include <swell/swell.h>
+#include <reaper_plugin_functions.h>
 
+#define _LICE_H // prevent swell-internal.h from including lice.h
+#define SWELL_LICE_GDI
 #define SWELL_TARGET_GDK
 #define Window Xorg_Window
 #include <swell/swell-internal.h> // access to hwnd->m_oswindow
 #undef Window
+
+struct LICEDeleter { void operator()(LICE_IBitmap *bm) { LICE__Destroy(bm); } };
+using LICEPtr = std::unique_ptr<LICE_IBitmap, LICEDeleter>;
 
 struct Window::Impl {
   void initGl();
@@ -48,7 +53,7 @@ struct Window::Impl {
   GdkGLContext *gl;
   unsigned int tex, fbo;
   OpenGLRenderer *renderer;
-  LICE_MemBitmap pixels; // used when docked
+  LICEPtr pixels; // used when docked
 };
 
 Window::Window(const char *title, RECT rect, Context *ctx)
@@ -68,6 +73,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
 
   // prevent invalidation (= displaying garbage) when moving another window over
   gdk_window_freeze_updates(m_impl->window);
+  m_impl->pixels = LICEPtr { LICE_CreateBitmap(0, 0, 0) };
 
   m_impl->initGl();
 
@@ -139,8 +145,8 @@ void Window::Impl::resizeTextures()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
     0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
-  pixels.resize(width, height);
-  glPixelStorei(GL_PACK_ROW_LENGTH, pixels.getRowSpan());
+  LICE__resize(pixels.get(), width, height);
+  glPixelStorei(GL_PACK_ROW_LENGTH, LICE__GetRowSpan(pixels.get()));
 }
 
 void Window::Impl::findOSWindow()
@@ -203,8 +209,9 @@ void Window::drawFrame(ImDrawData *data)
   if(m_impl->isDocked()) {
     // REAPER is also drawing to the same GdkWindow so we must share it.
     // Switch to slower render path, copying pixels into a LICE bitmap.
-    glReadPixels(0, 0, m_impl->pixels.getWidth(), m_impl->pixels.getHeight(),
-      GL_BGRA, GL_UNSIGNED_BYTE, m_impl->pixels.getBits());
+    glReadPixels(0, 0,
+      LICE__GetWidth(m_impl->pixels.get()), LICE__GetHeight(m_impl->pixels.get()),
+      GL_BGRA, GL_UNSIGNED_BYTE, LICE__GetBits(m_impl->pixels.get()));
     InvalidateRect(m_impl->hwnd.get(), nullptr, false);
     gdk_gl_context_clear_current();
     return;
@@ -223,17 +230,19 @@ void Window::drawFrame(ImDrawData *data)
 
 void Window::Impl::liceBlit()
 {
+  constexpr int LICE_BLIT_MODE_COPY { 0 };
+
   PAINTSTRUCT ps;
   if(!BeginPaint(hwnd.get(), &ps))
     return;
 
-  LICE_WrapperBitmap flipped { pixels.getBits(),
-    pixels.getWidth(), pixels.getHeight(), pixels.getRowSpan(), true };
+  const int width  { LICE__GetWidth(pixels.get())  },
+            height { LICE__GetHeight(pixels.get()) };
 
-  LICE_Blit(ps.hdc->surface, &flipped,
-    ps.hdc->surface_offs.x, ps.hdc->surface_offs.y,
-    0, 0, pixels.getWidth(), pixels.getHeight(), 1.0f,
-    LICE_BLIT_MODE_COPY | LICE_BLIT_IGNORE_SCALING);
+  // flip vertically
+  LICE_ScaledBlit(ps.hdc->surface, pixels.get(),
+    ps.hdc->surface_offs.x, ps.hdc->surface_offs.y, width, height,
+    0, height, width, -height, 1.0f, LICE_BLIT_MODE_COPY);
 
   EndPaint(hwnd.get(), &ps);
 }
