@@ -34,10 +34,14 @@
 struct Window::Impl {
   void initGl();
   void resizeFbTex();
+  void teardownGl();
+  void checkDockChanged();
+  void findOSWindow();
 
   HwndPtr hwnd;
   Context *ctx;
   GdkWindow *window;
+  HWND windowOwner;
   GdkGLContext *gl;
   unsigned int tex, fbo;
   OpenGLRenderer *renderer;
@@ -53,7 +57,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
 
   m_impl->ctx = ctx;
   m_impl->hwnd = HwndPtr { hwnd };
-  m_impl->window = m_impl->hwnd->m_oswindow;
+  m_impl->findOSWindow();
 
   if(static_cast<void *>(m_impl->window) == hwnd)
     throw reascript_error { "headless SWELL is not supported" };
@@ -63,20 +67,13 @@ Window::Window(const char *title, RECT rect, Context *ctx)
 
   m_impl->initGl();
 
-  glGenTextures(1, &m_impl->tex);
-  m_impl->resizeFbTex(); // binds to the texture and sets its size
-
-  glGenFramebuffers(1, &m_impl->fbo);
-  glBindFramebuffer(GL_FRAMEBUFFER, m_impl->fbo);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-    GL_TEXTURE_2D, m_impl->tex, 0);
-  assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-
-  m_impl->renderer = new OpenGLRenderer;
-  gdk_gl_context_clear_current();
-
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendPlatformName = "reaper_imgui_gdk";
+}
+
+Window::~Window()
+{
+  m_impl->teardownGl();
 }
 
 void Window::Impl::initGl()
@@ -114,12 +111,23 @@ void Window::Impl::initGl()
       OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR, major, minor);
     throw reascript_error { msg };
   }
+
+  glGenTextures(1, &tex);
+  resizeFbTex(); // binds to the texture and sets its size
+
+  glGenFramebuffers(1, &fbo);
+  glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+  assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+
+  renderer = new OpenGLRenderer;
+  gdk_gl_context_clear_current();
 }
 
 void Window::Impl::resizeFbTex()
 {
   RECT rect;
-  GetClientRect(hwnd.get(), &rect);
+  GetClientRect(windowOwner, &rect);
   const int width  { rect.right - rect.left },
             height { rect.bottom - rect.top };
 
@@ -128,19 +136,41 @@ void Window::Impl::resizeFbTex()
     0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 }
 
-Window::~Window()
+void Window::Impl::findOSWindow()
 {
-  gdk_gl_context_make_current(m_impl->gl);
+  windowOwner = hwnd.get();
+  while(windowOwner && !windowOwner->m_oswindow) {
+    HWND parent { GetParent(windowOwner) };
+    windowOwner =  IsWindowVisible(parent) ? parent : nullptr;
+  }
 
-  glDeleteFramebuffers(1, &m_impl->fbo);
-  glDeleteTextures(1, &m_impl->tex);
+  window = windowOwner ? windowOwner->m_oswindow : nullptr;
+}
 
-  delete m_impl->renderer;
+void Window::Impl::checkDockChanged()
+{
+  GdkWindow *prevWindow { window };
+  findOSWindow();
+
+  if(window && prevWindow != window) {
+    teardownGl();
+    initGl();
+  }
+}
+
+void Window::Impl::teardownGl()
+{
+  gdk_gl_context_make_current(gl);
+
+  glDeleteFramebuffers(1, &fbo);
+  glDeleteTextures(1, &tex);
+
+  delete renderer;
 
   // current GL context must be cleared before calling unref to avoid this bug:
   // https://gitlab.gnome.org/GNOME/gtk/-/issues/2562
   gdk_gl_context_clear_current();
-  g_object_unref(m_impl->gl);
+  g_object_unref(gl);
 }
 
 HWND Window::nativeHandle() const
@@ -154,17 +184,34 @@ void Window::beginFrame()
 
 void Window::drawFrame(ImDrawData *data)
 {
+  m_impl->checkDockChanged();
+
+  // hidden docker or another docker tab is active
+  if(!m_impl->window || !IsWindowVisible(m_impl->hwnd.get()))
+    return;
+
   gdk_gl_context_make_current(m_impl->gl);
 
   m_impl->renderer->draw(data, m_impl->ctx->clearColor());
 
-  ImGuiIO &io { ImGui::GetIO() };
-  GdkWindow *window { m_impl->window };
-  const cairo_region_t *region { gdk_window_get_clip_region(window) };
-  GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(window, region) };
+  RECT contextRect, ownerRect;
+  GetWindowRect(m_impl->hwnd.get(), &contextRect);
+  GetWindowRect(m_impl->windowOwner, &ownerRect);
+
+  cairo_rectangle_int_t rect {
+    contextRect.left   - ownerRect.left,
+    contextRect.top    - ownerRect.top,
+    contextRect.right  - contextRect.left,
+    contextRect.bottom - contextRect.top
+  };
+
+  cairo_region_t *region { cairo_region_create_rectangle(&rect) };
+  GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(m_impl->window, region) };
+  cairo_region_destroy(region);
+
   cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
-  gdk_cairo_draw_from_gl(cairoContext, window, m_impl->tex, GL_TEXTURE, 1,
-    0, 0, io.DisplaySize.x, io.DisplaySize.y);
+  gdk_cairo_draw_from_gl(cairoContext, m_impl->window, m_impl->tex,
+    GL_TEXTURE, 1, rect.x, rect.y, rect.width, rect.height);
   gdk_window_end_draw_frame(m_impl->window, drawContext);
 
   gdk_gl_context_clear_current();
@@ -176,6 +223,9 @@ void Window::endFrame()
 
 float Window::scaleFactor() const
 {
+  if(!m_impl->window)
+    return 1.0f;
+
   return gdk_window_get_scale_factor(m_impl->window);
 }
 
