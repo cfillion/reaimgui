@@ -51,6 +51,11 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
   return NO;
 }
 
+- (BOOL)acceptsFirstMouse:(NSEvent *)event
+{
+  return YES;
+}
+
 - (void)mouseDown:(NSEvent *)event
 {
   m_context->mouseDown(WM_LBUTTONDOWN);

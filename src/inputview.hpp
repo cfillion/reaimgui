@@ -36,6 +36,7 @@ void setupMacOSKeyMap(ImGuiIO &);
                          parent:(NSView *)parent;
 - (BOOL)resignFirstResponder;
 
+- (BOOL)acceptsFirstMouse:(NSEvent *)event;
 - (void)mouseDown:(NSEvent *)event;
 - (void)mouseUp:(NSEvent *)event;
 - (void)rightMouseDown:(NSEvent *)event;
