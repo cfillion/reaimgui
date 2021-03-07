@@ -56,6 +56,7 @@ public:
   void mouseWheel(unsigned int msg, short delta);
   void keyInput(uint8_t key, bool down);
   void charInput(unsigned int);
+  void resignFocus();
 
   HCURSOR cursor() const { return m_cursor; }
   Window *window() const { return m_window.get(); }

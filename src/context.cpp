@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <reaper_colortheme.h>
+#include <imgui/imgui_internal.h> // ClearActiveID
 #include <reaper_plugin_functions.h>
 #include <reaper_plugin_secrets.h>
 
@@ -361,6 +362,13 @@ void Context::charInput(const unsigned int codepoint)
   ImGui::SetCurrentContext(m_imgui.get());
   ImGuiIO &io { ImGui::GetIO() };
   io.AddInputCharacter(codepoint);
+}
+
+void Context::resignFocus()
+{
+  ImGui::SetCurrentContext(m_imgui.get());
+  if(ImGui::GetIO().WantCaptureKeyboard)
+    ImGui::ClearActiveID();
 }
 
 void Context::updateTheme()

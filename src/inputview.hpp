@@ -34,6 +34,7 @@ void setupMacOSKeyMap(ImGuiIO &);
 
 - (instancetype)initWithContext:(Context *)context
                          parent:(NSView *)parent;
+- (BOOL)acceptsFirstResponder;
 - (BOOL)resignFirstResponder;
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)event;

@@ -41,14 +41,16 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
   return self;
 }
 
+- (BOOL)acceptsFirstResponder
+{
+  // Make ourselves first responder again when regaining focus while docked
+  return YES;
+}
+
 - (BOOL)resignFirstResponder
 {
-  // Always retain focus.
-  // For some reason pressing the Enter key leads to REAPER invoking SetFocus
-  // on something else (the window perhaps?).
-  //
-  // This breaks receiving mouse input from SWELL.
-  return NO;
+  m_context->resignFocus();
+  return YES;
 }
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)event
