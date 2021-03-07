@@ -201,6 +201,9 @@ HWND Window::nativeHandle() const
 
 void Window::beginFrame()
 {
+  // GDK SWELL does not send a window message when focus is lost
+  if(GetFocus() != m_impl->hwnd.get())
+    m_impl->ctx->clearFocus();
 }
 
 void Window::drawFrame(ImDrawData *data)

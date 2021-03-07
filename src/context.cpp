@@ -365,7 +365,7 @@ void Context::charInput(const unsigned int codepoint)
   io.AddInputCharacter(codepoint);
 }
 
-void Context::resignFocus()
+void Context::clearFocus()
 {
   ImGui::SetCurrentContext(m_imgui.get());
   if(ImGui::GetIO().WantCaptureKeyboard)

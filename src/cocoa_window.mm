@@ -28,13 +28,10 @@ static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
 struct Window::Impl {
-  static int translateAccel(MSG *msg, accelerator_register_t *accel);
-
   Context *ctx;
   HwndPtr hwnd;
   NSView *view;
   InputView *inputView;
-  accelerator_register_t accel { &translateAccel, true, this };
   ImDrawData *lastDrawData     {};
   NSOpenGLContext *gl;
   OpenGLRenderer *renderer;
@@ -90,8 +87,6 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   NSUserDefaults *defaults { [NSUserDefaults standardUserDefaults] };
   [defaults registerDefaults:@{@"ApplePressAndHoldEnabled":@NO}];
 
-  plugin_register("accelerator", &m_impl->accel);
-
   ImGuiIO &io { ImGui::GetIO() };
   io.ConfigMacOSXBehaviors = false; // don't swap Cmd/Ctrl, SWELl already does it
   io.BackendPlatformName = "reaper_imgui_cocoa";
@@ -100,8 +95,6 @@ Window::Window(const char *title, RECT rect, Context *ctx)
 
 Window::~Window()
 {
-  plugin_register("-accelerator", &m_impl->accel);
-
   [m_impl->gl makeCurrentContext];
   delete m_impl->renderer;
 }
@@ -134,11 +127,16 @@ float Window::scaleFactor() const
   return [[m_impl->view window] backingScaleFactor];
 }
 
-bool Window::handleMessage(const unsigned int msg, WPARAM, LPARAM)
+bool Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
-  case WM_SIZE:
+  case WM_ACTIVATE:
+    // Only sent when not docked (InputView::resignFirstResponder otherwise)
+    if(wParam == WA_INACTIVE)
+      m_impl->ctx->clearFocus();
+    return true;
   case WM_PAINT: // update size if it changed while we were docked & inactive
+  case WM_SIZE:
     [m_impl->gl update];
     if(m_impl->lastDrawData)
       drawFrame(m_impl->lastDrawData);
@@ -148,15 +146,15 @@ bool Window::handleMessage(const unsigned int msg, WPARAM, LPARAM)
   return false;
 }
 
-int Window::Impl::translateAccel(MSG *msg, accelerator_register_t *accel)
+int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
 {
-  enum { NotOurWindow = 0, EatKeystroke = 1 };
+  auto *self { static_cast<Window *>(accel->user) };
+  HWND handle { self->m_impl->hwnd.get() };
 
-  auto *impl { static_cast<Window::Impl *>(accel->user) };
-  if(impl->hwnd.get() != msg->hwnd && !IsChild(impl->hwnd.get(), msg->hwnd))
-    return NotOurWindow;
+  if(handle == msg->hwnd || IsChild(handle, msg->hwnd)) {
+    [[self->m_impl->view window] sendEvent:[NSApp currentEvent]];
+    return Accel::EatKeystroke;
+  }
 
-  [[impl->view window] sendEvent:[NSApp currentEvent]];
-
-  return EatKeystroke;
+  return Accel::NotOurWindow;
 }

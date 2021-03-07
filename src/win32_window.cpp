@@ -254,7 +254,7 @@ bool Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
   case WM_CHAR:
     m_impl->ctx->charInput(wParam);
     return true;
-  case WM_DPICHANGED:
+  case WM_DPICHANGED: {
     const float dpi { static_cast<float>(LOWORD(wParam)) };
     const RECT *sugg { reinterpret_cast<RECT *>(lParam) };
     m_impl->scale = dpi / USER_DEFAULT_SCREEN_DPI;
@@ -262,6 +262,10 @@ bool Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
       sugg->left, sugg->top, sugg->right - sugg->left, sugg->bottom - sugg->top,
       SWP_NOACTIVATE | SWP_NOZORDER);
     return true;
+  }
+  case WM_KILLFOCUS:
+    m_impl->ctx->clearFocus();
+    return 0;
   }
 
   return false;

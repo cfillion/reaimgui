@@ -49,7 +49,7 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
 
 - (BOOL)resignFirstResponder
 {
-  m_context->resignFocus();
+  m_context->clearFocus();
   return YES;
 }
 

@@ -18,6 +18,8 @@
 #ifndef REAIMGUI_WINDOW_HPP
 #define REAIMGUI_WINDOW_HPP
 
+#include "plugin_register.hpp"
+
 #include <memory>
 
 #ifdef _WIN32
@@ -31,6 +33,8 @@ struct ImDrawData;
 
 class Window {
 public:
+  enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
+
   static HINSTANCE s_instance;
 
   // gives a default x/y coordinate to center a window to the arrange view
@@ -46,6 +50,7 @@ public:
   void endFrame();
   float scaleFactor() const;
   bool handleMessage(unsigned int msg, WPARAM, LPARAM);
+  static int translateAccel(MSG *msg, accelerator_register_t *accel);
 
   HWND nativeHandle() const;
 
@@ -59,6 +64,9 @@ private:
 
   struct Impl;
   std::unique_ptr<Impl> m_impl;
+
+  accelerator_register_t m_accel { &translateAccel, true, this };
+  PluginRegister m_accelReg { "accelerator", &m_accel };
 };
 
 #endif

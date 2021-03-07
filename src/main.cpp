@@ -15,13 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "api.hpp"
-#include "version.hpp"
-#include "window.hpp"
-
 #define REAPERAPI_IMPLEMENT
 #include <reaper_plugin_functions.h>
 #include <reaper_plugin_secrets.h>
+
+#include "api.hpp"
+#include "version.hpp"
+#include "window.hpp"
 
 #include <imgui/imgui.h>
 

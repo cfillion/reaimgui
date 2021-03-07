@@ -43,10 +43,6 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     return 0;
 
   switch(msg) {
-  case WM_ACTIVATE:
-    if(wParam == WA_INACTIVE)
-      ctx->resignFocus();
-    return 0;
   case WM_COMMAND: // docker close button sends WM_COMMAND with IDCANCEL
     if(LOWORD(wParam) != IDCANCEL)
       break;
@@ -78,6 +74,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   case WM_LBUTTONDOWN:
   case WM_MBUTTONDOWN:
   case WM_RBUTTONDOWN:
+    SetFocus(handle); // give keyboard focus when docked
     ctx->mouseDown(msg);
     return 0;
   case WM_LBUTTONUP:
@@ -148,6 +145,17 @@ int Window::centerY(const int height)
   const int parentHeight { parentRect.bottom - parentRect.top };
   return ((parentHeight - height) / 2) + parentRect.top;
 }
+
+#ifndef __APPLE__
+int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
+{
+  auto *self { static_cast<Window *>(accel->user) };
+  if(self->nativeHandle() == msg->hwnd)
+    return Accel::PassToWindow;
+  else
+    return Accel::NotOurWindow;
+}
+#endif
 
 void Window::WindowDeleter::operator()(HWND window)
 {
