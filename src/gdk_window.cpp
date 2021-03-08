@@ -43,7 +43,7 @@ struct Window::Impl {
   void teardownGl();
   void checkDockChanged();
   void findOSWindow();
-  bool isDocked() const { return hwnd.get() != windowOwner; }
+  bool isDocked() const { return windowOwner && hwnd.get() != windowOwner; }
   void liceBlit();
 
   HwndPtr hwnd;
@@ -73,7 +73,6 @@ Window::Window(const char *title, RECT rect, Context *ctx)
 
   // prevent invalidation (= displaying garbage) when moving another window over
   gdk_window_freeze_updates(m_impl->window);
-  m_impl->pixels = LICEPtr { LICE_CreateBitmap(0, 0, 0) };
 
   m_impl->initGl();
 
@@ -143,10 +142,12 @@ void Window::Impl::resizeTextures()
 
   glBindTexture(GL_TEXTURE_2D, tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
-    0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    0, GL_BGRA, GL_UNSIGNED_BYTE, nullptr);
 
-  LICE__resize(pixels.get(), width, height);
-  glPixelStorei(GL_PACK_ROW_LENGTH, LICE__GetRowSpan(pixels.get()));
+  if(pixels) {
+    LICE__resize(pixels.get(), width, height);
+    glPixelStorei(GL_PACK_ROW_LENGTH, LICE__GetRowSpan(pixels.get()));
+  }
 }
 
 void Window::Impl::findOSWindow()
@@ -154,7 +155,7 @@ void Window::Impl::findOSWindow()
   windowOwner = hwnd.get();
   while(windowOwner && !windowOwner->m_oswindow) {
     HWND parent { GetParent(windowOwner) };
-    windowOwner =  IsWindowVisible(parent) ? parent : nullptr;
+    windowOwner = IsWindowVisible(parent) ? parent : nullptr;
   }
 
   window = windowOwner ? windowOwner->m_oswindow : nullptr;
@@ -164,6 +165,13 @@ void Window::Impl::checkDockChanged()
 {
   GdkWindow *prevWindow { window };
   findOSWindow();
+
+  if(isDocked()) {
+    if(!pixels)
+      pixels = LICEPtr { LICE_CreateBitmap(0, 0, 0) };
+  }
+  else if(pixels)
+    pixels.reset();
 
   if(window && prevWindow != window) {
     teardownGl();
@@ -199,14 +207,12 @@ void Window::drawFrame(ImDrawData *data)
 {
   m_impl->checkDockChanged();
 
-  if(!m_impl->window) // we're in a hidden docker
-    return;
-
   gdk_gl_context_make_current(m_impl->gl);
 
-  m_impl->renderer->draw(data, m_impl->ctx->clearColor());
+  const bool softwareBlit { m_impl->isDocked() };
+  m_impl->renderer->draw(data, m_impl->ctx->clearColor(), softwareBlit);
 
-  if(m_impl->isDocked()) {
+  if(softwareBlit) {
     // REAPER is also drawing to the same GdkWindow so we must share it.
     // Switch to slower render path, copying pixels into a LICE bitmap.
     glReadPixels(0, 0,
@@ -230,7 +236,8 @@ void Window::drawFrame(ImDrawData *data)
 
 void Window::Impl::liceBlit()
 {
-  constexpr int LICE_BLIT_MODE_COPY { 0 };
+  constexpr int LICE_BLIT_MODE_COPY      { 0x00000 },
+                LICE_BLIT_IGNORE_SCALING { 0x20000 };
 
   PAINTSTRUCT ps;
   if(!BeginPaint(hwnd.get(), &ps))
@@ -239,10 +246,9 @@ void Window::Impl::liceBlit()
   const int width  { LICE__GetWidth(pixels.get())  },
             height { LICE__GetHeight(pixels.get()) };
 
-  // flip vertically
-  LICE_ScaledBlit(ps.hdc->surface, pixels.get(),
-    ps.hdc->surface_offs.x, ps.hdc->surface_offs.y, width, height,
-    0, height, width, -height, 1.0f, LICE_BLIT_MODE_COPY);
+  LICE_Blit(ps.hdc->surface, pixels.get(),
+    ps.hdc->surface_offs.x, ps.hdc->surface_offs.y,
+    0, 0, width, height, 1.0f, LICE_BLIT_MODE_COPY | LICE_BLIT_IGNORE_SCALING);
 
   EndPaint(hwnd.get(), &ps);
 }

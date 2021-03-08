@@ -159,7 +159,7 @@ OpenGLRenderer::~OpenGLRenderer()
   glDeleteVertexArrays(1, &m_vbo);
 }
 
-void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor)
+void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor, const bool flip)
 {
   const int fbWidth  { static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x) },
             fbHeight { static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y) };
@@ -174,10 +174,13 @@ void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor)
 
   glViewport(0, 0, fbWidth, fbHeight);
 
-  const float L { drawData->DisplayPos.x },
-              R { drawData->DisplayPos.x + drawData->DisplaySize.x },
-              T { drawData->DisplayPos.y },
-              B { drawData->DisplayPos.y + drawData->DisplaySize.y };
+  float L { drawData->DisplayPos.x },
+        R { drawData->DisplayPos.x + drawData->DisplaySize.x },
+        T { drawData->DisplayPos.y },
+        B { drawData->DisplayPos.y + drawData->DisplaySize.y };
+
+  if(flip)
+    std::swap(T, B);
 
   const float orthoProjection[4][4] {
     { 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
@@ -221,7 +224,7 @@ void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor)
         continue;
 
       // Apply scissor/clipping rectangle
-      glScissor(clipRect.x, fbHeight - clipRect.w,
+      glScissor(clipRect.x, flip ? clipRect.y : fbHeight - clipRect.w,
         clipRect.z - clipRect.x, clipRect.w - clipRect.y);
 
       // Bind texture, Draw

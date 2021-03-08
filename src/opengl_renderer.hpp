@@ -32,7 +32,7 @@ public:
   OpenGLRenderer();
   ~OpenGLRenderer();
 
-  void draw(ImDrawData *, const Color &clearColor);
+  void draw(ImDrawData *, const Color &clearColor, bool flip = false);
 
 private:
   void initShaders();
