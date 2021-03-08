@@ -127,23 +127,23 @@ float Window::scaleFactor() const
   return [[m_impl->view window] backingScaleFactor];
 }
 
-bool Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM)
+std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
   case WM_ACTIVATE:
     // Only sent when not docked (InputView::resignFirstResponder otherwise)
     if(wParam == WA_INACTIVE)
       m_impl->ctx->clearFocus();
-    return true;
+    return 0;
   case WM_PAINT: // update size if it changed while we were docked & inactive
   case WM_SIZE:
     [m_impl->gl update];
     if(m_impl->lastDrawData)
       drawFrame(m_impl->lastDrawData);
-    return true;
+    return 0;
   }
 
-  return false;
+  return std::nullopt;
 }
 
 int Window::translateAccel(MSG *msg, accelerator_register_t *accel)

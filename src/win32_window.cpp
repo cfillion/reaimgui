@@ -238,22 +238,12 @@ float Window::scaleFactor() const
   return m_impl->scale;
 }
 
-bool Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
+std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
   switch(msg) {
-  case WM_KEYDOWN:
-  case WM_SYSKEYDOWN:
-    if(wParam < 256)
-      m_impl->ctx->keyInput(wParam, true);
-    return true;
-  case WM_KEYUP:
-  case WM_SYSKEYUP:
-    if(wParam < 256)
-      m_impl->ctx->keyInput(wParam, false);
-    return true;
   case WM_CHAR:
     m_impl->ctx->charInput(wParam);
-    return true;
+    return 0;
   case WM_DPICHANGED: {
     const float dpi { static_cast<float>(LOWORD(wParam)) };
     const RECT *sugg { reinterpret_cast<RECT *>(lParam) };
@@ -261,12 +251,24 @@ bool Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
     SetWindowPos(m_impl->hwnd.get(), nullptr,
       sugg->left, sugg->top, sugg->right - sugg->left, sugg->bottom - sugg->top,
       SWP_NOACTIVATE | SWP_NOZORDER);
-    return true;
+    return 0;
   }
+  case WM_GETDLGCODE:
+    return DLGC_WANTALLKEYS; // eat all inputs, don't let Tab steal focus
+  case WM_KEYDOWN:
+  case WM_SYSKEYDOWN:
+    if(wParam < 256)
+      m_impl->ctx->keyInput(wParam, true);
+    return 0;
+  case WM_KEYUP:
+  case WM_SYSKEYUP:
+    if(wParam < 256)
+      m_impl->ctx->keyInput(wParam, false);
+    return 0;
   case WM_KILLFOCUS:
     m_impl->ctx->clearFocus();
     return 0;
   }
 
-  return false;
+  return std::nullopt;
 }

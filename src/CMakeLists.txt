@@ -1,4 +1,5 @@
 include(CheckCompilerFlag)
+include(CheckIncludeFileCXX)
 include(CheckLinkerFlag)
 include(FindPkgConfig)
 
@@ -94,6 +95,14 @@ target_link_libraries(${PROJECT_NAME} ImGui::ImGui)
 if(NOT WIN32)
   find_package(SWELL REQUIRED)
   target_link_libraries(${PROJECT_NAME} SWELL::swell)
+endif()
+
+check_include_file_cxx(optional HAS_STD_OPTIONAL)
+if(NOT HAS_STD_OPTIONAL)
+  check_include_file_cxx(experimental/optional HAS_STD_EXPERIMENTAL_OPTIONAL)
+  if(HAS_STD_EXPERIMENTAL_OPTIONAL)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC HAS_STD_EXPERIMENTAL_OPTIONAL)
+  endif()
 endif()
 
 get_target_property(REAIMGUI_BASENAME ${PROJECT_NAME} OUTPUT_NAME)

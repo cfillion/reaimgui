@@ -18,6 +18,7 @@
 #ifndef REAIMGUI_WINDOW_HPP
 #define REAIMGUI_WINDOW_HPP
 
+#include "optional.hpp"
 #include "plugin_register.hpp"
 
 #include <memory>
@@ -49,7 +50,7 @@ public:
   void drawFrame(ImDrawData *);
   void endFrame();
   float scaleFactor() const;
-  bool handleMessage(unsigned int msg, WPARAM, LPARAM);
+  std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM);
   static int translateAccel(MSG *msg, accelerator_register_t *accel);
 
   HWND nativeHandle() const;

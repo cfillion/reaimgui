@@ -39,8 +39,8 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 
   if(!ctx || !ctx->window())
     return DefWindowProc(handle, msg, wParam, lParam);
-  else if(ctx->window()->handleMessage(msg, wParam, lParam))
-    return 0;
+  else if(const auto &rv { ctx->window()->handleMessage(msg, wParam, lParam) })
+    return *rv;
 
   switch(msg) {
   case WM_COMMAND: // docker close button sends WM_COMMAND with IDCANCEL

@@ -293,30 +293,30 @@ static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)
   return wParam;
 }
 
-bool Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
+std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
   switch(msg) {
   case WM_SIZE:
     gdk_gl_context_make_current(m_impl->gl);
     m_impl->resizeTextures();
     gdk_gl_context_clear_current();
-    return true;
+    return 0;
   case WM_KEYDOWN:
     // No access to the orignal GDK key event, unfortunately.
     if(unsigned int c { unmangleSwellChar(wParam, lParam) })
       m_impl->ctx->charInput(c);
     if(wParam < 256)
       m_impl->ctx->keyInput(wParam, true);
-    return true;
+    return 0;
   case WM_KEYUP:
     if(wParam < 256)
       m_impl->ctx->keyInput(wParam, false);
-    return true;
+    return 0;
   case WM_PAINT:
     if(m_impl->isDocked())
       m_impl->liceBlit();
-    return true;
+    return 0;
   }
 
-  return false;
+  return std::nullopt;
 }
