@@ -22,10 +22,12 @@
 #include "opengl_renderer.hpp"
 
 #include <cassert>
+#include <string>
+
 #include <GL/gl3w.h>
 #include <GL/wglext.h>
+#include <reaper_plugin_secrets.h>
 #include <ShellScalingApi.h> // GetDpiForMonitor
-#include <string>
 
 static std::wstring widen(const char *input, const UINT codepage = CP_UTF8)
 {
@@ -112,9 +114,10 @@ Window::Window(const char *title, RECT rect, Context *ctx)
 {
   static Impl::WindowClass windowClass;
 
+  // WS_POPUP allows AttachWindowTopmostButton to work
+  constexpr DWORD style   { WS_OVERLAPPEDWINDOW | WS_POPUP };
   // WS_EX_DLGMODALFRAME removes the default icon
-  constexpr int style { WS_OVERLAPPEDWINDOW | WS_VISIBLE };
-  constexpr int exStyle { WS_EX_DLGMODALFRAME };
+  constexpr DWORD exStyle { WS_EX_DLGMODALFRAME };
 
   // Windows 10 Anniversary Update (1607) and newer
   static DllImport<decltype(AdjustWindowRectExForDpi)>
@@ -134,10 +137,6 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   };
   assert(hwnd && "CreateWindow failed");
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
-
-  // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
-  // Unsetting it disables the border while not bringing back the icon
-  SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_DLGMODALFRAME);
 
   // Windows 10 Anniversary Update (1607) and newer
   static DllImport<decltype(GetDpiForWindow)>
@@ -162,6 +161,13 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendPlatformName = "reaper_imgui_win32";
   io.ImeWindowHandle = hwnd;
+
+  AttachWindowTopmostButton(hwnd);
+  ShowWindow(hwnd, SW_SHOW); // after adding the topmost button
+
+  // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
+  // Unsetting it after the window is visible disables the border (+ no icon)
+  SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_DLGMODALFRAME);
 }
 
 void Window::Impl::initPixelFormat()

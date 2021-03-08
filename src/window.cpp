@@ -19,7 +19,7 @@
 
 #include "context.hpp"
 
-#include <reaper_plugin_functions.h>
+#include <reaper_plugin_secrets.h>
 
 #ifdef _WIN32
 #  include <windows.h>
@@ -99,6 +99,7 @@ HWND Window::createSwellDialog(const char *title)
   const char *res { MAKEINTRESOURCE(ForceNonChild | Resizable) };
   HWND dialog { CreateDialog(s_instance, res, parentHandle(), proc) };
   SetWindowText(dialog, title);
+  AttachWindowTopmostButton(dialog);
   return dialog;
 }
 #endif

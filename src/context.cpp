@@ -23,7 +23,6 @@
 #include <reaper_colortheme.h>
 #include <imgui/imgui_internal.h> // ClearActiveID
 #include <reaper_plugin_functions.h>
-#include <reaper_plugin_secrets.h>
 
 Context::Context(const char *title,
     const int x, const int y, const int w, const int h)
@@ -35,7 +34,6 @@ Context::Context(const char *title,
 
   const RECT rect { x, y, x + w, y + h };
   m_window = std::make_unique<Window>(title, rect, this);
-  AttachWindowTopmostButton(m_window->nativeHandle());
 }
 
 void Context::setupImGui()
