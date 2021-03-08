@@ -1,0 +1,46 @@
+// For compatibility with REAPER versions prior 6.24.
+// See hello_world.eel (ReaImGui_Hello World.eel) for an example using the new extension API syntax.
+
+FLT_MIN = 0.0001; // 1.17549e-38
+
+color = 0;
+#notes = "";
+
+ctx = extension_api("ImGui_CreateContext", "Hello World!", 500, 420);
+
+function update() (
+  track = GetSelectedTrack(0, 0);
+
+  !track ? (
+    color = 0;
+    #notes = "";
+  );
+
+  extension_api("ImGui_SetNextWindowPos", ctx, 0, 0);
+  extension_api("ImGui_GetDisplaySize", ctx, w, h);
+  extension_api("ImGui_SetNextWindowSize", ctx, w, h);
+  extension_api("ImGui_Begin", ctx, "main", 0, extension_api("ImGui_WindowFlags_NoDecoration")) ? (
+    extension_api("ImGui_TextWrapped", ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ultrices turpis lectus, in semper ligula blandit in. Duis non ipsum varius, pretium magna eu, mattis sapien. Maecenas augue mi, luctus sed leo et, ullamcorper convallis ligula. Nunc vitae porttitor quam. Integer a lorem fermentum, dapibus tortor ut, gravida erat. Quisque ut justo ante. Quisque fringilla a lectus a porta.");
+    extension_api("ImGui_Spacing", ctx);
+
+    color = GetTrackColor(track);
+    extension_api("ImGui_ColorEdit3", ctx, "track color", color) ?
+      SetTrackColor(track, color);
+    extension_api("ImGui_Spacing", ctx);
+
+    GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 0);
+    extension_api("ImGui_InputTextMultiline", ctx, "track notes", #notes, 0, -FLT_MIN) ?
+      GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 1);
+  );
+  extension_api("ImGui_End", ctx);
+);
+
+function loop() (
+  extension_api("ImGui_IsCloseRequested", ctx) ?
+    extension_api("ImGui_DestroyContext", ctx) : (
+    update();
+    defer("loop()");
+  )
+);
+
+defer("loop()");
