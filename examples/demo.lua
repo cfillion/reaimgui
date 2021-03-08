@@ -7346,4 +7346,4 @@ end
 --     r.ImGui_End();
 -- }
 
-demo.loop()
+reaper.defer(demo.loop)
