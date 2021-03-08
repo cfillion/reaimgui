@@ -135,6 +135,10 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   assert(hwnd && "CreateWindow failed");
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
 
+  // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
+  // Unsetting it disables the border while not bringing back the icon
+  SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_DLGMODALFRAME);
+
   // Windows 10 Anniversary Update (1607) and newer
   static DllImport<decltype(GetDpiForWindow)>
     _GetDpiForWindow
