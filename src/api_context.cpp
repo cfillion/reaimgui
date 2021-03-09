@@ -248,13 +248,6 @@ DEFINE_API(void, GetMouseWheel, (ImGui_Context*,ctx)
   if(API_W(horizontal)) *API_W(horizontal) = io.MouseWheelH;
 });
 
-DEFINE_API(double, GetMouseWheelH, (ImGui_Context*,ctx),
-"Mouse wheel Vertical: 1 unit scrolls about 5 lines text.",
-{
-  FRAME_GUARD;
-  return ImGui::GetIO().MouseWheelH;
-});
-
 DEFINE_API(bool, IsMouseDragging, (ImGui_Context*,ctx)
 (int,button)(double*,API_RO(lock_threshold)),
 R"(Is mouse dragging? (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
