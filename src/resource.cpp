@@ -41,6 +41,9 @@ public:
 private:
   static void tick()
   {
+    if(!IsWindowEnabled(GetMainHwnd()))
+      return; // a modal dialog is likely being shown, possibly pausing scripts
+
     auto it { g_rsx.begin() };
 
     while(it != g_rsx.end()) {
