@@ -32,8 +32,8 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(ImGui_Context*, CreateContext,
-(const char*, title)(int, size_w)(int, size_h)
-(int*, API_RO(pos_x))(int*, API_RO(pos_y)),
+(const char*,title)(int,size_w)(int,size_h)
+(int*,API_RO(pos_x))(int*,API_RO(pos_y)),
 R"(Create a new Dear ImGui context and OS window. The context will remain active as long as it is used every timer cycle. Pass null x/y coordinates to auto-position the window with the arrange view.
 
 Default values: pos_x = nil, pos_y = nil)",
