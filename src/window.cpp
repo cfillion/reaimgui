@@ -125,10 +125,10 @@ static RECT getAvailableRect(HWND window)
 #endif
 
   // limit the centering to the monitor containing most of the parent window
-  rect.left   = std::max(rect.left,   rect.left);
-  rect.top    = std::max(rect.top,    rect.top);
-  rect.right  = std::min(rect.right,  rect.right);
-  rect.bottom = std::min(rect.bottom, rect.bottom);
+  rect.left   = std::max(rect.left,   screenRect.left);
+  rect.top    = std::max(rect.top,    screenRect.top);
+  rect.right  = std::min(rect.right,  screenRect.right);
+  rect.bottom = std::min(rect.bottom, screenRect.bottom);
 
   return rect;
 }
