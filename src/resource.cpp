@@ -41,8 +41,10 @@ public:
 private:
   static void tick()
   {
-    if(!IsWindowEnabled(GetMainHwnd()))
+#ifndef __APPLE__
+    if(!IsWindowEnabled(GetMainHwnd())) // always true on macOS
       return; // a modal dialog is likely being shown, possibly pausing scripts
+#endif
 
     auto it { g_rsx.begin() };
 
