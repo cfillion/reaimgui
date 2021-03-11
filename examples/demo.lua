@@ -1111,7 +1111,7 @@ function demo.ShowDemoWindowWidgets()
       demo.HelpMarker('Hold CTRL and click to select multiple items.')
       for i,sel in ipairs(widgets.selectables.multiple) do
         if r.ImGui_Selectable(ctx, ('Object %d'):format(i-1), sel) then
-          if not (r.ImGui_GetKeyMods(ctx) & r.ImGui_KeyModFlags_Ctrl()) ~= 0 then -- Clear selection when CTRL is not held
+          if (r.ImGui_GetKeyMods(ctx) & r.ImGui_KeyModFlags_Ctrl()) == 0 then -- Clear selection when CTRL is not held
             for j = 1, #widgets.selectables.multiple do
               widgets.selectables.multiple[j] = false
             end
