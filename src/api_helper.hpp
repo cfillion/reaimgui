@@ -19,6 +19,7 @@
 #define REAIMGUI_API_HELPER_HPP
 
 #include "api.hpp"
+#include "api_vararg.hpp"
 #include "context.hpp"
 
 #include <boost/preprocessor.hpp>
