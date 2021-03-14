@@ -6,7 +6,13 @@ class Function < Struct.new :type, :name, :args, :namespace, :match
   end
 
   def arg_types
-    args.map {|arg| arg.normalized_type if arg.respond_to? :normalized_type }
+    args.map do |arg|
+      if arg.respond_to? :normalized_type
+        arg.normalized_type
+      else
+        arg
+      end
+    end
   end
 end
 

@@ -29,7 +29,7 @@ private
         next if $~[:name].end_with? '_COUNT'
         next if $~[:name].end_with? '_'
         @enums << $~[:name]
-      elsif line.chomp == '#ifndef DISABLE_OBSOLETE_FUNCTIONS'
+      elsif line.chomp == '#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS'
         in_obsolete = true
       elsif line =~ CLASS_R
         namespace = $~[:name]
