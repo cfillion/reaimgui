@@ -16,7 +16,7 @@ class ImGui_DrawList;
 class ImGui_ListClipper;
 
 struct reaper_array {
-  const unsigned int size, capacity;
+  const unsigned int size, alloc;
   double data[1];
 };
 
