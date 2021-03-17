@@ -88,26 +88,26 @@ DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
 
 DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
-(double*,API_RO(rounding))(int*,API_RO(rounding_corners))
+(double*,API_RO(rounding))(int*,API_RO(flags))
 (double*,API_RO(thickness)),
-"Default values: rounding = 0.0, rounding_corners = ImGui_DrawCornerFlags_All, thickness = 1.0",
+"Default values: rounding = 0.0, flags = ImGui_DrawFlags_None, thickness = 1.0",
 {
   ImGui_DrawList::get(draw_list)->AddRect(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.0),
-    valueOr(API_RO(rounding_corners), ImDrawCornerFlags_All),
+    valueOr(API_RO(flags), ImDrawFlags_None),
     valueOr(API_RO(thickness), 1.0));
 });
 
 DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
-(double*,API_RO(rounding))(int*,API_RO(rounding_corners)),
-"Default values: rounding = 0.0, rounding_corners = ImGui_DrawCornerFlags_All",
+(double*,API_RO(rounding))(int*,API_RO(flags)),
+"Default values: rounding = 0.0, flags = ImGui_DrawFlags_None",
 {
   ImGui_DrawList::get(draw_list)->AddRectFilled(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.0),
-    valueOr(API_RO(rounding_corners), ImDrawCornerFlags_All));
+    valueOr(API_RO(flags), ImDrawFlags_None));
 });
 
 DEFINE_API(void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,draw_list)
@@ -230,13 +230,13 @@ static std::vector<ImVec2> makePointsArray(const reaper_array *points)
 }
 
 DEFINE_API(void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
-(reaper_array*,points)(int,col_rgba)(bool,closed)(double,thickness),
+(reaper_array*,points)(int,col_rgba)(int,flags)(double,thickness),
 "Points is a list of x,y coordinates.",
 {
   const std::vector<ImVec2> vec2points { makePointsArray(points) };
   ImGui_DrawList::get(draw_list)->AddPolyline(
     vec2points.data(), vec2points.size(), Color::rgba2abgr(col_rgba),
-    closed, thickness);
+    flags, thickness);
 });
 
 DEFINE_API(void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
@@ -323,17 +323,18 @@ DEFINE_API(void, PathFillConvex, (ImGui_DrawList*,draw_list)
 });
 
 DEFINE_API(void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
-(int,col_rgba)(bool,closed)(double*,API_RO(thickness)),
-"Default values: thickness = 1.0",
+(int,col_rgba)(int*,API_RO(flags))(double*,API_RO(thickness)),
+"Default values: flags = ImGui_DrawFlags_None, thickness = 1.0",
 {
   ImGui_DrawList::get(draw_list)->PathStroke(
-    Color::rgba2abgr(col_rgba), closed, valueOr(API_RO(thickness), 1.0));
+    Color::rgba2abgr(col_rgba), valueOr(API_RO(flags), ImDrawFlags_None),
+    valueOr(API_RO(thickness), 1.0));
 });
 
 DEFINE_API(void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(double,a_min)(double,a_max)
 (int*,API_RO(num_segments)),
-"Default values: num_segments = 10",
+"Default values: num_segments = 0",
 {
   ImGui_DrawList::get(draw_list)->PathArcTo(ImVec2(center_x, center_y),
     radius, a_min, a_max, valueOr(API_RO(num_segments), 10));
@@ -372,10 +373,10 @@ Default values: num_segments = 0)",
 
 DEFINE_API(void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
 (double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y)
-(double*,API_RO(rounding))(int*,API_RO(rounding_corners)),
-"Default values: rounding = 0.0, rounding_corners = ImGui_DrawCornerFlags_All",
+(double*,API_RO(rounding))(int*,API_RO(flags)),
+"Default values: rounding = 0.0, flags = ImGui_DrawFlags_None",
 {
   ImGui_DrawList::get(draw_list)->PathRect(ImVec2(rect_min_x, rect_min_y),
     ImVec2(rect_max_x, rect_max_y), valueOr(API_RO(rounding), 0.0),
-    valueOr(API_RO(rounding_corners), ImDrawCornerFlags_All));
+    valueOr(API_RO(flags), ImDrawFlags_None));
 });

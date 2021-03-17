@@ -157,17 +157,19 @@ DEFINE_ENUM(ImGui, TableBgTarget_RowBg0, "Set row background color 0 (generally 
 DEFINE_ENUM(ImGui, TableBgTarget_RowBg1, "Set row background color 1 (generally used for selection marking)");
 DEFINE_ENUM(ImGui, TableBgTarget_CellBg, "Set cell background color (top-most color)");
 
-// ImDrawCornerFlags
-DEFINE_ENUM(Im, DrawCornerFlags_None,     "Flags: for ImDrawList::AddRect(), AddRectFilled() etc.");
-DEFINE_ENUM(Im, DrawCornerFlags_TopLeft,  "");
-DEFINE_ENUM(Im, DrawCornerFlags_TopRight, "");
-DEFINE_ENUM(Im, DrawCornerFlags_BotLeft,  "");
-DEFINE_ENUM(Im, DrawCornerFlags_BotRight, "");
-DEFINE_ENUM(Im, DrawCornerFlags_Top,      "");
-DEFINE_ENUM(Im, DrawCornerFlags_Bot,      "");
-DEFINE_ENUM(Im, DrawCornerFlags_Left,     "");
-DEFINE_ENUM(Im, DrawCornerFlags_Right,    "");
-DEFINE_ENUM(Im, DrawCornerFlags_All,      "In your function calls you may use ~0 (= all bits sets) instead of DrawCornerFlags_All as a convenience");
+// ImDrawFlags
+DEFINE_ENUM(Im, DrawFlags_None                        , "");
+DEFINE_ENUM(Im, DrawFlags_Closed                      , "PathStroke(), AddPolyline(): specify that shape should be closed (Important: this is always == 1 for legacy reason)");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopLeft         , "AddRect(), AddRectFilled(), PathRect(): enable rounding top-left corner only (when rounding > 0.0f, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopRight        , "AddRect(), AddRectFilled(), PathRect(): enable rounding top-right corner only (when rounding > 0.0f, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomLeft      , "AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomRight     , "AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-right corner only (when rounding > 0.0f, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersNone            , "AddRect(), AddRectFilled(), PathRect(): disable rounding on all corners (when rounding > 0.0f). This is NOT zero, NOT an implicit flag!");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTop             , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottom          , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersLeft            , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersRight           , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersAll             , "");
 
 // ImGuiButtonFlags
 DEFINE_ENUM(ImGui, ButtonFlags_None,              "Flags: for InvisibleButton()");
@@ -272,7 +274,7 @@ DEFINE_ENUM(ImGui, InputTextFlags_EnterReturnsTrue,    "Return 'true' when Enter
 DEFINE_ENUM(ImGui, InputTextFlags_AllowTabInput,       "Pressing TAB input a '\\t' character into the text field");
 DEFINE_ENUM(ImGui, InputTextFlags_CtrlEnterForNewLine, "In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter (default is opposite: unfocus with Ctrl+Enter, add line with Enter).");
 DEFINE_ENUM(ImGui, InputTextFlags_NoHorizontalScroll,  "Disable following the cursor horizontally");
-DEFINE_ENUM(ImGui, InputTextFlags_AlwaysInsertMode,    "Insert mode");
+DEFINE_ENUM(ImGui, InputTextFlags_AlwaysOverwrite,     "Overwrite mode");
 DEFINE_ENUM(ImGui, InputTextFlags_ReadOnly,            "Read-only mode");
 DEFINE_ENUM(ImGui, InputTextFlags_Password,            "Password mode, display all characters as '*'");
 DEFINE_ENUM(ImGui, InputTextFlags_NoUndoRedo,          "Disable undo/redo. Note that input text owns the text data while active, if you want to provide your own undo/redo stack you need e.g. to call ClearActiveID().");

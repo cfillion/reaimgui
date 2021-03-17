@@ -60,6 +60,8 @@ DEFINE_API(bool, IsItemFocused, (ImGui_Context*,ctx),
 DEFINE_API(bool, IsItemClicked, (ImGui_Context*,ctx)(int*,API_RO(mouse_button)),
 R"(Is the last item clicked? (e.g. button/node just clicked on) == IsMouseClicked(mouse_button) && IsItemHovered().
 
+This is NOT equivalent to the behavior of e.g.Button(). Most widgets have specific reactions based on mouse-up/down state, mouse position etc.
+
 Default values: mouse_button = ImGui_MouseButton_Left)",
 {
   FRAME_GUARD;

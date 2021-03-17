@@ -36,7 +36,8 @@ NATIVE_ONLY = [
   'void ImGui::StyleColorsLight(ImGuiStyle*)',
   'void ImGui::StyleColorsClassic(ImGuiStyle*)',
 
-  'void ImGui::SetAllocatorFunctions(void* (*alloc_func)(size_t sz, void* user_data), void (*free_func)(void* ptr, void* user_data), void*)',
+  'void ImGui::GetAllocatorFunctions(ImGuiMemAllocFunc*, ImGuiMemFreeFunc*, void**)',
+  'void ImGui::SetAllocatorFunctions(ImGuiMemAllocFunc, ImGuiMemFreeFunc, void*)',
   'void* ImGui::MemAlloc(size_t)',
   'void ImGui::MemFree(void*)',
 
@@ -141,7 +142,7 @@ NATIVE_ONLY = [
   'void ImDrawList::PopTextureID()',
   'void ImDrawList::AddImage(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
   'void ImDrawList::AddImageQuad(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
-  'void ImDrawList::AddImageRounded(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32, float, ImDrawCornerFlags)',
+  'void ImDrawList::AddImageRounded(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32, float, ImDrawFlags)',
 
   # value helpers
   'void ImGui::Value(const char*, bool)',
@@ -221,7 +222,7 @@ OVERRIDES = {
   # (array, array_size) -> reaper_array*
   'void ImGui::PlotLines(const char*, const float*, int, int, const char*, float, float, ImVec2, int)'     => 'void PlotLines(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
   'void ImGui::PlotHistogram(const char*, const float*, int, int, const char*, float, float, ImVec2, int)' => 'void PlotHistogram(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
-  'void ImDrawList::AddPolyline(const ImVec2*, int, ImU32, bool, float)' => 'void DrawList_AddPolyline(reaper_array*, int, bool, double)',
+  'void ImDrawList::AddPolyline(const ImVec2*, int, ImU32, int, float)' => 'void DrawList_AddPolyline(reaper_array*, int, int, double)',
   'void ImDrawList::AddConvexPolyFilled(const ImVec2*, int, ImU32)'      => 'void DrawList_AddConvexPolyFilled(reaper_array*, int, int)',
 
   # no callbacks
