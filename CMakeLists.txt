@@ -98,6 +98,7 @@ else()
 endif()
 
 add_subdirectory(src)
+add_subdirectory(tools)
 
 set(REAPER_USER_PLUGINS "UserPlugins")
 install(TARGETS ${PROJECT_NAME}
