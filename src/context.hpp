@@ -60,6 +60,7 @@ public:
 
   HCURSOR cursor() const { return m_cursor; }
   Window *window() const { return m_window.get(); }
+  ImGuiContext *imgui() const { return m_imgui.get(); }
 
 protected:
   void heartbeat() override;

@@ -48,7 +48,8 @@ API::~API()
 
 void API::RegInfo::announce() const
 {
-  plugin_register(key.c_str(), value);
+  if(value)
+    plugin_register(key.c_str(), value);
 }
 
 void API::registerAll()

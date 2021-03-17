@@ -24,6 +24,7 @@ add_library(${PROJECT_NAME} SHARED
   api_listclipper.cpp
   api_plots.cpp
   api_popups.cpp
+  api_secret.cpp
   api_style.cpp
   api_tables.cpp
   api_widgets.cpp
