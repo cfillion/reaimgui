@@ -239,3 +239,21 @@ Default values: alpha = nil)",
   if(API_W(b)) *API_W(b) = color.z;
   return Color{color}.pack(alpha);
 });
+
+DEFINE_API(int, ColorConvertRGBtoHSV,
+(double,r)(double,g)(double,b)(double*,API_RO(alpha))
+(double*,API_W(h))(double*,API_W(s))(double*,API_W(v)),
+R"(Return 0x00HHSSVV or, if alpha is provided, 0xHHSSVVAA.
+
+Default values: alpha = nil)",
+{
+  const bool alpha { API_RO(alpha) != nullptr };
+  ImVec4 color;
+  if(alpha)
+    color.w = *API_RO(alpha);
+  ImGui::ColorConvertRGBtoHSV(r, g, b, color.x, color.y, color.z);
+  if(API_W(h)) *API_W(h) = color.x;
+  if(API_W(s)) *API_W(s) = color.y;
+  if(API_W(v)) *API_W(v) = color.z;
+  return Color{color}.pack(alpha);
+});

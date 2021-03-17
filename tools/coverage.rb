@@ -57,7 +57,6 @@ NATIVE_ONLY = [
 
   'ImVec4 ImGui::ColorConvertU32ToFloat4(ImU32)',
   'ImU32 ImGui::ColorConvertFloat4ToU32(const ImVec4&)',
-  'void ImGui::ColorConvertRGBtoHSV(float, float, float, float&, float&, float&)',
 
   # equivalent overload implemented as GetColorEx
   'ImU32 ImGui::GetColorU32(const ImVec4&)',
@@ -207,7 +206,8 @@ ARG_RENAMES = {
 # these functions were not ported 1:1 (same name, otherwise add to RENAMES above too!)
 OVERRIDES = {
   'const char* ImGui::GetVersion()' => 'void GetVersion(char*, int, char*, int)',
-  'void ImGui::ColorConvertHSVtoRGB(float, float, float, float&, float&, float&)' => 'int ColorConvertHSVtoRGB(double, double, double, double*)',
+  'void ImGui::ColorConvertHSVtoRGB(float, float, float, float&, float&, float&)' => 'int ColorConvertHSVtoRGB(double, double, double, double*, double*, double*, double*)',
+  'void ImGui::ColorConvertRGBtoHSV(float, float, float, float&, float&, float&)' => 'int ColorConvertRGBtoHSV(double, double, double, double*, double*, double*, double*)',
   'void ImGui::PushStyleVar(ImGuiStyleVar, const ImVec2&)'                        => 'void PushStyleVar(int, double, double*)',
   'bool ImGui::SetDragDropPayload(const char*, const void*, size_t, ImGuiCond)'   => 'bool SetDragDropPayload(const char*, const char*, int*)',
   'const ImGuiPayload* ImGui::GetDragDropPayload()'                               => 'bool GetDragDropPayload(char*, int, char*, int, bool*, bool*)',

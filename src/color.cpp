@@ -38,7 +38,7 @@ Color Color::fromTheme(uint32_t color)
           (color << 16 & 0xff0000) ;
 #endif
 
-  return Color(color, false);
+  return { color, false };
 }
 
 Color::Color()
