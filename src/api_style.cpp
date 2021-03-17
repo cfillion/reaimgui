@@ -223,15 +223,19 @@ DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(int, ColorConvertHSVtoRGB,
-(double,h)(double,s)(double,v)(double*,API_RO(alpha)),
+(double,h)(double,s)(double,v)(double*,API_RO(alpha))
+(double*,API_W(r))(double*,API_W(g))(double*,API_W(b)),
 R"(Return 0x00RRGGBB or, if alpha is provided, 0xRRGGBBAA.
 
 Default values: alpha = nil)",
 {
   const bool alpha { API_RO(alpha) != nullptr };
-  ImVec4 rgba;
+  ImVec4 color;
   if(alpha)
-    rgba.w = *API_RO(alpha);
-  ImGui::ColorConvertHSVtoRGB(h, s, v, rgba.x, rgba.y, rgba.z);
-  return Color{rgba}.pack(alpha);
+    color.w = *API_RO(alpha);
+  ImGui::ColorConvertHSVtoRGB(h, s, v, color.x, color.y, color.z);
+  if(API_W(r)) *API_W(r) = color.x;
+  if(API_W(g)) *API_W(g) = color.y;
+  if(API_W(b)) *API_W(b) = color.z;
+  return Color{color}.pack(alpha);
 });
