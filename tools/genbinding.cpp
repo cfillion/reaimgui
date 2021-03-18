@@ -67,19 +67,23 @@ struct reaper_array;
 
 template<typename T>
 class ReaImGuiFunc;
+
 template<typename R, typename... Args>
 class ReaImGuiFunc<R(Args...)>
 {
 public:
   ReaImGuiFunc(const char *name) : m_name { name }, m_proc { nullptr } {}
-  operator bool() const { return m_proc != nullptr; }
-  auto operator()(Args... args)
+  operator bool() const { return proc() != nullptr; }
+  auto operator()(Args... args) { return proc()(std::forward<Args>(args)...); }
+
+private:
+  R(*proc())(Args...)
   {
     if(!m_proc)
       m_proc = reinterpret_cast<decltype(m_proc)>(plugin_getapi(m_name));
-    return m_proc(std::forward<Args>(args)...);
+    return m_proc;
   }
-private:
+
   const char *m_name;
   R(*m_proc)(Args...);
 };
@@ -97,6 +101,7 @@ public:
     }
     return m_value;
   }
+
 private:
   const char *m_name;
   bool m_init;
