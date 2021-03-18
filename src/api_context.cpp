@@ -43,27 +43,27 @@ Default values: pos_x = nil, pos_y = nil)",
   return new Context { title, pos_x, pos_y, size_w, size_h };
 });
 
-DEFINE_API(void, DestroyContext, (ImGui_Context*, ctx),
+DEFINE_API(void, DestroyContext, (ImGui_Context*,ctx),
 R"(Close and free the resources used by a context.)",
 {
   assertValid(ctx);
   delete ctx;
 });
 
-// DEFINE_API(bool, IsContextValid, (ImGui_Context*, ctx),
+// DEFINE_API(bool, IsContextValid, (ImGui_Context*,ctx),
 // R"(Return whether the context is still active.)",
 // {
 //   return Resource::exists(ctx); // TODO: generalize IsContextValid to IsValid(void* resource, const char* type)?
 // });
 
-DEFINE_API(void*, GetNativeHwnd, (ImGui_Context*, ctx),
+DEFINE_API(void*, GetNativeHwnd, (ImGui_Context*,ctx),
 R"(Return the native handle for the context's OS window.)",
 {
   assertValid(ctx);
   return ctx->window()->nativeHandle();
 });
 
-DEFINE_API(bool, IsCloseRequested, (ImGui_Context*, ctx),
+DEFINE_API(bool, IsCloseRequested, (ImGui_Context*,ctx),
 R"(Return whether the user has requested closing the OS window since the previous frame.)",
 {
   assertValid(ctx);
