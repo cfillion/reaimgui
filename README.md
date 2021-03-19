@@ -10,7 +10,7 @@ repository.
 
 Clone the repository and submodules:
 
-    git clone --recursive https://github.com/cfillion/reaimgui.git
+    git clone --recursive --shallow-submodules https://github.com/cfillion/reaimgui.git
 
 ### Prerequisites
 
