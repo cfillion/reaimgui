@@ -58,6 +58,7 @@ static void cppBinding(std::ostream &stream)
 #define REAPER_IMGUI_FUNCTIONS_H
 
 #include <reaper_plugin_functions.h>
+#include <utility>
 
 class ImGui_Context;
 class ImGui_DrawList;
@@ -180,6 +181,10 @@ int main(int argc, const char *argv[])
 
   if(lang == "cpp")
     cppBinding(std::cout);
-  else
+  else {
     fprintf(stderr, "don't know how to generate a binding for '%s'\n", lang.data());
+    return 1;
+  }
+
+  return 0;
 }
