@@ -234,6 +234,10 @@ void Window::drawFrame(ImDrawData *data)
     GL_TEXTURE, 1, 0, 0, io.DisplaySize.x, io.DisplaySize.y);
   gdk_window_end_draw_frame(m_impl->window, drawContext);
 
+  // required for making the window visible on GNOME
+  gdk_window_thaw_updates(m_impl->window); // schedules an update
+  gdk_window_freeze_updates(m_impl->window);
+
   gdk_gl_context_clear_current();
 }
 
