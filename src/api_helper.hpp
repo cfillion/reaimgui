@@ -43,7 +43,7 @@ using ImGui_Context = Context; // user-facing alias
 
 #define DEFINE_API(type, name, args, help, ...)                 \
   type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _,           \
-    BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)))                        \
+    BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))) noexcept               \
   try __VA_ARGS__                                               \
   API_CATCH(name, type, reascript_error)                        \
   API_CATCH(name, type, imgui_error)                            \
