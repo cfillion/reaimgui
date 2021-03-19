@@ -48,7 +48,7 @@ using ImGui_Context = Context; // user-facing alias
   API_CATCH(name, type, reascript_error)                        \
   API_CATCH(name, type, imgui_error)                            \
                                                                 \
-  static API API_reg_##name { #name,                            \
+  static const API API_reg_##name { #name,                      \
     reinterpret_cast<void *>(&API_##name),                      \
     reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>), \
     reinterpret_cast<void *>(const_cast<char *>(                \
