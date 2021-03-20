@@ -72,7 +72,7 @@ private:
 
   void setupImGui();
   void beginFrame();
-  void endFrame(bool render);
+  void endFrame(bool render, bool prinnyMode = true);
   bool anyMouseDown() const;
   void updateFrameInfo();
   void updateTheme();

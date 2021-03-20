@@ -88,7 +88,7 @@ Context::~Context()
   DockWindowRemove(m_window->nativeHandle());
 
   if(m_inFrame)
-    endFrame(false);
+    endFrame(false, false);
 }
 
 void Context::heartbeat()
@@ -126,7 +126,7 @@ void Context::enterFrame()
     beginFrame();
 }
 
-void Context::endFrame(const bool render) try
+void Context::endFrame(const bool render, const bool prinnyMode) try
 {
   ImGui::SetCurrentContext(m_imgui.get());
 
@@ -151,7 +151,9 @@ catch(const imgui_error &e) {
   m_window->endFrame();
   m_fontAtlas->Locked = false; // don't assert again when destroying the atlas
   m_inFrame = false; // don't call endFrame again from the destructor
-  delete this;
+
+  if(prinnyMode) // don't delete twice when first called from the destructor
+    delete this;
 }
 
 void Context::updateFrameInfo()
