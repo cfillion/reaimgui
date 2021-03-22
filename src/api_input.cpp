@@ -475,8 +475,8 @@ DEFINE_API(bool, DragDouble2, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
+  sanitizeSliderFlags(flags);
 
   ReadWriteArray<double, double, 2> values { API_RW(v1), API_RW(v2) };
   if(dragDoubleN(label, values.data(), values.size(),
@@ -495,8 +495,8 @@ DEFINE_API(bool, DragDouble3, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
+  sanitizeSliderFlags(flags);
 
   ReadWriteArray<double, double, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
   if(dragDoubleN(label, values.data(), values.size(),
@@ -516,8 +516,8 @@ DEFINE_API(bool, DragDouble4, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
+  sanitizeSliderFlags(flags);
 
   ReadWriteArray<double, double, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
@@ -653,8 +653,8 @@ DEFINE_API(bool, SliderDouble2, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
+  sanitizeSliderFlags(flags);
 
   ReadWriteArray<double, double, 2> values { API_RW(v1), API_RW(v2) };
   if(sliderDoubleN(label, values.data(), values.size(),
@@ -673,8 +673,8 @@ DEFINE_API(bool, SliderDouble3, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
+  sanitizeSliderFlags(flags);
 
   ReadWriteArray<double, double, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
   if(sliderDoubleN(label, values.data(), values.size(),
@@ -693,8 +693,8 @@ DEFINE_API(bool, SliderDouble4, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
+  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
+  sanitizeSliderFlags(flags);
 
   ReadWriteArray<double, double, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
