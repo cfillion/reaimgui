@@ -40,7 +40,7 @@ R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.). See
 Default values: flags = ImGui_HoveredFlags_None)",
 {
   FRAME_GUARD;
-  return ImGui::IsItemHovered(valueOr(API_RO(flags), 0));
+  return ImGui::IsItemHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
 });
 
 DEFINE_API(bool, IsItemActive, (ImGui_Context*,ctx),

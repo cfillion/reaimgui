@@ -284,7 +284,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
 {
   FRAME_GUARD;
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   sanitizeColorEditFlags(flags);
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
@@ -309,7 +309,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
   // unneeded, only to show Edit3 in the error message instead of Edit4
   FRAME_GUARD;
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   flags |= ImGuiColorEditFlags_NoAlpha;
   return API_ColorEdit4(ctx, label, API_RW(col_rgb), &flags);
 });
@@ -320,7 +320,7 @@ DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   sanitizeColorEditFlags(flags);
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
@@ -347,7 +347,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
   // unneeded, only to show Picker3 in the error message instead of Picker4
   FRAME_GUARD;
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   flags |= ImGuiColorEditFlags_NoAlpha;
   return API_ColorPicker4(ctx, label, API_RW(col_rgb), &flags, nullptr);
 });
@@ -361,7 +361,7 @@ Default values: flags = ImGui_ColorEditFlags_None, size_w = 0.0, size_h = 0.0)",
 {
   FRAME_GUARD;
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), 0) };
+  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   sanitizeColorEditFlags(flags);
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };

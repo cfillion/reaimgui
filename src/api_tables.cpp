@@ -51,7 +51,7 @@ Default values: flags = ImGui_TableFlags_None, outer_size_w = 0.0, outer_size_h 
   FRAME_GUARD;
 
   return ImGui::BeginTable(str_id, column,
-    valueOr(API_RO(flags), 0),
+    valueOr(API_RO(flags), ImGuiTableFlags_None),
     ImVec2(
       valueOr(API_RO(outer_size_w), 0.0),
       valueOr(API_RO(outer_size_h), 0.0)

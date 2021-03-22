@@ -194,7 +194,7 @@ R"(TreeNode functions return true when the node is open, in which case you need 
 Default values: flags = ImGui_TreeNodeFlags_None)",
 {
   FRAME_GUARD;
-  return ImGui::TreeNodeEx(label, valueOr(API_RO(flags), 0));
+  return ImGui::TreeNodeEx(label, valueOr(API_RO(flags), ImGuiTreeNodeFlags_None));
 });
 
 DEFINE_API(bool, TreeNodeEx, (ImGui_Context*,ctx)
@@ -204,7 +204,8 @@ R"(Helper variation to easily decorelate the id from the displayed string. Read 
 Default values: flags = ImGui_TreeNodeFlags_None)",
 {
   FRAME_GUARD;
-  return ImGui::TreeNodeEx(str_id, valueOr(API_RO(flags), 0), "%s", label);
+  const ImGuiTreeNodeFlags flags { valueOr(API_RO(flags), ImGuiTreeNodeFlags_None) };
+  return ImGui::TreeNodeEx(str_id, flags, "%s", label);
 });
 
 DEFINE_API(void, TreePush, (ImGui_Context*,ctx)
@@ -240,7 +241,8 @@ When 'visible' is provided: if 'true' display an additional small close button o
 Default values: flags = ImGui_TreeNodeFlags_None)",
 {
   FRAME_GUARD;
-  return ImGui::CollapsingHeader(label, API_RWO(p_visible), valueOr(API_RO(flags), 0));
+  const ImGuiTreeNodeFlags flags { valueOr(API_RO(flags), ImGuiTreeNodeFlags_None) };
+  return ImGui::CollapsingHeader(label, API_RWO(p_visible), flags);
 });
 
 DEFINE_API(bool, BeginMenuBar, (ImGui_Context*,ctx),

@@ -36,7 +36,7 @@ If you stop calling BeginDragDropSource() the payload is preserved however it wo
 Default values: flags = ImGui_DragDropFlags_None)",
 {
   FRAME_GUARD;
-  return ImGui::BeginDragDropSource(valueOr(API_RO(flags), 0));
+  return ImGui::BeginDragDropSource(valueOr(API_RO(flags), ImGuiDragDropFlags_None));
 });
 
 DEFINE_API(bool, SetDragDropPayload, (ImGui_Context*,ctx)
