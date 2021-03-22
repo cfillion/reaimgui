@@ -83,8 +83,7 @@ DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
   std::string value { API_RWBIG(buf) };
   if(ImGui::InputTextMultiline(label, &value,
       ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)),
-      valueOr(API_RO(flags), ImGuiInputTextFlags_None),
-      nullptr, nullptr)) {
+      flags, nullptr, nullptr)) {
     copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
     return true;
   }
