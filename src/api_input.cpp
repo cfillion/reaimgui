@@ -36,18 +36,30 @@ static void copyToBuffer(const std::string &value, char *buf, const size_t bufSi
   }
 }
 
-static void sanitizeInputTextFlags(ImGuiInputTextFlags &flags)
-{
-  flags &= ~(
-    // don't expose these to users
-    ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory |
-    ImGuiInputTextFlags_CallbackAlways | ImGuiInputTextFlags_CallbackCharFilter |
-    ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackResize |
+class InputTextFlags {
+public:
+  InputTextFlags(int *flags)
+    : m_flags { valueOr(flags, ImGuiInputTextFlags_None) }
+  {
+    m_flags &= ~(
+      // don't expose these to users
+      ImGuiInputTextFlags_CallbackCompletion |
+      ImGuiInputTextFlags_CallbackHistory    |
+      ImGuiInputTextFlags_CallbackAlways     |
+      ImGuiInputTextFlags_CallbackCharFilter |
+      ImGuiInputTextFlags_CallbackEdit       |
+      ImGuiInputTextFlags_CallbackResize     |
 
-    // reserved for ImGui's internal use
-    ImGuiInputTextFlags_Multiline | ImGuiInputTextFlags_NoMarkEdited
-  );
-}
+      // reserved for ImGui's internal use
+      ImGuiInputTextFlags_Multiline | ImGuiInputTextFlags_NoMarkEdited
+    );
+  }
+
+  operator ImGuiInputTextFlags() const { return m_flags; }
+
+private:
+  ImGuiInputTextFlags m_flags;
+};
 
 DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
@@ -57,10 +69,9 @@ DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
   std::string value { API_RWBIG(buf) };
+  const InputTextFlags flags { API_RO(flags) };
+
   if(ImGui::InputText(label, &value, flags, nullptr, nullptr)) {
     copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
     return true;
@@ -77,10 +88,9 @@ DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
   std::string value { API_RWBIG(buf) };
+  const InputTextFlags flags { API_RO(flags) };
+
   if(ImGui::InputTextMultiline(label, &value,
       ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)),
       flags, nullptr, nullptr)) {
@@ -99,10 +109,9 @@ DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
   std::string value { API_RWBIG(buf) };
+  const InputTextFlags flags { API_RO(flags) };
+
   if(ImGui::InputTextWithHint(label, hint, &value, flags, nullptr, nullptr)) {
     copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
     return true;
@@ -117,9 +126,7 @@ DEFINE_API(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
 {
   FRAME_GUARD;
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
+  const InputTextFlags flags { API_RO(flags) };
   return ImGui::InputInt(label, API_RW(v),
     valueOr(API_RO(step), 1), valueOr(API_RO(step_fast), 100), flags);
 });
@@ -130,10 +137,9 @@ DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
 {
   FRAME_GUARD;
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
   ReadWriteArray<int, int, 2> values { API_RW(v1), API_RW(v2) };
+  const InputTextFlags flags { API_RO(flags) };
+
   if(ImGui::InputInt2(label, values.data(), flags))
     return values.commit();
   else
@@ -147,10 +153,9 @@ DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
 {
   FRAME_GUARD;
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
   ReadWriteArray<int, int, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
+  const InputTextFlags flags { API_RO(flags) };
+
   if(ImGui::InputInt3(label, values.data(), flags))
     return values.commit();
   else
@@ -164,11 +169,10 @@ DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
 {
   FRAME_GUARD;
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
   ReadWriteArray<int, int, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
+  const InputTextFlags flags { API_RO(flags) };
+
   if(ImGui::InputInt4(label, values.data(), flags))
     return values.commit();
   else
@@ -183,8 +187,7 @@ DEFINE_API(bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
+  const InputTextFlags flags { API_RO(flags) };
 
   return ImGui::InputDouble(label, API_RW(v),
     valueOr(API_RO(step), 0.0), valueOr(API_RO(step_fast), 0.0),
@@ -206,10 +209,9 @@ DEFINE_API(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
   ReadWriteArray<double, double, 2> values { API_RW(v1), API_RW(v2) };
+  const InputTextFlags flags { API_RO(flags) };
+
   if(inputDoubleN(label, values.data(), values.size(), API_RO(format), flags))
     return values.commit();
   else
@@ -224,10 +226,9 @@ DEFINE_API(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
   ReadWriteArray<double, double, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
+  const InputTextFlags flags { API_RO(flags) };
+
   if(inputDoubleN(label, values.data(), values.size(), API_RO(format), flags))
     return values.commit();
   else
@@ -242,11 +243,10 @@ DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
-
   ReadWriteArray<double, double, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
+  const InputTextFlags flags { API_RO(flags) };
+
   if(inputDoubleN(label, values.data(), values.size(), API_RO(format), flags))
     return values.commit();
   else
@@ -262,8 +262,7 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
   assertValid(values);
   nullIfEmpty(API_RO(format));
 
-  ImGuiInputTextFlags flags { valueOr(API_RO(flags), ImGuiInputTextFlags_None) };
-  sanitizeInputTextFlags(flags);
+  const InputTextFlags flags { API_RO(flags) };
 
   return ImGui::InputScalarN(label, ImGuiDataType_Double,
     values->data, values->size, API_RO(step), API_RO(step_fast),

@@ -19,11 +19,20 @@
 
 #include <reaper_plugin_secrets.h> // reaper_array
 
-static void sanitizeSliderFlags(ImGuiSliderFlags &flags)
-{
-  // dear imgui will assert if these bits are set
-  flags &= ~ImGuiSliderFlags_InvalidMask_;
-}
+class SliderFlags {
+public:
+  SliderFlags(int *flags)
+    : m_flags { valueOr(flags, ImGuiSliderFlags_None) }
+  {
+    // dear imgui will assert if these bits are set
+    m_flags &= ~ImGuiSliderFlags_InvalidMask_;
+  }
+
+  operator ImGuiSliderFlags() const { return m_flags; }
+
+private:
+  ImGuiSliderFlags m_flags;
+};
 
 DEFINE_API(bool, DragInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(double*,API_RO(v_speed))
@@ -42,9 +51,7 @@ Default values: v_speed = 1.0, v_min = 0, v_max = 0, format = '%d', flags = ImGu
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
+  SliderFlags flags { API_RO(flags) };
   return ImGui::DragInt(label, API_RW(v), valueOr(API_RO(v_speed), 1.0),
     valueOr(API_RO(v_min), 0), valueOr(API_RO(v_max), 0), API_RO(format), flags);
 });
@@ -59,10 +66,9 @@ DEFINE_API(bool, DragInt2, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<int, int, 2> values { API_RW(v1), API_RW(v2) };
+  SliderFlags flags { API_RO(flags) };
+
   if(ImGui::DragInt2(label, values.data(), valueOr(API_RO(v_speed), 1.0),
       valueOr(API_RO(v_min), 0), valueOr(API_RO(v_max), 0), API_RO(format), flags))
     return values.commit();
@@ -80,10 +86,9 @@ DEFINE_API(bool, DragInt3, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<int, int, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
+  SliderFlags flags { API_RO(flags) };
+
   if(ImGui::DragInt3(label, values.data(), valueOr(API_RO(v_speed), 1.0),
       valueOr(API_RO(v_min), 0), valueOr(API_RO(v_max), 0), API_RO(format), flags))
     return values.commit();
@@ -101,11 +106,10 @@ DEFINE_API(bool, DragInt4, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<int, int, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
+  SliderFlags flags { API_RO(flags) };
+
   if(ImGui::DragInt4(label, values.data(), valueOr(API_RO(v_speed), 1.0),
       valueOr(API_RO(v_min), 0), valueOr(API_RO(v_max), 0), API_RO(format), flags))
     return values.commit();
@@ -124,9 +128,7 @@ DEFINE_API(bool, DragIntRange2, (ImGui_Context*,ctx)
   nullIfEmpty(API_RO(format));
   nullIfEmpty(API_RO(format_max));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
+  SliderFlags flags { API_RO(flags) };
   return ImGui::DragIntRange2(label, API_RW(v_current_min), API_RW(v_current_max),
     valueOr(API_RO(v_speed), 1.0), valueOr(API_RO(v_min), 0),
     valueOr(API_RO(v_max), 0), API_RO(format), API_RO(format_max), flags);
@@ -143,11 +145,10 @@ DEFINE_API(bool, DragFloatRange2, (ImGui_Context*,ctx)
   nullIfEmpty(API_RO(format));
   nullIfEmpty(API_RO(format_max));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<double, float, 2> values
     { API_RW(v_current_min), API_RW(v_current_max) };
+  SliderFlags flags { API_RO(flags) };
+
   if(ImGui::DragFloatRange2(label, &values[0], &values[1],
       valueOr(API_RO(v_speed), 1.0), valueOr(API_RO(v_min), 0.0),
       valueOr(API_RO(v_max), 0.0), API_RO(format) ? API_RO(format) : "%.3f",
@@ -166,9 +167,7 @@ DEFINE_API(bool, DragDouble, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
+  SliderFlags flags { API_RO(flags) };
   return ImGui::DragScalar(label, ImGuiDataType_Double,
     API_RW(v), valueOr(API_RO(v_speed), 1.0),
     API_RO(v_min), API_RO(v_max),
@@ -178,7 +177,7 @@ DEFINE_API(bool, DragDouble, (ImGui_Context*,ctx)
 
 static bool dragDoubleN(const char *label, double *data, const size_t size,
   double *v_speed, double *v_min, double *v_max, const char *format,
-  ImGuiSliderFlags flags)
+  const ImGuiSliderFlags flags)
 {
   return ImGui::DragScalarN(label, ImGuiDataType_Double, data, size,
     valueOr(v_speed, 1.0), v_min, v_max, format ? format : "%.3f", flags);
@@ -193,10 +192,9 @@ DEFINE_API(bool, DragDouble2, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<double, double, 2> values { API_RW(v1), API_RW(v2) };
+  SliderFlags flags { API_RO(flags) };
+
   if(dragDoubleN(label, values.data(), values.size(),
       API_RO(v_speed), API_RO(v_min), API_RO(v_max), API_RO(format), flags))
     return values.commit();
@@ -213,10 +211,9 @@ DEFINE_API(bool, DragDouble3, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<double, double, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
+  SliderFlags flags { API_RO(flags) };
+
   if(dragDoubleN(label, values.data(), values.size(),
       API_RO(v_speed), API_RO(v_min), API_RO(v_max), API_RO(format), flags))
     return values.commit();
@@ -234,11 +231,10 @@ DEFINE_API(bool, DragDouble4, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<double, double, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
+  SliderFlags flags { API_RO(flags) };
+
   if(dragDoubleN(label, values.data(), values.size(),
       API_RO(v_speed), API_RO(v_min), API_RO(v_max), API_RO(format), flags))
     return values.commit();
@@ -256,9 +252,7 @@ DEFINE_API(bool, DragDoubleN, (ImGui_Context*,ctx)
   assertValid(values);
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
+  SliderFlags flags { API_RO(flags) };
   return dragDoubleN(label, values->data, values->size, API_RO(speed),
     API_RO(min), API_RO(max), API_RO(format), flags);
 });
@@ -271,9 +265,7 @@ DEFINE_API(bool, SliderInt, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
+  SliderFlags flags { API_RO(flags) };
   return ImGui::SliderInt(label, API_RW(v), v_min, v_max,
     API_RO(format) ? API_RO(format) : "%d", flags);
 });
@@ -287,10 +279,9 @@ DEFINE_API(bool, SliderInt2, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<int, int, 2> values { API_RW(v1), API_RW(v2) };
+  SliderFlags flags { API_RO(flags) };
+
   if(ImGui::SliderInt2(label, values.data(), v_min, v_max,
       API_RO(format) ? API_RO(format) : "%d", flags))
     return values.commit();
@@ -307,10 +298,9 @@ DEFINE_API(bool, SliderInt3, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<int, int, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
+  SliderFlags flags { API_RO(flags) };
+
   if(ImGui::SliderInt3(label, values.data(), v_min, v_max,
       API_RO(format) ? API_RO(format) : "%d", flags))
     return values.commit();
@@ -327,11 +317,10 @@ DEFINE_API(bool, SliderInt4, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<int, int, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
+  SliderFlags flags { API_RO(flags) };
+
   if(ImGui::SliderInt4(label, values.data(), v_min, v_max,
       API_RO(format) ? API_RO(format) : "%d", flags))
     return values.commit();
@@ -347,9 +336,7 @@ DEFINE_API(bool, SliderDouble, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
+  SliderFlags flags { API_RO(flags) };
   return ImGui::SliderScalar(label, ImGuiDataType_Double, API_RW(v),
     &v_min, &v_max, API_RO(format) ? API_RO(format) : "%.3f", flags);
 });
@@ -371,10 +358,9 @@ DEFINE_API(bool, SliderDouble2, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<double, double, 2> values { API_RW(v1), API_RW(v2) };
+  SliderFlags flags { API_RO(flags) };
+
   if(sliderDoubleN(label, values.data(), values.size(),
       v_min, v_max, API_RO(format), flags))
     return values.commit();
@@ -391,10 +377,9 @@ DEFINE_API(bool, SliderDouble3, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<double, double, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
+  SliderFlags flags { API_RO(flags) };
+
   if(sliderDoubleN(label, values.data(), values.size(),
       v_min, v_max, API_RO(format), flags))
     return values.commit();
@@ -411,11 +396,10 @@ DEFINE_API(bool, SliderDouble4, (ImGui_Context*,ctx)(const char*,label)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   ReadWriteArray<double, double, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
+  SliderFlags flags { API_RO(flags) };
+
   if(sliderDoubleN(label, values.data(), values.size(),
       v_min, v_max, API_RO(format), flags))
     return values.commit();
@@ -433,9 +417,7 @@ DEFINE_API(bool, SliderDoubleN, (ImGui_Context*,ctx)
   assertValid(values);
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
+  SliderFlags flags { API_RO(flags) };
   return sliderDoubleN(label, values->data, values->size,
     v_min, v_max, API_RO(format), flags);
 });
@@ -448,10 +430,9 @@ DEFINE_API(bool, SliderAngle, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
   float rad = *API_RW(v_rad);
+  SliderFlags flags { API_RO(flags) };
+
   if(ImGui::SliderAngle(label, &rad,
       valueOr(API_RO(v_degrees_min), -360.0), valueOr(API_RO(v_degrees_max), +360.0),
       API_RO(format) ? API_RO(format) : "%.0f deg", flags)) {
@@ -470,9 +451,7 @@ DEFINE_API(bool, VSliderInt, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
+  SliderFlags flags { API_RO(flags) };
   return ImGui::VSliderInt(label, ImVec2(size_w, size_h), API_RW(v),
     v_min, v_max, API_RO(format) ? API_RO(format) : "%d", flags);
 });
@@ -486,9 +465,7 @@ DEFINE_API(bool, VSliderDouble, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  ImGuiSliderFlags flags { valueOr(API_RO(flags), ImGuiSliderFlags_None) };
-  sanitizeSliderFlags(flags);
-
+  SliderFlags flags { API_RO(flags) };
   return ImGui::VSliderScalar(label, ImVec2(size_w, size_h),
     ImGuiDataType_Double, API_RW(v), &v_min, &v_max,
     API_RO(format) ? API_RO(format) : "%.3f", flags);
