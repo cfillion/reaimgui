@@ -225,7 +225,7 @@ OVERRIDES = {
   # (array, array_size) -> reaper_array*
   'void ImGui::PlotLines(const char*, const float*, int, int, const char*, float, float, ImVec2, int)'     => 'void PlotLines(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
   'void ImGui::PlotHistogram(const char*, const float*, int, int, const char*, float, float, ImVec2, int)' => 'void PlotHistogram(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
-  'void ImDrawList::AddPolyline(const ImVec2*, int, ImU32, int, float)' => 'void DrawList_AddPolyline(reaper_array*, int, int, double)',
+  'void ImDrawList::AddPolyline(const ImVec2*, int, ImU32, ImDrawFlags, float)' => 'void DrawList_AddPolyline(reaper_array*, int, int, double)',
   'void ImDrawList::AddConvexPolyFilled(const ImVec2*, int, ImU32)'      => 'void DrawList_AddConvexPolyFilled(reaper_array*, int, int)',
 
   # no callbacks
@@ -360,9 +360,8 @@ private
 
     if arg.default == 'NULL'
       arg.default = 'nil'
-    elsif arg.default == '0' && arg.type.start_with?('ImGui')
-      arg.default = arg.type + '_None'
-      arg.default.insert 5, '_'
+    elsif arg.default == '0' && arg.type.start_with?(/Im(Gui)?/) && arg.type != 'ImGuiID'
+      arg.default = 'ImGui_' + arg.type[$~[0].size..-1] + '_None'
       arg.default = 'ImGui_Cond_Always' if arg.default == 'ImGui_Cond_None'
       arg.default = 'ImGui_MouseButton_Left' if arg.default == 'ImGui_MouseButton_None'
     elsif arg.default =~ /\AIm(Gui)?[\w_]+\z/
