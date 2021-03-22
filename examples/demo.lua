@@ -865,7 +865,7 @@ function demo.ShowDemoWindowWidgets()
     --   -- so you can safely copy & paste garbled characters into another application.
     --   r.ImGui_TextWrapped(ctx,
     --     'CJK text will only appears if the font was loaded with the appropriate CJK character ranges. ' ..
-    --     'Call io.Font->AddFontFromFileTTF() manually to load extra character ranges. ' ..
+    --     'Call io.Fonts->AddFontFromFileTTF() manually to load extra character ranges. ' ..
     --     'Read docs/FONTS.md for details.')
     --   r.ImGui_Text(ctx, 'Hiragana: かきくけこ (kakikukeko)')
     --   r.ImGui_Text(ctx, 'Kanjis: 日本語 (nihongo)')
@@ -5052,6 +5052,9 @@ function demo.ShowDemoWindowTables()
     r.ImGui_TreePop(ctx)
   end
 
+  -- In this example we'll expose most table flags and settings.
+  -- For specific flags and settings refer to the corresponding section for more detailed explanation.
+  -- This section is mostly useful to experiment with combining certain flags or settings with each others.
   -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once()) -- [DEBUG]
   DoOpenAction()
   if r.ImGui_TreeNode(ctx, 'Advanced') then
@@ -5192,7 +5195,7 @@ function demo.ShowDemoWindowTables()
       r.ImGui_TreePop(ctx)
     end
 
-    -- Recreate/reset item list if we changed the number of items
+    -- Update item list if we changed the number of items
     if #tables.advanced.items ~= tables.advanced.items_count then
       tables.advanced.items = {}
       for n = 0, tables.advanced.items_count - 1 do
@@ -5210,6 +5213,7 @@ function demo.ShowDemoWindowTables()
     -- const int parent_draw_list_draw_cmd_count = parent_draw_list->CmdBuffer.Size;
     -- local table_scroll_cur, table_scroll_max, table_draw_list -- For debug display
 
+    -- Submit table
     local inner_width_to_use = (tables.advanced.flags & r.ImGui_TableFlags_ScrollX()) ~= 0 and tables.advanced.inner_width_with_scroll or 0.0
     local w, h = 0, 0
     if tables.advanced.outer_size_enabled then
@@ -5259,9 +5263,9 @@ function demo.ShowDemoWindowTables()
 
           r.ImGui_PushID(ctx, item.id);
           r.ImGui_TableNextRow(ctx, r.ImGui_TableRowFlags_None(), tables.advanced.row_min_height)
-          r.ImGui_TableNextColumn(ctx)
 
           -- For the demo purpose we can select among different type of items submitted in the first column
+          r.ImGui_TableSetColumnIndex(ctx, 0)
           local label = ('%04d'):format(item.id)
           local contents_type = tables.advanced.contents_type
           if contents_type == 0 then -- text
@@ -5285,7 +5289,7 @@ function demo.ShowDemoWindowTables()
             end
           end
 
-          if r.ImGui_TableNextColumn(ctx) then
+          if r.ImGui_TableSetColumnIndex(ctx, 1) then
             r.ImGui_Text(ctx, item.name)
           end
 
@@ -5293,7 +5297,7 @@ function demo.ShowDemoWindowTables()
           -- and we are currently sorting on the column showing the Quantity.
           -- To avoid triggering a sort while holding the button, we only trigger it when the button has been released.
           -- You will probably need a more advanced system in your code if you want to automatically sort when a specific entry changes.
-          if r.ImGui_TableNextColumn(ctx) then
+          if r.ImGui_TableSetColumnIndex(ctx, 2) then
             if r.ImGui_SmallButton(ctx, 'Chop') then item.quantity = item.quantity + 1 end
             if sorts_specs_using_quantity and r.ImGui_IsItemDeactivated(ctx) then tables.advanced.items_need_sort = true end
             r.ImGui_SameLine(ctx)
@@ -5301,18 +5305,18 @@ function demo.ShowDemoWindowTables()
             if sorts_specs_using_quantity and r.ImGui_IsItemDeactivated(ctx) then tables.advanced.items_need_sort = true end
           end
 
-          if r.ImGui_TableNextColumn(ctx) then
+          if r.ImGui_TableSetColumnIndex(ctx, 3) then
             r.ImGui_Text(ctx, ('%d'):format(item.quantity))
           end
 
-          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_TableSetColumnIndex(ctx, 4)
           if tables.advanced.show_wrapped_text then
             r.ImGui_TextWrapped(ctx, 'Lorem ipsum dolor sit amet')
           else
             r.ImGui_Text(ctx, 'Lorem ipsum dolor sit amet')
           end
 
-          if r.ImGui_TableNextColumn(ctx) then
+          if r.ImGui_TableSetColumnIndex(ctx, 5) then
             r.ImGui_Text(ctx, '1234')
           end
 
@@ -5579,8 +5583,8 @@ function demo.ShowDemoWindowMisc()
     -- r.ImGui_Text("WantSetMousePos: %d", io.WantSetMousePos);
     -- r.ImGui_Text("NavActive: %d, NavVisible: %d", io.NavActive, io.NavVisible);
 
-    -- Display Keyboard/Mouse state
-    if r.ImGui_TreeNode(ctx, 'Keyboard, Mouse & Navigation State') then
+    -- Display Mouse state
+    if r.ImGui_TreeNode(ctx, 'Mouse State') then
       if r.ImGui_IsMousePosValid(ctx) then
         r.ImGui_Text(ctx, ('Mouse pos: (%g, %g)'):format(r.ImGui_GetMousePos(ctx)))
       else
@@ -5599,8 +5603,8 @@ function demo.ShowDemoWindowMisc()
       end
       r.ImGui_Text(ctx, 'Mouse down:')
       for _,button in ipairs(buttons) do
-        local duration = r.ImGui_GetMouseDownDuration(ctx, button)
-        if duration >= 0.0 then
+        if r.ImGui_IsMouseDown(ctx, button) then
+          local duration = r.ImGui_GetMouseDownDuration(ctx, button)
           r.ImGui_SameLine(ctx)
           r.ImGui_Text(ctx, ('b%d (%.02f secs)'):format(button, duration))
         end
@@ -5609,12 +5613,17 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_Text(ctx, 'Mouse dblclick:'); MouseState(r.ImGui_IsMouseDoubleClicked)
       r.ImGui_Text(ctx, 'Mouse released:'); MouseState(r.ImGui_IsMouseReleased)
       r.ImGui_Text(ctx, ('Mouse wheel: %.1f'):format(r.ImGui_GetMouseWheel(ctx)))
+      -- r.ImGui_Text(cxt, ('Pen Pressure: %.1f'):format(r.ImGui_GetPenPressure(ctx))) -- Note: currently unused
+      r.ImGui_TreePop(ctx)
+    end
 
+    -- Display Keyboard/Mouse state
+    if r.ImGui_TreeNode(ctx, 'Keyboard & Navigation State') then
       local max_key = 512
       r.ImGui_Text(ctx, 'Keys down:')
       for i = 0, max_key - 1 do
-        local duration = r.ImGui_GetKeyDownDuration(ctx, i)
-        if duration >= 0.0 then
+        if r.ImGui_IsKeyDown(ctx, i) then
+          local duration = r.ImGui_GetKeyDownDuration(ctx, i)
           r.ImGui_SameLine(ctx)
           r.ImGui_Text(ctx, ('%d (0x%X) (%.02f secs)'):format(i, i, duration))
         end
@@ -5646,9 +5655,8 @@ function demo.ShowDemoWindowMisc()
         r.ImGui_Text(ctx, ("'%s' (0x%04X)"):format(utf8.char(c), c))
       end
 
-      -- r.ImGui_Text("NavInputs down:");     for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputs[i] > 0.0f)              { r.ImGui_SameLine(); r.ImGui_Text("[%d] %.2f", i, io.NavInputs[i]); }
-      -- r.ImGui_Text("NavInputs pressed:");  for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] == 0.0f) { r.ImGui_SameLine(); r.ImGui_Text("[%d]", i); }
-      -- r.ImGui_Text("NavInputs duration:"); for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] >= 0.0f) { r.ImGui_SameLine(); r.ImGui_Text("[%d] %.2f", i, io.NavInputsDownDuration[i]); }
+      -- r.ImGui_Text(ctx, 'NavInputs down:');     for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputs[i] > 0.0f)              { r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '[%d] %.2f (%.02f secs)', i, io.NavInputs[i], io.NavInputsDownDuration[i]); }
+      -- r.ImGui_Text('NavInputs pressed:');  for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] == 0.0f) { r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '[%d]', i); }
 
       -- r.ImGui_Button("Hovering me sets the\nkeyboard capture flag");
       -- if (r.ImGui_IsItemHovered())
@@ -6899,9 +6907,7 @@ end
 --             const ImVec2 p = r.ImGui_GetCursorScreenPos();
 --             const ImU32 col = ImColor(colf);
 --             const float spacing = 10.0f;
---             const ImDrawCornerFlags corners_none = 0;
---             const ImDrawCornerFlags corners_all = ImDrawCornerFlags_All;
---             const ImDrawCornerFlags corners_tl_br = ImDrawCornerFlags_TopLeft | ImDrawCornerFlags_BotRight;
+--             const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
 --             const float rounding = sz / 5.0f;
 --             const int circle_segments = circle_segments_override ? circle_segments_override_v : 0;
 --             const int curve_segments = curve_segments_override ? curve_segments_override_v : 0;
@@ -6913,8 +6919,8 @@ end
 --                 float th = (n == 0) ? 1.0f : thickness;
 --                 draw_list->AddNgon(ImVec2(x + sz*0.5f, y + sz*0.5f), sz*0.5f, col, ngon_sides, th);                 x += sz + spacing;  // N-gon
 --                 draw_list->AddCircle(ImVec2(x + sz*0.5f, y + sz*0.5f), sz*0.5f, col, circle_segments, th);          x += sz + spacing;  // Circle
---                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, 0.0f,  corners_none, th);             x += sz + spacing;  // Square
---                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, rounding, corners_all, th);           x += sz + spacing;  // Square with all rounded corners
+--                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, 0.0f, ImDrawFlags_None, th);          x += sz + spacing;  // Square
+--                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, rounding, ImDrawFlags_None, th);      x += sz + spacing;  // Square with all rounded corners
 --                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, rounding, corners_tl_br, th);         x += sz + spacing;  // Square with two rounded corners
 --                 draw_list->AddTriangle(ImVec2(x+sz*0.5f,y), ImVec2(x+sz, y+sz-0.5f), ImVec2(x, y+sz-0.5f), col, th);x += sz + spacing;  // Triangle
 --                 //draw_list->AddTriangle(ImVec2(x+sz*0.2f,y), ImVec2(x, y+sz-0.5f), ImVec2(x+sz*0.4f, y+sz-0.5f), col, th);x+= sz*0.4f + spacing; // Thin triangle
