@@ -74,6 +74,8 @@ using ImGui_Context = Context; // user-facing alias
 #define API_WBIG(var)     var##OutNeedBig
 #define API_WBIG_SZ(var)  var##OutNeedBig_sz
 
+#define FRAME_GUARD assertValid(ctx); ctx->enterFrame()
+
 template<typename T, typename Y>
 inline T valueOr(const T *ptr, const Y fallback)
 {
@@ -109,6 +111,34 @@ inline void assertValid(T *ptr)
   throw reascript_error { message };
 }
 
-#define FRAME_GUARD assertValid(ctx); ctx->enterFrame()
+template <typename PtrType, typename ValType, size_t N>
+class ReadWriteArray {
+public:
+  template<typename... Args,
+    typename = typename std::enable_if_t<sizeof...(Args) == N>>
+  ReadWriteArray(Args&&... args)
+    : m_inputs { std::forward<Args>(args)... }
+  {
+    size_t i { 0 };
+    for(const PtrType *ptr : m_inputs)
+      m_values[i++] = *ptr;
+  }
+
+  size_t size() const { return N; }
+  ValType *data() { return m_values.data(); }
+  ValType &operator[](const size_t i) { return m_values[i]; }
+
+  bool commit()
+  {
+    size_t i { 0 };
+    for(const ValType value : m_values)
+      *m_inputs[i++] = value;
+    return true;
+  }
+
+private:
+  std::array<PtrType*, N> m_inputs;
+  std::array<ValType, N> m_values;
+};
 
 #endif
