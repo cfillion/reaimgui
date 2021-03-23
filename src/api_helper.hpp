@@ -121,7 +121,7 @@ public:
   {
     size_t i { 0 };
     for(const PtrType *ptr : m_inputs)
-      m_values[i++] = *ptr;
+      m_values[i++] = ptr ? *ptr : static_cast<ValType>(0);
   }
 
   size_t size() const { return N; }
@@ -131,8 +131,10 @@ public:
   bool commit()
   {
     size_t i { 0 };
-    for(const ValType value : m_values)
-      *m_inputs[i++] = value;
+    for(const ValType value : m_values) {
+      if(PtrType *ptr { m_inputs[i++] })
+        *ptr = value;
+    }
     return true;
   }
 

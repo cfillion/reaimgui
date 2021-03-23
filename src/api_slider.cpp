@@ -128,10 +128,16 @@ DEFINE_API(bool, DragIntRange2, (ImGui_Context*,ctx)
   nullIfEmpty(API_RO(format));
   nullIfEmpty(API_RO(format_max));
 
+  ReadWriteArray<int, int, 2> values
+    { API_RW(v_current_min), API_RW(v_current_max) };
   SliderFlags flags { API_RO(flags) };
-  return ImGui::DragIntRange2(label, API_RW(v_current_min), API_RW(v_current_max),
-    valueOr(API_RO(v_speed), 1.0), valueOr(API_RO(v_min), 0),
-    valueOr(API_RO(v_max), 0), API_RO(format), API_RO(format_max), flags);
+
+  if(ImGui::DragIntRange2(label, &values[0], &values[1],
+      valueOr(API_RO(v_speed), 1.0), valueOr(API_RO(v_min), 0),
+      valueOr(API_RO(v_max), 0), API_RO(format), API_RO(format_max), flags))
+    return values.commit();
+  else
+    return false;
 });
 
 DEFINE_API(bool, DragFloatRange2, (ImGui_Context*,ctx)
