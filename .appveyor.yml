@@ -8,7 +8,7 @@ build_script:
   - cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN
     -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_OSX_DEPLOYMENT_TARGET=$DEPLOY_TARGET
   - cmake --build build
-  - '[ "$ARCH" != "x86_64" ] || cmake --build build --target cpp_binding'
+  - '[ "$ARCH" != "x86_64" ] || cmake --build build --target bindings'
 test_script:
   - ruby -E UTF-8 tools/coverage.rb
 
@@ -59,6 +59,7 @@ for:
       esac
     artifacts:
       - path: build/src/reaper_imgui*.so
+      - path: build/tools/imgui_python.py
       - path: build/tools/reaper_imgui_functions.h
 
   - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
@@ -74,6 +75,7 @@ for:
       - sudo xcode-select -s /Applications/Xcode-$XCODE_VERSION.app
     artifacts:
       - path: build/src/reaper_imgui*.dylib
+      - path: build/tools/imgui_python.py
       - path: build/tools/reaper_imgui_functions.h
 
   - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2019 ] }
@@ -91,10 +93,11 @@ for:
     build_script:
       - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - cmake --build build
-      - cmake --build build --target cpp_binding
+      - cmake --build build --target bindings
     artifacts:
       - path: build\src\reaper_imgui*.dll
       - path: build\src\reaper_imgui*.pdb
+      - path: build\tools\imgui_python.py
       - path: build\tools\reaper_imgui_functions.h
 
 environment:
@@ -134,6 +137,6 @@ deploy:
   force_update: true
   auth_token:
     secure: S4kQ8Fky507O9XHtcXdQ/Gv1+EB/6iiJQwd/InbZsl5pUdCX0oPWuP9N1B8t5fbl
-  artifact: /.*\.(dll|dylib|so|h)/
+  artifact: /.*\.(dll|dylib|so)|reaper_imgui_functions\.h|imgui_python\.py/
   on:
     APPVEYOR_REPO_TAG: true

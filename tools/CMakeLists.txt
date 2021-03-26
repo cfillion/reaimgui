@@ -7,7 +7,7 @@ target_include_directories(genbinding PRIVATE
 )
 target_link_libraries(genbinding ${PROJECT_NAME})
 
-function(generate_binding lang output)
+function(add_binding lang output)
   add_custom_command(
     OUTPUT ${output}
     COMMAND $<TARGET_FILE:genbinding> ${lang} > ${output}
@@ -18,6 +18,9 @@ function(generate_binding lang output)
 
   add_custom_target(${lang}_binding DEPENDS ${output})
   add_dependencies(${lang}_binding genbinding)
+  add_dependencies(bindings ${lang}_binding)
 endfunction()
 
-generate_binding(cpp    "${CMAKE_CURRENT_BINARY_DIR}/reaper_imgui_functions.h")
+add_custom_target(bindings)
+add_binding(cpp    "${CMAKE_CURRENT_BINARY_DIR}/reaper_imgui_functions.h")
+add_binding(python "${CMAKE_CURRENT_BINARY_DIR}/imgui_python.py")
