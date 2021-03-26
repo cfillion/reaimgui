@@ -434,6 +434,7 @@ DEFINE_API(bool, SliderAngle, (ImGui_Context*,ctx)
 "Default values: v_degrees_min = -360.0, v_degrees_max = +360.0, format = '%.0f deg', flags = ImGui_SliderFlags_None",
 {
   FRAME_GUARD;
+  assertValid(API_RW(v_rad));
   nullIfEmpty(API_RO(format));
 
   float rad = *API_RW(v_rad);

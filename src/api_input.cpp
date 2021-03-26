@@ -283,6 +283,7 @@ tip: the ColorEdit* functions have a little color square that can be left-clicke
 Default values: flags = ImGui_ColorEditFlags_None)",
 {
   FRAME_GUARD;
+  assertValid(API_RW(col_rgba));
 
   ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   sanitizeColorEditFlags(flags);
@@ -308,6 +309,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
 {
   // unneeded, only to show Edit3 in the error message instead of Edit4
   FRAME_GUARD;
+  assertValid(API_RW(col_rgb));
 
   ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   flags |= ImGuiColorEditFlags_NoAlpha;
@@ -319,6 +321,7 @@ DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
 "Default values: flags = ImGui_ColorEditFlags_None, ref_col = nil",
 {
   FRAME_GUARD;
+  assertValid(API_RW(col_rgba));
 
   ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   sanitizeColorEditFlags(flags);
@@ -346,6 +349,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
 {
   // unneeded, only to show Picker3 in the error message instead of Picker4
   FRAME_GUARD;
+  assertValid(API_RW(col_rgb));
 
   ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   flags |= ImGuiColorEditFlags_NoAlpha;

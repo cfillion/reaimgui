@@ -117,6 +117,7 @@ R"(Accept contents of a RGB color. If ImGui_DragDropFlags_AcceptBeforeDelivery i
 Default values: flags = ImGui_DragDropFlags_None)",
 {
   FRAME_GUARD;
+  assertValid(API_W(rgb));
 
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, flags) };
@@ -139,6 +140,7 @@ R"(Accept contents of a RGBA color. If ImGui_DragDropFlags_AcceptBeforeDelivery 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
   FRAME_GUARD;
+  assertValid(API_W(rgba));
 
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_4F, flags) };
