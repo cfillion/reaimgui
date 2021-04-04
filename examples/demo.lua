@@ -4247,8 +4247,7 @@ function demo.ShowDemoWindowTables()
       local clipper = r.ImGui_CreateListClipper(ctx)
       r.ImGui_ListClipper_Begin(clipper, 1000)
       while r.ImGui_ListClipper_Step(clipper) do
-        local display_start = r.ImGui_ListClipper_GetDisplayStart(clipper)
-        local display_end   = r.ImGui_ListClipper_GetDisplayEnd(clipper)
+        local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
         for row = display_start, display_end - 1 do
           r.ImGui_TableNextRow(ctx)
           for column = 0, 2 do
@@ -5029,8 +5028,7 @@ function demo.ShowDemoWindowTables()
       local clipper = r.ImGui_CreateListClipper(ctx)
       r.ImGui_ListClipper_Begin(clipper, #tables.sorting.items)
       while r.ImGui_ListClipper_Step(clipper) do
-        local display_start = r.ImGui_ListClipper_GetDisplayStart(clipper)
-        local display_end   = r.ImGui_ListClipper_GetDisplayEnd(clipper)
+        local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
         for row_n = display_start, display_end - 1 do
           -- Display a data item
           local item = tables.sorting.items[row_n + 1]
@@ -5254,8 +5252,7 @@ function demo.ShowDemoWindowTables()
       local clipper = r.ImGui_CreateListClipper(ctx)
       r.ImGui_ListClipper_Begin(clipper, #tables.advanced.items)
       while r.ImGui_ListClipper_Step(clipper) do
-        local display_start = r.ImGui_ListClipper_GetDisplayStart(clipper)
-        local display_end   = r.ImGui_ListClipper_GetDisplayEnd(clipper)
+        local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
         for row_n = display_start, display_end - 1 do
           local item = tables.advanced.items[row_n + 1]
           -- //if (!filter.PassFilter(item->Name))

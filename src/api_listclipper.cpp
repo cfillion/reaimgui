@@ -61,8 +61,7 @@ Usage:
   local clipper = reaper.ImGui_CreateListClipper(ctx)
   reaper.ImGui_ListClipper_Begin(clipper, 1000) -- We have 1000 elements, evenly spaced
   while reaper.ImGui_ListClipper_Step(clipper) do
-    local display_start = reaper.ImGui_ListClipper_GetDisplayStart(clipper)
-    local display_end   = reaper.ImGui_ListClipper_GetDisplayEnd(clipper)
+    local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
     for row = display_start, display_end - 1 do
       reaper.ImGui_Text(ctx, ("line number %d"):format(i))
     end
@@ -103,14 +102,11 @@ DEFINE_API(void, ListClipper_End, (ImGui_ListClipper*,clipper),
   ListClipper::use(clipper)->End();
 });
 
-DEFINE_API(int, ListClipper_GetDisplayStart, (ImGui_ListClipper*,clipper),
+DEFINE_API(void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
+(int*,API_W(display_start))(int*,API_W(display_end)),
 "",
 {
-  return ListClipper::use(clipper)->DisplayStart;
-});
-
-DEFINE_API(int, ListClipper_GetDisplayEnd, (ImGui_ListClipper*,clipper),
-"",
-{
-  return ListClipper::use(clipper)->DisplayEnd;
+  ImGuiListClipper *imclipper { ListClipper::use(clipper) };
+  if(API_W(display_start)) *API_W(display_start) = imclipper->DisplayStart;
+  if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
 });
