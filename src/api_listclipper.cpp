@@ -58,11 +58,14 @@ The clipper calculates the range of visible items and advance the cursor to comp
 (Dear ImGui already clip items based on their bounds but it needs to measure text size to do so, whereas manual coarse clipping before submission makes this cost and your own data fetching/submission cost almost null)
 
 Usage:
-  ImGuiListClipper clipper;
-  clipper.Begin(1000);         // We have 1000 elements, evenly spaced.
-  while (clipper.Step())
-      for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-          ImGui::Text("line number %d", i);
+  local clipper = reaper.ImGui_CreateListClipper(ctx)
+  reaper.ImGui_ListClipper_Begin(clipper, 1000) -- We have 1000 elements, evenly spaced
+  while reaper.ImGui_ListClipper_Step(clipper) do
+    local display_start = reaper.ImGui_ListClipper_GetDisplayStart(clipper)
+    local display_end   = reaper.ImGui_ListClipper_GetDisplayEnd(clipper)
+    for row = display_start, display_end - 1 do
+      reaper.ImGui_Text(ctx, ("line number %d"):format(i))
+    end
 
 Generally what happens is:
 - Clipper lets you process the first element (DisplayStart = 0, DisplayEnd = 1) regardless of it being visible or not.
