@@ -3646,7 +3646,7 @@ end
 
 function demo.ShowDemoWindowTables()
   -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once())
-  if not r.ImGui_CollapsingHeader(ctx, 'Tables & Columns') then
+  if not r.ImGui_CollapsingHeader(ctx, 'Tables') then
     return
   end
 
