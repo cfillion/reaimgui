@@ -254,19 +254,20 @@ static void pythonBinding(std::ostream &stream)
       }
     }
     stream << "):\n"
-              "  proc = rpr_getfp('" << func.name << "')\n"
-              "  func = CFUNCTYPE(";
+              "  if not hasattr(" << func.name << ", 'func'):\n"
+              "    proc = rpr_getfp('" << func.name << "')\n"
+              "    " << func.name << ".func = CFUNCTYPE(";
     {
       CommaSep cs { stream };
       cs << pythonCType(func.type);
       for(const Argument &arg : func.args)
         cs << pythonCType(arg.type);
     }
-    stream << ")(proc)\n  ";
+    stream << ")(proc)\n";
 
     bool retAllArgs { false };
     if(!func.args.empty()) {
-      stream << "args = (";
+      stream << "  args = (";
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
         bool packed { false };
@@ -296,13 +297,21 @@ static void pythonBinding(std::ostream &stream)
       }
       if(func.args.size() == 1)
         stream << ',';
-      stream << ")\n  ";
+      stream << ")\n";
+    }
+
+    if(func.isEnum()) {
+      stream << "  if not hasattr(" << func.name << ", 'cache'):\n"
+                "    " << func.name << ".cache = " << func.name << ".func()\n"
+                "  return " << func.name << ".cache\n";
+      continue;
     }
 
     {
+      stream << "  ";
       if(!func.type.isVoid())
         stream << "rval = ";
-      stream << "func(";
+      stream << func.name << ".func(";
       CommaSep cs { stream };
       for(size_t i { 0 }; i < func.args.size(); ++i) {
         const Argument &arg { func.args[i] };
