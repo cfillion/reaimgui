@@ -93,11 +93,13 @@ To install ReaImGui into your REAPER installation after building:
 The following targets are available:
 
 - **`all`**: Build ReaImGui (default target)
+- **`bindings`**: Generate all bindings
+  - **`cpp_binding`**
+  - **`python_binding`**
 - **`clean`**: Delete all generated files
   (can be run before building another target using `--clean-first`)
 - **`install`**: Build and install ReaImGui into REAPER's resource directory
   (as specified in `CMAKE_INSTALL_PREFIX`)
-- **`test`**: Build and run the test suite
 
 ### Cross-compilation
 
