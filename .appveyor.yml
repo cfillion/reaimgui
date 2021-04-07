@@ -7,8 +7,8 @@ before_build:
 build_script:
   - cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN
     -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_OSX_DEPLOYMENT_TARGET=$DEPLOY_TARGET
-  - cmake --build build
-  - '[ "$ARCH" != "x86_64" ] || cmake --build build --target bindings'
+  - cmake --build build --target reaimgui
+  - '[ "$ARCH" != `uname -m` ] || cmake --build build --target bindings'
 test_script:
   - ruby -E UTF-8 tools/coverage.rb
 
@@ -93,7 +93,6 @@ for:
     build_script:
       - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
       - cmake --build build
-      - cmake --build build --target bindings
     artifacts:
       - path: build\src\reaper_imgui*.dll
       - path: build\src\reaper_imgui*.pdb

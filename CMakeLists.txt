@@ -102,7 +102,6 @@ add_subdirectory(tools)
 
 set(REAPER_USER_PLUGINS "UserPlugins")
 install(TARGETS ${PROJECT_NAME}
-  COMPONENT "${PROJECT_NAME}"
   RUNTIME DESTINATION "${REAPER_USER_PLUGINS}" # Windows .dll
   LIBRARY DESTINATION "${REAPER_USER_PLUGINS}" # Linux .so/macOS .dylib
 )
