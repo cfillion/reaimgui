@@ -143,4 +143,13 @@ private:
   std::array<ValType, N> m_values;
 };
 
+// key must be unique from the lower 32-bit only for 32-bit compatibility
+template<typename Output, typename Input>
+inline Output *encodePtr(const Input *in, const uint64_t key)
+{
+  uintptr_t out { reinterpret_cast<uintptr_t>(in) };
+  out ^= static_cast<uintptr_t>(key);
+  return reinterpret_cast<Output *>(out);
+}
+
 #endif
