@@ -29,16 +29,14 @@ uint32_t Color::rgba2abgr(const uint32_t rgba)
     (rgba << 24 & 0xFF000000) ; // alpha
 }
 
-Color Color::fromTheme(uint32_t color)
+Color Color::fromNative(const uint32_t rgb)
 {
+  Color color { rgb, false };
 #ifdef _WIN32
-  // bgr to rgb
-  color = (color >> 16 & 0x0000ff) |
-          (color       & 0x00ff00) |
-          (color << 16 & 0xff0000) ;
+  // swap red/blue channels
+  std::swap(std::get<0>(color.m_store), std::get<2>(color.m_store));
 #endif
-
-  return { color, false };
+  return color;
 }
 
 Color::Color()

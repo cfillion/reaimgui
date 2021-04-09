@@ -379,62 +379,62 @@ void Context::updateTheme()
   if(static_cast<size_t>(themeSize) < sizeof(ColorTheme))
     return;
 
-  m_clearColor = Color::fromTheme(theme->window_background);
+  m_clearColor = Color::fromNative(theme->window_background);
 
   // TODO: Extract a few key colors from REAPER's theme, and compute nicely
   // readable colors for ImGui from them. See vendor/reaper_colortheme.h
   ImVec4 *colors { ImGui::GetStyle().Colors };
   (void)colors;
-  // colors[ImGuiCol_Text]                  = Color::fromTheme(0);
-  // colors[ImGuiCol_TextDisabled]          = Color::fromTheme(0);
-  // colors[ImGuiCol_WindowBg]              = Color::fromTheme(0); // Background of normal windows
-  // colors[ImGuiCol_ChildBg]               = Color::fromTheme(0); // Background of child windows
-  // colors[ImGuiCol_PopupBg]               = Color::fromTheme(0); // Background of popups, menus, tooltips windows
-  // colors[ImGuiCol_Border]                = Color::fromTheme(0);
-  // colors[ImGuiCol_BorderShadow]          = Color::fromTheme(0);
-  // colors[ImGuiCol_FrameBg]               = Color::fromTheme(0); // Background of checkbox, radio button, plot, slider, text input
-  // colors[ImGuiCol_FrameBgHovered]        = Color::fromTheme(0);
-  // colors[ImGuiCol_FrameBgActive]         = Color::fromTheme(0);
-  // colors[ImGuiCol_TitleBg]               = Color::fromTheme(0);
-  // colors[ImGuiCol_TitleBgActive]         = Color::fromTheme(0);
-  // colors[ImGuiCol_TitleBgCollapsed]      = Color::fromTheme(0);
-  // colors[ImGuiCol_MenuBarBg]             = Color::fromTheme(0);
-  // colors[ImGuiCol_ScrollbarBg]           = Color::fromTheme(0);
-  // colors[ImGuiCol_ScrollbarGrab]         = Color::fromTheme(0);
-  // colors[ImGuiCol_ScrollbarGrabHovered]  = Color::fromTheme(0);
-  // colors[ImGuiCol_ScrollbarGrabActive]   = Color::fromTheme(0);
-  // colors[ImGuiCol_CheckMark]             = Color::fromTheme(0);
-  // colors[ImGuiCol_SliderGrab]            = Color::fromTheme(0);
-  // colors[ImGuiCol_SliderGrabActive]      = Color::fromTheme(0);
-  // colors[ImGuiCol_Button]                = Color::fromTheme(0);
-  // colors[ImGuiCol_ButtonHovered]         = Color::fromTheme(0);
-  // colors[ImGuiCol_ButtonActive]          = Color::fromTheme(0);
-  // colors[ImGuiCol_Header]                = Color::fromTheme(0); // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
-  // colors[ImGuiCol_HeaderHovered]         = Color::fromTheme(0);
-  // colors[ImGuiCol_HeaderActive]          = Color::fromTheme(0);
-  // colors[ImGuiCol_Separator]             = Color::fromTheme(0);
-  // colors[ImGuiCol_SeparatorHovered]      = Color::fromTheme(0);
-  // colors[ImGuiCol_SeparatorActive]       = Color::fromTheme(0);
-  // colors[ImGuiCol_ResizeGrip]            = Color::fromTheme(0);
-  // colors[ImGuiCol_ResizeGripHovered]     = Color::fromTheme(0);
-  // colors[ImGuiCol_ResizeGripActive]      = Color::fromTheme(0);
-  // colors[ImGuiCol_Tab]                   = Color::fromTheme(0);
-  // colors[ImGuiCol_TabHovered]            = Color::fromTheme(0);
-  // colors[ImGuiCol_TabActive]             = Color::fromTheme(0);
-  // colors[ImGuiCol_TabUnfocused]          = Color::fromTheme(0);
-  // colors[ImGuiCol_TabUnfocusedActive]    = Color::fromTheme(0);
-  // colors[ImGuiCol_PlotLines]             = Color::fromTheme(0);
-  // colors[ImGuiCol_PlotLinesHovered]      = Color::fromTheme(0);
-  // colors[ImGuiCol_PlotHistogram]         = Color::fromTheme(0);
-  // colors[ImGuiCol_PlotHistogramHovered]  = Color::fromTheme(0);
-  // colors[ImGuiCol_TableHeaderBg]         = Color::fromTheme(0); // Table header background
-  // colors[ImGuiCol_TableBorderStrong]     = Color::fromTheme(0); // Table outer and header borders (prefer using Alpha=1.0 here)
-  // colors[ImGuiCol_TableBorderLight]      = Color::fromTheme(0); // Table inner borders (prefer using Alpha=1.0 here)
-  // colors[ImGuiCol_TableRowBg]            = Color::fromTheme(0); // Table row background (even rows)
-  // colors[ImGuiCol_TableRowBgAlt]         = Color::fromTheme(0); // Table row background (odd rows)
-  // colors[ImGuiCol_TextSelectedBg]        = Color::fromTheme(0);
-  // colors[ImGuiCol_DragDropTarget]        = Color::fromTheme(0);
-  // colors[ImGuiCol_NavHighlight]          = Color::fromTheme(0); // Gamepad/keyboard: current highlighted item
-  // colors[ImGuiCol_NavWindowingHighlight] = Color::fromTheme(0); // Highlight window when using CTRL+TAB
-  // colors[ImGuiCol_NavWindowingDimBg]     = Color::fromTheme(0); // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+  // colors[ImGuiCol_Text]                  = Color::fromNative(0);
+  // colors[ImGuiCol_TextDisabled]          = Color::fromNative(0);
+  // colors[ImGuiCol_WindowBg]              = Color::fromNative(0); // Background of normal windows
+  // colors[ImGuiCol_ChildBg]               = Color::fromNative(0); // Background of child windows
+  // colors[ImGuiCol_PopupBg]               = Color::fromNative(0); // Background of popups, menus, tooltips windows
+  // colors[ImGuiCol_Border]                = Color::fromNative(0);
+  // colors[ImGuiCol_BorderShadow]          = Color::fromNative(0);
+  // colors[ImGuiCol_FrameBg]               = Color::fromNative(0); // Background of checkbox, radio button, plot, slider, text input
+  // colors[ImGuiCol_FrameBgHovered]        = Color::fromNative(0);
+  // colors[ImGuiCol_FrameBgActive]         = Color::fromNative(0);
+  // colors[ImGuiCol_TitleBg]               = Color::fromNative(0);
+  // colors[ImGuiCol_TitleBgActive]         = Color::fromNative(0);
+  // colors[ImGuiCol_TitleBgCollapsed]      = Color::fromNative(0);
+  // colors[ImGuiCol_MenuBarBg]             = Color::fromNative(0);
+  // colors[ImGuiCol_ScrollbarBg]           = Color::fromNative(0);
+  // colors[ImGuiCol_ScrollbarGrab]         = Color::fromNative(0);
+  // colors[ImGuiCol_ScrollbarGrabHovered]  = Color::fromNative(0);
+  // colors[ImGuiCol_ScrollbarGrabActive]   = Color::fromNative(0);
+  // colors[ImGuiCol_CheckMark]             = Color::fromNative(0);
+  // colors[ImGuiCol_SliderGrab]            = Color::fromNative(0);
+  // colors[ImGuiCol_SliderGrabActive]      = Color::fromNative(0);
+  // colors[ImGuiCol_Button]                = Color::fromNative(0);
+  // colors[ImGuiCol_ButtonHovered]         = Color::fromNative(0);
+  // colors[ImGuiCol_ButtonActive]          = Color::fromNative(0);
+  // colors[ImGuiCol_Header]                = Color::fromNative(0); // Header* colors are used for CollapsingHeader, TreeNode, Selectable, MenuItem
+  // colors[ImGuiCol_HeaderHovered]         = Color::fromNative(0);
+  // colors[ImGuiCol_HeaderActive]          = Color::fromNative(0);
+  // colors[ImGuiCol_Separator]             = Color::fromNative(0);
+  // colors[ImGuiCol_SeparatorHovered]      = Color::fromNative(0);
+  // colors[ImGuiCol_SeparatorActive]       = Color::fromNative(0);
+  // colors[ImGuiCol_ResizeGrip]            = Color::fromNative(0);
+  // colors[ImGuiCol_ResizeGripHovered]     = Color::fromNative(0);
+  // colors[ImGuiCol_ResizeGripActive]      = Color::fromNative(0);
+  // colors[ImGuiCol_Tab]                   = Color::fromNative(0);
+  // colors[ImGuiCol_TabHovered]            = Color::fromNative(0);
+  // colors[ImGuiCol_TabActive]             = Color::fromNative(0);
+  // colors[ImGuiCol_TabUnfocused]          = Color::fromNative(0);
+  // colors[ImGuiCol_TabUnfocusedActive]    = Color::fromNative(0);
+  // colors[ImGuiCol_PlotLines]             = Color::fromNative(0);
+  // colors[ImGuiCol_PlotLinesHovered]      = Color::fromNative(0);
+  // colors[ImGuiCol_PlotHistogram]         = Color::fromNative(0);
+  // colors[ImGuiCol_PlotHistogramHovered]  = Color::fromNative(0);
+  // colors[ImGuiCol_TableHeaderBg]         = Color::fromNative(0); // Table header background
+  // colors[ImGuiCol_TableBorderStrong]     = Color::fromNative(0); // Table outer and header borders (prefer using Alpha=1.0 here)
+  // colors[ImGuiCol_TableBorderLight]      = Color::fromNative(0); // Table inner borders (prefer using Alpha=1.0 here)
+  // colors[ImGuiCol_TableRowBg]            = Color::fromNative(0); // Table row background (even rows)
+  // colors[ImGuiCol_TableRowBgAlt]         = Color::fromNative(0); // Table row background (odd rows)
+  // colors[ImGuiCol_TextSelectedBg]        = Color::fromNative(0);
+  // colors[ImGuiCol_DragDropTarget]        = Color::fromNative(0);
+  // colors[ImGuiCol_NavHighlight]          = Color::fromNative(0); // Gamepad/keyboard: current highlighted item
+  // colors[ImGuiCol_NavWindowingHighlight] = Color::fromNative(0); // Highlight window when using CTRL+TAB
+  // colors[ImGuiCol_NavWindowingDimBg]     = Color::fromNative(0); // Darken/colorize entire screen behind the CTRL+TAB window list, when active
 }

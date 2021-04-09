@@ -27,7 +27,7 @@ class Color {
 public:
   static uint32_t rgba2abgr(const uint32_t rgba);
   static uint32_t abgr2rgba(const uint32_t abgr) { return rgba2abgr(abgr); }
-  static Color fromTheme(const uint32_t themeColor);
+  static Color fromNative(const uint32_t rgb);
 
   Color(); // opaque black
   Color(uint32_t rgba, bool alpha = true);
@@ -36,7 +36,7 @@ public:
 
   operator ImVec4() const;
   void unpack(float rgba[4]) const;
-  uint32_t pack(bool alpha = true, uint32_t prewextra = 0) const;
+  uint32_t pack(bool alpha = true, uint32_t extra = 0) const;
 
   template <class F>
   constexpr decltype(auto) apply(F&& f) const
