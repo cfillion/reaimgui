@@ -46,7 +46,7 @@ void Context::setupImGui()
     m_fontAtlas = g_fontAtlas.lock();
 
   m_imgui.reset(ImGui::CreateContext(m_fontAtlas.get()));
-  ImGui::SetCurrentContext(m_imgui.get());
+  setCurrent();
 
   ImGuiIO &io { ImGui::GetIO() };
   io.IniFilename = nullptr;
@@ -81,7 +81,7 @@ void Context::setupImGui()
 
 Context::~Context()
 {
-  ImGui::SetCurrentContext(m_imgui.get());
+  setCurrent();
 
   // Announce to REAPER the window is no longer going to be valid
   // (safe to call even when not docked)
@@ -118,9 +118,14 @@ void Context::beginFrame()
   m_window->beginFrame();
 }
 
-void Context::enterFrame()
+void Context::setCurrent()
 {
   ImGui::SetCurrentContext(m_imgui.get());
+}
+
+void Context::enterFrame()
+{
+  setCurrent();
 
   if(!m_inFrame)
     beginFrame();
@@ -128,7 +133,7 @@ void Context::enterFrame()
 
 void Context::endFrame(const bool render, const bool prinnyMode) try
 {
-  ImGui::SetCurrentContext(m_imgui.get());
+  setCurrent();
 
   // IsWindowVisible is false when docked and another tab is active
   if(render && IsWindowVisible(m_window->nativeHandle())) {
@@ -174,7 +179,7 @@ void Context::updateFrameInfo()
 
 void Context::updateCursor()
 {
-  ImGui::SetCurrentContext(m_imgui.get());
+  setCurrent();
 
   if(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
     return;
@@ -270,7 +275,7 @@ void Context::mouseUp(const unsigned int msg)
 void Context::updateMouseDown()
 {
   // this is only called from enterFrame, the context is already set
-  // ImGui::SetCurrentContext(m_imgui.get());
+  // setCurrent();
 
   ImGuiIO &io { ImGui::GetIO() };
 
@@ -284,7 +289,7 @@ void Context::updateMouseDown()
 void Context::updateMousePos()
 {
   // this is only called from enterFrame, the context is already set
-  // ImGui::SetCurrentContext(m_imgui.get());
+  // setCurrent();
 
   ImGuiIO &io { ImGui::GetIO() };
   HWND windowHwnd { m_window->nativeHandle() };
@@ -317,7 +322,7 @@ void Context::updateMousePos()
 
 void Context::mouseWheel(const unsigned int msg, const short delta)
 {
-  ImGui::SetCurrentContext(m_imgui.get());
+  setCurrent();
 
 #ifndef WHEEL_DELTA
   constexpr float WHEEL_DELTA {
@@ -337,7 +342,7 @@ void Context::mouseWheel(const unsigned int msg, const short delta)
 void Context::updateKeyMods()
 {
   // this is only called from enterFrame, the context is already set
-  // ImGui::SetCurrentContext(m_imgui.get());
+  // setCurrent();
 
   constexpr int down { 0x8000 };
 
@@ -350,7 +355,7 @@ void Context::updateKeyMods()
 
 void Context::keyInput(const uint8_t key, const bool down)
 {
-  ImGui::SetCurrentContext(m_imgui.get());
+  setCurrent();
   ImGuiIO &io { ImGui::GetIO() };
   io.KeysDown[key] = down;
 }
@@ -360,14 +365,14 @@ void Context::charInput(const unsigned int codepoint)
   if(codepoint < 32 || (codepoint > 126 && codepoint < 160))
     return;
 
-  ImGui::SetCurrentContext(m_imgui.get());
+  setCurrent();
   ImGuiIO &io { ImGui::GetIO() };
   io.AddInputCharacter(codepoint);
 }
 
 void Context::clearFocus()
 {
-  ImGui::SetCurrentContext(m_imgui.get());
+  setCurrent();
   if(ImGui::GetIO().WantCaptureKeyboard)
     ImGui::ClearActiveID();
 }

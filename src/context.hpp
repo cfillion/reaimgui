@@ -49,6 +49,7 @@ public:
   const Color &clearColor() const { return m_clearColor; }
   void setClearColor(const Color &col) { m_clearColor = col; }
 
+  void setCurrent();
   void enterFrame();
 
   void mouseDown(unsigned int msg);
