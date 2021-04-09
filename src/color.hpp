@@ -27,6 +27,7 @@ class Color {
 public:
   static uint32_t rgba2abgr(const uint32_t rgba);
   static uint32_t abgr2rgba(const uint32_t abgr) { return rgba2abgr(abgr); }
+  static uint32_t convertNative(const uint32_t rgb);
   static Color fromNative(const uint32_t rgb);
 
   Color(); // opaque black

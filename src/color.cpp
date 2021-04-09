@@ -29,6 +29,17 @@ uint32_t Color::rgba2abgr(const uint32_t rgba)
     (rgba << 24 & 0xFF000000) ; // alpha
 }
 
+uint32_t Color::convertNative(uint32_t rgb)
+{
+#ifdef _WIN32
+  // swap red/blue channels, preserving unused data in the MSB
+  rgb = (rgb >> 16 & 0x000000ff) |
+        (rgb       & 0xff00ff00) |
+        (rgb << 16 & 0x00ff0000) ;
+#endif
+  return rgb;
+}
+
 Color Color::fromNative(const uint32_t rgb)
 {
   Color color { rgb, false };

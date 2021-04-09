@@ -257,3 +257,10 @@ Default values: alpha = nil)",
   if(API_W(v)) *API_W(v) = color.z;
   return Color{color}.pack(alpha);
 });
+
+DEFINE_API(int, ColorConvertNative,
+(int,rgb),
+"Convert native colors coming from REAPER. This swaps the red and blue channels of the specified 0xRRGGBB color on Windows.",
+{
+  return Color::convertNative(rgb);
+});

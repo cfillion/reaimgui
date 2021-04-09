@@ -15,13 +15,13 @@ def paramCheckbox(track, param):
 
 def trackRow(ti):
   track = RPR_GetTrack(None, ti)
-  color = RPR_GetTrackColor(track)
 
   if ImGui_TableSetColumnIndex(ctx, 0):
+    color = ImGui_ColorConvertNative(RPR_GetTrackColor(track))
     colorEdit = ImGui_ColorEdit3(ctx, "##color", color,
       ImGui_ColorEditFlags_NoInputs() | ImGui_ColorEditFlags_NoLabel())
     if colorEdit[0]:
-      RPR_SetTrackColor(track, colorEdit[3])
+      RPR_SetTrackColor(track, ImGui_ColorConvertNative(colorEdit[3]))
 
   if ImGui_TableSetColumnIndex(ctx, 1):
     selected = RPR_IsTrackSelected(track)

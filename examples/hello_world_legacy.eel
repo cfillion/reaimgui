@@ -23,9 +23,9 @@ function update() (
     extension_api("ImGui_TextWrapped", ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ultrices turpis lectus, in semper ligula blandit in. Duis non ipsum varius, pretium magna eu, mattis sapien. Maecenas augue mi, luctus sed leo et, ullamcorper convallis ligula. Nunc vitae porttitor quam. Integer a lorem fermentum, dapibus tortor ut, gravida erat. Quisque ut justo ante. Quisque fringilla a lectus a porta.");
     extension_api("ImGui_Spacing", ctx);
 
-    color = GetTrackColor(track);
+    color = extension_api("ImGui_ColorConvertNative", GetTrackColor(track));
     extension_api("ImGui_ColorEdit3", ctx, "track color", color) ?
-      SetTrackColor(track, color);
+      SetTrackColor(track, extension_api("ImGui_ColorConvertNative", color));
     extension_api("ImGui_Spacing", ctx);
 
     GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 0);
