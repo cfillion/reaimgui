@@ -248,9 +248,9 @@ function demo.ShowDemoWindow(p_open)
 
   -- We specify a default position/size in case there's no data in the .ini file.
   -- We only do it to make the demo applications a little more welcoming, but typically this isn't required.
-  -- v1.81 TODO const ImGuiViewport* main_viewport = ImGui::GetMainViewport();
-  -- ImGui::SetNextWindowPos(ImVec2(main_viewport->WorkPos.x + 650, main_viewport->WorkPos.y + 20), ImGuiCond_FirstUseEver);
-  r.ImGui_SetNextWindowPos(ctx, 20, 20, r.ImGui_Cond_FirstUseEver())
+  local main_viewport = r.ImGui_GetMainViewport(ctx)
+  local work_pos = {r.ImGui_Viewport_GetWorkPos(main_viewport)}
+  r.ImGui_SetNextWindowPos(ctx, work_pos[1] + 20, work_pos[2] + 20, r.ImGui_Cond_FirstUseEver())
   r.ImGui_SetNextWindowSize(ctx, 550, 680, r.ImGui_Cond_FirstUseEver())
 
   -- Main body of the Demo window starts here.
@@ -3391,9 +3391,7 @@ function demo.ShowDemoWindowPopups()
     end
 
     -- Always center this window when appearing
-    local display_size = {r.ImGui_GetDisplaySize(ctx)}
-    local center = { display_size[1] * 0.5, display_size[2] * 0.5 }
-    -- ImVec2 center = ImGui::GetMainViewport()->GetCenter(); TODO
+    local center = {r.ImGui_Viewport_GetCenter(r.ImGui_GetMainViewport(ctx))}
     r.ImGui_SetNextWindowPos(ctx, center[1], center[2], r.ImGui_Cond_Appearing(), 0.5, 0.5)
 
     if r.ImGui_BeginPopupModal(ctx, 'Delete?', nil, r.ImGui_WindowFlags_AlwaysAutoResize()) then

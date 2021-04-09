@@ -130,6 +130,7 @@ static void cppBinding(std::ostream &stream)
 class ImGui_Context;
 class ImGui_DrawList;
 class ImGui_ListClipper;
+class ImGui_Viewport;
 
 struct reaper_array;
 

@@ -15,8 +15,10 @@ function update() (
     #notes = "";
   );
 
-  ImGui_SetNextWindowPos(ctx, 0, 0);
-  ImGui_GetDisplaySize(ctx, w, h);
+  viewport = ImGui_GetMainViewport(ctx);
+  ImGui_Viewport_GetPos(viewport, x, y);
+  ImGui_SetNextWindowPos(ctx, x, y);
+  ImGui_Viewport_GetSize(viewport, w, h);
   ImGui_SetNextWindowSize(ctx, w, h);
   ImGui_Begin(ctx, "main", 0, ImGui_WindowFlags_NoDecoration()) ? (
     ImGui_TextWrapped(ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ultrices turpis lectus, in semper ligula blandit in. Duis non ipsum varius, pretium magna eu, mattis sapien. Maecenas augue mi, luctus sed leo et, ullamcorper convallis ligula. Nunc vitae porttitor quam. Integer a lorem fermentum, dapibus tortor ut, gravida erat. Quisque ut justo ante. Quisque fringilla a lectus a porta.");

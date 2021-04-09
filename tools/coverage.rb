@@ -257,6 +257,7 @@ RESOURCES = {
   'ImGui_Context*'     => 'ctx',
   'ImGui_DrawList*'    => 'draw_list',
   'ImGui_ListClipper*' => 'clipper',
+  'ImGui_Viewport*'    => 'viewport',
 }
 
 # types REAPER's parser knows about
@@ -264,14 +265,11 @@ TYPES = [
   'bool',   'bool*',
   'int',    'int*',    # no unsigned int :-(
   'double', 'double*', # no float :'(
-  'ImGui_Context*',
-  'ImGui_DrawList*',
-  'ImGui_ListClipper*',
   'char*',
   'const char*',
   'reaper_array*',
   'void*',
-]
+] + RESOURCES.keys
 
 class Function < Struct.new :type, :name, :args, :namespace, :match
   def sig

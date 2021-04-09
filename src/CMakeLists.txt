@@ -28,6 +28,7 @@ add_library(${PROJECT_NAME} SHARED
   api_slider.cpp
   api_style.cpp
   api_tables.cpp
+  api_viewport.cpp
   api_widgets.cpp
   api_windows.cpp
 )

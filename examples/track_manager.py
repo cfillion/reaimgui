@@ -114,8 +114,10 @@ def loop():
     ImGui_DestroyContext(ctx)
     return
 
-  ImGui_SetNextWindowPos(ctx, 0, 0)
-  _, w, h = ImGui_GetDisplaySize(ctx)
+  viewport = ImGui_GetMainViewport(ctx)
+  _, x, y = ImGui_Viewport_GetPos(viewport)
+  ImGui_SetNextWindowPos(ctx, x, y)
+  _, w, h = ImGui_Viewport_GetSize(viewport)
   ImGui_SetNextWindowSize(ctx, w, h)
   ImGui_Begin(ctx, "main", None, ImGui_WindowFlags_NoDecoration())
 
