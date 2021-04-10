@@ -20,7 +20,6 @@ NATIVE_ONLY = [
   'void ImGui::Render()',
   'ImDrawData* ImGui::GetDrawData()',
   'ImDrawListSharedData* ImGui::GetDrawListSharedData()',
-  'ImGuiViewport* ImGui::GetMainViewport()',
   'void ImGui::CaptureKeyboardFromApp(bool)',
   'void ImGui::CaptureMouseFromApp(bool)',
 
@@ -346,6 +345,8 @@ private
       'int'
     when 'const char* const'
       'const char*'
+    when 'ImGuiViewport*'
+      'ImGui_Viewport*'
     else
       type
     end
