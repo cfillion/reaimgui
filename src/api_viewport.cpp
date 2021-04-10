@@ -18,8 +18,8 @@
 #include "api_helper.hpp"
 
 struct ImGui_Viewport {
-  enum Key : uint64_t {
-    Main = 0x4d4e56504d4e5650, // MNVPMNVP
+  enum Key {
+    Main = 0x4d4e5650, // MNVP
   };
 
   ImGuiViewport *get()

@@ -17,7 +17,6 @@
 
 #include "api_helper.hpp"
 
-#include <cassert>
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
 
 static bool isUserType(const char *type)

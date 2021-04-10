@@ -21,10 +21,10 @@
 #include <vector>
 
 struct ImGui_DrawList {
-  enum Key : uint64_t {
-    Window     = 0x77696e646f77646c, // WINDOWDL
-    Background = 0x6267646c6267646c, // BGDLBGDL
-    Foreground = 0x6667646c6667646c, // FGDLFGDL
+  enum Key {
+    Window     = 0x574e444c, // WNDL
+    Background = 0x6267646c, // BGDL
+    Foreground = 0x6667646c, // FGDL
   };
 
   ImDrawList *get()

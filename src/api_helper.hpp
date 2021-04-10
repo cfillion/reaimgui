@@ -24,6 +24,7 @@
 
 #include <boost/preprocessor.hpp>
 #include <boost/type_index.hpp>
+#include <cassert>
 #include <cstring> // strlen
 
 using ImGui_Context = Context; // user-facing alias
@@ -143,12 +144,12 @@ private:
   std::array<ValType, N> m_values;
 };
 
-// key must be unique from the lower 32-bit only for 32-bit compatibility
 template<typename Output, typename Input>
-inline Output *encodePtr(const Input *in, const uint64_t key)
+inline Output *encodePtr(const Input *in, const uint32_t key)
 {
   uintptr_t out { reinterpret_cast<uintptr_t>(in) };
   out ^= static_cast<uintptr_t>(key);
+  assert("out of double range (EEL incompatible)" && out <= 1ull<<53);
   return reinterpret_cast<Output *>(out);
 }
 
