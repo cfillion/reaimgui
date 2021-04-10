@@ -283,11 +283,11 @@ function demo.ShowDemoWindow()
       rv,show_app.console =
         r.ImGui_MenuItem(ctx, 'Console', nil, show_app.console, false)
       rv,show_app.log =
-        r.ImGui_MenuItem(ctx, 'Log', nil, show_app.log, false)
+        r.ImGui_MenuItem(ctx, 'Log', nil, show_app.log)
       rv,show_app.layout =
-        r.ImGui_MenuItem(ctx, 'Simple layout',nil, show_app.layout, false)
+        r.ImGui_MenuItem(ctx, 'Simple layout', nil, show_app.layout)
       rv,show_app.property_editor =
-        r.ImGui_MenuItem(ctx, 'Property editor', nil, show_app.property_editor, false)
+        r.ImGui_MenuItem(ctx, 'Property editor', nil, show_app.property_editor)
       rv,show_app.long_text =
         r.ImGui_MenuItem(ctx, 'Long text display', nil, show_app.long_text)
       rv,show_app.auto_resize =
@@ -6262,311 +6262,304 @@ end
 --     static ExampleAppConsole console;
 --     console.Draw("Example: Console", p_open);
 -- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Debug Log / ShowExampleAppLog()
--- //-----------------------------------------------------------------------------
---
--- // Usage:
--- //  static ExampleAppLog my_log;
--- //  my_log.AddLog("Hello %d world\n", 123);
--- //  my_log.Draw("title");
--- struct ExampleAppLog
--- {
---     ImGuiTextBuffer     Buf;
---     ImGuiTextFilter     Filter;
---     ImVector<int>       LineOffsets; // Index to lines offset. We maintain this with AddLog() calls.
---     bool                AutoScroll;  // Keep scrolling if already at the bottom.
---
---     ExampleAppLog()
---     {
---         AutoScroll = true;
---         Clear();
---     }
---
---     void    Clear()
---     {
---         Buf.clear();
---         LineOffsets.clear();
---         LineOffsets.push_back(0);
---     }
---
---     void    AddLog(const char* fmt, ...) IM_FMTARGS(2)
---     {
---         int old_size = Buf.size();
---         va_list args;
---         va_start(args, fmt);
---         Buf.appendfv(fmt, args);
---         va_end(args);
---         for (int new_size = Buf.size(); old_size < new_size; old_size++)
---             if (Buf[old_size] == '\n')
---                 LineOffsets.push_back(old_size + 1);
---     }
---
---     void    Draw(const char* title, bool* p_open = NULL)
---     {
---         if (!r.ImGui_Begin(title, p_open))
---         {
---             r.ImGui_End();
---             return;
---         }
---
---         // Options menu
---         if (r.ImGui_BeginPopup("Options"))
---         {
---             r.ImGui_Checkbox("Auto-scroll", &AutoScroll);
---             r.ImGui_EndPopup();
---         }
---
---         // Main window
---         if (r.ImGui_Button("Options"))
---             r.ImGui_OpenPopup("Options");
---         r.ImGui_SameLine();
---         bool clear = r.ImGui_Button("Clear");
---         r.ImGui_SameLine();
---         bool copy = r.ImGui_Button("Copy");
---         r.ImGui_SameLine();
---         Filter.Draw("Filter", -100.0f);
---
---         r.ImGui_Separator();
---         r.ImGui_BeginChild("scrolling", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
---
---         if (clear)
---             Clear();
---         if (copy)
---             r.ImGui_LogToClipboard();
---
---         r.ImGui_PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
---         const char* buf = Buf.begin();
---         const char* buf_end = Buf.end();
---         if (Filter.IsActive())
---         {
---             // In this example we don't use the clipper when Filter is enabled.
---             // This is because we don't have a random access on the result on our filter.
---             // A real application processing logs with ten of thousands of entries may want to store the result of
---             // search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
---             for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
---             {
---                 const char* line_start = buf + LineOffsets[line_no];
---                 const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
---                 if (Filter.PassFilter(line_start, line_end))
---                     r.ImGui_TextUnformatted(line_start, line_end);
---             }
---         }
---         else
---         {
---             // The simplest and easy way to display the entire buffer:
---             //   r.ImGui_TextUnformatted(buf_begin, buf_end);
---             // And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward
---             // to skip non-visible lines. Here we instead demonstrate using the clipper to only process lines that are
---             // within the visible area.
---             // If you have tens of thousands of items and their processing cost is non-negligible, coarse clipping them
---             // on your side is recommended. Using ImGuiListClipper requires
---             // - A) random access into your data
---             // - B) items all being the  same height,
---             // both of which we can handle since we an array pointing to the beginning of each line of text.
---             // When using the filter (in the block of code above) we don't have random access into the data to display
---             // anymore, which is why we don't use the clipper. Storing or skimming through the search result would make
---             // it possible (and would be recommended if you want to search through tens of thousands of entries).
---             ImGuiListClipper clipper;
---             clipper.Begin(LineOffsets.Size);
---             while (clipper.Step())
---             {
---                 for (int line_no = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++)
---                 {
---                     const char* line_start = buf + LineOffsets[line_no];
---                     const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
---                     r.ImGui_TextUnformatted(line_start, line_end);
---                 }
---             }
---             clipper.End();
---         }
---         r.ImGui_PopStyleVar();
---
---         if (AutoScroll && r.ImGui_GetScrollY() >= r.ImGui_GetScrollMaxY())
---             r.ImGui_SetScrollHereY(1.0f);
---
---         r.ImGui_EndChild();
---         r.ImGui_End();
---     }
--- };
---
--- // Demonstrate creating a simple log window with basic filtering.
--- static void ShowExampleAppLog(bool* p_open)
--- {
---     static ExampleAppLog log;
---
---     // For the demo: add a debug button _BEFORE_ the normal log window contents
---     // We take advantage of a rarely used feature: multiple calls to Begin()/End() are appending to the _same_ window.
---     // Most of the contents of the window will be added by the log.Draw() call.
---     r.ImGui_SetNextWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
---     r.ImGui_Begin("Example: Log", p_open);
---     if (r.ImGui_SmallButton("[Debug] Add 5 entries"))
---     {
---         static int counter = 0;
---         const char* categories[3] = { "info", "warn", "error" };
---         const char* words[] = { "Bumfuzzled", "Cattywampus", "Snickersnee", "Abibliophobia", "Absquatulate", "Nincompoop", "Pauciloquent" };
---         for (int n = 0; n < 5; n++)
---         {
---             const char* category = categories[counter % IM_ARRAYSIZE(categories)];
---             const char* word = words[counter % IM_ARRAYSIZE(words)];
---             log.AddLog("[%05d] [%s] Hello, current time is %.1f, here's a word: '%s'\n",
---                 r.ImGui_GetFrameCount(), category, r.ImGui_GetTime(), word);
---             counter++;
---         }
---     }
---     r.ImGui_End();
---
---     // Actually call in the regular Log helper (which will Begin() into the same window as we just did)
---     log.Draw("Example: Log", p_open);
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Simple Layout / ShowExampleAppLayout()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate create a window with multiple child windows.
--- static void ShowExampleAppLayout(bool* p_open)
--- {
---     r.ImGui_SetNextWindowSize(ImVec2(500, 440), ImGuiCond_FirstUseEver);
---     if (r.ImGui_Begin("Example: Simple layout", p_open, ImGuiWindowFlags_MenuBar))
---     {
---         if (r.ImGui_BeginMenuBar())
---         {
---             if (r.ImGui_BeginMenu("File"))
---             {
---                 if (r.ImGui_MenuItem("Close")) *p_open = false;
---                 r.ImGui_EndMenu();
---             }
---             r.ImGui_EndMenuBar();
---         }
---
---         // Left
---         static int selected = 0;
---         {
---             r.ImGui_BeginChild("left pane", ImVec2(150, 0), true);
---             for (int i = 0; i < 100; i++)
---             {
---                 char label[128];
---                 sprintf(label, "MyObject %d", i);
---                 if (r.ImGui_Selectable(label, selected == i))
---                     selected = i;
---             }
---             r.ImGui_EndChild();
---         }
---         r.ImGui_SameLine();
---
---         // Right
---         {
---             r.ImGui_BeginGroup();
---             r.ImGui_BeginChild("item view", ImVec2(0, -r.ImGui_GetFrameHeightWithSpacing())); // Leave room for 1 line below us
---             r.ImGui_Text("MyObject: %d", selected);
---             r.ImGui_Separator();
---             if (r.ImGui_BeginTabBar("##Tabs", ImGuiTabBarFlags_None))
---             {
---                 if (r.ImGui_BeginTabItem("Description"))
---                 {
---                     r.ImGui_TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ");
---                     r.ImGui_EndTabItem();
---                 }
---                 if (r.ImGui_BeginTabItem("Details"))
---                 {
---                     r.ImGui_Text("ID: 0123456789");
---                     r.ImGui_EndTabItem();
---                 }
---                 r.ImGui_EndTabBar();
---             }
---             r.ImGui_EndChild();
---             if (r.ImGui_Button("Revert")) {}
---             r.ImGui_SameLine();
---             if (r.ImGui_Button("Save")) {}
---             r.ImGui_EndGroup();
---         }
---     }
---     r.ImGui_End();
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Property Editor / ShowExampleAppPropertyEditor()
--- //-----------------------------------------------------------------------------
---
--- static void ShowPlaceholderObject(const char* prefix, int uid)
--- {
---     // Use object uid as identifier. Most commonly you could also use the object pointer as a base ID.
---     r.ImGui_PushID(uid);
---
---     // Text and Tree nodes are less high than framed widgets, using AlignTextToFramePadding() we add vertical spacing to make the tree lines equal high.
---     r.ImGui_TableNextRow();
---     r.ImGui_TableSetColumnIndex(0);
---     r.ImGui_AlignTextToFramePadding();
---     bool node_open = r.ImGui_TreeNode("Object", "%s_%u", prefix, uid);
---     r.ImGui_TableSetColumnIndex(1);
---     r.ImGui_Text("my sailor is rich");
---
---     if (node_open)
---     {
---         static float placeholder_members[8] = { 0.0f, 0.0f, 1.0f, 3.1416f, 100.0f, 999.0f };
---         for (int i = 0; i < 8; i++)
---         {
---             r.ImGui_PushID(i); // Use field index as identifier.
---             if (i < 2)
---             {
---                 ShowPlaceholderObject("Child", 424242);
---             }
---             else
---             {
---                 // Here we use a TreeNode to highlight on hover (we could use e.g. Selectable as well)
---                 r.ImGui_TableNextRow();
---                 r.ImGui_TableSetColumnIndex(0);
---                 r.ImGui_AlignTextToFramePadding();
---                 ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
---                 r.ImGui_TreeNodeEx("Field", flags, "Field_%d", i);
---
---                 r.ImGui_TableSetColumnIndex(1);
---                 r.ImGui_SetNextItemWidth(-FLT_MIN);
---                 if (i >= 5)
---                     r.ImGui_InputFloat("##value", &placeholder_members[i], 1.0f);
---                 else
---                     r.ImGui_DragFloat("##value", &placeholder_members[i], 0.01f);
---                 r.ImGui_NextColumn();
---             }
---             r.ImGui_PopID();
---         }
---         r.ImGui_TreePop();
---     }
---     r.ImGui_PopID();
--- }
---
--- // Demonstrate create a simple property editor.
--- static void ShowExampleAppPropertyEditor(bool* p_open)
--- {
---     r.ImGui_SetNextWindowSize(ImVec2(430, 450), ImGuiCond_FirstUseEver);
---     if (!r.ImGui_Begin("Example: Property editor", p_open))
---     {
---         r.ImGui_End();
---         return;
---     }
---
---     HelpMarker(
---         "This example shows how you may implement a property editor using two columns.\n"
---         "All objects/fields data are dummies here.\n"
---         "Remember that in many simple cases, you can use r.ImGui_SameLine(xxx) to position\n"
---         "your cursor horizontally instead of using the Columns() API.");
---
---     r.ImGui_PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(2, 2));
---     if (r.ImGui_BeginTable("split", 2, ImGuiTableFlags_BordersOuter | ImGuiTableFlags_Resizable))
---     {
---         // Iterate placeholder objects (all the same data)
---         for (int obj_i = 0; obj_i < 4; obj_i++)
---         {
---             ShowPlaceholderObject("Object", obj_i);
---             //r.ImGui_Separator();
---         }
---         r.ImGui_EndTable();
---     }
---     r.ImGui_PopStyleVar();
---     r.ImGui_End();
--- }
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Debug Log / ShowExampleAppLog()
+-------------------------------------------------------------------------------
+
+-- Usage:
+--   local my_log = ExampleAppLog:new(ctx)
+--   my_log:add_log('Hello %d world\n', 123)
+--   my_log:draw('title')
+
+local ExampleAppLog = {}
+function ExampleAppLog:new(ctx)
+  obj = {
+    ctx          = ctx,
+    lines        = {},
+    -- filter       = ImGuiTextFilter,
+    auto_scroll  = true, -- Keep scrolling if already at the bottom.
+  }
+  setmetatable(obj, self)
+  self.__index = self
+  return obj
+end
+
+function ExampleAppLog.clear(self)
+  self.lines = {}
+end
+
+function ExampleAppLog.add_log(self, fmt, ...)
+  local text = fmt:format(...)
+  for line in text:gmatch("[^\r\n]+") do
+    table.insert(self.lines, line)
+  end
+end
+
+function ExampleAppLog.draw(self, title, p_open)
+  local rv,p_open = r.ImGui_Begin(self.ctx, title, p_open)
+  if not rv then
+    r.ImGui_End(self.ctx)
+    return p_open
+  end
+
+  -- Options menu
+  if r.ImGui_BeginPopup(self.ctx, 'Options') then
+    rv,self.auto_scroll = r.ImGui_Checkbox(self.ctx, 'Auto-scroll', self.auto_scroll)
+    r.ImGui_EndPopup(self.ctx)
+  end
+
+  -- Main window
+  if r.ImGui_Button(self.ctx, 'Options') then
+    r.ImGui_OpenPopup(self.ctx, 'Options')
+  end
+  r.ImGui_SameLine(self.ctx)
+  local clear = r.ImGui_Button(self.ctx, 'Clear')
+  r.ImGui_SameLine(self.ctx)
+  local copy = r.ImGui_Button(self.ctx, 'Copy')
+  -- r.ImGui_SameLine(self.ctx)
+  -- Filter.Draw(ctx, 'Filter', -100.0)
+
+  r.ImGui_Separator(self.ctx)
+  r.ImGui_BeginChild(self.ctx, 'scrolling', 0, 0, false, r.ImGui_WindowFlags_HorizontalScrollbar())
+
+  if clear then
+    self:clear()
+  end
+  if copy then
+    r.ImGui_LogToClipboard(self.ctx)
+  end
+
+  r.ImGui_PushStyleVar(self.ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0)
+  -- const char* buf = Buf.begin();
+  -- const char* buf_end = Buf.end();
+  -- if (Filter.IsActive())
+  -- {
+  --     // In this example we don't use the clipper when Filter is enabled.
+  --     // This is because we don't have a random access on the result on our filter.
+  --     // A real application processing logs with ten of thousands of entries may want to store the result of
+  --     // search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
+  --     for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
+  --     {
+  --         const char* line_start = buf + LineOffsets[line_no];
+  --         const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
+  --         if (Filter.PassFilter(line_start, line_end))
+  --             r.ImGui_TextUnformatted(line_start, line_end);
+  --     }
+  -- }
+  -- else
+  -- {
+    -- The simplest and easy way to display the entire buffer:
+    --   r.ImGui_TextUnformatted(buf_begin, buf_end);
+    -- And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward
+    -- to skip non-visible lines. Here we instead demonstrate using the clipper to only process lines that are
+    -- within the visible area.
+    -- If you have tens of thousands of items and their processing cost is non-negligible, coarse clipping them
+    -- on your side is recommended. Using ImGuiListClipper requires
+    -- - A) random access into your data
+    -- - B) items all being the  same height,
+    -- both of which we can handle since we an array pointing to the beginning of each line of text.
+    -- When using the filter (in the block of code above) we don't have random access into the data to display
+    -- anymore, which is why we don't use the clipper. Storing or skimming through the search result would make
+    -- it possible (and would be recommended if you want to search through tens of thousands of entries).
+    local clipper = r.ImGui_CreateListClipper(self.ctx)
+    r.ImGui_ListClipper_Begin(clipper, #self.lines)
+    while r.ImGui_ListClipper_Step(clipper) do
+      local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
+      for line_no = display_start, display_end - 1 do
+        r.ImGui_Text(self.ctx, self.lines[line_no + 1])
+      end
+    end
+    r.ImGui_ListClipper_End(clipper)
+  -- }
+  r.ImGui_PopStyleVar(self.ctx)
+
+  if self.auto_scroll and r.ImGui_GetScrollY(self.ctx) >= r.ImGui_GetScrollMaxY(self.ctx) then
+    r.ImGui_SetScrollHereY(self.ctx, 1.0)
+  end
+
+  r.ImGui_EndChild(self.ctx)
+  r.ImGui_End(self.ctx)
+  return p_open
+end
+
+-- Demonstrate creating a simple log window with basic filtering.
+function demo.ShowExampleAppLog()
+  if not app.log then
+    app.log = ExampleAppLog:new(ctx)
+    app.log.counter = 0
+  end
+
+  -- For the demo: add a debug button _BEFORE_ the normal log window contents
+  -- We take advantage of a rarely used feature: multiple calls to Begin()/End() are appending to the _same_ window.
+  -- Most of the contents of the window will be added by the log.Draw() call.
+  r.ImGui_SetNextWindowSize(ctx, 500, 400, r.ImGui_Cond_FirstUseEver())
+  local rv,open = r.ImGui_Begin(ctx, 'Example: Log', true)
+  if r.ImGui_SmallButton(ctx, '[Debug] Add 5 entries') then
+    local categories = { "info", "warn", "error" }
+    local words = { "Bumfuzzled", "Cattywampus", "Snickersnee",
+                    "Abibliophobia", "Absquatulate", "Nincompoop",
+                    "Pauciloquent" }
+    for n = 0, 5 - 1 do
+      local category = categories[(app.log.counter % #categories) + 1]
+      local word = words[(app.log.counter % #words) + 1]
+      app.log:add_log("[%05d] [%s] Hello, current time is %.1f, here's a word: '%s'\n",
+          r.ImGui_GetFrameCount(ctx), category, r.ImGui_GetTime(ctx), word)
+      app.log.counter = app.log.counter + 1
+    end
+  end
+  r.ImGui_End(ctx)
+
+  -- Actually call in the regular Log helper (which will Begin() into the same window as we just did)
+  return app.log:draw("Example: Log", open)
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Simple Layout / ShowExampleAppLayout()
+-------------------------------------------------------------------------------
+
+-- Demonstrate create a window with multiple child windows.
+function demo.ShowExampleAppLayout()
+  if not app.layout then
+    app.layout = {
+      selected = 0,
+    }
+  end
+
+  r.ImGui_SetNextWindowSize(ctx, 500, 440, r.ImGui_Cond_FirstUseEver())
+  local rv,open = r.ImGui_Begin(ctx, 'Example: Simple layout', true, r.ImGui_WindowFlags_MenuBar())
+  if not rv then
+    r.ImGui_End(ctx)
+    return open
+  end
+
+  if r.ImGui_BeginMenuBar(ctx) then
+    if r.ImGui_BeginMenu(ctx, 'File') then
+      if r.ImGui_MenuItem(ctx, 'Close') then open = false end
+      r.ImGui_EndMenu(ctx)
+    end
+    r.ImGui_EndMenuBar(ctx)
+  end
+
+  -- Left
+  r.ImGui_BeginChild(ctx, 'left pane', 150, 0, true)
+  for i = 0, 100 - 1 do
+    if r.ImGui_Selectable(ctx, ('MyObject %d'):format(i), app.layout.selected == i) then
+      app.layout.selected = i
+    end
+  end
+  r.ImGui_EndChild(ctx)
+  r.ImGui_SameLine(ctx)
+
+  -- Right
+  r.ImGui_BeginGroup(ctx)
+  r.ImGui_BeginChild(ctx, 'item view', 0, -r.ImGui_GetFrameHeightWithSpacing(ctx)) -- Leave room for 1 line below us
+  r.ImGui_Text(ctx, ("MyObject: %d"):format(app.layout.selected))
+  r.ImGui_Separator(ctx)
+  if r.ImGui_BeginTabBar(ctx, '##Tabs', r.ImGui_TabBarFlags_None()) then
+    if r.ImGui_BeginTabItem(ctx, 'Description') then
+      r.ImGui_TextWrapped(ctx, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ')
+      r.ImGui_EndTabItem(ctx)
+    end
+    if r.ImGui_BeginTabItem(ctx, 'Details') then
+      r.ImGui_Text(ctx, 'ID: 0123456789')
+      r.ImGui_EndTabItem(ctx)
+    end
+    r.ImGui_EndTabBar(ctx)
+  end
+  r.ImGui_EndChild(ctx)
+  if r.ImGui_Button(ctx, 'Revert') then end
+  r.ImGui_SameLine(ctx)
+  if r.ImGui_Button(ctx, 'Save') then end
+  r.ImGui_EndGroup(ctx)
+  r.ImGui_End(ctx)
+  return open
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Property Editor / ShowExampleAppPropertyEditor()
+-------------------------------------------------------------------------------
+
+function demo.ShowPlaceholderObject(prefix, uid)
+  local rv
+
+  -- Use object uid as identifier. Most commonly you could also use the object pointer as a base ID.
+  r.ImGui_PushID(ctx, uid)
+
+  -- Text and Tree nodes are less high than framed widgets, using AlignTextToFramePadding() we add vertical spacing to make the tree lines equal high.
+  r.ImGui_TableNextRow(ctx)
+  r.ImGui_TableSetColumnIndex(ctx, 0)
+  r.ImGui_AlignTextToFramePadding(ctx)
+  local node_open = r.ImGui_TreeNodeEx(ctx, 'Object', ('%s_%u'):format(prefix, uid))
+  r.ImGui_TableSetColumnIndex(ctx, 1)
+  r.ImGui_Text(ctx, 'my sailor is rich')
+
+  if node_open then
+    for i = 0, #app.property_editor.placeholder_members - 1 do
+      r.ImGui_PushID(ctx, i) -- Use field index as identifier.
+      if i < 2 then
+        demo.ShowPlaceholderObject('Child', 424242)
+      else
+        -- Here we use a TreeNode to highlight on hover (we could use e.g. Selectable as well)
+        r.ImGui_TableNextRow(ctx)
+        r.ImGui_TableSetColumnIndex(ctx, 0)
+        r.ImGui_AlignTextToFramePadding(ctx)
+        local flags = r.ImGui_TreeNodeFlags_Leaf()             |
+                      r.ImGui_TreeNodeFlags_NoTreePushOnOpen() |
+                      r.ImGui_TreeNodeFlags_Bullet()
+        r.ImGui_TreeNodeEx(ctx, 'Field', ('Field_%d'):format(i), flags)
+
+        r.ImGui_TableSetColumnIndex(ctx, 1)
+        r.ImGui_SetNextItemWidth(ctx, -FLT_MIN)
+        if i >= 5 then
+          rv,app.property_editor.placeholder_members[i] =
+            r.ImGui_InputDouble(ctx, '##value', app.property_editor.placeholder_members[i], 1.0)
+        else
+          rv,app.property_editor.placeholder_members[i] =
+            r.ImGui_DragDouble(ctx, '##value', app.property_editor.placeholder_members[i], 0.01)
+        end
+      end
+      r.ImGui_PopID(ctx)
+    end
+    r.ImGui_TreePop(ctx)
+  end
+  r.ImGui_PopID(ctx)
+end
+
+-- Demonstrate create a simple property editor.
+function demo.ShowExampleAppPropertyEditor()
+  if not app.property_editor then
+    app.property_editor = {
+      placeholder_members = { 0.0, 0.0, 1.0, 3.1416, 100.0, 999.0, 0.0, 0.0 },
+    }
+  end
+
+  r.ImGui_SetNextWindowSize(ctx, 430, 450, r.ImGui_Cond_FirstUseEver())
+  local rv,open = r.ImGui_Begin(ctx, 'Example: Property editor', true)
+  if not rv then
+    r.ImGui_End(ctx)
+    return open
+  end
+
+  demo.HelpMarker(
+    'This example shows how you may implement a property editor using two columns.\n\z
+     All objects/fields data are dummies here.\n\z
+     Remember that in many simple cases, you can use r.ImGui_SameLine(xxx) to position\n\z
+     your cursor horizontally instead of using the Columns() API.')
+
+  r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), 2, 2)
+  if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_BordersOuter() | r.ImGui_TableFlags_Resizable()) then
+    -- Iterate placeholder objects (all the same data)
+    for obj_i = 0, 4 - 1 do
+      demo.ShowPlaceholderObject('Object', obj_i)
+      -- r.ImGui_Separator(ctx)
+    end
+    r.ImGui_EndTable(ctx)
+  end
+  r.ImGui_PopStyleVar(ctx)
+  r.ImGui_End(ctx)
+  return open
+end
 
 -------------------------------------------------------------------------------
 -- [SECTION] Example App: Long Text / ShowExampleAppLongText()
