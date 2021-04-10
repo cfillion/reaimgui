@@ -45,7 +45,7 @@ struct ReaScriptAPI<R(*)(Args...) noexcept>
     }
     else {
       // cast numbers to have the same size as a pointer to avoid warnings
-      using IntPtrR = std::conditional_t<std::is_pointer_v<R>, R, intptr_t>;
+      using IntPtrR = std::conditional_t<std::is_pointer_v<R>, R, uintptr_t>;
       const auto value { static_cast<IntPtrR>(std::apply(fn, args)) };
       return reinterpret_cast<const void *>(value);
     }
@@ -62,7 +62,7 @@ private:
     return std::make_tuple(
       std::is_floating_point_v<NthType<I>> ?
         *reinterpret_cast<NthType<I>*>(argv[I]) :
-        (NthType<I>)reinterpret_cast<intptr_t>(argv[I])
+        (NthType<I>)reinterpret_cast<uintptr_t>(argv[I])
       ...
     );
   }
