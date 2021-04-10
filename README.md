@@ -2,9 +2,11 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/9umkecgrs4sa8odf/branch/master?svg=true)](https://ci.appveyor.com/project/cfillion/reaimgui/branch/master)
 
-This REAPER extension is distributed through [ReaPack](https://reapack.com)
+This REAPER extension is distributed via [ReaPack](https://reapack.com)
 through the default [ReaTeam Extensions](https://github.com/ReaTeam/Extensions)
 repository.
+
+https://forum.cockos.com/showthread.php?t=250419
 
 ## Build from source
 
