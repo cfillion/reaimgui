@@ -61,6 +61,7 @@ layout  = {}
 popups  = {}
 tables  = {}
 misc    = {}
+app     = {}
 
 -- Hajime!
 
@@ -77,7 +78,7 @@ function demo.loop()
   end
 
   if demo.open then
-    demo.open = demo.ShowDemoWindow(demo.open)
+    demo.open = demo.ShowDemoWindow()
   else
     r.ImGui_Text(ctx, 'Bye!')
   end
@@ -187,8 +188,8 @@ show_app = {
 -- Demonstrate most Dear ImGui features (this is big function!)
 -- You may execute this function to experiment with the UI and understand what it does.
 -- You may then search for keywords in the code when you are interested by a specific feature.
-function demo.ShowDemoWindow(p_open)
-  local rv
+function demo.ShowDemoWindow()
+  local rv, open = nil, true
 
   if show_app.main_menu_bar      then                               demo.ShowExampleAppMainMenuBar()       end
   if show_app.documents          then show_app.documents          = demo.ShowExampleAppDocuments()         end
@@ -201,7 +202,7 @@ function demo.ShowDemoWindow(p_open)
   if show_app.constrained_resize then show_app.constrained_resize = demo.ShowExampleAppConstrainedResize() end
   if show_app.simple_overlay     then show_app.simple_overlay     = demo.ShowExampleAppSimpleOverlay()     end
   if show_app.fullscreen         then show_app.fullscreen         = demo.ShowExampleAppFullscreen()        end
-  if show_app.window_titles      then show_app.window_titles      = demo.ShowExampleAppWindowTitles()      end
+  if show_app.window_titles      then demo.ShowExampleAppWindowTitles()                                    end
   if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
 
   if show_app.metrics then show_app.metrics = r.ImGui_ShowMetricsWindow(ctx, show_app.metrics) end
@@ -224,7 +225,7 @@ function demo.ShowDemoWindow(p_open)
   if demo.no_nav            then window_flags = window_flags | r.ImGui_WindowFlags_NoNav()                 end
   if demo.no_background     then window_flags = window_flags | r.ImGui_WindowFlags_NoBackground()          end
   if demo.no_bring_to_front then window_flags = window_flags | r.ImGui_WindowFlags_NoBringToFrontOnFocus() end
-  if demo.no_close          then p_open = nil end -- Don't pass our bool* to Begin
+  if demo.no_close          then open = nil end -- Don't pass our bool* to Begin
 
   local reset_ctx = false
   if r.ImGui_BeginPopupContextVoid(ctx, "dock") then
@@ -254,12 +255,12 @@ function demo.ShowDemoWindow(p_open)
   r.ImGui_SetNextWindowSize(ctx, 550, 680, r.ImGui_Cond_FirstUseEver())
 
   -- Main body of the Demo window starts here.
-  rv,p_open = r.ImGui_Begin(ctx, 'Dear ImGui Demo', p_open, window_flags)
-  if demo.no_close then p_open = true end
+  rv,open = r.ImGui_Begin(ctx, 'Dear ImGui Demo', open, window_flags)
+  if demo.no_close then open = true end
   if not rv then
     -- Early out if the window is collapsed, as an optimization.
     r.ImGui_End(ctx)
-    return p_open
+    return open
   end
 
   -- Most "big" widgets share a common width settings by default. See 'Demo->Layout->Widgets Width' for details.
@@ -288,17 +289,17 @@ function demo.ShowDemoWindow(p_open)
       rv,show_app.property_editor =
         r.ImGui_MenuItem(ctx, 'Property editor', nil, show_app.property_editor, false)
       rv,show_app.long_text =
-        r.ImGui_MenuItem(ctx, 'Long text display', nil, show_app.long_text, false)
+        r.ImGui_MenuItem(ctx, 'Long text display', nil, show_app.long_text)
       rv,show_app.auto_resize =
-        r.ImGui_MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize, false)
+        r.ImGui_MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize)
       rv,show_app.constrained_resize =
-        r.ImGui_MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize, false)
+        r.ImGui_MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize)
       rv,show_app.simple_overlay =
-        r.ImGui_MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay, false)
+        r.ImGui_MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay)
       rv,show_app.fullscreen =
-        r.ImGui_MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen, false)
+        r.ImGui_MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen)
       rv,show_app.window_titles =
-        r.ImGui_MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles, false)
+        r.ImGui_MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
       rv,show_app.custom_rendering =
         r.ImGui_MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering, false)
       rv,show_app.documents =
@@ -448,7 +449,8 @@ function demo.ShowDemoWindow(p_open)
   -- End of ShowDemoWindow()
   r.ImGui_PopItemWidth(ctx)
   r.ImGui_End(ctx)
-  return p_open
+
+  return open
 end
 
 function demo.ShowDemoWindowWidgets()
@@ -5788,13 +5790,11 @@ end
 -- Access from Dear ImGui Demo -> Tools -> About
 -------------------------------------------------------------------------------
 
-function demo.ShowAboutWindow(p_open)
-  local rv
-
-  rv,p_open = r.ImGui_Begin(ctx, 'About Dear ImGui', p_open, r.ImGui_WindowFlags_AlwaysAutoResize())
+function demo.ShowAboutWindow()
+  local rv,open = r.ImGui_Begin(ctx, 'About Dear ImGui', true, r.ImGui_WindowFlags_AlwaysAutoResize())
   if not rv then
     r.ImGui_End(ctx)
-    return p_open
+    return open
   end
   r.ImGui_Text(ctx, ('Dear ImGui %s'):format(IMGUI_VERSION))
   r.ImGui_Text(ctx, ('reaper_imgui %s'):format(REAIMGUI_VERSION))
@@ -5803,7 +5803,7 @@ function demo.ShowAboutWindow(p_open)
   r.ImGui_Text(ctx, 'Dear ImGui is licensed under the MIT License, see LICENSE for more information.')
   r.ImGui_End(ctx)
 
-  return p_open
+  return open
 end
 
 -------------------------------------------------------------------------------
@@ -6567,270 +6567,294 @@ end
 --     r.ImGui_PopStyleVar();
 --     r.ImGui_End();
 -- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Long Text / ShowExampleAppLongText()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate/test rendering huge amount of text, and the incidence of clipping.
--- static void ShowExampleAppLongText(bool* p_open)
--- {
---     r.ImGui_SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
---     if (!r.ImGui_Begin("Example: Long text display", p_open))
---     {
---         r.ImGui_End();
---         return;
---     }
---
---     static int test_type = 0;
---     static ImGuiTextBuffer log;
---     static int lines = 0;
---     r.ImGui_Text("Printing unusually long amount of text.");
---     r.ImGui_Combo("Test type", &test_type,
---         "Single call to TextUnformatted()\0"
---         "Multiple calls to Text(), clipped\0"
---         "Multiple calls to Text(), not clipped (slow)\0");
---     r.ImGui_Text("Buffer contents: %d lines, %d bytes", lines, log.size());
---     if (r.ImGui_Button("Clear")) { log.clear(); lines = 0; }
---     r.ImGui_SameLine();
---     if (r.ImGui_Button("Add 1000 lines"))
---     {
---         for (int i = 0; i < 1000; i++)
---             log.appendf("%i The quick brown fox jumps over the lazy dog\n", lines + i);
---         lines += 1000;
---     }
---     r.ImGui_BeginChild("Log");
---     switch (test_type)
---     {
---     case 0:
---         // Single call to TextUnformatted() with a big buffer
---         r.ImGui_TextUnformatted(log.begin(), log.end());
---         break;
---     case 1:
---         {
---             // Multiple calls to Text(), manually coarsely clipped - demonstrate how to use the ImGuiListClipper helper.
---             r.ImGui_PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
---             ImGuiListClipper clipper;
---             clipper.Begin(lines);
---             while (clipper.Step())
---                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
---                     r.ImGui_Text("%i The quick brown fox jumps over the lazy dog", i);
---             r.ImGui_PopStyleVar();
---             break;
---         }
---     case 2:
---         // Multiple calls to Text(), not clipped (slow)
---         r.ImGui_PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
---         for (int i = 0; i < lines; i++)
---             r.ImGui_Text("%i The quick brown fox jumps over the lazy dog", i);
---         r.ImGui_PopStyleVar();
---         break;
---     }
---     r.ImGui_EndChild();
---     r.ImGui_End();
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Auto Resize / ShowExampleAppAutoResize()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate creating a window which gets auto-resized according to its content.
--- static void ShowExampleAppAutoResize(bool* p_open)
--- {
---     if (!r.ImGui_Begin("Example: Auto-resizing window", p_open, ImGuiWindowFlags_AlwaysAutoResize))
---     {
---         r.ImGui_End();
---         return;
---     }
---
---     static int lines = 10;
---     r.ImGui_TextUnformatted(
---         "Window will resize every-frame to the size of its content.\n"
---         "Note that you probably don't want to query the window size to\n"
---         "output your content because that would create a feedback loop.");
---     r.ImGui_SliderInt("Number of lines", &lines, 1, 20);
---     for (int i = 0; i < lines; i++)
---         r.ImGui_Text("%*sThis is line %d", i * 4, "", i); // Pad with space to extend size horizontally
---     r.ImGui_End();
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Constrained Resize / ShowExampleAppConstrainedResize()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate creating a window with custom resize constraints.
--- static void ShowExampleAppConstrainedResize(bool* p_open)
--- {
---     struct CustomConstraints
---     {
---         // Helper functions to demonstrate programmatic constraints
---         static void Square(ImGuiSizeCallbackData* data) { data->DesiredSize.x = data->DesiredSize.y = IM_MAX(data->DesiredSize.x, data->DesiredSize.y); }
---         static void Step(ImGuiSizeCallbackData* data)   { float step = (float)(int)(intptr_t)data->UserData; data->DesiredSize = ImVec2((int)(data->DesiredSize.x / step + 0.5f) * step, (int)(data->DesiredSize.y / step + 0.5f) * step); }
---     };
---
---     const char* test_desc[] =
---     {
---         "Resize vertical only",
---         "Resize horizontal only",
---         "Width > 100, Height > 100",
---         "Width 400-500",
---         "Height 400-500",
---         "Custom: Always Square",
---         "Custom: Fixed Steps (100)",
---     };
---
---     static bool auto_resize = false;
---     static int type = 0;
---     static int display_lines = 10;
---     if (type == 0) r.ImGui_SetNextWindowSizeConstraints(ImVec2(-1, 0),    ImVec2(-1, FLT_MAX));      // Vertical only
---     if (type == 1) r.ImGui_SetNextWindowSizeConstraints(ImVec2(0, -1),    ImVec2(FLT_MAX, -1));      // Horizontal only
---     if (type == 2) r.ImGui_SetNextWindowSizeConstraints(ImVec2(100, 100), ImVec2(FLT_MAX, FLT_MAX)); // Width > 100, Height > 100
---     if (type == 3) r.ImGui_SetNextWindowSizeConstraints(ImVec2(400, -1),  ImVec2(500, -1));          // Width 400-500
---     if (type == 4) r.ImGui_SetNextWindowSizeConstraints(ImVec2(-1, 400),  ImVec2(-1, 500));          // Height 400-500
---     if (type == 5) r.ImGui_SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::Square);                     // Always Square
---     if (type == 6) r.ImGui_SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::Step, (void*)(intptr_t)100); // Fixed Step
---
---     ImGuiWindowFlags flags = auto_resize ? ImGuiWindowFlags_AlwaysAutoResize : 0;
---     if (r.ImGui_Begin("Example: Constrained Resize", p_open, flags))
---     {
---         if (r.ImGui_Button("200x200")) { r.ImGui_SetWindowSize(ImVec2(200, 200)); } r.ImGui_SameLine();
---         if (r.ImGui_Button("500x500")) { r.ImGui_SetWindowSize(ImVec2(500, 500)); } r.ImGui_SameLine();
---         if (r.ImGui_Button("800x200")) { r.ImGui_SetWindowSize(ImVec2(800, 200)); }
---         r.ImGui_SetNextItemWidth(200);
---         r.ImGui_Combo("Constraint", &type, test_desc, IM_ARRAYSIZE(test_desc));
---         r.ImGui_SetNextItemWidth(200);
---         r.ImGui_DragInt("Lines", &display_lines, 0.2f, 1, 100);
---         r.ImGui_Checkbox("Auto-resize", &auto_resize);
---         for (int i = 0; i < display_lines; i++)
---             r.ImGui_Text("%*sHello, sailor! Making this line long enough for the example.", i * 4, "");
---     }
---     r.ImGui_End();
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Simple overlay / ShowExampleAppSimpleOverlay()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate creating a simple static window with no decoration
--- // + a context-menu to choose which corner of the screen to use.
--- static void ShowExampleAppSimpleOverlay(bool* p_open)
--- {
---     const float PAD = 10.0f;
---     static int corner = 0;
---     ImGuiIO& io = r.ImGui_GetIO();
---     ImGuiWindowFlags window_flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
---     if (corner != -1)
---     {
---         // v1.80 window_flags |= ImGuiWindowFlags_NoMove;
---         // v1.80 ImVec2 window_pos = ImVec2((corner & 1) ? io.DisplaySize.x - DISTANCE : DISTANCE, (corner & 2) ? io.DisplaySize.y - DISTANCE : DISTANCE);
---         // v1.80 ImVec2 window_pos_pivot = ImVec2((corner & 1) ? 1.0f : 0.0f, (corner & 2) ? 1.0f : 0.0f);
---         // v1.80 r.ImGui_SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
---
-        -- const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        -- ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-        -- ImVec2 work_size = viewport->WorkSize;
-        -- ImVec2 window_pos, window_pos_pivot;
-        -- window_pos.x = (corner & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
-        -- window_pos.y = (corner & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
-        -- window_pos_pivot.x = (corner & 1) ? 1.0f : 0.0f;
-        -- window_pos_pivot.y = (corner & 2) ? 1.0f : 0.0f;
-        -- ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-        -- window_flags |= ImGuiWindowFlags_NoMove;
---     }
---     r.ImGui_SetNextWindowBgAlpha(0.35f); // Transparent background
---     if (r.ImGui_Begin("Example: Simple overlay", p_open, window_flags))
---     {
---         r.ImGui_Text("Simple overlay\n" "in the corner of the screen.\n" "(right-click to change position)");
---         r.ImGui_Separator();
---         if (r.ImGui_IsMousePosValid())
---             r.ImGui_Text("Mouse Position: (%.1f,%.1f)", io.MousePos.x, io.MousePos.y);
---         else
---             r.ImGui_Text("Mouse Position: <invalid>");
---         if (r.ImGui_BeginPopupContextWindow())
---         {
---             if (r.ImGui_MenuItem("Custom",       NULL, corner == -1)) corner = -1;
---             if (r.ImGui_MenuItem("Top-left",     NULL, corner == 0)) corner = 0;
---             if (r.ImGui_MenuItem("Top-right",    NULL, corner == 1)) corner = 1;
---             if (r.ImGui_MenuItem("Bottom-left",  NULL, corner == 2)) corner = 2;
---             if (r.ImGui_MenuItem("Bottom-right", NULL, corner == 3)) corner = 3;
---             if (p_open && r.ImGui_MenuItem("Close")) *p_open = false;
---             r.ImGui_EndPopup();
---         }
---     }
---     r.ImGui_End();
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Fullscreen window / ShowExampleAppFullscreen()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate creating a window covering the entire screen/viewport
--- static void ShowExampleAppFullscreen(bool* p_open)
--- {
---     static bool use_work_area = true;
---     static ImGuiWindowFlags flags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings;
---
---     // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
---     // Based on your use case you may want one of the other.
---     const ImGuiViewport* viewport = ImGui::GetMainViewport();
---     ImGui::SetNextWindowPos(use_work_area ? viewport->WorkPos : viewport->Pos);
---     ImGui::SetNextWindowSize(use_work_area ? viewport->WorkSize : viewport->Size);
---
---     if (ImGui::Begin("Example: Fullscreen window", p_open, flags))
---     {
---         ImGui::Checkbox("Use work area instead of main area", &use_work_area);
---         ImGui::SameLine();
---         HelpMarker("Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.");
---
---         ImGui::CheckboxFlags("ImGuiWindowFlags_NoBackground", &flags, ImGuiWindowFlags_NoBackground);
---         ImGui::CheckboxFlags("ImGuiWindowFlags_NoDecoration", &flags, ImGuiWindowFlags_NoDecoration);
---         ImGui::Indent();
---         ImGui::CheckboxFlags("ImGuiWindowFlags_NoTitleBar", &flags, ImGuiWindowFlags_NoTitleBar);
---         ImGui::CheckboxFlags("ImGuiWindowFlags_NoCollapse", &flags, ImGuiWindowFlags_NoCollapse);
---         ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
---         ImGui::Unindent();
---
---         if (p_open && ImGui::Button("Close this window"))
---             *p_open = false;
---     }
---     ImGui::End();
--- }
---
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Manipulating window titles / ShowExampleAppWindowTitles()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate using "##" and "###" in identifiers to manipulate ID generation.
--- // This apply to all regular items as well.
--- // Read FAQ section "How can I have multiple widgets with the same label?" for details.
--- static void ShowExampleAppWindowTitles(bool*)
--- {
---     const ImGuiViewport* viewport = ImGui::GetMainViewport();
---     const ImVec2 base_pos = viewport->Pos;
---
---     // By default, Windows are uniquely identified by their title.
---     // You can use the "##" and "###" markers to manipulate the display/ID.
---
---     // Using "##" to display same title but have unique identifier.
---      ImGui::SetNextWindowPos(ImVec2(base_pos.x + 100, base_pos.y + 100), ImGuiCond_FirstUseEver);
---     r.ImGui_Begin("Same title as another window##1");
---     r.ImGui_Text("This is window 1.\nMy title is the same as window 2, but my identifier is unique.");
---     r.ImGui_End();
---
---     ImGui::SetNextWindowPos(ImVec2(base_pos.x + 100, base_pos.y + 200), ImGuiCond_FirstUseEver);
---     r.ImGui_Begin("Same title as another window##2");
---     r.ImGui_Text("This is window 2.\nMy title is the same as window 1, but my identifier is unique.");
---     r.ImGui_End();
---
---     // Using "###" to display a changing title but keep a static identifier "AnimatedTitle"
---     char buf[128];
---     sprintf(buf, "Animated title %c %d###AnimatedTitle", "|/-\\"[(int)(r.ImGui_GetTime() / 0.25f) & 3], r.ImGui_GetFrameCount());
---     ImGui::SetNextWindowPos(ImVec2(base_pos.x + 100, base_pos.y + 300), ImGuiCond_FirstUseEver);
---     r.ImGui_Begin(buf);
---     r.ImGui_Text("This window has a changing title.");
---     r.ImGui_End();
--- }
---
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Long Text / ShowExampleAppLongText()
+-------------------------------------------------------------------------------
+
+-- Demonstrate/test rendering huge amount of text, and the incidence of clipping.
+function demo.ShowExampleAppLongText()
+  if not app.long_text then
+    app.long_text = {
+      test_type = 0,
+      log       = '',
+      lines     = 0,
+    }
+  end
+
+  r.ImGui_SetNextWindowSize(ctx, 520, 600, r.ImGui_Cond_FirstUseEver())
+  local rv, open = r.ImGui_Begin(ctx, 'Example: Long text display', true)
+  if not rv then
+    r.ImGui_End(ctx)
+    return open
+  end
+
+  r.ImGui_Text(ctx, 'Printing unusually long amount of text.')
+  rv,app.long_text.test_type = r.ImGui_Combo(ctx, 'Test type', app.long_text.test_type,
+    'Single call to Text()\31\z
+     Multiple calls to Text(), clipped\31\z
+     Multiple calls to Text(), not clipped (slow)\31')
+  r.ImGui_Text(ctx, ('Buffer contents: %d lines, %d bytes'):format(app.long_text.lines, app.long_text.log:len()))
+  if r.ImGui_Button(ctx, 'Clear') then app.long_text.log = ''; app.long_text.lines = 0 end
+  r.ImGui_SameLine(ctx)
+  if r.ImGui_Button(ctx, 'Add 1000 lines') then
+    local newLines = ''
+    for i = 0, 1000 - 1 do
+      newLines = newLines .. ("%i The quick brown fox jumps over the lazy dog\n"):format(app.long_text.lines + i)
+    end
+    app.long_text.log = app.long_text.log .. newLines
+    app.long_text.lines = app.long_text.lines + 1000
+  end
+  r.ImGui_BeginChild(ctx, 'Log')
+  if app.long_text.test_type == 0 then
+    -- Single call to TextUnformatted() with a big buffer
+    r.ImGui_Text(ctx, app.long_text.log)
+  elseif app.long_text.test_type == 1 then
+    -- Multiple calls to Text(), manually coarsely clipped - demonstrate how to use the ImGui_ListClipper helper.
+    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0);
+    local clipper = r.ImGui_CreateListClipper(ctx);
+    r.ImGui_ListClipper_Begin(clipper, app.long_text.lines)
+    while r.ImGui_ListClipper_Step(clipper) do
+      local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
+      for i = display_start, display_end - 1 do
+        r.ImGui_Text(ctx, ('%i The quick brown fox jumps over the lazy dog'):format(i))
+      end
+    end
+    r.ImGui_PopStyleVar(ctx)
+  elseif app.long_text.test_type == 2 then
+    -- Multiple calls to Text(), not clipped (slow)
+    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0);
+    for i = 0, app.long_text.lines do
+      r.ImGui_Text(ctx, ('%i The quick brown fox jumps over the lazy dog'):format(i))
+    end
+    r.ImGui_PopStyleVar(ctx)
+  end
+  r.ImGui_EndChild(ctx)
+  r.ImGui_End(ctx)
+  return open
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Auto Resize / ShowExampleAppAutoResize()
+-------------------------------------------------------------------------------
+
+-- Demonstrate creating a window which gets auto-resized according to its content.
+function demo.ShowExampleAppAutoResize()
+  if not app.auto_resize then
+    app.auto_resize = {
+      lines = 10,
+    }
+  end
+
+  local rv,open = r.ImGui_Begin(ctx, 'Example: Auto-resizing window', true, r.ImGui_WindowFlags_AlwaysAutoResize())
+  if not rv then
+    r.ImGui_End(ctx)
+    return open
+  end
+
+  r.ImGui_Text(ctx,
+    "Window will resize every-frame to the size of its content.\n\z
+     Note that you probably don't want to query the window size to\n\z
+     output your content because that would create a feedback loop.")
+  rv,app.auto_resize.lines = r.ImGui_SliderInt(ctx, 'Number of lines', app.auto_resize.lines, 1, 20)
+  for i = 1, app.auto_resize.lines do
+    r.ImGui_Text(ctx, ("%sThis is line %d"):format((' '):rep(i * 4), i)) -- Pad with space to extend size horizontally
+  end
+  r.ImGui_End(ctx)
+  return open
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Constrained Resize / ShowExampleAppConstrainedResize()
+-------------------------------------------------------------------------------
+
+-- Demonstrate creating a window with custom resize constraints.
+function demo.ShowExampleAppConstrainedResize()
+  -- struct CustomConstraints
+  -- {
+  --   // Helper functions to demonstrate programmatic constraints
+  --   static void Square(ImGuiSizeCallbackData* data) { data->DesiredSize.x = data->DesiredSize.y = IM_MAX(data->DesiredSize.x, data->DesiredSize.y); }
+  --   static void Step(ImGuiSizeCallbackData* data)   { float step = (float)(int)(intptr_t)data->UserData; data->DesiredSize = ImVec2((int)(data->DesiredSize.x / step + 0.5f) * step, (int)(data->DesiredSize.y / step + 0.5f) * step); }
+  -- };
+
+  if not app.constrained_resize then
+    app.constrained_resize = {
+      auto_resize   = false,
+      type          = 0,
+      display_lines = 10,
+    }
+  end
+
+  if app.constrained_resize.type == 0 then r.ImGui_SetNextWindowSizeConstraints(ctx, -1, 0, -1, FLT_MAX)         end -- Vertical only
+  if app.constrained_resize.type == 1 then r.ImGui_SetNextWindowSizeConstraints(ctx, 0, -1, FLT_MAX, -1)         end -- Horizontal only
+  if app.constrained_resize.type == 2 then r.ImGui_SetNextWindowSizeConstraints(ctx, 100, 100, FLT_MAX, FLT_MAX) end -- Width > 100, Height > 100
+  if app.constrained_resize.type == 3 then r.ImGui_SetNextWindowSizeConstraints(ctx, 400, -1, 500, -1)           end -- Width 400-500
+  if app.constrained_resize.type == 4 then r.ImGui_SetNextWindowSizeConstraints(ctx, -1, 400, -1, 500)           end -- Height 400-500
+  -- if (type == 5) r.ImGui_SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::Square);                     // Always Square
+  -- if (type == 6) r.ImGui_SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::Step, (void*)(intptr_t)100); // Fixed Step
+
+  local flags = app.constrained_resize.auto_resize and r.ImGui_WindowFlags_AlwaysAutoResize() or 0
+  local rv,open = r.ImGui_Begin(ctx, 'Example: Constrained Resize', true, flags)
+  if rv then
+    if r.ImGui_Button(ctx, '200x200') then r.ImGui_SetWindowSize(ctx, 200, 200) end r.ImGui_SameLine(ctx)
+    if r.ImGui_Button(ctx, '500x500') then r.ImGui_SetWindowSize(ctx, 500, 500) end r.ImGui_SameLine(ctx)
+    if r.ImGui_Button(ctx, '800x200') then r.ImGui_SetWindowSize(ctx, 800, 200) end
+    r.ImGui_SetNextItemWidth(ctx, 200)
+    rv,app.constrained_resize.type = r.ImGui_Combo(ctx, 'Constraint', app.constrained_resize.type,
+      "Resize vertical only\31\z
+       Resize horizontal only\31\z
+       Width > 100, Height > 100\31\z
+       Width 400-500\31\z
+       Height 400-500\31")
+       --Custom: Always Square\31\z
+       --Custom: Fixed Steps (100)\31")
+    r.ImGui_SetNextItemWidth(ctx, 200)
+    rv,app.constrained_resize.display_lines = r.ImGui_DragInt(ctx, 'Lines', app.constrained_resize.display_lines, 0.2, 1, 100)
+    rv,app.constrained_resize.auto_resize = r.ImGui_Checkbox(ctx, 'Auto-resize', app.constrained_resize.auto_resize)
+    for i = 1, app.constrained_resize.display_lines do
+      r.ImGui_Text(ctx, ('%sHello, sailor! Making this line long enough for the example.'):format((' '):rep(i * 4)))
+    end
+  end
+  r.ImGui_End(ctx)
+  return open
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Simple overlay / ShowExampleAppSimpleOverlay()
+-------------------------------------------------------------------------------
+
+-- Demonstrate creating a simple static window with no decoration
+-- + a context-menu to choose which corner of the screen to use.
+function demo.ShowExampleAppSimpleOverlay()
+  if not app.simple_overlay then
+    app.simple_overlay = {
+      PAD    = 10.0,
+      corner = 0,
+    }
+  end
+
+  local window_flags = r.ImGui_WindowFlags_NoDecoration()       |
+                       r.ImGui_WindowFlags_AlwaysAutoResize()   |
+                       -- r.ImGui_WindowFlags_NoSavedSettings()    |
+                       r.ImGui_WindowFlags_NoFocusOnAppearing() |
+                       r.ImGui_WindowFlags_NoNav()
+
+  if app.simple_overlay.corner ~= -1 then
+    local viewport = r.ImGui_GetMainViewport(ctx)
+    local work_pos = {r.ImGui_Viewport_GetWorkPos(viewport)} -- Use work area to avoid menu-bar/task-bar, if any!
+    local work_size = {r.ImGui_Viewport_GetWorkSize(viewport)}
+    local window_pos_x, window_pos_y, window_pos_pivot_x, window_pos_pivot_y
+    window_pos_x = app.simple_overlay.corner & 1 ~= 0 and work_pos[1] + work_size[1] - app.simple_overlay.PAD or work_pos[1] + app.simple_overlay.PAD
+    window_pos_y = app.simple_overlay.corner & 2 ~= 0 and work_pos[2] + work_size[2] - app.simple_overlay.PAD or work_pos[2] + app.simple_overlay.PAD
+    window_pos_pivot_x = app.simple_overlay.corner & 1 ~= 0 and 1.0 or 0.0
+    window_pos_pivot_y = app.simple_overlay.corner & 2 ~= 0 and 1.0 or 0.0
+    r.ImGui_SetNextWindowPos(ctx, window_pos_x, window_pos_y, r.ImGui_Cond_Always(), window_pos_pivot_x, window_pos_pivot_y)
+    window_flags = window_flags | r.ImGui_WindowFlags_NoMove()
+  end
+
+  r.ImGui_SetNextWindowBgAlpha(ctx, 0.35) -- Transparent background
+
+  local rv,open = r.ImGui_Begin(ctx, 'Example: Simple overlay', true, window_flags)
+  if rv then
+    r.ImGui_Text(ctx, 'Simple overlay\nin the corner of the screen.\n(right-click to change position)')
+    r.ImGui_Separator(ctx)
+    if r.ImGui_IsMousePosValid(ctx) then
+      r.ImGui_Text(ctx, ('Mouse Position: (%.1f,%.1f)'):format(r.ImGui_GetMousePos(ctx)))
+    else
+      r.ImGui_Text(ctx, 'Mouse Position: <invalid>')
+    end
+    if r.ImGui_BeginPopupContextWindow(ctx) then
+      if r.ImGui_MenuItem(ctx, 'Custom',       nil, app.simple_overlay.corner == -1) then app.simple_overlay.corner = -1 end
+      if r.ImGui_MenuItem(ctx, 'Top-left',     nil, app.simple_overlay.corner ==  0) then app.simple_overlay.corner =  0 end
+      if r.ImGui_MenuItem(ctx, 'Top-right',    nil, app.simple_overlay.corner ==  1) then app.simple_overlay.corner =  1 end
+      if r.ImGui_MenuItem(ctx, 'Bottom-left',  nil, app.simple_overlay.corner ==  2) then app.simple_overlay.corner =  2 end
+      if r.ImGui_MenuItem(ctx, 'Bottom-right', nil, app.simple_overlay.corner ==  3) then app.simple_overlay.corner =  3 end
+      if r.ImGui_MenuItem(ctx, 'Close') then open = false end
+      r.ImGui_EndPopup(ctx)
+    end
+  end
+  r.ImGui_End(ctx)
+  return open
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Fullscreen window / ShowExampleAppFullscreen()
+-------------------------------------------------------------------------------
+
+-- Demonstrate creating a window covering the entire screen/viewport
+function demo.ShowExampleAppFullscreen()
+  if not app.fullscreen then
+    app.fullscreen = {
+      use_work_area = true,
+      flags = r.ImGui_WindowFlags_NoDecoration() | r.ImGui_WindowFlags_NoMove() |
+              r.ImGui_WindowFlags_NoResize()-- | r.ImGui_WindowFlags_NoSavedSettings(),
+    }
+  end
+
+  -- We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
+  -- Based on your use case you may want one of the other.
+  local viewport = r.ImGui_GetMainViewport(ctx)
+  local getViewportPos  = app.fullscreen.use_work_area and r.ImGui_Viewport_GetWorkPos or r.ImGui_Viewport_GetPos
+  local getViewportSize = app.fullscreen.use_work_area and r.ImGui_Viewport_GetWorkSize or r.ImGui_Viewport_GetSize
+  r.ImGui_SetNextWindowPos(ctx, getViewportPos(viewport))
+  r.ImGui_SetNextWindowSize(ctx, getViewportSize(viewport))
+
+  local rv,open = r.ImGui_Begin(ctx, 'Example: Fullscreen window', true, app.fullscreen.flags)
+  if rv then
+    rv,app.fullscreen.use_work_area = r.ImGui_Checkbox(ctx, 'Use work area instead of main area', app.fullscreen.use_work_area)
+    r.ImGui_SameLine(ctx)
+    demo.HelpMarker('Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.');
+
+    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoBackground', app.fullscreen.flags, r.ImGui_WindowFlags_NoBackground())
+    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoDecoration', app.fullscreen.flags, r.ImGui_WindowFlags_NoDecoration())
+    r.ImGui_Indent(ctx)
+    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoTitleBar', app.fullscreen.flags, r.ImGui_WindowFlags_NoTitleBar())
+    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoCollapse', app.fullscreen.flags, r.ImGui_WindowFlags_NoCollapse())
+    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoScrollbar', app.fullscreen.flags, r.ImGui_WindowFlags_NoScrollbar())
+    r.ImGui_Unindent(ctx)
+
+    if r.ImGui_Button(ctx, 'Close this window') then
+      open = false
+    end
+  end
+  r.ImGui_End(ctx)
+  return open
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Manipulating window titles / ShowExampleAppWindowTitles()
+-------------------------------------------------------------------------------
+
+-- Demonstrate using "##" and "###" in identifiers to manipulate ID generation.
+-- This apply to all regular items as well.
+-- Read FAQ section "How can I have multiple widgets with the same label?" for details.
+function demo.ShowExampleAppWindowTitles()
+  local viewport = r.ImGui_GetMainViewport(ctx)
+  local base_pos = {r.ImGui_Viewport_GetPos(viewport)}
+
+  -- By default, Windows are uniquely identified by their title.
+  -- You can use the "##" and "###" markers to manipulate the display/ID.
+
+  -- Using "##" to display same title but have unique identifier.
+  r.ImGui_SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 100, r.ImGui_Cond_FirstUseEver())
+  r.ImGui_Begin(ctx, 'Same title as another window##1')
+  r.ImGui_Text(ctx, 'This is window 1.\nMy title is the same as window 2, but my identifier is unique.')
+  r.ImGui_End(ctx)
+
+  r.ImGui_SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 200, r.ImGui_Cond_FirstUseEver())
+  r.ImGui_Begin(ctx, 'Same title as another window##2')
+  r.ImGui_Text(ctx, 'This is window 2.\nMy title is the same as window 1, but my identifier is unique.')
+  r.ImGui_End(ctx)
+
+  -- Using "###" to display a changing title but keep a static identifier "AnimatedTitle"
+  r.ImGui_SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 300, r.ImGui_Cond_FirstUseEver())
+  spinners = {'|', '/', '-', '\\'}
+  local spinner = math.floor(r.ImGui_GetTime(ctx) / 0.25) & 3
+  r.ImGui_Begin(ctx, ("Animated title %s %d###AnimatedTitle"):format(spinners[spinner+1], r.ImGui_GetFrameCount(ctx)))
+  r.ImGui_Text(ctx, "This window has a changing title.")
+  r.ImGui_End(ctx)
+end
+
 -- //-----------------------------------------------------------------------------
 -- // [SECTION] Example App: Custom Rendering using ImDrawList API / ShowExampleAppCustomRendering()
 -- //-----------------------------------------------------------------------------
