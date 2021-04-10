@@ -34,7 +34,7 @@ DEFINE_API(void, GetVersion,
 DEFINE_API(ImGui_Context*, CreateContext,
 (const char*,title)(int,size_w)(int,size_h)
 (int*,API_RO(pos_x))(int*,API_RO(pos_y)),
-R"(Create a new Dear ImGui context and OS window. The context will remain active as long as it is used every timer cycle. Pass null x/y coordinates to auto-position the window with the arrange view.
+R"(Create a new ReaImGui context. It will remain valid as long as it is used every timer cycle. Pass null x/y coordinates to auto-position the window with the arrange view.
 
 Default values: pos_x = nil, pos_y = nil)",
 {
@@ -57,14 +57,14 @@ R"(Close and free the resources used by a context.)",
 // });
 
 DEFINE_API(void*, GetNativeHwnd, (ImGui_Context*,ctx),
-R"(Return the native handle for the context's OS window.)",
+R"(Return the native handle for the context's platform window.)",
 {
   assertValid(ctx);
   return ctx->window()->nativeHandle();
 });
 
 DEFINE_API(bool, IsCloseRequested, (ImGui_Context*,ctx),
-R"(Return whether the user has requested closing the OS window since the previous frame.)",
+R"(Return whether the user has requested closing the context since the previous frame.)",
 {
   assertValid(ctx);
   return ctx->isCloseRequested();

@@ -36,7 +36,7 @@ struct ImGui_Viewport {
 };
 
 DEFINE_API(ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
-R"(Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.",
+R"(Currently represents the Platform Window created by the ReaImGui context which is hosting our Dear ImGui windows.",
 
 - Main Area = entire viewport.
 - Work Area = entire viewport minus sections used by main menu bars (for platform windows), or by task bar (for platform monitor).
