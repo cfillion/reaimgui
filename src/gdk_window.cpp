@@ -60,7 +60,9 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   : m_impl { std::make_unique<Impl>() }
 {
   HWND hwnd { createSwellDialog(title) };
-  hwnd->m_position = rect;
+  SetWindowPos(hwnd, nullptr,
+    rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+    SWP_NOACTIVATE | SWP_NOZORDER);
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
   ShowWindow(hwnd, SW_SHOW);
 
