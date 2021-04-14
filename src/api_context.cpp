@@ -33,14 +33,17 @@ DEFINE_API(void, GetVersion,
 
 DEFINE_API(ImGui_Context*, CreateContext,
 (const char*,title)(int,size_w)(int,size_h)
-(int*,API_RO(pos_x))(int*,API_RO(pos_y)),
+(int*,API_RO(pos_x))(int*,API_RO(pos_y))
+(int*,API_RO(dock)),
 R"(Create a new ReaImGui context. It will remain valid as long as it is used every timer cycle. Pass null x/y coordinates to auto-position the window with the arrange view.
 
-Default values: pos_x = nil, pos_y = nil)",
+Default values: pos_x = nil, pos_y = nil, dock = 0)",
 {
   const int pos_x { valueOr(API_RO(pos_x), Window::centerX(size_w)) },
-            pos_y { valueOr(API_RO(pos_y), Window::centerY(size_h)) };
-  return new Context { title, pos_x, pos_y, size_w, size_h };
+            pos_y { valueOr(API_RO(pos_y), Window::centerY(size_h)) },
+            dock  { valueOr(API_RO(dock), 0) };
+  const WindowConfig window { title, pos_x, pos_y, size_w, size_h, dock };
+  return new Context { window };
 });
 
 DEFINE_API(void, DestroyContext, (ImGui_Context*,ctx),
@@ -85,6 +88,21 @@ DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
   assertValid(ctx);
   ImGuiIO &io { ImGui::GetIO() };
   io.ConfigFlags = flags;
+});
+
+DEFINE_API(int, GetDock, (ImGui_Context*,ctx),
+"See ImGui_SetDock.",
+{
+  assertValid(ctx);
+  return ctx->window()->dock();
+});
+
+DEFINE_API(void, SetDock, (ImGui_Context*,ctx)
+(int,dock),
+"First bit is the docking enable flag. The remaining bits are the docker index.",
+{
+  assertValid(ctx);
+  ctx->setDockNextFrame(dock);
 });
 
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)

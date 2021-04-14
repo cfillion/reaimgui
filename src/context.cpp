@@ -24,16 +24,14 @@
 #include <imgui/imgui_internal.h> // ClearActiveID
 #include <reaper_plugin_functions.h>
 
-Context::Context(const char *title,
-    const int x, const int y, const int w, const int h)
+Context::Context(const WindowConfig &winConfig)
   : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_imgui { nullptr, &ImGui::DestroyContext }
 {
   setupImGui();
 
-  const RECT rect { x, y, x + w, y + h };
-  m_window = std::make_unique<Window>(title, rect, this);
+  m_window = std::make_unique<Window>(winConfig, this);
 }
 
 void Context::setupImGui()
@@ -83,10 +81,6 @@ Context::~Context()
 {
   setCurrent();
 
-  // Announce to REAPER the window is no longer going to be valid
-  // (safe to call even when not docked)
-  DockWindowRemove(m_window->nativeHandle());
-
   if(m_inFrame)
     endFrame(false, false);
 }
@@ -108,6 +102,11 @@ void Context::beginFrame()
 
   m_inFrame = true;
 
+  if(m_setDockNextFrame) {
+    m_window->setDock(*m_setDockNextFrame);
+    m_setDockNextFrame = std::nullopt;
+  }
+
   updateFrameInfo();
   updateTheme();
   updateMouseDown();
@@ -121,6 +120,13 @@ void Context::beginFrame()
 void Context::setCurrent()
 {
   ImGui::SetCurrentContext(m_imgui.get());
+}
+
+void Context::setDockNextFrame(const int dock)
+{
+  // Docking later, as this might recreate the rendering context and invalidate
+  // textures that are already used in the current frame.
+  m_setDockNextFrame = dock;
 }
 
 void Context::enterFrame()

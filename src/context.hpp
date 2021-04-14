@@ -19,6 +19,7 @@
 #define REAIMGUI_CONTEXT_HPP
 
 #include "color.hpp"
+#include "optional.hpp"
 #include "resource.hpp"
 
 #include <array>
@@ -33,6 +34,7 @@
 #endif
 
 class Window;
+struct WindowConfig;
 struct ImFontAtlas;
 struct ImGuiContext;
 
@@ -40,7 +42,7 @@ class Context : public Resource {
 public:
   static constexpr const char *api_type_name { "ImGui_Context" };
 
-  Context(const char *title, int x, int y, int w, int h);
+  Context(const WindowConfig &);
   ~Context();
 
   void setCloseRequested(bool req = true) { m_closeReq = req; }
@@ -50,6 +52,7 @@ public:
   void setClearColor(const Color &col) { m_clearColor = col; }
 
   void setCurrent();
+  void setDockNextFrame(int);
   void enterFrame();
 
   void mouseDown(unsigned int msg);
@@ -86,6 +89,7 @@ private:
   bool m_inFrame, m_closeReq;
   Color m_clearColor;
   HCURSOR m_cursor;
+  std::optional<int> m_setDockNextFrame;
   std::array<uint8_t, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
 

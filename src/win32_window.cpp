@@ -29,12 +29,14 @@
 #include <reaper_plugin_secrets.h>
 #include <ShellScalingApi.h> // GetDpiForMonitor
 
-static std::wstring widen(const char *input, const UINT codepage = CP_UTF8)
+static std::wstring widen(const std::string &input, const UINT codepage = CP_UTF8)
 {
-  const int size { MultiByteToWideChar(codepage, 0, input, -1, nullptr, 0) - 1 };
+  const int size {
+    MultiByteToWideChar(codepage, 0, input.c_str(), input.size(), nullptr, 0)
+  };
 
   std::wstring output(size, L'\0');
-  MultiByteToWideChar(codepage, 0, input, -1, &output[0], size);
+  MultiByteToWideChar(codepage, 0, input.c_str(), input.size(), output.data(), size);
 
   return output;
 }
@@ -86,7 +88,6 @@ struct Window::Impl {
   void initPixelFormat();
   void initGL();
 
-  Context *ctx;
   HwndPtr hwnd;
   HDC dc;
   HGLRC gl;
@@ -109,8 +110,8 @@ Window::Impl::WindowClass::~WindowClass()
   UnregisterClass(CLASS_NAME, Window::s_instance);
 }
 
-Window::Window(const char *title, RECT rect, Context *ctx)
-  : m_impl { std::make_unique<Impl>() }
+Window::Window(const WindowConfig &cfg, Context *ctx)
+  : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
   static Impl::WindowClass windowClass;
 
@@ -118,6 +119,8 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   constexpr DWORD style   { WS_OVERLAPPEDWINDOW | WS_POPUP };
   // WS_EX_DLGMODALFRAME removes the default icon
   constexpr DWORD exStyle { WS_EX_DLGMODALFRAME };
+
+  RECT rect { cfg.clientRect() };
 
   // Windows 10 Anniversary Update (1607) and newer
   static DllImport<decltype(AdjustWindowRectExForDpi)>
@@ -131,7 +134,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
     AdjustWindowRectEx(&rect, style, false, exStyle);
 
   HWND hwnd {
-    CreateWindowEx(exStyle, CLASS_NAME, widen(title).c_str(), style,
+    CreateWindowEx(exStyle, CLASS_NAME, widen(cfg.title).c_str(), style,
       rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
       parentHandle(), nullptr, s_instance, nullptr)
   };
@@ -149,8 +152,7 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   else
     m_impl->scale = 1.0f;
 
-  m_impl->ctx = ctx;
-  m_impl->hwnd = HwndPtr { hwnd };
+  m_impl->hwnd.reset(hwnd);
   m_impl->dc = GetDC(hwnd);
 
   m_impl->initPixelFormat();
@@ -162,8 +164,12 @@ Window::Window(const char *title, RECT rect, Context *ctx)
   io.BackendPlatformName = "reaper_imgui_win32";
   io.ImeWindowHandle = hwnd;
 
-  AttachWindowTopmostButton(hwnd);
-  ShowWindow(hwnd, SW_SHOW); // after adding the topmost button
+  if(cfg.dock & 1)
+    setDock(cfg.dock);
+  else {
+    AttachWindowTopmostButton(hwnd);
+    ShowWindow(hwnd, SW_SHOW); // after adding the topmost button
+  }
 
   // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
   // Unsetting it after the window is visible disables the border (+ no icon)
@@ -234,7 +240,7 @@ void Window::beginFrame()
 void Window::drawFrame(ImDrawData *drawData)
 {
   wglMakeCurrent(m_impl->dc, m_impl->gl);
-  m_impl->renderer->draw(drawData, m_impl->ctx->clearColor());
+  m_impl->renderer->draw(drawData, m_ctx->clearColor());
   SwapBuffers(m_impl->dc);
   wglMakeCurrent(nullptr, nullptr);
 }
@@ -252,7 +258,7 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
 {
   switch(msg) {
   case WM_CHAR:
-    m_impl->ctx->charInput(wParam);
+    m_ctx->charInput(wParam);
     return 0;
   case WM_DPICHANGED: {
     const float dpi { static_cast<float>(LOWORD(wParam)) };
@@ -268,15 +274,15 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
     if(wParam < 256)
-      m_impl->ctx->keyInput(wParam, true);
+      m_ctx->keyInput(wParam, true);
     return 0;
   case WM_KEYUP:
   case WM_SYSKEYUP:
     if(wParam < 256)
-      m_impl->ctx->keyInput(wParam, false);
+      m_ctx->keyInput(wParam, false);
     return 0;
   case WM_KILLFOCUS:
-    m_impl->ctx->clearFocus();
+    m_ctx->clearFocus();
     return 0;
   }
 

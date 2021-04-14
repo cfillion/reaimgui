@@ -30,6 +30,11 @@
 
 HINSTANCE Window::s_instance;
 
+RECT WindowConfig::clientRect() const
+{
+  return { x, y, x + w, y + h };
+}
+
 LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   const WPARAM wParam, const LPARAM lParam)
 {
@@ -86,6 +91,56 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   }
 
   return DefWindowProc(handle, msg, wParam, lParam);
+}
+
+int Window::dock() const
+{
+  const int dockIndex = { DockIsChildOfDock(nativeHandle(), nullptr)  };
+  return dockIndex > -1 ? (dockIndex << 1) | 1 : m_cfg.dock & ~1;
+}
+
+void Window::setDock(const int dock)
+{
+  HWND hwnd { nativeHandle() };
+
+  if(dock == m_cfg.dock && IsWindowVisible(hwnd))
+    return;
+
+  DockWindowRemove(hwnd);
+
+  if(dock & 1) {
+    if(!(m_cfg.dock & 1))
+      updateConfig(); // store current undocked position and size (overwrites dock)
+    m_cfg.dock = dock;
+
+    constexpr const char *INI_KEY { "reaimgui" };
+    Dock_UpdateDockID(INI_KEY, dock >> 1);
+    DockWindowAddEx(hwnd, m_cfg.title.c_str(), INI_KEY, true);
+    DockWindowActivate(hwnd);
+  }
+  else {
+    m_cfg.dock = dock;
+    Window floating { m_cfg, m_ctx };
+    std::swap(m_impl, floating.m_impl);
+  }
+}
+
+void Window::updateConfig()
+{
+  HWND hwnd { nativeHandle() };
+
+  RECT rect;
+  GetClientRect(hwnd, &rect);
+  m_cfg.w = rect.right - rect.left;
+  m_cfg.h = rect.bottom - rect.top;
+#ifdef __APPLE__
+  std::swap(rect.top, rect.bottom);
+#endif
+  ClientToScreen(hwnd, reinterpret_cast<POINT *>(&rect));
+  m_cfg.x = rect.left;
+  m_cfg.y = rect.top;
+
+  m_cfg.dock = dock();
 }
 
 #ifndef _WIN32
@@ -160,5 +215,8 @@ int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
 
 void Window::WindowDeleter::operator()(HWND window)
 {
+  // Announce to REAPER the window is no longer going to be valid
+  // (safe to call even when not docked)
+  DockWindowRemove(window);
   DestroyWindow(window);
 }

@@ -35,48 +35,49 @@
 #undef Window
 
 struct LICEDeleter { void operator()(LICE_IBitmap *bm) { LICE__Destroy(bm); } };
-using LICEPtr = std::unique_ptr<LICE_IBitmap, LICEDeleter>;
 
 struct Window::Impl {
   void initGl();
   void resizeTextures();
   void teardownGl();
-  void checkDockChanged();
+  bool checkOSWindowChanged();
   void findOSWindow();
   bool isDocked() const { return windowOwner && hwnd.get() != windowOwner; }
   void liceBlit();
 
   HwndPtr hwnd;
-  Context *ctx;
   GdkWindow *window;
   HWND windowOwner;
   GdkGLContext *gl;
   unsigned int tex, fbo;
   OpenGLRenderer *renderer;
-  LICEPtr pixels; // used when docked
+  std::unique_ptr<LICE_IBitmap, LICEDeleter> pixels; // used when docked
 };
 
-Window::Window(const char *title, RECT rect, Context *ctx)
-  : m_impl { std::make_unique<Impl>() }
+Window::Window(const WindowConfig &cfg, Context *ctx)
+  : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
-  HWND hwnd { createSwellDialog(title) };
-  SetWindowPos(hwnd, nullptr,
-    rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+  HWND hwnd { createSwellDialog(cfg.title.c_str()) };
+  SetWindowPos(hwnd, nullptr, cfg.x, cfg.y, cfg.w, cfg.h,
     SWP_NOACTIVATE | SWP_NOZORDER);
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
-  ShowWindow(hwnd, SW_SHOW);
 
-  m_impl->ctx = ctx;
-  m_impl->hwnd = HwndPtr { hwnd };
+  m_impl->hwnd.reset(hwnd);
+
+  if(cfg.dock & 1) {
+    // LICE bitmap must be null when docking to avoid drawing a garbage frame
+    setDock(cfg.dock);
+    m_impl->pixels.reset(LICE_CreateBitmap(0, 0, 0));
+  }
+  else
+    ShowWindow(hwnd, SW_SHOW);
+
   m_impl->findOSWindow();
-
-  if(static_cast<void *>(m_impl->window) == hwnd)
-    throw reascript_error { "headless SWELL is not supported" };
+  m_impl->initGl();
 
   // prevent invalidation (= displaying garbage) when moving another window over
-  gdk_window_freeze_updates(m_impl->window);
-
-  m_impl->initGl();
+  if(!cfg.dock)
+    gdk_window_freeze_updates(m_impl->window);
 
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendPlatformName = "reaper_imgui_gdk";
@@ -161,24 +162,26 @@ void Window::Impl::findOSWindow()
   }
 
   window = windowOwner ? windowOwner->m_oswindow : nullptr;
+
+  if(static_cast<void *>(window) == hwnd.get())
+    window = nullptr; // headless SWELL
 }
 
-void Window::Impl::checkDockChanged()
+bool Window::Impl::checkOSWindowChanged()
 {
   GdkWindow *prevWindow { window };
   findOSWindow();
 
-  if(isDocked()) {
-    if(!pixels)
-      pixels = LICEPtr { LICE_CreateBitmap(0, 0, 0) };
-  }
-  else if(pixels)
-    pixels.reset();
+  if(!pixels && isDocked())
+    pixels.reset(LICE_CreateBitmap(0, 0, 0));
 
   if(window && prevWindow != window) {
     teardownGl();
     initGl();
+    return true;
   }
+
+  return false;
 }
 
 void Window::Impl::teardownGl()
@@ -205,17 +208,23 @@ void Window::beginFrame()
 {
   // GDK SWELL does not send a window message when focus is lost
   if(GetFocus() != m_impl->hwnd.get())
-    m_impl->ctx->clearFocus();
+    m_ctx->clearFocus();
+
+  m_impl->checkOSWindowChanged();
 }
 
 void Window::drawFrame(ImDrawData *data)
 {
-  m_impl->checkDockChanged();
+  if(m_impl->checkOSWindowChanged()) {
+    // The current data refers to resources from the GL context tied to the
+    // previous OS window. Skip this frame.
+    return;
+  }
 
   gdk_gl_context_make_current(m_impl->gl);
 
   const bool softwareBlit { m_impl->isDocked() };
-  m_impl->renderer->draw(data, m_impl->ctx->clearColor(), softwareBlit);
+  m_impl->renderer->draw(data, m_ctx->clearColor(), softwareBlit);
 
   if(softwareBlit) {
     // REAPER is also drawing to the same GdkWindow so we must share it.
@@ -310,16 +319,16 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
   case WM_KEYDOWN:
     // No access to the orignal GDK key event, unfortunately.
     if(unsigned int c { unmangleSwellChar(wParam, lParam) })
-      m_impl->ctx->charInput(c);
+      m_ctx->charInput(c);
     if(wParam < 256)
-      m_impl->ctx->keyInput(wParam, true);
+      m_ctx->keyInput(wParam, true);
     return 0;
   case WM_KEYUP:
     if(wParam < 256)
-      m_impl->ctx->keyInput(wParam, false);
+      m_ctx->keyInput(wParam, false);
     return 0;
   case WM_PAINT:
-    if(m_impl->isDocked())
+    if(m_impl->pixels)
       m_impl->liceBlit();
     return 0;
   }

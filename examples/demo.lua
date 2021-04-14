@@ -65,11 +65,7 @@ app     = {}
 
 -- Hajime!
 
-function demo.CreateContext()
-  return r.ImGui_CreateContext('ImGui Demo', 590, 720)
-end
-
-local ctx = demo.CreateContext()
+local ctx = r.ImGui_CreateContext('ImGui Demo', 590, 720)
 
 function demo.loop()
   if r.ImGui_IsCloseRequested(ctx) then
@@ -227,24 +223,13 @@ function demo.ShowDemoWindow()
   if demo.no_bring_to_front then window_flags = window_flags | r.ImGui_WindowFlags_NoBringToFrontOnFocus() end
   if demo.no_close          then open = nil end -- Don't pass our bool* to Begin
 
-  local reset_ctx = false
-  if r.ImGui_BeginPopupContextVoid(ctx, "dock") then
+  if r.ImGui_BeginPopupContextVoid(ctx, 'dock') then
     local hwnd = r.ImGui_GetNativeHwnd(ctx)
-    local dock, isFloatingDocker = reaper.DockIsChildOfDock(hwnd)
-    if r.ImGui_MenuItem(ctx, 'Duck in docker', nil, dock ~= -1) then
-      if dock == -1 then
-        r.DockWindowAdd(hwnd, 'ReaImGui Demo', 0, true)
-        r.DockWindowActivate(hwnd)
-      else
-        reset_ctx = true
-      end
+    local dock = r.ImGui_GetDock(ctx)
+    if r.ImGui_MenuItem(ctx, 'Duck in docker', nil, dock & 1) then
+      r.ImGui_SetDock(ctx, dock ~ 1)
     end
     r.ImGui_EndPopup(ctx)
-  end
-  if reset_ctx then
-    -- create a new OS window for undocking
-    r.ImGui_DestroyContext(ctx)
-    ctx = demo.CreateContext()
   end
 
   -- We specify a default position/size in case there's no data in the .ini file.

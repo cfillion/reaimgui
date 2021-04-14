@@ -32,6 +32,14 @@
 class Context;
 struct ImDrawData;
 
+struct WindowConfig {
+  RECT clientRect() const;
+
+  std::string title;
+  int x, y, w, h;
+  int dock;
+};
+
 class Window {
 public:
   enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
@@ -42,7 +50,7 @@ public:
   static int centerX(int width);
   static int centerY(int height);
 
-  Window(const char *title, RECT, Context *);
+  Window(const WindowConfig &, Context *);
   Window(const Window &) = delete;
   ~Window();
 
@@ -53,6 +61,8 @@ public:
   std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM);
   static int translateAccel(MSG *msg, accelerator_register_t *accel);
 
+  int dock() const;
+  void setDock(int);
   HWND nativeHandle() const;
 
 private:
@@ -63,11 +73,15 @@ private:
   static HWND createSwellDialog(const char *title);
   static HWND parentHandle();
 
-  struct Impl;
-  std::unique_ptr<Impl> m_impl;
+  void updateConfig();
 
+  WindowConfig m_cfg;
+  Context *m_ctx;
   accelerator_register_t m_accel { &translateAccel, true, this };
   PluginRegister m_accelReg { "accelerator", &m_accel };
+
+  struct Impl;
+  std::unique_ptr<Impl> m_impl;
 };
 
 #endif

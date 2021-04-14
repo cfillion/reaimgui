@@ -28,36 +28,33 @@ static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
 struct Window::Impl {
-  Context *ctx;
   HwndPtr hwnd;
   NSView *view;
   InputView *inputView;
-  ImDrawData *lastDrawData     {};
+  ImDrawData *lastDrawData {};
   NSOpenGLContext *gl;
   OpenGLRenderer *renderer;
 };
 
-Window::Window(const char *title, RECT rect, Context *ctx)
-  : m_impl { std::make_unique<Impl>() }
+Window::Window(const WindowConfig &cfg, Context *ctx)
+  : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
-  const NSPoint position {
-    static_cast<float>(rect.left), static_cast<float>(rect.top)
-  };
-  const NSSize size {
-    static_cast<float>(rect.right - rect.left),
-    static_cast<float>(rect.bottom - rect.top)
-  };
+  const NSPoint position { static_cast<float>(cfg.x), static_cast<float>(cfg.y) };
+  const NSSize size { static_cast<float>(cfg.w), static_cast<float>(cfg.h) };
 
-  HWND hwnd { createSwellDialog(title) };
+  HWND hwnd { createSwellDialog(cfg.title.c_str()) };
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
-  ShowWindow(hwnd, SW_SHOW);
-
-  m_impl->ctx = ctx;
-  m_impl->hwnd = HwndPtr { hwnd };
+  m_impl->hwnd.reset(hwnd);
   m_impl->view = (__bridge NSView *)hwnd; // SWELL_hwndChild inherits from NSView
-  [[m_impl->view window] setColorSpace:[NSColorSpace sRGBColorSpace]];
-  [[m_impl->view window] setFrameOrigin:position];
-  [[m_impl->view window] setContentSize:size];
+
+  if(m_cfg.dock & 1)
+    setDock(m_cfg.dock);
+  else {
+    ShowWindow(hwnd, SW_SHOW);
+    [[m_impl->view window] setColorSpace:[NSColorSpace sRGBColorSpace]];
+    [[m_impl->view window] setFrameOrigin:position];
+    [[m_impl->view window] setContentSize:size];
+  }
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
@@ -113,7 +110,7 @@ void Window::drawFrame(ImDrawData *drawData)
 {
   m_impl->lastDrawData = drawData;
   [m_impl->gl makeCurrentContext];
-  m_impl->renderer->draw(drawData, m_impl->ctx->clearColor());
+  m_impl->renderer->draw(drawData, m_ctx->clearColor());
   [m_impl->gl flushBuffer];
   [NSOpenGLContext clearCurrentContext];
 }
@@ -133,7 +130,7 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
   case WM_ACTIVATE:
     // Only sent when not docked (InputView::resignFirstResponder otherwise)
     if(wParam == WA_INACTIVE)
-      m_impl->ctx->clearFocus();
+      m_ctx->clearFocus();
     return 0;
   case WM_PAINT: // update size if it changed while we were docked & inactive
   case WM_SIZE:

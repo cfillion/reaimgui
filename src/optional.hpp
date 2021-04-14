@@ -15,6 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef REAIMGUI_OPTIONAL_HPP
+#define REAIMGUI_OPTIONAL_HPP
+
 #ifdef HAS_STD_EXPERIMENTAL_OPTIONAL
   // Xcode 9 for macOS 32-bit builds
 #  include <experimental/optional>
@@ -25,4 +28,6 @@
   }
 #else
 #  include <optional>
+#endif
+
 #endif
