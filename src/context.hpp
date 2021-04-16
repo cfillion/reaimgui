@@ -75,7 +75,6 @@ private:
     DownUnread = 1<<1,
   };
 
-  void setupImGui();
   void beginFrame();
   void endFrame(bool render, bool prinnyMode = true);
   bool anyMouseDown() const;
@@ -95,7 +94,6 @@ private:
 
   std::unique_ptr<ImGuiContext, void(*)(ImGuiContext*)> m_imgui;
   std::unique_ptr<Window> m_window; // must be after m_imgui for correct destruction
-  std::shared_ptr<ImFontAtlas> m_fontAtlas;
 };
 
 #endif

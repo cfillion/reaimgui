@@ -27,23 +27,8 @@
 Context::Context(const WindowConfig &winConfig)
   : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
-    m_imgui { nullptr, &ImGui::DestroyContext }
+    m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
 {
-  setupImGui();
-
-  m_window = std::make_unique<Window>(winConfig, this);
-}
-
-void Context::setupImGui()
-{
-  static std::weak_ptr<ImFontAtlas> g_fontAtlas;
-
-  if(g_fontAtlas.expired())
-    g_fontAtlas = m_fontAtlas = std::make_shared<ImFontAtlas>();
-  else
-    m_fontAtlas = g_fontAtlas.lock();
-
-  m_imgui.reset(ImGui::CreateContext(m_fontAtlas.get()));
   setCurrent();
 
   ImGuiIO &io { ImGui::GetIO() };
@@ -75,6 +60,8 @@ void Context::setupImGui()
   io.KeyMap[ImGuiKey_Y]           = 'Y';
   io.KeyMap[ImGuiKey_Z]           = 'Z';
 #endif
+
+  m_window = std::make_unique<Window>(winConfig, this);
 }
 
 Context::~Context()
@@ -160,8 +147,12 @@ catch(const imgui_error &e) {
 
   // no recovery, just destroy the context
   m_window->endFrame();
-  m_fontAtlas->Locked = false; // don't assert again when destroying the atlas
-  m_inFrame = false; // don't call endFrame again from the destructor
+
+  // don't assert again when destroying the font atlas
+  ImGui::GetIO().Fonts->Locked = false;
+
+  // don't call endFrame again from the destructor
+  m_inFrame = false;
 
   if(prinnyMode) // don't delete twice when first called from the destructor
     delete this;
