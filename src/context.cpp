@@ -24,6 +24,16 @@
 #include <imgui/imgui_internal.h> // ClearActiveID
 #include <reaper_plugin_functions.h>
 
+class TempCurrent {
+public:
+  TempCurrent(Context *ctx)
+    : m_old { ImGui::GetCurrentContext() } { ctx->setCurrent(); }
+  ~TempCurrent() { ImGui::SetCurrentContext(m_old); }
+
+private:
+  ImGuiContext *m_old;
+};
+
 Context::Context(const WindowConfig &winConfig)
   : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
@@ -319,8 +329,6 @@ void Context::updateMousePos()
 
 void Context::mouseWheel(const unsigned int msg, const short delta)
 {
-  setCurrent();
-
 #ifndef WHEEL_DELTA
   constexpr float WHEEL_DELTA {
 #  ifdef __APPLE__
@@ -331,6 +339,7 @@ void Context::mouseWheel(const unsigned int msg, const short delta)
   };
 #endif
 
+  TempCurrent cur { this };
   ImGuiIO &io { ImGui::GetIO() };
   float &wheel { msg == WM_MOUSEHWHEEL ? io.MouseWheelH : io.MouseWheel };
   wheel += static_cast<float>(delta) / static_cast<float>(WHEEL_DELTA);
@@ -352,7 +361,7 @@ void Context::updateKeyMods()
 
 void Context::keyInput(const uint8_t key, const bool down)
 {
-  setCurrent();
+  TempCurrent cur { this };
   ImGuiIO &io { ImGui::GetIO() };
   io.KeysDown[key] = down;
 }
@@ -362,14 +371,14 @@ void Context::charInput(const unsigned int codepoint)
   if(codepoint < 32 || (codepoint > 126 && codepoint < 160))
     return;
 
-  setCurrent();
+  TempCurrent cur { this };
   ImGuiIO &io { ImGui::GetIO() };
   io.AddInputCharacter(codepoint);
 }
 
 void Context::clearFocus()
 {
-  setCurrent();
+  TempCurrent cur { this };
   if(ImGui::GetIO().WantCaptureKeyboard)
     ImGui::ClearActiveID();
 }
