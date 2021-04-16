@@ -40,7 +40,7 @@ struct Window::Impl {
   void initGl();
   void resizeTextures();
   void teardownGl();
-  bool checkOSWindowChanged();
+  void checkOSWindowChanged();
   void findOSWindow();
   bool isDocked() const { return windowOwner && hwnd.get() != windowOwner; }
   void liceBlit();
@@ -167,7 +167,7 @@ void Window::Impl::findOSWindow()
     window = nullptr; // headless SWELL
 }
 
-bool Window::Impl::checkOSWindowChanged()
+void Window::Impl::checkOSWindowChanged()
 {
   GdkWindow *prevWindow { window };
   findOSWindow();
@@ -178,10 +178,7 @@ bool Window::Impl::checkOSWindowChanged()
   if(window && prevWindow != window) {
     teardownGl();
     initGl();
-    return true;
   }
-
-  return false;
 }
 
 void Window::Impl::teardownGl()
@@ -215,12 +212,6 @@ void Window::beginFrame()
 
 void Window::drawFrame(ImDrawData *data)
 {
-  if(m_impl->checkOSWindowChanged()) {
-    // The current data refers to resources from the GL context tied to the
-    // previous OS window. Skip this frame.
-    return;
-  }
-
   gdk_gl_context_make_current(m_impl->gl);
 
   const bool softwareBlit { m_impl->isDocked() };
