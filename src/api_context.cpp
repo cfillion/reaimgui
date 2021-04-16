@@ -77,6 +77,7 @@ DEFINE_API(int, GetConfigFlags, (ImGui_Context*,ctx),
 "See ImGui_SetConfigFlags.",
 {
   assertValid(ctx);
+  ctx->setCurrent();
   ImGuiIO &io { ImGui::GetIO() };
   return io.ConfigFlags;
 });
@@ -86,6 +87,7 @@ DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
 "See ImGui_GetConfigFlags, ImGui_ConfigFlags_None.",
 {
   assertValid(ctx);
+  ctx->setCurrent();
   ImGuiIO &io { ImGui::GetIO() };
   io.ConfigFlags = flags;
 });
