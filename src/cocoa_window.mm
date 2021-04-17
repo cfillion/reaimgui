@@ -50,10 +50,9 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   if(m_cfg.dock & 1)
     setDock(m_cfg.dock);
   else {
-    ShowWindow(hwnd, SW_SHOW);
-    [[m_impl->view window] setColorSpace:[NSColorSpace sRGBColorSpace]];
     [[m_impl->view window] setFrameOrigin:position];
     [[m_impl->view window] setContentSize:size];
+    ShowWindow(hwnd, SW_SHOW);
   }
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
