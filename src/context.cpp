@@ -34,6 +34,11 @@ private:
   ImGuiContext *m_old;
 };
 
+Context *Context::current()
+{
+  return static_cast<Context *>(ImGui::GetIO().UserData);
+}
+
 Context::Context(const WindowConfig &winConfig)
   : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
@@ -42,9 +47,10 @@ Context::Context(const WindowConfig &winConfig)
   setCurrent();
 
   ImGuiIO &io { ImGui::GetIO() };
-  io.IniFilename = nullptr;
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
+  io.IniFilename = nullptr;
+  io.UserData = this;
 
 #ifndef __APPLE__
   io.KeyMap[ImGuiKey_Tab]         = VK_TAB;

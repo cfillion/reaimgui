@@ -17,8 +17,9 @@
 
 #include "api.hpp"
 
-#include <list>
+#include "context.hpp"
 
+#include <list>
 #include <reaper_plugin_functions.h>
 
 using namespace std::string_literals;
@@ -83,4 +84,6 @@ void API::handleError(const char *fnName, const imgui_error &e)
   snprintf(message, sizeof(message),
     "ImGui_%s: ImGui assertion failed: %s", fnName, e.what());
   ReaScriptError(message);
+
+  delete Context::current();
 }

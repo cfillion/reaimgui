@@ -41,6 +41,7 @@ struct ImGuiContext;
 class Context : public Resource {
 public:
   static constexpr const char *api_type_name { "ImGui_Context" };
+  static Context *current();
 
   Context(const WindowConfig &);
   ~Context();
