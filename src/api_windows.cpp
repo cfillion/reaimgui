@@ -70,6 +70,24 @@ DEFINE_API(void, EndChild, (ImGui_Context*,ctx),
   ImGui::EndChild();
 });
 
+DEFINE_API(bool, BeginChildFrame, (ImGui_Context*,ctx)
+(const char*,str_id)(double,size_w)(double,size_h)(int*,API_RO(flags)),
+R"(Helper to create a child window / scrolling region that looks like a normal widget frame.
+
+Default values: flags = ImGui_WindowFlags_None)",
+{
+  FRAME_GUARD;
+  return ImGui::BeginChildFrame(ImGui::GetID(str_id), ImVec2(size_w, size_h),
+    valueOr(API_RO(flags), ImGuiWindowFlags_None));
+});
+
+DEFINE_API(void, EndChildFrame, (ImGui_Context*,ctx),
+"See ImGui_BeginChildFrame.",
+{
+  FRAME_GUARD;
+  ImGui::EndChildFrame();
+});
+
 DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
 "Begin/append a tooltip window. to create full-featured tooltip (with any kind of items).",
 {

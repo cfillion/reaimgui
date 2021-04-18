@@ -253,6 +253,9 @@ OVERRIDES = {
 
   # drag/drop payload as string
   'const ImGuiPayload* ImGui::AcceptDragDropPayload(const char*, ImGuiDragDropFlags)' => 'bool AcceptDragDropPayload(const char*, char*, int, int*)',
+
+  # ImGuiID -> str_id
+  'bool ImGui::BeginChildFrame(ImGuiID, const ImVec2&, ImGuiWindowFlags)' => 'bool BeginChildFrame(const char*, double, double, int*)',
 }
 
 # argument position & name are checked
