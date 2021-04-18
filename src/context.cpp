@@ -44,12 +44,16 @@ Context::Context(const WindowConfig &winConfig)
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
 {
+  static const std::string logFn
+    { std::string { GetResourcePath() } + "/imgui_log.txt" };
+
   setCurrent();
 
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.IniFilename = nullptr;
+  io.LogFilename = logFn.c_str();
   io.UserData = this;
 
 #ifndef __APPLE__

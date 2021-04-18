@@ -102,6 +102,7 @@ NATIVE_ONLY = [
   'void ImGui::TextWrappedV(const char*, va_list)',
   'void ImGui::LabelTextV(const char*, const char*, va_list)',
   'void ImGui::BulletTextV(const char*, va_list)',
+  'void ImGui::LogTextV(const char*, va_list)',
 
   # not recommended (use SetNextWindow* instead)
   'void ImGui::SetWindowPos(const ImVec2&, ImGuiCond)',
@@ -146,11 +147,14 @@ NATIVE_ONLY = [
   'void ImDrawList::AddImageQuad(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
   'void ImDrawList::AddImageRounded(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32, float, ImDrawFlags)',
 
-  # value helpers
+  # value helpers (just Text() with a "prefix: value" format string)
   'void ImGui::Value(const char*, bool)',
   'void ImGui::Value(const char*, int)',
   'void ImGui::Value(const char*, unsigned int)',
   'void ImGui::Value(const char*, float, const char*)',
+
+  # not recommended for new designs
+  'void ImGui::LogButtons()',
 ]
 
 NATIVE_ONLY_CLASSES = %w[

@@ -53,6 +53,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(DockWindowRemove),
     IMPORT(GetColorThemeStruct),
     IMPORT(GetMainHwnd),
+    IMPORT(GetResourcePath),
     IMPORT(plugin_getapi),
     IMPORT(plugin_register),
     IMPORT(realloc_cmd_ptr), // v5.26

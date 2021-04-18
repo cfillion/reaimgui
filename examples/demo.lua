@@ -34,7 +34,6 @@ local IMGUI_VERSION, REAIMGUI_VERSION = r.ImGui_GetVersion()
 -- Global data storage
 demo = {
   open = true,
-  config = r.ImGui_ConfigFlags_None(),
 
   menu = {
     enabled = true,
@@ -56,6 +55,7 @@ demo = {
   no_bring_to_front = false,
 }
 
+config  = {}
 widgets = {}
 layout  = {}
 popups  = {}
@@ -327,43 +327,47 @@ function demo.ShowDemoWindow()
     demo.ShowUserGuide()
   end
 
-    if r.ImGui_CollapsingHeader(ctx, 'Configuration') then
-      -- if r.ImGui_TreeNode(ctx, 'Configuration##2') then
-        rv,demo.config = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NavEnableKeyboard', demo.config, r.ImGui_ConfigFlags_NavEnableKeyboard())
-        r.ImGui_SameLine(ctx); demo.HelpMarker('Enable keyboard controls.')
-        -- r.ImGui_CheckboxFlags("io.ConfigFlags: NavEnableGamepad",     &io.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad)
-        -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable gamepad controls. Require backend to set io.BackendFlags |= ImGuiBackendFlags_HasGamepad.\n\nRead instructions in imgui.cpp for details.")
-        rv,demo.config = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NavEnableSetMousePos', demo.config, r.ImGui_ConfigFlags_NavEnableSetMousePos())
-        r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct navigation to move the mouse cursor.')
-        rv,demo.config = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoMouse', demo.config, r.ImGui_ConfigFlags_NoMouse())
-        if (demo.config & r.ImGui_ConfigFlags_NoMouse()) ~= 0 then
-          -- The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
-          if r.ImGui_GetTime(ctx) % 0.40 < 0.20 then
-            r.ImGui_SameLine(ctx)
-            r.ImGui_Text(ctx, '<<PRESS SPACE TO DISABLE>>')
-          end
-          -- if r.ImGui_IsKeyPressed(ctx, r.ImGui_GetKeyIndex(ctx, r.ImGui_Key_Space())) then TODO
-          rv,char = r.ImGui_GetInputQueueCharacter(ctx, 0)
-          if rv and char == 0x20 then
-            demo.config = demo.config & ~r.ImGui_ConfigFlags_NoMouse()
-          end
+  if r.ImGui_CollapsingHeader(ctx, 'Configuration') then
+    if r.ImGui_TreeNode(ctx, 'Configuration##2') then
+      if not config.flags then
+        config.flags = r.ImGui_ConfigFlags_None()
+      end
+
+      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NavEnableKeyboard', config.flags, r.ImGui_ConfigFlags_NavEnableKeyboard())
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Enable keyboard controls.')
+      -- r.ImGui_CheckboxFlags("io.ConfigFlags: NavEnableGamepad",     &io.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad)
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable gamepad controls. Require backend to set io.BackendFlags |= ImGuiBackendFlags_HasGamepad.\n\nRead instructions in imgui.cpp for details.")
+      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NavEnableSetMousePos', config.flags, r.ImGui_ConfigFlags_NavEnableSetMousePos())
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct navigation to move the mouse cursor.')
+      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoMouse', config.flags, r.ImGui_ConfigFlags_NoMouse())
+      if (config.flags & r.ImGui_ConfigFlags_NoMouse()) ~= 0 then
+        -- The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
+        if r.ImGui_GetTime(ctx) % 0.40 < 0.20 then
+          r.ImGui_SameLine(ctx)
+          r.ImGui_Text(ctx, '<<PRESS SPACE TO DISABLE>>')
         end
-        rv,demo.config = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', demo.config, r.ImGui_ConfigFlags_NoMouseCursorChange())
-        r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
-        -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTextCursorBlink', &io.ConfigInputTextCursorBlink)
-        -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting)")
-        -- r.ImGui_Checkbox(ctx, 'io.ConfigDragClickToInputText', &io.ConfigDragClickToInputText)
-        -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
-        -- r.ImGui_Checkbox("io.ConfigWindowsResizeFromEdges", &io.ConfigWindowsResizeFromEdges)
-        -- r.ImGui_SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.\nThis requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback.')
-        -- r.ImGui_Checkbox(ctx, 'io.ConfigWindowsMoveFromTitleBarOnly', &io.ConfigWindowsMoveFromTitleBarOnly)
-        -- r.ImGui_Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
-        -- r.ImGui_SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
-        -- r.ImGui_Text(ctx, "Also see Style->Rendering for rendering options.")
-        r.ImGui_SetConfigFlags(ctx, demo.config)
-        -- r.ImGui_TreePop(ctx)
-        -- r.ImGui_Separator(ctx)
-      -- end
+        -- if r.ImGui_IsKeyPressed(ctx, r.ImGui_GetKeyIndex(ctx, r.ImGui_Key_Space())) then TODO
+        rv,char = r.ImGui_GetInputQueueCharacter(ctx, 0)
+        if rv and char == 0x20 then
+          config.flags = config.flags & ~r.ImGui_ConfigFlags_NoMouse()
+        end
+      end
+      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', config.flags, r.ImGui_ConfigFlags_NoMouseCursorChange())
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
+      -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTextCursorBlink', &io.ConfigInputTextCursorBlink)
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting)")
+      -- r.ImGui_Checkbox(ctx, 'io.ConfigDragClickToInputText', &io.ConfigDragClickToInputText)
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
+      -- r.ImGui_Checkbox("io.ConfigWindowsResizeFromEdges", &io.ConfigWindowsResizeFromEdges)
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.\nThis requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback.')
+      -- r.ImGui_Checkbox(ctx, 'io.ConfigWindowsMoveFromTitleBarOnly', &io.ConfigWindowsMoveFromTitleBarOnly)
+      -- r.ImGui_Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
+      -- r.ImGui_SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
+      -- r.ImGui_Text(ctx, "Also see Style->Rendering for rendering options.")
+      r.ImGui_SetConfigFlags(ctx, config.flags)
+      r.ImGui_TreePop(ctx)
+      r.ImGui_Separator(ctx)
+    end
 
 --         if (r.ImGui_TreeNode("Backend Flags"))
 --         {
@@ -388,24 +392,43 @@ function demo.ShowDemoWindow()
 --             r.ImGui_TreePop();
 --             r.ImGui_Separator();
 --         }
---
---         if (r.ImGui_TreeNode("Capture/Logging"))
---         {
---             HelpMarker(
---                 "The logging API redirects all text output so you can easily capture the content of "
---                 "a window or a block. Tree nodes can be automatically expanded.\n"
---                 "Try opening any of the contents below in this window and then click one of the \"Log To\" button.");
---             r.ImGui_LogButtons();
---
---             HelpMarker("You can also call r.ImGui_LogText() to output directly to the log without a visual output.");
---             if (r.ImGui_Button("Copy \"Hello, world!\" to clipboard"))
---             {
---                 r.ImGui_LogToClipboard();
---                 r.ImGui_LogText("Hello, world!");
---                 r.ImGui_LogFinish();
---             }
---             r.ImGui_TreePop();
---         }
+
+    if r.ImGui_TreeNode(ctx, 'Capture/Logging') then
+      if not config.logging then
+        config.logging = {
+          auto_open_depth = 2,
+        }
+      end
+
+      demo.HelpMarker(
+        'The logging API redirects all text output so you can easily capture the content of \z
+         a window or a block. Tree nodes can be automatically expanded.\n\z
+         Try opening any of the contents below in this window and then click one of the "Log To" button.')
+      r.ImGui_PushID(ctx, 'LogButtons')
+      local log_to_tty = r.ImGui_Button(ctx, 'Log To TTY'); r.ImGui_SameLine(ctx)
+      local log_to_file = r.ImGui_Button(ctx, 'Log To File'); r.ImGui_SameLine(ctx)
+      local log_to_clipboard = r.ImGui_Button(ctx, 'Log To Clipboard'); r.ImGui_SameLine(ctx)
+      r.ImGui_PushAllowKeyboardFocus(ctx, false)
+      r.ImGui_SetNextItemWidth(ctx, 80.0)
+      rv,config.logging.auto_open_depth =
+        r.ImGui_SliderInt(ctx, 'Open Depth', config.logging.auto_open_depth, 0, 9)
+      r.ImGui_PopAllowKeyboardFocus(ctx)
+      r.ImGui_PopID(ctx)
+
+      -- Start logging at the end of the function so that the buttons don't appear in the log
+      local depth = config.logging.auto_open_depth
+      if log_to_tty       then r.ImGui_LogToTTY(ctx, depth)       end
+      if log_to_file      then r.ImGui_LogToFile(ctx, depth)      end
+      if log_to_clipboard then r.ImGui_LogToClipboard(ctx, depth) end
+
+      demo.HelpMarker('You can also call r.ImGui_LogText() to output directly to the log without a visual output.')
+      if r.ImGui_Button(ctx, 'Copy "Hello, world!" to clipboard') then
+        r.ImGui_LogToClipboard(ctx, depth)
+        r.ImGui_LogText(ctx, 'Hello, world!')
+        r.ImGui_LogFinish(ctx)
+      end
+      r.ImGui_TreePop(ctx)
+    end
   end
 
   if r.ImGui_CollapsingHeader(ctx, 'Window options') then
