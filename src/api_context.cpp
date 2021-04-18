@@ -53,11 +53,14 @@ R"(Close and free the resources used by a context.)",
   delete ctx;
 });
 
-// DEFINE_API(bool, IsContextValid, (ImGui_Context*,ctx),
-// R"(Return whether the context is still active.)",
-// {
-//   return Resource::exists(ctx); // TODO: generalize IsContextValid to IsValid(void* resource, const char* type)?
-// });
+DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
+R"(Return whether the pointer of the specified type is valid. Currently the only supported type is ImGui_Context*.)",
+{
+  if(!strcmp(type, "ImGui_Context*"))
+    return Resource::exists(static_cast<Context *>(pointer));
+  else
+    return false;
+});
 
 DEFINE_API(void*, GetNativeHwnd, (ImGui_Context*,ctx),
 R"(Return the native handle for the context's platform window.)",
