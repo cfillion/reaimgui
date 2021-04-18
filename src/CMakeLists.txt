@@ -18,6 +18,7 @@ add_library(${PROJECT_NAME} SHARED
   api_dragndrop.cpp
   api_drawlist.cpp
   api_enums.cpp
+  api_indev.cpp
   api_input.cpp
   api_item.cpp
   api_layout.cpp
