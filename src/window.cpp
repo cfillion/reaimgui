@@ -54,6 +54,8 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     [[fallthrough]];
   case WM_CLOSE:
     ctx->setCloseRequested();
+    if(ctx->frozen()) // let users kill frozen contexts
+      delete ctx;
     return 0;
   case WM_DESTROY:
     SetWindowLongPtr(handle, GWLP_USERDATA, 0);

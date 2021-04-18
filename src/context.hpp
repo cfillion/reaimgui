@@ -46,11 +46,14 @@ public:
   Context(const WindowConfig &);
   ~Context();
 
-  void setCloseRequested(bool req = true) { m_closeReq = req; }
   bool isCloseRequested() const { return m_closeReq; }
+  void setCloseRequested(bool req = true) { m_closeReq = req; }
 
   const Color &clearColor() const { return m_clearColor; }
   void setClearColor(const Color &col) { m_clearColor = col; }
+
+  bool frozen() { return m_frozen; }
+  void freeze() { m_frozen = true; }
 
   void setCurrent();
   void setDockNextFrame(int);
@@ -86,7 +89,7 @@ private:
   void updateMousePos();
   void updateKeyMods();
 
-  bool m_inFrame, m_closeReq;
+  bool m_inFrame, m_closeReq, m_frozen;
   Color m_clearColor;
   HCURSOR m_cursor;
   std::optional<int> m_setDockNextFrame;

@@ -110,6 +110,13 @@ DEFINE_API(void, SetDock, (ImGui_Context*,ctx)
   ctx->setDockNextFrame(dock);
 });
 
+DEFINE_API(void, Freeze, (ImGui_Context*,ctx),
+"Suspend rendering and keep the context alive until it is used next. Call this before calling a blocking function. Users will be able to destroy the context by closing the platform window during this time.",
+{
+  assertValid(ctx);
+  ctx->freeze();
+});
+
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
 (bool*,API_RWO(p_open)),
 R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc.
