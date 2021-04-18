@@ -62,3 +62,20 @@ DEFINE_API(void, LogText, (ImGui_Context*,ctx)
   FRAME_GUARD;
   ImGui::LogText("%s", text);
 });
+
+DEFINE_API(const char*, GetClipboardText, (ImGui_Context*,ctx),
+"See ImGui_SetClipboardText.",
+{
+  assertValid(ctx);
+  ctx->setCurrent();
+  return ImGui::GetClipboardText();
+});
+
+DEFINE_API(void, SetClipboardText, (ImGui_Context*,ctx)
+(const char*,text),
+"See also the ImGui_LogToClipboard function to capture GUI into clipboard, or easily output text data to the clipboard.",
+{
+  assertValid(ctx);
+  ctx->setCurrent();
+  return ImGui::SetClipboardText(text);
+});
