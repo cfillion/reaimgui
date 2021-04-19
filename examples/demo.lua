@@ -286,7 +286,7 @@ function demo.ShowDemoWindow()
       rv,show_app.window_titles =
         r.ImGui_MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
       rv,show_app.custom_rendering =
-        r.ImGui_MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering, false)
+        r.ImGui_MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
       rv,show_app.documents =
         r.ImGui_MenuItem(ctx, 'Documents', nil, show_app.documents, false)
       r.ImGui_EndMenu(ctx)
@@ -6856,247 +6856,274 @@ function demo.ShowExampleAppWindowTitles()
   r.ImGui_End(ctx)
 end
 
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Custom Rendering using ImDrawList API / ShowExampleAppCustomRendering()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate using the low-level ImDrawList to draw custom shapes.
--- static void ShowExampleAppCustomRendering(bool* p_open)
--- {
---     if (!r.ImGui_Begin("Example: Custom rendering", p_open))
---     {
---         r.ImGui_End();
---         return;
---     }
---
---     // Tip: If you do a lot of custom rendering, you probably want to use your own geometrical types and benefit of
---     // overloaded operators, etc. Define IM_VEC2_CLASS_EXTRA in imconfig.h to create implicit conversions between your
---     // types and ImVec2/ImVec4. Dear ImGui defines overloaded operators but they are internal to imgui.cpp and not
---     // exposed outside (to avoid messing with your types) In this example we are not using the maths operators!
---
---     if (r.ImGui_BeginTabBar("##TabBar"))
---     {
---         if (r.ImGui_BeginTabItem("Primitives"))
---         {
---             r.ImGui_PushItemWidth(-r.ImGui_GetFontSize() * 15);
---             ImDrawList* draw_list = r.ImGui_GetWindowDrawList();
---
---             // Draw gradients
---             // (note that those are currently exacerbating our sRGB/Linear issues)
---             // Calling r.ImGui_GetColorU32() multiplies the given colors by the current Style Alpha, but you may pass the IM_COL32() directly as well..
---             r.ImGui_Text("Gradients");
---             ImVec2 gradient_size = ImVec2(r.ImGui_CalcItemWidth(), r.ImGui_GetFrameHeight());
---             {
---                 ImVec2 p0 = r.ImGui_GetCursorScreenPos();
---                 ImVec2 p1 = ImVec2(p0.x + gradient_size.x, p0.y + gradient_size.y);
---                 ImU32 col_a = r.ImGui_GetColorU32(IM_COL32(0, 0, 0, 255));
---                 ImU32 col_b = r.ImGui_GetColorU32(IM_COL32(255, 255, 255, 255));
---                 draw_list->AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
---                 r.ImGui_InvisibleButton("##gradient1", gradient_size);
---             }
---             {
---                 ImVec2 p0 = r.ImGui_GetCursorScreenPos();
---                 ImVec2 p1 = ImVec2(p0.x + gradient_size.x, p0.y + gradient_size.y);
---                 ImU32 col_a = r.ImGui_GetColorU32(IM_COL32(0, 255, 0, 255));
---                 ImU32 col_b = r.ImGui_GetColorU32(IM_COL32(255, 0, 0, 255));
---                 draw_list->AddRectFilledMultiColor(p0, p1, col_a, col_b, col_b, col_a);
---                 r.ImGui_InvisibleButton("##gradient2", gradient_size);
---             }
---
---             // Draw a bunch of primitives
---             r.ImGui_Text("All primitives");
---             static float sz = 36.0f;
---             static float thickness = 3.0f;
---             static int ngon_sides = 6;
---             static bool circle_segments_override = false;
---             static int circle_segments_override_v = 12;
---             static bool curve_segments_override = false;
---             static int curve_segments_override_v = 8;
---             static ImVec4 colf = ImVec4(1.0f, 1.0f, 0.4f, 1.0f);
---             ImGui::DragFloat("Size", &sz, 0.2f, 2.0f, 100.0f, "%.0f");
---             r.ImGui_DragFloat("Thickness", &thickness, 0.05f, 1.0f, 8.0f, "%.02f");
---             r.ImGui_SliderInt("N-gon sides", &ngon_sides, 3, 12);
---             r.ImGui_Checkbox("##circlesegmentoverride", &circle_segments_override);
---             r.ImGui_SameLine(0.0f, r.ImGui_GetStyle().ItemInnerSpacing.x);
---             circle_segments_override |= r.ImGui_SliderInt("Circle segments override", &circle_segments_override_v, 3, 40);
---             r.ImGui_Checkbox("##curvessegmentoverride", &curve_segments_override);
---             r.ImGui_SameLine(0.0f, r.ImGui_GetStyle().ItemInnerSpacing.x);
---             curve_segments_override |= r.ImGui_SliderInt("Curves segments override", &curve_segments_override_v, 3, 40);
---             r.ImGui_ColorEdit4("Color", &colf.x);
---
---             const ImVec2 p = r.ImGui_GetCursorScreenPos();
---             const ImU32 col = ImColor(colf);
---             const float spacing = 10.0f;
---             const ImDrawFlags corners_tl_br = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
---             const float rounding = sz / 5.0f;
---             const int circle_segments = circle_segments_override ? circle_segments_override_v : 0;
---             const int curve_segments = curve_segments_override ? curve_segments_override_v : 0;
---             float x = p.x + 4.0f;
---             float y = p.y + 4.0f;
---             for (int n = 0; n < 2; n++)
---             {
---                 // First line uses a thickness of 1.0f, second line uses the configurable thickness
---                 float th = (n == 0) ? 1.0f : thickness;
---                 draw_list->AddNgon(ImVec2(x + sz*0.5f, y + sz*0.5f), sz*0.5f, col, ngon_sides, th);                 x += sz + spacing;  // N-gon
---                 draw_list->AddCircle(ImVec2(x + sz*0.5f, y + sz*0.5f), sz*0.5f, col, circle_segments, th);          x += sz + spacing;  // Circle
---                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, 0.0f, ImDrawFlags_None, th);          x += sz + spacing;  // Square
---                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, rounding, ImDrawFlags_None, th);      x += sz + spacing;  // Square with all rounded corners
---                 draw_list->AddRect(ImVec2(x, y), ImVec2(x + sz, y + sz), col, rounding, corners_tl_br, th);         x += sz + spacing;  // Square with two rounded corners
---                 draw_list->AddTriangle(ImVec2(x+sz*0.5f,y), ImVec2(x+sz, y+sz-0.5f), ImVec2(x, y+sz-0.5f), col, th);x += sz + spacing;  // Triangle
---                 //draw_list->AddTriangle(ImVec2(x+sz*0.2f,y), ImVec2(x, y+sz-0.5f), ImVec2(x+sz*0.4f, y+sz-0.5f), col, th);x+= sz*0.4f + spacing; // Thin triangle
---                 draw_list->AddLine(ImVec2(x, y), ImVec2(x + sz, y), col, th);                                       x += sz + spacing;  // Horizontal line (note: drawing a filled rectangle will be faster!)
---                 draw_list->AddLine(ImVec2(x, y), ImVec2(x, y + sz), col, th);                                       x += spacing;       // Vertical line (note: drawing a filled rectangle will be faster!)
---                 draw_list->AddLine(ImVec2(x, y), ImVec2(x + sz, y + sz), col, th);                                  x += sz + spacing;  // Diagonal line
---
---                 // Quadratic Bezier Curve (3 control points)
---                 ImVec2 cp3[3] = { ImVec2(x, y + sz * 0.6f), ImVec2(x + sz * 0.5f, y - sz * 0.4f), ImVec2(x + sz, y + sz) };
---                 draw_list->AddBezierQuadratic(cp3[0], cp3[1], cp3[2], col, th, curve_segments); x += sz + spacing;
---
---                 // Cubic Bezier Curve (4 control points)
---                 ImVec2 cp4[4] = { ImVec2(x, y), ImVec2(x + sz * 1.3f, y + sz * 0.3f), ImVec2(x + sz - sz * 1.3f, y + sz - sz * 0.3f), ImVec2(x + sz, y + sz) };
---                 draw_list->AddBezierCubic(cp4[0], cp4[1], cp4[2], cp4[3], col, th, curve_segments);
---
---                 x = p.x + 4;
---                 y += sz + spacing;
---             }
---             draw_list->AddNgonFilled(ImVec2(x + sz * 0.5f, y + sz * 0.5f), sz*0.5f, col, ngon_sides);               x += sz + spacing;  // N-gon
---             draw_list->AddCircleFilled(ImVec2(x + sz*0.5f, y + sz*0.5f), sz*0.5f, col, circle_segments);            x += sz + spacing;  // Circle
---             draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + sz, y + sz), col);                                    x += sz + spacing;  // Square
---             draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + sz, y + sz), col, 10.0f);                             x += sz + spacing;  // Square with all rounded corners
---             draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + sz, y + sz), col, 10.0f, corners_tl_br);              x += sz + spacing;  // Square with two rounded corners
---             draw_list->AddTriangleFilled(ImVec2(x+sz*0.5f,y), ImVec2(x+sz, y+sz-0.5f), ImVec2(x, y+sz-0.5f), col);  x += sz + spacing;  // Triangle
---             //draw_list->AddTriangleFilled(ImVec2(x+sz*0.2f,y), ImVec2(x, y+sz-0.5f), ImVec2(x+sz*0.4f, y+sz-0.5f), col); x += sz*0.4f + spacing; // Thin triangle
---             draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + sz, y + thickness), col);                             x += sz + spacing;  // Horizontal line (faster than AddLine, but only handle integer thickness)
---             draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + thickness, y + sz), col);                             x += spacing * 2.0f;// Vertical line (faster than AddLine, but only handle integer thickness)
---             draw_list->AddRectFilled(ImVec2(x, y), ImVec2(x + 1, y + 1), col);                                      x += sz;            // Pixel (faster than AddLine)
---             draw_list->AddRectFilledMultiColor(ImVec2(x, y), ImVec2(x + sz, y + sz), IM_COL32(0, 0, 0, 255), IM_COL32(255, 0, 0, 255), IM_COL32(255, 255, 0, 255), IM_COL32(0, 255, 0, 255));
---
---             r.ImGui_Dummy(ImVec2((sz + spacing) * 10.2f, (sz + spacing) * 3.0f));
---             r.ImGui_PopItemWidth();
---             r.ImGui_EndTabItem();
---         }
---
---         if (r.ImGui_BeginTabItem("Canvas"))
---         {
---             static ImVector<ImVec2> points;
---             static ImVec2 scrolling(0.0f, 0.0f);
---             static bool opt_enable_grid = true;
---             static bool opt_enable_context_menu = true;
---             static bool adding_line = false;
---
---             r.ImGui_Checkbox("Enable grid", &opt_enable_grid);
---             r.ImGui_Checkbox("Enable context menu", &opt_enable_context_menu);
---             r.ImGui_Text("Mouse Left: drag to add lines,\nMouse Right: drag to scroll, click for context menu.");
---
---             // Typically you would use a BeginChild()/EndChild() pair to benefit from a clipping region + own scrolling.
---             // Here we demonstrate that this can be replaced by simple offsetting + custom drawing + PushClipRect/PopClipRect() calls.
---             // To use a child window instead we could use, e.g:
---             //      r.ImGui_PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));      // Disable padding
---             //      r.ImGui_PushStyleColor(ImGuiCol_ChildBg, IM_COL32(50, 50, 50, 255));  // Set a background color
---             //      r.ImGui_BeginChild("canvas", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoMove);
---             //      r.ImGui_PopStyleColor();
---             //      r.ImGui_PopStyleVar();
---             //      [...]
---             //      r.ImGui_EndChild();
---
---             // Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
---             ImVec2 canvas_p0 = r.ImGui_GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
---             ImVec2 canvas_sz = r.ImGui_GetContentRegionAvail();   // Resize canvas to what's available
---             if (canvas_sz.x < 50.0f) canvas_sz.x = 50.0f;
---             if (canvas_sz.y < 50.0f) canvas_sz.y = 50.0f;
---             ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
---
---             // Draw border and background color
---             ImGuiIO& io = r.ImGui_GetIO();
---             ImDrawList* draw_list = r.ImGui_GetWindowDrawList();
---             draw_list->AddRectFilled(canvas_p0, canvas_p1, IM_COL32(50, 50, 50, 255));
---             draw_list->AddRect(canvas_p0, canvas_p1, IM_COL32(255, 255, 255, 255));
---
---             // This will catch our interactions
---             r.ImGui_InvisibleButton("canvas", canvas_sz, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
---             const bool is_hovered = r.ImGui_IsItemHovered(); // Hovered
---             const bool is_active = r.ImGui_IsItemActive();   // Held
---             const ImVec2 origin(canvas_p0.x + scrolling.x, canvas_p0.y + scrolling.y); // Lock scrolled origin
---             const ImVec2 mouse_pos_in_canvas(io.MousePos.x - origin.x, io.MousePos.y - origin.y);
---
---             // Add first and second point
---             if (is_hovered && !adding_line && r.ImGui_IsMouseClicked(ImGuiMouseButton_Left))
---             {
---                 points.push_back(mouse_pos_in_canvas);
---                 points.push_back(mouse_pos_in_canvas);
---                 adding_line = true;
---             }
---             if (adding_line)
---             {
---                 points.back() = mouse_pos_in_canvas;
---                 if (!r.ImGui_IsMouseDown(ImGuiMouseButton_Left))
---                     adding_line = false;
---             }
---
---             // Pan (we use a zero mouse threshold when there's no context menu)
---             // You may decide to make that threshold dynamic based on whether the mouse is hovering something etc.
---             const float mouse_threshold_for_pan = opt_enable_context_menu ? -1.0f : 0.0f;
---             if (is_active && r.ImGui_IsMouseDragging(ImGuiMouseButton_Right, mouse_threshold_for_pan))
---             {
---                 scrolling.x += io.MouseDelta.x;
---                 scrolling.y += io.MouseDelta.y;
---             }
---
---             // Context menu (under default mouse threshold)
---             ImVec2 drag_delta = r.ImGui_GetMouseDragDelta(ImGuiMouseButton_Right);
---             if (opt_enable_context_menu && r.ImGui_IsMouseReleased(ImGuiMouseButton_Right) && drag_delta.x == 0.0f && drag_delta.y == 0.0f)
---                 r.ImGui_OpenPopupOnItemClick("context");
---             if (r.ImGui_BeginPopup("context"))
---             {
---                 if (adding_line)
---                     points.resize(points.size() - 2);
---                 adding_line = false;
---                 if (r.ImGui_MenuItem("Remove one", NULL, false, points.Size > 0)) { points.resize(points.size() - 2); }
---                 if (r.ImGui_MenuItem("Remove all", NULL, false, points.Size > 0)) { points.clear(); }
---                 r.ImGui_EndPopup();
---             }
---
---             // Draw grid + all lines in the canvas
---             draw_list->PushClipRect(canvas_p0, canvas_p1, true);
---             if (opt_enable_grid)
---             {
---                 const float GRID_STEP = 64.0f;
---                 for (float x = fmodf(scrolling.x, GRID_STEP); x < canvas_sz.x; x += GRID_STEP)
---                     draw_list->AddLine(ImVec2(canvas_p0.x + x, canvas_p0.y), ImVec2(canvas_p0.x + x, canvas_p1.y), IM_COL32(200, 200, 200, 40));
---                 for (float y = fmodf(scrolling.y, GRID_STEP); y < canvas_sz.y; y += GRID_STEP)
---                     draw_list->AddLine(ImVec2(canvas_p0.x, canvas_p0.y + y), ImVec2(canvas_p1.x, canvas_p0.y + y), IM_COL32(200, 200, 200, 40));
---             }
---             for (int n = 0; n < points.Size; n += 2)
---                 draw_list->AddLine(ImVec2(origin.x + points[n].x, origin.y + points[n].y), ImVec2(origin.x + points[n + 1].x, origin.y + points[n + 1].y), IM_COL32(255, 255, 0, 255), 2.0f);
---             draw_list->PopClipRect();
---
---             r.ImGui_EndTabItem();
---         }
---
---         if (r.ImGui_BeginTabItem("BG/FG draw lists"))
---         {
---             static bool draw_bg = true;
---             static bool draw_fg = true;
---             r.ImGui_Checkbox("Draw in Background draw list", &draw_bg);
---             r.ImGui_SameLine(); HelpMarker("The Background draw list will be rendered below every Dear ImGui windows.");
---             r.ImGui_Checkbox("Draw in Foreground draw list", &draw_fg);
---             r.ImGui_SameLine(); HelpMarker("The Foreground draw list will be rendered over every Dear ImGui windows.");
---             ImVec2 window_pos = r.ImGui_GetWindowPos();
---             ImVec2 window_size = r.ImGui_GetWindowSize();
---             ImVec2 window_center = ImVec2(window_pos.x + window_size.x * 0.5f, window_pos.y + window_size.y * 0.5f);
---             if (draw_bg)
---                 r.ImGui_GetBackgroundDrawList()->AddCircle(window_center, window_size.x * 0.6f, IM_COL32(255, 0, 0, 200), 0, 10 + 4);
---             if (draw_fg)
---                 r.ImGui_GetForegroundDrawList()->AddCircle(window_center, window_size.y * 0.6f, IM_COL32(0, 255, 0, 200), 0, 10);
---             r.ImGui_EndTabItem();
---         }
---
---         r.ImGui_EndTabBar();
---     }
---
---     r.ImGui_End();
--- }
---
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Custom Rendering using ImDrawList API / ShowExampleAppCustomRendering()
+-------------------------------------------------------------------------------
+
+-- Demonstrate using the low-level ImDrawList to draw custom shapes.
+function demo.ShowExampleAppCustomRendering()
+  if not app.rendering then
+    app.rendering = {
+      sz                         = 36.0,
+      thickness                  = 3.0,
+      ngon_sides                 = 6,
+      circle_segments_override   = false,
+      circle_segments_override_v = 12,
+      curve_segments_override    = false,
+      curve_segments_override_v  = 8,
+      col                        = 0xffff66ff,
+
+      points                     = {},
+      scrolling                  = {0.0, 0.0},
+      opt_enable_grid            = true,
+      opt_enable_context_menu    = true,
+      adding_line                = false,
+
+      draw_bg                    = true,
+      draw_fg                    = true,
+    }
+  end
+
+  local rv,open = r.ImGui_Begin(ctx, 'Example: Custom rendering', true)
+  if not rv then
+    r.ImGui_End(ctx)
+    return open
+  end
+
+  if r.ImGui_BeginTabBar(ctx, '##TabBar') then
+    if r.ImGui_BeginTabItem(ctx, 'Primitives') then
+      r.ImGui_PushItemWidth(ctx, -r.ImGui_GetFontSize(ctx) * 15)
+      local draw_list = r.ImGui_GetWindowDrawList(ctx)
+
+      -- Draw gradients
+      -- (note that those are currently exacerbating our sRGB/Linear issues)
+      -- Calling r.ImGui_GetColor[Ex]() multiplies the given colors by the current Style Alpha
+      r.ImGui_Text(ctx, 'Gradients')
+      local gradient_size = {r.ImGui_CalcItemWidth(ctx), r.ImGui_GetFrameHeight(ctx)}
+
+      local p0 = {r.ImGui_GetCursorScreenPos(ctx)}
+      local p1 = {p0[1] + gradient_size[1], p0[2] + gradient_size[2]}
+      local col_a = r.ImGui_GetColorEx(ctx, 0x000000FF)
+      local col_b = r.ImGui_GetColorEx(ctx, 0xFFFFFFFF)
+      r.ImGui_DrawList_AddRectFilledMultiColor(draw_list, p0[1], p0[2], p1[1], p1[2], col_a, col_b, col_b, col_a)
+      r.ImGui_InvisibleButton(ctx, '##gradient1', gradient_size[1], gradient_size[2])
+
+      local p0 = {r.ImGui_GetCursorScreenPos(ctx)}
+      local p1 = {p0[1] + gradient_size[1], p0[2] + gradient_size[2]}
+      local col_a = r.ImGui_GetColorEx(ctx, 0x00FF00FF)
+      local col_b = r.ImGui_GetColorEx(ctx, 0xFF0000FF)
+      r.ImGui_DrawList_AddRectFilledMultiColor(draw_list, p0[1], p0[2], p1[1], p1[2], col_a, col_b, col_b, col_a)
+      r.ImGui_InvisibleButton(ctx, '##gradient2', gradient_size[1], gradient_size[2])
+
+      -- Draw a bunch of primitives
+      local item_inner_spacing_x = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())
+      r.ImGui_Text(ctx, 'All primitives')
+      rv,app.rendering.sz = r.ImGui_DragDouble(ctx, 'Size', app.rendering.sz, 0.2, 2.0, 100.0, '%.0f')
+      rv,app.rendering.thickness = r.ImGui_DragDouble(ctx, 'Thickness', app.rendering.thickness, 0.05, 1.0, 8.0, '%.02f')
+      rv,app.rendering.ngon_sides = r.ImGui_SliderInt(ctx, 'N-gon sides', app.rendering.ngon_sides, 3, 12)
+      rv,app.rendering.circle_segments_override = r.ImGui_Checkbox(ctx, '##circlesegmentoverride', app.rendering.circle_segments_override)
+      r.ImGui_SameLine(ctx, 0.0, item_inner_spacing_x)
+      rv,app.rendering.circle_segments_override_v = r.ImGui_SliderInt(ctx, 'Circle segments override', app.rendering.circle_segments_override_v, 3, 40)
+      if rv then app.rendering.circle_segments_override = true end
+      rv,app.rendering.curve_segments_override = r.ImGui_Checkbox(ctx, '##curvessegmentoverride', app.rendering.curve_segments_override)
+      r.ImGui_SameLine(ctx, 0.0, item_inner_spacing_x)
+      rv,app.rendering.curve_segments_override_v = r.ImGui_SliderInt(ctx, 'Curves segments override', app.rendering.curve_segments_override_v, 3, 40)
+      if rv then app.rendering.curve_segments_override = true end
+      rv,app.rendering.col = r.ImGui_ColorEdit4(ctx, 'Color', app.rendering.col)
+
+      local p = {r.ImGui_GetCursorScreenPos(ctx)}
+      local spacing = 10.0
+      local corners_tl_br = r.ImGui_DrawFlags_RoundCornersTopLeft() | r.ImGui_DrawFlags_RoundCornersBottomRight()
+      local col = app.rendering.col
+      local sz = app.rendering.sz
+      local rounding = sz / 5.0
+      local circle_segments = app.rendering.circle_segments_override and app.rendering.circle_segments_override_v or 0
+      local curve_segments = app.rendering.curve_segments_override and app.rendering.curve_segments_override_v or 0
+      local x = p[1] + 4.0
+      local y = p[2] + 4.0
+      for n = 1, 2 do
+        -- First line uses a thickness of 1.0, second line uses the configurable thickness
+        local th = n == 1 and 1.0 or app.rendering.thickness
+        r.ImGui_DrawList_AddNgon(draw_list, x + sz*0.5, y + sz*0.5, sz*0.5, col, app.rendering.ngon_sides, th); x = x + sz + spacing  -- N-gon
+        r.ImGui_DrawList_AddCircle(draw_list, x + sz*0.5, y + sz*0.5, sz*0.5, col, circle_segments, th);        x = x + sz + spacing  -- Circle
+        r.ImGui_DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, 0.0, r.ImGui_DrawFlags_None(), th);      x = x + sz + spacing  -- Square
+        r.ImGui_DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, rounding, r.ImGui_DrawFlags_None(), th); x = x + sz + spacing  -- Square with all rounded corners
+        r.ImGui_DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, rounding, corners_tl_br, th);            x = x + sz + spacing  -- Square with two rounded corners
+        r.ImGui_DrawList_AddTriangle(draw_list, x+sz*0.5, y, x+sz, y+sz-0.5, x, y+sz-0.5, col, th);             x = x + sz + spacing  -- Triangle
+        -- r.ImGui_DrawList_AddTriangle(draw_list, x+sz*0.2, y, x, y+sz-0.5, x+sz*0.4, y+sz-0.5, col, th);      x = x + sz*0.4 + spacing -- Thin triangle
+        r.ImGui_DrawList_AddLine(draw_list, x, y, x + sz, y, col, th);                                          x = x + sz + spacing  -- Horizontal line (note: drawing a filled rectangle will be faster!)
+        r.ImGui_DrawList_AddLine(draw_list, x, y, x, y + sz, col, th);                                          x = x +      spacing  -- Vertical line (note: drawing a filled rectangle will be faster!)
+        r.ImGui_DrawList_AddLine(draw_list, x, y, x + sz, y + sz, col, th);                                     x = x + sz + spacing  -- Diagonal line
+
+        -- Quadratic Bezier Curve (3 control points)
+        local cp3 = {{x, y + sz * 0.6}, {x + sz * 0.5, y - sz * 0.4}, {x + sz, y + sz}}
+        r.ImGui_DrawList_AddBezierQuadratic(draw_list,
+          cp3[1][1], cp3[1][2], cp3[2][1], cp3[2][2], cp3[3][1], cp3[3][2],
+          col, th, curve_segments)
+        x = x + sz + spacing
+
+        -- Cubic Bezier Curve (4 control points)
+        local cp4 = {{x, y}, {x + sz * 1.3, y + sz * 0.3}, {x + sz - sz * 1.3, y + sz - sz * 0.3}, {x + sz, y + sz}}
+        r.ImGui_DrawList_AddBezierCubic(draw_list,
+          cp4[1][1], cp4[1][2], cp4[2][1], cp4[2][2], cp4[3][1], cp4[3][2], cp4[4][1], cp4[4][2],
+          col, th, curve_segments)
+
+        x = p[1] + 4
+        y = y + sz + spacing
+      end
+      r.ImGui_DrawList_AddNgonFilled(draw_list, x + sz * 0.5, y + sz * 0.5, sz*0.5, col, app.rendering.ngon_sides); x = x + sz + spacing  -- N-gon
+      r.ImGui_DrawList_AddCircleFilled(draw_list, x + sz*0.5, y + sz*0.5, sz*0.5, col, circle_segments);            x = x + sz + spacing  -- Circle
+      r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + sz, y + sz, col);                                         x = x + sz + spacing  -- Square
+      r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + sz, y + sz, col, 10.0);                                   x = x + sz + spacing  -- Square with all rounded corners
+      r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + sz, y + sz, col, 10.0, corners_tl_br);                    x = x + sz + spacing  -- Square with two rounded corners
+      r.ImGui_DrawList_AddTriangleFilled(draw_list, x+sz*0.5, y, x+sz, y+sz-0.5, x, y+sz-0.5, col);                 x = x + sz + spacing  -- Triangle
+      -- r.ImGui_DrawList_AddTriangleFilled(draw_list, x+sz*0.2, y, x, y+sz-0.5, x+sz*0.4, y+sz-0.5, col);          x = x + sz*0.4 + spacing -- Thin triangle
+      r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + sz, y + app.rendering.thickness, col);                    x = x + sz + spacing  -- Horizontal line (faster than AddLine, but only handle integer thickness)
+      r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + app.rendering.thickness, y + sz, col);                    x = x + spacing * 2.0 -- Vertical line (faster than AddLine, but only handle integer thickness)
+      r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + 1, y + 1, col);                                           x = x + sz            -- Pixel (faster than AddLine)
+      r.ImGui_DrawList_AddRectFilledMultiColor(draw_list, x, y, x + sz, y + sz, 0x000000ff, 0xff0000ff, 0xffff00ff, 0x00ff00ff)
+
+      r.ImGui_Dummy(ctx, (sz + spacing) * 10.2, (sz + spacing) * 3.0)
+      r.ImGui_PopItemWidth(ctx)
+      r.ImGui_EndTabItem(ctx)
+    end
+
+    if r.ImGui_BeginTabItem(ctx, 'Canvas') then
+      rv,app.rendering.opt_enable_grid =
+        r.ImGui_Checkbox(ctx, 'Enable grid', app.rendering.opt_enable_grid)
+      rv,app.rendering.opt_enable_context_menu =
+        r.ImGui_Checkbox(ctx, 'Enable context menu', app.rendering.opt_enable_context_menu)
+      r.ImGui_Text(ctx, 'Mouse Left: drag to add lines,\nMouse Right: drag to scroll, click for context menu.')
+
+      -- Typically you would use a BeginChild()/EndChild() pair to benefit from a clipping region + own scrolling.
+      -- Here we demonstrate that this can be replaced by simple offsetting + custom drawing + PushClipRect/PopClipRect() calls.
+      -- To use a child window instead we could use, e.g:
+      --      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_WindowPadding(), 0, 0) -- Disable padding
+      --      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ChildBg(), 0x323232ff)    -- Set a background color
+      --      r.ImGui_BeginChild(ctx, 'canvas', 0.0, 0.0, true, r.ImGui_WindowFlags_NoMove())
+      --      r.ImGui_PopStyleColor(ctx)
+      --      r.ImGui_PopStyleVar(ctx)
+      --      [...]
+      --      r.ImGui_EndChild(ctx)
+
+      -- Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
+      local canvas_p0 = {r.ImGui_GetCursorScreenPos(ctx)}      -- ImDrawList API uses screen coordinates!
+      local canvas_sz = {r.ImGui_GetContentRegionAvail(ctx)}   -- Resize canvas to what's available
+      if canvas_sz[1] < 50.0 then canvas_sz[1] = 50.0 end
+      if canvas_sz[2] < 50.0 then canvas_sz[2] = 50.0 end
+      local canvas_p1 = {canvas_p0[1] + canvas_sz[1], canvas_p0[2] + canvas_sz[2]}
+
+      -- Draw border and background color
+      local mouse_pos = {r.ImGui_GetMousePos(ctx)}
+      local draw_list = r.ImGui_GetWindowDrawList(ctx)
+      r.ImGui_DrawList_AddRectFilled(draw_list, canvas_p0[1], canvas_p0[2], canvas_p1[1], canvas_p1[2], 0x323232ff)
+      r.ImGui_DrawList_AddRect(draw_list, canvas_p0[1], canvas_p0[2], canvas_p1[1], canvas_p1[2], 0xffffffff)
+
+      -- This will catch our interactions
+      r.ImGui_InvisibleButton(ctx, 'canvas', canvas_sz[1], canvas_sz[2], r.ImGui_ButtonFlags_MouseButtonLeft() | r.ImGui_ButtonFlags_MouseButtonRight())
+      local is_hovered = r.ImGui_IsItemHovered(ctx) -- Hovered
+      local is_active = r.ImGui_IsItemActive(ctx)   -- Held
+      local origin = {canvas_p0[1] + app.rendering.scrolling[1], canvas_p0[2] + app.rendering.scrolling[2]} -- Lock scrolled origin
+      local mouse_pos_in_canvas = {mouse_pos[1] - origin[1], mouse_pos[2] - origin[2]}
+
+      -- Add first and second point
+      if is_hovered and not app.rendering.adding_line and r.ImGui_IsMouseClicked(ctx, r.ImGui_MouseButton_Left()) then
+        table.insert(app.rendering.points, mouse_pos_in_canvas)
+        table.insert(app.rendering.points, mouse_pos_in_canvas)
+        app.rendering.adding_line = true
+      end
+      if app.rendering.adding_line then
+        app.rendering.points[#app.rendering.points] = mouse_pos_in_canvas
+        if not r.ImGui_IsMouseDown(ctx, r.ImGui_MouseButton_Left()) then
+          app.rendering.adding_line = false
+        end
+      end
+
+      -- Pan (we use a zero mouse threshold when there's no context menu)
+      -- You may decide to make that threshold dynamic based on whether the mouse is hovering something etc.
+      local mouse_threshold_for_pan = app.rendering.opt_enable_context_menu and -1.0 or 0.0
+      if is_active and r.ImGui_IsMouseDragging(ctx, r.ImGui_MouseButton_Right(), mouse_threshold_for_pan) then
+        local mouse_delta = {r.ImGui_GetMouseDelta(ctx)}
+        app.rendering.scrolling[1] = app.rendering.scrolling[1] + mouse_delta[1]
+        app.rendering.scrolling[2] = app.rendering.scrolling[2] + mouse_delta[2]
+      end
+
+      local removeLastLine = function()
+        table.remove(app.rendering.points)
+        table.remove(app.rendering.points)
+      end
+
+      -- Context menu (under default mouse threshold)
+      local drag_delta = {r.ImGui_GetMouseDragDelta(ctx, 0, 0, r.ImGui_MouseButton_Right())}
+      if app.rendering.opt_enable_context_menu and r.ImGui_IsMouseReleased(ctx, r.ImGui_MouseButton_Right()) and drag_delta[1] == 0.0 and drag_delta[2] == 0.0 then
+        r.ImGui_OpenPopupOnItemClick(ctx, 'context')
+      end
+      if r.ImGui_BeginPopup(ctx, 'context') then
+        if app.rendering.adding_line then
+          removeLastLine()
+          app.rendering.adding_line = false
+        end
+        if r.ImGui_MenuItem(ctx, 'Remove one', nil, false, #app.rendering.points > 0) then removeLastLine() end
+        if r.ImGui_MenuItem(ctx, 'Remove all', nil, false, #app.rendering.points > 0) then app.rendering.points = {} end
+        r.ImGui_EndPopup(ctx)
+      end
+
+      -- Draw grid + all lines in the canvas
+      r.ImGui_DrawList_PushClipRect(draw_list, canvas_p0[1], canvas_p0[2], canvas_p1[1], canvas_p1[2], true)
+      if app.rendering.opt_enable_grid then
+        local GRID_STEP = 64.0
+        local x = math.fmod(app.rendering.scrolling[1], GRID_STEP)
+        while x < canvas_sz[1] do
+          r.ImGui_DrawList_AddLine(draw_list, canvas_p0[1] + x, canvas_p0[2], canvas_p0[1] + x, canvas_p1[2], 0xc8c8c828)
+          x = x + GRID_STEP
+        end
+        local y = math.fmod(app.rendering.scrolling[2], GRID_STEP)
+        while y < canvas_sz[2] do
+          r.ImGui_DrawList_AddLine(draw_list, canvas_p0[1], canvas_p0[2] + y, canvas_p1[1], canvas_p0[2] + y, 0xc8c8c828)
+          y = y + GRID_STEP
+        end
+      end
+      local n = 1
+      while n < #app.rendering.points do
+        r.ImGui_DrawList_AddLine(draw_list,
+          origin[1] + app.rendering.points[n][1], origin[2] + app.rendering.points[n][2],
+          origin[1] + app.rendering.points[n + 1][1], origin[2] + app.rendering.points[n + 1][2],
+          0xffff00ff, 2.0)
+        n = n + 2
+      end
+      r.ImGui_DrawList_PopClipRect(draw_list)
+
+      r.ImGui_EndTabItem(ctx)
+    end
+
+    if r.ImGui_BeginTabItem(ctx, 'BG/FG draw lists') then
+      rv,app.rendering.draw_bg = r.ImGui_Checkbox(ctx, 'Draw in Background draw list', app.rendering.draw_bg)
+      r.ImGui_SameLine(ctx); demo.HelpMarker('The Background draw list will be rendered below every Dear ImGui windows.')
+      rv,app.rendering.draw_fg = r.ImGui_Checkbox(ctx, 'Draw in Foreground draw list', app.rendering.draw_fg)
+      r.ImGui_SameLine(ctx); demo.HelpMarker('The Foreground draw list will be rendered over every Dear ImGui windows.')
+      local window_pos = {r.ImGui_GetWindowPos(ctx)}
+      local window_size = {r.ImGui_GetWindowSize(ctx)}
+      local window_center = {window_pos[1] + window_size[1] * 0.5, window_pos[2] + window_size[2] * 0.5}
+      if app.rendering.draw_bg then
+        r.ImGui_DrawList_AddCircle(r.ImGui_GetBackgroundDrawList(ctx),
+          window_center[1], window_center[2], window_size[1] * 0.6,
+          0xFF0000c8, nil, 10 + 4)
+      end
+      if app.rendering.draw_fg then
+        r.ImGui_DrawList_AddCircle(r.ImGui_GetForegroundDrawList(ctx),
+          window_center[1], window_center[2], window_size[2] * 0.6,
+          0x00FF00c8, nil, 10)
+      end
+      r.ImGui_EndTabItem(ctx)
+    end
+
+    r.ImGui_EndTabBar(ctx)
+  end
+
+  r.ImGui_End(ctx)
+  return open
+end
+
 -- //-----------------------------------------------------------------------------
 -- // [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
 -- //-----------------------------------------------------------------------------
