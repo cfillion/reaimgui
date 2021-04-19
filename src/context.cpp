@@ -30,6 +30,20 @@
 #  define PATH_SEP "/"
 #endif
 
+static std::string iniFilename(const std::string &label)
+{
+  std::string fn { GetResourcePath() };
+  fn += PATH_SEP "ReaImGui";
+  RecursiveCreateDirectory(fn.c_str(), 0);
+
+  const size_t pathSize { fn.size() };
+  fn.resize(pathSize + (sizeof(ImGuiID) * 2) + strlen(PATH_SEP ".ini"));
+  snprintf(&fn[pathSize], (fn.size() - pathSize) + 1, PATH_SEP "%0*X.ini",
+    static_cast<int>(sizeof(ImGuiID) * 2), ImHashStr(label.c_str()));
+
+  return fn;
+}
+
 class TempCurrent {
 public:
   TempCurrent(Context *ctx)
@@ -48,6 +62,7 @@ Context *Context::current()
 Context::Context(const WindowConfig &winConfig)
   : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
+    m_iniFilename { iniFilename(winConfig.title) },
     m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
 {
   static const std::string logFn
@@ -58,7 +73,7 @@ Context::Context(const WindowConfig &winConfig)
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
-  io.IniFilename = nullptr;
+  io.IniFilename = m_iniFilename.c_str();
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 

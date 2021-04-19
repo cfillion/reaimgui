@@ -173,7 +173,6 @@ NATIVE_ONLY_ENUMS = [
   /\AFontAtlasFlags_/,
   'Cond_None',          # alias for Cond_Always
   /\AKey_.+/,           # for GetKeyIndex, not implemented
-  /_NoSavedSettings\z/, # saved settings are not implemented yet
   'ColorEditFlags_HDR', # not allowed, would break float[4]<->int conversion
   /\AViewportFlags_/,
   'MouseCursor_None',   # not implemented under SWELL

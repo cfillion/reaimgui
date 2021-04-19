@@ -369,7 +369,7 @@ DEFINE_ENUM(ImGui, TableFlags_Resizable,                  "Enable resizing colum
 DEFINE_ENUM(ImGui, TableFlags_Reorderable,                "Enable reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)");
 DEFINE_ENUM(ImGui, TableFlags_Hideable,                   "Enable hiding/disabling columns in context menu.");
 DEFINE_ENUM(ImGui, TableFlags_Sortable,                   "Enable sorting. Call TableGetSortSpecs() to obtain sort specs. Also see ImGuiTableFlags_SortMulti and ImGuiTableFlags_SortTristate.");
-// DEFINE_ENUM(ImGui, TableFlags_NoSavedSettings,            "Disable persisting columns order, width and sort settings in the .ini file.");
+DEFINE_ENUM(ImGui, TableFlags_NoSavedSettings,            "Disable persisting columns order, width and sort settings in the .ini file.");
 DEFINE_ENUM(ImGui, TableFlags_ContextMenuInBody,          "Right-click on columns body/contents will display table context menu. By default it is available in TableHeadersRow().");
 // Decorations
 DEFINE_ENUM(ImGui, TableFlags_RowBg,                      "Set each RowBg color with ImGuiCol_TableRowBg or ImGuiCol_TableRowBgAlt (equivalent of calling TableSetBgColor with ImGuiTableBgFlags_RowBg0 on each row manually)");
@@ -465,7 +465,7 @@ DEFINE_ENUM(ImGui, WindowFlags_NoScrollWithMouse,         "Disable user vertical
 DEFINE_ENUM(ImGui, WindowFlags_NoCollapse,                "Disable user collapsing window by double-clicking on it");
 DEFINE_ENUM(ImGui, WindowFlags_AlwaysAutoResize,          "Resize every window to its content every frame");
 DEFINE_ENUM(ImGui, WindowFlags_NoBackground,              "Disable drawing background color (WindowBg, etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0f).");
-// DEFINE_ENUM(ImGui, WindowFlags_NoSavedSettings,           "Never load/save settings in .ini file");
+DEFINE_ENUM(ImGui, WindowFlags_NoSavedSettings,           "Never load/save settings in .ini file");
 DEFINE_ENUM(ImGui, WindowFlags_NoMouseInputs,             "Disable catching mouse, hovering test with pass through.");
 DEFINE_ENUM(ImGui, WindowFlags_MenuBar,                   "Has a menu-bar");
 DEFINE_ENUM(ImGui, WindowFlags_HorizontalScrollbar,     R"(Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(ImVec2(width,0.0f)); prior to calling Begin() to specify width. Read code in imgui_demo in the "Horizontal Scrolling" section.)");

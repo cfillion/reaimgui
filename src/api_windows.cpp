@@ -33,7 +33,6 @@ Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 {
   FRAME_GUARD;
   ImGuiWindowFlags flags { valueOr(API_RO(flags), ImGuiWindowFlags_None) };
-  flags |= ImGuiWindowFlags_NoSavedSettings;
   return ImGui::Begin(name, API_RWO(p_open), flags);
 });
 

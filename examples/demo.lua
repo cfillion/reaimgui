@@ -1136,7 +1136,7 @@ function demo.ShowDemoWindowWidgets()
       r.ImGui_TreePop(ctx)
     end
     if r.ImGui_TreeNode(ctx, 'In columns') then
-      if r.ImGui_BeginTable(ctx, 'split1', 3, r.ImGui_TableFlags_Resizable()) then-- | r.ImGui_TableFlags_NoSavedSettings())
+      if r.ImGui_BeginTable(ctx, 'split1', 3, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings()) then
         for i,sel in ipairs(widgets.selectables.columns) do
           r.ImGui_TableNextColumn(ctx)
           rv,widgets.selectables.columns[i] = r.ImGui_Selectable(ctx, ('Item %d'):format(i-1), sel);
@@ -1144,7 +1144,7 @@ function demo.ShowDemoWindowWidgets()
         r.ImGui_EndTable(ctx)
       end
       r.ImGui_Separator(ctx)
-      if r.ImGui_BeginTable(ctx, 'split2', 3, r.ImGui_TableFlags_Resizable()) then-- | r.ImGui_TableFlags_NoSavedSettings())
+      if r.ImGui_BeginTable(ctx, 'split2', 3, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings()) then
         for i,sel in ipairs(widgets.selectables.columns) do
           r.ImGui_TableNextRow(ctx)
           r.ImGui_TableNextColumn(ctx)
@@ -2481,7 +2481,7 @@ function demo.ShowDemoWindowLayout()
       end
       r.ImGui_EndMenuBar(ctx)
     end
-    if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_Resizable()--[[ | r.ImGuiTableFlags_NoSavedSettings()]]) then
+    if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_Resizable() | r.ImGuiTableFlags_NoSavedSettings()) then
       for i = 0, 99 do
         r.ImGui_TableNextColumn(ctx)
         r.ImGui_Button(ctx, ('%03d'):format(i), -FLT_MIN, 0.0)
@@ -4941,12 +4941,12 @@ function demo.ShowDemoWindowTables()
   DoOpenAction()
   if r.ImGui_TreeNode(ctx, 'Synced instances') then
     demo.HelpMarker('Multiple tables with the same identifier will share their settings, width, visibility, order etc.')
-    local flags = r.ImGui_TableFlags_Resizable() |
-                  r.ImGui_TableFlags_Reorderable() |
-                  r.ImGui_TableFlags_Hideable() |
-                  r.ImGui_TableFlags_Borders() |
-                  r.ImGui_TableFlags_SizingFixedFit()-- |
-                  --r.ImGui_TableFlags_NoSavedSettings()
+    local flags = r.ImGui_TableFlags_Resizable()      |
+                  r.ImGui_TableFlags_Reorderable()    |
+                  r.ImGui_TableFlags_Hideable()       |
+                  r.ImGui_TableFlags_Borders()        |
+                  r.ImGui_TableFlags_SizingFixedFit() |
+                  r.ImGui_TableFlags_NoSavedSettings()
     for n = 0, 2 do
       local buf = ('Synced Table %d'):format(n)
       local open = r.ImGui_CollapsingHeader(ctx, buf, nil, r.ImGui_TreeNodeFlags_DefaultOpen())
@@ -5101,7 +5101,7 @@ function demo.ShowDemoWindowTables()
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Reorderable', tables.advanced.flags, r.ImGui_TableFlags_Reorderable())
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Hideable', tables.advanced.flags, r.ImGui_TableFlags_Hideable())
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Sortable', tables.advanced.flags, r.ImGui_TableFlags_Sortable())
-        -- rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoSavedSettings', tables.advanced.flags, r.ImGui_TableFlags_NoSavedSettings())
+        rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoSavedSettings', tables.advanced.flags, r.ImGui_TableFlags_NoSavedSettings())
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ContextMenuInBody', tables.advanced.flags, r.ImGui_TableFlags_ContextMenuInBody())
         r.ImGui_TreePop(ctx)
       end
@@ -6741,7 +6741,7 @@ function demo.ShowExampleAppSimpleOverlay()
 
   local window_flags = r.ImGui_WindowFlags_NoDecoration()       |
                        r.ImGui_WindowFlags_AlwaysAutoResize()   |
-                       -- r.ImGui_WindowFlags_NoSavedSettings()    |
+                       r.ImGui_WindowFlags_NoSavedSettings()    |
                        r.ImGui_WindowFlags_NoFocusOnAppearing() |
                        r.ImGui_WindowFlags_NoNav()
 
@@ -6793,7 +6793,7 @@ function demo.ShowExampleAppFullscreen()
     app.fullscreen = {
       use_work_area = true,
       flags = r.ImGui_WindowFlags_NoDecoration() | r.ImGui_WindowFlags_NoMove() |
-              r.ImGui_WindowFlags_NoResize()-- | r.ImGui_WindowFlags_NoSavedSettings(),
+              r.ImGui_WindowFlags_NoResize() | r.ImGui_WindowFlags_NoSavedSettings(),
     }
   end
 

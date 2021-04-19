@@ -24,6 +24,7 @@
 
 #include <array>
 #include <chrono>
+#include <string>
 
 #include <imgui/imgui.h>
 
@@ -92,6 +93,7 @@ private:
   std::optional<int> m_setDockNextFrame;
   std::array<uint8_t, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
+  std::string m_iniFilename;
 
   std::unique_ptr<ImGuiContext, void(*)(ImGuiContext*)> m_imgui;
   std::unique_ptr<Window> m_window; // must be after m_imgui for correct destruction
