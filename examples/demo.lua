@@ -5804,11 +5804,19 @@ function demo.ShowAboutWindow()
     r.ImGui_End(ctx)
     return open
   end
+  r.ImGui_Separator(ctx)
   r.ImGui_Text(ctx, ('Dear ImGui %s'):format(IMGUI_VERSION))
-  r.ImGui_Text(ctx, ('reaper_imgui %s'):format(REAIMGUI_VERSION))
   r.ImGui_Separator(ctx)
   r.ImGui_Text(ctx, 'By Omar Cornut and all Dear ImGui contributors.')
-  r.ImGui_Text(ctx, 'Dear ImGui is licensed under the MIT License, see LICENSE for more information.')
+  r.ImGui_Text(ctx, 'Dear ImGui is licensed under the MIT License.')
+
+  r.ImGui_Spacing(ctx)
+
+  r.ImGui_Separator(ctx)
+  r.ImGui_Text(ctx, ('reaper_imgui %s'):format(REAIMGUI_VERSION))
+  r.ImGui_Separator(ctx)
+  r.ImGui_Text(ctx, 'By Christian Fillion and contributors.')
+  r.ImGui_Text(ctx, 'ReaImGui is licensed under the LGPL License.')
   r.ImGui_End(ctx)
 
   return open
