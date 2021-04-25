@@ -172,7 +172,7 @@ DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 
 DEFINE_API(int, GetColor, (ImGui_Context*,ctx)
 (int,idx)(double*,API_RO(alpha_mul)),
-R"(Retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value (RGBA).
+R"(Retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value (RGBA). See ImGui_Col_* for available style colors.
 
 Default values: alpha_mul = 1.0)",
 {
@@ -183,7 +183,7 @@ Default values: alpha_mul = 1.0)",
 
 DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
 (int,col_rgba),
-"Retrieve given color with style alpha applied, packed as a 32-bit value.",
+"Retrieve given color with style alpha applied, packed as a 32-bit value (RGBA).",
 {
   FRAME_GUARD;
   return Color::abgr2rgba(ImGui::GetColorU32(Color::rgba2abgr(col_rgba)));
@@ -191,7 +191,7 @@ DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
 
 DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
 (int,idx),
-"Retrieve style color as stored in ImGuiStyle structure. use to feed back into PushStyleColor(), Otherwise use GetColor() to get style color with style alpha baked in.",
+"Retrieve style color as stored in ImGuiStyle structure. Use to feed back into PushStyleColor(), Otherwise use ImGui_GetColor() to get style color with style alpha baked in. See ImGui_Col_* for available style colors.",
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
@@ -207,7 +207,7 @@ DEFINE_API(const char*, GetStyleColorName, (int,idx),
 
 DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
 (int,idx)(int,col_rgba),
-"Modify a style color. always use this if you modify the style after NewFrame().",
+"Modify a style color. Call ImGui_PopStyleColor to undo after use (before the end of the frame). See ImGui_Col_* for available style colors.",
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
