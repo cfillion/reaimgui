@@ -224,7 +224,6 @@ function demo.ShowDemoWindow()
   if demo.no_close          then open = nil end -- Don't pass our bool* to Begin
 
   if r.ImGui_BeginPopupContextVoid(ctx, 'dock') then
-    local hwnd = r.ImGui_GetNativeHwnd(ctx)
     local dock = r.ImGui_GetDock(ctx)
     if r.ImGui_MenuItem(ctx, 'Duck in docker', nil, dock & 1) then
       r.ImGui_SetDock(ctx, dock ~ 1)
@@ -254,7 +253,7 @@ function demo.ShowDemoWindow()
   --r.ImGui_PushItemWidth(-r.ImGui_GetWindowWidth() * 0.35f);
 
   -- e.g. Leave a fixed amount of width for labels (by passing a negative value), the rest goes to widgets.
-  r.ImGui_PushItemWidth(ctx, r.ImGui_GetFontSize(ctx) * -12);
+  r.ImGui_PushItemWidth(ctx, r.ImGui_GetFontSize(ctx) * -12)
 
   -- Menu Bar
   if r.ImGui_BeginMenuBar(ctx) then
