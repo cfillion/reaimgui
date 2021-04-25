@@ -83,6 +83,10 @@ Context::Context(const WindowConfig &winConfig)
 #endif
 
   m_window = std::make_unique<Window>(winConfig, this);
+
+  // Start a frame to prevent contexts created within a defer callback from
+  // being immediately destroyed.
+  beginFrame();
 }
 
 Context::~Context()
