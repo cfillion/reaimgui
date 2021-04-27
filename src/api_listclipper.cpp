@@ -17,35 +17,33 @@
 
 #include "api_helper.hpp"
 
-#include "resource.hpp"
+#include "listclipper.hpp"
 
 #include <reaper_plugin_functions.h>
 
-class ListClipper : public Resource {
-public:
-  static ImGuiListClipper *use(ListClipper *);
+ListClipper::ListClipper(Context *ctx) : m_ctx { ctx } {}
 
-  ListClipper(Context *ctx) : m_ctx { ctx } {}
-  ~ListClipper() { m_imlc.ItemsCount = -1; } // ensure the assert doesn't trip
+// ensure the assert in ~ImGuiListClipper doesn't trip
+ListClipper::~ListClipper() { m_imlc.ItemsCount = -1; }
 
-protected:
-  void heartbeat() override { delete this; }
+void ListClipper::heartbeat() { delete this; }
 
-private:
-  Context *m_ctx;
-  ImGuiListClipper m_imlc;
-};
+bool ListClipper::validate(ListClipper *lc)
+{
+  return Resource::exists(lc) && Resource::exists(lc->m_ctx);
+}
 
 ImGuiListClipper *ListClipper::use(ListClipper *lc)
 {
-  if(Resource::exists(lc) && Resource::exists(lc->m_ctx)) {
-    lc->m_ctx->enterFrame();
-    return &lc->m_imlc;
+  if(!validate(lc)) {
+    char message[255];
+    snprintf(message, sizeof(message),
+      "expected a valid ImGui_ListClipper*, got %p", lc);
+    throw reascript_error { message };
   }
 
-  char message[255];
-  snprintf(message, sizeof(message), "expected a valid ImGui_ListClipper*, got %p", lc);
-  throw reascript_error { message };
+  lc->m_ctx->enterFrame();
+  return &lc->m_imlc;
 }
 
 using ImGui_ListClipper = ListClipper;
