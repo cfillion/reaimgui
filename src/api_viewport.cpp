@@ -17,6 +17,8 @@
 
 #include "api_helper.hpp"
 
+#include "resource_proxy.hpp"
+
 struct ImGui_Viewport {
   enum Key {
     Main = 0x4d4e5650, // MNVP
@@ -24,16 +26,20 @@ struct ImGui_Viewport {
 
   ImGuiViewport *get()
   {
-    Context *ctx;
+    ResourceProxy::Key viewport {};
+    Context *ctx { Viewport.decode<Context>(this, &viewport) };
 
-    if(Resource::exists(ctx = encodePtr<Context>(this, Main))) {
+    switch(viewport) {
+    case Main:
       ctx->setCurrent();
       return ImGui::GetMainViewport();
+    default:
+      throw reascript_error { "expected a valid ImGui_Viewport*" };
     }
-
-    throw reascript_error { "expected a valid ImGui_Viewport*" };
   }
 };
+
+ResourceProxy Viewport { ImGui_Viewport::Main };
 
 DEFINE_API(ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
 R"(Currently represents the Platform Window created by the ReaImGui context which is hosting our Dear ImGui windows.",
@@ -43,7 +49,7 @@ R"(Currently represents the Platform Window created by the ReaImGui context whic
 
 Windows are generally trying to stay within the Work Area of their host viewport.)",
 {
-  return encodePtr<ImGui_Viewport>(ctx, ImGui_Viewport::Main);
+  return ResourceProxy::encode<ImGui_Viewport>(ctx, ImGui_Viewport::Main);
 });
 
 DEFINE_API(void, Viewport_GetPos, (ImGui_Viewport*,viewport)

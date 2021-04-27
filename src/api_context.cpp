@@ -18,6 +18,7 @@
 #include "api_helper.hpp"
 
 #include "listclipper.hpp"
+#include "resource_proxy.hpp"
 #include "version.hpp"
 #include "window.hpp"
 
@@ -55,12 +56,18 @@ R"(Close and free the resources used by a context.)",
 });
 
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context* and ImGui_ListClipper*.)",
+R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_ListClipper* and ImGui_Viewport*.)",
 {
+  ResourceProxy::Key proxyKey;
+
   if(!strcmp(type, "ImGui_Context*"))
     return Resource::exists(static_cast<Context *>(pointer));
+  else if(!strcmp(type, "ImGui_DrawList*"))
+    return DrawList.decode<Context>(pointer, &proxyKey);
   else if(!strcmp(type, "ImGui_ListClipper*"))
     return ListClipper::validate(static_cast<ListClipper *>(pointer));
+  else if(!strcmp(type, "ImGui_Viewport*"))
+    return Viewport.decode<Context>(pointer, &proxyKey);
   else
     return false;
 });

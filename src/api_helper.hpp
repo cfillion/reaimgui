@@ -24,7 +24,6 @@
 
 #include <boost/preprocessor.hpp>
 #include <boost/type_index.hpp>
-#include <cassert>
 #include <cstring> // strlen
 
 using ImGui_Context = Context; // user-facing alias
@@ -143,14 +142,5 @@ private:
   std::array<PtrType*, N> m_inputs;
   std::array<ValType, N> m_values;
 };
-
-template<typename Output, typename Input>
-inline Output *encodePtr(const Input *in, const uint32_t key)
-{
-  uintptr_t out { reinterpret_cast<uintptr_t>(in) };
-  out ^= static_cast<uintptr_t>(key);
-  assert("out of double range (EEL incompatible)" && out <= 1ull<<53);
-  return reinterpret_cast<Output *>(out);
-}
 
 #endif

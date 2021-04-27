@@ -17,6 +17,8 @@
 
 #include "api_helper.hpp"
 
+#include "resource_proxy.hpp"
+
 #include <reaper_plugin_secrets.h> // reaper_array
 #include <vector>
 
@@ -29,43 +31,47 @@ struct ImGui_DrawList {
 
   ImDrawList *get()
   {
-    Context *ctx;
+    ResourceProxy::Key drawList {};
+    Context *ctx { DrawList.decode<Context>(this, &drawList) };
 
-    if(Resource::exists(ctx = encodePtr<Context>(this, Window))) {
+    switch(drawList) {
+    case Window:
       ctx->enterFrame();
       return ImGui::GetWindowDrawList();
-    }
-
-    if(Resource::exists(ctx = encodePtr<Context>(this, Background))) {
+    case Background:
       ctx->enterFrame();
       return ImGui::GetBackgroundDrawList();
-    }
-
-    if(Resource::exists(ctx = encodePtr<Context>(this, Foreground))) {
+    case Foreground:
       ctx->enterFrame();
       return ImGui::GetForegroundDrawList();
+    default:
+      throw reascript_error { "expected a valid ImGui_DrawList*" };
     }
-
-    throw reascript_error { "expected a valid ImGui_DrawList*" };
   }
+};
+
+ResourceProxy DrawList {
+  ImGui_DrawList::Window,
+  ImGui_DrawList::Background,
+  ImGui_DrawList::Foreground
 };
 
 DEFINE_API(ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
 "The draw list associated to the current window, to append your own drawing primitives",
 {
-  return encodePtr<ImGui_DrawList>(ctx, ImGui_DrawList::Window);
+  return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Window);
 });
 
 DEFINE_API(ImGui_DrawList*, GetBackgroundDrawList, (ImGui_Context*,ctx),
 "This draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.",
 {
-  return encodePtr<ImGui_DrawList>(ctx, ImGui_DrawList::Background);
+  return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Background);
 });
 
 DEFINE_API(ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
 "This draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.",
 {
-  return encodePtr<ImGui_DrawList>(ctx, ImGui_DrawList::Foreground);
+  return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Foreground);
 });
 
 DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
