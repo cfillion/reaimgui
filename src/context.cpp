@@ -57,7 +57,6 @@ Context::Context(const WindowConfig &winConfig)
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
-#ifndef __APPLE__
   io.KeyMap[ImGuiKey_Tab]         = VK_TAB;
   io.KeyMap[ImGuiKey_LeftArrow]   = VK_LEFT;
   io.KeyMap[ImGuiKey_RightArrow]  = VK_RIGHT;
@@ -80,7 +79,6 @@ Context::Context(const WindowConfig &winConfig)
   io.KeyMap[ImGuiKey_X]           = 'X';
   io.KeyMap[ImGuiKey_Y]           = 'Y';
   io.KeyMap[ImGuiKey_Z]           = 'Z';
-#endif
 
   m_window = std::make_unique<Window>(winConfig, this);
 

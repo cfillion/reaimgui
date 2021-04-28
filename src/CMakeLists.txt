@@ -80,8 +80,9 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE
       -fobjc-arc -Wno-error=deprecated-declarations)
 
+    find_library(CARBON_LIB Carbon)
     find_package(OpenGL REQUIRED)
-    target_link_libraries(${PROJECT_NAME} OpenGL::GL)
+    target_link_libraries(${PROJECT_NAME} ${CARBON_LIB} OpenGL::GL)
   else()
     target_sources(${PROJECT_NAME} PRIVATE gdk_window.cpp)
 

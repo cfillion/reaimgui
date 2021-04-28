@@ -86,7 +86,6 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   ImGuiIO &io { ImGui::GetIO() };
   io.ConfigMacOSXBehaviors = false; // don't swap Cmd/Ctrl, SWELl already does it
   io.BackendPlatformName = "reaper_imgui_cocoa";
-  setupMacOSKeyMap(io);
 }
 
 Window::~Window()

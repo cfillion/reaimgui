@@ -21,9 +21,6 @@
 #include <AppKit/AppKit.h>
 
 class Context;
-struct ImGuiIO;
-
-void setupMacOSKeyMap(ImGuiIO &);
 
 @interface InputView : NSView<NSTextInputClient>
 {

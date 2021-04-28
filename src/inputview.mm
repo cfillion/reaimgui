@@ -19,11 +19,70 @@
 
 #include "context.hpp"
 
-#include <swell/swell-types.h>
+#include <Carbon/Carbon.h>
 
-#include <Carbon/Carbon.h> // key code constants
+// prevent name conflicts between Carbon.h and swell-functions.h
+#define CreateEvent     SWELL_CreateEvent
+#define GetMenu         SWELL_GetMenu
+#define DrawMenuBar     SWELL_DrawMenuBar
+#define DeleteMenu      SWELL_DeleteMenu
+#define CheckMenuItem   SWELL_CheckMenuItem
+#define EnableMenuItem  SWELL_EnableMenuItem
+#define InsertMenuItem  SWELL_InsertMenuItem
+#define SetMenuItemText SWELL_SetMenuItemText
+#define ShowWindow      SWELL_ShowWindow
+#define IsWindowVisible SWELL_IsWindowVisible
+#include <swell/swell.h>
+
+static_assert(__has_feature(objc_arc),
+  "This file must be built with automatic reference counting enabled.");
 
 constexpr NSRange kEmptyRange { NSNotFound, 0 };
+
+static NSEvent *eventCharsIgnoringMods(NSEvent *event)
+{
+  // NSEvent's charactersIgnoringModifiers does not ignore Shift.
+  //
+  // This is undesirable because it would lead to stuck keys:
+  // Shift down, 4 down (value for '$'), Shift up, 4 up (oops, value for '4'!).
+
+  const auto inputSource { TISCopyCurrentKeyboardLayoutInputSource() };
+  const auto layoutData { static_cast<CFDataRef>(
+    TISGetInputSourceProperty(inputSource, kTISPropertyUnicodeKeyLayoutData)) };
+  const auto layout
+    { reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(layoutData)) };
+
+  UInt32 deadKeyState {};
+  UniChar str[4];
+  UniCharCount strLen {};
+  UCKeyTranslate(layout, [event keyCode], kUCKeyActionDown, 0, LMGetKbdType(),
+    kUCKeyTranslateNoDeadKeysMask, &deadKeyState, std::size(str), &strLen, str);
+
+  if(!strLen)
+    return event;
+
+  NSString *chars { [NSString stringWithCharacters:str length:strLen] };
+
+  return [NSEvent keyEventWithType:[event type]
+                          location:[event locationInWindow]
+                     modifierFlags:[event modifierFlags]
+                         timestamp:[event timestamp]
+                      windowNumber:[event windowNumber]
+                           context:nil
+                        characters:chars
+       charactersIgnoringModifiers:chars
+                         isARepeat:[event isARepeat]
+                           keyCode:[event keyCode]];
+}
+
+static uint8_t virtualKeyCode(NSEvent *event)
+{
+  if([event modifierFlags] & NSEventModifierFlagShift)
+    event = eventCharsIgnoringMods(event);
+
+  int flags;
+  return SWELL_MacKeyToWindowsKey((__bridge void *)event, &flags) & 0xFF;
+}
 
 @implementation InputView
 - (instancetype)initWithContext:(Context *)context
@@ -93,15 +152,12 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
   // Send key to the system input manager. It will reply by sending insertText.
   [self interpretKeyEvents:@[event]];
 
-  // SWELL keyboard events report different key codes depending on the
-  // modifiers. This is undesirable because it would lead to stuck keys:
-  // Shift down, 4 down (keycode for $), Shift up, 4 up (oops, keycode for 4!).
-  m_context->keyInput([event keyCode], true);
+  m_context->keyInput(virtualKeyCode(event), true);
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-  m_context->keyInput([event keyCode], false);
+  m_context->keyInput(virtualKeyCode(event), false);
 }
 
 // Implement NSTextInputClient for IME-aware text input
@@ -203,29 +259,3 @@ constexpr NSRange kEmptyRange { NSNotFound, 0 };
 {
 }
 @end
-
-void setupMacOSKeyMap(ImGuiIO &io)
-{
-  io.KeyMap[ImGuiKey_Tab]         = kVK_Tab;
-  io.KeyMap[ImGuiKey_LeftArrow]   = kVK_LeftArrow;
-  io.KeyMap[ImGuiKey_RightArrow]  = kVK_RightArrow;
-  io.KeyMap[ImGuiKey_UpArrow]     = kVK_UpArrow;
-  io.KeyMap[ImGuiKey_DownArrow]   = kVK_DownArrow;
-  io.KeyMap[ImGuiKey_PageUp]      = kVK_PageUp;
-  io.KeyMap[ImGuiKey_PageDown]    = kVK_PageDown;
-  io.KeyMap[ImGuiKey_Home]        = kVK_Home;
-  io.KeyMap[ImGuiKey_End]         = kVK_End;
-  io.KeyMap[ImGuiKey_Insert]      = kVK_Help;
-  io.KeyMap[ImGuiKey_Delete]      = kVK_ForwardDelete;
-  io.KeyMap[ImGuiKey_Backspace]   = kVK_Delete;
-  io.KeyMap[ImGuiKey_Space]       = kVK_Space;
-  io.KeyMap[ImGuiKey_Enter]       = kVK_Return;
-  io.KeyMap[ImGuiKey_Escape]      = kVK_Escape;
-  io.KeyMap[ImGuiKey_KeyPadEnter] = kVK_Return;
-  io.KeyMap[ImGuiKey_A]           = kVK_ANSI_A;
-  io.KeyMap[ImGuiKey_C]           = kVK_ANSI_C;
-  io.KeyMap[ImGuiKey_V]           = kVK_ANSI_V;
-  io.KeyMap[ImGuiKey_X]           = kVK_ANSI_X;
-  io.KeyMap[ImGuiKey_Y]           = kVK_ANSI_Y;
-  io.KeyMap[ImGuiKey_Z]           = kVK_ANSI_Z;
-}
