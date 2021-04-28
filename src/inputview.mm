@@ -160,6 +160,34 @@ static uint8_t virtualKeyCode(NSEvent *event)
   m_context->keyInput(virtualKeyCode(event), false);
 }
 
+- (void)flagsChanged:(NSEvent *)event
+{
+  struct Modifier {
+    unsigned short keyCode; unsigned long modFlag; uint8_t virtualKeyCode;
+  };
+
+  constexpr Modifier modifiers[] {
+    { kVK_Shift,        NSEventModifierFlagShift,   VK_SHIFT   },
+    { kVK_RightShift,   NSEventModifierFlagShift,   VK_SHIFT   },
+    { kVK_Control,      NSEventModifierFlagControl, VK_CONTROL },
+    { kVK_RightControl, NSEventModifierFlagControl, VK_CONTROL },
+    { kVK_Option,       NSEventModifierFlagOption,  VK_MENU    },
+    { kVK_RightOption,  NSEventModifierFlagOption,  VK_MENU    },
+    { kVK_Command,      NSEventModifierFlagCommand, VK_LWIN    },
+    { kVK_RightCommand, NSEventModifierFlagCommand, VK_LWIN    },
+  };
+
+  const unsigned short keyCode { [event keyCode] };
+  const unsigned long modFlags { [event modifierFlags] };
+
+  for(const auto &modifier : modifiers) {
+    if(modifier.keyCode == keyCode) {
+      m_context->keyInput(modifier.virtualKeyCode, modFlags & modifier.modFlag);
+      return;
+    }
+  }
+}
+
 // Implement NSTextInputClient for IME-aware text input
 // Extracted from GLFW (zlib license) with minimal changes
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange

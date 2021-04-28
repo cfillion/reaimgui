@@ -43,6 +43,7 @@ class Context;
 - (void)otherMouseUp:(NSEvent *)event;
 - (void)keyDown:(NSEvent *)event;
 - (void)keyUp:(NSEvent *)event;
+- (void)flagsChanged:(NSEvent *)event;
 
 // NSTextInputClient
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange;
