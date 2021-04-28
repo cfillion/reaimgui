@@ -39,8 +39,11 @@ struct Window::Impl {
 Window::Window(const WindowConfig &cfg, Context *ctx)
   : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
-  const NSPoint position { static_cast<float>(cfg.x), static_cast<float>(cfg.y) };
-  const NSSize size { static_cast<float>(cfg.w), static_cast<float>(cfg.h) };
+  const RECT rect { cfg.clientRect() };
+  const float x { static_cast<float>(rect.left) },
+              y { static_cast<float>(rect.top)  },
+              w { static_cast<float>(rect.right - rect.left) },
+              h { static_cast<float>(rect.bottom - rect.top) };
 
   HWND hwnd { createSwellDialog(cfg.title.c_str()) };
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
@@ -50,8 +53,8 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   if(m_cfg.dock & 1)
     setDock(m_cfg.dock);
   else {
-    [[m_impl->view window] setFrameOrigin:position];
-    [[m_impl->view window] setContentSize:size];
+    [[m_impl->view window] setFrameOrigin:NSPoint { x, y }];
+    [[m_impl->view window] setContentSize:NSSize  { w, h }];
     ShowWindow(hwnd, SW_SHOW);
   }
 

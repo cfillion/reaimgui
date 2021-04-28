@@ -30,9 +30,58 @@
 
 HINSTANCE Window::s_instance;
 
-RECT WindowConfig::clientRect() const
+static RECT visibleRect(HWND window)
 {
-  return { x, y, x + w, y + h };
+  RECT rect;
+  GetWindowRect(window, &rect);
+
+#ifdef _WIN32
+  HMONITOR monitor { MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST) };
+  MONITORINFO minfo { sizeof(minfo) };
+  GetMonitorInfo(monitor, &minfo);
+  RECT &screenRect { minfo.rcWork };
+#else
+  RECT screenRect;
+  SWELL_GetViewPort(&screenRect, &rect, true);
+#endif
+
+  rect.left   = std::max(rect.left,   screenRect.left);
+  rect.top    = std::max(rect.top,    screenRect.top);
+  rect.right  = std::min(rect.right,  screenRect.right);
+  rect.bottom = std::min(rect.bottom, screenRect.bottom);
+
+  return rect;
+}
+
+RECT WindowConfig::clientRect(const float scale) const
+{
+  RECT parentRect;
+  if(!x || !y)
+    parentRect = visibleRect(Window::parentHandle());
+
+  RECT rect;
+  const int scaledWidth  { static_cast<int>(w * scale) },
+            scaledHeight { static_cast<int>(h * scale) };
+
+  if(x)
+    rect.left = *x;
+  else {
+    // default to the center of the parent window
+    const int parentWidth { parentRect.right - parentRect.left };
+    rect.left = ((parentWidth - scaledWidth) / 2) + parentRect.left;
+  }
+
+  if(y)
+    rect.top = *y;
+  else {
+    const int parentHeight { parentRect.bottom - parentRect.top };
+    rect.top = ((parentHeight - scaledHeight) / 2) + parentRect.top;
+  }
+
+  rect.right  = rect.left + scaledWidth;
+  rect.bottom = rect.top + scaledHeight;
+
+  return rect;
 }
 
 LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
@@ -164,44 +213,6 @@ HWND Window::createSwellDialog(const char *title)
 HWND Window::parentHandle()
 {
   return GetMainHwnd();
-}
-
-static RECT getAvailableRect(HWND window)
-{
-  RECT rect;
-  GetWindowRect(window, &rect);
-
-#ifdef _WIN32
-  HMONITOR monitor { MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST) };
-  MONITORINFO minfo { sizeof(minfo) };
-  GetMonitorInfo(monitor, &minfo);
-  RECT &screenRect { minfo.rcWork };
-#else
-  RECT screenRect;
-  SWELL_GetViewPort(&screenRect, &rect, false);
-#endif
-
-  // limit the centering to the monitor containing most of the parent window
-  rect.left   = std::max(rect.left,   screenRect.left);
-  rect.top    = std::max(rect.top,    screenRect.top);
-  rect.right  = std::min(rect.right,  screenRect.right);
-  rect.bottom = std::min(rect.bottom, screenRect.bottom);
-
-  return rect;
-}
-
-int Window::centerX(const int width)
-{
-  const RECT &parentRect { getAvailableRect(parentHandle()) };
-  const int parentWidth { parentRect.right - parentRect.left };
-  return ((parentWidth - width) / 2) + parentRect.left;
-}
-
-int Window::centerY(const int height)
-{
-  const RECT &parentRect { getAvailableRect(parentHandle()) };
-  const int parentHeight { parentRect.bottom - parentRect.top };
-  return ((parentHeight - height) / 2) + parentRect.top;
 }
 
 #ifndef __APPLE__

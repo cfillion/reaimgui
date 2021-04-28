@@ -59,7 +59,7 @@ static bool isPerMonitorV2DPIAwareness()
     threadAwareness, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
 }
 
-static unsigned int getDpiForPoint(const POINT &point)
+static unsigned int dpiForPoint(const POINT &point)
 {
   // Windows 8.1+
   static DllImport<decltype(GetDpiForMonitor)>
@@ -75,6 +75,49 @@ static unsigned int getDpiForPoint(const POINT &point)
   }
 
   return USER_DEFAULT_SCREEN_DPI;
+}
+
+static unsigned int dpiForWindow(HWND window)
+{
+  // Windows 10 Anniversary Update (1607) and newer
+  static DllImport<decltype(GetDpiForWindow)>
+    _GetDpiForWindow
+    { L"User32.dll", "GetDpiForWindow" };
+  if(isPerMonitorV2DPIAwareness() && _GetDpiForWindow)
+    return _GetDpiForWindow(window);
+  else
+    return USER_DEFAULT_SCREEN_DPI;
+}
+
+static float scaleForDpi(const unsigned int dpi)
+{
+  return static_cast<float>(dpi) / USER_DEFAULT_SCREEN_DPI;
+}
+
+static RECT scaledWindowRect(const WindowConfig &cfg,
+  const DWORD style, const DWORD exStyle)
+{
+  RECT rect;
+
+  // Windows 10 Anniversary Update (1607) and newer
+  static DllImport<decltype(AdjustWindowRectExForDpi)>
+    _AdjustWindowRectExForDpi
+    { L"User32.dll", "AdjustWindowRectExForDpi" };
+  if(isPerMonitorV2DPIAwareness() && _AdjustWindowRectExForDpi) {
+    unsigned int dpi;
+    if(cfg.x && cfg.y)
+      dpi = dpiForPoint({ *cfg.x, *cfg.y });
+    else
+      dpi = dpiForWindow(Window::parentHandle());
+    rect = cfg.clientRect(scaleForDpi(dpi));
+    _AdjustWindowRectExForDpi(&rect, style, false, exStyle, dpi);
+  }
+  else {
+    rect = cfg.clientRect();
+    AdjustWindowRectEx(&rect, style, false, exStyle);
+  }
+
+  return rect;
 }
 
 constexpr wchar_t *CLASS_NAME { L"reaper_imgui_context" };
@@ -120,18 +163,7 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   // WS_EX_DLGMODALFRAME removes the default icon
   constexpr DWORD exStyle { WS_EX_DLGMODALFRAME };
 
-  RECT rect { cfg.clientRect() };
-
-  // Windows 10 Anniversary Update (1607) and newer
-  static DllImport<decltype(AdjustWindowRectExForDpi)>
-    _AdjustWindowRectExForDpi
-    { L"User32.dll", "AdjustWindowRectExForDpi" };
-  if(isPerMonitorV2DPIAwareness() && _AdjustWindowRectExForDpi) {
-    const unsigned int dpi { getDpiForPoint({ rect.left, rect.top }) };
-    _AdjustWindowRectExForDpi(&rect, style, false, exStyle, dpi);
-  }
-  else
-    AdjustWindowRectEx(&rect, style, false, exStyle);
+  const RECT rect { scaledWindowRect(cfg, style, exStyle) };
 
   HWND hwnd {
     CreateWindowEx(exStyle, CLASS_NAME, widen(cfg.title).c_str(), style,
@@ -141,19 +173,9 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   assert(hwnd && "CreateWindow failed");
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
 
-  // Windows 10 Anniversary Update (1607) and newer
-  static DllImport<decltype(GetDpiForWindow)>
-    _GetDpiForWindow
-    { L"User32.dll", "GetDpiForWindow" };
-  if(isPerMonitorV2DPIAwareness() && _GetDpiForWindow) {
-    const float dpi { static_cast<float>(_GetDpiForWindow(hwnd)) };
-    m_impl->scale = dpi / USER_DEFAULT_SCREEN_DPI;
-  }
-  else
-    m_impl->scale = 1.0f;
-
   m_impl->hwnd.reset(hwnd);
   m_impl->dc = GetDC(hwnd);
+  m_impl->scale = scaleForDpi(dpiForWindow(hwnd));
 
   m_impl->initPixelFormat();
   m_impl->initGL();
@@ -261,9 +283,8 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
     m_ctx->charInput(wParam);
     return 0;
   case WM_DPICHANGED: {
-    const float dpi { static_cast<float>(LOWORD(wParam)) };
+    m_impl->scale = scaleForDpi(LOWORD(wParam));
     const RECT *sugg { reinterpret_cast<RECT *>(lParam) };
-    m_impl->scale = dpi / USER_DEFAULT_SCREEN_DPI;
     SetWindowPos(m_impl->hwnd.get(), nullptr,
       sugg->left, sugg->top, sugg->right - sugg->left, sugg->bottom - sugg->top,
       SWP_NOACTIVATE | SWP_NOZORDER);

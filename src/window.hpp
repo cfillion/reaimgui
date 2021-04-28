@@ -33,10 +33,11 @@ class Context;
 struct ImDrawData;
 
 struct WindowConfig {
-  RECT clientRect() const;
+  RECT clientRect(float scale = 1.f) const;
 
   std::string title;
-  int x, y, w, h;
+  std::optional<int> x, y;
+  int w, h;
   int dock;
 };
 
@@ -45,10 +46,7 @@ public:
   enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
 
   static HINSTANCE s_instance;
-
-  // gives a default x/y coordinate to center a window to the arrange view
-  static int centerX(int width);
-  static int centerY(int height);
+  static HWND parentHandle();
 
   Window(const WindowConfig &, Context *);
   Window(const Window &) = delete;
@@ -71,7 +69,6 @@ private:
 
   static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
   static HWND createSwellDialog(const char *title);
-  static HWND parentHandle();
 
   void updateConfig();
 

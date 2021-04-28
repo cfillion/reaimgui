@@ -58,7 +58,9 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
   HWND hwnd { createSwellDialog(cfg.title.c_str()) };
-  SetWindowPos(hwnd, nullptr, cfg.x, cfg.y, cfg.w, cfg.h,
+  const RECT rect { cfg.clientRect(scaleFactor()) };
+  SetWindowPos(hwnd, nullptr, rect.left, rect.top,
+    rect.right - rect.left, rect.bottom - rect.top,
     SWP_NOACTIVATE | SWP_NOZORDER);
   SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
 
