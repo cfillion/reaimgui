@@ -345,9 +345,7 @@ function demo.ShowDemoWindow()
           r.ImGui_SameLine(ctx)
           r.ImGui_Text(ctx, '<<PRESS SPACE TO DISABLE>>')
         end
-        -- if r.ImGui_IsKeyPressed(ctx, r.ImGui_GetKeyIndex(ctx, r.ImGui_Key_Space())) then TODO
-        rv,char = r.ImGui_GetInputQueueCharacter(ctx, 0)
-        if rv and char == 0x20 then
+        if r.ImGui_IsKeyPressed(ctx, 0x20) then
           config.flags = config.flags & ~r.ImGui_ConfigFlags_NoMouse()
         end
       end
