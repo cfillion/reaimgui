@@ -251,6 +251,15 @@ float Window::scaleFactor() const
 std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
   switch(msg) {
+  case WM_NCCREATE: {
+    // Windows 10 Anniversary Update (1607) and newer
+    static DllImport<decltype(EnableNonClientDpiScaling)>
+      _EnableNonClientDpiScaling
+      { L"User32.dll", "EnableNonClientDpiScaling" };
+    if(_EnableNonClientDpiScaling)
+      _EnableNonClientDpiScaling(m_hwnd.get());
+    return std::nullopt;
+  }
   case WM_CHAR:
     m_ctx->charInput(wParam);
     return 0;
