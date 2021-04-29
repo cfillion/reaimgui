@@ -189,12 +189,17 @@ void Context::updateFrameInfo()
 {
   ImGuiIO &io { ImGui::GetIO() };
 
+  const float scale { m_window->scaleFactor() };
+  io.DisplayFramebufferScale = { scale, scale };
+
   RECT rect;
   GetClientRect(m_window->nativeHandle(), &rect);
-  io.DisplaySize = ImVec2(rect.right - rect.left, rect.bottom - rect.top);
-
-  const float scale { m_window->scaleFactor() };
-  io.DisplayFramebufferScale = ImVec2{scale, scale};
+  io.DisplaySize.x = rect.right - rect.left;
+  io.DisplaySize.y = rect.bottom - rect.top;
+#ifndef __APPLE__
+  io.DisplaySize.x /= scale;
+  io.DisplaySize.y /= scale;
+#endif
 
   const auto now { decltype(m_lastFrame)::clock::now() };
   io.DeltaTime = std::chrono::duration<float> { now - m_lastFrame }.count();
@@ -321,6 +326,10 @@ void Context::updateMousePos()
   if(io.WantSetMousePos) {
     POINT p { static_cast<LONG>(io.MousePos.x),
               static_cast<LONG>(io.MousePos.y) };
+#ifndef __APPLE__
+    p.x *= io.DisplayFramebufferScale.x;
+    p.y *= io.DisplayFramebufferScale.y;
+#endif
     ClientToScreen(windowHwnd, &p);
     SetCursorPos(p.x, p.y);
     return;
@@ -330,6 +339,10 @@ void Context::updateMousePos()
   GetCursorPos(&p);
   const HWND targetHwnd { WindowFromPoint(p) };
   ScreenToClient(windowHwnd, &p);
+#ifndef __APPLE__
+  p.x /= io.DisplayFramebufferScale.x;
+  p.y /= io.DisplayFramebufferScale.y;
+#endif
 
 #ifdef __APPLE__
   // Our InputView overlays SWELL's NSView.
