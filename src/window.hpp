@@ -61,19 +61,19 @@ public:
 
   int dock() const;
   void setDock(int);
-  HWND nativeHandle() const;
+  HWND nativeHandle() const { return m_hwnd.get(); }
 
 private:
   struct WindowDeleter { void operator()(HWND); };
-  using HwndPtr = std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter>;
 
   static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
-  HWND createSwellDialog();
+  void createSwellDialog();
 
   void updateConfig();
 
   WindowConfig m_cfg;
   Context *m_ctx;
+  std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
   accelerator_register_t m_accel { &translateAccel, true, this };
   PluginRegister m_accelReg { "accelerator", &m_accel };
 

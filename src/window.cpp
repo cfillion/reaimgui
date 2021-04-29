@@ -79,6 +79,7 @@ RECT WindowConfig::clientRect(const float scale) const
 LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   const WPARAM wParam, const LPARAM lParam)
 {
+  Window *self;
 #ifdef _WIN32
   if(msg == WM_NCCREATE) {
     void *ptr { reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams };
@@ -86,10 +87,12 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   if(msg == WM_CREATE) {
     auto &ptr { lParam };
 #endif
-    SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ptr));
+    self = reinterpret_cast<Window *>(ptr);
+    self->m_hwnd.reset(handle);
+    SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
   }
-
-  Window *self { reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA)) };
+  else
+    self = reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA));
 
   if(!self)
     return DefWindowProc(handle, msg, wParam, lParam);
@@ -146,18 +149,16 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 
 int Window::dock() const
 {
-  const int dockIndex = { DockIsChildOfDock(nativeHandle(), nullptr)  };
+  const int dockIndex = { DockIsChildOfDock(m_hwnd.get(), nullptr)  };
   return dockIndex > -1 ? (dockIndex << 1) | 1 : m_cfg.dock & ~1;
 }
 
 void Window::setDock(const int dock)
 {
-  HWND hwnd { nativeHandle() };
-
-  if(dock == m_cfg.dock && IsWindowVisible(hwnd))
+  if(dock == m_cfg.dock && IsWindowVisible(m_hwnd.get()))
     return;
 
-  DockWindowRemove(hwnd);
+  DockWindowRemove(m_hwnd.get());
 
   if(dock & 1) {
     if(!(m_cfg.dock & 1))
@@ -166,30 +167,28 @@ void Window::setDock(const int dock)
 
     constexpr const char *INI_KEY { "reaimgui" };
     Dock_UpdateDockID(INI_KEY, dock >> 1);
-    DockWindowAddEx(hwnd, m_cfg.title.c_str(), INI_KEY, true);
-    DockWindowActivate(hwnd);
+    DockWindowAddEx(m_hwnd.get(), m_cfg.title.c_str(), INI_KEY, true);
+    DockWindowActivate(m_hwnd.get());
   }
   else {
     m_cfg.dock = dock;
     Window floating { m_cfg, m_ctx };
-    SetWindowLongPtr(floating.nativeHandle(), GWLP_USERDATA,
-      reinterpret_cast<LONG_PTR>(this));
+    std::swap(m_hwnd, floating.m_hwnd);
     std::swap(m_impl, floating.m_impl);
+    SetWindowLongPtr(m_hwnd.get(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
   }
 }
 
 void Window::updateConfig()
 {
-  HWND hwnd { nativeHandle() };
-
   RECT rect;
-  GetClientRect(hwnd, &rect);
+  GetClientRect(m_hwnd.get(), &rect);
   m_cfg.w = rect.right - rect.left;
   m_cfg.h = rect.bottom - rect.top;
 #ifdef __APPLE__
   std::swap(rect.top, rect.bottom);
 #endif
-  ClientToScreen(hwnd, reinterpret_cast<POINT *>(&rect));
+  ClientToScreen(m_hwnd.get(), reinterpret_cast<POINT *>(&rect));
   m_cfg.x = rect.left;
   m_cfg.y = rect.top;
 
@@ -197,7 +196,7 @@ void Window::updateConfig()
 }
 
 #ifndef _WIN32
-HWND Window::createSwellDialog()
+void Window::createSwellDialog()
 {
   enum SwellDialogResFlags {
     ForceNonChild = 0x400000 | 0x8, // allows not using a resource id
@@ -206,10 +205,9 @@ HWND Window::createSwellDialog()
 
   const char *res { MAKEINTRESOURCE(ForceNonChild | Resizable) };
   LPARAM param { reinterpret_cast<LPARAM>(this) };
-  HWND dialog { CreateDialogParam(s_instance, res, parentHandle(), proc, param) };
-  SetWindowText(dialog, m_cfg.title.c_str());
-  AttachWindowTopmostButton(dialog);
-  return dialog;
+  CreateDialogParam(s_instance, res, parentHandle(), proc, param);
+  SetWindowText(m_hwnd.get(), m_cfg.title.c_str());
+  AttachWindowTopmostButton(m_hwnd.get());
 }
 #endif
 
@@ -222,7 +220,7 @@ HWND Window::parentHandle()
 int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
 {
   auto *self { static_cast<Window *>(accel->user) };
-  if(self->nativeHandle() == msg->hwnd)
+  if(self->m_hwnd.get() == msg->hwnd)
     return Accel::PassToWindow;
   else
     return Accel::NotOurWindow;

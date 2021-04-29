@@ -110,10 +110,9 @@ struct Window::Impl {
     ~WindowClass();
   };
 
-  void initPixelFormat();
-  void initGL();
+  void initPixelFormat(HWND);
+  void initGL(HWND);
 
-  HwndPtr hwnd;
   HDC dc;
   HGLRC gl;
   float scale;
@@ -147,39 +146,36 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
 
   const RECT rect { scaledWindowRect(cfg, style, exStyle) };
 
-  HWND hwnd {
-    CreateWindowEx(exStyle, CLASS_NAME, widen(cfg.title).c_str(), style,
-      rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
-      parentHandle(), nullptr, s_instance, this)
-  };
-  assert(hwnd && "CreateWindow failed");
+  CreateWindowEx(exStyle, CLASS_NAME, widen(cfg.title).c_str(), style,
+    rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+    parentHandle(), nullptr, s_instance, this);
+  assert(m_hwnd && "CreateWindow failed");
 
-  m_impl->hwnd.reset(hwnd);
-  m_impl->dc = GetDC(hwnd);
-  m_impl->scale = scaleForDpi(dpiForWindow(hwnd));
+  m_impl->dc = GetDC(m_hwnd.get());
+  m_impl->scale = scaleForDpi(dpiForWindow(m_hwnd.get()));
 
-  m_impl->initPixelFormat();
-  m_impl->initGL();
+  m_impl->initPixelFormat(m_hwnd.get());
+  m_impl->initGL(m_hwnd.get());
   m_impl->renderer = new OpenGLRenderer;
   wglMakeCurrent(m_impl->dc, nullptr);
 
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendPlatformName = "reaper_imgui_win32";
-  io.ImeWindowHandle = hwnd;
+  io.ImeWindowHandle = m_hwnd.get();
 
   if(cfg.dock & 1)
     setDock(cfg.dock);
   else {
-    AttachWindowTopmostButton(hwnd);
-    ShowWindow(hwnd, SW_SHOW); // after adding the topmost button
+    AttachWindowTopmostButton(m_hwnd.get());
+    ShowWindow(m_hwnd.get(), SW_SHOW); // after adding the topmost button
   }
 
   // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
   // Unsetting it after the window is visible disables the border (+ no icon)
-  SetWindowLongPtr(hwnd, GWL_EXSTYLE, exStyle & ~WS_EX_DLGMODALFRAME);
+  SetWindowLongPtr(m_hwnd.get(), GWL_EXSTYLE, exStyle & ~WS_EX_DLGMODALFRAME);
 }
 
-void Window::Impl::initPixelFormat()
+void Window::Impl::initPixelFormat(HWND hwnd)
 {
   PIXELFORMATDESCRIPTOR pfd {};
   pfd.nSize = sizeof(pfd);
@@ -189,12 +185,12 @@ void Window::Impl::initPixelFormat()
   pfd.cColorBits = 24;
 
   if(!SetPixelFormat(dc, ChoosePixelFormat(dc, &pfd), &pfd)) {
-    ReleaseDC(hwnd.get(), dc);
+    ReleaseDC(hwnd, dc);
     throw reascript_error { "failed to set a suitable pixel format" };
   }
 }
 
-void Window::Impl::initGL()
+void Window::Impl::initGL(HWND hwnd)
 {
   HGLRC dummyGl { wglCreateContext(dc) }; // creates a legacy (< 2.1) context
   wglMakeCurrent(dc, gl = dummyGl);
@@ -218,7 +214,7 @@ void Window::Impl::initGL()
 
   if(gl3wInit() || !gl3wIsSupported(OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR)) {
     wglDeleteContext(gl);
-    ReleaseDC(hwnd.get(), dc);
+    ReleaseDC(hwnd, dc);
     throw reascript_error { "failed to initialize OpenGL 3.2 or newer" };
   }
 }
@@ -228,12 +224,7 @@ Window::~Window()
   wglMakeCurrent(m_impl->dc, m_impl->gl);
   delete m_impl->renderer;
   wglDeleteContext(m_impl->gl);
-  ReleaseDC(m_impl->hwnd.get(), m_impl->dc);
-}
-
-HWND Window::nativeHandle() const
-{
-  return m_impl->hwnd.get();
+  ReleaseDC(m_hwnd.get(), m_impl->dc);
 }
 
 void Window::beginFrame()
@@ -266,7 +257,7 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
   case WM_DPICHANGED: {
     m_impl->scale = scaleForDpi(LOWORD(wParam));
     const RECT *sugg { reinterpret_cast<RECT *>(lParam) };
-    SetWindowPos(m_impl->hwnd.get(), nullptr,
+    SetWindowPos(m_hwnd.get(), nullptr,
       sugg->left, sugg->top, sugg->right - sugg->left, sugg->bottom - sugg->top,
       SWP_NOACTIVATE | SWP_NOZORDER);
     return 0;

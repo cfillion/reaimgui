@@ -28,7 +28,6 @@ static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
 struct Window::Impl {
-  HwndPtr hwnd;
   NSView *view;
   InputView *inputView;
   ImDrawData *lastDrawData {};
@@ -45,16 +44,15 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
               w { static_cast<float>(rect.right - rect.left) },
               h { static_cast<float>(rect.bottom - rect.top) };
 
-  HWND hwnd { createSwellDialog() };
-  m_impl->hwnd.reset(hwnd);
-  m_impl->view = (__bridge NSView *)hwnd; // SWELL_hwndChild inherits from NSView
+  createSwellDialog();
+  m_impl->view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
 
   if(m_cfg.dock & 1)
     setDock(m_cfg.dock);
   else {
     [[m_impl->view window] setFrameOrigin:NSPoint { x, y }];
     [[m_impl->view window] setContentSize:NSSize  { w, h }];
-    ShowWindow(hwnd, SW_SHOW);
+    ShowWindow(m_hwnd.get(), SW_SHOW);
   }
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
@@ -94,11 +92,6 @@ Window::~Window()
 {
   [m_impl->gl makeCurrentContext];
   delete m_impl->renderer;
-}
-
-HWND Window::nativeHandle() const
-{
-  return m_impl->hwnd.get();
 }
 
 void Window::beginFrame()
@@ -146,9 +139,8 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
 int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
 {
   auto *self { static_cast<Window *>(accel->user) };
-  HWND handle { self->m_impl->hwnd.get() };
 
-  if(handle == msg->hwnd || IsChild(handle, msg->hwnd)) {
+  if(self->m_hwnd.get() == msg->hwnd || IsChild(self->m_hwnd.get(), msg->hwnd)) {
     [[self->m_impl->view window] sendEvent:[NSApp currentEvent]];
     return Accel::EatKeystroke;
   }

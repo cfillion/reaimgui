@@ -42,12 +42,11 @@ struct Window::Impl {
   void teardownGl();
   void checkOSWindowChanged();
   void findOSWindow();
-  bool isDocked() const { return windowOwner && hwnd.get() != windowOwner; }
+  bool isDocked() const { return windowOwner && hwnd != windowOwner; }
   void liceBlit();
 
-  HwndPtr hwnd;
+  HWND hwnd, windowOwner;
   GdkWindow *window;
-  HWND windowOwner;
   GdkGLContext *gl;
   unsigned int tex, fbo;
   OpenGLRenderer *renderer;
@@ -57,12 +56,11 @@ struct Window::Impl {
 Window::Window(const WindowConfig &cfg, Context *ctx)
   : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
-  HWND hwnd { createSwellDialog() };
+  createSwellDialog();
   const RECT rect { cfg.clientRect(scaleFactor()) };
-  SetWindowPos(hwnd, nullptr, rect.left, rect.top,
+  SetWindowPos(m_hwnd.get(), nullptr, rect.left, rect.top,
     rect.right - rect.left, rect.bottom - rect.top,
     SWP_NOACTIVATE | SWP_NOZORDER);
-  m_impl->hwnd.reset(hwnd);
 
   if(cfg.dock & 1) {
     // LICE bitmap must be null when docking to avoid drawing a garbage frame
@@ -70,7 +68,7 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
     m_impl->pixels.reset(LICE_CreateBitmap(0, 0, 0));
   }
   else
-    ShowWindow(hwnd, SW_SHOW);
+    ShowWindow(m_hwnd.get(), SW_SHOW);
 
   m_impl->findOSWindow();
   m_impl->initGl();
@@ -139,7 +137,7 @@ void Window::Impl::initGl()
 void Window::Impl::resizeTextures()
 {
   RECT rect;
-  GetClientRect(hwnd.get(), &rect);
+  GetClientRect(hwnd, &rect);
   const int width  { rect.right - rect.left },
             height { rect.bottom - rect.top };
 
@@ -155,7 +153,7 @@ void Window::Impl::resizeTextures()
 
 void Window::Impl::findOSWindow()
 {
-  windowOwner = hwnd.get();
+  windowOwner = hwnd;
   while(windowOwner && !windowOwner->m_oswindow) {
     HWND parent { GetParent(windowOwner) };
     windowOwner = IsWindowVisible(parent) ? parent : nullptr;
@@ -163,7 +161,7 @@ void Window::Impl::findOSWindow()
 
   window = windowOwner ? windowOwner->m_oswindow : nullptr;
 
-  if(static_cast<void *>(window) == hwnd.get())
+  if(static_cast<void *>(window) == hwnd)
     window = nullptr; // headless SWELL
 }
 
@@ -196,15 +194,10 @@ void Window::Impl::teardownGl()
   g_object_unref(gl);
 }
 
-HWND Window::nativeHandle() const
-{
-  return m_impl->hwnd.get();
-}
-
 void Window::beginFrame()
 {
   // GDK SWELL does not send a window message when focus is lost
-  if(GetFocus() != m_impl->hwnd.get())
+  if(GetFocus() != m_hwnd.get())
     m_ctx->clearFocus();
 
   m_impl->checkOSWindowChanged();
@@ -223,7 +216,7 @@ void Window::drawFrame(ImDrawData *data)
     glReadPixels(0, 0,
       LICE__GetWidth(m_impl->pixels.get()), LICE__GetHeight(m_impl->pixels.get()),
       GL_BGRA, GL_UNSIGNED_BYTE, LICE__GetBits(m_impl->pixels.get()));
-    InvalidateRect(m_impl->hwnd.get(), nullptr, false);
+    InvalidateRect(m_hwnd.get(), nullptr, false);
     gdk_gl_context_clear_current();
     return;
   }
@@ -251,7 +244,7 @@ void Window::Impl::liceBlit()
                 LICE_BLIT_IGNORE_SCALING { 0x20000 };
 
   PAINTSTRUCT ps;
-  if(!BeginPaint(hwnd.get(), &ps))
+  if(!BeginPaint(hwnd, &ps))
     return;
 
   const int width  { LICE__GetWidth(pixels.get())  },
@@ -261,7 +254,7 @@ void Window::Impl::liceBlit()
     ps.hdc->surface_offs.x, ps.hdc->surface_offs.y,
     0, 0, width, height, 1.0f, LICE_BLIT_MODE_COPY | LICE_BLIT_IGNORE_SCALING);
 
-  EndPaint(hwnd.get(), &ps);
+  EndPaint(hwnd, &ps);
 }
 
 void Window::endFrame()
@@ -301,6 +294,9 @@ static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)
 std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
   switch(msg) {
+  case WM_CREATE:
+    m_impl->hwnd = m_hwnd.get();
+    return 0;
   case WM_SIZE:
     if(m_ctx->window() != this) // skip WM_SIZE sent form createSwellDialog
       return std::nullopt;      // (m_impl->gl is not initialized yet)
