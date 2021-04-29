@@ -232,8 +232,10 @@ void Window::drawFrame(ImDrawData *data)
   const cairo_region_t *region { gdk_window_get_clip_region(m_impl->window) };
   GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(m_impl->window, region) };
   cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
-  gdk_cairo_draw_from_gl(cairoContext, m_impl->window, m_impl->tex,
-    GL_TEXTURE, 1, 0, 0, io.DisplaySize.x, io.DisplaySize.y);
+  gdk_cairo_draw_from_gl(cairoContext, m_impl->window,
+    m_impl->tex, GL_TEXTURE, 1, 0, 0,
+    io.DisplaySize.x * io.DisplayFramebufferScale.x,
+    io.DisplaySize.y * io.DisplayFramebufferScale.y);
   gdk_window_end_draw_frame(m_impl->window, drawContext);
 
   // required for making the window visible on GNOME
@@ -268,10 +270,7 @@ void Window::endFrame()
 
 float Window::scaleFactor() const
 {
-  if(!m_impl->window)
-    return 1.0f;
-
-  return gdk_window_get_scale_factor(m_impl->window);
+  return SWELL_GetScaling256() / 256.f;
 }
 
 static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)
