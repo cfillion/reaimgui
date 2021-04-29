@@ -57,13 +57,11 @@ struct Window::Impl {
 Window::Window(const WindowConfig &cfg, Context *ctx)
   : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
-  HWND hwnd { createSwellDialog(cfg.title.c_str()) };
+  HWND hwnd { createSwellDialog() };
   const RECT rect { cfg.clientRect(scaleFactor()) };
   SetWindowPos(hwnd, nullptr, rect.left, rect.top,
     rect.right - rect.left, rect.bottom - rect.top,
     SWP_NOACTIVATE | SWP_NOZORDER);
-  SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
-
   m_impl->hwnd.reset(hwnd);
 
   if(cfg.dock & 1) {
@@ -305,6 +303,8 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
 {
   switch(msg) {
   case WM_SIZE:
+    if(m_ctx->window() != this) // skip WM_SIZE sent form createSwellDialog
+      return std::nullopt;      // (m_impl->gl is not initialized yet)
     gdk_gl_context_make_current(m_impl->gl);
     m_impl->resizeTextures();
     gdk_gl_context_clear_current();

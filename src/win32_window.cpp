@@ -41,24 +41,6 @@ static std::wstring widen(const std::string &input, const UINT codepage = CP_UTF
   return output;
 }
 
-static bool isPerMonitorV2DPIAwareness()
-{
-  // Windows 10 Creators Update (1703) and newer
-  static DllImport<decltype(GetThreadDpiAwarenessContext)>
-    _GetThreadDpiAwarenessContext
-    { L"User32.dll", "GetThreadDpiAwarenessContext" };
-  static DllImport<decltype(AreDpiAwarenessContextsEqual)>
-    _AreDpiAwarenessContextsEqual
-    { L"User32.dll", "AreDpiAwarenessContextsEqual" };
-
-  if(!_GetThreadDpiAwarenessContext || !_AreDpiAwarenessContextsEqual)
-    return false;
-
-  static const auto threadAwareness { _GetThreadDpiAwarenessContext() };
-  return _AreDpiAwarenessContextsEqual(
-    threadAwareness, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-}
-
 static unsigned int dpiForPoint(const POINT &point)
 {
   // Windows 8.1+
@@ -83,7 +65,7 @@ static unsigned int dpiForWindow(HWND window)
   static DllImport<decltype(GetDpiForWindow)>
     _GetDpiForWindow
     { L"User32.dll", "GetDpiForWindow" };
-  if(isPerMonitorV2DPIAwareness() && _GetDpiForWindow)
+  if(_GetDpiForWindow)
     return _GetDpiForWindow(window);
   else
     return USER_DEFAULT_SCREEN_DPI;
@@ -103,7 +85,7 @@ static RECT scaledWindowRect(const WindowConfig &cfg,
   static DllImport<decltype(AdjustWindowRectExForDpi)>
     _AdjustWindowRectExForDpi
     { L"User32.dll", "AdjustWindowRectExForDpi" };
-  if(isPerMonitorV2DPIAwareness() && _AdjustWindowRectExForDpi) {
+  if(_AdjustWindowRectExForDpi) {
     unsigned int dpi;
     if(cfg.x && cfg.y)
       dpi = dpiForPoint({ *cfg.x, *cfg.y });
@@ -168,10 +150,9 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   HWND hwnd {
     CreateWindowEx(exStyle, CLASS_NAME, widen(cfg.title).c_str(), style,
       rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
-      parentHandle(), nullptr, s_instance, nullptr)
+      parentHandle(), nullptr, s_instance, this)
   };
   assert(hwnd && "CreateWindow failed");
-  SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
 
   m_impl->hwnd.reset(hwnd);
   m_impl->dc = GetDC(hwnd);

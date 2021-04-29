@@ -45,8 +45,7 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
               w { static_cast<float>(rect.right - rect.left) },
               h { static_cast<float>(rect.bottom - rect.top) };
 
-  HWND hwnd { createSwellDialog(cfg.title.c_str()) };
-  SetWindowLongPtr(hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ctx));
+  HWND hwnd { createSwellDialog() };
   m_impl->hwnd.reset(hwnd);
   m_impl->view = (__bridge NSView *)hwnd; // SWELL_hwndChild inherits from NSView
 

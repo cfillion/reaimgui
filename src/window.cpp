@@ -79,13 +79,21 @@ RECT WindowConfig::clientRect(const float scale) const
 LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   const WPARAM wParam, const LPARAM lParam)
 {
-  Context *ctx {
-    reinterpret_cast<Context *>(GetWindowLongPtr(handle, GWLP_USERDATA))
-  };
+#ifdef _WIN32
+  if(msg == WM_NCCREATE) {
+    void *ptr { reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams };
+#else
+  if(msg == WM_CREATE) {
+    auto &ptr { lParam };
+#endif
+    SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(ptr));
+  }
 
-  if(!ctx || !ctx->window())
+  Window *self { reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA)) };
+
+  if(!self)
     return DefWindowProc(handle, msg, wParam, lParam);
-  else if(const auto &rv { ctx->window()->handleMessage(msg, wParam, lParam) })
+  else if(const auto &rv { self->handleMessage(msg, wParam, lParam) })
     return *rv;
 
   switch(msg) {
@@ -94,9 +102,9 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
       break;
     [[fallthrough]];
   case WM_CLOSE:
-    ctx->setCloseRequested();
-    if(ctx->frozen()) // let users kill frozen contexts
-      delete ctx;
+    self->m_ctx->setCloseRequested();
+    if(self->m_ctx->frozen()) // let users kill frozen contexts
+      delete self->m_ctx;
     return 0;
   case WM_DESTROY:
     SetWindowLongPtr(handle, GWLP_USERDATA, 0);
@@ -106,11 +114,11 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 #ifndef GET_WHEEL_DELTA_WPARAM
 #  define GET_WHEEL_DELTA_WPARAM GET_Y_LPARAM
 #endif
-    ctx->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
+    self->m_ctx->mouseWheel(msg, GET_WHEEL_DELTA_WPARAM(wParam));
     return 0;
   case WM_SETCURSOR:
     if(LOWORD(lParam) == HTCLIENT) {
-      SetCursor(ctx->cursor()); // sets the cursor when re-entering the window
+      SetCursor(self->m_ctx->cursor()); // sets the cursor when re-entering the window
       return 1;
     }
 #ifdef _WIN32
@@ -123,12 +131,12 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   case WM_MBUTTONDOWN:
   case WM_RBUTTONDOWN:
     SetFocus(handle); // give keyboard focus when docked
-    ctx->mouseDown(msg);
+    self->m_ctx->mouseDown(msg);
     return 0;
   case WM_LBUTTONUP:
   case WM_MBUTTONUP:
   case WM_RBUTTONUP:
-    ctx->mouseUp(msg);
+    self->m_ctx->mouseUp(msg);
     return 0;
 #endif // __APPLE__
   }
@@ -164,6 +172,8 @@ void Window::setDock(const int dock)
   else {
     m_cfg.dock = dock;
     Window floating { m_cfg, m_ctx };
+    SetWindowLongPtr(floating.nativeHandle(), GWLP_USERDATA,
+      reinterpret_cast<LONG_PTR>(this));
     std::swap(m_impl, floating.m_impl);
   }
 }
@@ -187,7 +197,7 @@ void Window::updateConfig()
 }
 
 #ifndef _WIN32
-HWND Window::createSwellDialog(const char *title)
+HWND Window::createSwellDialog()
 {
   enum SwellDialogResFlags {
     ForceNonChild = 0x400000 | 0x8, // allows not using a resource id
@@ -195,8 +205,9 @@ HWND Window::createSwellDialog(const char *title)
   };
 
   const char *res { MAKEINTRESOURCE(ForceNonChild | Resizable) };
-  HWND dialog { CreateDialog(s_instance, res, parentHandle(), proc) };
-  SetWindowText(dialog, title);
+  LPARAM param { reinterpret_cast<LPARAM>(this) };
+  HWND dialog { CreateDialogParam(s_instance, res, parentHandle(), proc, param) };
+  SetWindowText(dialog, m_cfg.title.c_str());
   AttachWindowTopmostButton(dialog);
   return dialog;
 }

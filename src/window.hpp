@@ -68,7 +68,7 @@ private:
   using HwndPtr = std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter>;
 
   static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
-  static HWND createSwellDialog(const char *title);
+  HWND createSwellDialog();
 
   void updateConfig();
 
