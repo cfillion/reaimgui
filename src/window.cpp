@@ -73,6 +73,8 @@ RECT WindowConfig::clientRect(const float scale) const
   rect.right  = rect.left + scaledWidth;
   rect.bottom = rect.top + scaledHeight;
 
+  EnsureNotCompletelyOffscreen(&rect);
+
   return rect;
 }
 
