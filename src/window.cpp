@@ -187,6 +187,10 @@ void Window::updateConfig()
   m_cfg.h = rect.bottom - rect.top;
 #ifdef __APPLE__
   std::swap(rect.top, rect.bottom);
+#else
+  const float scale { scaleFactor() };
+  m_cfg.w /= scale;
+  m_cfg.h /= scale;
 #endif
   ClientToScreen(m_hwnd.get(), reinterpret_cast<POINT *>(&rect));
   m_cfg.x = rect.left;
