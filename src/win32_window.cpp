@@ -41,6 +41,14 @@ static std::wstring widen(const std::string &input, const UINT codepage = CP_UTF
   return output;
 }
 
+static unsigned int xpScreenDpi()
+{
+  const HDC dc { GetDC(nullptr) };
+  const int dpi { GetDeviceCaps(dc, LOGPIXELSX) };
+  ReleaseDC(nullptr, dc);
+  return dpi;
+}
+
 static unsigned int dpiForPoint(const POINT &point)
 {
   // Windows 8.1+
@@ -56,7 +64,7 @@ static unsigned int dpiForPoint(const POINT &point)
       return dpiX;
   }
 
-  return USER_DEFAULT_SCREEN_DPI;
+  return xpScreenDpi();
 }
 
 static unsigned int dpiForWindow(HWND window)
@@ -67,8 +75,11 @@ static unsigned int dpiForWindow(HWND window)
     { L"User32.dll", "GetDpiForWindow" };
   if(_GetDpiForWindow)
     return _GetDpiForWindow(window);
-  else
-    return USER_DEFAULT_SCREEN_DPI;
+  else {
+    RECT rect;
+    GetWindowRect(window, &rect);
+    return dpiForPoint({ rect.left, rect.top });
+  }
 }
 
 static float scaleForDpi(const unsigned int dpi)
@@ -79,25 +90,22 @@ static float scaleForDpi(const unsigned int dpi)
 static RECT scaledWindowRect(const WindowConfig &cfg,
   const DWORD style, const DWORD exStyle)
 {
-  RECT rect;
+  unsigned int dpi;
+  if(cfg.x && cfg.y)
+    dpi = dpiForPoint({ *cfg.x, *cfg.y });
+  else
+    dpi = dpiForWindow(Window::parentHandle());
+
+  RECT rect { cfg.clientRect(scaleForDpi(dpi)) };
 
   // Windows 10 Anniversary Update (1607) and newer
   static DllImport<decltype(AdjustWindowRectExForDpi)>
     _AdjustWindowRectExForDpi
     { L"User32.dll", "AdjustWindowRectExForDpi" };
-  if(_AdjustWindowRectExForDpi) {
-    unsigned int dpi;
-    if(cfg.x && cfg.y)
-      dpi = dpiForPoint({ *cfg.x, *cfg.y });
-    else
-      dpi = dpiForWindow(Window::parentHandle());
-    rect = cfg.clientRect(scaleForDpi(dpi));
+  if(_AdjustWindowRectExForDpi)
     _AdjustWindowRectExForDpi(&rect, style, false, exStyle, dpi);
-  }
-  else {
-    rect = cfg.clientRect();
+  else
     AdjustWindowRectEx(&rect, style, false, exStyle);
-  }
 
   return rect;
 }
