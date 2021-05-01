@@ -41,6 +41,11 @@ public:
 private:
   static void tick()
   {
+    // REAPER v6.19+ does not execute deferred script callbacks
+    // when the splash screen is open.
+    if(Splash_GetWnd())
+      return;
+
     auto it { g_rsx.begin() };
 
     while(it != g_rsx.end()) {
