@@ -26,7 +26,7 @@ ListClipper::ListClipper(Context *ctx) : m_ctx { ctx } {}
 // ensure the assert in ~ImGuiListClipper doesn't trip
 ListClipper::~ListClipper() { m_imlc.ItemsCount = -1; }
 
-void ListClipper::heartbeat() { delete this; }
+bool ListClipper::heartbeat() { return false; }
 
 bool ListClipper::validate(ListClipper *lc)
 {

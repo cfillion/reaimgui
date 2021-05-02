@@ -92,21 +92,21 @@ Context::~Context()
   setCurrent();
 
   if(m_inFrame)
-    endFrame(false, false);
+    endFrame(false);
 }
 
-void Context::heartbeat()
+bool Context::heartbeat()
 {
   if(m_frozen)
-    return;
+    return true;
 
   if(m_closeReq)
     m_closeReq = false;
 
   if(m_inFrame)
-    endFrame(true);
+    return endFrame(true);
   else
-    delete this;
+    return false;
 }
 
 void Context::beginFrame()
@@ -151,7 +151,7 @@ void Context::enterFrame()
     beginFrame();
 }
 
-void Context::endFrame(const bool render, const bool prinnyMode) try
+bool Context::endFrame(const bool render) try
 {
   setCurrent();
 
@@ -166,6 +166,8 @@ void Context::endFrame(const bool render, const bool prinnyMode) try
 
   m_window->endFrame();
   m_inFrame = false;
+
+  return true;
 }
 catch(const imgui_error &e) {
   char message[1024];
@@ -181,8 +183,7 @@ catch(const imgui_error &e) {
   // don't call endFrame again from the destructor
   m_inFrame = false;
 
-  if(prinnyMode) // don't delete twice when first called from the destructor
-    delete this;
+  return false;
 }
 
 void Context::updateFrameInfo()

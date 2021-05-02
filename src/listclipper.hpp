@@ -29,7 +29,7 @@ public:
   ~ListClipper();
 
 protected:
-  void heartbeat() override;
+  bool heartbeat() override;
 
 private:
   Context *m_ctx;

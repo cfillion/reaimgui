@@ -50,7 +50,8 @@ private:
 
     while(it != g_rsx.end()) {
       Resource *rs { *it++ };
-      rs->heartbeat(); // may delete rs
+      if(!rs->heartbeat())
+        delete rs;
     }
   }
 };

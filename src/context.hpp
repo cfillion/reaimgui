@@ -71,7 +71,7 @@ public:
   ImGuiContext *imgui() const { return m_imgui.get(); }
 
 protected:
-  void heartbeat() override;
+  bool heartbeat() override;
 
 private:
   enum ButtonState {
@@ -80,7 +80,7 @@ private:
   };
 
   void beginFrame();
-  void endFrame(bool render, bool prinnyMode = true);
+  bool endFrame(bool render);
   bool anyMouseDown() const;
   void updateFrameInfo();
   void updateTheme();

@@ -37,7 +37,7 @@ public:
   }
 
 protected:
-  virtual void heartbeat() = 0;
+  virtual bool heartbeat() = 0;
 
 private:
   class Timer;
