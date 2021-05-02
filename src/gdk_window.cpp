@@ -74,7 +74,7 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   m_impl->initGl();
 
   // prevent invalidation (= displaying garbage) when moving another window over
-  if(!cfg.dock)
+  if(!(cfg.dock & 1))
     gdk_window_freeze_updates(m_impl->window);
 
   ImGuiIO &io { ImGui::GetIO() };
