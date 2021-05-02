@@ -47,6 +47,7 @@ public:
 
   static HINSTANCE s_instance;
   static HWND parentHandle();
+  static void updateKeyMap();
 
   Window(const WindowConfig &, Context *);
   Window(const Window &) = delete;
@@ -57,7 +58,6 @@ public:
   void endFrame();
   float scaleFactor() const;
   std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM);
-  static int translateAccel(MSG *msg, accelerator_register_t *accel);
 
   int dock() const;
   void setDock(int);
@@ -67,8 +67,9 @@ private:
   struct WindowDeleter { void operator()(HWND); };
 
   static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
-  void createSwellDialog();
+  static int translateAccel(MSG *msg, accelerator_register_t *accel);
 
+  void createSwellDialog();
   void updateConfig();
 
   WindowConfig m_cfg;
