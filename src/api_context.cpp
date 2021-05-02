@@ -36,16 +36,17 @@ DEFINE_API(void, GetVersion,
 DEFINE_API(ImGui_Context*, CreateContext,
 (const char*,title)(int,size_w)(int,size_h)
 (int*,API_RO(pos_x))(int*,API_RO(pos_y))
-(int*,API_RO(dock)),
+(int*,API_RO(dock))(int*,API_RO(config_flags)),
 R"(Create a new ReaImGui context. It will remain valid as long as it is used in each defer cycle. Pass null x/y coordinates to auto-position the window with the arrange view.
 
 Default values: pos_x = nil, pos_y = nil, dock = 0)",
 {
   const int pos_x { valueOr(API_RO(pos_x), WindowConfig::DEFAULT_POS) },
             pos_y { valueOr(API_RO(pos_y), WindowConfig::DEFAULT_POS) },
-            dock  { valueOr(API_RO(dock), 0) };
+            dock  { valueOr(API_RO(dock), 0) },
+            flags { valueOr(API_RO(config_flags), ImGuiConfigFlags_None) };
   const WindowConfig window { title, pos_x, pos_y, size_w, size_h, dock };
-  return new Context { window };
+  return new Context { window, flags };
 });
 
 DEFINE_API(void, DestroyContext, (ImGui_Context*,ctx),

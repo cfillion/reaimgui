@@ -44,7 +44,7 @@ public:
   static constexpr const char *api_type_name { "ImGui_Context" };
   static Context *current();
 
-  Context(const WindowConfig &);
+  Context(const WindowConfig &, int configFlags = 0);
   ~Context();
 
   bool isCloseRequested() const { return m_closeReq; }

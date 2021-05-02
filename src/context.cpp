@@ -59,7 +59,7 @@ Context *Context::current()
   return static_cast<Context *>(ImGui::GetIO().UserData);
 }
 
-Context::Context(const WindowConfig &winConfig)
+Context::Context(const WindowConfig &winConfig, const int configFlags)
   : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_iniFilename { iniFilename(winConfig.title) },
@@ -73,6 +73,7 @@ Context::Context(const WindowConfig &winConfig)
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
+  io.ConfigFlags = configFlags;
   io.IniFilename = m_iniFilename.c_str();
   io.LogFilename = logFn.c_str();
   io.UserData = this;
