@@ -39,6 +39,10 @@ struct WindowConfig;
 struct ImFontAtlas;
 struct ImGuiContext;
 
+enum ConfigFlags {
+  ReaImGuiConfigFlags_NoSavedSettings = 1<<20,
+};
+
 class Context : public Resource {
 public:
   static constexpr const char *api_type_name { "ImGui_Context" };

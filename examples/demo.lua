@@ -351,6 +351,8 @@ function demo.ShowDemoWindow()
       end
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', config.flags, r.ImGui_ConfigFlags_NoMouseCursorChange())
       r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
+      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, r.ImGui_ConfigFlags_NoSavedSettings())
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
       -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTextCursorBlink', &io.ConfigInputTextCursorBlink)
       -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting)")
       -- r.ImGui_Checkbox(ctx, 'io.ConfigDragClickToInputText', &io.ConfigDragClickToInputText)

@@ -214,6 +214,8 @@ DEFINE_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos, "Instruct navigation to mov
 DEFINE_ENUM(ImGui, ConfigFlags_NoMouse,              "Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.");
 DEFINE_ENUM(ImGui, ConfigFlags_NoMouseCursorChange,  "Instruct backend to not alter mouse cursor shape and visibility.");
 
+DEFINE_ENUM(ReaImGui, ConfigFlags_NoSavedSettings, "Disable state restoration and persistence for the whole context");
+
 // ImGuiComboFlags
 DEFINE_ENUM(ImGui, ComboFlags_None,           "Flags for ImGui::BeginCombo()");
 DEFINE_ENUM(ImGui, ComboFlags_PopupAlignLeft, "Align the popup toward the left by default");

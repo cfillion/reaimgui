@@ -74,7 +74,6 @@ Context::Context(const WindowConfig &winConfig, const int configFlags)
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.ConfigFlags = configFlags;
-  io.IniFilename = m_iniFilename.c_str();
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
@@ -185,6 +184,9 @@ catch(const imgui_error &e) {
 void Context::updateFrameInfo()
 {
   ImGuiIO &io { ImGui::GetIO() };
+
+  io.IniFilename = io.ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings ?
+    nullptr : m_iniFilename.c_str();
 
   const float scale { m_window->scaleFactor() };
   io.DisplayFramebufferScale = { scale, scale };
