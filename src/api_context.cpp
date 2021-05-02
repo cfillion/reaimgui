@@ -41,10 +41,9 @@ R"(Create a new ReaImGui context. It will remain valid as long as it is used eve
 
 Default values: pos_x = nil, pos_y = nil, dock = 0)",
 {
-  std::optional<int> pos_x, pos_y;
-  if(API_RO(pos_x)) pos_x = *API_RO(pos_x);
-  if(API_RO(pos_y)) pos_y = *API_RO(pos_y);
-  const int dock { valueOr(API_RO(dock), 0) };
+  const int pos_x { valueOr(API_RO(pos_x), WindowConfig::DEFAULT_POS) },
+            pos_y { valueOr(API_RO(pos_y), WindowConfig::DEFAULT_POS) },
+            dock  { valueOr(API_RO(dock), 0) };
   const WindowConfig window { title, pos_x, pos_y, size_w, size_h, dock };
   return new Context { window };
 });

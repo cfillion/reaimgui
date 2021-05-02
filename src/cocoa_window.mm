@@ -38,7 +38,7 @@ struct Window::Impl {
 Window::Window(const WindowConfig &cfg, Context *ctx)
   : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
-  const RECT rect { cfg.clientRect() };
+  const RECT rect { cfg.initialRect() };
   const float x { static_cast<float>(rect.left) },
               y { static_cast<float>(rect.top)  },
               w { static_cast<float>(rect.right - rect.left) },

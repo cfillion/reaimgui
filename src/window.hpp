@@ -33,11 +33,12 @@ class Context;
 struct ImDrawData;
 
 struct WindowConfig {
-  RECT clientRect(float scale = 1.f) const;
+  static constexpr int DEFAULT_POS { static_cast<int>(0x80000000) };
+
+  RECT initialRect(float scale = 1.f) const;
 
   std::string title;
-  std::optional<int> x, y;
-  int w, h;
+  POINT pos, size;
   int dock;
 };
 

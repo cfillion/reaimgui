@@ -30,10 +30,10 @@
 
 HINSTANCE Window::s_instance;
 
-RECT WindowConfig::clientRect(const float scale) const
+RECT WindowConfig::initialRect(const float scale) const
 {
   RECT parent, screen;
-  if(!x || !y) {
+  if(pos.x == DEFAULT_POS || pos.y == DEFAULT_POS) {
     HWND parentHwnd { Window::parentHandle() };
     GetWindowRect(parentHwnd, &parent);
 
@@ -48,27 +48,27 @@ RECT WindowConfig::clientRect(const float scale) const
   }
 
   RECT rect;
-  const int scaledWidth  { static_cast<int>(w * scale) },
-            scaledHeight { static_cast<int>(h * scale) };
+  const int scaledWidth  { static_cast<int>(size.x * scale) },
+            scaledHeight { static_cast<int>(size.y * scale) };
 
-  if(x)
-    rect.left = *x;
-  else {
+  if(pos.x == DEFAULT_POS) {
     // default to the center of the parent window
     const int parentWidth { parent.right - parent.left };
     rect.left = ((parentWidth - scaledWidth) / 2) + parent.left;
     rect.left = std::min(rect.left, screen.right - scaledWidth);
     rect.left = std::max(rect.left, screen.left);
   }
+  else
+    rect.left = pos.x;
 
-  if(y)
-    rect.top = *y;
-  else {
+  if(pos.y == DEFAULT_POS) {
     const int parentHeight { parent.bottom - parent.top };
     rect.top = ((parentHeight - scaledHeight) / 2) + parent.top;
     rect.top = std::min(rect.top, screen.bottom - scaledHeight);
     rect.top = std::max(rect.top, screen.top);
   }
+  else
+    rect.top = pos.y;
 
   rect.right  = rect.left + scaledWidth;
   rect.bottom = rect.top + scaledHeight;
@@ -210,18 +210,18 @@ void Window::updateConfig()
 {
   RECT rect;
   GetClientRect(m_hwnd.get(), &rect);
-  m_cfg.w = rect.right - rect.left;
-  m_cfg.h = rect.bottom - rect.top;
+  m_cfg.size.x = rect.right - rect.left;
+  m_cfg.size.y = rect.bottom - rect.top;
 #ifdef __APPLE__
   std::swap(rect.top, rect.bottom);
 #else
   const float scale { scaleFactor() };
-  m_cfg.w /= scale;
-  m_cfg.h /= scale;
+  m_cfg.size.x /= scale;
+  m_cfg.size.y /= scale;
 #endif
   ClientToScreen(m_hwnd.get(), reinterpret_cast<POINT *>(&rect));
-  m_cfg.x = rect.left;
-  m_cfg.y = rect.top;
+  m_cfg.pos.x = rect.left;
+  m_cfg.pos.y = rect.top;
 
   m_cfg.dock = dock();
 }

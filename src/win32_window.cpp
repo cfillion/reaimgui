@@ -91,12 +91,13 @@ static RECT scaledWindowRect(const WindowConfig &cfg,
   const DWORD style, const DWORD exStyle)
 {
   unsigned int dpi;
-  if(cfg.x && cfg.y)
-    dpi = dpiForPoint({ *cfg.x, *cfg.y });
-  else
+  if(cfg.pos.x == WindowConfig::DEFAULT_POS ||
+      cfg.pos.y == WindowConfig::DEFAULT_POS)
     dpi = dpiForWindow(Window::parentHandle());
+  else
+    dpi = dpiForPoint(cfg.pos);
 
-  RECT rect { cfg.clientRect(scaleForDpi(dpi)) };
+  RECT rect { cfg.initialRect(scaleForDpi(dpi)) };
 
   // Windows 10 Anniversary Update (1607) and newer
   static DllImport<decltype(AdjustWindowRectExForDpi)>
