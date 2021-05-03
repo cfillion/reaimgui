@@ -25,17 +25,41 @@
 constexpr size_t MAX_INSTANCES { 99 };
 
 static std::unordered_set<Resource *> g_rsx;
+static unsigned int g_reentrant;
+#ifndef __APPLE__
+static WNDPROC g_mainProc;
+#endif
+
+#ifndef GWLP_WNDPROC // SWELL
+#  define GWLP_WNDPROC GWL_WNDPROC
+#  define SetWindowLongPtr SetWindowLong
+#  define GetWindowLongPtr GetWindowLong
+#endif
 
 class Resource::Timer {
 public:
   Timer()
   {
+#ifndef __APPLE__
+    LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
+             oldProc { SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc) };
+    g_mainProc = reinterpret_cast<WNDPROC>(oldProc);
+#endif
+
     plugin_register("timer", reinterpret_cast<void *>(&Timer::tick));
   }
 
   ~Timer()
   {
     plugin_register("-timer", reinterpret_cast<void *>(&Timer::tick));
+
+#ifndef __APPLE__
+    HWND mainWnd { GetMainHwnd() };
+    LONG_PTR expectedProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
+             previousProc { reinterpret_cast<LONG_PTR>(g_mainProc) };
+    if(GetWindowLongPtr(mainWnd, GWLP_WNDPROC) == expectedProc)
+      SetWindowLongPtr(mainWnd, GWLP_WNDPROC, previousProc);
+#endif
   }
 
 private:
@@ -43,7 +67,7 @@ private:
   {
     // REAPER v6.19+ does not execute deferred script callbacks
     // when the splash screen is open.
-    if(Splash_GetWnd())
+    if(Splash_GetWnd() || g_reentrant > 1)
       return;
 
     auto it { g_rsx.begin() };
@@ -54,6 +78,26 @@ private:
         delete rs;
     }
   }
+
+#ifndef __APPLE__
+  // Timers are reentrant on Windows and Linux, but deferred ReaScripts aren't.
+  // The workaround below suspends ReaImGui when a script opens a modal dialog,
+  // in order to not flag the context as being unused and destroying it.
+  static LRESULT CALLBACK mainProcOverride(HWND hwnd,
+    unsigned int msg, WPARAM wParam, LPARAM lParam)
+  {
+    // 0x29a is REAPER's "misc timer". It's responsible for triggering both
+    // deferred ReaScripts and extension timer callbacks (among other things).
+    if(msg == WM_TIMER && wParam == 0x29a) {
+      g_reentrant += 1;
+      const LRESULT ret { CallWindowProc(g_mainProc, hwnd, msg, wParam, lParam) };
+      g_reentrant -= 1;
+      return ret;
+    }
+
+    return CallWindowProc(g_mainProc, hwnd, msg, wParam, lParam);
+  }
+#endif
 };
 
 Resource::Resource()
