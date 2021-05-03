@@ -17,14 +17,14 @@ for:
     install: |-
       set -e
 
-      sudo sed -i '/arch=/! s/^deb/deb [arch=amd64,i386]/' /etc/apt/sources.list
+      sudo rm /etc/apt/sources.list.d/*.list
+      sudo sed -i '/ubuntu\.com/!d; /arch=/! s/^deb/deb [arch=amd64,i386]/' \
+        /etc/apt/sources.list
       awk '
-      $3 !~ /ubuntu\.com/ { next }
       $1 == "deb" {
         $2 = "[arch=armhf,arm64]";
         $3 = "http://ports.ubuntu.com/ubuntu-ports/"
       } 1' /etc/apt/sources.list | sudo dd of=/etc/apt/sources.list.d/ports.list
-      sudo rm /etc/apt/sources.list.d/microsoft-prod.list
 
       install-deps() {
         local arch="$1"; shift
