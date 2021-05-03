@@ -46,8 +46,7 @@ Context *Context::current()
 }
 
 Context::Context(const WindowConfig &winConfig)
-  : m_inFrame { false }, m_closeReq { false }, m_frozen { false },
-    m_cursor {}, m_mouseDown {},
+  : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
 {
@@ -82,9 +81,6 @@ Context::~Context()
 
 bool Context::heartbeat()
 {
-  if(m_frozen)
-    return true;
-
   if(m_closeReq)
     m_closeReq = false;
 
@@ -130,7 +126,6 @@ void Context::setDockNextFrame(const int dock)
 void Context::enterFrame()
 {
   setCurrent();
-  m_frozen = false;
 
   if(!m_inFrame)
     beginFrame();

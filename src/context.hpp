@@ -52,9 +52,6 @@ public:
   const Color &clearColor() const { return m_clearColor; }
   void setClearColor(const Color &col) { m_clearColor = col; }
 
-  bool frozen() { return m_frozen; }
-  void freeze() { m_frozen = true; }
-
   void setCurrent();
   void setDockNextFrame(int);
   void enterFrame();
@@ -89,7 +86,7 @@ private:
   void updateMousePos();
   void updateKeyMods();
 
-  bool m_inFrame, m_closeReq, m_frozen;
+  bool m_inFrame, m_closeReq;
   Color m_clearColor;
   HCURSOR m_cursor;
   std::optional<int> m_setDockNextFrame;
