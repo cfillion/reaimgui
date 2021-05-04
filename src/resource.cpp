@@ -69,7 +69,8 @@ void Resource::Timer::tick()
 {
   // REAPER v6.19+ does not execute deferred script callbacks
   // when the splash screen is open.
-  if(Splash_GetWnd() || g_reentrant > 1)
+  static bool pauseDuringLoad { atof(GetAppVersion()) >= 6.19 };
+  if((pauseDuringLoad && Splash_GetWnd()) || g_reentrant > 1)
     return;
 
   auto it { g_rsx.begin() };
