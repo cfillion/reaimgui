@@ -26,8 +26,6 @@ ListClipper::ListClipper(Context *ctx) : m_ctx { ctx } {}
 // ensure the assert in ~ImGuiListClipper doesn't trip
 ListClipper::~ListClipper() { m_imlc.ItemsCount = -1; }
 
-bool ListClipper::heartbeat() { return false; }
-
 bool ListClipper::validate(ListClipper *lc)
 {
   return Resource::exists(lc) && Resource::exists(lc->m_ctx);
@@ -42,6 +40,7 @@ ImGuiListClipper *ListClipper::use(ListClipper *lc)
     throw reascript_error { message };
   }
 
+  lc->keepAlive();
   lc->m_ctx->enterFrame();
   return &lc->m_imlc;
 }
@@ -71,7 +70,7 @@ Generally what happens is:
 - Clipper calculate the actual range of elements to display based on the current clipping rectangle, position the cursor before the first visible element.
 - User code submit visible elements.
 
-The returned clipper object is tied to the context and valid until the next timer tick. See ImGui_ListClipper_Begin.)",
+The returned clipper object is tied to the context and is valid as long as it is used in each defer cycle. See ImGui_ListClipper_Begin.)",
 {
   assertValid(ctx);
   return new ListClipper { ctx };

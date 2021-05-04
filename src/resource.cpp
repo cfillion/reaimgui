@@ -101,6 +101,7 @@ private:
 };
 
 Resource::Resource()
+  : m_keepAlive { true }
 {
   if(g_rsx.size() >= MAX_INSTANCES)
     throw reascript_error { "exceeded maximum object allocation limit" };
@@ -118,6 +119,15 @@ Resource::Resource()
 Resource::~Resource()
 {
   g_rsx.erase(this);
+}
+
+bool Resource::heartbeat()
+{
+  if(!m_keepAlive)
+    return false;
+
+  m_keepAlive = false;
+  return true;
 }
 
 template<>

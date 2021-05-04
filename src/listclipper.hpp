@@ -28,9 +28,6 @@ public:
   ListClipper(Context *ctx);
   ~ListClipper();
 
-protected:
-  bool heartbeat() override;
-
 private:
   Context *m_ctx;
   ImGuiListClipper m_imlc;
