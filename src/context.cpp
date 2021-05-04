@@ -24,6 +24,12 @@
 #include <imgui/imgui_internal.h> // ClearActiveID
 #include <reaper_plugin_functions.h>
 
+#ifdef _WIN32
+#  define PATH_SEP "\\"
+#else
+#  define PATH_SEP "/"
+#endif
+
 class TempCurrent {
 public:
   TempCurrent(Context *ctx)
@@ -46,7 +52,7 @@ Context::Context(const WindowConfig &winConfig)
     m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
 {
   static const std::string logFn
-    { std::string { GetResourcePath() } + "/imgui_log.txt" };
+    { std::string { GetResourcePath() } + PATH_SEP "imgui_log.txt" };
 
   setCurrent();
 
