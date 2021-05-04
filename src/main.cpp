@@ -52,6 +52,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(DockWindowAddEx),
     IMPORT(DockWindowRemove),
     IMPORT(EnsureNotCompletelyOffscreen),
+    IMPORT(GetAppVersion),
     IMPORT(GetColorThemeStruct),
     IMPORT(GetMainHwnd),
     IMPORT(GetResourcePath),
