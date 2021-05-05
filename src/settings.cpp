@@ -60,6 +60,9 @@ Settings::Settings(const char *name)
   : title { name, ImGui::FindRenderedTextEnd(name) },
     m_filename { GetResourcePath() }
 {
+  if(!name[0]) // does not prohibit empty window titles
+    throw reascript_error { "context name is required" };
+
   m_filename += WDL_DIRCHAR_STR "ReaImGui";
   RecursiveCreateDirectory(m_filename.c_str(), 0);
 
