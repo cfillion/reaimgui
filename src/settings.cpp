@@ -56,8 +56,9 @@ static void Settings_writeAll(
   buf->append("\n");
 }
 
-Settings::Settings(const char *label)
-  : title { label }, m_filename { GetResourcePath() }
+Settings::Settings(const char *name)
+  : title { name, ImGui::FindRenderedTextEnd(name) },
+    m_filename { GetResourcePath() }
 {
   m_filename += WDL_DIRCHAR_STR "ReaImGui";
   RecursiveCreateDirectory(m_filename.c_str(), 0);
@@ -67,7 +68,7 @@ Settings::Settings(const char *label)
     (sizeof(ImGuiID) * 2) + strlen(WDL_DIRCHAR_STR ".ini"));
   snprintf(&m_filename[pathSize], (m_filename.size() - pathSize) + 1,
     WDL_DIRCHAR_STR "%0*X.ini",
-    static_cast<int>(sizeof(ImGuiID) * 2), ImHashStr(label));
+    static_cast<int>(sizeof(ImGuiID) * 2), ImHashStr(name));
 }
 
 void Settings::install()

@@ -34,14 +34,14 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(ImGui_Context*, CreateContext,
-(const char*,title)(int,size_w)(int,size_h)
+(const char*,name)(int,size_w)(int,size_h)
 (int*,API_RO(pos_x))(int*,API_RO(pos_y))
 (int*,API_RO(dock))(int*,API_RO(config_flags)),
 R"(Create a new ReaImGui context. It will remain valid as long as it is used in each defer cycle. Pass null x/y coordinates to auto-position the window with the arrange view.
 
 Default values: pos_x = nil, pos_y = nil, dock = 0)",
 {
-  Settings settings { title };
+  Settings settings { name };
   settings.pos = {
     valueOr(API_RO(pos_x), Settings::DEFAULT_POS),
     valueOr(API_RO(pos_y), Settings::DEFAULT_POS),
