@@ -38,21 +38,17 @@ struct Window::Impl {
 Window::Window(Context *ctx)
   : m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
-  const Settings &settings { ctx->settings() };
-  const RECT rect { settings.initialRect() };
-  const float x { static_cast<float>(rect.left) },
-              y { static_cast<float>(rect.top)  },
-              w { static_cast<float>(rect.right - rect.left) },
-              h { static_cast<float>(rect.bottom - rect.top) };
-
   createSwellDialog();
   m_impl->view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
 
+  const Settings &settings { ctx->settings() };
   if(settings.dock & 1)
     setDock(settings.dock);
   else {
-    [[m_impl->view window] setFrameOrigin:NSPoint { x, y }];
-    [[m_impl->view window] setContentSize:NSSize  { w, h }];
+    const RECT &rect { settings.initialRect() };
+    NSWindow *window { [m_impl->view window] };
+    [window setFrameOrigin:NSMakePoint(rect.left, rect.top)];
+    [window setContentSize:NSMakeSize(rect.right - rect.left, rect.bottom - rect.top)];
     ShowWindow(m_hwnd.get(), SW_SHOW);
   }
 
