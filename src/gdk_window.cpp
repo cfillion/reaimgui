@@ -53,18 +53,19 @@ struct Window::Impl {
   std::unique_ptr<LICE_IBitmap, LICEDeleter> pixels; // used when docked
 };
 
-Window::Window(const WindowConfig &cfg, Context *ctx)
-  : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
+Window::Window(Context *ctx)
+  : m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
   createSwellDialog();
-  const RECT rect { cfg.initialRect(scaleFactor()) };
+  const Settings &settings { ctx->settings() };
+  const RECT rect { settings.initialRect(scaleFactor()) };
   SetWindowPos(m_hwnd.get(), nullptr, rect.left, rect.top,
     rect.right - rect.left, rect.bottom - rect.top,
     SWP_NOACTIVATE | SWP_NOZORDER);
 
-  if(cfg.dock & 1) {
+  if(settings.dock & 1) {
     // LICE bitmap must be null when docking to avoid drawing a garbage frame
-    setDock(cfg.dock);
+    setDock(settings.dock);
     m_impl->pixels.reset(LICE_CreateBitmap(0, 0, 0));
   }
   else
@@ -74,7 +75,7 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   m_impl->initGl();
 
   // prevent invalidation (= displaying garbage) when moving another window over
-  if(!(cfg.dock & 1))
+  if(!(settings.dock & 1))
     gdk_window_freeze_updates(m_impl->window);
 
   ImGuiIO &io { ImGui::GetIO() };

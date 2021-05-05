@@ -23,26 +23,7 @@
 #include <reaper_colortheme.h>
 #include <imgui/imgui_internal.h> // ClearActiveID
 #include <reaper_plugin_functions.h>
-
-#ifdef _WIN32
-#  define PATH_SEP "\\"
-#else
-#  define PATH_SEP "/"
-#endif
-
-static std::string iniFilename(const std::string &label)
-{
-  std::string fn { GetResourcePath() };
-  fn += PATH_SEP "ReaImGui";
-  RecursiveCreateDirectory(fn.c_str(), 0);
-
-  const size_t pathSize { fn.size() };
-  fn.resize(pathSize + (sizeof(ImGuiID) * 2) + strlen(PATH_SEP ".ini"));
-  snprintf(&fn[pathSize], (fn.size() - pathSize) + 1, PATH_SEP "%0*X.ini",
-    static_cast<int>(sizeof(ImGuiID) * 2), ImHashStr(label.c_str()));
-
-  return fn;
-}
+#include <WDL/wdltypes.h>
 
 class TempCurrent {
 public:
@@ -59,14 +40,14 @@ Context *Context::current()
   return static_cast<Context *>(ImGui::GetIO().UserData);
 }
 
-Context::Context(const WindowConfig &winConfig, const int configFlags)
-  : m_inFrame { false }, m_closeReq { false }, m_cursor {}, m_mouseDown {},
+Context::Context(const Settings &settings, const int configFlags)
+  : m_inFrame { false }, m_closeReq { false }, m_cursor {},
+    m_settings { settings }, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
-    m_iniFilename { iniFilename(winConfig.title) },
     m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
 {
   static const std::string logFn
-    { std::string { GetResourcePath() } + PATH_SEP "imgui_log.txt" };
+    { std::string { GetResourcePath() } + WDL_DIRCHAR_STR "imgui_log.txt" };
 
   setCurrent();
 
@@ -79,7 +60,7 @@ Context::Context(const WindowConfig &winConfig, const int configFlags)
 
   Window::updateKeyMap();
 
-  m_window = std::make_unique<Window>(winConfig, this);
+  m_window = std::make_unique<Window>(this);
 
   // Start a frame to prevent contexts created within a defer callback from
   // being immediately destroyed.
@@ -121,6 +102,8 @@ void Context::beginFrame()
   updateMouseDown();
   updateMousePos();
   updateKeyMods();
+
+  m_settings.update();
 
   ImGui::NewFrame();
   m_window->beginFrame();
@@ -184,9 +167,6 @@ catch(const imgui_error &e) {
 void Context::updateFrameInfo()
 {
   ImGuiIO &io { ImGui::GetIO() };
-
-  io.IniFilename = io.ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings ?
-    nullptr : m_iniFilename.c_str();
 
   const float scale { m_window->scaleFactor() };
   io.DisplayFramebufferScale = { scale, scale };

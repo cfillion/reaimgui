@@ -87,17 +87,17 @@ static float scaleForDpi(const unsigned int dpi)
   return static_cast<float>(dpi) / USER_DEFAULT_SCREEN_DPI;
 }
 
-static RECT scaledWindowRect(const WindowConfig &cfg,
+static RECT scaledWindowRect(const Settings &settings,
   const DWORD style, const DWORD exStyle)
 {
   unsigned int dpi;
-  if(cfg.pos.x == WindowConfig::DEFAULT_POS ||
-      cfg.pos.y == WindowConfig::DEFAULT_POS)
+  if(settings.pos.x == Settings::DEFAULT_POS ||
+      settings.pos.y == Settings::DEFAULT_POS)
     dpi = dpiForWindow(Window::parentHandle());
   else
-    dpi = dpiForPoint(cfg.pos);
+    dpi = dpiForPoint({ settings.pos.x, settings.pos.y });
 
-  RECT rect { cfg.initialRect(scaleForDpi(dpi)) };
+  RECT rect { settings.initialRect(scaleForDpi(dpi)) };
 
   // Windows 10 Anniversary Update (1607) and newer
   static DllImport<decltype(AdjustWindowRectExForDpi)>
@@ -143,8 +143,8 @@ Window::Impl::WindowClass::~WindowClass()
   UnregisterClass(CLASS_NAME, Window::s_instance);
 }
 
-Window::Window(const WindowConfig &cfg, Context *ctx)
-  : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
+Window::Window(Context *ctx)
+  : m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
   static Impl::WindowClass windowClass;
 
@@ -153,9 +153,10 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   // WS_EX_DLGMODALFRAME removes the default icon
   constexpr DWORD exStyle { WS_EX_DLGMODALFRAME };
 
-  const RECT rect { scaledWindowRect(cfg, style, exStyle) };
+  const Settings &settings { m_ctx->settings() };
+  const RECT rect { scaledWindowRect(settings, style, exStyle) };
 
-  CreateWindowEx(exStyle, CLASS_NAME, widen(cfg.title).c_str(), style,
+  CreateWindowEx(exStyle, CLASS_NAME, widen(settings.title).c_str(), style,
     rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
     parentHandle(), nullptr, s_instance, this);
   assert(m_hwnd && "CreateWindow failed");
@@ -172,8 +173,8 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   io.BackendPlatformName = "reaper_imgui_win32";
   io.ImeWindowHandle = m_hwnd.get();
 
-  if(cfg.dock & 1)
-    setDock(cfg.dock);
+  if(settings.dock & 1)
+    setDock(settings.dock);
   else {
     AttachWindowTopmostButton(m_hwnd.get());
     ShowWindow(m_hwnd.get(), SW_SHOW); // after adding the topmost button

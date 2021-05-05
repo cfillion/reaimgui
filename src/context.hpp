@@ -21,6 +21,7 @@
 #include "color.hpp"
 #include "optional.hpp"
 #include "resource.hpp"
+#include "settings.hpp"
 
 #include <array>
 #include <chrono>
@@ -35,7 +36,6 @@
 #endif
 
 class Window;
-struct WindowConfig;
 struct ImFontAtlas;
 struct ImGuiContext;
 
@@ -48,7 +48,7 @@ public:
   static constexpr const char *api_type_name { "ImGui_Context" };
   static Context *current();
 
-  Context(const WindowConfig &, int configFlags = 0);
+  Context(const Settings &, int configFlags = 0);
   ~Context();
 
   bool isCloseRequested() const { return m_closeReq; }
@@ -69,6 +69,7 @@ public:
   void clearFocus();
 
   HCURSOR cursor() const { return m_cursor; }
+  Settings &settings() { return m_settings; }
   Window *window() const { return m_window.get(); }
   ImGuiContext *imgui() const { return m_imgui.get(); }
 
@@ -92,12 +93,12 @@ private:
   void updateKeyMods();
 
   bool m_inFrame, m_closeReq;
-  Color m_clearColor;
   HCURSOR m_cursor;
+  Color m_clearColor;
+  Settings m_settings;
   std::optional<int> m_setDockNextFrame;
   std::array<uint8_t, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
-  std::string m_iniFilename;
 
   std::unique_ptr<ImGuiContext, void(*)(ImGuiContext*)> m_imgui;
   std::unique_ptr<Window> m_window; // must be after m_imgui for correct destruction

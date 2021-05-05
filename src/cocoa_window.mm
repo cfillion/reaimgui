@@ -35,10 +35,11 @@ struct Window::Impl {
   OpenGLRenderer *renderer;
 };
 
-Window::Window(const WindowConfig &cfg, Context *ctx)
-  : m_cfg { cfg }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
+Window::Window(Context *ctx)
+  : m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
-  const RECT rect { cfg.initialRect() };
+  const Settings &settings { ctx->settings() };
+  const RECT rect { settings.initialRect() };
   const float x { static_cast<float>(rect.left) },
               y { static_cast<float>(rect.top)  },
               w { static_cast<float>(rect.right - rect.left) },
@@ -47,8 +48,8 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   createSwellDialog();
   m_impl->view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
 
-  if(m_cfg.dock & 1)
-    setDock(m_cfg.dock);
+  if(settings.dock & 1)
+    setDock(settings.dock);
   else {
     [[m_impl->view window] setFrameOrigin:NSPoint { x, y }];
     [[m_impl->view window] setContentSize:NSSize  { w, h }];

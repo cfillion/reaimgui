@@ -30,54 +30,6 @@
 
 HINSTANCE Window::s_instance;
 
-RECT WindowConfig::initialRect(const float scale) const
-{
-  RECT parent, screen;
-  if(pos.x == DEFAULT_POS || pos.y == DEFAULT_POS) {
-    HWND parentHwnd { Window::parentHandle() };
-    GetWindowRect(parentHwnd, &parent);
-
-#ifdef _WIN32
-  HMONITOR monitor { MonitorFromWindow(parentHwnd, MONITOR_DEFAULTTONEAREST) };
-  MONITORINFO minfo { sizeof(minfo) };
-  GetMonitorInfo(monitor, &minfo);
-  screen = minfo.rcWork;
-#else
-  SWELL_GetViewPort(&screen, &parent, true);
-#endif
-  }
-
-  RECT rect;
-  const int scaledWidth  { static_cast<int>(size.x * scale) },
-            scaledHeight { static_cast<int>(size.y * scale) };
-
-  if(pos.x == DEFAULT_POS) {
-    // default to the center of the parent window
-    const int parentWidth { parent.right - parent.left };
-    rect.left = ((parentWidth - scaledWidth) / 2) + parent.left;
-    rect.left = std::min(rect.left, screen.right - scaledWidth);
-    rect.left = std::max(rect.left, screen.left);
-  }
-  else
-    rect.left = pos.x;
-
-  if(pos.y == DEFAULT_POS) {
-    const int parentHeight { parent.bottom - parent.top };
-    rect.top = ((parentHeight - scaledHeight) / 2) + parent.top;
-    rect.top = std::min(rect.top, screen.bottom - scaledHeight);
-    rect.top = std::max(rect.top, screen.top);
-  }
-  else
-    rect.top = pos.y;
-
-  rect.right  = rect.left + scaledWidth;
-  rect.bottom = rect.top + scaledHeight;
-
-  EnsureNotCompletelyOffscreen(&rect);
-
-  return rect;
-}
-
 LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   const WPARAM wParam, const LPARAM lParam)
 {
@@ -177,53 +129,56 @@ void Window::updateKeyMap()
 int Window::dock() const
 {
   const int dockIndex = { DockIsChildOfDock(m_hwnd.get(), nullptr)  };
-  return dockIndex > -1 ? (dockIndex << 1) | 1 : m_cfg.dock & ~1;
+  return dockIndex > -1 ? (dockIndex << 1) | 1 : m_ctx->settings().dock & ~1;
 }
 
 void Window::setDock(const int dock)
 {
-  if(dock == m_cfg.dock && IsWindowVisible(m_hwnd.get()))
+  Settings &settings { m_ctx->settings() };
+  if(dock == settings.dock && IsWindowVisible(m_hwnd.get()))
     return;
 
   DockWindowRemove(m_hwnd.get());
 
   if(dock & 1) {
-    if(!(m_cfg.dock & 1))
-      updateConfig(); // store current undocked position and size (overwrites dock)
-    m_cfg.dock = dock;
+    if(!(settings.dock & 1)) // store undocked position and size
+      updateSettings();      // (overwrites settings.dock first)
+    settings.dock = dock;
 
     constexpr const char *INI_KEY { "reaimgui" };
     Dock_UpdateDockID(INI_KEY, dock >> 1);
-    DockWindowAddEx(m_hwnd.get(), m_cfg.title.c_str(), INI_KEY, true);
+    DockWindowAddEx(m_hwnd.get(), settings.title.c_str(), INI_KEY, true);
     DockWindowActivate(m_hwnd.get());
   }
   else {
-    m_cfg.dock = dock;
-    Window floating { m_cfg, m_ctx };
+    settings.dock = dock;
+    Window floating { m_ctx };
     std::swap(m_hwnd, floating.m_hwnd);
     std::swap(m_impl, floating.m_impl);
     SetWindowLongPtr(m_hwnd.get(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
   }
 }
 
-void Window::updateConfig()
+void Window::updateSettings()
 {
+  Settings &settings { m_ctx->settings() };
+
   RECT rect;
   GetClientRect(m_hwnd.get(), &rect);
-  m_cfg.size.x = rect.right - rect.left;
-  m_cfg.size.y = rect.bottom - rect.top;
+  settings.size.x = rect.right - rect.left;
+  settings.size.y = rect.bottom - rect.top;
 #ifdef __APPLE__
   std::swap(rect.top, rect.bottom);
 #else
   const float scale { scaleFactor() };
-  m_cfg.size.x /= scale;
-  m_cfg.size.y /= scale;
+  settings.size.x /= scale;
+  settings.size.y /= scale;
 #endif
   ClientToScreen(m_hwnd.get(), reinterpret_cast<POINT *>(&rect));
-  m_cfg.pos.x = rect.left;
-  m_cfg.pos.y = rect.top;
+  settings.pos.x = rect.left;
+  settings.pos.y = rect.top;
 
-  m_cfg.dock = dock();
+  settings.dock = dock();
 }
 
 #ifndef _WIN32
@@ -237,7 +192,7 @@ void Window::createSwellDialog()
   const char *res { MAKEINTRESOURCE(ForceNonChild | Resizable) };
   LPARAM param { reinterpret_cast<LPARAM>(this) };
   CreateDialogParam(s_instance, res, parentHandle(), proc, param);
-  SetWindowText(m_hwnd.get(), m_cfg.title.c_str());
+  SetWindowText(m_hwnd.get(), m_ctx->settings().title.c_str());
   AttachWindowTopmostButton(m_hwnd.get());
 }
 #endif

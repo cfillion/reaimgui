@@ -32,16 +32,6 @@
 class Context;
 struct ImDrawData;
 
-struct WindowConfig {
-  static constexpr int DEFAULT_POS { static_cast<int>(0x80000000) };
-
-  RECT initialRect(float scale = 1.f) const;
-
-  std::string title;
-  POINT pos, size;
-  int dock;
-};
-
 class Window {
 public:
   enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
@@ -50,7 +40,7 @@ public:
   static HWND parentHandle();
   static void updateKeyMap();
 
-  Window(const WindowConfig &, Context *);
+  Window(Context *);
   Window(const Window &) = delete;
   ~Window();
 
@@ -62,6 +52,7 @@ public:
 
   int dock() const;
   void setDock(int);
+  void updateSettings();
   HWND nativeHandle() const { return m_hwnd.get(); }
 
 private:
@@ -71,9 +62,7 @@ private:
   static int translateAccel(MSG *msg, accelerator_register_t *accel);
 
   void createSwellDialog();
-  void updateConfig();
 
-  WindowConfig m_cfg;
   Context *m_ctx;
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
   accelerator_register_t m_accel { &translateAccel, true, this };
