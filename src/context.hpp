@@ -101,7 +101,7 @@ private:
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
 
   std::unique_ptr<ImGuiContext, void(*)(ImGuiContext*)> m_imgui;
-  std::unique_ptr<Window> m_window; // must be after m_imgui for correct destruction
+  std::unique_ptr<Window> m_window;
 };
 
 #endif

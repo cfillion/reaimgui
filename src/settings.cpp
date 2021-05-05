@@ -25,6 +25,37 @@
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h>
 
+static void *Settings_readOpen(
+  ImGuiContext *, ImGuiSettingsHandler *handler, const char *)
+{
+  return handler; // must return non-NULL for readLine to be called
+}
+
+static void Settings_readLine(
+  ImGuiContext *, ImGuiSettingsHandler *handler, void *, const char *line)
+{
+  Settings *settings { static_cast<Settings *>(handler->UserData) };
+
+  int x, y;
+  if(sscanf(line, "Pos=%d,%d", &x, &y) == 2)
+    settings->pos = { x, y };
+  else if(sscanf(line, "Size=%d,%d", &x, &y) == 2)
+    settings->size = { x, y };
+  else if(sscanf(line, "Dock=%d", &x) == 1)
+    settings->dock = x;
+}
+
+static void Settings_writeAll(
+  ImGuiContext *, ImGuiSettingsHandler *handler, ImGuiTextBuffer *buf)
+{
+  const Settings *settings { static_cast<Settings *>(handler->UserData) };
+  buf->appendf("[%s][%s]\n", handler->TypeName, settings->title.c_str());
+  buf->appendf("Pos=%d,%d\n", settings->pos.x, settings->pos.y);
+  buf->appendf("Size=%d,%d\n", settings->size.x, settings->size.y);
+  buf->appendf("Dock=%d\n", settings->dock);
+  buf->append("\n");
+}
+
 Settings::Settings(const char *label)
   : title { label }, m_filename { GetResourcePath() }
 {
@@ -39,7 +70,30 @@ Settings::Settings(const char *label)
     static_cast<int>(sizeof(ImGuiID) * 2), ImHashStr(label));
 }
 
-void Settings::update()
+void Settings::install()
+{
+  ImGuiSettingsHandler ini_handler;
+  ini_handler.TypeName = "Context";
+  ini_handler.TypeHash = ImHashStr(ini_handler.TypeName);
+  ini_handler.WriteAllFn = Settings_writeAll;
+  ini_handler.ReadOpenFn = Settings_readOpen;
+  ini_handler.ReadLineFn = Settings_readLine;
+  ini_handler.UserData = this;
+
+  ImGuiContext *imgui { ImGui::GetCurrentContext() };
+  imgui->SettingsHandlers.push_back(ini_handler);
+}
+
+void Settings::load()
+{
+  update();
+
+  ImGuiIO &io { ImGui::GetIO() };
+  if(io.IniFilename)
+    ImGui::LoadIniSettingsFromDisk(io.IniFilename);
+}
+
+void Settings::update() // called every frame
 {
   ImGuiIO &io { ImGui::GetIO() };
   io.IniFilename = io.ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings ?

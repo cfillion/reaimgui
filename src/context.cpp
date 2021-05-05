@@ -58,8 +58,10 @@ Context::Context(const Settings &settings, const int configFlags)
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
-  Window::updateKeyMap();
+  m_settings.install();
+  m_settings.load();
 
+  Window::updateKeyMap();
   m_window = std::make_unique<Window>(this);
 
   // Start a frame to prevent contexts created within a defer callback from
@@ -70,6 +72,8 @@ Context::Context(const Settings &settings, const int configFlags)
 Context::~Context()
 {
   setCurrent();
+
+  m_window->updateSettings();
 
   if(m_inFrame)
     endFrame(false);

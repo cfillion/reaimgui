@@ -31,6 +31,8 @@ public:
   static constexpr int DEFAULT_POS { static_cast<int>(0x80000000) };
 
   Settings(const char *label);
+  void install();
+  void load();
   void update();
 
   RECT initialRect(float scale = 1.f) const;

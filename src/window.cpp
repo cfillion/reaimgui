@@ -162,23 +162,25 @@ void Window::setDock(const int dock)
 void Window::updateSettings()
 {
   Settings &settings { m_ctx->settings() };
-
-  RECT rect;
-  GetClientRect(m_hwnd.get(), &rect);
-  settings.size.x = rect.right - rect.left;
-  settings.size.y = rect.bottom - rect.top;
-#ifdef __APPLE__
-  std::swap(rect.top, rect.bottom);
-#else
-  const float scale { scaleFactor() };
-  settings.size.x /= scale;
-  settings.size.y /= scale;
-#endif
-  ClientToScreen(m_hwnd.get(), reinterpret_cast<POINT *>(&rect));
-  settings.pos.x = rect.left;
-  settings.pos.y = rect.top;
-
   settings.dock = dock();
+
+  // only persist position and size when undocked
+  if(!(settings.dock & 1)) {
+    RECT rect;
+    GetClientRect(m_hwnd.get(), &rect);
+    settings.size.x = rect.right - rect.left;
+    settings.size.y = rect.bottom - rect.top;
+#ifdef __APPLE__
+    std::swap(rect.top, rect.bottom);
+#else
+    const float scale { scaleFactor() };
+    settings.size.x /= scale;
+    settings.size.y /= scale;
+#endif
+    ClientToScreen(m_hwnd.get(), reinterpret_cast<POINT *>(&rect));
+    settings.pos.x = rect.left;
+    settings.pos.y = rect.top;
+  }
 }
 
 #ifndef _WIN32
