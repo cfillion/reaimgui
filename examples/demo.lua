@@ -328,9 +328,7 @@ function demo.ShowDemoWindow()
 
   if r.ImGui_CollapsingHeader(ctx, 'Configuration') then
     if r.ImGui_TreeNode(ctx, 'Configuration##2') then
-      if not config.flags then
-        config.flags = r.ImGui_ConfigFlags_None()
-      end
+      config.flags = r.ImGui_GetConfigFlags(ctx)
 
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NavEnableKeyboard', config.flags, r.ImGui_ConfigFlags_NavEnableKeyboard())
       r.ImGui_SameLine(ctx); demo.HelpMarker('Enable keyboard controls.')
@@ -353,6 +351,7 @@ function demo.ShowDemoWindow()
       r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, r.ImGui_ConfigFlags_NoSavedSettings())
       r.ImGui_SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
+
       -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTextCursorBlink', &io.ConfigInputTextCursorBlink)
       -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting)")
       -- r.ImGui_Checkbox(ctx, 'io.ConfigDragClickToInputText', &io.ConfigDragClickToInputText)
@@ -363,6 +362,15 @@ function demo.ShowDemoWindow()
       -- r.ImGui_Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
       -- r.ImGui_SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
       -- r.ImGui_Text(ctx, "Also see Style->Rendering for rendering options.")
+
+      local dock = r.ImGui_GetDock(ctx)
+      local dock_index = dock >> 1
+      rv,dock = r.ImGui_CheckboxFlags(ctx, 'Dock in REAPER docker:', dock, 1)
+      if rv then r.ImGui_SetDock(ctx, dock) end
+      r.ImGui_SameLine(ctx)
+      rv,dock_index = r.ImGui_InputInt(ctx, '##docker_index', dock_index, 1)
+      if r.ImGui_IsItemDeactivatedAfterEdit(ctx) then r.ImGui_SetDock(ctx, 1 | (dock_index << 1)) end
+
       r.ImGui_SetConfigFlags(ctx, config.flags)
       r.ImGui_TreePop(ctx)
       r.ImGui_Separator(ctx)
