@@ -39,7 +39,9 @@ DEFINE_API(ImGui_Context*, CreateContext,
 (int*,API_RO(dock))(int*,API_RO(config_flags)),
 R"(Create a new ReaImGui context. It will remain valid as long as it is used in each defer cycle. Pass null x/y coordinates to auto-position the window with the arrange view.
 
-Default values: pos_x = nil, pos_y = nil, dock = 0)",
+The position, size and dock status are automatically saved and restored (unless the ImGui_ConfigFlags_NoSavedSettings flag is set).
+
+Default values: pos_x = 0x80000000, pos_y = 0x80000000, dock = 0, config_flags = ImGui_ConfigFlags_None)",
 {
   Settings settings { name };
   settings.pos = {
