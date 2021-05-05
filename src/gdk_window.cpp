@@ -304,7 +304,7 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
     gdk_gl_context_make_current(m_impl->gl);
     m_impl->resizeTextures();
     gdk_gl_context_clear_current();
-    return 0;
+    break; // continue handling in Window::proc
   case WM_KEYDOWN:
     // No access to the orignal GDK key event, unfortunately.
     if(unsigned int c { unmangleSwellChar(wParam, lParam) })

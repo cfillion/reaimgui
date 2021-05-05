@@ -396,6 +396,13 @@ void Context::clearFocus()
     ImGui::ClearActiveID();
 }
 
+void Context::markSettingsDirty()
+{
+  TempCurrent cur { this };
+  if(!(ImGui::GetIO().ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings))
+    ImGui::MarkIniSettingsDirty();
+}
+
 void Context::updateTheme()
 {
   int themeSize;

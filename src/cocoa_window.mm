@@ -125,13 +125,13 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
     // Only sent when not docked (InputView::resignFirstResponder otherwise)
     if(wParam == WA_INACTIVE)
       m_ctx->clearFocus();
-    return 0;
+    break;
   case WM_PAINT: // update size if it changed while we were docked & inactive
   case WM_SIZE:
     [m_impl->gl update];
     if(m_impl->lastDrawData)
       drawFrame(m_impl->lastDrawData);
-    return 0;
+    break; // continue handling WM_SIZE in Window::proc
   }
 
   return std::nullopt;

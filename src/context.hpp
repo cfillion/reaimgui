@@ -67,6 +67,7 @@ public:
   void keyInput(uint8_t key, bool down);
   void charInput(unsigned int);
   void clearFocus();
+  void markSettingsDirty();
 
   HCURSOR cursor() const { return m_cursor; }
   Settings &settings() { return m_settings; }

@@ -61,6 +61,11 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   case WM_CLOSE:
     self->m_ctx->setCloseRequested();
     return 0;
+  case WM_MOVE:
+  case WM_SIZE:
+    if(self->m_ctx->window() == self) // only after window construction is over
+      self->updateSettings();
+    return 0;
   case WM_DESTROY:
     SetWindowLongPtr(handle, GWLP_USERDATA, 0);
     return 0;
@@ -181,6 +186,8 @@ void Window::updateSettings()
     settings.pos.x = rect.left;
     settings.pos.y = rect.top;
   }
+
+  m_ctx->markSettingsDirty();
 }
 
 #ifndef _WIN32
