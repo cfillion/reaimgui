@@ -392,8 +392,10 @@ void Context::charInput(const unsigned int codepoint)
 void Context::clearFocus()
 {
   TempCurrent cur { this };
-  if(ImGui::GetIO().WantCaptureKeyboard)
+  ImGuiIO &io { ImGui::GetIO() };
+  if(io.WantCaptureKeyboard)
     ImGui::ClearActiveID();
+  memset(io.KeysDown, 0, sizeof(io.KeysDown));
 }
 
 void Context::markSettingsDirty()
