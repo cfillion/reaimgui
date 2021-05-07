@@ -5,9 +5,7 @@ FLT_MIN = 0.0001; // 1.17549e-38
 color = 0;
 #notes = "";
 
-ctx = ImGui_CreateContext("Hello World!", 500, 420);
-
-function update() (
+function frame() (
   track = GetSelectedTrack(0, 0);
 
   !track ? (
@@ -15,33 +13,37 @@ function update() (
     #notes = "";
   );
 
-  viewport = ImGui_GetMainViewport(ctx);
-  ImGui_Viewport_GetPos(viewport, x, y);
-  ImGui_SetNextWindowPos(ctx, x, y);
-  ImGui_Viewport_GetSize(viewport, w, h);
-  ImGui_SetNextWindowSize(ctx, w, h);
-  ImGui_Begin(ctx, "main", 0, ImGui_WindowFlags_NoDecoration()) ? (
-    ImGui_TextWrapped(ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ultrices turpis lectus, in semper ligula blandit in. Duis non ipsum varius, pretium magna eu, mattis sapien. Maecenas augue mi, luctus sed leo et, ullamcorper convallis ligula. Nunc vitae porttitor quam. Integer a lorem fermentum, dapibus tortor ut, gravida erat. Quisque ut justo ante. Quisque fringilla a lectus a porta.");
-    ImGui_Spacing(ctx);
+  ImGui_TextWrapped(ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ultrices turpis lectus, in semper ligula blandit in. Duis non ipsum varius, pretium magna eu, mattis sapien. Maecenas augue mi, luctus sed leo et, ullamcorper convallis ligula. Nunc vitae porttitor quam. Integer a lorem fermentum, dapibus tortor ut, gravida erat. Quisque ut justo ante. Quisque fringilla a lectus a porta.");
+  ImGui_Spacing(ctx);
 
-    color = ImGui_ColorConvertNative(GetTrackColor(track));
-    ImGui_ColorEdit3(ctx, "track color", color) ?
-      SetTrackColor(track, ImGui_ColorConvertNative(color));
-    ImGui_Spacing(ctx);
+  color = ImGui_ColorConvertNative(GetTrackColor(track));
+  ImGui_ColorEdit3(ctx, "track color", color) ?
+    SetTrackColor(track, ImGui_ColorConvertNative(color));
+  ImGui_Spacing(ctx);
 
-    GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 0);
-    ImGui_InputTextMultiline(ctx, "track notes", #notes, 0, -FLT_MIN) ?
-      GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 1);
-  );
-  ImGui_End(ctx);
+  GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 0);
+  ImGui_InputTextMultiline(ctx, "track notes", #notes, 0, -FLT_MIN) ?
+    GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 1);
 );
 
 function loop() (
-  ImGui_IsCloseRequested(ctx) ?
-    ImGui_DestroyContext(ctx) : (
-    update();
+  ImGui_IsCloseRequested(ctx) ? ImGui_DestroyContext(ctx) : (
+    ImGui_Viewport_GetPos(viewport, x, y);
+    ImGui_SetNextWindowPos(ctx, x, y);
+    ImGui_Viewport_GetSize(viewport, w, h);
+    ImGui_SetNextWindowSize(ctx, w, h);
+    ImGui_Begin(ctx, "main", 0, ImGui_WindowFlags_NoDecoration());
+    frame();
+    ImGui_End(ctx);
+
     defer("loop()");
-  )
+  );
 );
 
-defer("loop()");
+function init() (
+  ctx = ImGui_CreateContext("Hello World!", 500, 420);
+  viewport = ImGui_GetMainViewport(ctx);
+  loop();
+);
+
+defer("init()");

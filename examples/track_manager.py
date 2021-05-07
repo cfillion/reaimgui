@@ -2,7 +2,12 @@ sys.path.append(RPR_GetResourcePath() + "/Scripts/ReaTeam Extensions/API")
 from imgui_python import *
 
 FLT_MIN = 1.17549e-38
-ctx = ImGui_CreateContext("Track manager", 700, 500)[0]
+
+def init():
+  global ctx, viewport
+  ctx = ImGui_CreateContext("Track manager", 700, 500)[0]
+  viewport = ImGui_GetMainViewport(ctx)
+  loop()
 
 def paramCheckbox(track, param):
   value = RPR_GetMediaTrackInfo_Value(track, param)
@@ -114,7 +119,6 @@ def loop():
     ImGui_DestroyContext(ctx)
     return
 
-  viewport = ImGui_GetMainViewport(ctx)
   _, x, y = ImGui_Viewport_GetPos(viewport)
   ImGui_SetNextWindowPos(ctx, x, y)
   _, w, h = ImGui_Viewport_GetSize(viewport)
@@ -130,4 +134,4 @@ def loop():
 
   RPR_defer("loop()")
 
-RPR_defer("loop()")
+RPR_defer("init()")

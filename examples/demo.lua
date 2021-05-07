@@ -64,8 +64,11 @@ misc    = {}
 app     = {}
 
 -- Hajime!
-
-local ctx = r.ImGui_CreateContext('ImGui Demo', 590, 720)
+local ctx
+reaper.defer(function()
+  ctx = r.ImGui_CreateContext('ImGui Demo', 590, 720)
+  demo.loop()
+end)
 
 function demo.loop()
   if r.ImGui_IsCloseRequested(ctx) then
@@ -7413,5 +7416,3 @@ end
 --
 --     r.ImGui_End();
 -- }
-
-reaper.defer(demo.loop)
