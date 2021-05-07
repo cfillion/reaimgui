@@ -39,6 +39,7 @@ public:
   static HINSTANCE s_instance;
   static HWND parentHandle();
   static void updateKeyMap();
+  static const char *getSwellClass();
 
   Window(Context *);
   Window(const Window &) = delete;

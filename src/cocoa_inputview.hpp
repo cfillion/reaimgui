@@ -43,6 +43,8 @@ class Context;
 - (void)rightMouseUp:(NSEvent *)event;
 - (void)otherMouseDown:(NSEvent *)event;
 - (void)otherMouseUp:(NSEvent *)event;
+
+- (const char *)getSwellClass;
 - (void)keyDown:(NSEvent *)event;
 - (void)keyUp:(NSEvent *)event;
 - (void)flagsChanged:(NSEvent *)event;

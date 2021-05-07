@@ -33,6 +33,7 @@
 #define ShowWindow      SWELL_ShowWindow
 #define IsWindowVisible SWELL_IsWindowVisible
 #include <swell/swell.h>
+#include "window.hpp"
 
 static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
@@ -152,6 +153,12 @@ static uint8_t virtualKeyCode(NSEvent *event)
 - (void)otherMouseUp:(NSEvent *)event
 {
   m_context->mouseUp(WM_MBUTTONUP);
+}
+
+- (const char *)getSwellClass
+{
+  m_context->setCurrent();
+  return Window::getSwellClass();
 }
 
 - (void)keyDown:(NSEvent *)event

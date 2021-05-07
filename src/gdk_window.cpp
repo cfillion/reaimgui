@@ -200,8 +200,9 @@ void Window::Impl::teardownGl()
 
 void Window::beginFrame()
 {
-  // GDK SWELL does not send a window message when focus is lost
-  if(GetFocus() != m_hwnd.get())
+  if(GetFocus() == m_hwnd.get())
+    SWELL_SetClassName(m_hwnd.get(), getSwellClass());
+  else // GDK SWELL does not send a window message when focus is lost
     m_ctx->clearFocus();
 
   m_impl->checkOSWindowChanged();

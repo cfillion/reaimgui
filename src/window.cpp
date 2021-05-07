@@ -202,6 +202,13 @@ void Window::createSwellDialog()
   SetWindowText(m_hwnd.get(), m_ctx->settings().title.c_str());
   AttachWindowTopmostButton(m_hwnd.get());
 }
+
+const char *Window::getSwellClass()
+{
+  // eat global shortcuts when a text input is focused
+  ImGuiIO &io { ImGui::GetIO() };
+  return io.WantCaptureKeyboard ? "Lua_LICE_gfx_standalone" : "reaper_imgui_context";
+}
 #endif
 
 HWND Window::parentHandle()
