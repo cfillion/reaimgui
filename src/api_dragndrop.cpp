@@ -102,58 +102,52 @@ Default values: flags = ImGui_DragDropFlags_None)",
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
 
+  if(payload)
+    copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
+
+  return payload;
+});
+
+static bool AcceptDragDropPayloadColor(int *color, bool alpha, ImGuiDragDropFlags flags)
+{
+  assertValid(color);
+
+  const char *type { alpha ? IMGUI_PAYLOAD_TYPE_COLOR_4F : IMGUI_PAYLOAD_TYPE_COLOR_3F };
+  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
+
   if(!payload)
     return false;
 
-  copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
+  const size_t size { sizeof(float) * (alpha ? 4 : 3) };
+  assert(static_cast<size_t>(payload->DataSize) == size);
+
+  float buf[4];
+  memcpy(buf, payload->Data, size);
+  *color = Color{buf, alpha}.pack(alpha);
 
   return true;
-});
+}
 
 DEFINE_API(bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
 (int*,API_W(rgb))(int*,API_RO(flags)),
-R"(Accept contents of a RGB color. If ImGui_DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
+R"(Accept contents of a RGB color. See ImGui_AcceptDragDropPayload.
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
   FRAME_GUARD;
-  assertValid(API_W(rgb));
-
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
-  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, flags) };
-
-  if(!payload)
-    return false;
-
-  float rgb[3];
-  assert(payload->DataSize == sizeof(rgb));
-  memcpy(rgb, payload->Data, sizeof(rgb));
-  *API_W(rgb) = Color{rgb, false}.pack(false);
-
-  return true;
+  return AcceptDragDropPayloadColor(API_W(rgb), false, flags);
 });
 
 DEFINE_API(bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
 (int*,API_W(rgba))(int*,API_RO(flags)),
-R"(Accept contents of a RGBA color. If ImGui_DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
+R"(Accept contents of a RGBA color. See ImGui_AcceptDragDropPayload.
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
   FRAME_GUARD;
-  assertValid(API_W(rgba));
-
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
-  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_4F, flags) };
-
-  if(!payload)
-    return false;
-
-  float rgba[4];
-  assert(payload->DataSize == sizeof(rgba));
-  memcpy(rgba, payload->Data, sizeof(rgba));
-  *API_W(rgba) = Color{rgba, true}.pack(true);
-
-  return true;
+  return AcceptDragDropPayloadColor(API_W(rgba), true, flags);
 });
 
 DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
