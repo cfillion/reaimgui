@@ -102,6 +102,11 @@ static uint8_t virtualKeyCode(NSEvent *event)
   return self;
 }
 
+- (void)setImePosition:(NSPoint)pos
+{
+  m_imePos = pos;
+}
+
 - (BOOL)acceptsFirstResponder
 {
   // Make ourselves first responder again when regaining focus while docked
@@ -285,9 +290,6 @@ static uint8_t virtualKeyCode(NSEvent *event)
         selectedRange:(NSRange)selectedRange
      replacementRange:(NSRange)replacementRange
 {
-#if !__has_feature(objc_arc)
-  [m_markedText release];
-#endif
   if([string isKindOfClass:[NSAttributedString class]])
     m_markedText = [[NSMutableAttributedString alloc] initWithAttributedString:string];
   else
@@ -318,9 +320,10 @@ static uint8_t virtualKeyCode(NSEvent *event)
 - (NSRect)firstRectForCharacterRange:(NSRange)range
                          actualRange:(NSRangePointer)actualRange
 {
-  // const NSRect frame { [[self superview] frame] };
-  // return NSMakeRect(frame.origin.x, frame.origin.y, 0.0, 0.0);
-  return NSMakeRect(0, 0, 0, 0); // this doesn't seem to be used
+  NSRect rect { NSMakeRect(m_imePos.x, m_imePos.y, 0, 0) };
+  rect = [[self superview] convertRect:rect toView:nil]; // to window coordinates
+  rect = [[self window] convertRectToScreen:rect];
+  return rect;
 }
 
 - (void)doCommandBySelector:(SEL)selector

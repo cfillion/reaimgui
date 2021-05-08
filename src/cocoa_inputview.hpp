@@ -22,15 +22,17 @@
 
 class Context;
 
-@interface InputView : NSView<NSTextInputClient>
-{
-  @private
+@interface InputView : NSView<NSTextInputClient> {
+@private
   NSMutableAttributedString *m_markedText;
   Context *m_context;
+  NSPoint m_imePos;
 }
 
 - (instancetype)initWithContext:(Context *)context
                          parent:(NSView *)parent;
+- (void)setImePosition:(NSPoint)pos;
+
 - (BOOL)acceptsFirstResponder;
 - (BOOL)resignFirstResponder;
 
