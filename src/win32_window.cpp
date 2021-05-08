@@ -20,26 +20,16 @@
 #include "context.hpp"
 #include "dllimport.hpp"
 #include "opengl_renderer.hpp"
+#include "win32_unicode.hpp"
 
 #include <cassert>
-#include <string>
 
 #include <GL/gl3w.h>
 #include <GL/wglext.h>
 #include <reaper_plugin_secrets.h>
 #include <ShellScalingApi.h> // GetDpiForMonitor
 
-static std::wstring widen(const std::string &input, const UINT codepage = CP_UTF8)
-{
-  const int size {
-    MultiByteToWideChar(codepage, 0, input.c_str(), input.size(), nullptr, 0)
-  };
-
-  std::wstring output(size, L'\0');
-  MultiByteToWideChar(codepage, 0, input.c_str(), input.size(), output.data(), size);
-
-  return output;
-}
+#include "win32_droptarget.ipp"
 
 static unsigned int xpScreenDpi()
 {
@@ -126,6 +116,7 @@ struct Window::Impl {
   HGLRC gl;
   float scale;
   OpenGLRenderer *renderer;
+  DropTarget dropTarget;
 };
 
 Window::Impl::WindowClass::WindowClass()
@@ -151,7 +142,7 @@ Window::Window(Context *ctx)
   // WS_POPUP allows AttachWindowTopmostButton to work
   constexpr DWORD style   { WS_OVERLAPPEDWINDOW | WS_POPUP };
   // WS_EX_DLGMODALFRAME removes the default icon
-  constexpr DWORD exStyle { WS_EX_DLGMODALFRAME };
+  constexpr DWORD exStyle { WS_EX_DLGMODALFRAME | WS_EX_ACCEPTFILES };
 
   const Settings &settings { m_ctx->settings() };
   const RECT rect { scaledWindowRect(settings, style, exStyle) };
@@ -183,6 +174,9 @@ Window::Window(Context *ctx)
   // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
   // Unsetting it after the window is visible disables the border (+ no icon)
   SetWindowLongPtr(m_hwnd.get(), GWL_EXSTYLE, exStyle & ~WS_EX_DLGMODALFRAME);
+
+  m_impl->dropTarget.setContext(ctx);
+  RegisterDragDrop(m_hwnd.get(), &m_impl->dropTarget);
 }
 
 void Window::Impl::initPixelFormat(HWND hwnd)
@@ -231,6 +225,8 @@ void Window::Impl::initGL(HWND hwnd)
 
 Window::~Window()
 {
+  RevokeDragDrop(m_hwnd.get());
+
   wglMakeCurrent(m_impl->dc, m_impl->gl);
   delete m_impl->renderer;
   wglDeleteContext(m_impl->gl);

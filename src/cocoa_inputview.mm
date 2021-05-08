@@ -97,6 +97,8 @@ static uint8_t virtualKeyCode(NSEvent *event)
   [parent addSubview:self];
   [[parent window] makeFirstResponder:self];
 
+  [self registerForDraggedTypes:@[NSFilenamesPboardType]];
+
   return self;
 }
 
@@ -186,6 +188,44 @@ static uint8_t virtualKeyCode(NSEvent *event)
       return;
     }
   }
+}
+
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender
+{
+  NSPasteboard *pboard { [sender draggingPasteboard] };
+  if(![[pboard types] containsObject:NSFilenamesPboardType])
+    return NSDragOperationNone;
+
+  NSArray *nsfiles { [pboard propertyListForType:NSFilenamesPboardType] };
+  const NSUInteger count { [nsfiles count] };
+
+  std::vector<std::string> files;
+  files.reserve(count);
+
+  for(size_t i { 0 }; i < count; ++i) {
+    NSString *file { [nsfiles objectAtIndex:i] };
+    files.emplace_back([file UTF8String]);
+  }
+
+  m_context->beginDrag(std::move(files));
+
+  return NSDragOperationGeneric;
+}
+
+- (void)draggingExited:(id<NSDraggingInfo>)sender
+{
+  m_context->endDrag(false);
+}
+
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
+{
+  NSPasteboard *pboard { [sender draggingPasteboard] };
+  if([[pboard types] containsObject:NSFilenamesPboardType]) {
+    m_context->endDrag(true);
+    return YES;
+  }
+
+  return NO;
 }
 
 // Implement NSTextInputClient for IME-aware text input

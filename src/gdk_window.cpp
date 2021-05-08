@@ -56,8 +56,11 @@ struct Window::Impl {
 Window::Window(Context *ctx)
   : m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
-  createSwellDialog();
   const Settings &settings { ctx->settings() };
+
+  createSwellDialog();
+  SetWindowLongPtr(m_hwnd.get(), GWL_EXSTYLE, WS_EX_ACCEPTFILES);
+
   const RECT rect { settings.initialRect(scaleFactor()) };
   SetWindowPos(m_hwnd.get(), nullptr, rect.left, rect.top,
     rect.right - rect.left, rect.bottom - rect.top,
@@ -297,6 +300,10 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
   switch(msg) {
   case WM_CREATE:
     m_impl->hwnd = m_hwnd.get();
+    return 0;
+  case WM_DROPFILES:
+    m_ctx->beginDrag(reinterpret_cast<HDROP>(wParam));
+    m_ctx->endDrag(true);
     return 0;
   case WM_SIZE:
     if(m_ctx->window() != this) // skip WM_SIZE sent form createSwellDialog

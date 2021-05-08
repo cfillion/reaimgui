@@ -21,9 +21,7 @@
 
 #include <reaper_plugin_secrets.h>
 
-#ifdef _WIN32
-#  include <windows.h>
-#else
+#ifndef _WIN32
 #  include <swell/swell.h>
 #  include <WDL/wdltypes.h>
 #endif

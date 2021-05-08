@@ -45,6 +45,10 @@ class Context;
 - (void)keyUp:(NSEvent *)event;
 - (void)flagsChanged:(NSEvent *)event;
 
+- (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender;
+- (void)draggingExited:(id<NSDraggingInfo>)sender;
+- (BOOL)performDragOperation:(id<NSDraggingInfo>)sender;
+
 // NSTextInputClient
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange;
 - (BOOL)hasMarkedText;

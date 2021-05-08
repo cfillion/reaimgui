@@ -2171,6 +2171,7 @@ label:
           'Bibi', 'Blaine', 'Bryn',
         },
         items  = { 'Item One', 'Item Two', 'Item Three', 'Item Four', 'Item Five' },
+        files = {},
       }
     end
 
@@ -2251,6 +2252,39 @@ label:
           end
         end
       end
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Drag and drop files') then
+      r.ImGui_BeginChildFrame(ctx, '##drop_files', -FLT_MIN, 100)
+      if #widgets.dragdrop.files == 0 then
+        r.ImGui_Text(ctx, 'Drag and drop files here...')
+      else
+        r.ImGui_Text(ctx, ('Received %d file(s):'):format(#widgets.dragdrop.files))
+        r.ImGui_SameLine(ctx)
+        if r.ImGui_SmallButton(ctx, 'Clear') then
+          widgets.dragdrop.files = {}
+        end
+      end
+      for _, file in ipairs(widgets.dragdrop.files) do
+        r.ImGui_Bullet(ctx)
+        r.ImGui_TextWrapped(ctx, file)
+      end
+      r.ImGui_EndChildFrame(ctx)
+
+      if r.ImGui_BeginDragDropTarget(ctx) then
+        local rv, count = r.ImGui_AcceptDragDropPayloadFiles(ctx)
+        if rv then
+          widgets.dragdrop.files = {}
+          for i = 0, count - 1 do
+            local filename
+            rv,filename = r.ImGui_GetDragDropPayloadFile(ctx, i)
+            table.insert(widgets.dragdrop.files, filename)
+          end
+        end
+        r.ImGui_EndDragDropTarget(ctx)
+      end
+
       r.ImGui_TreePop(ctx)
     end
 

@@ -150,6 +150,24 @@ Default values: flags = ImGui_DragDropFlags_None)",
   return AcceptDragDropPayloadColor(API_W(rgba), true, flags);
 });
 
+DEFINE_API(bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
+(int*,API_W(count))(int*,API_RO(flags)),
+R"(Accept contents of a RGBA color. See ImGui_AcceptDragDropPayload.
+
+Default values: flags = ImGui_DragDropFlags_None)",
+{
+  FRAME_GUARD;
+  assertValid(API_W(count));
+
+  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
+  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, flags) };
+
+  if(payload)
+    *API_W(count) = ctx->draggedFiles().size();
+
+  return payload;
+});
+
 DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
 "Only call EndDragDropTarget() if BeginDragDropTarget() returns true!",
 {
@@ -174,6 +192,25 @@ DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
   copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
   if(API_W(is_preview))  *API_W(is_preview)  = payload->Preview;
   if(API_W(is_delivery)) *API_W(is_delivery) = payload->Delivery;
+
+  return true;
+});
+
+DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
+(int,index)(char*,API_W(filename))(int,API_W_SZ(filename)),
+"",
+{
+  FRAME_GUARD;
+
+  const auto &files { ctx->draggedFiles() };
+
+  const ImGuiPayload *payload { ImGui::GetDragDropPayload() };
+  if(!payload || !payload->IsDataType(REAIMGUI_PAYLOAD_TYPE_FILES))
+    return false;
+  else if(static_cast<size_t>(index) >= files.size())
+    return false;
+
+  snprintf(API_W(filename), API_W_SZ(filename), "%s", files[index].c_str());
 
   return true;
 });

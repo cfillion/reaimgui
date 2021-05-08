@@ -25,9 +25,20 @@
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h>
 
+#ifdef _WIN32
+#  include "win32_unicode.hpp"
+#endif
+
 enum ButtonState {
   ButtonState_Down       = 1<<0,
   ButtonState_DownUnread = 1<<1,
+};
+
+enum DragState {
+  DragState_None,
+  DragState_FirstFrame = 1<<0,
+  DragState_FakeClick  = 1<<1,
+  DragState_Drop       = 1<<2,
 };
 
 class TempCurrent {
@@ -46,7 +57,7 @@ Context *Context::current()
 }
 
 Context::Context(const Settings &settings, const int configFlags)
-  : m_inFrame { false }, m_closeReq { false }, m_cursor {},
+  : m_inFrame { false }, m_closeReq { false }, m_dragState {}, m_cursor {},
     m_settings { settings }, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
@@ -116,6 +127,8 @@ void Context::beginFrame()
 
   ImGui::NewFrame();
   m_window->beginFrame();
+
+  dragSources();
 }
 
 void Context::setCurrent()
@@ -145,6 +158,7 @@ bool Context::endFrame(const bool render) try
   // IsWindowVisible is false when docked and another tab is active
   if(render && IsWindowVisible(m_window->nativeHandle())) {
     updateCursor();
+    updateDragDrop();
     ImGui::Render();
     m_window->drawFrame(ImGui::GetDrawData());
   }
@@ -337,10 +351,11 @@ void Context::updateMousePos()
   // Our InputView overlays SWELL's NSView.
   // Capturing is not used as macOS sends mouse up events from outside of the
   // frame when the mouse down event occured within.
-  if(IsChild(windowHwnd, targetHwnd) || anyMouseDown())
+  const bool over { IsChild(windowHwnd, targetHwnd) || anyMouseDown() };
 #else
-  if(targetHwnd == windowHwnd || GetCapture() == windowHwnd)
+  const bool over { targetHwnd == windowHwnd || GetCapture() == windowHwnd };
 #endif
+  if(over && !(m_dragState & DragState_FakeClick))
     io.MousePos = { static_cast<float>(p.x), static_cast<float>(p.y) };
   else
     io.MousePos = { -FLT_MAX, -FLT_MAX };
@@ -393,6 +408,82 @@ void Context::charInput(const unsigned int codepoint)
   TempCurrent cur { this };
   ImGuiIO &io { ImGui::GetIO() };
   io.AddInputCharacter(codepoint);
+}
+
+void Context::updateDragDrop()
+{
+  if(m_dragState & DragState_FirstFrame) {
+    m_dragState &= ~DragState_FirstFrame;
+    return; // don't clear data until next frame
+  }
+
+  if(m_dragState & DragState_Drop)
+    m_draggedFiles.clear();
+
+  m_dragState = DragState_None;
+}
+
+void Context::dragSources()
+{
+  // this is only called from enterFrame, the context is already set
+  // setCurrent();
+
+  const int flags { ImGuiDragDropFlags_SourceExtern |
+                    ImGuiDragDropFlags_SourceAutoExpirePayload };
+
+  if(!m_draggedFiles.empty() && ImGui::BeginDragDropSource(flags)) {
+    ImGui::SetDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, nullptr, 0);
+    for(const std::string &file : m_draggedFiles) {
+      size_t fnPos { file.rfind(WDL_DIRCHAR_STR) };
+      if(fnPos == std::string::npos)
+        fnPos = 0;
+      else
+        ++fnPos;
+      if(m_draggedFiles.size() > 1)
+        ImGui::Bullet();
+      ImGui::TextUnformatted(&file[fnPos]);
+    }
+    ImGui::EndDragDropSource();
+  }
+}
+
+void Context::beginDrag(std::vector<std::string> &&files)
+{
+  m_draggedFiles = std::move(files);
+  m_mouseDown[ImGuiMouseButton_Left] = ButtonState_Down | ButtonState_DownUnread;
+  m_dragState = DragState_FirstFrame | DragState_FakeClick;
+}
+
+#ifndef __APPLE__
+void Context::beginDrag(HDROP drop)
+{
+  unsigned int count { DragQueryFile(drop, -1, nullptr, 0) };
+  std::vector<std::string> files { count };
+  for(unsigned int i { 0 }; i < count; ++i) {
+    std::string &file { files[i] };
+#ifdef _WIN32
+    std::wstring wideFile(DragQueryFile(drop, i, nullptr, 0), L'\0');
+    DragQueryFile(drop, i, wideFile.data(), wideFile.size() + 1);
+    file = narrow(wideFile);
+#else
+    file.resize(DragQueryFile(drop, i, nullptr, 0));
+    DragQueryFile(drop, i, file.data(), file.size() + 1);
+#endif
+  }
+  DragFinish(drop);
+  beginDrag(std::move(files));
+}
+#endif
+
+void Context::endDrag(const bool drop)
+{
+  m_mouseDown[ImGuiMouseButton_Left] &= ~ButtonState_Down;
+  if(drop)
+    m_dragState = DragState_Drop | (m_dragState & DragState_FirstFrame);
+  else {
+    m_dragState = DragState_FakeClick;
+    m_draggedFiles.clear();
+  }
 }
 
 void Context::clearFocus()

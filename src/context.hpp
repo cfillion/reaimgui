@@ -25,6 +25,7 @@
 
 #include <array>
 #include <chrono>
+#include <vector>
 
 #include <imgui/imgui.h>
 
@@ -41,6 +42,8 @@ struct ImGuiContext;
 enum ConfigFlags {
   ReaImGuiConfigFlags_NoSavedSettings = 1<<20,
 };
+
+constexpr const char *REAIMGUI_PAYLOAD_TYPE_FILES { "_FILES" };
 
 class Context : public Resource {
 public:
@@ -65,6 +68,9 @@ public:
   void mouseWheel(unsigned int msg, short delta);
   void keyInput(uint8_t key, bool down);
   void charInput(unsigned int);
+  void beginDrag(std::vector<std::string> &&);
+  void beginDrag(HDROP);
+  void endDrag(bool drop);
   void clearFocus();
   void markSettingsDirty();
 
@@ -72,6 +78,7 @@ public:
   Settings &settings() { return m_settings; }
   Window *window() const { return m_window.get(); }
   ImGuiContext *imgui() const { return m_imgui.get(); }
+  const auto &draggedFiles() const { return m_draggedFiles; }
 
 protected:
   bool heartbeat() override;
@@ -79,21 +86,27 @@ protected:
 private:
   void beginFrame();
   bool endFrame(bool render);
-  bool anyMouseDown() const;
+
   void updateFrameInfo();
   void updateTheme();
   void updateCursor();
   void updateMouseDown();
   void updateMousePos();
   void updateKeyMods();
+  void updateDragDrop();
+
+  bool anyMouseDown() const;
+  void dragSources();
 
   bool m_inFrame, m_closeReq;
+  int m_dragState;
   HCURSOR m_cursor;
   Color m_clearColor;
   Settings m_settings;
   std::optional<int> m_setDockNextFrame;
   std::array<uint8_t, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
+  std::vector<std::string> m_draggedFiles;
 
   std::unique_ptr<ImGuiContext, void(*)(ImGuiContext*)> m_imgui;
   std::unique_ptr<Window> m_window;
