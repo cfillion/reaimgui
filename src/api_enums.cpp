@@ -482,3 +482,12 @@ DEFINE_ENUM(ImGui, WindowFlags_UnsavedDocument,           "Append '*' to title w
 DEFINE_ENUM(ImGui, WindowFlags_NoNav,                     "WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
 DEFINE_ENUM(ImGui, WindowFlags_NoDecoration,              "WindowFlags_NoTitleBar | WindowFlags_NoResize | WindowFlags_NoScrollbar | WindowFlags_NoCollapse");
 DEFINE_ENUM(ImGui, WindowFlags_NoInputs,                  "WindowFlags_NoMouseInputs | WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
+
+DEFINE_API(void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
+"Returns FLT_MIN and FLT_MAX for this system.",
+{
+  assertValid(API_W(min));
+  assertValid(API_W(max));
+  *API_W(min) = FLT_MIN;
+  *API_W(max) = FLT_MAX;
+});

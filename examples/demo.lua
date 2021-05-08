@@ -28,7 +28,7 @@ Index of this file:
 --]]
 
 local r = reaper
-local FLT_MIN, FLT_MAX = 1.17549e-38, 3.40282e+38
+local FLT_MIN, FLT_MAX = r.ImGui_NumericLimits_Float()
 local IMGUI_VERSION, REAIMGUI_VERSION = r.ImGui_GetVersion()
 
 -- Global data storage
