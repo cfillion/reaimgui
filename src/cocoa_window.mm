@@ -110,6 +110,11 @@ void Window::drawFrame(ImDrawData *drawData)
 
 void Window::endFrame()
 {
+  // WM_ACTIVATE (wParam = WA_INACTIVE) is not fired when docked.
+  // InputView::resignFirstResponder handles change of focus within the docker's
+  // window, and isKeyWindow below handles the docker window itself losing focus.
+  if(![[m_impl->view window] isKeyWindow])
+    m_ctx->clearFocus();
 }
 
 float Window::scaleFactor() const
@@ -120,11 +125,6 @@ float Window::scaleFactor() const
 std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
-  case WM_ACTIVATE:
-    // Only sent when not docked (InputView::resignFirstResponder otherwise)
-    if(wParam == WA_INACTIVE)
-      m_ctx->clearFocus();
-    break;
   case WM_PAINT: // update size if it changed while we were docked & inactive
   case WM_SIZE:
     [m_impl->gl update];
