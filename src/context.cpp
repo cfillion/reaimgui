@@ -21,9 +21,14 @@
 
 #include <cassert>
 #include <reaper_colortheme.h>
-#include <imgui/imgui_internal.h> // ClearActiveID
+#include <imgui/imgui_internal.h>
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h>
+
+enum ButtonState {
+  ButtonState_Down       = 1<<0,
+  ButtonState_DownUnread = 1<<1,
+};
 
 class TempCurrent {
 public:
@@ -224,7 +229,7 @@ void Context::updateCursor()
 bool Context::anyMouseDown() const
 {
   for(const auto state : m_mouseDown) {
-    if(state & Down)
+    if(state & ButtonState_Down)
       return true;
   }
 
@@ -254,7 +259,7 @@ void Context::mouseDown(const unsigned int msg)
     SetCapture(m_window->nativeHandle());
 #endif
 
-  m_mouseDown[btn] = Down | DownUnread;
+  m_mouseDown[btn] = ButtonState_Down | ButtonState_DownUnread;
 }
 
 void Context::mouseUp(const unsigned int msg)
@@ -275,8 +280,8 @@ void Context::mouseUp(const unsigned int msg)
     return;
   }
 
-  // keep DownUnread set to catch clicks shorted than one frame
-  m_mouseDown[btn] &= ~Down;
+  // keep ButtonState_DownUnread set to catch clicks shorted than one frame
+  m_mouseDown[btn] &= ~ButtonState_Down;
 
 #ifndef __APPLE__
   if(!anyMouseDown() && GetCapture() == m_window->nativeHandle())
@@ -293,8 +298,9 @@ void Context::updateMouseDown()
 
   size_t i {};
   for(auto &state : m_mouseDown) {
-    io.MouseDown[i++] = (state & DownUnread) || (state & Down);
-    state &= ~DownUnread;
+    io.MouseDown[i++] = (state & ButtonState_DownUnread) ||
+                        (state & ButtonState_Down);
+    state &= ~ButtonState_DownUnread;
   }
 }
 

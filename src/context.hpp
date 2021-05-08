@@ -25,7 +25,6 @@
 
 #include <array>
 #include <chrono>
-#include <string>
 
 #include <imgui/imgui.h>
 
@@ -78,11 +77,6 @@ protected:
   bool heartbeat() override;
 
 private:
-  enum ButtonState {
-    Down       = 1<<0,
-    DownUnread = 1<<1,
-  };
-
   void beginFrame();
   bool endFrame(bool render);
   bool anyMouseDown() const;
