@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "inputview.hpp"
+#include "cocoa_inputview.hpp"
 
 #include "context.hpp"
 

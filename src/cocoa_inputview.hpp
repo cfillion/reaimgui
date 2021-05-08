@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_INPUTVIEW_HPP
-#define REAIMGUI_INPUTVIEW_HPP
+#ifndef REAIMGUI_COCOA_INPUTVIEW_HPP
+#define REAIMGUI_COCOA_INPUTVIEW_HPP
 
 #include <AppKit/AppKit.h>
 

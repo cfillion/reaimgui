@@ -17,8 +17,8 @@
 
 #include "window.hpp"
 
+#include "cocoa_inputview.hpp"
 #include "context.hpp"
-#include "inputview.hpp"
 #include "opengl_renderer.hpp"
 
 #include <WDL/wdltypes.h>

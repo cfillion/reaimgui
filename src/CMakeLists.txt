@@ -76,7 +76,7 @@ else()
   endif()
 
   if(APPLE)
-    target_sources(${PROJECT_NAME} PRIVATE cocoa_window.mm inputview.mm)
+    target_sources(${PROJECT_NAME} PRIVATE cocoa_inputview.mm cocoa_window.mm)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GL_SILENCE_DEPRECATION)
     target_compile_options(${PROJECT_NAME} PRIVATE
       -fobjc-arc -Wno-error=deprecated-declarations)
