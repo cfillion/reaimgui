@@ -307,8 +307,6 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
     m_ctx->endDrag(true);
     return 0;
   case WM_SIZE:
-    if(m_ctx->window() != this) // skip WM_SIZE sent form createSwellDialog
-      return std::nullopt;      // (m_impl->gl is not initialized yet)
     gdk_gl_context_make_current(m_impl->gl);
     m_impl->resizeTextures();
     gdk_gl_context_clear_current();

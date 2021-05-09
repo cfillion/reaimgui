@@ -32,6 +32,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   const WPARAM wParam, const LPARAM lParam)
 {
   Window *self;
+
 #ifdef _WIN32
   if(msg == WM_NCCREATE) {
     void *ptr { reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams };
@@ -43,12 +44,14 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self->m_hwnd.reset(handle);
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
   }
-  else
+  else {
     self = reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA));
 
-  if(!self)
-    return DefWindowProc(handle, msg, wParam, lParam);
-  else if(const auto &rv { self->handleMessage(msg, wParam, lParam) })
+    if(!self || self->m_ctx->window() != self)
+      return DefWindowProc(handle, msg, wParam, lParam);
+  }
+
+  if(const std::optional<LRESULT> &rv { self->handleMessage(msg, wParam, lParam) })
     return *rv;
 
   switch(msg) {
@@ -61,8 +64,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     return 0;
   case WM_MOVE:
   case WM_SIZE:
-    if(self->m_ctx->window() == self) // only after window construction is over
-      self->updateSettings();
+    self->updateSettings();
     return 0;
   case WM_DESTROY:
     SetWindowLongPtr(handle, GWLP_USERDATA, 0);
