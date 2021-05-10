@@ -21,7 +21,6 @@ NATIVE_ONLY = [
   'ImDrawData* ImGui::GetDrawData()',
   'ImDrawListSharedData* ImGui::GetDrawListSharedData()',
   'int ImGui::GetKeyIndex(ImGuiKey)',
-  'void ImGui::CaptureKeyboardFromApp(bool)',
   'void ImGui::CaptureMouseFromApp(bool)',
 
   # no support for fonts at this time

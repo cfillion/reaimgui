@@ -259,3 +259,14 @@ DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
 
   return false;
 });
+
+DEFINE_API(void, CaptureKeyboardFromApp, (ImGui_Context*,ctx)
+(bool*,API_RO(want_capture_keyboard_value)),
+R"(Manually enable or disable capture of keyboard shortcuts in the global scope for the next frame.
+
+Default values: want_capture_keyboard_value = true)",
+{
+  FRAME_GUARD;
+  const bool value { valueOr(API_RO(want_capture_keyboard_value), true) };
+  ImGui::CaptureKeyboardFromApp(value);
+});
