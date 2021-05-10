@@ -82,7 +82,7 @@ Window::Window(Context *ctx)
   NSUserDefaults *defaults { [NSUserDefaults standardUserDefaults] };
   [defaults registerDefaults:@{@"ApplePressAndHoldEnabled":@NO}];
 
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io { ctx->IO() };
   io.ConfigMacOSXBehaviors = false; // don't swap Cmd/Ctrl, SWELl already does it
   io.BackendPlatformName = "reaper_imgui_cocoa";
   io.ImeSetInputScreenPosFn = &Impl::setImePosition;

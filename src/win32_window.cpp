@@ -160,7 +160,7 @@ Window::Window(Context *ctx)
   m_impl->renderer = new OpenGLRenderer;
   wglMakeCurrent(m_impl->dc, nullptr);
 
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io { ctx->IO() };
   io.BackendPlatformName = "reaper_imgui_win32";
   io.ImeWindowHandle = m_hwnd.get();
 

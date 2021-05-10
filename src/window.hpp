@@ -39,7 +39,6 @@ public:
   static HINSTANCE s_instance;
   static HWND parentHandle();
   static void updateKeyMap();
-  static const char *getSwellClass();
 
   Window(Context *);
   Window(const Window &) = delete;
@@ -55,6 +54,7 @@ public:
   void setDock(int);
   void updateSettings();
   HWND nativeHandle() const { return m_hwnd.get(); }
+  const char *getSwellClass();
 
 private:
   struct WindowDeleter { void operator()(HWND); };

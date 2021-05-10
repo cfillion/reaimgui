@@ -67,7 +67,7 @@ Context::Context(const Settings &settings, const int configFlags)
 
   setCurrent();
 
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io { m_imgui->IO };
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.ConfigFlags = configFlags;
@@ -106,6 +106,23 @@ bool Context::heartbeat()
     return false;
 }
 
+ImGuiIO &Context::IO()
+{
+  return m_imgui->IO;
+}
+
+void Context::setCurrent()
+{
+  ImGui::SetCurrentContext(m_imgui.get());
+}
+
+void Context::setDockNextFrame(const int dock)
+{
+  // Docking later, as this might recreate the rendering context and invalidate
+  // textures that are already used in the current frame.
+  m_setDockNextFrame = dock;
+}
+
 void Context::beginFrame()
 {
   assert(!m_inFrame);
@@ -129,18 +146,6 @@ void Context::beginFrame()
   m_window->beginFrame();
 
   dragSources();
-}
-
-void Context::setCurrent()
-{
-  ImGui::SetCurrentContext(m_imgui.get());
-}
-
-void Context::setDockNextFrame(const int dock)
-{
-  // Docking later, as this might recreate the rendering context and invalidate
-  // textures that are already used in the current frame.
-  m_setDockNextFrame = dock;
 }
 
 void Context::enterFrame()
@@ -179,7 +184,7 @@ catch(const imgui_error &e) {
   m_window->endFrame();
 
   // don't assert again when destroying the font atlas
-  ImGui::GetIO().Fonts->Locked = false;
+  m_imgui->IO.Fonts->Locked = false;
 
   // don't call endFrame again from the destructor
   m_inFrame = false;
@@ -189,7 +194,7 @@ catch(const imgui_error &e) {
 
 void Context::updateFrameInfo()
 {
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io { m_imgui->IO };
 
   const float scale { m_window->scaleFactor() };
   io.DisplayFramebufferScale = { scale, scale };
@@ -210,9 +215,10 @@ void Context::updateFrameInfo()
 
 void Context::updateCursor()
 {
-  setCurrent();
+  // this is only called from endFrame, the context is already set
+  // setCurrent();
 
-  if(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
+  if(m_imgui->IO.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
     return;
 
   static HCURSOR nativeCursors[ImGuiMouseCursor_COUNT] {
@@ -305,10 +311,7 @@ void Context::mouseUp(const unsigned int msg)
 
 void Context::updateMouseDown()
 {
-  // this is only called from enterFrame, the context is already set
-  // setCurrent();
-
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io { m_imgui->IO };
 
   size_t i {};
   for(auto &state : m_mouseDown) {
@@ -320,10 +323,7 @@ void Context::updateMouseDown()
 
 void Context::updateMousePos()
 {
-  // this is only called from enterFrame, the context is already set
-  // setCurrent();
-
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io { m_imgui->IO };
   HWND windowHwnd { m_window->nativeHandle() };
 
   if(io.WantSetMousePos) {
@@ -373,20 +373,16 @@ void Context::mouseWheel(const unsigned int msg, const short delta)
   };
 #endif
 
-  TempCurrent cur { this };
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io { m_imgui->IO };
   float &wheel { msg == WM_MOUSEHWHEEL ? io.MouseWheelH : io.MouseWheel };
   wheel += static_cast<float>(delta) / static_cast<float>(WHEEL_DELTA);
 }
 
 void Context::updateKeyMods()
 {
-  // this is only called from enterFrame, the context is already set
-  // setCurrent();
-
   constexpr int down { 0x8000 };
 
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io { m_imgui->IO };
   io.KeyCtrl  = GetAsyncKeyState(VK_CONTROL) & down;
   io.KeyShift = GetAsyncKeyState(VK_SHIFT)   & down;
   io.KeyAlt   = GetAsyncKeyState(VK_MENU)    & down;
@@ -395,9 +391,7 @@ void Context::updateKeyMods()
 
 void Context::keyInput(const uint8_t key, const bool down)
 {
-  TempCurrent cur { this };
-  ImGuiIO &io { ImGui::GetIO() };
-  io.KeysDown[key] = down;
+  m_imgui->IO.KeysDown[key] = down;
 }
 
 void Context::charInput(const unsigned int codepoint)
@@ -405,9 +399,7 @@ void Context::charInput(const unsigned int codepoint)
   if(codepoint < 32 || (codepoint > 126 && codepoint < 160))
     return;
 
-  TempCurrent cur { this };
-  ImGuiIO &io { ImGui::GetIO() };
-  io.AddInputCharacter(codepoint);
+  m_imgui->IO.AddInputCharacter(codepoint);
 }
 
 void Context::updateDragDrop()
@@ -425,7 +417,7 @@ void Context::updateDragDrop()
 
 void Context::dragSources()
 {
-  // this is only called from enterFrame, the context is already set
+  // this is only called from beginFrame, the context is already set
   // setCurrent();
 
   const int flags { ImGuiDragDropFlags_SourceExtern |
@@ -493,19 +485,23 @@ void Context::clearFocus()
     ImGui::ClearActiveID();
   }
 
-  ImGuiIO &io { ImGui::GetIO() };
-  memset(io.KeysDown, 0, sizeof(io.KeysDown));
+  memset(m_imgui->IO.KeysDown, 0, sizeof(m_imgui->IO.KeysDown));
 }
 
 void Context::markSettingsDirty()
 {
+  if(m_imgui->IO.ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings)
+    return;
+
   TempCurrent cur { this };
-  if(!(ImGui::GetIO().ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings))
-    ImGui::MarkIniSettingsDirty();
+  ImGui::MarkIniSettingsDirty();
 }
 
 void Context::updateTheme()
 {
+  // this is only called from beginFrame, the context is already set
+  // setCurrent();
+
   int themeSize;
   const ColorTheme *theme { static_cast<ColorTheme *>(GetColorThemeStruct(&themeSize)) };
   if(static_cast<size_t>(themeSize) < sizeof(ColorTheme))

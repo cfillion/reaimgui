@@ -97,9 +97,7 @@ DEFINE_API(int, GetConfigFlags, (ImGui_Context*,ctx),
 "See ImGui_SetConfigFlags.",
 {
   assertValid(ctx);
-  ctx->setCurrent();
-  ImGuiIO &io { ImGui::GetIO() };
-  return io.ConfigFlags;
+  return ctx->IO().ConfigFlags;
 });
 
 DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
@@ -107,9 +105,7 @@ DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
 "See ImGui_GetConfigFlags, ImGui_ConfigFlags_None.",
 {
   assertValid(ctx);
-  ctx->setCurrent();
-  ImGuiIO &io { ImGui::GetIO() };
-  io.ConfigFlags = flags;
+  ctx->IO().ConfigFlags = flags;
 });
 
 DEFINE_API(int, GetDock, (ImGui_Context*,ctx),
@@ -148,7 +144,7 @@ DEFINE_API(double, GetDeltaTime, (ImGui_Context*,ctx),
 "Time elapsed since last frame, in seconds.",
 {
   FRAME_GUARD;
-  return ImGui::GetIO().DeltaTime;
+  return ctx->IO().DeltaTime;
 });
 
 DEFINE_API(int, GetFrameCount, (ImGui_Context*,ctx),
@@ -163,7 +159,7 @@ DEFINE_API(void, GetDisplaySize, (ImGui_Context*,ctx)
 "",
 {
   FRAME_GUARD;
-  const ImVec2 &size { ImGui::GetIO().DisplaySize };
+  const ImVec2 &size { ctx->IO().DisplaySize };
   if(API_W(w)) *API_W(w) = size.x;
   if(API_W(h)) *API_W(h) = size.y;
 });

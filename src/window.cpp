@@ -214,7 +214,7 @@ void Window::createSwellDialog()
 const char *Window::getSwellClass()
 {
   // eat global shortcuts when a text input is focused before v6.29's hwnd_info
-  return ImGui::GetIO().WantCaptureKeyboard
+  return m_ctx->IO().WantCaptureKeyboard
     ? "Lua_LICE_gfx_standalone" : "reaper_imgui_context";
 }
 #endif
@@ -264,8 +264,7 @@ int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
   if(infoType == IsInTextField && Resource::exists(ctx)) {
     // Called for handling global shortcuts (v6.29+)
     // getSwellClass emulates this in older versions (but only on macOS & Linux)
-    ctx->setCurrent();
-    return ImGui::GetIO().WantCaptureKeyboard ? InTextField : NotInTextField;
+    return ctx->IO().WantCaptureKeyboard ? InTextField : NotInTextField;
   }
 
   return Unknown;

@@ -74,6 +74,7 @@ public:
   void clearFocus();
   void markSettingsDirty();
 
+  ImGuiIO &IO();
   HCURSOR cursor() const { return m_cursor; }
   Settings &settings() { return m_settings; }
   Window *window() const { return m_window.get(); }

@@ -81,8 +81,7 @@ Window::Window(Context *ctx)
   if(!(settings.dock & 1))
     gdk_window_freeze_updates(m_impl->window);
 
-  ImGuiIO &io { ImGui::GetIO() };
-  io.BackendPlatformName = "reaper_imgui_gdk";
+  ctx->IO().BackendPlatformName = "reaper_imgui_gdk";
 }
 
 Window::~Window()
@@ -226,7 +225,7 @@ void Window::drawFrame(ImDrawData *data)
     return;
   }
 
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io { m_ctx->IO() };
   const cairo_region_t *region { gdk_window_get_clip_region(m_impl->window) };
   GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(m_impl->window, region) };
   cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };

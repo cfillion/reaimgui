@@ -157,8 +157,7 @@ static uint8_t virtualKeyCode(NSEvent *event)
 
 - (const char *)getSwellClass
 {
-  m_context->setCurrent();
-  return Window::getSwellClass();
+  return m_context->window()->getSwellClass();
 }
 
 - (void)keyDown:(NSEvent *)event

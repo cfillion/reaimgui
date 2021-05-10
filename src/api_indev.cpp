@@ -31,7 +31,7 @@ DEFINE_API(double, GetMouseDownDuration, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(ImGuiIO::MouseDownDuration));
-  return ImGui::GetIO().MouseDownDuration[button];
+  return ctx->IO().MouseDownDuration[button];
 });
 
 DEFINE_API(bool, IsMouseClicked, (ImGui_Context*,ctx)
@@ -50,7 +50,7 @@ DEFINE_API(void, GetMouseClickedPos, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(ImGuiIO::MouseDownDuration));
-  const ImVec2 &pos { ImGui::GetIO().MouseClickedPos[button] };
+  const ImVec2 &pos { ctx->IO().MouseClickedPos[button] };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
 });
@@ -112,7 +112,7 @@ DEFINE_API(void, GetMousePos, (ImGui_Context*,ctx)
 "",
 {
   FRAME_GUARD;
-  const ImVec2 &pos { ImGui::GetIO().MousePos };
+  const ImVec2 &pos { ctx->IO().MousePos };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
 });
@@ -132,7 +132,7 @@ DEFINE_API(void, GetMouseWheel, (ImGui_Context*,ctx)
 "Mouse wheel Vertical: 1 unit scrolls about 5 lines text.",
 {
   FRAME_GUARD;
-  const ImGuiIO &io { ImGui::GetIO() };
+  const ImGuiIO &io { ctx->IO() };
   if(API_W(vertical))   *API_W(vertical)   = io.MouseWheel;
   if(API_W(horizontal)) *API_W(horizontal) = io.MouseWheelH;
 });
@@ -152,7 +152,7 @@ DEFINE_API(void, GetMouseDelta, (ImGui_Context*,ctx)
 "Mouse delta. Note that this is zero if either current or previous position are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have a huge delta.",
 {
   FRAME_GUARD;
-  const ImVec2 &delta { ImGui::GetIO().MouseDelta };
+  const ImVec2 &delta { ctx->IO().MouseDelta };
   *API_W(x) = delta.x, *API_W(y) = delta.y;
 });
 
@@ -210,7 +210,7 @@ DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   IM_ASSERT(key_code >= 0 && key_code < IM_ARRAYSIZE(ImGuiIO::KeysDownDuration));
-  return ImGui::GetIO().KeysDownDuration[key_code];
+  return ctx->IO().KeysDownDuration[key_code];
 });
 
 DEFINE_API(bool, IsKeyPressed, (ImGui_Context*,ctx)
@@ -243,7 +243,7 @@ DEFINE_API(int, GetKeyMods, (ImGui_Context*,ctx),
 "Ctrl/Shift/Alt/Super. See ImGui_KeyModFlags_*.",
 {
   FRAME_GUARD;
-  return ImGui::GetIO().KeyMods;
+  return ctx->IO().KeyMods;
 });
 
 DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
@@ -251,7 +251,7 @@ DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
 "Read from ImGui's character input queue. Call with increasing idx until false is returned.",
 {
   FRAME_GUARD;
-  const ImGuiIO &io { ImGui::GetIO() };
+  const ImGuiIO &io { ctx->IO() };
   if(idx >= 0 && idx < io.InputQueueCharacters.Size) {
     if(API_W(unicode_char)) *API_W(unicode_char) = io.InputQueueCharacters[idx];
     return true;
