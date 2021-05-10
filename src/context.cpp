@@ -488,10 +488,12 @@ void Context::endDrag(const bool drop)
 
 void Context::clearFocus()
 {
-  TempCurrent cur { this };
-  ImGuiIO &io { ImGui::GetIO() };
-  if(io.WantCaptureKeyboard)
+  if(m_imgui->ActiveId != 0) {
+    TempCurrent cur { this };
     ImGui::ClearActiveID();
+  }
+
+  ImGuiIO &io { ImGui::GetIO() };
   memset(io.KeysDown, 0, sizeof(io.KeysDown));
 }
 
