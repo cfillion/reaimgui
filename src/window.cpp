@@ -24,7 +24,10 @@
 #ifndef _WIN32
 #  include <swell/swell.h>
 #  include <WDL/wdltypes.h>
+#  define TEXT(str) str
 #endif
+
+constexpr const auto *PROP_CONTEXT { TEXT("reaper_imgui_context") };
 
 HINSTANCE Window::s_instance;
 
@@ -43,6 +46,8 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self = reinterpret_cast<Window *>(ptr);
     self->m_hwnd.reset(handle);
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
+    SetProp(handle, PROP_CONTEXT, self->m_ctx);
+    self->installHooks();
   }
   else {
     self = reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA));
@@ -67,6 +72,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self->updateSettings();
     return 0;
   case WM_DESTROY:
+    RemoveProp(handle, PROP_CONTEXT);
     SetWindowLongPtr(handle, GWLP_USERDATA, 0);
     return 0;
   case WM_MOUSEWHEEL:
@@ -207,9 +213,9 @@ void Window::createSwellDialog()
 
 const char *Window::getSwellClass()
 {
-  // eat global shortcuts when a text input is focused
-  ImGuiIO &io { ImGui::GetIO() };
-  return io.WantCaptureKeyboard ? "Lua_LICE_gfx_standalone" : "reaper_imgui_context";
+  // eat global shortcuts when a text input is focused before v6.29's hwnd_info
+  return ImGui::GetIO().WantCaptureKeyboard
+    ? "Lua_LICE_gfx_standalone" : "reaper_imgui_context";
 }
 #endif
 
@@ -228,6 +234,42 @@ int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
     return Accel::NotOurWindow;
 }
 #endif
+
+void Window::installHooks()
+{
+  static std::weak_ptr<PluginRegister> g_hwndInfo; // v6.29+
+
+  if(g_hwndInfo.expired())
+    g_hwndInfo = m_hwndInfo = std::make_shared<PluginRegister>
+      ("hwnd_info", reinterpret_cast<void *>(&Window::hwndInfo));
+  else
+    m_hwndInfo = g_hwndInfo.lock();
+}
+
+int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
+{
+  enum InfoType { IsInTextField };
+  enum RetVal { Unknown = 0, InTextField = 1, NotInTextField = -1 };
+
+  Context *ctx;
+  do {
+    ctx = static_cast<Context *>(GetProp(hwnd, PROP_CONTEXT));
+#ifdef __APPLE__
+  // hwnd is the InputView when it has focus
+  } while(!ctx && (hwnd = GetParent(hwnd)));
+#else
+  } while(false);
+#endif
+
+  if(infoType == IsInTextField && Resource::exists(ctx)) {
+    // Called for handling global shortcuts (v6.29+)
+    // getSwellClass emulates this in older versions (but only on macOS & Linux)
+    ctx->setCurrent();
+    return ImGui::GetIO().WantCaptureKeyboard ? InTextField : NotInTextField;
+  }
+
+  return Unknown;
+}
 
 void Window::WindowDeleter::operator()(HWND window)
 {

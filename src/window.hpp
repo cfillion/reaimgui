@@ -61,13 +61,17 @@ private:
 
   static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
   static int translateAccel(MSG *msg, accelerator_register_t *accel);
+  static int hwndInfo(HWND, INT_PTR type);
 
   void createSwellDialog();
+  void installHooks();
 
   Context *m_ctx;
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
+
   accelerator_register_t m_accel { &translateAccel, true, this };
   PluginRegister m_accelReg { "accelerator", &m_accel };
+  std::shared_ptr<PluginRegister> m_hwndInfo;
 
   struct Impl;
   std::unique_ptr<Impl> m_impl;

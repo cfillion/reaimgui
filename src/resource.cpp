@@ -136,5 +136,5 @@ bool Resource::heartbeat()
 template<>
 bool Resource::exists<Resource>(Resource *rs)
 {
-  return g_rsx.count(rs) > 0;
+  return rs && g_rsx.count(rs) > 0;
 }
