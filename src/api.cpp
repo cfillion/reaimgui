@@ -71,10 +71,11 @@ void API::unregisterAll()
   }
 }
 
+// REAPER 6.29+ uses the '!' prefix to abort the calling Lua script's execution
 void API::handleError(const char *fnName, const reascript_error &e)
 {
   char message[1024];
-  snprintf(message, sizeof(message), "ImGui_%s: %s", fnName, e.what());
+  snprintf(message, sizeof(message), "!ImGui_%s: %s", fnName, e.what());
   ReaScriptError(message);
 }
 
@@ -82,7 +83,7 @@ void API::handleError(const char *fnName, const imgui_error &e)
 {
   char message[1024];
   snprintf(message, sizeof(message),
-    "ImGui_%s: ImGui assertion failed: %s", fnName, e.what());
+    "!ImGui_%s: ImGui assertion failed: %s", fnName, e.what());
   ReaScriptError(message);
 
   delete Context::current();

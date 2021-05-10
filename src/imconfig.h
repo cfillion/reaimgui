@@ -110,9 +110,6 @@ inline void ReaImGui_Assert(const bool ok, const char *message)
 //#define IM_DEBUG_BREAK  IM_ASSERT(0)
 //#define IM_DEBUG_BREAK  __debugbreak()
 
-// This is pretty useless right now as it only reports which API function was
-// responsible for the selected widget. This may change in the future should
-// REAPER's ReaScriptError function be updated to report the source file/line.
 #define IM_DEBUG_BREAK() throw reascript_error { "debug break" }
 
 //---- Debug Tools: Have the Item Picker break in the ItemAdd() function instead of ItemHoverable(),
