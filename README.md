@@ -57,7 +57,7 @@ Set the `VCPKG_ROOT` and `VCPKG_DEFAULT_TRIPLET` environment variables
 
 Install ReaImGui's build dependencies:
 
-    set /p reaimgui-deps=<vendor\vcpkg-deps.txt
+    set /p reaimgui-deps=<vendor\vcpkg\win32-deps.txt
     %VCPKG_ROOT%\vcpkg install %reaimgui-deps%
 
 ### Build configuration
