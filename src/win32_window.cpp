@@ -231,6 +231,13 @@ Window::~Window()
   ReleaseDC(m_hwnd.get(), m_impl->dc);
 }
 
+void Window::uploadFontTex()
+{
+  wglMakeCurrent(m_impl->dc, m_impl->gl);
+  m_impl->renderer->uploadFontTex();
+  wglMakeCurrent(nullptr, nullptr);
+}
+
 void Window::beginFrame()
 {
 }

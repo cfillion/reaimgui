@@ -46,17 +46,18 @@ public:
   Window(const Window &) = delete;
   ~Window();
 
+  void uploadFontTex();
   void beginFrame();
   void drawFrame(ImDrawData *);
   void endFrame();
   float scaleFactor() const;
-  std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM);
 
   int dock() const;
   void setDock(int);
   void updateSettings();
-  HWND nativeHandle() const { return m_hwnd.get(); }
+
   const char *getSwellClass();
+  HWND nativeHandle() const { return m_hwnd.get(); }
 
 private:
   struct WindowDeleter { void operator()(HWND); };
@@ -67,6 +68,7 @@ private:
 
   void createSwellDialog();
   void installHooks();
+  std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM);
 
   Context *m_ctx;
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;

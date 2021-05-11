@@ -85,7 +85,6 @@ OpenGLRenderer::OpenGLRenderer()
   glGenTextures(m_textures.size(), m_textures.data());
 
   initShaders();
-  initFontTex();
 
   glGenVertexArrays(1, &m_vbo);
   glBindVertexArray(m_vbo);
@@ -136,7 +135,7 @@ void OpenGLRenderer::initShaders()
   glUseProgram(m_program);
 }
 
-void OpenGLRenderer::initFontTex()
+void OpenGLRenderer::uploadFontTex()
 {
   ImGuiIO &io { ImGui::GetIO() };
   unsigned char *pixels;
@@ -149,6 +148,7 @@ void OpenGLRenderer::initFontTex()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
   io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(m_textures[FontTex]));
+  io.Fonts->ClearTexData();
 }
 
 OpenGLRenderer::~OpenGLRenderer()

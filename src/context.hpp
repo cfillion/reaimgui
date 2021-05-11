@@ -61,6 +61,7 @@ public:
 
   void setCurrent();
   void setDockNextFrame(int);
+  void invalidateTextures() { m_uploadFonts = true; }
   void enterFrame();
 
   void mouseDown(unsigned int msg);
@@ -96,10 +97,12 @@ private:
   void updateKeyMods();
   void updateDragDrop();
 
+  void uploadFonts();
+
   bool anyMouseDown() const;
   void dragSources();
 
-  bool m_inFrame, m_closeReq;
+  bool m_inFrame, m_closeReq, m_uploadFonts;
   int m_dragState;
   HCURSOR m_cursor;
   Color m_clearColor;

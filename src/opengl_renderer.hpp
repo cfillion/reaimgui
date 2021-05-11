@@ -32,11 +32,11 @@ public:
   OpenGLRenderer();
   ~OpenGLRenderer();
 
+  void uploadFontTex();
   void draw(ImDrawData *, const Color &clearColor, bool flip = false);
 
 private:
   void initShaders();
-  void initFontTex();
 
   unsigned int m_vbo, m_program;
   std::array<unsigned int, 2> m_buffers;

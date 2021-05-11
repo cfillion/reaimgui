@@ -100,6 +100,13 @@ Window::~Window()
   delete m_impl->renderer;
 }
 
+void Window::uploadFontTex()
+{
+  [m_impl->gl makeCurrentContext];
+  m_impl->renderer->uploadFontTex();
+  [NSOpenGLContext clearCurrentContext];
+}
+
 void Window::beginFrame()
 {
   m_impl->lastDrawData = nullptr;

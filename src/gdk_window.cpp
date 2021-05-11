@@ -179,6 +179,9 @@ void Window::Impl::checkOSWindowChanged()
   if(window && prevWindow != window) {
     teardownGl();
     initGl();
+
+    Context *ctx { static_cast<Context *>(GetProp(hwnd, CLASS_NAME)) };
+    ctx->invalidateTextures();
   }
 }
 
@@ -195,6 +198,13 @@ void Window::Impl::teardownGl()
   // https://gitlab.gnome.org/GNOME/gtk/-/issues/2562
   gdk_gl_context_clear_current();
   g_object_unref(gl);
+}
+
+void Window::uploadFontTex()
+{
+  gdk_gl_context_make_current(m_impl->gl);
+  m_impl->renderer->uploadFontTex();
+  gdk_gl_context_clear_current();
 }
 
 void Window::beginFrame()

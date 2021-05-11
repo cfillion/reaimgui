@@ -136,7 +136,7 @@ void Window::updateKeyMap()
 
 int Window::dock() const
 {
-  const int dockIndex = { DockIsChildOfDock(m_hwnd.get(), nullptr)  };
+  const int dockIndex { DockIsChildOfDock(m_hwnd.get(), nullptr) };
   return dockIndex > -1 ? (dockIndex << 1) | 1 : m_ctx->settings().dock & ~1;
 }
 
@@ -164,6 +164,7 @@ void Window::setDock(const int dock)
     std::swap(m_hwnd, floating.m_hwnd);
     std::swap(m_impl, floating.m_impl);
     SetWindowLongPtr(m_hwnd.get(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
+    m_ctx->invalidateTextures();
   }
 }
 

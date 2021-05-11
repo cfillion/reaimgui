@@ -60,8 +60,8 @@ Context *Context::current()
 }
 
 Context::Context(const Settings &settings, const int configFlags)
-  : m_inFrame { false }, m_closeReq { false }, m_dragState {}, m_cursor {},
-    m_settings { settings }, m_mouseDown {},
+  : m_inFrame { false }, m_closeReq { false }, m_uploadFonts { true },
+    m_dragState {}, m_cursor {}, m_settings { settings }, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
 {
@@ -142,6 +142,9 @@ void Context::beginFrame()
   updateMousePos();
   updateKeyMods();
 
+  if(m_uploadFonts)
+    uploadFonts();
+
   m_settings.update();
 
   ImGui::NewFrame();
@@ -193,6 +196,7 @@ void Context::updateFrameInfo()
   ImGuiIO &io { m_imgui->IO };
 
   const float scale { m_window->scaleFactor() };
+  m_uploadFonts |= scale != io.DisplayFramebufferScale.x;
   io.DisplayFramebufferScale = { scale, scale };
 
   RECT rect;
@@ -492,6 +496,22 @@ void Context::markSettingsDirty()
 
   TempCurrent cur { this };
   ImGui::MarkIniSettingsDirty();
+}
+
+void Context::uploadFonts()
+{
+  ImGuiIO &io { m_imgui->IO };
+  io.Fonts->ClearFonts();
+
+  ImFontConfig cfg;
+  cfg.SizePixels = 13.f * io.DisplayFramebufferScale.x;
+  ImFont *defFont { io.Fonts->AddFontDefault(&cfg) };
+  defFont->Scale = 1.f / io.DisplayFramebufferScale.x;
+
+  m_window->uploadFontTex();
+  io.Fonts->ClearInputData();
+
+  m_uploadFonts = false;
 }
 
 void Context::updateTheme()
