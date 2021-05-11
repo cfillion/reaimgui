@@ -53,7 +53,10 @@ private:
 
 Context *Context::current()
 {
-  return static_cast<Context *>(ImGui::GetIO().UserData);
+  if(ImGuiContext *imgui { ImGui::GetCurrentContext() })
+    return static_cast<Context *>(imgui->IO.UserData);
+  else
+    return nullptr;
 }
 
 Context::Context(const Settings &settings, const int configFlags)
