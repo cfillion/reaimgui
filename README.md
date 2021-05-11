@@ -47,18 +47,12 @@ architecture when configuring or building ReaImGui.
 Install [vcpkg](https://docs.microsoft.com/cpp/build/vcpkg) in any directory:
 
     git clone https://github.com/Microsoft/vcpkg.git C:\path\to\vcpkg
-    C:\path\to\vcpkg\bootstrap-vcpkg.bat
 
-Set the `VCPKG_ROOT` and `VCPKG_DEFAULT_TRIPLET` environment variables
-(only required when running `vcpkg install` or creating a new build tree):
+Set `VCPKG_TARGET_TRIPLET` and `CMAKE_TOOLCHAIN_FILE` when creating the build
+tree:
 
-    set VCPKG_ROOT=C:\path\to\vcpkg
-    set VCPKG_DEFAULT_TRIPLET=%PLATFORM%-windows-static
-
-Install ReaImGui's build dependencies:
-
-    set /p reaimgui-deps=<vendor\vcpkg\win32-deps.txt
-    %VCPKG_ROOT%\vcpkg install %reaimgui-deps%
+    -DVCPKG_TARGET_TRIPLET=%PLATFORM%-windows-static
+    -DCMAKE_TOOLCHAIN_FILE=C:\path\to\vcpkg\scripts\buildsystems\vcpkg.cmake
 
 ### Build configuration
 

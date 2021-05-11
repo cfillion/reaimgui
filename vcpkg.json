@@ -1,0 +1,10 @@
+{
+  "name": "reaimgui",
+  "version-string": "current",
+  "dependencies": [
+    "boost-core",
+    "boost-preprocessor",
+    "boost-type-index",
+    { "name": "gl3w", "platform": "windows" }
+  ]
+}

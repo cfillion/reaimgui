@@ -5,7 +5,8 @@ stack: ruby 2.7
 before_build:
   - git submodule update --init --depth 1
 build_script:
-  - cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN
+  - cmake -B build -DCMAKE_BUILD_TYPE=Release
+    -DVCPKG_TARGET_TRIPLET=$TRIPLET -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN
     -DCMAKE_OSX_ARCHITECTURES=$ARCH -DCMAKE_OSX_DEPLOYMENT_TARGET=$DEPLOY_TARGET
   - cmake --build build --target reaimgui
   - '[ "$ARCH" != `uname -m` ] || cmake --build build --target bindings'
@@ -66,9 +67,11 @@ for:
 
   - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
     cache:
-      - $HOME/vcpkg/installed ->
-        vendor/vcpkg/macos-deps.txt, vendor/vcpkg/triplets/macos.cmake
+      - build/vcpkg_installed -> vcpkg.json, cmake/vcpkg-triplets/auto-osx.cmake
     install:
+      - TRIPLET=auto-osx TOOLCHAIN=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+      - export VCPKG_OVERLAY_TRIPLETS=cmake/vcpkg-triplets
+
       - |-
         case $ARCH in
         arm64) export DEPLOY_TARGET=11.0 XCODE_VERSION=12.3  ;;
@@ -76,11 +79,6 @@ for:
         esac
 
       - sudo xcode-select -s /Applications/Xcode-$XCODE_VERSION.app
-
-      - export VCPKG_DEFAULT_TRIPLET=macos
-      - export VCPKG_OVERLAY_TRIPLETS=vendor/vcpkg/triplets
-      - TOOLCHAIN=~/vcpkg/scripts/buildsystems/vcpkg.cmake
-      - vcpkg install $(cat vendor/vcpkg/macos-deps.txt)
     artifacts:
       - path: build/src/reaper_imgui*.dylib
       - path: build/tools/imgui_python.py
@@ -88,18 +86,15 @@ for:
 
   - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2019 ] }
     cache:
-      - C:\Tools\vcpkg\installed -> vendor\vcpkg\win32-deps.txt
+      - build\vcpkg_installed -> vcpkg.json
     install:
-      - set VCPKG_ROOT=C:\Tools\vcpkg
-      - set VCPKG_DEFAULT_TRIPLET=%ARCH%-windows-static
-      - set /p reaimgui-deps=<vendor\vcpkg\win32-deps.txt
-      - vcpkg install %reaimgui-deps%
       - set PATH=C:\Ruby30\bin;%PATH%
-
       - if "%ARCH%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
       - if "%ARCH%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
     build_script:
       - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        -DVCPKG_TARGET_TRIPLET=%ARCH%-windows-static
+        -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake
       - cmake --build build
     artifacts:
       - path: build\src\reaper_imgui*.dll
