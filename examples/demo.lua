@@ -2528,7 +2528,7 @@ function demo.ShowDemoWindowLayout()
       end
       r.ImGui_EndMenuBar(ctx)
     end
-    if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_Resizable() | r.ImGuiTableFlags_NoSavedSettings()) then
+    if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings()) then
       for i = 0, 99 do
         r.ImGui_TableNextColumn(ctx)
         r.ImGui_Button(ctx, ('%03d'):format(i), -FLT_MIN, 0.0)
