@@ -27,12 +27,14 @@ Install the following libraries (and development headers if your system provides
 them separately):
 
 - [Boost](https://www.boost.org/)
+- [Fontconfig](https://www.fontconfig.org)
+- [FreeType](https://www.freetype.org/)
 - [GDK3](https://developer.gnome.org/gdk3/stable/) (3.22 or newer)
 - [libepoxy](https://github.com/anholt/libepoxy)
 
 #### macOS
 
-Install Boost using [Homebrew](https://brew.sh) (recommended).
+Install Boost and FreeType using [Homebrew](https://brew.sh) (recommended).
 The build tools can be installed using `xcode-select --install` or the Xcode IDE.
 
 #### Windows

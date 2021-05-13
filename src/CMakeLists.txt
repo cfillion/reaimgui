@@ -8,6 +8,7 @@ add_library(${PROJECT_NAME} SHARED
   api.cpp
   color.cpp
   context.cpp
+  font.cpp
   main.cpp
   opengl_renderer.cpp
   resource.cpp
@@ -49,7 +50,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 if(WIN32)
-  target_sources(${PROJECT_NAME} PRIVATE version.rc win32_window.cpp)
+  target_sources(${PROJECT_NAME} PRIVATE version.rc win32_font.cpp win32_window.cpp)
   target_compile_options(${PROJECT_NAME} PUBLIC /W3 /WX /wd4244 /wd4267 /wd4312 /wd4996 /wd5208)
   target_compile_definitions(${PROJECT_NAME} PUBLIC NOMINMAX UNICODE)
 
@@ -75,7 +76,8 @@ else()
   endif()
 
   if(APPLE)
-    target_sources(${PROJECT_NAME} PRIVATE cocoa_inputview.mm cocoa_window.mm)
+    target_sources(${PROJECT_NAME} PRIVATE
+      cocoa_font.mm cocoa_inputview.mm cocoa_window.mm)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GL_SILENCE_DEPRECATION)
     target_compile_options(${PROJECT_NAME} PRIVATE
       -fobjc-arc -Wno-error=deprecated-declarations)
@@ -84,7 +86,10 @@ else()
     find_package(OpenGL REQUIRED)
     target_link_libraries(${PROJECT_NAME} ${CARBON_LIB} OpenGL::GL)
   else()
-    target_sources(${PROJECT_NAME} PRIVATE gdk_window.cpp)
+    target_sources(${PROJECT_NAME} PRIVATE fc_font.cpp gdk_window.cpp)
+
+    find_package(Fontconfig REQUIRED)
+    target_link_libraries(${PROJECT_NAME} Fontconfig::Fontconfig)
 
     pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
     pkg_search_module(GDK REQUIRED IMPORTED_TARGET gdk-3.0)
@@ -109,6 +114,11 @@ endif()
 check_include_file_cxx(optional HAS_STD_OPTIONAL)
 if(HAS_STD_OPTIONAL)
   target_compile_definitions(${PROJECT_NAME} PUBLIC HAS_STD_OPTIONAL)
+endif()
+
+check_include_file_cxx(variant HAS_STD_VARIANT)
+if(HAS_STD_VARIANT)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC HAS_STD_VARIANT)
 endif()
 
 get_target_property(REAIMGUI_BASENAME ${PROJECT_NAME} OUTPUT_NAME)

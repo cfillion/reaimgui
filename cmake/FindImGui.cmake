@@ -26,11 +26,20 @@ add_library(imgui
   ${ImGui_INCLUDE_DIR}/imgui_tables.cpp
   ${ImGui_INCLUDE_DIR}/imgui_widgets.cpp
   ${ImGui_INCLUDE_DIR}/misc/cpp/imgui_stdlib.cpp
+  ${ImGui_INCLUDE_DIR}/misc/freetype/imgui_freetype.cpp
 )
 
 target_compile_features(imgui PRIVATE cxx_std_17)
 target_compile_definitions(imgui PUBLIC
   "IMGUI_USER_CONFIG=\"${CMAKE_CURRENT_SOURCE_DIR}/imconfig.h\"")
 target_include_directories(imgui PUBLIC ${ImGui_INCLUDE_DIR})
+
+if(VCPKG_TOOLCHAIN)
+  find_package(freetype CONFIG REQUIRED)
+  target_link_libraries(imgui PRIVATE freetype)
+else()
+  find_package(Freetype REQUIRED)
+  target_link_libraries(imgui PRIVATE Freetype::Freetype)
+endif()
 
 add_library(ImGui::ImGui ALIAS imgui)

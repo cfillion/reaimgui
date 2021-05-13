@@ -17,6 +17,7 @@
 
 #include "context.hpp"
 
+#include "font.hpp"
 #include "window.hpp"
 
 #include <cassert>
@@ -503,10 +504,13 @@ void Context::uploadFonts()
   ImGuiIO &io { m_imgui->IO };
   io.Fonts->ClearFonts();
 
-  ImFontConfig cfg;
-  cfg.SizePixels = 13.f * io.DisplayFramebufferScale.x;
-  ImFont *defFont { io.Fonts->AddFontDefault(&cfg) };
-  defFont->Scale = 1.f / io.DisplayFramebufferScale.x;
+  // ImFontConfig cfg;
+  // cfg.SizePixels = 13.f * io.DisplayFramebufferScale.x;
+  // ImFont *defFont { io.Fonts->AddFontDefault(&cfg) };
+  // defFont->Scale = 1.f / io.DisplayFramebufferScale.x;
+
+  Font font { "sans-serif", 13, FontFlags_None };
+  font.load();
 
   m_window->uploadFontTex();
   io.Fonts->ClearInputData();
