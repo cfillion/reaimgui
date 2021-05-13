@@ -18,7 +18,9 @@
 #ifndef REAIMGUI_OPTIONAL_HPP
 #define REAIMGUI_OPTIONAL_HPP
 
-#ifdef HAS_STD_EXPERIMENTAL_OPTIONAL
+#ifdef HAS_STD_OPTIONAL
+#  include <optional>
+#else
   // Xcode 9 for macOS 32-bit builds
 #  include <experimental/optional>
   namespace std {
@@ -26,8 +28,6 @@
     using optional = experimental::optional<T>;
     constexpr auto nullopt { experimental::nullopt };
   }
-#else
-#  include <optional>
 #endif
 
 #endif

@@ -105,11 +105,8 @@ if(NOT WIN32)
 endif()
 
 check_include_file_cxx(optional HAS_STD_OPTIONAL)
-if(NOT HAS_STD_OPTIONAL)
-  check_include_file_cxx(experimental/optional HAS_STD_EXPERIMENTAL_OPTIONAL)
-  if(HAS_STD_EXPERIMENTAL_OPTIONAL)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC HAS_STD_EXPERIMENTAL_OPTIONAL)
-  endif()
+if(HAS_STD_OPTIONAL)
+  target_compile_definitions(${PROJECT_NAME} PUBLIC HAS_STD_OPTIONAL)
 endif()
 
 get_target_property(REAIMGUI_BASENAME ${PROJECT_NAME} OUTPUT_NAME)
