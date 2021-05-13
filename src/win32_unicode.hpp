@@ -20,26 +20,26 @@
 
 #include <string>
 
-inline std::string narrow(const std::wstring &input, const UINT codepage = CP_UTF8)
+inline std::string narrow(const std::wstring_view &input, const UINT codepage = CP_UTF8)
 {
   const int size { WideCharToMultiByte(codepage, 0,
-    input.c_str(), input.size(), nullptr, 0, nullptr, nullptr) };
+    input.data(), input.size(), nullptr, 0, nullptr, nullptr) };
 
   std::string output(size, L'\0');
-  WideCharToMultiByte(codepage, 0, input.c_str(), input.size(),
+  WideCharToMultiByte(codepage, 0, input.data(), input.size(),
     output.data(), size, nullptr, nullptr);
 
   return output;
 }
 
-inline std::wstring widen(const std::string &input, const UINT codepage = CP_UTF8)
+inline std::wstring widen(const std::string_view &input, const UINT codepage = CP_UTF8)
 {
   const int size {
-    MultiByteToWideChar(codepage, 0, input.c_str(), input.size(), nullptr, 0)
+    MultiByteToWideChar(codepage, 0, input.data(), input.size(), nullptr, 0)
   };
 
   std::wstring output(size, L'\0');
-  MultiByteToWideChar(codepage, 0, input.c_str(), input.size(), output.data(), size);
+  MultiByteToWideChar(codepage, 0, input.data(), input.size(), output.data(), size);
 
   return output;
 }
