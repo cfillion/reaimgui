@@ -74,6 +74,7 @@ Context::Context(const Settings &settings, const int configFlags)
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.ConfigFlags = configFlags;
+  io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
