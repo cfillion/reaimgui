@@ -50,8 +50,9 @@ Window::Window(const WindowConfig &cfg, Context *ctx)
   if(m_cfg.dock & 1)
     setDock(m_cfg.dock);
   else {
-    [[m_impl->view window] setFrameOrigin:NSPoint { x, y }];
+    // the size must be set first to always get the desired position
     [[m_impl->view window] setContentSize:NSSize  { w, h }];
+    [[m_impl->view window] setFrameOrigin:NSPoint { x, y }];
     ShowWindow(m_hwnd.get(), SW_SHOW);
   }
 
