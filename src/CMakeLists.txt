@@ -40,7 +40,6 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
   ${CMAKE_SOURCE_DIR}/vendor ${CMAKE_SOURCE_DIR}/vendor/reaper-sdk/sdk
-  ${CMAKE_SOURCE_DIR}/vendor/WDL
   ${CMAKE_CURRENT_BINARY_DIR}
 )
 
@@ -98,6 +97,9 @@ target_link_libraries(${PROJECT_NAME} Boost::headers)
 
 find_package(ImGui REQUIRED)
 target_link_libraries(${PROJECT_NAME} ImGui::ImGui)
+
+find_package(WDL REQUIRED)
+target_link_libraries(${PROJECT_NAME} WDL::WDL)
 
 if(NOT WIN32)
   find_package(SWELL REQUIRED)

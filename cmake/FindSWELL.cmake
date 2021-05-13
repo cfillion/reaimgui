@@ -27,6 +27,6 @@ endif()
 
 target_compile_definitions(swell PUBLIC SWELL_PROVIDED_BY_APP)
 target_include_directories(swell INTERFACE ${SWELL_INCLUDE_DIR})
-target_link_libraries(swell PUBLIC WDL::WDL)
+target_link_libraries(swell PRIVATE WDL::WDL)
 
 add_library(SWELL::swell ALIAS swell)
