@@ -24,10 +24,7 @@
 #ifndef _WIN32
 #  include <swell/swell.h>
 #  include <WDL/wdltypes.h>
-#  define TEXT(str) str
 #endif
-
-constexpr const auto *PROP_CONTEXT { TEXT("reaper_imgui_context") };
 
 HINSTANCE Window::s_instance;
 
@@ -46,7 +43,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self = reinterpret_cast<Window *>(ptr);
     self->m_hwnd.reset(handle);
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
-    SetProp(handle, PROP_CONTEXT, self->m_ctx);
+    SetProp(handle, CLASS_NAME, self->m_ctx);
     self->installHooks();
   }
   else {
@@ -72,7 +69,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self->updateSettings();
     return 0;
   case WM_DESTROY:
-    RemoveProp(handle, PROP_CONTEXT);
+    RemoveProp(handle, CLASS_NAME);
     SetWindowLongPtr(handle, GWLP_USERDATA, 0);
     return 0;
   case WM_MOUSEWHEEL:
@@ -214,8 +211,7 @@ void Window::createSwellDialog()
 const char *Window::getSwellClass()
 {
   // eat global shortcuts when a text input is focused before v6.29's hwnd_info
-  return m_ctx->IO().WantCaptureKeyboard
-    ? "Lua_LICE_gfx_standalone" : "reaper_imgui_context";
+  return m_ctx->IO().WantCaptureKeyboard ? "Lua_LICE_gfx_standalone" : CLASS_NAME;
 }
 #endif
 
@@ -253,7 +249,7 @@ int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
 
   Context *ctx;
   do {
-    ctx = static_cast<Context *>(GetProp(hwnd, PROP_CONTEXT));
+    ctx = static_cast<Context *>(GetProp(hwnd, CLASS_NAME));
 #ifdef __APPLE__
   // hwnd is the InputView when it has focus
   } while(!ctx && (hwnd = GetParent(hwnd)));

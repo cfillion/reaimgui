@@ -27,6 +27,7 @@
 #  include <windows.h>
 #else
 #  include <swell/swell-types.h>
+#  define TEXT(str) str
 #endif
 
 class Context;
@@ -35,6 +36,7 @@ struct ImDrawData;
 class Window {
 public:
   enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
+  static constexpr const auto *CLASS_NAME { TEXT("reaper_imgui_context") };
 
   static HINSTANCE s_instance;
   static HWND parentHandle();

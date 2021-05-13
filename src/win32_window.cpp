@@ -101,8 +101,6 @@ static RECT scaledWindowRect(const Settings &settings,
   return rect;
 }
 
-constexpr wchar_t *CLASS_NAME { L"reaper_imgui_context" };
-
 struct Window::Impl {
   struct WindowClass {
     WindowClass();
