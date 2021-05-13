@@ -47,10 +47,11 @@ Window::Window(Context *ctx)
   if(settings.dock & 1)
     setDock(settings.dock);
   else {
+    // the size must be set first to always get the desired position
     const RECT &rect { settings.initialRect() };
     NSWindow *window { [m_impl->view window] };
-    [window setFrameOrigin:NSMakePoint(rect.left, rect.top)];
     [window setContentSize:NSMakeSize(rect.right - rect.left, rect.bottom - rect.top)];
+    [window setFrameOrigin:NSMakePoint(rect.left, rect.top)];
     ShowWindow(m_hwnd.get(), SW_SHOW);
   }
 
