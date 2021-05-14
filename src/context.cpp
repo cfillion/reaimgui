@@ -396,9 +396,10 @@ void Context::keyInput(const uint8_t key, const bool down)
   m_imgui->IO.KeysDown[key] = down;
 }
 
-void Context::charInput(const unsigned int codepoint)
+void Context::charInput(const ImWchar codepoint)
 {
-  if(codepoint < 32 || (codepoint > 126 && codepoint < 160))
+  if(codepoint < 32 || (codepoint >= 0x7f && codepoint <= 0x9f) || // control chars
+      (codepoint >= 0xf700 && codepoint <= 0xf7ff)) // unicode private range
     return;
 
   m_imgui->IO.AddInputCharacter(codepoint);

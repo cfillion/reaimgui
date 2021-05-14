@@ -67,7 +67,7 @@ public:
   void mouseUp(unsigned int msg);
   void mouseWheel(unsigned int msg, short delta);
   void keyInput(uint8_t key, bool down);
-  void charInput(unsigned int);
+  void charInput(ImWchar);
   void beginDrag(std::vector<std::string> &&);
   void beginDrag(HDROP);
   void endDrag(bool drop);

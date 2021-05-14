@@ -257,19 +257,14 @@ static uint8_t virtualKeyCode(NSEvent *event)
   NSRange range { NSMakeRange(0, [characters length]) };
 
   while(range.length) {
-    uint32_t codepoint {};
-
-    if(![characters getBytes:&codepoint
+    ImWchar codepoint {};
+    if([characters getBytes:&codepoint
                    maxLength:sizeof(codepoint)
                   usedLength:nullptr
                     encoding:NSUTF32StringEncoding
                      options:0
                        range:range
               remainingRange:&range])
-      continue;
-    else if(codepoint >= 0xf700 && codepoint <= 0xf7ff)
-      continue; // unicode private range
-
     m_context->charInput(codepoint);
   }
 }
