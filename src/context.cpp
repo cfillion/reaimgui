@@ -61,7 +61,7 @@ Context *Context::current()
 }
 
 Context::Context(const Settings &settings, const int configFlags)
-  : m_inFrame { false }, m_closeReq { false }, m_uploadFonts { true },
+  : m_inFrame { false }, m_closeReq { false },
     m_dragState {}, m_cursor {}, m_settings { settings }, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
@@ -142,9 +142,7 @@ void Context::beginFrame()
   updateMouseDown();
   updateMousePos();
   updateKeyMods();
-
-  if(m_uploadFonts)
-    uploadFonts();
+  uploadFonts();
 
   m_settings.update();
 
@@ -172,6 +170,7 @@ bool Context::endFrame(const bool render) try
     updateDragDrop();
     ImGui::Render();
     m_window->drawFrame(ImGui::GetDrawData());
+    m_fonts.keepAliveAll();
   }
   else
     ImGui::EndFrame();
@@ -197,7 +196,8 @@ void Context::updateFrameInfo()
   ImGuiIO &io { m_imgui->IO };
 
   const float scale { m_window->scaleFactor() };
-  m_uploadFonts |= scale != io.DisplayFramebufferScale.x;
+  if(scale != io.DisplayFramebufferScale.x)
+    m_fonts.invalidate();
   io.DisplayFramebufferScale = { scale, scale };
 
   RECT rect;
@@ -501,21 +501,19 @@ void Context::markSettingsDirty()
 
 void Context::uploadFonts()
 {
+  if(m_fonts.isLoaded())
+    return;
+
   ImGuiIO &io { m_imgui->IO };
   io.Fonts->ClearFonts();
-
-  // ImFontConfig cfg;
-  // cfg.SizePixels = 13.f * io.DisplayFramebufferScale.x;
-  // ImFont *defFont { io.Fonts->AddFontDefault(&cfg) };
-  // defFont->Scale = 1.f / io.DisplayFramebufferScale.x;
-
-  Font font { "sans-serif", 13, FontFlags_None };
-  font.load();
-
+  m_fonts.loadAll();
   m_window->uploadFontTex();
   io.Fonts->ClearInputData();
+}
 
-  m_uploadFonts = false;
+void Context::invalidateTextures()
+{
+  m_fonts.invalidate();
 }
 
 void Context::updateTheme()

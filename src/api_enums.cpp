@@ -214,8 +214,6 @@ DEFINE_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos, "Instruct navigation to mov
 DEFINE_ENUM(ImGui, ConfigFlags_NoMouse,              "Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.");
 DEFINE_ENUM(ImGui, ConfigFlags_NoMouseCursorChange,  "Instruct backend to not alter mouse cursor shape and visibility.");
 
-DEFINE_ENUM(ReaImGui, ConfigFlags_NoSavedSettings, "Disable state restoration and persistence for the whole context");
-
 // ImGuiComboFlags
 DEFINE_ENUM(ImGui, ComboFlags_None,           "Flags for ImGui::BeginCombo()");
 DEFINE_ENUM(ImGui, ComboFlags_PopupAlignLeft, "Align the popup toward the left by default");
@@ -482,6 +480,12 @@ DEFINE_ENUM(ImGui, WindowFlags_UnsavedDocument,           "Append '*' to title w
 DEFINE_ENUM(ImGui, WindowFlags_NoNav,                     "WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
 DEFINE_ENUM(ImGui, WindowFlags_NoDecoration,              "WindowFlags_NoTitleBar | WindowFlags_NoResize | WindowFlags_NoScrollbar | WindowFlags_NoCollapse");
 DEFINE_ENUM(ImGui, WindowFlags_NoInputs,                  "WindowFlags_NoMouseInputs | WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
+
+// ReaImGui exclusive constants
+DEFINE_ENUM(ReaImGui, ConfigFlags_NoSavedSettings, "Disable state restoration and persistence for the whole context");
+DEFINE_ENUM(ReaImGui, FontFlags_None, "");
+DEFINE_ENUM(ReaImGui, FontFlags_Bold, "");
+DEFINE_ENUM(ReaImGui, FontFlags_Italic, "");
 
 DEFINE_API(void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
 "Returns FLT_MIN and FLT_MAX for this system.",

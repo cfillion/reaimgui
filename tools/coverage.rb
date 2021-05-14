@@ -23,12 +23,6 @@ NATIVE_ONLY = [
   'int ImGui::GetKeyIndex(ImGuiKey)',
   'void ImGui::CaptureMouseFromApp(bool)',
 
-  # no support for fonts at this time
-  'ImFont* ImGui::GetFont()',
-  'void ImGui::PushFont(ImFont*)',
-  'void ImGui::PopFont()',
-  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)',
-
   'void ImGui::ShowDemoWindow(bool*)',
   'void ImGui::ShowAboutWindow(bool*)',
   'void ImGui::ShowUserGuide()',
@@ -197,6 +191,8 @@ RENAMES = {
   'const ImVec4& ImGui::GetStyleColorVec4(ImGuiCol)'        => 'GetStyleColor',
   'bool ImGui::IsRectVisible(const ImVec2&, const ImVec2&)' => 'IsRectVisibleEx',
   'ImGuiTableSortSpecs* ImGui::TableGetSortSpecs()'         => 'TableGetColumnSortSpecs',
+  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'DrawList_AddTextEx',
+
 
   # variable-component input only supports double
   'bool ImGui::DragScalarN(const char*, ImGuiDataType, void*, int, float, const void*, const void*, const char*, ImGuiSliderFlags)' => 'DragDoubleN',
@@ -246,6 +242,7 @@ OVERRIDES = {
   # no text_end argument
   'ImVec2 ImGui::CalcTextSize(const char*, const char*, bool, float)'        => 'void CalcTextSize(const char*, double*, double*, bool*, double*)',
   'void ImDrawList::AddText(const ImVec2&, ImU32, const char*, const char*)' => 'void DrawList_AddText(double, double, int, const char*)',
+  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'void DrawList_AddTextEx(ImGui_Font*, double, double, double, int, const char*, double*, double*, double*, double*, double*)',
 
   'bool ImGui::DragScalarN(const char*, ImGuiDataType, void*, int, float, const void*, const void*, const char*, ImGuiSliderFlags)' => 'bool DragDoubleN(const char*, reaper_array*, double*, double*, double*, const char*, int*)',
   'bool ImGui::SliderScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiSliderFlags)'      => 'bool SliderDoubleN(const char*, reaper_array*, double, double, const char*, int*)',
@@ -262,6 +259,7 @@ OVERRIDES = {
 RESOURCES = {
   'ImGui_Context*'     => 'ctx',
   'ImGui_DrawList*'    => 'draw_list',
+  'ImGui_Font*'        => 'font',
   'ImGui_ListClipper*' => 'clipper',
   'ImGui_Viewport*'    => 'viewport',
 }
@@ -354,6 +352,8 @@ private
       'const char*'
     when 'ImGuiViewport*'
       'ImGui_Viewport*'
+    when 'ImFont*', 'const ImFont*'
+      'ImGui_Font*'
     else
       type
     end
@@ -396,22 +396,32 @@ private
         out.first.name += '_x'
         out.last.name  += '_y'
       end
-
-      if arg.default =~ /ImVec2\((.+?)f?,\s*(.+?)f?\)/
-        out.first.default = $~[1]
-        out.last.default  = $~[2]
-
-        out.first.default = '0.0' if out.first.default == '0'
-        out.last.default  = '0.0' if out.last.default  == '0'
-      end
     elsif arg.type.include?('ImVec4') && arg.name.include?('col')
       arg.type = 'int'
       arg.name += '_rgba'
+    elsif arg.type.include? 'ImVec4'
+      arg.type = 'double'
+      arg.type += '*' if arg.default
+      3.times do
+        out << Argument.new(arg.type, arg.name, arg.default, arg.size)
+      end
+
+      out[0].name += '_x'
+      out[1].name += '_y'
+      out[2].name += '_w'
+      out[3].name += '_h'
     elsif arg.type == 'double' && arg.name == 'col' && arg.size.between?(3, 4)
       arg.type = 'int*'
       arg.name += '_rgb'
       arg.name += 'a' if arg.size == 4
       arg.size = 0
+    end
+
+    if arg.default =~ /ImVec2\((.+?)f?,\s*(.+?)f?\)/
+      out.each_with_index do |out_arg, index|
+        out_arg.default = $~[index + 1]
+        out_arg.default = '0.0' if out_arg.default == '0'
+      end
     end
 
     arg.type += '*' if arg.default && arg.type[-1] != '*'
@@ -554,13 +564,16 @@ reaimgui_funcs.each do |func|
     warn "#{func.name}: invalid return type: #{func.type}"
   end
 
+  first_arg_is_resource = false
   func.args.each_with_index do |arg, i|
     unless TYPES.include? arg.type
       warn "#{func.name}: invalid argument type for '#{arg.name}': #{arg.type}"
     end
 
     if RESOURCES.has_key?(arg.type)
-      unless i == 0
+      if i == 0
+        first_arg_is_resource = true
+      elsif !first_arg_is_resource
         warn "#{func.name}: argument of type '#{arg.type}' should come first"
       end
 

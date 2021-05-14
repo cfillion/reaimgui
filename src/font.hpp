@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "resource.hpp"
 #include "variant.hpp"
 
 enum FontFlags {
@@ -31,8 +32,12 @@ enum FontFlags {
   ReaImGuiFontFlags_StyleMask = ~0xFF,
 };
 
-class Font {
+struct ImFont;
+
+class Font : public Resource {
 public:
+  static constexpr const char *api_type_name { "ImGui_Font" };
+
   // generic fonts
   static constexpr const char
     *CURSIVE    { "cursive" },
@@ -42,13 +47,32 @@ public:
     *SERIF      { "serif" };
 
   Font(const char *family, int size, int style);
-  void load();
+  ImFont *load();
 
 private:
   bool resolve(const char *family, int style);
 
   std::variant<std::string, std::vector<unsigned char>> m_data;
   int m_index, m_size, m_missingStyles;
+};
+
+class FontList {
+public:
+  FontList();
+  void add(Font *);
+  bool isLoaded() const { return m_loaded; }
+  void invalidate() { m_loaded = false; }
+  void keepAliveAll();
+  void loadAll();
+
+  Font *get(ImFont *) const;
+  ImFont *instanceOf(Font *) const;
+
+private:
+  bool m_loaded;
+
+  struct FontAttachment { Font *descriptor; ImFont *instance; };
+  std::vector<FontAttachment> m_fonts;
 };
 
 #endif

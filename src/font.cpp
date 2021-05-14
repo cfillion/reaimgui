@@ -17,6 +17,7 @@
 
 #include "font.hpp"
 
+#include <cassert>
 #include <imgui/imgui.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
 
@@ -31,7 +32,7 @@ Font::Font(const char *family, const int size, const int flags)
   }
 }
 
-ImFont *Font::load()
+ImFont *Font::load() try
 {
   ImFontConfig cfg;
   // light hinting solves uneven glyph height on macOS
@@ -56,4 +57,71 @@ ImFont *Font::load()
   }
 
   font->Scale = 1.f / scale;
+
+  return font;
+}
+catch(const imgui_error &)
+{
+  return nullptr;
+}
+
+FontList::FontList()
+  : m_loaded { false }
+{
+}
+
+void FontList::add(Font *font)
+{
+  for(const FontAttachment &attachment : m_fonts) {
+    if(attachment.descriptor == font)
+      return; // the font was already added
+  }
+
+  m_fonts.push_back({ font });
+  m_loaded = false;
+}
+
+void FontList::keepAliveAll()
+{
+  for(const FontAttachment &attachment : m_fonts)
+    attachment.descriptor->keepAlive();
+}
+
+void FontList::loadAll()
+{
+  ImGuiIO &io { ImGui::GetIO() };
+
+  ImFontConfig cfg;
+  cfg.SizePixels = 13.f * io.DisplayFramebufferScale.x;
+  ImFont *defFont { io.Fonts->AddFontDefault(&cfg) };
+  defFont->Scale = 1.f / io.DisplayFramebufferScale.x;
+
+  for(FontAttachment &attachment : m_fonts)
+    attachment.instance = attachment.descriptor->load();
+
+  m_loaded = true;
+}
+
+Font *FontList::get(ImFont *instance) const
+{
+  for(const FontAttachment &attachment : m_fonts) {
+    if(attachment.instance == instance)
+      return attachment.descriptor;
+  }
+  return nullptr; // not found, it's probably the default font
+}
+
+ImFont *FontList::instanceOf(Font *descriptor) const
+{
+  if(!descriptor)
+    return nullptr; // default font
+
+  for(const FontAttachment &attachment : m_fonts) {
+    if(attachment.descriptor == descriptor) {
+      assert(attachment.instance && "attached font was not loaded");
+      return attachment.instance;
+    }
+  }
+
+  throw reascript_error { "font is not attached to the context (did you call AttachFont?)" };
 }

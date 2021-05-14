@@ -3252,16 +3252,15 @@ function demo.ShowDemoWindowLayout()
         r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
         r.ImGui_DrawList_AddText(draw_list, text_pos[1], text_pos[2], 0xffffffff, text_str)
         r.ImGui_DrawList_PopClipRect(draw_list)
-      -- TODO
-      -- elseif n == 2 then
-      --   demo.HelpMarker(
-      --     'Using ImDrawList::AddText() with a fine ClipRect:\n\z
-      --      Will alter only this specific ImDrawList::AddText() rendering.\n\z
-      --      (this is often used internally to avoid altering the clipping rectangle and minimize draw calls)')
-      --   local clip_rect = { p0[1], p0[2], p1[1], p1[2] }
-      --   r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
-      --   r.ImGui_DrawList_AddTextEx(draw_list, r.ImGui_GetFont(ctx), r.ImGui_GetFontSize(ctx),
-      --     text_pos[1], text_pos[2], 0xffffffff, text_str, nil, 0.0, table.unpack(clip_rect))
+      elseif n == 2 then
+        demo.HelpMarker(
+          'Using ImDrawList::AddText() with a fine ClipRect:\n\z
+           Will alter only this specific ImDrawList::AddText() rendering.\n\z
+           (this is often used internally to avoid altering the clipping rectangle and minimize draw calls)')
+        local clip_rect = { p0[1], p0[2], p1[1], p1[2] }
+        r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
+        r.ImGui_DrawList_AddTextEx(draw_list, r.ImGui_GetFont(ctx), r.ImGui_GetFontSize(ctx),
+          text_pos[1], text_pos[2], 0xffffffff, text_str, 0.0, table.unpack(clip_rect))
       end
       r.ImGui_EndGroup(ctx)
       r.ImGui_PopID(ctx)

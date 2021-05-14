@@ -19,6 +19,7 @@
 #define REAIMGUI_CONTEXT_HPP
 
 #include "color.hpp"
+#include "font.hpp"
 #include "optional.hpp"
 #include "resource.hpp"
 #include "settings.hpp"
@@ -36,7 +37,6 @@
 #endif
 
 class Window;
-struct ImFontAtlas;
 struct ImGuiContext;
 
 enum ConfigFlags {
@@ -61,7 +61,7 @@ public:
 
   void setCurrent();
   void setDockNextFrame(int);
-  void invalidateTextures() { m_uploadFonts = true; }
+  void invalidateTextures();
   void enterFrame();
 
   void mouseDown(unsigned int msg);
@@ -76,8 +76,9 @@ public:
   void markSettingsDirty();
 
   ImGuiIO &IO();
-  HCURSOR cursor() const { return m_cursor; }
+  FontList &fonts() { return m_fonts; }
   Settings &settings() { return m_settings; }
+  HCURSOR cursor() const { return m_cursor; }
   Window *window() const { return m_window.get(); }
   ImGuiContext *imgui() const { return m_imgui.get(); }
   const auto &draggedFiles() const { return m_draggedFiles; }
@@ -102,9 +103,10 @@ private:
   bool anyMouseDown() const;
   void dragSources();
 
-  bool m_inFrame, m_closeReq, m_uploadFonts;
+  bool m_inFrame, m_closeReq;
   int m_dragState;
   HCURSOR m_cursor;
+  FontList m_fonts;
   Color m_clearColor;
   Settings m_settings;
   std::optional<int> m_setDockNextFrame;

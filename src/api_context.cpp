@@ -71,6 +71,8 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
     return Resource::exists(static_cast<Context *>(pointer));
   else if(!strcmp(type, "ImGui_DrawList*"))
     return DrawList.decode<Context>(pointer, &proxyKey);
+  else if(!strcmp(type, "ImGui_Font*"))
+    return Resource::exists(static_cast<Font *>(pointer));
   else if(!strcmp(type, "ImGui_ListClipper*"))
     return ListClipper::validate(static_cast<ListClipper *>(pointer));
   else if(!strcmp(type, "ImGui_Viewport*"))
@@ -162,4 +164,17 @@ DEFINE_API(void, GetDisplaySize, (ImGui_Context*,ctx)
   const ImVec2 &size { ctx->IO().DisplaySize };
   if(API_W(w)) *API_W(w) = size.x;
   if(API_W(h)) *API_W(h) = size.y;
+});
+
+DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
+(ImGui_Font*,font),
+"Enable a font for use in the given context. Fonts must be attached as soon as possible after creating the context or on a new defer cycle.",
+{
+  assertValid(ctx);
+  assertValid(font);
+
+  if(ctx->IO().Fonts->Locked)
+    throw reascript_error { "cannot modify font texture: a frame has already begun" };
+
+  ctx->fonts().add(font);
 });

@@ -30,6 +30,7 @@
 #define _LICE_H // prevent swell-internal.h from including lice.h
 #define SWELL_LICE_GDI
 #define SWELL_TARGET_GDK
+#define Font Xorg_Font
 #define Window Xorg_Window
 #include <swell/swell-internal.h> // access to hwnd->m_oswindow
 #undef Window

@@ -29,10 +29,13 @@ struct ImGui_DrawList {
     Foreground = 0x6667646c, // FGDL
   };
 
-  ImDrawList *get()
+  ImDrawList *get(Context **p_ctx = nullptr)
   {
     ResourceProxy::Key drawList {};
     Context *ctx { DrawList.decode<Context>(this, &drawList) };
+
+    if(p_ctx)
+      *p_ctx = ctx;
 
     switch(drawList) {
     case Window:
@@ -209,8 +212,41 @@ DEFINE_API(void, DrawList_AddText, (ImGui_DrawList*,draw_list)
 (double,x)(double,y)(int,col_rgba)(const char*,text),
 "",
 {
-  ImDrawList *drawList { draw_list->get() };
-  drawList->AddText(ImVec2(x, y), Color::rgba2abgr(col_rgba), text);
+  draw_list->get()->AddText(ImVec2(x, y), Color::rgba2abgr(col_rgba), text);
+});
+
+DEFINE_API(void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
+(ImGui_Font*,font)(double,font_size)(double,pos_x)(double,pos_y)
+(int,col_rgba)(const char*,text)(double*,API_RO(wrap_width))
+(double*,API_RO(cpu_fine_clip_rect_x))(double*,API_RO(cpu_fine_clip_rect_y))
+(double*,API_RO(cpu_fine_clip_rect_w))(double*,API_RO(cpu_fine_clip_rect_h)),
+R"(The default font is used if font = nil. cpu_fine_clip_rect_* only takes effect if all four are non-nil.
+
+Default values: wrap_width = 0.0, cpu_fine_clip_rect_x = nil, cpu_fine_clip_rect_y = nil, cpu_fine_clip_rect_w = nil, cpu_fine_clip_rect_h = nil)",
+{
+  col_rgba = Color::rgba2abgr(col_rgba);
+
+  ImVec2 pos;
+  pos.x = pos_x;
+  pos.y = pos_y;
+
+  const double wrap_width { valueOr(API_RO(wrap_width), 0.0) };
+
+  ImVec4 cpu_fine_clip_rect, *cpu_fine_clip_rect_ptr;
+  if(API_RO(cpu_fine_clip_rect_x) && API_RO(cpu_fine_clip_rect_y) &&
+      API_RO(cpu_fine_clip_rect_w) && API_RO(cpu_fine_clip_rect_h)) {
+    cpu_fine_clip_rect.x = *API_RO(cpu_fine_clip_rect_x);
+    cpu_fine_clip_rect.y = *API_RO(cpu_fine_clip_rect_y);
+    cpu_fine_clip_rect.z = *API_RO(cpu_fine_clip_rect_w);
+    cpu_fine_clip_rect.w = *API_RO(cpu_fine_clip_rect_h);
+    cpu_fine_clip_rect_ptr = &cpu_fine_clip_rect;
+  }
+  else
+    cpu_fine_clip_rect_ptr = nullptr;
+
+  Context *ctx;
+  draw_list->get(&ctx)->AddText(ctx->fonts().instanceOf(font), font_size,
+    pos, col_rgba, text, nullptr, wrap_width, cpu_fine_clip_rect_ptr);
 });
 
 static std::vector<ImVec2> makePointsArray(const reaper_array *points)
