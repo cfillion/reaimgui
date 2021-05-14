@@ -83,10 +83,6 @@ Context::Context(const Settings &settings, const int configFlags)
 
   Window::updateKeyMap();
   m_window = std::make_unique<Window>(this);
-
-  // Start a frame to prevent contexts created within a defer callback from
-  // being immediately destroyed.
-  beginFrame();
 }
 
 Context::~Context()
@@ -104,10 +100,12 @@ bool Context::heartbeat()
   if(m_closeReq)
     m_closeReq = false;
 
-  if(m_inFrame)
-    return endFrame(true);
-  else
-    return false;
+  if(m_inFrame && endFrame(true))
+    keepAlive();
+
+  // Keep the frame alive for at least one full timer cycle to prevent contexts
+  // created within a defer callback from being immediately destroyed.
+  return Resource::heartbeat();
 }
 
 ImGuiIO &Context::IO()
