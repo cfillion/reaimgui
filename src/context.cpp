@@ -182,14 +182,8 @@ catch(const imgui_error &e) {
   snprintf(message, sizeof(message), "ImGui assertion failed: %s\n", e.what());
   ShowConsoleMsg(message); // cannot use ReaScriptError unless called by a script
 
-  // no recovery, just destroy the context
   m_window->endFrame();
-
-  // don't assert again when destroying the font atlas
-  m_imgui->IO.Fonts->Locked = false;
-
-  // don't call endFrame again from the destructor
-  m_inFrame = false;
+  m_inFrame = false; // don't call endFrame again from the destructor
 
   return false;
 }
