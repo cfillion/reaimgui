@@ -123,8 +123,8 @@ RECT Settings::initialRect(const float scale) const
   }
 
   RECT rect;
-  const int scaledWidth  { static_cast<int>(size.x * scale) },
-            scaledHeight { static_cast<int>(size.y * scale) };
+  const int scaledWidth  { std::max(10, static_cast<int>(size.x * scale)) },
+            scaledHeight { std::max(10, static_cast<int>(size.y * scale)) };
 
   if(pos.x == Settings::DEFAULT_POS) {
     // default to the center of the parent window
