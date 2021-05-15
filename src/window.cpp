@@ -178,9 +178,7 @@ void Window::updateSettings()
     GetClientRect(m_hwnd.get(), &rect);
     settings.size.x = rect.right - rect.left;
     settings.size.y = rect.bottom - rect.top;
-#ifdef __APPLE__
-    std::swap(rect.top, rect.bottom);
-#else
+#ifndef __APPLE__
     const float scale { scaleFactor() };
     settings.size.x /= scale;
     settings.size.y /= scale;

@@ -139,16 +139,33 @@ RECT Settings::initialRect(const float scale) const
   if(pos.y == Settings::DEFAULT_POS) {
     const int parentHeight { parent.bottom - parent.top };
     rect.top = ((parentHeight - scaledHeight) / 2) + parent.top;
+#ifdef __APPLE__
+    rect.top += scaledHeight;
+    // screen top/bottom are inversed
+    rect.top = std::max(rect.top, screen.top + scaledHeight);
+    rect.top = std::min(rect.top, screen.bottom);
+#else
     rect.top = std::min(rect.top, screen.bottom - scaledHeight);
     rect.top = std::max(rect.top, screen.top);
+#endif
   }
   else
     rect.top = pos.y;
 
   rect.right  = rect.left + scaledWidth;
+#ifdef __APPLE__
+  rect.bottom = rect.top - scaledHeight;
+#else
   rect.bottom = rect.top + scaledHeight;
+#endif
 
+#ifdef __APPLE__
+  std::swap(rect.top, rect.bottom);
+#endif
   EnsureNotCompletelyOffscreen(&rect);
+#ifdef __APPLE__
+  std::swap(rect.bottom, rect.top);
+#endif
 
   return rect;
 }
