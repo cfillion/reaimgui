@@ -176,7 +176,11 @@ void Window::updateSettings()
   // only persist position and size when undocked
   if(!(settings.dock & 1)) {
     RECT rect;
+#ifdef __linux__
+    GetWindowRect(m_hwnd.get(), &rect);
+#else
     GetClientRect(m_hwnd.get(), &rect);
+#endif
     settings.size.x = rect.right - rect.left;
     settings.size.y = rect.bottom - rect.top;
 #ifndef __APPLE__
@@ -184,7 +188,9 @@ void Window::updateSettings()
     settings.size.x /= scale;
     settings.size.y /= scale;
 #endif
+#ifndef __linux__
     ClientToScreen(m_hwnd.get(), reinterpret_cast<POINT *>(&rect));
+#endif
     settings.pos.x = rect.left;
     settings.pos.y = rect.top;
   }
