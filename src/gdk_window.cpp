@@ -312,10 +312,13 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
   case WM_CREATE:
     m_impl->hwnd = m_hwnd.get();
     return 0;
-  case WM_DROPFILES:
-    m_ctx->beginDrag(reinterpret_cast<HDROP>(wParam));
+  case WM_DROPFILES: {
+    HDROP drop { reinterpret_cast<HDROP>(wParam) };
+    m_ctx->beginDrag(drop);
+    DragFinish(drop);
     m_ctx->endDrag(true);
     return 0;
+  }
   case WM_SIZE:
     gdk_gl_context_make_current(m_impl->gl);
     m_impl->resizeTextures();

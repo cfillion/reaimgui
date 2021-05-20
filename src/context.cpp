@@ -464,7 +464,6 @@ void Context::beginDrag(HDROP drop)
     DragQueryFile(drop, i, file.data(), file.size() + 1);
 #endif
   }
-  DragFinish(drop);
   beginDrag(std::move(files));
 }
 #endif
