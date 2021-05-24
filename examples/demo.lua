@@ -6333,15 +6333,14 @@ end
 
 local ExampleAppLog = {}
 function ExampleAppLog:new(ctx)
-  obj = {
+  local obj = {
     ctx          = ctx,
     lines        = {},
     -- filter       = ImGuiTextFilter,
     auto_scroll  = true, -- Keep scrolling if already at the bottom.
   }
-  setmetatable(obj, self)
   self.__index = self
-  return obj
+  return setmetatable(obj, self)
 end
 
 function ExampleAppLog.clear(self)
