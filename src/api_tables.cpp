@@ -214,6 +214,14 @@ Default values: column_n = -1)",
   return ImGui::TableGetColumnFlags(valueOr(API_RO(column_n), -1));
 });
 
+DEFINE_API(void, TableSetColumnEnabled, (ImGui_Context*,ctx)
+(int,column_n)(bool,v),
+"Change enabled/disabled state of a column, set to false to hide the column. Note that end-user can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)",
+{
+  FRAME_GUARD;
+  ImGui::TableSetColumnEnabled(column_n, v);
+});
+
 DEFINE_API(void, TableSetBgColor, (ImGui_Context*,ctx)
 (int,target)(int,color_rgba)(int*,API_RO(column_n)),
 R"(Change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.

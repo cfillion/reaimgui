@@ -17,6 +17,7 @@
 
 #include "api_helper.hpp"
 
+#include <imgui/imgui_internal.h> // internal ImGuiInputTextFlags
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
 #include <reaper_plugin_secrets.h>   // reaper_array

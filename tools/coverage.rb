@@ -64,6 +64,7 @@ NATIVE_ONLY = [
   'void ImGui::PushID(const void*)',
   'void ImGui::PushID(const char*, const char*)',
   'bool ImGui::BeginChild(ImGuiID, const ImVec2&, bool, ImGuiWindowFlags)',
+  'void ImGui::OpenPopup(ImGuiID, ImGuiPopupFlags)',
 
   'ImGuiID ImGui::GetID(const char*)',
   'ImGuiID ImGui::GetID(const char*, const char*)',

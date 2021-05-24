@@ -228,7 +228,7 @@ void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor, const b
         clipRect.z - clipRect.x, clipRect.w - clipRect.y);
 
       // Bind texture, Draw
-      glBindTexture(GL_TEXTURE_2D, (unsigned int)(intptr_t)cmd->TextureId);
+      glBindTexture(GL_TEXTURE_2D, (unsigned int)(intptr_t)cmd->GetTexID());
       glDrawElementsBaseVertex(GL_TRIANGLES, cmd->ElemCount,
         sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
         (void*)(intptr_t)(cmd->IdxOffset * sizeof(ImDrawIdx)),

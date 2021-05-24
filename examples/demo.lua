@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.82)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.83)
 
 --[[
 Index of this file:
@@ -1605,7 +1605,7 @@ label:
     r.ImGui_PlotHistogram(ctx, 'Histogram', widgets.plots.frame_times, 0, nil, 0.0, 1.0, 0, 80.0)
     r.ImGui_Separator(ctx)
 
-    r.ImGui_SetNextItemWidth(ctx, 100)
+    r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 8)
     rv,widgets.plots.plot2.func = r.ImGui_Combo(ctx, 'func', widgets.plots.plot2.func, 'Sin\31Saw\31')
     local funcChanged = rv
     r.ImGui_SameLine(ctx)
@@ -2547,7 +2547,7 @@ function demo.ShowDemoWindowLayout()
     --   layout from this position.
     -- - Using r.ImGui_GetItemRectMin/Max() to query the "item" state (because the child window is an item from
     --   the POV of the parent window). See 'Demo->Querying Status (Active/Focused/Hovered etc.)' for details.
-    r.ImGui_SetNextItemWidth(ctx, 100)
+    r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 8)
     rv,layout.child.offset_x = r.ImGui_DragInt(ctx, 'Offset X', layout.child.offset_x, 1.0, -1000, 1000)
 
     r.ImGui_SetCursorPosX(ctx, r.ImGui_GetCursorPosX(ctx) + layout.child.offset_x)
@@ -3010,13 +3010,15 @@ function demo.ShowDemoWindowLayout()
       end
       if child_is_visible then -- Avoid calling SetScrollHereY when running with culled items
         for item = 0, 99 do
+          if item > 0 then
+            r.ImGui_SameLine(ctx)
+          end
           if layout.scrolling.enable_track and item == layout.scrolling.track_item then
             r.ImGui_TextColored(ctx, 0xFFFF00FF, ('Item %d'):format(item))
             r.ImGui_SetScrollHereX(ctx, (i - 1) * 0.25) -- 0.0f:left, 0.5f:center, 1.0f:right
           else
             r.ImGui_Text(ctx, ('Item %d'):format(item))
           end
-          r.ImGui_SameLine(ctx)
         end
       end
       local scroll_x = r.ImGui_GetScrollX(ctx)
@@ -3389,14 +3391,41 @@ function demo.ShowDemoWindowPopups()
       }
     end
 
+    demo.HelpMarker('"Context" functions are simple helpers to associate a Popup to a given Item or Window identifier.')
+
     -- BeginPopupContextItem() is a helper to provide common/simple popup behavior of essentially doing:
-    --    if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
-    --       OpenPopup(id);
-    --    return BeginPopup(id);
-    -- For more advanced uses you may want to replicate and customize this code.
-    -- See details in BeginPopupContextItem().
-    r.ImGui_Text(ctx, ('Value = %.6f (<-- right-click here)'):format(popups.context.value))
-    if r.ImGui_BeginPopupContextItem(ctx, 'item context menu') then
+    --     if (id == 0)
+    --         id = GetItemID(); // Use last item id
+    --     if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
+    --         OpenPopup(id);
+    --     return BeginPopup(id);
+    -- For advanced advanced uses you may want to replicate and customize this code.
+    -- See more details in BeginPopupContextItem().
+
+    -- Example 1
+    -- When used after an item that has an ID (e.g. Button), we can skip providing an ID to BeginPopupContextItem(),
+    -- and BeginPopupContextItem() will use the last item ID as the popup ID.
+    local names = { 'Label1', 'Label2', 'Label3', 'Label4', 'Label5' }
+    for _, name in ipairs(names) do
+      r.ImGui_Selectable(ctx, name)
+      if r.ImGui_BeginPopupContextItem(ctx) then -- use last item id as popup id
+        r.ImGui_Text(ctx, ('This a popup for "%s"!'):format(name))
+        if r.ImGui_Button(ctx, 'Close') then
+          r.ImGui_CloseCurrentPopup(ctx)
+        end
+        r.ImGui_EndPopup(ctx)
+      end
+      if r.ImGui_IsItemHovered(ctx) then
+        r.ImGui_SetTooltip(ctx, 'Right-click to open popup')
+      end
+    end
+
+    -- Example 2
+    -- Popup on a Text() element which doesn't have an identifier: we need to provide an identifier to BeginPopupContextItem().
+    -- Using an explicit identifier is also convenient if you want to activate the popups from different locations.
+    demo.HelpMarker("Text() elements don't have stable identifiers so we need to provide one.")
+    r.ImGui_Text(ctx, ('Value = %.6f <-- (1) right-click this value'):format(popups.context.value))
+    if r.ImGui_BeginPopupContextItem(ctx, 'my popup') then
       if r.ImGui_Selectable(ctx, 'Set to zero') then popups.context.value = 0.0      end
       if r.ImGui_Selectable(ctx, 'Set to PI')   then popups.context.value = 3.141592 end
       r.ImGui_SetNextItemWidth(ctx, -FLT_MIN)
@@ -3404,16 +3433,22 @@ function demo.ShowDemoWindowPopups()
       r.ImGui_EndPopup(ctx)
     end
 
-    -- We can also use OpenPopupOnItemClick() which is the same as BeginPopupContextItem() but without the
-    -- Begin() call. So here we will make it that clicking on the text field with the right mouse button (1)
-    -- will toggle the visibility of the popup above.
-    r.ImGui_Text(ctx, '(You can also right-click me to open the same popup as above.)')
-    r.ImGui_OpenPopupOnItemClick(ctx, 'item context menu', 1)
+    -- We can also use OpenPopupOnItemClick() to toggle the visibility of a given popup.
+    -- Here we make it that right-clicking this other text element opens the same popup as above.
+    -- The popup itself will be submitted by the code above.
+    r.ImGui_Text(ctx, '(2) Or right-click this text')
+    r.ImGui_OpenPopupOnItemClick(ctx, 'my popup', r.ImGui_PopupFlags_MouseButtonRight())
 
-    -- When used after an item that has an ID (e.g.Button), we can skip providing an ID to BeginPopupContextItem().
-    -- BeginPopupContextItem() will use the last item ID as the popup ID.
-    -- In addition here, we want to include your editable label inside the button label.
-    -- We use the ### operator to override the ID (read FAQ about ID for details)
+    -- Back to square one: manually open the same popup.
+    if r.ImGui_Button(ctx, '(3) Or click this button') then
+      r.ImGui_OpenPopup(ctx, 'my popup')
+    end
+
+    -- Example 3
+    -- When using BeginPopupContextItem() with an implicit identifier (NULL == use last item ID),
+    -- we need to make sure your item identifier is stable.
+    -- In this example we showcase altering the item label while preserving its identifier, using the ### operator (see FAQ).
+    demo.HelpMarker('Showcase using a popup ID linked to item ID, with the item having a changing label + stable ID using the ### operator.')
     r.ImGui_Button(ctx, ("Button: %s###Button"):format(popups.context.name)) -- ### operator override ID ignoring the preceding label
     if r.ImGui_BeginPopupContextItem(ctx) then
       r.ImGui_Text(ctx, 'Edit name:')
@@ -5730,7 +5765,7 @@ function demo.ShowDemoWindowMisc()
       rv,misc.tabbing.buf = r.ImGui_InputText(ctx, '3', misc.tabbing.buf)
       r.ImGui_PushAllowKeyboardFocus(ctx, false)
       rv,misc.tabbing.buf = r.ImGui_InputText(ctx, '4 (tab skip)', misc.tabbing.buf)
-      -- r.ImGui_SameLine(ctx); demo.HelpMarker('Use r.ImGui_PushAllowKeyboardFocus(bool) to disable tabbing through certain widgets.')
+      r.ImGui_SameLine(ctx); demo.HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.")
       r.ImGui_PopAllowKeyboardFocus(ctx)
       rv,misc.tabbing.buf = r.ImGui_InputText(ctx, '5', misc.tabbing.buf)
       r.ImGui_TreePop(ctx)
@@ -5761,6 +5796,7 @@ function demo.ShowDemoWindowMisc()
       if focus_3 then r.ImGui_SetKeyboardFocusHere(ctx) end
       rv,misc.focus.buf = r.ImGui_InputText(ctx, '3 (tab skip)', misc.focus.buf)
       if r.ImGui_IsItemActive(ctx) then has_focus = 3 end
+      r.ImGui_SameLine(ctx); demo.HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.")
       r.ImGui_PopAllowKeyboardFocus(ctx)
 
       if has_focus > 0 then
