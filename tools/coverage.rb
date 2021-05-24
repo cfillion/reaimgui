@@ -694,7 +694,9 @@ puts "functions: %.2f%% complete (%.2f%% total)" %
   [(perfect_count + manual_count).to_f / (imgui_funcs.size - skipped_count) * 100,
    (perfect_count + manual_count).to_f / imgui_funcs.size * 100]
 
-puts "enums:     %d skipped" % skipped_enums
+extra_enums = reaimgui_enums - imgui_enums
+enums_count = reaimgui_enums.size - extra_enums.size
+puts "enums:     %d skipped, %d exclusive" % [skipped_enums, extra_enums.size]
 puts "enums:     %.2f%% complete (%.2f%% total)" %
-  [reaimgui_enums.size.to_f / (imgui_enums.size - skipped_enums) * 100,
-   reaimgui_enums.size.to_f / imgui_enums.size * 100]
+  [enums_count.to_f / (imgui_enums.size - skipped_enums) * 100,
+   enums_count.to_f / imgui_enums.size * 100]
