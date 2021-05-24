@@ -3003,10 +3003,10 @@ function demo.ShowDemoWindowLayout()
     for i,name in ipairs(names) do
       local child_is_visible = r.ImGui_BeginChild(ctx, i, -100, child_height, true, child_flags)
       if scroll_to_off then
-        r.ImGui_SetScrollX(layout.scrolling.scroll_to_off_px)
+        r.ImGui_SetScrollX(ctx, layout.scrolling.scroll_to_off_px)
       end
       if scroll_to_pos then
-        r.ImGui_SetScrollFromPosX(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[1] + scroll_to_pos_px, (i - 1) * 0.25)
+        r.ImGui_SetScrollFromPosX(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[1] + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
       end
       if child_is_visible then -- Avoid calling SetScrollHereY when running with culled items
         for item = 0, 99 do
