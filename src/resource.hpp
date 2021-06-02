@@ -26,7 +26,7 @@ public:
   Resource(const Resource &) = delete;
   virtual ~Resource();
 
-  void keepAlive() { m_keepAlive = true; }
+  void keepAlive();
 
   template<typename T>
   static bool exists(T *userData)
@@ -44,7 +44,7 @@ protected:
 private:
   class Timer;
   std::shared_ptr<Timer> m_timer;
-  bool m_keepAlive;
+  unsigned int m_keepAlive;
 };
 
 template<>

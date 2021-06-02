@@ -25,6 +25,13 @@
 
 constexpr size_t MAX_INSTANCES { 99 };
 
+// Splash_GetWnd may be NULL for a brief moment after _s_splash_thread_running
+// is set internally. The misc timer may fire during this time, skipping
+// deferred scripts while still running extension callbacks (seen on Windows).
+// To workaround this, wait an extra frame before collecting unused objects.
+// [p=2450259]
+constexpr unsigned int KEEP_ALIVE_FRAMES { 2 };
+
 static std::unordered_set<Resource *> g_rsx;
 static unsigned int g_reentrant;
 #ifndef __APPLE__
@@ -104,7 +111,7 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
 #endif
 
 Resource::Resource()
-  : m_keepAlive { true }
+  : m_keepAlive { KEEP_ALIVE_FRAMES }
 {
   if(g_rsx.size() >= MAX_INSTANCES)
     throw reascript_error { "exceeded maximum object allocation limit" };
@@ -124,12 +131,17 @@ Resource::~Resource()
   g_rsx.erase(this);
 }
 
+void Resource::keepAlive()
+{
+  m_keepAlive = KEEP_ALIVE_FRAMES;
+}
+
 bool Resource::heartbeat()
 {
   if(!m_keepAlive)
     return false;
 
-  m_keepAlive = false;
+  --m_keepAlive;
   return true;
 }
 
