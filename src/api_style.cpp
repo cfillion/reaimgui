@@ -65,6 +65,8 @@ DEFINE_API(ImGui_Font*, CreateFont,
 (const char*,family_or_file)(int,size)(int*,API_RO(flags)),
 R"(Load a font matching a font family name or from a font file. The font will remain valid while it's attached to a context. See ImGui_AttachFont.
 
+The family name can be an installed font or one of the generic fonts: sans-serif, serif, monospace, cursive, fantasy.
+
 If 'family_or_file' specifies a filename:
 - The first byte of 'flags' is used as the font index within the file
 - The font styles in 'flags' are simulated by the font renderer
