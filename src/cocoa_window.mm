@@ -53,6 +53,7 @@ Window::Window(Context *ctx)
     // the size must be set first to always get the desired position
     [window setContentSize:NSMakeSize(rect.right - rect.left, rect.top - rect.bottom)];
 
+    // most scripts expect y=0 to be the top of the window
     const NSRect &content { [window contentRectForFrameRect: [window frame]] };
     const CGFloat titleBarHeight { [window frame].size.height - content.size.height };
     [window setFrameTopLeftPoint:NSMakePoint(rect.left, rect.top + titleBarHeight)];
