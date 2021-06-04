@@ -40,7 +40,22 @@ static_assert(__has_feature(objc_arc),
 
 constexpr NSRange kEmptyRange { NSNotFound, 0 };
 
-static NSEvent *eventCharsIgnoringMods(NSEvent *event)
+constexpr uint8_t
+  VK_APPS       { 0x5D },
+  VK_OEM_PLUS   { 0xBB },
+  VK_OEM_COMMA  { 0xBC },
+  VK_OEM_MINUS  { 0xBD },
+  VK_OEM_PERIOD { 0xBE },
+  VK_OEM_1      { 0xBA }, // ;:
+  VK_OEM_2      { 0xBF }, // /?
+  VK_OEM_3      { 0xC0 }, // `~
+  VK_OEM_4      { 0xDB }, // [(
+  VK_OEM_5      { 0xDC }, // \|
+  VK_OEM_6      { 0xDD }, // ])
+  VK_OEM_7      { 0xDE }, // '"
+  VK_OEM_102    { 0xE2 };
+
+static NSString *eventCharsIgnoringMods(NSEvent *event)
 {
   // NSEvent's charactersIgnoringModifiers does not ignore Shift.
   //
@@ -59,30 +74,99 @@ static NSEvent *eventCharsIgnoringMods(NSEvent *event)
   UCKeyTranslate(layout, [event keyCode], kUCKeyActionDown, 0, LMGetKbdType(),
     kUCKeyTranslateNoDeadKeysMask, &deadKeyState, std::size(str), &strLen, str);
 
-  if(!strLen)
-    return event;
-
-  NSString *chars { [NSString stringWithCharacters:str length:strLen] };
-
-  return [NSEvent keyEventWithType:[event type]
-                          location:[event locationInWindow]
-                     modifierFlags:[event modifierFlags]
-                         timestamp:[event timestamp]
-                      windowNumber:[event windowNumber]
-                           context:nil
-                        characters:chars
-       charactersIgnoringModifiers:chars
-                         isARepeat:[event isARepeat]
-                           keyCode:[event keyCode]];
+  if(strLen)
+    return [NSString stringWithCharacters:str length:strLen];
+  else
+    return [event charactersIgnoringModifiers];
 }
 
 static uint8_t virtualKeyCode(NSEvent *event)
 {
-  if([event modifierFlags] & NSEventModifierFlagShift)
-    event = eventCharsIgnoringMods(event);
+  const uint16_t keyCode { [event keyCode] };
 
-  int flags;
-  return SWELL_MacKeyToWindowsKey((__bridge void *)event, &flags) & 0xFF;
+  // hard-code these keys based on their physical location on the keyboard
+  // https://developer.apple.com/library/archive/documentation/mac/pdf/MacintoshToolboxEssentials.pdf (figure 2-10)
+  switch(keyCode) {
+  case 0x33: return VK_BACK;
+  case 0x72: return VK_INSERT;
+  case 0x75: return VK_DELETE;
+  case 0x73: return VK_HOME;
+  case 0x77: return VK_END;
+  case 0x74: return VK_PRIOR;
+  case 0x79: return VK_NEXT;
+  case 0x6e: return VK_APPS;
+  case 0x7b: return VK_LEFT;
+  case 0x7c: return VK_RIGHT;
+  case 0x7e: return VK_UP;
+  case 0x7d: return VK_DOWN;
+
+  case 0x0a: return VK_OEM_102;
+  case 0x2a: return VK_OEM_5;
+
+  // number row
+  case 0x12: return '1';
+  case 0x13: return '2';
+  case 0x14: return '3';
+  case 0x15: return '4';
+  case 0x17: return '5';
+  case 0x16: return '6';
+  case 0x1a: return '7';
+  case 0x1c: return '8';
+  case 0x19: return '9';
+  case 0x1d: return '0';
+
+  // numpad
+  case 0x47: return VK_NUMLOCK;
+  case 0x51: return VK_SEPARATOR;
+  case 0x4b: return VK_DIVIDE;
+  case 0x43: return VK_MULTIPLY;
+  case 0x4e: return VK_SUBTRACT;
+  case 0x45: return VK_ADD;
+  case 0x4c: return VK_RETURN;
+  case 0x41: return VK_DECIMAL;
+  case 0x52: return VK_NUMPAD0;
+  case 0x53: return VK_NUMPAD1;
+  case 0x54: return VK_NUMPAD2;
+  case 0x55: return VK_NUMPAD3;
+  case 0x56: return VK_NUMPAD4;
+  case 0x57: return VK_NUMPAD5;
+  case 0x58: return VK_NUMPAD6;
+  case 0x59: return VK_NUMPAD7;
+  case 0x5b: return VK_NUMPAD8;
+  case 0x5c: return VK_NUMPAD9;
+  }
+
+  // obey keyboard layout for other keys (ASCII virtual key code)
+  NSString *chars;
+  if([event modifierFlags] & NSEventModifierFlagShift)
+    chars = eventCharsIgnoringMods(event);
+  else
+    chars = [event charactersIgnoringModifiers];
+
+  if(![chars length])
+    return keyCode & 0xFF;
+
+  uint16_t charValue { [chars characterAtIndex:0] };
+  if(charValue >= NSF1FunctionKey && charValue <= NSF24FunctionKey)
+    charValue += VK_F1 - NSF1FunctionKey;
+  else if(charValue >= 'a' && charValue <= 'z')
+    charValue += 'A'-'a';
+
+  // attempt to be compatible with QWERTY/AZERTY, may be innacurate
+  switch(charValue) {
+  case '-':  return VK_OEM_MINUS;
+  case '=':  return VK_OEM_PLUS;
+  case ',':  return VK_OEM_COMMA;
+  case '.':  return VK_OEM_PERIOD;
+  case ';': case '$': return VK_OEM_1;
+  case '/': case ':': return VK_OEM_2;
+  case '`':  return VK_OEM_3;
+  case '[':  return VK_OEM_4;
+  case ']': case ')': return VK_OEM_6;
+  case '\'': return VK_OEM_7;
+  }
+
+  return charValue & 0xFF;
 }
 
 @implementation InputView
