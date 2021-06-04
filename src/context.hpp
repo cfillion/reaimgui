@@ -41,6 +41,7 @@ struct ImGuiContext;
 
 enum ConfigFlags {
   ReaImGuiConfigFlags_NoSavedSettings = 1<<20,
+  ReaImGuiConfigFlags_NoRestoreSize   = 1<<21,
 };
 
 constexpr const char *REAIMGUI_PAYLOAD_TYPE_FILES { "_FILES" };

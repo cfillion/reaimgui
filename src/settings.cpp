@@ -32,14 +32,16 @@ static void *Settings_readOpen(
 }
 
 static void Settings_readLine(
-  ImGuiContext *, ImGuiSettingsHandler *handler, void *, const char *line)
+  ImGuiContext *ctx, ImGuiSettingsHandler *handler, void *, const char *line)
 {
   Settings *settings { static_cast<Settings *>(handler->UserData) };
+  const int flags { ctx->IO.ConfigFlags };
 
   int x, y;
   if(sscanf(line, "Pos=%d,%d", &x, &y) == 2)
     settings->pos = { x, y };
-  else if(sscanf(line, "Size=%d,%d", &x, &y) == 2)
+  else if(!(flags & ReaImGuiConfigFlags_NoRestoreSize) &&
+      sscanf(line, "Size=%d,%d", &x, &y) == 2)
     settings->size = { x, y };
   else if(sscanf(line, "Dock=%d", &x) == 1)
     settings->dock = x;

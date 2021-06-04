@@ -483,6 +483,7 @@ DEFINE_ENUM(ImGui, WindowFlags_NoInputs,                  "WindowFlags_NoMouseIn
 
 // ReaImGui exclusive constants
 DEFINE_ENUM(ReaImGui, ConfigFlags_NoSavedSettings, "Disable state restoration and persistence for the whole context");
+DEFINE_ENUM(ReaImGui, ConfigFlags_NoRestoreSize,   "Disable restoration of the previous context size");
 DEFINE_ENUM(ReaImGui, FontFlags_None, "");
 DEFINE_ENUM(ReaImGui, FontFlags_Bold, "");
 DEFINE_ENUM(ReaImGui, FontFlags_Italic, "");
