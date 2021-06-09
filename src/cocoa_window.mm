@@ -28,7 +28,7 @@ static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
 struct Window::Impl {
-  static void setImePosition(int x, int y);
+  static void setImePosition(ImGuiViewport *, ImVec2);
 
   NSView *view;
   InputView *inputView;
@@ -92,7 +92,9 @@ Window::Window(Context *ctx)
   ImGuiIO &io { ctx->IO() };
   io.ConfigMacOSXBehaviors = false; // don't swap Cmd/Ctrl, SWELl already does it
   io.BackendPlatformName = "reaper_imgui_cocoa";
-  io.ImeSetInputScreenPosFn = &Impl::setImePosition;
+
+  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  pio.Platform_SetImeInputPos = &Impl::setImePosition;
 }
 
 Window::~Window()
@@ -162,8 +164,8 @@ int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
   return Accel::NotOurWindow;
 }
 
-void Window::Impl::setImePosition(const int x, const int y)
+void Window::Impl::setImePosition(ImGuiViewport *, const ImVec2 pos)
 {
   InputView *inputView { Context::current()->window()->m_impl->inputView };
-  [inputView setImePosition:NSMakePoint(x, y + ImGui::GetTextLineHeight())];
+  [inputView setImePosition:NSMakePoint(pos.x, pos.y + ImGui::GetTextLineHeight())];
 }
