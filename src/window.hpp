@@ -32,53 +32,82 @@
 
 class Context;
 struct ImDrawData;
+struct ImGuiViewport;
+struct ImVec2;
 
 class Window {
 public:
   enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
-  static constexpr const auto *CLASS_NAME { TEXT("reaper_imgui_context") };
 
   static HINSTANCE s_instance;
-  static HWND parentHandle();
-  static void updateKeyMap();
+  static void install();
+  static void updateMonitors();
 
-  Window(Context *);
+  Window(ImGuiViewport *, Context *);
   Window(const Window &) = delete;
   ~Window();
 
-  void uploadFontTex();
-  void beginFrame();
-  void drawFrame(ImDrawData *);
-  void endFrame();
+  // platform callbacks
+  void show();
+  void setPosition(ImVec2);
+  ImVec2 getPosition() const;
+  void setSize(ImVec2);
+  ImVec2 getSize() const;
+  void setFocus();
+  bool hasFocus() const;
+  bool isVisible() const;
+  void setTitle(const char *);
+  void update();
+  void render(void *);
   float scaleFactor() const;
+  void onChangedViewport();
+  void setImePosition(ImVec2);
+  ImVec2 translatePosition(float x, float y, bool toHiDpi = false) const;
 
-  int dock() const;
-  void setDock(int);
-  void updateSettings();
+  // int dock() const;
+  // void setDock(int);
+  // void updateSettings();
 
-  const char *getSwellClass();
+  const char *getSwellClass() const;
+  Context *context() const { return m_ctx; }
   HWND nativeHandle() const { return m_hwnd.get(); }
+  ImGuiViewport *viewport() const { return m_viewport; }
 
-private:
-  struct WindowDeleter { void operator()(HWND); };
-
-  static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
+protected:
+  static constexpr const auto *CLASS_NAME { TEXT("reaper_imgui_context") };
   static int translateAccel(MSG *msg, accelerator_register_t *accel);
-  static int hwndInfo(HWND, INT_PTR type);
 
   void createSwellDialog();
-  void installHooks();
+  void commonShow();
+
+  static void platformInstall();
+  void uploadFontTex();
   std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM);
 
+  ImGuiViewport *m_viewport;
   Context *m_ctx;
+
+  struct WindowDeleter { void operator()(HWND); };
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
+
+  struct Impl;
+  std::unique_ptr<Impl> m_impl;
+
+private:
+  static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
+  static int hwndInfo(HWND, INT_PTR type);
+
+  void installHooks();
+  HWND parentHandle();
+  void mouseDown(unsigned int msg);
+  void mouseUp(unsigned int msg);
+
+  float m_previousScale {};
+  int m_fontTexVersion {};
 
   accelerator_register_t m_accel { &translateAccel, true, this };
   PluginRegister m_accelReg { "accelerator", &m_accel };
   std::shared_ptr<PluginRegister> m_hwndInfo;
-
-  struct Impl;
-  std::unique_ptr<Impl> m_impl;
 };
 
 #endif

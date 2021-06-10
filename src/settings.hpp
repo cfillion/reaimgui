@@ -28,18 +28,10 @@
 
 class Settings {
 public:
-  static constexpr int DEFAULT_POS { static_cast<int>(0x80000000) };
-
-  Settings(const char *name);
-  void install();
-  void load();
+  Settings(const char *str_id);
+  // void install();
+  // void load();
   void update();
-
-  RECT initialRect(float scale = 1.f) const;
-
-  std::string title;
-  struct { int x; int y; } pos, size;
-  int dock;
 
 private:
   std::string m_filename;

@@ -46,12 +46,12 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(Splash_GetWnd), // v4.7
 
     IMPORT(AttachWindowTopmostButton),
+    IMPORT(DetachWindowTopmostButton),
     IMPORT(Dock_UpdateDockID),
     IMPORT(DockIsChildOfDock),
     IMPORT(DockWindowActivate),
     IMPORT(DockWindowAddEx),
     IMPORT(DockWindowRemove),
-    IMPORT(EnsureNotCompletelyOffscreen),
     IMPORT(GetAppVersion),
     IMPORT(GetColorThemeStruct),
     IMPORT(GetMainHwnd),

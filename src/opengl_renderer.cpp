@@ -75,12 +75,16 @@ enum Textures  { FontTex };
 enum Locations { ProjMtxUniLoc, TexUniLoc,
                  VtxColorAttrLoc, VtxPosAttrLoc, VtxUVAttrLoc };
 
-OpenGLRenderer::OpenGLRenderer()
+void OpenGLRenderer::install()
 {
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendRendererName = "reaper_imgui_opengl3";
   io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset; // glDrawElementsBaseVertex
+  io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+}
 
+OpenGLRenderer::OpenGLRenderer()
+{
   glGenBuffers(m_buffers.size(), m_buffers.data());
   glGenTextures(m_textures.size(), m_textures.data());
 
@@ -148,7 +152,6 @@ void OpenGLRenderer::uploadFontTex()
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
   io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(m_textures[FontTex]));
-  io.Fonts->ClearTexData();
 }
 
 OpenGLRenderer::~OpenGLRenderer()
@@ -159,17 +162,24 @@ OpenGLRenderer::~OpenGLRenderer()
   glDeleteVertexArrays(1, &m_vbo);
 }
 
-void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor, const bool flip)
+void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
 {
+  ImDrawData *drawData { viewport->DrawData };
+
+  // this is not done by Dear ImGui at this moment, but might be in the future
+  drawData->FramebufferScale = { viewport->DpiScale, viewport->DpiScale };
+
   const int fbWidth  { static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x) },
             fbHeight { static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y) };
 
   if(fbWidth <= 0 || fbHeight <= 0)
-    return; // avoid rendering when minimized
+    return;
 
-  glDisable(GL_SCISSOR_TEST);
-  clearColor.apply(glClearColor);
-  glClear(GL_COLOR_BUFFER_BIT);
+  if(!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) {
+    glClearColor(0.f, 0.f, 0.f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT);
+  }
+
   glEnable(GL_SCISSOR_TEST);
 
   glViewport(0, 0, fbWidth, fbHeight);
@@ -236,6 +246,6 @@ void OpenGLRenderer::draw(ImDrawData *drawData, const Color &clearColor, const b
     }
   }
 
-  // allow glClear in the backend to modify the whole framebuffer
+  // allow glClear to modify the whole framebuffer
   glDisable(GL_SCISSOR_TEST);
 }

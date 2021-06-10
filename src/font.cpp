@@ -17,8 +17,10 @@
 
 #include "font.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
 
 Font::Font(const char *family, const int size, const int flags)
@@ -32,7 +34,7 @@ Font::Font(const char *family, const int size, const int flags)
   }
 }
 
-ImFont *Font::load() try
+ImFont *Font::load(ImFontAtlas *atlas, const float scale) try
 {
   ImFontConfig cfg;
   // light hinting solves uneven glyph height on macOS
@@ -43,17 +45,15 @@ ImFont *Font::load() try
     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
   cfg.FontNo = m_index;
 
-  ImGuiIO &io { ImGui::GetIO() };
-  const float scale { io.DisplayFramebufferScale.x };
   const int scaledSize { static_cast<int>(m_size * scale) };
 
   ImFont *font;
   if(const std::string *path { std::get_if<std::string>(&m_data) })
-    font = io.Fonts->AddFontFromFileTTF(path->c_str(), scaledSize, &cfg);
+    font = atlas->AddFontFromFileTTF(path->c_str(), scaledSize, &cfg);
   else {
     cfg.FontDataOwnedByAtlas = false;
     auto &data { std::get<std::vector<unsigned char>>(m_data) };
-    font = io.Fonts->AddFontFromMemoryTTF(data.data(), data.size(), scaledSize, &cfg);
+    font = atlas->AddFontFromMemoryTTF(data.data(), data.size(), scaledSize, &cfg);
   }
 
   font->Scale = 1.f / scale;
@@ -66,62 +66,132 @@ catch(const imgui_error &)
 }
 
 FontList::FontList()
-  : m_loaded { false }
+  : m_rebuild { false }, m_version { 0 }
 {
+}
+
+FontList::~FontList()
+{
+  for(auto &pair : m_atlases)
+    pair.second->Locked = false;
 }
 
 void FontList::add(Font *font)
 {
-  for(const FontAttachment &attachment : m_fonts) {
-    if(attachment.descriptor == font)
-      return; // the font was already added
-  }
+  if(std::find(m_fonts.begin(), m_fonts.end(), font) != m_fonts.end())
+    return; // the font was already attached
 
-  m_fonts.push_back({ font });
-  m_loaded = false;
+  m_fonts.push_back(font);
+  m_rebuild = !m_atlases.empty(); // don't rebuild before the first frame
 }
 
 void FontList::keepAliveAll()
 {
-  for(const FontAttachment &attachment : m_fonts)
-    attachment.descriptor->keepAlive();
+  for(Font *font : m_fonts)
+    font->keepAlive();
 }
 
-void FontList::loadAll()
+void FontList::update()
+{
+  if(m_atlases.empty())
+    setScale(ImGui::GetPlatformIO().Monitors[0].DpiScale);
+
+  if(m_rebuild) {
+    for(const auto &pair : m_atlases)
+      build(pair.first);
+    m_rebuild = false;
+    ++m_version; // invalidate the font textures
+  }
+}
+
+int FontList::setScale(const float scale)
 {
   ImGuiIO &io { ImGui::GetIO() };
 
+  std::unique_ptr<ImFontAtlas> &atlas { m_atlases[scale] };
+  if(!atlas)
+    atlas.reset(new ImFontAtlas);
+
+  const bool atlasChanged { atlas.get() != io.Fonts };
+  io.Fonts = atlas.get();
+
+  if(!atlas->IsBuilt())
+    build(scale);
+
+  if(atlasChanged)
+    migrateActiveFonts();
+
+  return m_version;
+}
+
+void FontList::build(const float scale)
+{
+  auto &atlas { m_atlases.at(scale) }; // don't insert
+  atlas->ClearFonts();
+
   ImFontConfig cfg;
-  cfg.SizePixels = 13.f * io.DisplayFramebufferScale.x;
-  ImFont *defFont { io.Fonts->AddFontDefault(&cfg) };
-  defFont->Scale = 1.f / io.DisplayFramebufferScale.x;
+  cfg.SizePixels = 13.f * scale;
+  ImFont *defFont { atlas->AddFontDefault(&cfg) };
+  defFont->Scale = 1.f / scale;
 
-  for(FontAttachment &attachment : m_fonts)
-    attachment.instance = attachment.descriptor->load();
+  for(Font *font : m_fonts)
+    font->load(atlas.get(), scale);
 
-  m_loaded = true;
+  atlas->Flags |= ImFontAtlasFlags_NoMouseCursors;
+  atlas->Build();
+  atlas->ClearInputData();
+}
+
+void FontList::migrateActiveFonts()
+{
+  if(ImFont *currentFont { ImGui::GetFont() })
+    ImGui::SetCurrentFont(toCurrentAtlas(currentFont));
+
+  auto &fontStack { ImGui::GetCurrentContext()->FontStack };
+  for(int i {}; i < fontStack.Size; ++i)
+    fontStack[i] = toCurrentAtlas(fontStack[i]);
 }
 
 Font *FontList::get(ImFont *instance) const
 {
-  for(const FontAttachment &attachment : m_fonts) {
-    if(attachment.instance == instance)
-      return attachment.descriptor;
+  const ImFontAtlas *atlas { ImGui::GetIO().Fonts };
+  for(int i { 1 }; i < atlas->Fonts.Size; ++i) {
+    assert(static_cast<size_t>(i) <= m_fonts.size());
+
+    if(atlas->Fonts[i] == instance)
+      return m_fonts[i - 1];
   }
-  return nullptr; // not found, it's probably the default font
+  return nullptr; // default font
 }
 
-ImFont *FontList::instanceOf(Font *descriptor) const
+ImFont *FontList::instanceOf(Font *font) const
 {
-  if(!descriptor)
+  if(!font)
     return nullptr; // default font
 
-  for(const FontAttachment &attachment : m_fonts) {
-    if(attachment.descriptor == descriptor) {
-      assert(attachment.instance && "attached font was not loaded");
-      return attachment.instance;
-    }
+  const auto it { std::find(m_fonts.begin(), m_fonts.end(), font) };
+  if(it == m_fonts.end())
+    throw reascript_error { "font is not attached to the context (did you call AttachFont?)" };
+
+  const auto index { std::distance(m_fonts.begin(), it) + 1 };
+  const ImFontAtlas *atlas { ImGui::GetIO().Fonts };
+  assert(index < atlas->Fonts.Size);
+  return atlas->Fonts[index];
+}
+
+ImFont *FontList::toCurrentAtlas(ImFont *oldInstance) const
+{
+  const ImFontAtlas *newAtlas { ImGui::GetIO().Fonts },
+                    *oldAtlas { oldInstance->ContainerAtlas };
+
+  if(newAtlas == oldAtlas)
+    return oldInstance;
+
+  const int size { std::min(oldAtlas->Fonts.Size, newAtlas->Fonts.Size) };
+  for(int i { 0 }; i < size; ++i) {
+    if(oldAtlas->Fonts[i] == oldInstance)
+      return newAtlas->Fonts[i];
   }
 
-  throw reascript_error { "font is not attached to the context (did you call AttachFont?)" };
+  return ImGui::GetDefaultFont();
 }

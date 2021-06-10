@@ -18,9 +18,6 @@
 #ifndef REAIMGUI_CONTEXT_HPP
 #define REAIMGUI_CONTEXT_HPP
 
-#include "color.hpp"
-#include "font.hpp"
-#include "optional.hpp"
 #include "resource.hpp"
 #include "settings.hpp"
 
@@ -36,12 +33,13 @@
 #  include <swell/swell-types.h>
 #endif
 
+class FontList;
 class Window;
 struct ImGuiContext;
+struct ImGuiViewport;
 
 enum ConfigFlags {
   ReaImGuiConfigFlags_NoSavedSettings = 1<<20,
-  ReaImGuiConfigFlags_NoRestoreSize   = 1<<21,
 };
 
 constexpr const char *REAIMGUI_PAYLOAD_TYPE_FILES { "_FILES" };
@@ -51,36 +49,28 @@ public:
   static constexpr const char *api_type_name { "ImGui_Context" };
   static Context *current();
 
-  Context(const Settings &, int configFlags = 0);
+  Context(const char *name, int configFlags = ImGuiConfigFlags_None);
   ~Context();
 
-  bool isCloseRequested() const { return m_closeReq; }
-  void setCloseRequested(bool req = true) { m_closeReq = req; }
-
-  const Color &clearColor() const { return m_clearColor; }
-  void setClearColor(const Color &col) { m_clearColor = col; }
-
   void setCurrent();
-  void setDockNextFrame(int);
-  void invalidateTextures();
+  bool inFrame() const { return m_inFrame; }
   void enterFrame();
 
-  void mouseDown(unsigned int msg);
-  void mouseUp(unsigned int msg);
-  void mouseWheel(unsigned int msg, short delta);
+  void mouseInput(int button, bool down);
+  bool anyMouseDown() const;
+  void mouseWheel(bool horizontal, short delta);
   void keyInput(uint8_t key, bool down);
   void charInput(ImWchar);
   void beginDrag(std::vector<std::string> &&);
   void beginDrag(HDROP);
   void endDrag(bool drop);
   void clearFocus();
-  void markSettingsDirty();
+  // void markSettingsDirty();
 
   ImGuiIO &IO();
-  FontList &fonts() { return m_fonts; }
-  Settings &settings() { return m_settings; }
+  FontList *fonts() { return m_fonts.get(); }
+  // Settings &settings() { return m_settings; }
   HCURSOR cursor() const { return m_cursor; }
-  Window *window() const { return m_window.get(); }
   ImGuiContext *imgui() const { return m_imgui.get(); }
   const auto &draggedFiles() const { return m_draggedFiles; }
 
@@ -98,25 +88,23 @@ private:
   void updateMousePos();
   void updateKeyMods();
   void updateDragDrop();
+  void updateFocus();
 
-  void uploadFonts();
-
-  bool anyMouseDown() const;
+  ImGuiViewport *viewportUnder(POINT) const;
+  ImGuiViewport *focusedViewport(bool *hasOwnedViewport = nullptr) const;
   void dragSources();
 
-  bool m_inFrame, m_closeReq;
+  bool m_inFrame;
   int m_dragState;
   HCURSOR m_cursor;
-  FontList m_fonts;
-  Color m_clearColor;
-  Settings m_settings;
-  std::optional<int> m_setDockNextFrame;
   std::array<uint8_t, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
   std::vector<std::string> m_draggedFiles;
+  Settings m_settings;
 
-  std::unique_ptr<ImGuiContext, void(*)(ImGuiContext*)> m_imgui;
-  std::unique_ptr<Window> m_window;
+  struct ContextDeleter { void operator()(ImGuiContext *); };
+  std::unique_ptr<ImGuiContext, ContextDeleter> m_imgui;
+  std::unique_ptr<FontList> m_fonts;
 };
 
 #endif

@@ -64,26 +64,20 @@ misc    = {}
 app     = {}
 
 -- Hajime!
-local ctx
-reaper.defer(function()
-  ctx = r.ImGui_CreateContext('ImGui Demo', 590, 720)
-  demo.loop()
-end)
+local ctx = r.ImGui_CreateContext('ReaImGui Demo')
 
 function demo.loop()
-  if r.ImGui_IsCloseRequested(ctx) then
-    r.ImGui_DestroyContext(ctx)
-    return
-  end
+  demo.open = demo.ShowDemoWindow()
 
   if demo.open then
-    demo.open = demo.ShowDemoWindow()
+    r.defer(demo.loop)
   else
-    r.ImGui_Text(ctx, 'Bye!')
+    r.ImGui_DestroyContext(ctx)
   end
 
-  r.defer(demo.loop)
 end
+
+reaper.defer(demo.loop)
 
 -------------------------------------------------------------------------------
 -- [SECTION] Forward Declarations, Helpers
@@ -226,14 +220,6 @@ function demo.ShowDemoWindow()
   if demo.no_bring_to_front then window_flags = window_flags | r.ImGui_WindowFlags_NoBringToFrontOnFocus() end
   if demo.no_close          then open = nil end -- Don't pass our bool* to Begin
 
-  if r.ImGui_BeginPopupContextVoid(ctx, 'dock') then
-    local dock = r.ImGui_GetDock(ctx)
-    if r.ImGui_MenuItem(ctx, 'Duck in docker', nil, dock & 1) then
-      r.ImGui_SetDock(ctx, dock ~ 1)
-    end
-    r.ImGui_EndPopup(ctx)
-  end
-
   -- We specify a default position/size in case there's no data in the .ini file.
   -- We only do it to make the demo applications a little more welcoming, but typically this isn't required.
   local main_viewport = r.ImGui_GetMainViewport(ctx)
@@ -366,13 +352,13 @@ function demo.ShowDemoWindow()
       -- r.ImGui_SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
       -- r.ImGui_Text(ctx, "Also see Style->Rendering for rendering options.")
 
-      local dock = r.ImGui_GetDock(ctx)
-      local dock_index = dock >> 1
-      rv,dock = r.ImGui_CheckboxFlags(ctx, 'Dock in REAPER docker:', dock, 1)
-      if rv then r.ImGui_SetDock(ctx, dock) end
-      r.ImGui_SameLine(ctx)
-      rv,dock_index = r.ImGui_InputInt(ctx, '##docker_index', dock_index, 1)
-      if r.ImGui_IsItemDeactivatedAfterEdit(ctx) then r.ImGui_SetDock(ctx, 1 | (dock_index << 1)) end
+      -- local dock = r.ImGui_GetDock(ctx)
+      -- local dock_index = dock >> 1
+      -- rv,dock = r.ImGui_CheckboxFlags(ctx, 'Dock in REAPER docker:', dock, 1)
+      -- if rv then r.ImGui_SetDock(ctx, dock) end
+      -- r.ImGui_SameLine(ctx)
+      -- rv,dock_index = r.ImGui_InputInt(ctx, '##docker_index', dock_index, 1)
+      -- if r.ImGui_IsItemDeactivatedAfterEdit(ctx) then r.ImGui_SetDock(ctx, 1 | (dock_index << 1)) end
 
       r.ImGui_SetConfigFlags(ctx, config.flags)
       r.ImGui_TreePop(ctx)

@@ -21,45 +21,71 @@
 #include "context.hpp"
 #include "opengl_renderer.hpp"
 
-#include <WDL/wdltypes.h>
-#include <reaper_plugin_functions.h>
+#include <imgui/imgui_internal.h>
+#include <objc/runtime.h>
+#include <reaper_plugin_secrets.h>
 
 static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
-struct Window::Impl {
-  static void setImePosition(ImGuiViewport *, ImVec2);
+@interface SWELLWindowOverride : NSObject
+- (NSRect)constrainFrameRect:(NSRect)frameRect toScreen:(NSScreen *)screen;
+@end
 
+@implementation SWELLWindowOverride
+- (NSRect)constrainFrameRect:(NSRect)frameRect toScreen:(NSScreen *)screen
+{
+  // allow setPosition to move the window outside of the woring area
+  return frameRect;
+}
+@end
+
+static void subclassWindow(NSWindow *window)
+{
+  static Class subclass;
+
+  if(!subclass) {
+    unsigned int methodCount {};
+    Method *methods
+      { class_copyMethodList([SWELLWindowOverride class], &methodCount) };
+
+    subclass = objc_allocateClassPair([window class], "ReaImGui_SWELLWindow", 0);
+    for(unsigned int i {}; i < methodCount; ++i) {
+      Method method { methods[i] };
+      class_addMethod(subclass, method_getName(method),
+        method_getImplementation(method), method_getTypeEncoding(method));
+    }
+    objc_registerClassPair(subclass);
+
+    free(methods);
+  }
+
+  object_setClass(window, subclass);
+}
+
+struct Window::Impl {
   NSView *view;
   InputView *inputView;
-  ImDrawData *lastDrawData {};
   NSOpenGLContext *gl;
   OpenGLRenderer *renderer;
+  unsigned int defaultStyleMask, defaultLevel;
+  ImGuiViewportFlags previousFlags;
 };
 
-Window::Window(Context *ctx)
-  : m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
+Window::Window(ImGuiViewport *vp, Context *ctx)
+  : m_viewport { vp }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
   createSwellDialog();
   m_impl->view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
+  [m_impl->view setWantsBestResolutionOpenGLSurface:YES]; // retina
+  m_impl->inputView = [[InputView alloc] initWithWindow:this];
 
-  const Settings &settings { ctx->settings() };
-  if(settings.dock & 1)
-    setDock(settings.dock);
-  else {
-    const RECT &rect { settings.initialRect() };
-    NSWindow *window { [m_impl->view window] };
-
-    // the size must be set first to always get the desired position
-    [window setContentSize:NSMakeSize(rect.right - rect.left, rect.top - rect.bottom)];
-
-    // most scripts expect y=0 to be the top of the window
-    const NSRect &content { [window contentRectForFrameRect: [window frame]] };
-    const CGFloat titleBarHeight { [window frame].size.height - content.size.height };
-    [window setFrameTopLeftPoint:NSMakePoint(rect.left, rect.top + titleBarHeight)];
-
-    ShowWindow(m_hwnd.get(), SW_SHOW);
-  }
+  NSWindow *window { [m_impl->view window] };
+  subclassWindow(window);
+  m_impl->defaultStyleMask = [window styleMask];
+  m_impl->defaultLevel = [window level];
+  m_impl->previousFlags = ~m_viewport->Flags; // mark all as modified
+  // imgui calls update() before show(), it will apply the flags
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
@@ -72,35 +98,140 @@ Window::Window(Context *ctx)
   NSOpenGLPixelFormat *fmt { [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] };
   m_impl->gl = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
   if(!m_impl->gl)
-    throw reascript_error { "failed to initialize OpenGL 3.2 core context" };
-
-  [m_impl->view setWantsBestResolutionOpenGLSurface:YES]; // retina
-  [m_impl->gl setView:m_impl->view];
+    throw backend_error { "failed to initialize OpenGL 3.2 core context" };
 
   [m_impl->gl makeCurrentContext];
   m_impl->renderer = new OpenGLRenderer;
-  [m_impl->gl flushBuffer]; // avoid a quick flash of undefined pixels
   [NSOpenGLContext clearCurrentContext];
+}
 
-  m_impl->inputView = [[InputView alloc] initWithContext:ctx parent:m_impl->view];
-
+void Window::platformInstall()
+{
   // Temprarily enable repeat character input
   // WARNING: this is application-wide!
   NSUserDefaults *defaults { [NSUserDefaults standardUserDefaults] };
   [defaults registerDefaults:@{@"ApplePressAndHoldEnabled":@NO}];
 
-  ImGuiIO &io { ctx->IO() };
+  ImGuiIO &io { ImGui::GetIO() };
   io.ConfigMacOSXBehaviors = false; // don't swap Cmd/Ctrl, SWELl already does it
   io.BackendPlatformName = "reaper_imgui_cocoa";
-
-  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
-  pio.Platform_SetImeInputPos = &Impl::setImePosition;
 }
 
 Window::~Window()
 {
   [m_impl->gl makeCurrentContext];
   delete m_impl->renderer;
+}
+
+void Window::updateMonitors()
+{
+  // TODO
+  // if(!g_monitorsChanged)
+  //   return;
+
+  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  pio.Monitors.resize(0); // recycle allocated memory (don't use clear here!)
+
+  NSArray<NSScreen *> *screens { [NSScreen screens] };
+  const CGFloat mainHeight { screens[0].frame.size.height };
+
+  for(NSScreen *screen in screens) {
+    const NSRect frame { [screen frame] }, workFrame { [screen visibleFrame] };
+    ImGuiPlatformMonitor monitor;
+    monitor.MainPos.x  = frame.origin.x;
+    monitor.MainPos.y  = mainHeight - frame.origin.y - frame.size.height;
+    monitor.MainSize.x = frame.size.width;
+    monitor.MainSize.y = frame.size.height;
+    monitor.WorkPos.x  = workFrame.origin.x;
+    monitor.WorkPos.y  = mainHeight - workFrame.origin.y - workFrame.size.height;
+    monitor.WorkSize.x = workFrame.size.width;
+    monitor.WorkSize.y = workFrame.size.height;
+    monitor.DpiScale   = [screen backingScaleFactor];
+
+    pio.Monitors.push_back(monitor);
+  }
+}
+
+void Window::show()
+{
+  commonShow();
+  [m_impl->gl setView:m_impl->view];
+
+  if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing))
+    [[m_impl->view window] makeFirstResponder:m_impl->inputView];
+}
+
+void Window::setPosition(ImVec2 pos)
+{
+  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  NSWindow *window { [m_impl->view window] };
+  const NSRect &content { [window contentRectForFrameRect:[window frame]] };
+  const CGFloat titleBarHeight { [window frame].size.height - content.size.height };
+  pos.y = (pio.Monitors[0].MainSize.y - pos.y) + titleBarHeight;
+  [window setFrameTopLeftPoint:NSMakePoint(pos.x, pos.y)];
+}
+
+void Window::setSize(const ImVec2 size)
+{
+  // most scripts expect y=0 to be the top of the window
+  NSWindow *window { [m_impl->view window] };
+  [window setContentSize:NSMakeSize(size.x, size.y)];
+  setPosition(m_viewport->Pos); // preserve y position from the top
+  [m_impl->gl update];
+}
+
+void Window::update()
+{
+  const ImGuiViewportFlags diff { m_impl->previousFlags ^ m_viewport->Flags };
+  m_impl->previousFlags = m_viewport->Flags;
+
+  NSWindow *window { [m_impl->view window] };
+
+  if(diff & ImGuiViewportFlags_NoDecoration) {
+    if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration) {
+      DetachWindowTopmostButton(m_hwnd.get(), false);
+      [window setStyleMask:NSWindowStyleMaskBorderless];
+    }
+    else {
+      [window setStyleMask:m_impl->defaultStyleMask];
+      AttachWindowTopmostButton(m_hwnd.get());
+      // ask dear imgui to call setText again
+      static_cast<ImGuiViewportP *>(m_viewport)->LastNameHash = 0;
+    }
+  }
+
+  if(diff & ImGuiViewportFlags_TopMost) {
+    if(m_viewport->Flags & ImGuiViewportFlags_TopMost)
+      [window setLevel:NSStatusWindowLevel];
+    else
+      [window setLevel:m_impl->defaultLevel]; // SWELL uses 1 by default
+  }
+
+  if(diff & ImGuiViewportFlags_NoInputs) {
+    const bool transparent { !!(m_viewport->Flags & ImGuiViewportFlags_NoInputs) };
+    [window setIgnoresMouseEvents:transparent];
+  }
+}
+
+void Window::render(void *)
+{
+  [m_impl->gl makeCurrentContext];
+  m_impl->renderer->render(m_viewport);
+  [m_impl->gl flushBuffer];
+  [NSOpenGLContext clearCurrentContext];
+}
+
+float Window::scaleFactor() const
+{
+  return [[m_impl->view window] backingScaleFactor];
+}
+
+void Window::setImePosition(ImVec2 pos)
+{
+  pos.y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - pos.y;
+  pos.y -= ImGui::GetTextLineHeight();
+
+  [m_impl->inputView setImePosition:NSMakePoint(pos.x, pos.y)];
 }
 
 void Window::uploadFontTex()
@@ -110,32 +241,12 @@ void Window::uploadFontTex()
   [NSOpenGLContext clearCurrentContext];
 }
 
-void Window::beginFrame()
+ImVec2 Window::translatePosition(const float x, const float y, bool) const
 {
-  m_impl->lastDrawData = nullptr;
-}
-
-void Window::drawFrame(ImDrawData *drawData)
-{
-  m_impl->lastDrawData = drawData;
-  [m_impl->gl makeCurrentContext];
-  m_impl->renderer->draw(drawData, m_ctx->clearColor());
-  [m_impl->gl flushBuffer];
-  [NSOpenGLContext clearCurrentContext];
-}
-
-void Window::endFrame()
-{
-  // WM_ACTIVATE (wParam = WA_INACTIVE) is not fired when docked.
-  // InputView::resignFirstResponder handles change of focus within the docker's
-  // window, and isKeyWindow below handles the docker window itself losing focus.
-  if(![[m_impl->view window] isKeyWindow])
-    m_ctx->clearFocus();
-}
-
-float Window::scaleFactor() const
-{
-  return [[m_impl->view window] backingScaleFactor];
+  ImVec2 pos;
+  pos.x = x;
+  pos.y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - y;
+  return pos;
 }
 
 std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM)
@@ -144,8 +255,6 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
   case WM_PAINT: // update size if it changed while we were docked & inactive
   case WM_SIZE:
     [m_impl->gl update];
-    if(m_impl->lastDrawData)
-      drawFrame(m_impl->lastDrawData);
     break; // continue handling WM_SIZE in Window::proc
   }
 
@@ -162,10 +271,4 @@ int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
   }
 
   return Accel::NotOurWindow;
-}
-
-void Window::Impl::setImePosition(ImGuiViewport *, const ImVec2 pos)
-{
-  InputView *inputView { Context::current()->window()->m_impl->inputView };
-  [inputView setImePosition:NSMakePoint(pos.x, pos.y + ImGui::GetTextLineHeight())];
 }

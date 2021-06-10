@@ -20,17 +20,16 @@
 
 #include <AppKit/AppKit.h>
 
-class Context;
+class Window;
 
 @interface InputView : NSView<NSTextInputClient> {
 @private
   NSMutableAttributedString *m_markedText;
-  Context *m_context;
+  Window *m_window;
   NSPoint m_imePos;
 }
 
-- (instancetype)initWithContext:(Context *)context
-                         parent:(NSView *)parent;
+- (instancetype)initWithWindow:(Window *)window;
 - (void)setImePosition:(NSPoint)pos;
 
 - (BOOL)acceptsFirstResponder;

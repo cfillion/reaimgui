@@ -26,8 +26,9 @@
     using runtime_error::runtime_error;    \
   }
 
-DEFINE_EXCEPT(reascript_error);
+DEFINE_EXCEPT(backend_error);
 DEFINE_EXCEPT(imgui_error);
+DEFINE_EXCEPT(reascript_error);
 
 #undef DEFINE_EXCEPT
 

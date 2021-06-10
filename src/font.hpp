@@ -18,7 +18,9 @@
 #ifndef REAIMGUI_FONT_HPP
 #define REAIMGUI_FONT_HPP
 
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "resource.hpp"
@@ -33,6 +35,7 @@ enum FontFlags {
 };
 
 struct ImFont;
+struct ImFontAtlas;
 
 class Font : public Resource {
 public:
@@ -47,7 +50,7 @@ public:
     *SERIF      { "serif" };
 
   Font(const char *family, int size, int style);
-  ImFont *load();
+  ImFont *load(ImFontAtlas *, float scale);
 
 private:
   bool resolve(const char *family, int style);
@@ -59,20 +62,25 @@ private:
 class FontList {
 public:
   FontList();
-  void add(Font *);
-  bool isLoaded() const { return m_loaded; }
-  void invalidate() { m_loaded = false; }
-  void keepAliveAll();
-  void loadAll();
+  ~FontList();
 
+  void add(Font *);
+  void keepAliveAll();
+  void update();
+  int texVersion() const { return m_version; }
+  int setScale(float scale); // returns the current texture version
   Font *get(ImFont *) const;
   ImFont *instanceOf(Font *) const;
 
 private:
-  bool m_loaded;
+  void build(float scale);
+  void migrateActiveFonts();
+  ImFont *toCurrentAtlas(ImFont *) const;
 
-  struct FontAttachment { Font *descriptor; ImFont *instance; };
-  std::vector<FontAttachment> m_fonts;
+  std::vector<Font *> m_fonts;
+  std::unordered_map<float, std::unique_ptr<ImFontAtlas>> m_atlases;
+  bool m_rebuild;
+  int m_version;
 };
 
 #endif

@@ -20,8 +20,8 @@
 
 #include <array>
 
-class Color;
 struct ImDrawData;
+struct ImGuiViewport;
 
 class OpenGLRenderer {
 public:
@@ -29,11 +29,13 @@ public:
   static constexpr int MIN_MAJOR { 3 };
   static constexpr int MIN_MINOR { 2 };
 
+  static void install();
+
   OpenGLRenderer();
   ~OpenGLRenderer();
 
   void uploadFontTex();
-  void draw(ImDrawData *, const Color &clearColor, bool flip = false);
+  void render(ImGuiViewport *, bool flip = false);
 
 private:
   void initShaders();

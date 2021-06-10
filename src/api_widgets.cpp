@@ -17,6 +17,8 @@
 
 #include "api_helper.hpp"
 
+#include "color.hpp"
+
 DEFINE_API(void, Text, (ImGui_Context*,ctx)
 (const char*,text),
 "",

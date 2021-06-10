@@ -23,7 +23,6 @@
 #include "win32_unicode.hpp"
 
 #include <cassert>
-
 #include <GL/gl3w.h>
 #include <GL/wglext.h>
 #include <reaper_plugin_secrets.h>
@@ -39,14 +38,12 @@ static unsigned int xpScreenDpi()
   return dpi;
 }
 
-static unsigned int dpiForPoint(const POINT &point)
+static unsigned int dpiForMonitor(HMONITOR monitor)
 {
   // Windows 8.1+
   static DllImport<decltype(GetDpiForMonitor)>
     _GetDpiForMonitor
     { L"SHCore.dll", "GetDpiForMonitor" };
-
-  HMONITOR monitor { MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST) };
 
   if(_GetDpiForMonitor && monitor) {
     unsigned int dpiX, dpiY;
@@ -63,12 +60,12 @@ static unsigned int dpiForWindow(HWND window)
   static DllImport<decltype(GetDpiForWindow)>
     _GetDpiForWindow
     { L"User32.dll", "GetDpiForWindow" };
+
   if(_GetDpiForWindow)
     return _GetDpiForWindow(window);
   else {
-    RECT rect;
-    GetWindowRect(window, &rect);
-    return dpiForPoint({ rect.left, rect.top });
+    HMONITOR monitor { MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST) };
+    return dpiForMonitor(monitor);
   }
 }
 
@@ -77,28 +74,19 @@ static float scaleForDpi(const unsigned int dpi)
   return static_cast<float>(dpi) / USER_DEFAULT_SCREEN_DPI;
 }
 
-static RECT scaledWindowRect(const Settings &settings,
-  const DWORD style, const DWORD exStyle)
+static void styleFromFlags(ImGuiViewportFlags flags, DWORD *style, DWORD *exStyle)
 {
-  unsigned int dpi;
-  if(settings.pos.x == Settings::DEFAULT_POS ||
-      settings.pos.y == Settings::DEFAULT_POS)
-    dpi = dpiForWindow(Window::parentHandle());
-  else
-    dpi = dpiForPoint({ settings.pos.x, settings.pos.y });
+  *style = WS_POPUP; // fix AttachWindowTopmostButton when a titlebar is shown
+  *exStyle = WS_EX_ACCEPTFILES;
 
-  RECT rect { settings.initialRect(scaleForDpi(dpi)) };
+  if(!(flags & ImGuiViewportFlags_NoDecoration))
+    *style |= WS_OVERLAPPEDWINDOW;
 
-  // Windows 10 Anniversary Update (1607) and newer
-  static DllImport<decltype(AdjustWindowRectExForDpi)>
-    _AdjustWindowRectExForDpi
-    { L"User32.dll", "AdjustWindowRectExForDpi" };
-  if(_AdjustWindowRectExForDpi)
-    _AdjustWindowRectExForDpi(&rect, style, false, exStyle, dpi);
-  else
-    AdjustWindowRectEx(&rect, style, false, exStyle);
+  if(flags & ImGuiViewportFlags_NoTaskBarIcon)
+    *exStyle |= WS_EX_TOOLWINDOW;
 
-  return rect;
+  if(flags & ImGuiViewportFlags_TopMost)
+    *exStyle |= WS_EX_TOPMOST;
 }
 
 struct Window::Impl {
@@ -109,12 +97,14 @@ struct Window::Impl {
 
   void initPixelFormat(HWND);
   void initGL(HWND);
+  RECT scaledWindowRect(ImVec2 pos, ImVec2 size);
 
   HDC dc;
   HGLRC gl;
-  float scale;
+  unsigned int dpi;
   OpenGLRenderer *renderer;
   DropTarget dropTarget;
+  DWORD style, exStyle;
 };
 
 Window::Impl::WindowClass::WindowClass()
@@ -132,49 +122,86 @@ Window::Impl::WindowClass::~WindowClass()
   UnregisterClass(CLASS_NAME, Window::s_instance);
 }
 
-Window::Window(Context *ctx)
-  : m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
+void Window::platformInstall()
+{
+  ImGuiIO &io { ImGui::GetIO() };
+  io.BackendPlatformName = "reaper_imgui_win32";
+}
+
+static int CALLBACK enumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM)
+{
+  MONITORINFO info{};
+  info.cbSize = sizeof(MONITORINFO);
+  if(!GetMonitorInfo(monitor, &info))
+    return true;
+
+  ImGuiPlatformMonitor imguiMonitor;
+  imguiMonitor.MainPos.x  = info.rcMonitor.left;
+  imguiMonitor.MainPos.y  = info.rcMonitor.top;
+  imguiMonitor.MainSize.x = info.rcMonitor.right - info.rcMonitor.left;
+  imguiMonitor.MainSize.y = info.rcMonitor.bottom - info.rcMonitor.top;
+  imguiMonitor.WorkPos.x  = info.rcWork.left;
+  imguiMonitor.WorkPos.y  = info.rcWork.top;
+  imguiMonitor.WorkSize.x = info.rcWork.right - info.rcWork.left;
+  imguiMonitor.WorkSize.y = info.rcWork.bottom - info.rcWork.top;
+  imguiMonitor.DpiScale   = scaleForDpi(dpiForMonitor(monitor));
+
+  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  if(info.dwFlags & MONITORINFOF_PRIMARY)
+    pio.Monitors.push_front(imguiMonitor);
+  else
+    pio.Monitors.push_back(imguiMonitor);
+
+  return true;
+}
+
+void Window::updateMonitors()
+{
+  ImGui::GetPlatformIO().Monitors.resize(0);
+  EnumDisplayMonitors(nullptr, nullptr, enumMonitors, 0);
+}
+
+Window::Window(ImGuiViewport *viewport, Context *ctx)
+  : m_viewport { viewport }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
 {
   static Impl::WindowClass windowClass;
 
-  // WS_POPUP allows AttachWindowTopmostButton to work
-  constexpr DWORD style   { WS_OVERLAPPEDWINDOW | WS_POPUP };
-  // WS_EX_DLGMODALFRAME removes the default icon
-  constexpr DWORD exStyle { WS_EX_DLGMODALFRAME | WS_EX_ACCEPTFILES };
+  styleFromFlags(viewport->Flags, &m_impl->style, &m_impl->exStyle);
 
-  const Settings &settings { m_ctx->settings() };
-  const RECT rect { scaledWindowRect(settings, style, exStyle) };
+  // Trick remove the default icon during construction, unset in show()
+  DWORD exStyle { m_impl->exStyle };
+  if(!(viewport->Flags & ImGuiViewportFlags_NoDecoration))
+    exStyle |= WS_EX_DLGMODALFRAME;
 
-  CreateWindowEx(exStyle, CLASS_NAME, widen(settings.title).c_str(), style,
-    rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+  CreateWindowEx(exStyle, CLASS_NAME, L"", m_impl->style,
+    CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
     parentHandle(), nullptr, s_instance, this);
   assert(m_hwnd && "CreateWindow failed");
 
-  m_impl->dc = GetDC(m_hwnd.get());
-  m_impl->scale = scaleForDpi(dpiForWindow(m_hwnd.get()));
+  m_impl->dpi = dpiForWindow(m_hwnd.get());
+  m_viewport->DpiScale = scaleForDpi(m_impl->dpi);
+  const RECT &rect { m_impl->scaledWindowRect(viewport->Pos, viewport->Size) };
+  SetWindowPos(m_hwnd.get(), nullptr,  rect.left, rect.top,
+    rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER);
 
+  m_impl->dc = GetDC(m_hwnd.get());
   m_impl->initPixelFormat(m_hwnd.get());
   m_impl->initGL(m_hwnd.get());
   m_impl->renderer = new OpenGLRenderer;
   wglMakeCurrent(m_impl->dc, nullptr);
 
-  ImGuiIO &io { ctx->IO() };
-  io.BackendPlatformName = "reaper_imgui_win32";
-  io.ImeWindowHandle = m_hwnd.get();
-
-  if(settings.dock & 1)
-    setDock(settings.dock);
-  else {
-    AttachWindowTopmostButton(m_hwnd.get());
-    ShowWindow(m_hwnd.get(), SW_SHOW); // after adding the topmost button
-  }
-
-  // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
-  // Unsetting it after the window is visible disables the border (+ no icon)
-  SetWindowLongPtr(m_hwnd.get(), GWL_EXSTYLE, exStyle & ~WS_EX_DLGMODALFRAME);
-
   m_impl->dropTarget.setContext(ctx);
   RegisterDragDrop(m_hwnd.get(), &m_impl->dropTarget);
+}
+
+Window::~Window()
+{
+  RevokeDragDrop(m_hwnd.get());
+
+  wglMakeCurrent(m_impl->dc, m_impl->gl);
+  delete m_impl->renderer;
+  wglDeleteContext(m_impl->gl);
+  ReleaseDC(m_hwnd.get(), m_impl->dc);
 }
 
 void Window::Impl::initPixelFormat(HWND hwnd)
@@ -188,7 +215,7 @@ void Window::Impl::initPixelFormat(HWND hwnd)
 
   if(!SetPixelFormat(dc, ChoosePixelFormat(dc, &pfd), &pfd)) {
     ReleaseDC(hwnd, dc);
-    throw reascript_error { "failed to set a suitable pixel format" };
+    throw backend_error { "failed to set a suitable pixel format" };
   }
 }
 
@@ -217,18 +244,126 @@ void Window::Impl::initGL(HWND hwnd)
   if(gl3wInit() || !gl3wIsSupported(OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR)) {
     wglDeleteContext(gl);
     ReleaseDC(hwnd, dc);
-    throw reascript_error { "failed to initialize OpenGL 3.2 or newer" };
+    throw backend_error { "failed to initialize OpenGL 3.2 or newer" };
   }
 }
 
-Window::~Window()
+RECT Window::Impl::scaledWindowRect(const ImVec2 pos, const ImVec2 size)
 {
-  RevokeDragDrop(m_hwnd.get());
+  const float scale { scaleForDpi(dpi) };
 
+  RECT rect;
+  rect.left = pos.x;
+  rect.top  = pos.y;
+  rect.right  = rect.left + (size.x * scale);
+  rect.bottom = rect.top  + (size.y * scale);
+
+  // Windows 10 Anniversary Update (1607) and newer
+  static DllImport<decltype(AdjustWindowRectExForDpi)>
+    _AdjustWindowRectExForDpi
+    { L"User32.dll", "AdjustWindowRectExForDpi" };
+
+  if(_AdjustWindowRectExForDpi)
+    _AdjustWindowRectExForDpi(&rect, style, false, exStyle, dpi);
+  else
+    AdjustWindowRectEx(&rect, style, false, exStyle);
+
+  return rect;
+}
+
+void Window::show()
+{
+  if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
+    AttachWindowTopmostButton(m_hwnd.get());
+
+  commonShow();
+
+  // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
+  // Unsetting it after the window is visible disables the border (+ no icon)
+  const auto exStyle { GetWindowLong(m_hwnd.get(), GWL_EXSTYLE) };
+  if(exStyle & WS_EX_DLGMODALFRAME)
+    SetWindowLongPtr(m_hwnd.get(), GWL_EXSTYLE, m_impl->exStyle);
+}
+
+void Window::setPosition(const ImVec2 pos)
+{
+  const RECT &rect { m_impl->scaledWindowRect(pos, m_viewport->Size) };
+  SetWindowPos(m_hwnd.get(), nullptr,
+    rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+    SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
+}
+
+void Window::setSize(ImVec2 size)
+{
+  const RECT &rect { m_impl->scaledWindowRect(m_viewport->Pos, size) };
+  SetWindowPos(m_hwnd.get(), nullptr,
+    0, 0, rect.right - rect.left, rect.bottom - rect.top,
+    SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
+}
+
+void Window::setTitle(const char *title)
+{
+  SetWindowText(m_hwnd.get(), widen(title).c_str());
+}
+
+void Window::update()
+{
+  const DWORD prevStyle { m_impl->style }, prevExStyle { m_impl->exStyle };
+  styleFromFlags(m_viewport->Flags, &m_impl->style, &m_impl->exStyle);
+
+  if(prevStyle != m_impl->style || prevExStyle != m_impl->exStyle) {
+    SetWindowLong(m_hwnd.get(), GWL_STYLE, m_impl->style);
+    SetWindowLong(m_hwnd.get(), GWL_EXSTYLE, m_impl->exStyle);
+
+    if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration)
+      DetachWindowTopmostButton(m_hwnd.get(), false);
+    else
+      AttachWindowTopmostButton(m_hwnd.get());
+
+
+    HWND insertAfter;
+    unsigned int flags { SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW };
+    if((prevExStyle & m_impl->exStyle) ^ WS_EX_TOPMOST) {
+      if(m_impl->exStyle & WS_EX_TOPMOST)
+        insertAfter = HWND_TOPMOST;
+      else
+        insertAfter = HWND_NOTOPMOST;
+    }
+    else {
+      insertAfter = nullptr;
+      flags |= SWP_NOZORDER;
+    }
+
+    const RECT rect { m_impl->scaledWindowRect(m_viewport->Pos, m_viewport->Size) };
+    SetWindowPos(m_hwnd.get(), insertAfter, rect.left, rect.top,
+      rect.right - rect.left, rect.bottom - rect.top, flags);
+    m_viewport->PlatformRequestMove = m_viewport->PlatformRequestResize = true;
+  }
+}
+
+void Window::render(void *)
+{
   wglMakeCurrent(m_impl->dc, m_impl->gl);
-  delete m_impl->renderer;
-  wglDeleteContext(m_impl->gl);
-  ReleaseDC(m_hwnd.get(), m_impl->dc);
+  m_impl->renderer->render(m_viewport);
+  SwapBuffers(m_impl->dc);
+  wglMakeCurrent(nullptr, nullptr);
+}
+
+float Window::scaleFactor() const
+{
+  return m_viewport->DpiScale;
+}
+
+void Window::setImePosition(const ImVec2 pos)
+{
+  if(HIMC ime { ImmGetContext(m_hwnd.get()) }) {
+    COMPOSITIONFORM cf;
+    cf.ptCurrentPos.x = pos.x;
+    cf.ptCurrentPos.y = pos.y;
+    cf.dwStyle = CFS_FORCE_POSITION;
+    ImmSetCompositionWindow(ime, &cf);
+    ImmReleaseContext(m_hwnd.get(), ime);
+  }
 }
 
 void Window::uploadFontTex()
@@ -236,27 +371,6 @@ void Window::uploadFontTex()
   wglMakeCurrent(m_impl->dc, m_impl->gl);
   m_impl->renderer->uploadFontTex();
   wglMakeCurrent(nullptr, nullptr);
-}
-
-void Window::beginFrame()
-{
-}
-
-void Window::drawFrame(ImDrawData *drawData)
-{
-  wglMakeCurrent(m_impl->dc, m_impl->gl);
-  m_impl->renderer->draw(drawData, m_ctx->clearColor());
-  SwapBuffers(m_impl->dc);
-  wglMakeCurrent(nullptr, nullptr);
-}
-
-void Window::endFrame()
-{
-}
-
-float Window::scaleFactor() const
-{
-  return m_impl->scale;
 }
 
 std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM lParam)
@@ -269,17 +383,21 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
       { L"User32.dll", "EnableNonClientDpiScaling" };
     if(_EnableNonClientDpiScaling)
       _EnableNonClientDpiScaling(m_hwnd.get());
-    return std::nullopt;
+    break;
   }
   case WM_CHAR:
     m_ctx->charInput(wParam);
     return 0;
   case WM_DPICHANGED: {
-    m_impl->scale = scaleForDpi(LOWORD(wParam));
+    m_impl->dpi = LOWORD(wParam);
+    m_viewport->DpiScale = scaleForDpi(m_impl->dpi);
     const RECT *sugg { reinterpret_cast<RECT *>(lParam) };
     SetWindowPos(m_hwnd.get(), nullptr,
       sugg->left, sugg->top, sugg->right - sugg->left, sugg->bottom - sugg->top,
       SWP_NOACTIVATE | SWP_NOZORDER);
+
+    // PlatformRequestResize doesn't work here to tell ImGui to fetch the new size
+    m_viewport->Size = getSize();
     return 0;
   }
   case WM_GETDLGCODE:
@@ -294,6 +412,10 @@ std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wPar
     if(wParam < 256)
       m_ctx->keyInput(wParam, false);
     return 0;
+  case WM_NCHITTEST:
+    if(m_viewport->Flags & ImGuiViewportFlags_NoInputs)
+      return HTTRANSPARENT;
+    break;
   case WM_KILLFOCUS:
     m_ctx->clearFocus();
     return 0;

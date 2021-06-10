@@ -18,6 +18,7 @@
 #include "context.hpp"
 
 #include "font.hpp"
+#include "opengl_renderer.hpp"
 #include "window.hpp"
 
 #include <cassert>
@@ -60,11 +61,16 @@ Context *Context::current()
     return nullptr;
 }
 
-Context::Context(const Settings &settings, const int configFlags)
-  : m_inFrame { false }, m_closeReq { false },
-    m_dragState {}, m_cursor {}, m_settings { settings }, m_mouseDown {},
+static ImFontAtlas * const NO_DEFAULT_ATLAS
+  { reinterpret_cast<ImFontAtlas *>(-1) };
+
+Context::Context(const char *name, const int configFlags)
+  : m_inFrame { false },
+    m_dragState {}, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
-    m_imgui { ImGui::CreateContext(), &ImGui::DestroyContext }
+    m_settings { name },
+    m_imgui { ImGui::CreateContext(NO_DEFAULT_ATLAS) },
+    m_fonts { std::make_unique<FontList>() }
 {
   static const std::string logFn
     { std::string { GetResourcePath() } + WDL_DIRCHAR_STR "imgui_log.txt" };
@@ -74,23 +80,28 @@ Context::Context(const Settings &settings, const int configFlags)
   ImGuiIO &io { m_imgui->IO };
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
-  io.ConfigFlags = configFlags;
-  io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
+  io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
+  io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
+  io.ConfigFlags = configFlags | ImGuiConfigFlags_ViewportsEnable;
+  io.ConfigViewportsNoAutoMerge = true; // disable the main viewport
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
-  m_settings.install();
-  m_settings.load();
+  // m_settings.install();
+  // m_settings.load();
 
-  Window::updateKeyMap();
-  m_window = std::make_unique<Window>(this);
+  Window::install();
+  OpenGLRenderer::install();
+
+  ImGuiViewport *main { ImGui::GetMainViewport() };
+  main->PlatformHandle = GetMainHwnd();
 }
 
 Context::~Context()
 {
   setCurrent();
 
-  m_window->updateSettings();
+  // m_window->updateSettings();
 
   if(m_inFrame)
     endFrame(false);
@@ -98,14 +109,12 @@ Context::~Context()
 
 bool Context::heartbeat()
 {
-  if(m_closeReq)
-    m_closeReq = false;
-
   if(m_inFrame) {
-    if(endFrame(true))
-      keepAlive();
-    else
+    if(!endFrame(true))
       return false;
+
+    keepAlive();
+    m_fonts->keepAliveAll();
   }
 
   // Keep the frame alive for at least one full timer cycle to prevent contexts
@@ -123,35 +132,24 @@ void Context::setCurrent()
   ImGui::SetCurrentContext(m_imgui.get());
 }
 
-void Context::setDockNextFrame(const int dock)
-{
-  // Docking later, as this might recreate the rendering context and invalidate
-  // textures that are already used in the current frame.
-  m_setDockNextFrame = dock;
-}
-
 void Context::beginFrame()
 {
   assert(!m_inFrame);
 
   m_inFrame = true;
 
-  if(m_setDockNextFrame) {
-    m_window->setDock(*m_setDockNextFrame);
-    m_setDockNextFrame = std::nullopt;
-  }
+  Window::updateMonitors();
+  m_fonts->update(); // uses the monitor list
 
   updateFrameInfo();
   updateTheme();
   updateMouseDown();
   updateMousePos();
   updateKeyMods();
-  uploadFonts();
 
   m_settings.update();
 
   ImGui::NewFrame();
-  m_window->beginFrame();
 
   dragSources();
 }
@@ -166,21 +164,23 @@ void Context::enterFrame()
 
 bool Context::endFrame(const bool render) try
 {
+  m_inFrame = false;
+
   setCurrent();
 
-  // IsWindowVisible is false when docked and another tab is active
-  if(render && IsWindowVisible(m_window->nativeHandle())) {
+  if(render) {
     updateCursor();
     updateDragDrop();
     ImGui::Render();
-    m_window->drawFrame(ImGui::GetDrawData());
-    m_fonts.keepAliveAll();
   }
   else
     ImGui::EndFrame();
 
-  m_window->endFrame();
-  m_inFrame = false;
+  ImGui::UpdatePlatformWindows();
+  updateFocus();
+
+  if(render)
+    ImGui::RenderPlatformWindowsDefault();
 
   return true;
 }
@@ -189,8 +189,12 @@ catch(const imgui_error &e) {
   snprintf(message, sizeof(message), "ImGui assertion failed: %s\n", e.what());
   ShowConsoleMsg(message); // cannot use ReaScriptError unless called by a script
 
-  m_window->endFrame();
-  m_inFrame = false; // don't call endFrame again from the destructor
+  return false;
+}
+catch(const backend_error &e) {
+  char message[1024];
+  snprintf(message, sizeof(message), "ReaImGui error: %s\n", e.what());
+  ShowConsoleMsg(message);
 
   return false;
 }
@@ -199,19 +203,17 @@ void Context::updateFrameInfo()
 {
   ImGuiIO &io { m_imgui->IO };
 
-  const float scale { m_window->scaleFactor() };
-  if(scale != io.DisplayFramebufferScale.x)
-    m_fonts.invalidate();
-  io.DisplayFramebufferScale = { scale, scale };
+  ImGuiPlatformIO &pio { m_imgui->PlatformIO };
+  io.DisplaySize = pio.Monitors[0].MainSize;
 
-  RECT rect;
-  GetClientRect(m_window->nativeHandle(), &rect);
-  io.DisplaySize.x = rect.right - rect.left;
-  io.DisplaySize.y = rect.bottom - rect.top;
-#ifndef __APPLE__
-  io.DisplaySize.x /= scale;
-  io.DisplaySize.y /= scale;
-#endif
+//   RECT rect;
+//   GetClientRect(m_window->nativeHandle(), &rect);
+//   io.DisplaySize.x = rect.right - rect.left;
+//   io.DisplaySize.y = rect.bottom - rect.top;
+// #ifndef __APPLE__
+//   io.DisplaySize.x /= scale;
+//   io.DisplaySize.y /= scale;
+// #endif
 
   const auto now { decltype(m_lastFrame)::clock::now() };
   io.DeltaTime = std::chrono::duration<float> { now - m_lastFrame }.count();
@@ -261,57 +263,14 @@ bool Context::anyMouseDown() const
   return false;
 }
 
-void Context::mouseDown(const unsigned int msg)
+void Context::mouseInput(const int button, const bool down)
 {
-  size_t btn;
-
-  switch(msg) {
-  case WM_LBUTTONDOWN:
-    btn = ImGuiMouseButton_Left;
-    break;
-  case WM_MBUTTONDOWN:
-    btn = ImGuiMouseButton_Middle;
-    break;
-  case WM_RBUTTONDOWN:
-    btn = ImGuiMouseButton_Right;
-    break;
-  default:
-    return;
+  if(down)
+    m_mouseDown[button] = ButtonState_Down | ButtonState_DownUnread;
+  else {
+    // keep ButtonState_DownUnread set to catch clicks shorted than one frame
+    m_mouseDown[button] &= ~ButtonState_Down;
   }
-
-#ifndef __APPLE__
-  if(!anyMouseDown() && GetCapture() == nullptr)
-    SetCapture(m_window->nativeHandle());
-#endif
-
-  m_mouseDown[btn] = ButtonState_Down | ButtonState_DownUnread;
-}
-
-void Context::mouseUp(const unsigned int msg)
-{
-  size_t btn;
-
-  switch(msg) {
-  case WM_LBUTTONUP:
-    btn = ImGuiMouseButton_Left;
-    break;
-  case WM_MBUTTONUP:
-    btn = ImGuiMouseButton_Middle;
-    break;
-  case WM_RBUTTONUP:
-    btn = ImGuiMouseButton_Right;
-    break;
-  default:
-    return;
-  }
-
-  // keep ButtonState_DownUnread set to catch clicks shorted than one frame
-  m_mouseDown[btn] &= ~ButtonState_Down;
-
-#ifndef __APPLE__
-  if(!anyMouseDown() && GetCapture() == m_window->nativeHandle())
-    ReleaseCapture();
-#endif
 }
 
 void Context::updateMouseDown()
@@ -326,47 +285,67 @@ void Context::updateMouseDown()
   }
 }
 
-void Context::updateMousePos()
+ImGuiViewport *Context::viewportUnder(const POINT pos) const
 {
-  ImGuiIO &io { m_imgui->IO };
-  HWND windowHwnd { m_window->nativeHandle() };
-
-  if(io.WantSetMousePos) {
-    POINT p { static_cast<LONG>(io.MousePos.x),
-              static_cast<LONG>(io.MousePos.y) };
-#ifndef __APPLE__
-    p.x *= io.DisplayFramebufferScale.x;
-    p.y *= io.DisplayFramebufferScale.y;
+  HWND target;
+#ifdef __APPLE__
+  // Capturing is not used as macOS sends mouse up events from outside of the
+  // frame when the mouse down event occured within.
+  //
+  // MouseLastHoveredViewport won't be the main viewport because of our
+  // handling of MouseHoveredViewport in updateMousePos
+  if(anyMouseDown())
+    return m_imgui->MouseLastHoveredViewport;
+#else
+  if(HWND capture { GetCapture() })
+    target = capture;
 #endif
-    ClientToScreen(windowHwnd, &p);
-    SetCursorPos(p.x, p.y);
-    return;
-  }
-
-  POINT p;
-  GetCursorPos(&p);
-  const HWND targetHwnd { WindowFromPoint(p) };
-  ScreenToClient(windowHwnd, &p);
-#ifndef __APPLE__
-  p.x /= io.DisplayFramebufferScale.x;
-  p.y /= io.DisplayFramebufferScale.y;
-#endif
+  else
+    target = WindowFromPoint(pos);
 
 #ifdef __APPLE__
   // Our InputView overlays SWELL's NSView.
-  // Capturing is not used as macOS sends mouse up events from outside of the
-  // frame when the mouse down event occured within.
-  const bool over { IsChild(windowHwnd, targetHwnd) || anyMouseDown() };
-#else
-  const bool over { targetHwnd == windowHwnd || GetCapture() == windowHwnd };
+  target = GetParent(target);
 #endif
-  if(over && !(m_dragState & DragState_FakeClick))
-    io.MousePos = { static_cast<float>(p.x), static_cast<float>(p.y) };
-  else
-    io.MousePos = { -FLT_MAX, -FLT_MAX };
+
+  return ImGui::FindViewportByPlatformHandle(target);
 }
 
-void Context::mouseWheel(const unsigned int msg, const short delta)
+void Context::updateMousePos()
+{
+  ImGuiIO &io { m_imgui->IO };
+
+  if(io.WantSetMousePos) {
+    ImVec2 newPos { io.MousePos };
+    // convert to HiDPI on Windows, flip Y on macOS
+    if(ImGuiViewport *viewport { m_imgui->MouseLastHoveredViewport }) {
+      if(Window *window { static_cast<Window *>(viewport->PlatformUserData) })
+        newPos = window->translatePosition(newPos.x, newPos.y, true);
+    }
+    SetCursorPos(newPos.x, newPos.y);
+    return;
+  }
+  else if(m_dragState & DragState_FakeClick) {
+    io.MousePos = { -FLT_MAX, -FLT_MAX };
+    return;
+  }
+
+  POINT pos;
+  GetCursorPos(&pos);
+
+  io.MousePos = { -FLT_MAX, -FLT_MAX };
+  io.MouseHoveredViewport = 0;
+
+  if(ImGuiViewport *viewport { viewportUnder(pos) }) {
+    if(Window *window { static_cast<Window *>(viewport->PlatformUserData) }) {
+      io.MousePos = window->translatePosition(pos.x, pos.y);
+      assert(!(viewport->Flags & ImGuiViewportFlags_NoInputs));
+      io.MouseHoveredViewport = viewport->ID;
+    }
+  }
+}
+
+void Context::mouseWheel(const bool horizontal, const short delta)
 {
 #ifndef WHEEL_DELTA
   constexpr float WHEEL_DELTA {
@@ -379,7 +358,7 @@ void Context::mouseWheel(const unsigned int msg, const short delta)
 #endif
 
   ImGuiIO &io { m_imgui->IO };
-  float &wheel { msg == WM_MOUSEHWHEEL ? io.MouseWheelH : io.MouseWheel };
+  float &wheel { horizontal ? io.MouseWheelH : io.MouseWheel };
   wheel += static_cast<float>(delta) / static_cast<float>(WHEEL_DELTA);
 }
 
@@ -392,6 +371,8 @@ void Context::updateKeyMods()
   io.KeyShift = GetAsyncKeyState(VK_SHIFT)   & down;
   io.KeyAlt   = GetAsyncKeyState(VK_MENU)    & down;
   io.KeySuper = GetAsyncKeyState(VK_LWIN)    & down;
+
+  io.ConfigViewportsNoDecoration = !io.KeyShift; // TODO remove!
 }
 
 void Context::keyInput(const uint8_t key, const bool down)
@@ -483,41 +464,59 @@ void Context::endDrag(const bool drop)
   }
 }
 
+ImGuiViewport *Context::focusedViewport(bool *hasOwnedViewport) const
+{
+  // TODO: test using hasFocus docked instead of keyWindow (+ update comment)
+  //
+  // WM_ACTIVATE (wParam = WA_INACTIVE) is not fired when docked.
+  // InputView::resignFirstResponder handles change of focus within the docker's
+  // window, and isKeyWindow below handles the docker window itself losing focus.
+
+  if(hasOwnedViewport)
+    *hasOwnedViewport = false;
+
+  const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
+  for(int i {}; i < pio.Viewports.Size; ++i) {
+    ImGuiViewport *viewport { pio.Viewports[i] };
+    if(Window *window { static_cast<Window *>(viewport->PlatformUserData) }) {
+      if(hasOwnedViewport)
+        *hasOwnedViewport = true;
+
+      if(window->hasFocus())
+        return viewport;
+    }
+  }
+
+  return nullptr;
+}
+
+void Context::updateFocus()
+{
+  bool hasOwnedViewport;
+  if(!focusedViewport(&hasOwnedViewport) && hasOwnedViewport)
+    clearFocus();
+}
+
 void Context::clearFocus()
 {
-  if(m_imgui->ActiveId != 0) {
-    TempCurrent cur { this };
-    ImGui::ClearActiveID();
-  }
+  TempCurrent cur { this };
+
+  if(ImGui::GetTopMostPopupModal())
+    ImGui::ClearActiveID(); // don't close the current modal
+  else
+    ImGui::FocusWindow(nullptr); // also calls ClearActiveID
 
   memset(m_imgui->IO.KeysDown, 0, sizeof(m_imgui->IO.KeysDown));
 }
 
-void Context::markSettingsDirty()
-{
-  if(m_imgui->IO.ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings)
-    return;
-
-  TempCurrent cur { this };
-  ImGui::MarkIniSettingsDirty();
-}
-
-void Context::uploadFonts()
-{
-  if(m_fonts.isLoaded())
-    return;
-
-  ImGuiIO &io { m_imgui->IO };
-  io.Fonts->ClearFonts();
-  m_fonts.loadAll();
-  m_window->uploadFontTex();
-  io.Fonts->ClearInputData();
-}
-
-void Context::invalidateTextures()
-{
-  m_fonts.invalidate();
-}
+// void Context::markSettingsDirty()
+// {
+//   if(m_imgui->IO.ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings)
+//     return;
+//
+//   TempCurrent cur { this };
+//   ImGui::MarkIniSettingsDirty();
+// }
 
 void Context::updateTheme()
 {
@@ -529,12 +528,10 @@ void Context::updateTheme()
   if(static_cast<size_t>(themeSize) < sizeof(ColorTheme))
     return;
 
-  m_clearColor = Color::fromNative(theme->window_background);
-
   // TODO: Extract a few key colors from REAPER's theme, and compute nicely
   // readable colors for ImGui from them. See vendor/reaper_colortheme.h
   ImVec4 *colors { ImGui::GetStyle().Colors };
-  (void)colors;
+  (void)theme; (void)colors;
   // colors[ImGuiCol_Text]                  = Color::fromNative(0);
   // colors[ImGuiCol_TextDisabled]          = Color::fromNative(0);
   // colors[ImGuiCol_WindowBg]              = Color::fromNative(0); // Background of normal windows
@@ -587,4 +584,9 @@ void Context::updateTheme()
   // colors[ImGuiCol_NavHighlight]          = Color::fromNative(0); // Gamepad/keyboard: current highlighted item
   // colors[ImGuiCol_NavWindowingHighlight] = Color::fromNative(0); // Highlight window when using CTRL+TAB
   // colors[ImGuiCol_NavWindowingDimBg]     = Color::fromNative(0); // Darken/colorize entire screen behind the CTRL+TAB window list, when active
+}
+
+void Context::ContextDeleter::operator()(ImGuiContext *imgui)
+{
+  ImGui::DestroyContext(imgui);
 }

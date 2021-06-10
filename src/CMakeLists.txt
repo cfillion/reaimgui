@@ -53,6 +53,7 @@ if(WIN32)
   target_sources(${PROJECT_NAME} PRIVATE version.rc win32_font.cpp win32_window.cpp)
   target_compile_options(${PROJECT_NAME} PUBLIC /W3 /WX /wd4244 /wd4267 /wd4312 /wd4996 /wd5208)
   target_compile_definitions(${PROJECT_NAME} PUBLIC NOMINMAX UNICODE)
+  target_link_libraries(${PROJECT_NAME} Imm32)
 
   find_package(gl3w CONFIG REQUIRED)
   target_link_libraries(${PROJECT_NAME} unofficial::gl3w::gl3w)

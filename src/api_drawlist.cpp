@@ -17,6 +17,8 @@
 
 #include "api_helper.hpp"
 
+#include "color.hpp"
+#include "font.hpp"
 #include "resource_proxy.hpp"
 
 #include <reaper_plugin_secrets.h> // reaper_array
@@ -245,7 +247,7 @@ Default values: wrap_width = 0.0, cpu_fine_clip_rect_x = nil, cpu_fine_clip_rect
     cpu_fine_clip_rect_ptr = nullptr;
 
   Context *ctx;
-  draw_list->get(&ctx)->AddText(ctx->fonts().instanceOf(font), font_size,
+  draw_list->get(&ctx)->AddText(ctx->fonts()->instanceOf(font), font_size,
     pos, col_rgba, text, nullptr, wrap_width, cpu_fine_clip_rect_ptr);
 });
 

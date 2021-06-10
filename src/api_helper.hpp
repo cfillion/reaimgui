@@ -27,6 +27,7 @@
 #include <cstring> // strlen
 
 // user-facing aliases
+class Font;
 using ImGui_Context = Context;
 using ImGui_Font = Font;
 

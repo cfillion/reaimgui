@@ -170,17 +170,16 @@ static uint8_t virtualKeyCode(NSEvent *event)
 }
 
 @implementation InputView
-- (instancetype)initWithContext:(Context *)context
-                         parent:(NSView *)parent
+- (instancetype)initWithWindow:(Window *)window
 {
-  self = [super initWithFrame:parent.frame];
-  m_context = context;
+  NSView *parent { (__bridge NSView *)window->nativeHandle() };
+  self = [super initWithFrame:[parent frame]];
+  m_window = window;
 
   // Fill the window to receive mouse click events
-  self.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
-  parent.autoresizesSubviews = YES;
+  [self setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
+  [parent setAutoresizesSubviews:YES];
   [parent addSubview:self];
-  [[parent window] makeFirstResponder:self];
 
   [self registerForDraggedTypes:@[NSFilenamesPboardType]];
 
@@ -200,7 +199,7 @@ static uint8_t virtualKeyCode(NSEvent *event)
 
 - (BOOL)resignFirstResponder
 {
-  m_context->clearFocus();
+  m_window->context()->clearFocus();
   return YES;
 }
 
@@ -211,37 +210,37 @@ static uint8_t virtualKeyCode(NSEvent *event)
 
 - (void)mouseDown:(NSEvent *)event
 {
-  m_context->mouseDown(WM_LBUTTONDOWN);
+  m_window->context()->mouseInput(ImGuiMouseButton_Left, true);
 }
 
 - (void)mouseUp:(NSEvent *)event
 {
-  m_context->mouseUp(WM_LBUTTONUP);
+  m_window->context()->mouseInput(ImGuiMouseButton_Left, false);
 }
 
 - (void)rightMouseDown:(NSEvent *)event
 {
-  m_context->mouseDown(WM_RBUTTONDOWN);
+  m_window->context()->mouseInput(ImGuiMouseButton_Right, true);
 }
 
 - (void)rightMouseUp:(NSEvent *)event
 {
-  m_context->mouseUp(WM_RBUTTONUP);
+  m_window->context()->mouseInput(ImGuiMouseButton_Right, false);
 }
 
 - (void)otherMouseDown:(NSEvent *)event
 {
-  m_context->mouseDown(WM_MBUTTONDOWN);
+  m_window->context()->mouseInput(ImGuiMouseButton_Middle, true);
 }
 
 - (void)otherMouseUp:(NSEvent *)event
 {
-  m_context->mouseUp(WM_MBUTTONUP);
+  m_window->context()->mouseInput(ImGuiMouseButton_Middle, false);
 }
 
 - (const char *)getSwellClass
 {
-  return m_context->window()->getSwellClass();
+  return m_window->getSwellClass();
 }
 
 - (void)keyDown:(NSEvent *)event
@@ -249,12 +248,12 @@ static uint8_t virtualKeyCode(NSEvent *event)
   // Send key to the system input manager. It will reply by sending insertText.
   [self interpretKeyEvents:@[event]];
 
-  m_context->keyInput(virtualKeyCode(event), true);
+  m_window->context()->keyInput(virtualKeyCode(event), true);
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-  m_context->keyInput(virtualKeyCode(event), false);
+  m_window->context()->keyInput(virtualKeyCode(event), false);
 }
 
 - (void)flagsChanged:(NSEvent *)event
@@ -279,7 +278,7 @@ static uint8_t virtualKeyCode(NSEvent *event)
 
   for(const auto &modifier : modifiers) {
     if(modifier.keyCode == keyCode) {
-      m_context->keyInput(modifier.virtualKeyCode, modFlags & modifier.modFlag);
+      m_window->context()->keyInput(modifier.virtualKeyCode, modFlags & modifier.modFlag);
       return;
     }
   }
@@ -302,21 +301,21 @@ static uint8_t virtualKeyCode(NSEvent *event)
     files.emplace_back([file UTF8String]);
   }
 
-  m_context->beginDrag(std::move(files));
+  m_window->context()->beginDrag(std::move(files));
 
   return NSDragOperationGeneric;
 }
 
 - (void)draggingExited:(id<NSDraggingInfo>)sender
 {
-  m_context->endDrag(false);
+  m_window->context()->endDrag(false);
 }
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
 {
   NSPasteboard *pboard { [sender draggingPasteboard] };
   if([[pboard types] containsObject:NSFilenamesPboardType]) {
-    m_context->endDrag(true);
+    m_window->context()->endDrag(true);
     return YES;
   }
 
@@ -349,7 +348,7 @@ static uint8_t virtualKeyCode(NSEvent *event)
                      options:0
                        range:range
               remainingRange:&range])
-    m_context->charInput(codepoint);
+    m_window->context()->charInput(codepoint);
   }
 }
 
@@ -405,10 +404,7 @@ static uint8_t virtualKeyCode(NSEvent *event)
 - (NSRect)firstRectForCharacterRange:(NSRange)range
                          actualRange:(NSRangePointer)actualRange
 {
-  NSRect rect { NSMakeRect(m_imePos.x, m_imePos.y, 0, 0) };
-  rect = [[self superview] convertRect:rect toView:nil]; // to window coordinates
-  rect = [[self window] convertRectToScreen:rect];
-  return rect;
+  return NSMakeRect(m_imePos.x, m_imePos.y, 0, 0);
 }
 
 - (void)doCommandBySelector:(SEL)selector

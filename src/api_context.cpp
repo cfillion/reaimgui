@@ -17,10 +17,10 @@
 
 #include "api_helper.hpp"
 
+#include "font.hpp"
 #include "listclipper.hpp"
 #include "resource_proxy.hpp"
 #include "version.hpp"
-#include "window.hpp"
 
 DEFINE_API(void, GetVersion,
 (char*,API_W(imgui_version))(int,API_W_SZ(imgui_version))
@@ -34,25 +34,13 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(ImGui_Context*, CreateContext,
-(const char*,name)(int,size_w)(int,size_h)
-(int*,API_RO(pos_x))(int*,API_RO(pos_y))
-(int*,API_RO(dock))(int*,API_RO(config_flags)),
-R"(Create a new ReaImGui context. It will remain valid as long as it is used in each defer cycle. Pass null x/y coordinates to auto-position the window with the arrange view.
+(const char*,str_id)(int*,API_RO(config_flags)),
+R"(Create a new ReaImGui context. The context will remain valid as long as it is used in each defer cycle.
 
-The position, size and dock status are automatically saved and restored (unless the ImGui_ConfigFlags_NoSavedSettings flag is set).
-
-Default values: pos_x = 0x80000000, pos_y = 0x80000000, dock = 0, config_flags = ImGui_ConfigFlags_None)",
+Default values: config_flags = ImGui_ConfigFlags_None)",
 {
-  Settings settings { name };
-  settings.pos = {
-    valueOr(API_RO(pos_x), Settings::DEFAULT_POS),
-    valueOr(API_RO(pos_y), Settings::DEFAULT_POS),
-  };
-  settings.size = { size_w, size_h };
-  settings.dock = valueOr(API_RO(dock), 0);
-
   const int flags { valueOr(API_RO(config_flags), ImGuiConfigFlags_None) };
-  return new Context { settings, flags };
+  return new Context { str_id, flags };
 });
 
 DEFINE_API(void, DestroyContext, (ImGui_Context*,ctx),
@@ -81,19 +69,12 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
     return false;
 });
 
-DEFINE_API(void*, GetNativeHwnd, (ImGui_Context*,ctx),
-R"(Return the native handle for the context's platform window.)",
-{
-  assertValid(ctx);
-  return ctx->window()->nativeHandle();
-});
-
-DEFINE_API(bool, IsCloseRequested, (ImGui_Context*,ctx),
-R"(Return whether the user has requested closing the context since the previous frame.)",
-{
-  assertValid(ctx);
-  return ctx->isCloseRequested();
-});
+// DEFINE_API(void*, GetNativeHwnd, (ImGui_Context*,ctx),
+// R"(Return the native handle for the context's platform window.)",
+// {
+//   assertValid(ctx);
+//   return ctx->window()->nativeHandle();
+// });
 
 DEFINE_API(int, GetConfigFlags, (ImGui_Context*,ctx),
 "See ImGui_SetConfigFlags.",
@@ -110,20 +91,20 @@ DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
   ctx->IO().ConfigFlags = flags;
 });
 
-DEFINE_API(int, GetDock, (ImGui_Context*,ctx),
-"See ImGui_SetDock.",
-{
-  assertValid(ctx);
-  return ctx->window()->dock();
-});
+// DEFINE_API(int, GetDock, (ImGui_Context*,ctx),
+// "See ImGui_SetDock.",
+// {
+//   assertValid(ctx);
+//   return ctx->window()->dock();
+// });
 
-DEFINE_API(void, SetDock, (ImGui_Context*,ctx)
-(int,dock),
-"First bit is the docking enable flag. The remaining bits are the docker index.",
-{
-  assertValid(ctx);
-  ctx->setDockNextFrame(dock);
-});
+// DEFINE_API(void, SetDock, (ImGui_Context*,ctx)
+// (int,dock),
+// "First bit is the docking enable flag. The remaining bits are the docker index.",
+// {
+//   assertValid(ctx);
+//   ctx->setDockNextFrame(dock);
+// });
 
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
 (bool*,API_RWO(p_open)),
@@ -173,8 +154,8 @@ DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
   assertValid(ctx);
   assertValid(font);
 
-  if(ctx->IO().Fonts->Locked)
+  if(ctx->inFrame())
     throw reascript_error { "cannot modify font texture: a frame has already begun" };
 
-  ctx->fonts().add(font);
+  ctx->fonts()->add(font);
 });

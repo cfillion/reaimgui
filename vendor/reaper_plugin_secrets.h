@@ -14,5 +14,6 @@ struct reaper_array {
 // reaper_plugin_functions.h.
 
 REAPERAPI_DEF void (*AttachWindowTopmostButton)(HWND);
+REAPERAPI_DEF void (*DetachWindowTopmostButton)(HWND, bool);
 
 #endif
