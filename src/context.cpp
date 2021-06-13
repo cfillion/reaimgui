@@ -101,8 +101,12 @@ bool Context::heartbeat()
   if(m_closeReq)
     m_closeReq = false;
 
-  if(m_inFrame && endFrame(true))
-    keepAlive();
+  if(m_inFrame) {
+    if(endFrame(true))
+      keepAlive();
+    else
+      return false;
+  }
 
   // Keep the frame alive for at least one full timer cycle to prevent contexts
   // created within a defer callback from being immediately destroyed.
