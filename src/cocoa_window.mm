@@ -40,27 +40,35 @@ static_assert(__has_feature(objc_arc),
 }
 @end
 
-static void subclassWindow(NSWindow *window)
+class Subclass {
+public:
+  Subclass(Class parent, Class chind, const char *name);
+  void activate(NSObject *);
+
+private:
+  Class m_subclass;
+};
+
+Subclass::Subclass(Class parent, Class child, const char *name)
 {
-  static Class subclass;
+  unsigned int methodCount {};
+  Method *methods
+    { class_copyMethodList(child, &methodCount) };
 
-  if(!subclass) {
-    unsigned int methodCount {};
-    Method *methods
-      { class_copyMethodList([SWELLWindowOverride class], &methodCount) };
-
-    subclass = objc_allocateClassPair([window class], "ReaImGui_SWELLWindow", 0);
-    for(unsigned int i {}; i < methodCount; ++i) {
-      Method method { methods[i] };
-      class_addMethod(subclass, method_getName(method),
-        method_getImplementation(method), method_getTypeEncoding(method));
-    }
-    objc_registerClassPair(subclass);
-
-    free(methods);
+  m_subclass = objc_allocateClassPair(parent, name, 0);
+  for(unsigned int i {}; i < methodCount; ++i) {
+    Method method { methods[i] };
+    class_addMethod(m_subclass, method_getName(method),
+      method_getImplementation(method), method_getTypeEncoding(method));
   }
+  objc_registerClassPair(m_subclass);
 
-  object_setClass(window, subclass);
+  free(methods);
+}
+
+void Subclass::activate(NSObject *object)
+{
+  object_setClass(object, m_subclass);
 }
 
 struct Window::Impl {
@@ -81,11 +89,14 @@ Window::Window(ImGuiViewport *vp, Context *ctx)
   m_impl->inputView = [[InputView alloc] initWithWindow:this];
 
   NSWindow *window { [m_impl->view window] };
-  subclassWindow(window);
   m_impl->defaultStyleMask = [window styleMask];
   m_impl->defaultLevel = [window level];
   m_impl->previousFlags = ~m_viewport->Flags; // mark all as modified
   // imgui calls update() before show(), it will apply the flags
+
+  static Subclass swellWindowOverride
+    { [window class], [SWELLWindowOverride class], "ReaImGui_SWELLWindow" };
+  swellWindowOverride.activate(window);
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
