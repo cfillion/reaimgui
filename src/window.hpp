@@ -31,6 +31,7 @@
 #endif
 
 class Context;
+class Docker;
 struct ImDrawData;
 struct ImGuiViewport;
 struct ImVec2;
@@ -65,9 +66,6 @@ public:
   void setImePosition(ImVec2);
   void translatePosition(POINT *, bool toHiDpi = false) const;
 
-  // int dock() const;
-  // void setDock(int);
-  // void updateSettings();
   void mouseDown(unsigned int msg);
   void mouseUp(unsigned int msg);
 
@@ -89,12 +87,13 @@ protected:
 
   ImGuiViewport *m_viewport;
   Context *m_ctx;
-
-  struct WindowDeleter { void operator()(HWND); };
-  std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
+  Docker *m_docker;
 
   struct Impl;
   std::unique_ptr<Impl> m_impl;
+
+  struct WindowDeleter { void operator()(HWND); };
+  std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
 
 private:
   static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);

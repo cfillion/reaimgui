@@ -72,7 +72,8 @@ void Subclass::activate(NSObject *object)
 }
 
 struct Window::Impl {
-  static ImGuiViewport *viewportFromWindowNumber(unsigned int);
+  static ImGuiViewport *nextViewportUnder
+    (const NSPoint, const unsigned int windowNumber);
 
   NSView *view;
   InputView *inputView;
@@ -176,6 +177,9 @@ void Window::show()
 
 void Window::setPosition(ImVec2 pos)
 {
+  if(m_docker)
+    return;
+
   ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
   NSWindow *window { [m_impl->view window] };
   const NSRect &content { [window contentRectForFrameRect:[window frame]] };
@@ -186,6 +190,9 @@ void Window::setPosition(ImVec2 pos)
 
 void Window::setSize(const ImVec2 size)
 {
+  if(m_docker)
+    return;
+
   // most scripts expect y=0 to be the top of the window
   NSWindow *window { [m_impl->view window] };
   [window setContentSize:NSMakeSize(size.x, size.y)];
@@ -195,6 +202,9 @@ void Window::setSize(const ImVec2 size)
 
 void Window::update()
 {
+  if(m_docker)
+    return;
+
   const ImGuiViewportFlags diff { m_impl->previousFlags ^ m_viewport->Flags };
   m_impl->previousFlags = m_viewport->Flags;
 
@@ -278,14 +288,26 @@ int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
   return Accel::NotOurWindow;
 }
 
-ImGuiViewport *Window::Impl::viewportFromWindowNumber(const unsigned int number)
+ImGuiViewport *Window::Impl::nextViewportUnder
+  (const NSPoint pos, const unsigned int windowNumber)
 {
   ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
-  for(int i {}; i < pio.Viewports.Size; ++i) {
+
+  for(int i { 1 }; i < pio.Viewports.Size; ++i) { // skip the main viewport
     ImGuiViewport *viewport { pio.Viewports[i] };
-    Window *window { static_cast<Window *>(viewport->PlatformUserData) };
-    if(window && [[window->m_impl->view window] windowNumber] == number)
-      return viewport;
+    Window *instance { static_cast<Window *>(viewport->PlatformUserData) };
+    NSView *view { instance->m_impl->inputView };
+
+    if([[view window] windowNumber] != windowNumber)
+      continue;
+
+    // NSView's hitTest takes a point in the coordinate system of the view's
+    // superview, not of the view itself.
+    NSPoint clientPos { [[view window] convertScreenToBase:pos] };
+    clientPos = [[view superview] convertPoint:clientPos fromView:nil];
+
+    if([view hitTest:clientPos])
+     return viewport;
   }
 
   return nullptr;
@@ -295,12 +317,12 @@ ImGuiViewport *Window::viewportUnder(const POINT pos)
 {
   const NSPoint point { NSMakePoint(pos.x, pos.y) };
 
-  unsigned int number {};
+  unsigned int number { 0 };
   ImGuiViewport *viewport;
 
   do {
     number = [NSWindow windowNumberAtPoint:point belowWindowWithWindowNumber:number];
-    viewport = Impl::viewportFromWindowNumber(number);
+    viewport = Impl::nextViewportUnder(point, number);
   } while(viewport && !!(viewport->Flags & ImGuiViewportFlags_NoInputs));
 
   return viewport;

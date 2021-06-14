@@ -8,6 +8,7 @@ add_library(${PROJECT_NAME} SHARED
   api.cpp
   color.cpp
   context.cpp
+  docker.cpp
   font.cpp
   main.cpp
   opengl_renderer.cpp

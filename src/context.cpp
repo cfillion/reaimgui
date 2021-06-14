@@ -17,6 +17,7 @@
 
 #include "context.hpp"
 
+#include "docker.hpp"
 #include "font.hpp"
 #include "opengl_renderer.hpp"
 #include "window.hpp"
@@ -70,6 +71,7 @@ Context::Context(const char *name, const int userConfigFlags)
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_settings { name },
     m_imgui { ImGui::CreateContext(NO_DEFAULT_ATLAS) },
+    m_dockers { std::make_unique<DockerList>() },
     m_fonts { std::make_unique<FontList>() }
 {
   static const std::string logFn
@@ -155,6 +157,7 @@ void Context::beginFrame()
   ImGui::NewFrame();
 
   dragSources();
+  m_dockers->drawActive();
 }
 
 void Context::enterFrame()

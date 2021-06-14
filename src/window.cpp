@@ -18,9 +18,11 @@
 #include "window.hpp"
 
 #include "context.hpp"
+#include "docker.hpp"
 #include "font.hpp"
 
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 
 #ifndef _WIN32
 #  include <swell/swell.h>
@@ -124,11 +126,12 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
     SetProp(handle, CLASS_NAME, self->m_ctx);
     self->installHooks();
+    self->m_docker = self->m_ctx->dockers()->findByViewport(self->m_viewport);
   }
   else {
     self = reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA));
 
-    if(!self)// || self->m_ctx->window() != self) // TODO: when redoing undocking
+    if(!self)
       return DefWindowProc(handle, msg, wParam, lParam);
   }
 
@@ -152,6 +155,9 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   case WM_DESTROY:
     RemoveProp(handle, CLASS_NAME);
     SetWindowLongPtr(handle, GWLP_USERDATA, 0);
+    // Announce to REAPER the window is no longer going to be valid
+    // (DockWindowRemove is safe to call even when not docked)
+    DockWindowRemove(handle); // may send messages
     return 0;
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
@@ -194,10 +200,19 @@ void Window::commonShow()
   if(ImGui::GetFrameCount() < 3)
     m_viewport->Flags &= ~ImGuiViewportFlags_NoFocusOnAppearing;
 
-  if(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
-    ShowWindow(m_hwnd.get(), SW_SHOWNA);
-  else
-    ShowWindow(m_hwnd.get(), SW_SHOW);
+  if(m_docker) {
+    constexpr const char *INI_KEY { "reaimgui" };
+    Dock_UpdateDockID(INI_KEY, m_docker->id());
+    DockWindowAddEx(m_hwnd.get(), "foo", INI_KEY, true);
+    if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing))
+      DockWindowActivate(m_hwnd.get());
+  }
+  else {
+    if(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
+      ShowWindow(m_hwnd.get(), SW_SHOWNA);
+    else
+      ShowWindow(m_hwnd.get(), SW_SHOW);
+  }
 }
 
 ImVec2 Window::getPosition() const
@@ -233,12 +248,11 @@ void Window::setFocus()
 bool Window::hasFocus() const
 {
   // the focused control is a child of the window's hwnd on macOS (InputView)
-  HWND foreground { GetForegroundWindow() }, self { m_hwnd.get() };
+  HWND foreground { GetFocus() };
 #ifdef __APPLE__
-  return IsChild(self, foreground);
-#else
-  return foreground == self;
+  foreground = GetParent(foreground);
 #endif
+  return foreground == m_hwnd.get();
 }
 
 bool Window::isVisible() const
@@ -263,6 +277,19 @@ void Window::onChangedViewport()
   if(scaleChanged || fontTexVersion != m_fontTexVersion) {
     uploadFontTex();
     m_fontTexVersion = fontTexVersion;
+  }
+
+  if(m_docker) {
+    ImGuiViewportP *viewport { static_cast<ImGuiViewportP *>(m_viewport) };
+    if(auto *userWindow { viewport->Window }) {
+      userWindow->Pos = viewport->Pos = viewport->LastPlatformPos = getPosition();
+      userWindow->Size = userWindow->SizeFull = viewport->LastRendererSize =
+        viewport->Size = viewport->LastPlatformSize = getSize();
+    }
+
+    const int dockIndex { DockIsChildOfDock(m_hwnd.get(), nullptr) };
+    if(static_cast<ReaDockID>(dockIndex) != m_docker->id())
+      m_ctx->dockers()->onDockChanged(m_docker, dockIndex);
   }
 }
 
@@ -328,70 +355,6 @@ void Window::mouseUp(const unsigned int msg)
   if(GetCapture() == m_hwnd.get() && !m_ctx->anyMouseDown())
     ReleaseCapture();
 }
-
-// int Window::dock() const
-// {
-//   const int dockIndex { DockIsChildOfDock(m_hwnd.get(), nullptr) };
-//   return dockIndex > -1 ? (dockIndex << 1) | 1 : m_ctx->settings().dock & ~1;
-// }
-
-// void Window::setDock(const int dock)
-// {
-//   Settings &settings { m_ctx->settings() };
-//   if(dock == settings.dock && IsWindowVisible(m_hwnd.get()))
-//     return;
-//
-//   DockWindowRemove(m_hwnd.get());
-//
-//   if(dock & 1) {
-//     if(!(settings.dock & 1)) // store undocked position and size
-//       updateSettings();      // (overwrites settings.dock first)
-//     settings.dock = dock;
-//
-//     constexpr const char *INI_KEY { "reaimgui" };
-//     Dock_UpdateDockID(INI_KEY, dock >> 1);
-//     DockWindowAddEx(m_hwnd.get(), settings.title.c_str(), INI_KEY, true);
-//     DockWindowActivate(m_hwnd.get());
-//   }
-//   else {
-//     settings.dock = dock;
-//     Window floating { m_ctx };
-//     std::swap(m_hwnd, floating.m_hwnd);
-//     std::swap(m_impl, floating.m_impl);
-//     SetWindowLongPtr(m_hwnd.get(), GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
-//     m_ctx->invalidateTextures();
-//   }
-// }
-
-// void Window::updateSettings()
-// {
-//   Settings &settings { m_ctx->settings() };
-//   settings.dock = dock();
-//
-//   // only persist position and size when undocked
-//   if(!(settings.dock & 1)) {
-//     RECT rect;
-// #ifdef __linux__
-//     GetWindowRect(m_hwnd.get(), &rect);
-// #else
-//     GetClientRect(m_hwnd.get(), &rect);
-// #endif
-//     settings.size.x = rect.right - rect.left;
-//     settings.size.y = rect.bottom - rect.top;
-// #ifndef __APPLE__
-//     const float scale { scaleFactor() };
-//     settings.size.x /= scale;
-//     settings.size.y /= scale;
-// #endif
-// #ifndef __linux__
-//     ClientToScreen(m_hwnd.get(), reinterpret_cast<POINT *>(&rect));
-// #endif
-//     settings.pos.x = rect.left;
-//     settings.pos.y = rect.top;
-//   }
-//
-//   m_ctx->markSettingsDirty();
-// }
 
 #ifndef _WIN32
 void Window::createSwellDialog()
@@ -484,8 +447,5 @@ ImGuiViewport *Window::viewportUnder(const POINT pos)
 
 void Window::WindowDeleter::operator()(HWND window)
 {
-  // Announce to REAPER the window is no longer going to be valid
-  // (safe to call even when not docked)
-  DockWindowRemove(window);
   DestroyWindow(window);
 }

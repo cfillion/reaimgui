@@ -199,7 +199,7 @@ static uint8_t virtualKeyCode(NSEvent *event)
 
 - (BOOL)resignFirstResponder
 {
-  m_window->context()->clearFocus();
+  // called if docked when losing focus to another control
   return YES;
 }
 

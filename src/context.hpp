@@ -33,6 +33,7 @@
 #  include <swell/swell-types.h>
 #endif
 
+class DockerList;
 class FontList;
 class Window;
 struct ImGuiContext;
@@ -68,6 +69,7 @@ public:
   // void markSettingsDirty();
 
   ImGuiIO &IO();
+  DockerList *dockers() { return m_dockers.get(); }
   FontList *fonts() { return m_fonts.get(); }
   // Settings &settings() { return m_settings; }
   HCURSOR cursor() const { return m_cursor; }
@@ -104,6 +106,7 @@ private:
 
   struct ContextDeleter { void operator()(ImGuiContext *); };
   std::unique_ptr<ImGuiContext, ContextDeleter> m_imgui;
+  std::unique_ptr<DockerList> m_dockers;
   std::unique_ptr<FontList> m_fonts;
 };
 
