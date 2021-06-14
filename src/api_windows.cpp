@@ -33,7 +33,15 @@ Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 {
   FRAME_GUARD;
   ImGuiWindowFlags flags { valueOr(API_RO(flags), ImGuiWindowFlags_None) };
-  return ImGui::Begin(name, API_RWO(p_open), flags);
+  if(!ctx->IO().ConfigViewportsNoDecoration) {
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+    flags |= ImGuiWindowFlags_NoTitleBar |
+             ImGuiWindowFlags_NoResize   ;
+  }
+  const bool rv { ImGui::Begin(name, API_RWO(p_open), flags) };
+  if(!ctx->IO().ConfigViewportsNoDecoration)
+    ImGui::PopStyleVar();
+  return rv;
 });
 
 DEFINE_API(void, End, (ImGui_Context*,ctx),
