@@ -72,6 +72,8 @@ void Subclass::activate(NSObject *object)
 }
 
 struct Window::Impl {
+  static ImGuiViewport *viewportFromWindowNumber(unsigned int);
+
   NSView *view;
   InputView *inputView;
   NSOpenGLContext *gl;
@@ -217,11 +219,6 @@ void Window::update()
     else
       [window setLevel:m_impl->defaultLevel]; // SWELL uses 1 by default
   }
-
-  if(diff & ImGuiViewportFlags_NoInputs) {
-    const bool transparent { !!(m_viewport->Flags & ImGuiViewportFlags_NoInputs) };
-    [window setIgnoresMouseEvents:transparent];
-  }
 }
 
 void Window::render(void *)
@@ -252,12 +249,9 @@ void Window::uploadFontTex()
   [NSOpenGLContext clearCurrentContext];
 }
 
-ImVec2 Window::translatePosition(const float x, const float y, bool) const
+void Window::translatePosition(POINT *pos, bool) const
 {
-  ImVec2 pos;
-  pos.x = x;
-  pos.y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - y;
-  return pos;
+  pos->y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - pos->y;
 }
 
 std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM)
@@ -282,4 +276,32 @@ int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
   }
 
   return Accel::NotOurWindow;
+}
+
+ImGuiViewport *Window::Impl::viewportFromWindowNumber(const unsigned int number)
+{
+  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  for(int i {}; i < pio.Viewports.Size; ++i) {
+    ImGuiViewport *viewport { pio.Viewports[i] };
+    Window *window { static_cast<Window *>(viewport->PlatformUserData) };
+    if(window && [[window->m_impl->view window] windowNumber] == number)
+      return viewport;
+  }
+
+  return nullptr;
+}
+
+ImGuiViewport *Window::viewportUnder(const POINT pos)
+{
+  const NSPoint point { NSMakePoint(pos.x, pos.y) };
+
+  unsigned int number {};
+  ImGuiViewport *viewport;
+
+  do {
+    number = [NSWindow windowNumberAtPoint:point belowWindowWithWindowNumber:number];
+    viewport = Impl::viewportFromWindowNumber(number);
+  } while(viewport && !!(viewport->Flags & ImGuiViewportFlags_NoInputs));
+
+  return viewport;
 }

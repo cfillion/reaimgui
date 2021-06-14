@@ -210,32 +210,32 @@ static uint8_t virtualKeyCode(NSEvent *event)
 
 - (void)mouseDown:(NSEvent *)event
 {
-  m_window->context()->mouseInput(ImGuiMouseButton_Left, true);
+  m_window->mouseDown(WM_LBUTTONDOWN);
 }
 
 - (void)mouseUp:(NSEvent *)event
 {
-  m_window->context()->mouseInput(ImGuiMouseButton_Left, false);
+  m_window->mouseUp(WM_LBUTTONUP);
 }
 
 - (void)rightMouseDown:(NSEvent *)event
 {
-  m_window->context()->mouseInput(ImGuiMouseButton_Right, true);
+  m_window->mouseDown(WM_RBUTTONDOWN);
 }
 
 - (void)rightMouseUp:(NSEvent *)event
 {
-  m_window->context()->mouseInput(ImGuiMouseButton_Right, false);
+  m_window->mouseUp(WM_RBUTTONUP);
 }
 
 - (void)otherMouseDown:(NSEvent *)event
 {
-  m_window->context()->mouseInput(ImGuiMouseButton_Middle, true);
+  m_window->mouseDown(WM_MBUTTONDOWN);
 }
 
 - (void)otherMouseUp:(NSEvent *)event
 {
-  m_window->context()->mouseInput(ImGuiMouseButton_Middle, false);
+  m_window->mouseUp(WM_MBUTTONUP);
 }
 
 - (const char *)getSwellClass

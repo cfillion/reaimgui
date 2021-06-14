@@ -42,6 +42,7 @@ public:
   static HINSTANCE s_instance;
   static void install();
   static void updateMonitors();
+  static ImGuiViewport *viewportUnder(POINT);
 
   Window(ImGuiViewport *, Context *);
   Window(const Window &) = delete;
@@ -62,11 +63,13 @@ public:
   float scaleFactor() const;
   void onChangedViewport();
   void setImePosition(ImVec2);
-  ImVec2 translatePosition(float x, float y, bool toHiDpi = false) const;
+  void translatePosition(POINT *, bool toHiDpi = false) const;
 
   // int dock() const;
   // void setDock(int);
   // void updateSettings();
+  void mouseDown(unsigned int msg);
+  void mouseUp(unsigned int msg);
 
   const char *getSwellClass() const;
   Context *context() const { return m_ctx; }
@@ -99,8 +102,6 @@ private:
 
   void installHooks();
   HWND parentHandle();
-  void mouseDown(unsigned int msg);
-  void mouseUp(unsigned int msg);
 
   float m_previousScale {};
   int m_fontTexVersion {};

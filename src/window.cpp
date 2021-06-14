@@ -267,20 +267,19 @@ void Window::onChangedViewport()
 }
 
 #ifndef __APPLE__
-ImVec2 Window::translatePosition(const float x, const float y, const bool toHiDpi) const
+void Window::translatePosition(POINT *point, const bool toHiDpi) const
 {
-  const auto fromOriginX { x - m_viewport->Pos.x },
-             fromOriginY { y - m_viewport->Pos.y };
+  const auto fromOriginX { point->x - m_viewport->Pos.x },
+             fromOriginY { point->y - m_viewport->Pos.y };
 
   float scale { m_viewport->DpiScale };
   if(!toHiDpi)
     scale = 1.f / scale;
 
-  ImVec2 pos;
-  pos.x = m_viewport->Pos.x + (fromOriginX * scale);
-  pos.y = m_viewport->Pos.y + (fromOriginY * scale);
-  return pos;
+  point->x = m_viewport->Pos.x + (fromOriginX * scale);
+  point->y = m_viewport->Pos.y + (fromOriginY * scale);
 }
+#endif
 
 void Window::mouseDown(const unsigned int msg)
 {
@@ -329,7 +328,6 @@ void Window::mouseUp(const unsigned int msg)
   if(GetCapture() == m_hwnd.get() && !m_ctx->anyMouseDown())
     ReleaseCapture();
 }
-#endif
 
 // int Window::dock() const
 // {
@@ -470,6 +468,19 @@ int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
 
   return Unknown;
 }
+
+#ifndef __APPLE__
+ImGuiViewport *Window::viewportUnder(const POINT pos)
+{
+  HWND target { WindowFromPoint(pos) };
+
+  ImGuiViewport *viewport { ImGui::FindViewportByPlatformHandle(target) };
+  if(viewport && viewport->PlatformUserData)
+    return viewport;
+
+  return nullptr;
+}
+#endif
 
 void Window::WindowDeleter::operator()(HWND window)
 {

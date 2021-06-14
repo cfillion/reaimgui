@@ -49,7 +49,7 @@ public:
   static constexpr const char *api_type_name { "ImGui_Context" };
   static Context *current();
 
-  Context(const char *name, int configFlags = ImGuiConfigFlags_None);
+  Context(const char *name, int userConfigFlags = ImGuiConfigFlags_None);
   ~Context();
 
   void setCurrent();

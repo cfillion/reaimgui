@@ -64,7 +64,7 @@ Context *Context::current()
 static ImFontAtlas * const NO_DEFAULT_ATLAS
   { reinterpret_cast<ImFontAtlas *>(-1) };
 
-Context::Context(const char *name, const int configFlags)
+Context::Context(const char *name, const int userConfigFlags)
   : m_inFrame { false },
     m_dragState {}, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
@@ -82,10 +82,13 @@ Context::Context(const char *name, const int configFlags)
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
   io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
-  io.ConfigFlags = configFlags | ImGuiConfigFlags_ViewportsEnable;
+  io.ConfigFlags  |= ImGuiConfigFlags_ViewportsEnable;
+  io.ConfigFlags  |= ImGuiConfigFlags_DockingEnable;
   io.ConfigViewportsNoAutoMerge = true; // disable the main viewport
   io.LogFilename = logFn.c_str();
   io.UserData = this;
+
+  io.ConfigFlags |= userConfigFlags;
 
   // m_settings.install();
   // m_settings.load();
@@ -285,43 +288,21 @@ void Context::updateMouseDown()
   }
 }
 
-ImGuiViewport *Context::viewportUnder(const POINT pos) const
-{
-  HWND target;
-#ifdef __APPLE__
-  // Capturing is not used as macOS sends mouse up events from outside of the
-  // frame when the mouse down event occured within.
-  //
-  // MouseLastHoveredViewport won't be the main viewport because of our
-  // handling of MouseHoveredViewport in updateMousePos
-  if(anyMouseDown())
-    return m_imgui->MouseLastHoveredViewport;
-#else
-  if(HWND capture { GetCapture() })
-    target = capture;
-#endif
-  else
-    target = WindowFromPoint(pos);
-
-#ifdef __APPLE__
-  // Our InputView overlays SWELL's NSView.
-  target = GetParent(target);
-#endif
-
-  return ImGui::FindViewportByPlatformHandle(target);
-}
-
 void Context::updateMousePos()
 {
   ImGuiIO &io { m_imgui->IO };
 
   if(io.WantSetMousePos) {
-    ImVec2 newPos { io.MousePos };
+    POINT newPos;
+    newPos.x = io.MousePos.x;
+    newPos.y = io.MousePos.y;
+
     // convert to HiDPI on Windows, flip Y on macOS
-    if(ImGuiViewport *viewport { m_imgui->MouseLastHoveredViewport }) {
+    if(ImGuiViewport *viewport { Window::viewportUnder(newPos) }) {
       if(Window *window { static_cast<Window *>(viewport->PlatformUserData) })
-        newPos = window->translatePosition(newPos.x, newPos.y, true);
+        window->translatePosition(&newPos, true);
     }
+
     SetCursorPos(newPos.x, newPos.y);
     return;
   }
@@ -336,12 +317,26 @@ void Context::updateMousePos()
   io.MousePos = { -FLT_MAX, -FLT_MAX };
   io.MouseHoveredViewport = 0;
 
-  if(ImGuiViewport *viewport { viewportUnder(pos) }) {
-    if(Window *window { static_cast<Window *>(viewport->PlatformUserData) }) {
-      io.MousePos = window->translatePosition(pos.x, pos.y);
-      assert(!(viewport->Flags & ImGuiViewportFlags_NoInputs));
-      io.MouseHoveredViewport = viewport->ID;
-    }
+  ImGuiViewport *viewportForInput { Window::viewportUnder(pos) };
+  ImGuiViewport *viewportForPos;
+  if(viewportForInput) {
+    viewportForPos = viewportForInput;
+    // Viewports with NoInputs set go through WindowFromPoint with
+    // WM_NCHITTEST->HTTRANSPARENT when decorations are enabled on Windows
+    if(!(viewportForInput->Flags & ImGuiViewportFlags_NoInputs))
+      io.MouseHoveredViewport = viewportForInput->ID;
+  }
+  else if(HWND capture { GetCapture() })
+    viewportForPos = ImGui::FindViewportByPlatformHandle(capture);
+  else
+    viewportForPos = nullptr;
+
+  if(viewportForPos && viewportForPos->PlatformUserData) {
+    Window *window { static_cast<Window *>(viewportForPos->PlatformUserData) };
+    window->translatePosition(&pos);
+
+    io.MousePos.x = pos.x;
+    io.MousePos.y = pos.y;
   }
 }
 

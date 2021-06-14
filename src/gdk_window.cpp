@@ -81,6 +81,7 @@ Window::~Window()
 void Window::platformInstall()
 {
   ImGuiIO &io { ImGui::GetIO() };
+  io.BackendFlags &= ~ImGuiBackendFlags_HasMouseHoveredViewport;
   io.BackendPlatformName = "reaper_imgui_gdk";
 }
 
