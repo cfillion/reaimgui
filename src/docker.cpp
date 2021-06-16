@@ -32,7 +32,7 @@ Docker::Docker(const ReaDockID id)
 
 void Docker::draw()
 {
-  constexpr ImGuiWindowFlags parentWindowFlags {
+  constexpr ImGuiWindowFlags windowFlags {
     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
     ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
     ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBackground |
@@ -46,7 +46,7 @@ void Docker::draw()
   ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.f, 0.f });
   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
-  const int visible { ImGui::Begin(m_windowTitle, nullptr, parentWindowFlags) };
+  const int visible { ImGui::Begin(m_windowTitle, nullptr, windowFlags) };
   ImGui::PopStyleVar(3);
   if(visible) // just in case, altough NoDecoration implies NoCollapse
     ImGui::DockSpace(nodeId(), { 0.f, 0.f }, dockSpaceFlags);
@@ -55,23 +55,29 @@ void Docker::draw()
 
 bool Docker::isActive() const
 {
-  return !ImGui::DockBuilderGetNode(nodeId())->IsEmpty();
+  const ImGuiDockNode *node { ImGui::DockBuilderGetNode(nodeId()) };
+
+  if(!node || node->IsEmpty())
+    return false;
+
+  const ImGuiWindow *window { node->VisibleWindow };
+  return window && (window->Active || window->WasActive);
 }
 
 void Docker::moveTo(Docker *target)
 {
   assert(target && target != this);
 
-  ImGuiID targetNodeId { target->nodeId() };
-
   if(target->isActive()) {
-    reset();
+    reset(); // undock all contained windows
     return;
   }
 
-  // the target docker is unused: move our contents to it and take its place
+  // The target docker is unused: move our contents to it and take its place
+  // to reuse the same platform window and keep using the same docker instance.
   ImVector<const char *> remap;
-  ImGui::DockBuilderCopyDockSpace(nodeId(), targetNodeId, &remap);
+  ImGui::DockBuilderCopyDockSpace(nodeId(), target->nodeId(), &remap);
+  reset(); // clear out the previous node to hide it
   std::swap(m_id, target->m_id);
 }
 
