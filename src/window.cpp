@@ -77,7 +77,6 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
     SetProp(handle, CLASS_NAME, self->m_ctx);
     self->installHooks();
-    self->m_docker = self->m_ctx->dockers()->findByViewport(self->m_viewport);
   }
   else {
     self = reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA));
@@ -149,7 +148,7 @@ void Window::commonShow()
 {
   Viewport::show();
 
-  if(!m_docker) {
+  if(!m_dockerHost) {
     if(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
       ShowWindow(m_hwnd.get(), SW_SHOWNA);
     else

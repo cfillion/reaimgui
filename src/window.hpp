@@ -31,6 +31,8 @@
 #  define TEXT(str) str
 #endif
 
+class DockerHost;
+
 class Window : public Viewport {
 public:
   enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
@@ -40,7 +42,7 @@ public:
   static void updateMonitors();
   static ImGuiViewport *viewportUnder(POINT);
 
-  Window(ImGuiViewport *);
+  Window(ImGuiViewport *, DockerHost * = nullptr);
   virtual ~Window();
 
   // platform callbacks
@@ -78,7 +80,7 @@ protected:
   void uploadFontTex();
   std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM);
 
-  Docker *m_docker;
+  DockerHost *m_dockerHost;
 
   struct Impl;
   std::unique_ptr<Impl> m_impl;

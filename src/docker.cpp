@@ -58,55 +58,26 @@ bool Docker::isActive() const
   return !ImGui::DockBuilderGetNode(nodeId())->IsEmpty();
 }
 
-static void remapNodeContents(ImGuiDockNode *sourceNode, ImGuiDockNode *targetNode)
+void Docker::moveTo(Docker *target)
 {
-  if(sourceNode->IsSplitNode()) {
-    targetNode->SplitAxis = sourceNode->SplitAxis;
-    for(size_t i {}; i < std::size(targetNode->ChildNodes); ++i) {
-      std::swap(sourceNode->ChildNodes[i], targetNode->ChildNodes[i]);
-      targetNode->ChildNodes[i]->ParentNode = targetNode;
-    }
+  assert(target && target != this);
+
+  ImGuiID targetNodeId { target->nodeId() };
+
+  if(target->isActive()) {
+    reset();
+    return;
   }
 
-  std::swap(sourceNode->Windows, targetNode->Windows);
-
-  for(int i {}; i < targetNode->Windows.Size; ++i) {
-    ImGuiWindow *window { targetNode->Windows[i] };
-    window->DockId   = targetNode->ID;
-    window->DockNode = targetNode;
-  }
+  // the target docker is unused: move our contents to it and take its place
+  ImVector<const char *> remap;
+  ImGui::DockBuilderCopyDockSpace(nodeId(), targetNodeId, &remap);
+  std::swap(m_id, target->m_id);
 }
 
-void Docker::moveTo(const ReaDockID newId)
+void Docker::reset()
 {
-  ImGuiID targetNodeId { ~newId };
-
-  if(ImGuiDockNode *targetNode { ImGui::DockBuilderGetNode(targetNodeId) }) {
-    bool horizontal { true };
-    while(ImGuiDockNode *childNode { targetNode->ChildNodes[1] }) {
-      targetNode = childNode;
-      targetNodeId = childNode->ID;
-      horizontal ^= true;
-    }
-
-    if(!targetNode->IsEmpty()) {
-      const ImGuiDir direction { horizontal ? ImGuiDir_Right : ImGuiDir_Down };
-      ImGui::DockBuilderSplitNode(targetNodeId, direction, 0.5f,
-        &targetNodeId, nullptr);
-    }
-  }
-  else
-    ImGui::DockBuilderAddNode(targetNodeId);
-
-  // don't trust ImGuiDockNode pointers to remain valid after operations
-  ImGuiDockNode *sourceNode { ImGui::DockBuilderGetNode(nodeId()) },
-                *targetNode { ImGui::DockBuilderGetNode(targetNodeId) };
-
-  remapNodeContents(sourceNode, targetNode);
-}
-
-void Docker::remove()
-{
+  // the node will be re-created next frame in draw()
   ImGui::DockBuilderRemoveNode(nodeId());
 }
 
@@ -146,21 +117,6 @@ Docker *DockerList::findByViewport(const ImGuiViewport *viewport)
   }
 
   return nullptr;
-}
-
-void DockerList::onDockChanged(Docker *docker, const ReaDockID newId)
-{
-  assert(newId < DOCKER_COUNT);
-
-  const bool reuseWindow { !ImGui::DockBuilderGetNode(~newId) };
-  docker->moveTo(newId);
-
-  if(reuseWindow) {
-    findById(newId)->setId(docker->id());
-    docker->setId(newId);
-  }
-  else
-    docker->remove();
 }
 
 DockerHost::DockerHost(Docker *docker, ImGuiViewport *viewport)
@@ -270,7 +226,7 @@ void DockerHost::onChanged()
   if(m_window) {
     const int dockIndex { DockIsChildOfDock(m_window->nativeHandle(), nullptr) };
     if(static_cast<ReaDockID>(dockIndex) != m_docker->id())
-      m_ctx->dockers()->onDockChanged(m_docker, dockIndex);
+      m_docker->moveTo(m_ctx->dockers()->findById(dockIndex));
 
     m_window->onChanged();
   }

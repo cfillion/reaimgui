@@ -33,16 +33,16 @@ public:
   Docker(Docker &) = delete;
 
   ReaDockID id() const { return m_id; } // REAPER dock index
-  void setId(unsigned int newId) { m_id = newId; }
   ImGuiID nodeId() const { return ~m_id; } // for SetNextWindowDockID
   ImGuiID windowId() const { return m_windowId; }
 
   void draw();
   bool isActive() const;
-  void moveTo(unsigned int id);
-  void remove();
+  void moveTo(Docker *other);
 
 private:
+  void reset();
+
   ReaDockID m_id;
   ImGuiID m_windowId;
   char m_windowTitle[20];
@@ -56,7 +56,6 @@ public:
   void drawAll();
   Docker *findById(unsigned int);
   Docker *findByViewport(const ImGuiViewport *);
-  void onDockChanged(Docker *docker, ReaDockID newId);
 
 private:
   std::array<Docker, DOCKER_COUNT> m_dockers;

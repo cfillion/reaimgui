@@ -83,8 +83,8 @@ struct Window::Impl {
   ImGuiViewportFlags previousFlags;
 };
 
-Window::Window(ImGuiViewport *viewport)
-  : Viewport { viewport }, m_impl { std::make_unique<Impl>() }
+Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
+  : Viewport { viewport }, m_dockerHost { dockerHost }, m_impl { std::make_unique<Impl>() }
 {
 }
 
