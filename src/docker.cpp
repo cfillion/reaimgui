@@ -17,13 +17,16 @@
 
 #include "docker.hpp"
 
+#include "context.hpp"
+#include "window.hpp"
+
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
 Docker::Docker(const ReaDockID id)
-  : m_id { id }, m_appearing { true }
+  : m_id { id }
 {
-  snprintf(m_windowTitle, sizeof(m_windowTitle), "reaimgui_docker_%02X", id);
+  snprintf(m_windowTitle, sizeof(m_windowTitle), "reaimgui_docker_%X", id);
   m_windowId = ImHashStr(m_windowTitle);
 }
 
@@ -32,7 +35,8 @@ void Docker::draw()
   constexpr ImGuiWindowFlags parentWindowFlags {
     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
     ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
-    ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBackground
+    ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoBackground |
+    ImGuiWindowFlags_NoSavedSettings
   };
 
   constexpr ImGuiDockNodeFlags dockSpaceFlags {
@@ -44,11 +48,14 @@ void Docker::draw()
   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
   const int visible { ImGui::Begin(m_windowTitle, nullptr, parentWindowFlags) };
   ImGui::PopStyleVar(3);
-  if(visible)
+  if(visible) // just in case, altough NoDecoration implies NoCollapse
     ImGui::DockSpace(nodeId(), { 0.f, 0.f }, dockSpaceFlags);
   ImGui::End();
+}
 
-  m_appearing = false;
+bool Docker::isActive() const
+{
+  return !ImGui::DockBuilderGetNode(nodeId())->IsEmpty();
 }
 
 static void remapNodeContents(ImGuiDockNode *sourceNode, ImGuiDockNode *targetNode)
@@ -101,7 +108,6 @@ void Docker::moveTo(const ReaDockID newId)
 void Docker::remove()
 {
   ImGui::DockBuilderRemoveNode(nodeId());
-  m_appearing = true;
 }
 
 template <ImGuiID... IDs>
@@ -113,16 +119,10 @@ DockerList::DockerList()
 {
 }
 
-void DockerList::drawActive()
+void DockerList::drawAll()
 {
-  for(Docker &docker : m_dockers) {
-    if(ImGuiDockNode *node { ImGui::DockBuilderGetNode(docker.nodeId()) }) {
-      if(docker.appearing() || !node->IsEmpty())
-        docker.draw();
-      else
-        node->LastFrameAlive = ImGui::GetFrameCount();
-    }
-  }
+  for(Docker &docker : m_dockers)
+    docker.draw();
 }
 
 Docker *DockerList::findById(const ReaDockID id)
@@ -137,9 +137,10 @@ Docker *DockerList::findById(const ReaDockID id)
 
 Docker *DockerList::findByViewport(const ImGuiViewport *viewport)
 {
-  if(ImGuiWindow *window { static_cast<const ImGuiViewportP *>(viewport)->Window }) {
+  const auto *viewportPrivate { static_cast<const ImGuiViewportP *>(viewport) };
+  if(ImGuiWindow *userWindow { viewportPrivate->Window }) {
     for(Docker &docker : m_dockers) {
-      if(docker.windowId() == window->ID)
+      if(docker.windowId() == userWindow->ID)
         return &docker;
     }
   }
@@ -160,4 +161,129 @@ void DockerList::onDockChanged(Docker *docker, const ReaDockID newId)
   }
   else
     docker->remove();
+}
+
+DockerHost::DockerHost(Docker *docker, ImGuiViewport *viewport)
+  : Viewport { viewport }, m_docker { docker }
+{
+}
+
+void DockerHost::activate()
+{
+  m_window.reset(new Window { m_viewport });
+  m_viewport->PlatformHandle = m_window->create();
+  HWND hwnd { m_window->nativeHandle() };
+
+  constexpr const char *INI_KEY { "reaimgui" };
+  Dock_UpdateDockID(INI_KEY, m_docker->id());
+  DockWindowAddEx(hwnd, "foo", INI_KEY, true);
+
+  m_window->show();
+
+  if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing))
+    DockWindowActivate(hwnd);
+}
+
+void *DockerHost::create()
+{
+  return nullptr;
+}
+
+void DockerHost::show()
+{
+}
+
+void DockerHost::setPosition(ImVec2)
+{
+}
+
+ImVec2 DockerHost::getPosition() const
+{
+  return m_window ? m_window->getPosition() : ImVec2{};
+}
+
+void DockerHost::setSize(ImVec2)
+{
+}
+
+ImVec2 DockerHost::getSize() const
+{
+  return m_window ? m_window->getSize() : ImVec2{};
+}
+
+void DockerHost::setFocus()
+{
+  if(m_window)
+    m_window->setFocus();
+}
+
+bool DockerHost::hasFocus() const
+{
+  return m_window ? m_window->hasFocus() : false;
+}
+
+bool DockerHost::isVisible() const
+{
+  return m_window ? m_window->isVisible() : false;
+}
+
+void DockerHost::setTitle(const char *)
+{
+}
+
+void DockerHost::update()
+{
+}
+
+void DockerHost::render(void *payload)
+{
+  if(m_window)
+    m_window->render(payload);
+}
+
+float DockerHost::scaleFactor() const
+{
+  return m_window ? m_window->scaleFactor() : 1.f;
+}
+
+void DockerHost::onChanged()
+{
+  const bool isActive { m_docker->isActive() };
+  if(isActive ^ !!m_window) {
+    if(isActive) {
+      activate();
+      m_window->show();
+    }
+    else {
+      m_viewport->PlatformHandle = nullptr;
+      m_window.reset();
+    }
+  }
+
+  ImGuiViewportP *viewport { static_cast<ImGuiViewportP *>(m_viewport) };
+  if(ImGuiWindow *userWindow { viewport->Window }) {
+    userWindow->Pos = viewport->Pos = viewport->LastPlatformPos = getPosition();
+    userWindow->Size = userWindow->SizeFull = viewport->LastRendererSize =
+      viewport->Size = viewport->LastPlatformSize = getSize();
+  }
+
+  if(m_window) {
+    const int dockIndex { DockIsChildOfDock(m_window->nativeHandle(), nullptr) };
+    if(static_cast<ReaDockID>(dockIndex) != m_docker->id())
+      m_ctx->dockers()->onDockChanged(m_docker, dockIndex);
+
+    m_window->onChanged();
+  }
+}
+
+void DockerHost::setImePosition(const ImVec2 pos)
+{
+  if(m_window)
+    m_window->setImePosition(pos);
+}
+
+void DockerHost::translatePosition(POINT *point, bool toHiDpi) const
+{
+  if(m_window)
+    m_window->translatePosition(point, toHiDpi);
 }

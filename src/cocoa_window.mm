@@ -83,8 +83,12 @@ struct Window::Impl {
   ImGuiViewportFlags previousFlags;
 };
 
-Window::Window(ImGuiViewport *vp, Context *ctx)
-  : m_viewport { vp }, m_ctx { ctx }, m_impl { std::make_unique<Impl>() }
+Window::Window(ImGuiViewport *viewport)
+  : Viewport { viewport }, m_impl { std::make_unique<Impl>() }
+{
+}
+
+void *Window::create()
 {
   createSwellDialog();
   m_impl->view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
@@ -117,6 +121,8 @@ Window::Window(ImGuiViewport *vp, Context *ctx)
   [m_impl->gl makeCurrentContext];
   m_impl->renderer = new OpenGLRenderer;
   [NSOpenGLContext clearCurrentContext];
+
+  return m_hwnd.get();
 }
 
 void Window::platformInstall()
@@ -177,9 +183,6 @@ void Window::show()
 
 void Window::setPosition(ImVec2 pos)
 {
-  if(m_docker)
-    return;
-
   ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
   NSWindow *window { [m_impl->view window] };
   const NSRect &content { [window contentRectForFrameRect:[window frame]] };
@@ -190,9 +193,6 @@ void Window::setPosition(ImVec2 pos)
 
 void Window::setSize(const ImVec2 size)
 {
-  if(m_docker)
-    return;
-
   // most scripts expect y=0 to be the top of the window
   NSWindow *window { [m_impl->view window] };
   [window setContentSize:NSMakeSize(size.x, size.y)];
@@ -202,9 +202,6 @@ void Window::setSize(const ImVec2 size)
 
 void Window::update()
 {
-  if(m_docker)
-    return;
-
   const ImGuiViewportFlags diff { m_impl->previousFlags ^ m_viewport->Flags };
   m_impl->previousFlags = m_viewport->Flags;
 
@@ -295,18 +292,19 @@ ImGuiViewport *Window::Impl::nextViewportUnder
 
   for(int i { 1 }; i < pio.Viewports.Size; ++i) { // skip the main viewport
     ImGuiViewport *viewport { pio.Viewports[i] };
-    Window *instance { static_cast<Window *>(viewport->PlatformUserData) };
-    NSView *view { instance->m_impl->inputView };
+    NSView *superView { (__bridge NSView *)viewport->PlatformHandle };
 
-    if([[view window] windowNumber] != windowNumber)
+    // PlatformHandle is NULL for inactive DockerHosts
+    if(!superView || [[superView window] windowNumber] != windowNumber)
       continue;
 
     // NSView's hitTest takes a point in the coordinate system of the view's
     // superview, not of the view itself.
-    NSPoint clientPos { [[view window] convertScreenToBase:pos] };
-    clientPos = [[view superview] convertPoint:clientPos fromView:nil];
+    NSPoint clientPos { [[superView window] convertScreenToBase:pos] };
+    clientPos = [superView convertPoint:clientPos fromView:nil];
 
-    if([view hitTest:clientPos])
+    NSView *inputView { [superView subviews][0] };
+    if([inputView hitTest:clientPos])
      return viewport;
   }
 

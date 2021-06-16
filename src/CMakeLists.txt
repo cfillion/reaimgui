@@ -14,6 +14,7 @@ add_library(${PROJECT_NAME} SHARED
   opengl_renderer.cpp
   resource.cpp
   settings.cpp
+  viewport.cpp
   window.cpp
 
   # binding

@@ -31,36 +31,6 @@
 
 HINSTANCE Window::s_instance;
 
-static void createWindow(ImGuiViewport *viewport)
-{
-  Window *window = new Window { viewport, Context::current() };
-
-  // set these only if constructions succeeds
-  viewport->PlatformUserData = window;
-  viewport->PlatformHandle = window->nativeHandle();
-}
-
-static void destroyWindow(ImGuiViewport *viewport)
-{
-  if(viewport->Flags & ImGuiViewportFlags_OwnedByApp)
-    return; // don't destroy the "main" viewport that we didn't create
-
-  delete static_cast<Window *>(viewport->PlatformUserData);
-  viewport->PlatformUserData = viewport->PlatformHandle = nullptr;
-}
-
-template<auto fn, typename... Args>
-static auto instanceProxy(ImGuiViewport *vp, Args... args)
-{
-  using R = std::result_of_t<decltype(fn)(Window *, Args...)>;
-
-  if(Window *wnd { static_cast<Window *>(vp->PlatformUserData) })
-    return (wnd->*fn)(args...);
-
-  if constexpr(!std::is_void_v<R>)
-    return R{};
-}
-
 void Window::install()
 {
   ImGuiIO &io { ImGui::GetIO() };
@@ -86,25 +56,6 @@ void Window::install()
   io.KeyMap[ImGuiKey_X]           = 'X';
   io.KeyMap[ImGuiKey_Y]           = 'Y';
   io.KeyMap[ImGuiKey_Z]           = 'Z';
-
-  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
-  pio.Platform_CreateWindow       = &createWindow;
-  pio.Platform_DestroyWindow      = &destroyWindow;
-  pio.Platform_ShowWindow         = &instanceProxy<&Window::show>;
-  pio.Platform_SetWindowPos       = &instanceProxy<&Window::setPosition>;
-  pio.Platform_GetWindowPos       = &instanceProxy<&Window::getPosition>;
-  pio.Platform_SetWindowSize      = &instanceProxy<&Window::setSize>;
-  pio.Platform_GetWindowSize      = &instanceProxy<&Window::getSize>;
-  pio.Platform_SetWindowFocus     = &instanceProxy<&Window::setFocus>;
-  pio.Platform_GetWindowFocus     = &instanceProxy<&Window::hasFocus>;
-  pio.Platform_GetWindowMinimized = &instanceProxy<&Window::isVisible>;
-  pio.Platform_SetWindowTitle     = &instanceProxy<&Window::setTitle>;
-  // TODO: SetWindowAlpha
-  pio.Platform_UpdateWindow       = &instanceProxy<&Window::update>;
-  pio.Platform_RenderWindow       = &instanceProxy<&Window::render>;
-  pio.Platform_GetWindowDpiScale  = &instanceProxy<&Window::scaleFactor>;
-  pio.Platform_OnChangedViewport  = &instanceProxy<&Window::onChangedViewport>;
-  pio.Platform_SetImeInputPos     = &instanceProxy<&Window::setImePosition>;
 
   platformInstall();
 }
@@ -196,18 +147,9 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 
 void Window::commonShow()
 {
-  // FIXME: Undo this weird thing ImGui does before calling ShowWindow
-  if(ImGui::GetFrameCount() < 3)
-    m_viewport->Flags &= ~ImGuiViewportFlags_NoFocusOnAppearing;
+  Viewport::show();
 
-  if(m_docker) {
-    constexpr const char *INI_KEY { "reaimgui" };
-    Dock_UpdateDockID(INI_KEY, m_docker->id());
-    DockWindowAddEx(m_hwnd.get(), "foo", INI_KEY, true);
-    if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing))
-      DockWindowActivate(m_hwnd.get());
-  }
-  else {
+  if(!m_docker) {
     if(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
       ShowWindow(m_hwnd.get(), SW_SHOWNA);
     else
@@ -268,7 +210,7 @@ void Window::setTitle(const char *title)
 }
 #endif
 
-void Window::onChangedViewport()
+void Window::onChanged()
 {
   const bool scaleChanged { m_previousScale != m_viewport->DpiScale };
   m_previousScale = m_viewport->DpiScale;
@@ -277,19 +219,6 @@ void Window::onChangedViewport()
   if(scaleChanged || fontTexVersion != m_fontTexVersion) {
     uploadFontTex();
     m_fontTexVersion = fontTexVersion;
-  }
-
-  if(m_docker) {
-    ImGuiViewportP *viewport { static_cast<ImGuiViewportP *>(m_viewport) };
-    if(auto *userWindow { viewport->Window }) {
-      userWindow->Pos = viewport->Pos = viewport->LastPlatformPos = getPosition();
-      userWindow->Size = userWindow->SizeFull = viewport->LastRendererSize =
-        viewport->Size = viewport->LastPlatformSize = getSize();
-    }
-
-    const int dockIndex { DockIsChildOfDock(m_hwnd.get(), nullptr) };
-    if(static_cast<ReaDockID>(dockIndex) != m_docker->id())
-      m_ctx->dockers()->onDockChanged(m_docker, dockIndex);
   }
 }
 

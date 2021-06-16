@@ -20,6 +20,7 @@
 
 #include "optional.hpp"
 #include "plugin_register.hpp"
+#include "viewport.hpp"
 
 #include <memory>
 
@@ -30,13 +31,7 @@
 #  define TEXT(str) str
 #endif
 
-class Context;
-class Docker;
-struct ImDrawData;
-struct ImGuiViewport;
-struct ImVec2;
-
-class Window {
+class Window : public Viewport {
 public:
   enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
 
@@ -45,34 +40,32 @@ public:
   static void updateMonitors();
   static ImGuiViewport *viewportUnder(POINT);
 
-  Window(ImGuiViewport *, Context *);
-  Window(const Window &) = delete;
-  ~Window();
+  Window(ImGuiViewport *);
+  virtual ~Window();
 
   // platform callbacks
-  void show();
-  void setPosition(ImVec2);
-  ImVec2 getPosition() const;
-  void setSize(ImVec2);
-  ImVec2 getSize() const;
-  void setFocus();
-  bool hasFocus() const;
-  bool isVisible() const;
-  void setTitle(const char *);
-  void update();
-  void render(void *);
-  float scaleFactor() const;
-  void onChangedViewport();
-  void setImePosition(ImVec2);
-  void translatePosition(POINT *, bool toHiDpi = false) const;
+  void *create() override;
+  void show() override;
+  void setPosition(ImVec2) override;
+  ImVec2 getPosition() const override;
+  void setSize(ImVec2) override;
+  ImVec2 getSize() const override;
+  void setFocus() override;
+  bool hasFocus() const override;
+  bool isVisible() const override;
+  void setTitle(const char *) override;
+  void update() override;
+  void render(void *) override;
+  float scaleFactor() const override;
+  void onChanged() override;
+  void setImePosition(ImVec2) override;
+  void translatePosition(POINT *, bool toHiDpi = false) const override;
 
   void mouseDown(unsigned int msg);
   void mouseUp(unsigned int msg);
 
   const char *getSwellClass() const;
-  Context *context() const { return m_ctx; }
   HWND nativeHandle() const { return m_hwnd.get(); }
-  ImGuiViewport *viewport() const { return m_viewport; }
 
 protected:
   static constexpr const auto *CLASS_NAME { TEXT("reaper_imgui_context") };
@@ -85,8 +78,6 @@ protected:
   void uploadFontTex();
   std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM);
 
-  ImGuiViewport *m_viewport;
-  Context *m_ctx;
   Docker *m_docker;
 
   struct Impl;

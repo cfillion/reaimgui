@@ -20,7 +20,8 @@
 #include "docker.hpp"
 #include "font.hpp"
 #include "opengl_renderer.hpp"
-#include "window.hpp"
+#include "viewport.hpp"
+#include "window.hpp" // TODO
 
 #include <cassert>
 #include <reaper_colortheme.h>
@@ -90,12 +91,13 @@ Context::Context(const char *name, const int userConfigFlags)
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
-  io.ConfigFlags |= userConfigFlags;
+  io.ConfigFlags |= userConfigFlags; // TODO setUserConfigFLags(userConfigFlags);
 
-  // m_settings.install();
+  // m_settings.install(); TODO remove?
   // m_settings.load();
 
-  Window::install();
+  Viewport::install();
+  Window::install(); // TODO: change this? Platform?
   OpenGLRenderer::install();
 
   ImGuiViewport *main { ImGui::GetMainViewport() };
@@ -106,7 +108,7 @@ Context::~Context()
 {
   setCurrent();
 
-  // m_window->updateSettings();
+  // m_window->updateSettings(); TODO
 
   if(m_inFrame)
     endFrame(false);
@@ -157,7 +159,7 @@ void Context::beginFrame()
   ImGui::NewFrame();
 
   dragSources();
-  m_dockers->drawActive();
+  m_dockers->drawAll();
 }
 
 void Context::enterFrame()
@@ -302,8 +304,8 @@ void Context::updateMousePos()
 
     // convert to HiDPI on Windows, flip Y on macOS
     if(ImGuiViewport *viewport { Window::viewportUnder(newPos) }) {
-      if(Window *window { static_cast<Window *>(viewport->PlatformUserData) })
-        window->translatePosition(&newPos, true);
+      if(Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) })
+        instance->translatePosition(&newPos, true); // TODO static
     }
 
     SetCursorPos(newPos.x, newPos.y);
@@ -335,8 +337,8 @@ void Context::updateMousePos()
     viewportForPos = nullptr;
 
   if(viewportForPos && viewportForPos->PlatformUserData) {
-    Window *window { static_cast<Window *>(viewportForPos->PlatformUserData) };
-    window->translatePosition(&pos);
+    Viewport *instance { static_cast<Viewport *>(viewportForPos->PlatformUserData) };
+    instance->translatePosition(&pos); // TODO static
 
     io.MousePos.x = pos.x;
     io.MousePos.y = pos.y;
@@ -476,11 +478,11 @@ ImGuiViewport *Context::focusedViewport(bool *hasOwnedViewport) const
   const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
   for(int i {}; i < pio.Viewports.Size; ++i) {
     ImGuiViewport *viewport { pio.Viewports[i] };
-    if(Window *window { static_cast<Window *>(viewport->PlatformUserData) }) {
+    if(Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) }) {
       if(hasOwnedViewport)
         *hasOwnedViewport = true;
 
-      if(window->hasFocus())
+      if(instance->hasFocus())
         return viewport;
     }
   }
