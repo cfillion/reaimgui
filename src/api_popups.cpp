@@ -121,19 +121,6 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
     valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
 });
 
-DEFINE_API(bool, BeginPopupContextVoid, (ImGui_Context*,ctx)
-(const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
-R"(Open+begin popup when clicked in void (where there are no windows).
-
-Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
-{
-  FRAME_GUARD;
-  nullIfEmpty(API_RO(str_id));
-
-  return ImGui::BeginPopupContextVoid(API_RO(str_id),
-    valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
-});
-
 DEFINE_API(bool, IsPopupOpen, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
 R"(Return true if the popup is open at the current BeginPopup() level of the popup stack.

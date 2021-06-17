@@ -158,7 +158,7 @@ end
 
 show_app = {
   -- Examples Apps (accessible from the "Examples" menu)
-  main_menu_bar      = false,
+  -- main_menu_bar      = false,
   documents          = false,
   console            = false,
   log                = false,
@@ -184,7 +184,7 @@ show_app = {
 function demo.ShowDemoWindow()
   local rv, open = nil, true
 
-  if show_app.main_menu_bar      then                               demo.ShowExampleAppMainMenuBar()       end
+  -- if show_app.main_menu_bar      then                               demo.ShowExampleAppMainMenuBar()       end
   if show_app.documents          then show_app.documents          = demo.ShowExampleAppDocuments()         end
   if show_app.console            then show_app.console            = demo.ShowExampleAppConsole()           end
   if show_app.log                then show_app.log                = demo.ShowExampleAppLog()               end
@@ -251,8 +251,8 @@ function demo.ShowDemoWindow()
       r.ImGui_EndMenu(ctx)
     end
     if r.ImGui_BeginMenu(ctx, 'Examples') then
-      rv,show_app.main_menu_bar =
-        r.ImGui_MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
+      -- rv,show_app.main_menu_bar =
+      --   r.ImGui_MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
       rv,show_app.console =
         r.ImGui_MenuItem(ctx, 'Console', nil, show_app.console, false)
       rv,show_app.log =
@@ -5898,24 +5898,24 @@ end
 -- Note the difference between BeginMainMenuBar() and BeginMenuBar():
 -- - BeginMenuBar() = menu-bar inside current window (which needs the ImGuiWindowFlags_MenuBar flag!)
 -- - BeginMainMenuBar() = helper to create menu-bar-sized window at the top of the main viewport + call BeginMenuBar() into it.
-function demo.ShowExampleAppMainMenuBar()
-  if r.ImGui_BeginMainMenuBar(ctx) then
-    if r.ImGui_BeginMenu(ctx, 'File') then
-      demo.ShowExampleMenuFile()
-      r.ImGui_EndMenu(ctx)
-    end
-    if r.ImGui_BeginMenu(ctx, 'Edit') then
-      if r.ImGui_MenuItem(ctx, 'Undo', 'CTRL+Z') then end
-      if r.ImGui_MenuItem(ctx, 'Redo', 'CTRL+Y', false, false) then end -- Disabled item
-      r.ImGui_Separator(ctx)
-      if r.ImGui_MenuItem(ctx, 'Cut', 'CTRL+X') then end
-      if r.ImGui_MenuItem(ctx, 'Copy', 'CTRL+C') then end
-      if r.ImGui_MenuItem(ctx, 'Paste', 'CTRL+V') then end
-      r.ImGui_EndMenu(ctx)
-    end
-    r.ImGui_EndMainMenuBar(ctx)
-  end
-end
+-- function demo.ShowExampleAppMainMenuBar()
+--   if r.ImGui_BeginMainMenuBar(ctx) then
+--     if r.ImGui_BeginMenu(ctx, 'File') then
+--       demo.ShowExampleMenuFile()
+--       r.ImGui_EndMenu(ctx)
+--     end
+--     if r.ImGui_BeginMenu(ctx, 'Edit') then
+--       if r.ImGui_MenuItem(ctx, 'Undo', 'CTRL+Z') then end
+--       if r.ImGui_MenuItem(ctx, 'Redo', 'CTRL+Y', false, false) then end -- Disabled item
+--       r.ImGui_Separator(ctx)
+--       if r.ImGui_MenuItem(ctx, 'Cut', 'CTRL+X') then end
+--       if r.ImGui_MenuItem(ctx, 'Copy', 'CTRL+C') then end
+--       if r.ImGui_MenuItem(ctx, 'Paste', 'CTRL+V') then end
+--       r.ImGui_EndMenu(ctx)
+--     end
+--     r.ImGui_EndMainMenuBar(ctx)
+--   end
+-- end
 
 -- Note that shortcuts are currently provided for display only
 -- (future version will add explicit flags to BeginMenu() to request processing shortcuts)

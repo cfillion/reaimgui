@@ -261,20 +261,6 @@ R"(Only call EndMenuBar() if BeginMenuBar() returns true! See ImGui_BeginMenuBar
   ImGui::EndMenuBar();
 });
 
-DEFINE_API(bool, BeginMainMenuBar, (ImGui_Context*,ctx),
-R"(Create a menu bar at the top of the screen and append to it.)",
-{
-  FRAME_GUARD;
-  return ImGui::BeginMainMenuBar();
-});
-
-DEFINE_API(void, EndMainMenuBar, (ImGui_Context*,ctx),
-R"(Only call EndMainMenuBar() if BeginMainMenuBar() returns true! See ImGui_BeginMainMenuBar.)",
-{
-  FRAME_GUARD;
-  ImGui::EndMainMenuBar();
-});
-
 DEFINE_API(bool, BeginMenu, (ImGui_Context*,ctx)
 (const char*, label)(bool*, API_RO(enabled)),
 R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_EndMenu.

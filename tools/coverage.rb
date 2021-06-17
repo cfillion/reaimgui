@@ -151,6 +151,11 @@ NATIVE_ONLY = [
 
   # not recommended for new designs
   'void ImGui::LogButtons()',
+
+  # no main viewport
+  'bool ImGui::BeginMainMenuBar()',
+  'void ImGui::EndMainMenuBar()',
+  'bool ImGui::BeginPopupContextVoid(const char*, ImGuiPopupFlags)',
 ]
 
 NATIVE_ONLY_CLASSES = %w[
