@@ -5881,7 +5881,7 @@ function demo.ShowAboutWindow()
   r.ImGui_Text(ctx, ('reaper_imgui %s'):format(REAIMGUI_VERSION))
   r.ImGui_Separator(ctx)
   r.ImGui_Text(ctx, 'By Christian Fillion and contributors.')
-  r.ImGui_Text(ctx, 'ReaImGui is licensed under the LGPL License.')
+  r.ImGui_Text(ctx, 'ReaImGui is licensed under the LGPL.')
   r.ImGui_End(ctx)
 
   return open
