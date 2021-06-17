@@ -186,9 +186,9 @@ bool DockerHost::hasFocus() const
   return m_window ? m_window->hasFocus() : false;
 }
 
-bool DockerHost::isVisible() const
+bool DockerHost::isMinimized() const
 {
-  return m_window ? m_window->isVisible() : false;
+  return m_window ? m_window->isMinimized() : true;
 }
 
 void DockerHost::setTitle(const char *)

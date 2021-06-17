@@ -81,7 +81,7 @@ void Viewport::install()
   pio.Platform_GetWindowSize      = &instanceProxy<&Viewport::getSize>;
   pio.Platform_SetWindowFocus     = &instanceProxy<&Viewport::setFocus>;
   pio.Platform_GetWindowFocus     = &instanceProxy<&Viewport::hasFocus>;
-  pio.Platform_GetWindowMinimized = &instanceProxy<&Viewport::isVisible>;
+  pio.Platform_GetWindowMinimized = &instanceProxy<&Viewport::isMinimized>;
   pio.Platform_SetWindowTitle     = &instanceProxy<&Viewport::setTitle>;
   // TODO: SetWindowAlpha
   pio.Platform_UpdateWindow       = &instanceProxy<&Viewport::update>;

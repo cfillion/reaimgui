@@ -74,7 +74,7 @@ public:
   ImVec2 getSize() const override;
   void setFocus() override;
   bool hasFocus() const override;
-  bool isVisible() const override;
+  bool isMinimized() const override;
   void setTitle(const char *) override;
   void update() override;
   void render(void *) override;

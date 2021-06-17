@@ -42,7 +42,7 @@ public:
   virtual ImVec2 getSize() const = 0;
   virtual void setFocus() = 0;
   virtual bool hasFocus() const = 0;
-  virtual bool isVisible() const = 0;
+  virtual bool isMinimized() const = 0;
   virtual void setTitle(const char *) = 0;
   virtual void update() = 0;
   virtual void render(void *) = 0;

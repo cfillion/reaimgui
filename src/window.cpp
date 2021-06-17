@@ -220,7 +220,7 @@ bool Window::hasFocus() const
   return foreground == m_hwnd.get();
 }
 
-bool Window::isVisible() const
+bool Window::isMinimized() const
 {
   // IsWindowVisible is false when docked and another tab is active
   return !IsWindowVisible(m_hwnd.get());

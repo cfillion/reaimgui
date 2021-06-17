@@ -50,7 +50,7 @@ public:
   ImVec2 getSize() const override;
   void setFocus() override;
   bool hasFocus() const override;
-  bool isVisible() const override;
+  bool isMinimized() const override;
   void onChanged() override;
 
   void mouseDown(unsigned int msg);
