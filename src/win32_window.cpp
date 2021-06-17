@@ -345,6 +345,7 @@ std::optional<LRESULT> Win32Window::handleMessage
   case WM_DPICHANGED: {
     m_dpi = LOWORD(wParam);
     m_viewport->DpiScale = scaleForDpi(m_dpi);
+
     const RECT *sugg { reinterpret_cast<RECT *>(lParam) };
     SetWindowPos(m_hwnd.get(), nullptr,
       sugg->left, sugg->top, sugg->right - sugg->left, sugg->bottom - sugg->top,
@@ -354,6 +355,14 @@ std::optional<LRESULT> Win32Window::handleMessage
     m_viewport->Size = getSize();
     return 0;
   }
+  case WM_DPICHANGED_BEFOREPARENT:
+    // Tthis messages is sent when docked.
+    // Only top-level windows receive WM_DPICHANGED.
+    m_dpi = dpiForWindow(m_hwnd.get());
+    m_viewport->DpiScale = scaleForDpi(m_dpi);
+    m_viewport->Pos = getPosition();
+    // WM_SIZE has been sent, no need to set m_viewport->Size here
+    return 0;
   case WM_GETDLGCODE:
     return DLGC_WANTALLKEYS; // eat all inputs, don't let Tab steal focus
   case WM_KEYDOWN:
