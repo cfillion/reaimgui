@@ -45,6 +45,7 @@ public:
   void uploadFontTex() override;
   std::optional<LRESULT> handleMessage
     (const unsigned int msg, WPARAM wParam, LPARAM) override;
+  int handleAccelerator(MSG *) override;
 
 private:
   NSView *m_view;

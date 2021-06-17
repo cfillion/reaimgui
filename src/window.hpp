@@ -64,22 +64,22 @@ public:
 protected:
   static constexpr const auto *CLASS_NAME { TEXT("reaper_imgui_context") };
   static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
-  static int translateAccel(MSG *msg, accelerator_register_t *accel); // TODO remove
 
   void createSwellDialog();
+  HWND parentHandle();
 
   virtual void uploadFontTex() = 0;
   virtual std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM) = 0;
-
-  DockerHost *m_dockerHost;
+  virtual int handleAccelerator(MSG *);
 
   struct WindowDeleter { void operator()(HWND); };
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
 
-  HWND parentHandle();
-
 private:
   static int hwndInfo(HWND, INT_PTR type);
+  static int translateAccel(MSG *msg, accelerator_register_t *accel);
+
+  DockerHost *m_dockerHost;
 
   accelerator_register_t m_accel;
   PluginRegister m_accelReg;

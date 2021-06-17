@@ -18,12 +18,10 @@
 #include "window.hpp"
 
 #include "context.hpp"
-#include "docker.hpp"
 #include "font.hpp"
 #include "platform.hpp"
 
 #include <imgui/imgui.h>
-#include <imgui/imgui_internal.h>
 
 #ifndef _WIN32
 #  include <swell/swell.h>
@@ -150,7 +148,6 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
       ("hwnd_info", reinterpret_cast<void *>(&Window::hwndInfo));
   else
     m_hwndInfo = g_hwndInfo.lock();
-
 
   // Cannot initialize m_hwnd during construction due to handleMessage being
   // virtual. This task is delayed to created() called once fully constructed.
@@ -327,16 +324,20 @@ HWND Window::parentHandle()
   return static_cast<HWND>(parent->PlatformHandle);
 }
 
-#ifndef __APPLE__
 int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
 {
   auto *self { static_cast<Window *>(accel->user) };
-  if(self->m_hwnd.get() == msg->hwnd)
-    return Accel::PassToWindow;
+  HWND hwnd { self->m_hwnd.get() };
+  if(hwnd == msg->hwnd || IsChild(hwnd, msg->hwnd))
+    return self->handleAccelerator(msg);
   else
     return Accel::NotOurWindow;
 }
-#endif
+
+int Window::handleAccelerator(MSG *)
+{
+  return Accel::PassToWindow; // default implementation
+}
 
 int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
 {

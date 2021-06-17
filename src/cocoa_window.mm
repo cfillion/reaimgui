@@ -225,15 +225,8 @@ std::optional<LRESULT> CocoaWindow::handleMessage
   return std::nullopt;
 }
 
-int Window::translateAccel(MSG *msg, accelerator_register_t *accel) // TODO
+int CocoaWindow::handleAccelerator(MSG *msg)
 {
-  auto *self { static_cast<CocoaWindow *>(accel->user) };
-  HWND hwnd { self->nativeHandle() };
-
-  if(hwnd == msg->hwnd || IsChild(hwnd, msg->hwnd)) {
-    [[(__bridge NSView *)hwnd window] sendEvent:[NSApp currentEvent]];
-    return Accel::EatKeystroke;
-  }
-
-  return Accel::NotOurWindow;
+  [[m_view window] sendEvent:[NSApp currentEvent]];
+  return Accel::EatKeystroke;
 }

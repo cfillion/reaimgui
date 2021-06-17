@@ -225,7 +225,7 @@ RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
 
 void Win32Window::show()
 {
-  if(!m_dockerHost && !(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
+  if(!isDocked() && !(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
     AttachWindowTopmostButton(m_hwnd.get());
 
   Window::show();
