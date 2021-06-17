@@ -306,15 +306,17 @@ float Win32Window::scaleFactor() const
   return m_viewport->DpiScale;
 }
 
-void Win32Window::setImePosition(const ImVec2 pos)
+void Win32Window::setImePosition(ImVec2 pos)
 {
-  // TODO translate pos
   if(HIMC ime { ImmGetContext(m_hwnd.get()) }) {
+    Platform::translatePosition(&pos, true);
+
     COMPOSITIONFORM cf;
     cf.ptCurrentPos.x = pos.x;
     cf.ptCurrentPos.y = pos.y;
     cf.dwStyle = CFS_FORCE_POSITION;
     ImmSetCompositionWindow(ime, &cf);
+
     ImmReleaseContext(m_hwnd.get(), ime);
   }
 }
