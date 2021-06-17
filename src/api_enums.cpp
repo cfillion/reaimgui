@@ -61,6 +61,8 @@ DEFINE_ENUM(ImGui, Col_TabHovered,            "");
 DEFINE_ENUM(ImGui, Col_TabActive,             "");
 DEFINE_ENUM(ImGui, Col_TabUnfocused,          "");
 DEFINE_ENUM(ImGui, Col_TabUnfocusedActive,    "");
+DEFINE_ENUM(ImGui, Col_DockingPreview,        "Preview overlay color when about to docking something");
+DEFINE_ENUM(ImGui, Col_DockingEmptyBg,        "Background color for empty node (e.g. CentralNode with no window docked into it)");
 DEFINE_ENUM(ImGui, Col_PlotLines,             "");
 DEFINE_ENUM(ImGui, Col_PlotLinesHovered,      "");
 DEFINE_ENUM(ImGui, Col_PlotHistogram,         "");
@@ -479,6 +481,7 @@ DEFINE_ENUM(ImGui, WindowFlags_AlwaysUseWindowPadding,    "Ensure child windows 
 DEFINE_ENUM(ImGui, WindowFlags_NoNavInputs,               "No gamepad/keyboard navigation within the window");
 DEFINE_ENUM(ImGui, WindowFlags_NoNavFocus,                "No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB)");
 DEFINE_ENUM(ImGui, WindowFlags_UnsavedDocument,           "Append '*' to title without affecting the ID, as a convenience to avoid using the ### operator. When used in a tab/docking context, tab is selected on closure and closure is deferred by one frame to allow code to cancel the closure (with a confirmation popup, etc.) without flicker.");
+DEFINE_ENUM(ImGui, WindowFlags_NoDocking,                 "Disable docking of this window");
 DEFINE_ENUM(ImGui, WindowFlags_NoNav,                     "WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
 DEFINE_ENUM(ImGui, WindowFlags_NoDecoration,              "WindowFlags_NoTitleBar | WindowFlags_NoResize | WindowFlags_NoScrollbar | WindowFlags_NoCollapse");
 DEFINE_ENUM(ImGui, WindowFlags_NoInputs,                  "WindowFlags_NoMouseInputs | WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
