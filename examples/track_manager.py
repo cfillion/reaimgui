@@ -4,9 +4,8 @@ from imgui_python import *
 FLT_MIN = 1.17549e-38
 
 def init():
-  global ctx, viewport
-  ctx = ImGui_CreateContext("Track manager", 700, 500)[0]
-  viewport = ImGui_GetMainViewport(ctx)
+  global ctx
+  ctx = ImGui_CreateContext("Track manager")[0]
   loop()
 
 def paramCheckbox(track, param):
@@ -115,23 +114,20 @@ def trackTable():
   ImGui_EndTable(ctx)
 
 def loop():
-  if ImGui_IsCloseRequested(ctx):
-    ImGui_DestroyContext(ctx)
-    return
+  ImGui_SetNextWindowSize(ctx, 700, 500, ImGui_Cond_FirstUseEver())
+  begin = ImGui_Begin(ctx, "Track manager", True)
 
-  _, x, y = ImGui_Viewport_GetPos(viewport)
-  ImGui_SetNextWindowPos(ctx, x, y)
-  _, w, h = ImGui_Viewport_GetSize(viewport)
-  ImGui_SetNextWindowSize(ctx, w, h)
-  ImGui_Begin(ctx, "main", None, ImGui_WindowFlags_NoDecoration())
+  if begin[0]:
+    if ImGui_Button(ctx, "Add track")[0]:
+      RPR_InsertTrackAtIndex(-1, True)
 
-  if ImGui_Button(ctx, "Add track")[0]:
-    RPR_InsertTrackAtIndex(-1, True)
-
-  trackTable()
+    trackTable()
 
   ImGui_End(ctx)
 
-  RPR_defer("loop()")
+  if begin[3]:
+    RPR_defer("loop()")
+  else:
+    ImGui_DestroyContext(ctx)
 
 RPR_defer("init()")

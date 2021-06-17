@@ -33,12 +33,11 @@
 
 static int g_actionId;
 static ImGui_Context *g_ctx;
-static ImGui_Viewport *g_viewport;
 
 static void frame()
 {
   static int click_count;
-  static char text[255] { "hello dear imgui" };
+  static char text[255] { "The quick brown fox jumps over the lazy dog" };
 
   if(ImGui_Button(g_ctx, "Click me!", nullptr, nullptr))
     ++click_count;
@@ -53,28 +52,21 @@ static void frame()
 
 static void loop()
 {
-  if(!g_ctx) {
-    g_ctx = ImGui_CreateContext("My extension", 300, 60, nullptr, nullptr, nullptr, nullptr);
-    g_viewport = ImGui_GetMainViewport(g_ctx);
-  }
+  if(!g_ctx)
+    g_ctx = ImGui_CreateContext("My extension", nullptr);
 
-  if(ImGui_IsCloseRequested(g_ctx)) {
+  int cond { ImGui_Cond_FirstUseEver };
+  ImGui_SetNextWindowSize(g_ctx, 400, 80, &cond);
+  bool open { true };
+  if(ImGui_Begin(g_ctx, "ReaImGui C++ example", &open, nullptr))
+    frame();
+  ImGui_End(g_ctx);
+
+  if(!open) {
     plugin_register("-timer", reinterpret_cast<void *>(&loop));
     ImGui_DestroyContext(g_ctx);
     g_ctx = nullptr;
-    return;
   }
-
-  double x, y, w, h;
-  ImGui_Viewport_GetPos(g_viewport, &x, &y);
-  ImGui_Viewport_GetSize(g_viewport, &w, &h);
-  ImGui_SetNextWindowPos(g_ctx, x, y, nullptr, nullptr, nullptr);
-  ImGui_SetNextWindowSize(g_ctx, w, h, nullptr);
-
-  int window_flags { ImGui_WindowFlags_NoDecoration };
-  ImGui_Begin(g_ctx, "Window", nullptr, &window_flags);
-  frame();
-  ImGui_End(g_ctx);
 }
 
 static bool commandHook(KbdSectionInfo *sec, const int command,

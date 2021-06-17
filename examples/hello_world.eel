@@ -1,6 +1,6 @@
 // REAPER 6.24 or newer only! (Use the legacy syntax extension_api(...) for older versions)
 
-FLT_MIN = 0.0001; // 1.17549e-38
+ImGui_NumericLimits_Float(FLT_MIN, FLT_MAX);
 
 color = 0;
 #notes = "";
@@ -27,22 +27,15 @@ function frame() (
 );
 
 function loop() (
-  ImGui_IsCloseRequested(ctx) ? ImGui_DestroyContext(ctx) : (
-    ImGui_Viewport_GetPos(viewport, x, y);
-    ImGui_SetNextWindowPos(ctx, x, y);
-    ImGui_Viewport_GetSize(viewport, w, h);
-    ImGui_SetNextWindowSize(ctx, w, h);
-    ImGui_Begin(ctx, "main", 0, ImGui_WindowFlags_NoDecoration());
-    frame();
-    ImGui_End(ctx);
-
-    defer("loop()");
-  );
+  open = 1;
+  ImGUi_SetNextWindowSize(ctx, 500, 420, ImGui_Cond_FirstUseEver());
+  ImGui_Begin(ctx, "Hello World!", open) ? frame();
+  ImGui_End(ctx);
+  open ? defer("loop()") : ImGui_DestroyContext(ctx)
 );
 
 function init() (
-  ctx = ImGui_CreateContext("Hello World!", 500, 420);
-  viewport = ImGui_GetMainViewport(ctx);
+  ctx = ImGui_CreateContext("Hello World!");
   loop();
 );
 

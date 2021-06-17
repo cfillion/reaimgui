@@ -1,7 +1,7 @@
 // For compatibility with REAPER versions prior 6.24.
 // See hello_world.eel (ReaImGui_Hello World.eel) for an example using the new extension API syntax.
 
-FLT_MIN = 0.0001; // 1.17549e-38
+extension_api("ImGui_NumericLimits_Float", FLT_MIN, FLT_MAX);
 
 color = 0;
 #notes = "";
@@ -28,23 +28,15 @@ function frame() (
 );
 
 function loop() (
-  extension_api("ImGui_IsCloseRequested", ctx) ?
-      extension_api("ImGui_DestroyContext", ctx) : (
-    extension_api("ImGui_Viewport_GetPos", viewport, x, y);
-    extension_api("ImGui_SetNextWindowPos", ctx, x, y);
-    extension_api("ImGui_Viewport_GetSize", viewport, w, h);
-    extension_api("ImGui_SetNextWindowSize", ctx, w, h);
-    extension_api("ImGui_Begin", ctx, "main", 0, extension_api("ImGui_WindowFlags_NoDecoration"));
-    frame();
-    extension_api("ImGui_End", ctx);
-
-    defer("loop()");
-  );
+  open = 1;
+  extension_api("ImGui_SetNextWindowSize", ctx, 500, 420, extension_api("ImGui_Cond_FirstUseEver"));
+  extension_api("ImGui_Begin", ctx, "Hello World!", open) ? frame();
+  extension_api("ImGui_End", ctx);
+  open ? defer("loop()") : extension_api("ImGui_DestroyContext", ctx);
 );
 
 function init() (
-  ctx = extension_api("ImGui_CreateContext", "Hello World!", 500, 420);
-  viewport = extension_api("ImGui_GetMainViewport", ctx);
+  ctx = extension_api("ImGui_CreateContext", "Hello World!");
   loop();
 );
 
