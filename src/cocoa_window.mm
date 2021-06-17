@@ -219,6 +219,8 @@ std::optional<LRESULT> CocoaWindow::handleMessage
   case WM_PAINT: // update size if it changed while we were docked & inactive
   case WM_SIZE:
     [m_gl update];
+    if(m_viewport->DrawData && m_viewport->DrawData->Valid)
+      render(nullptr);
     break; // continue handling WM_SIZE in CocoaWindow::proc
   }
 
