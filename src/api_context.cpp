@@ -117,16 +117,6 @@ DEFINE_API(int, GetFrameCount, (ImGui_Context*,ctx),
   return ImGui::GetFrameCount();
 });
 
-DEFINE_API(void, GetDisplaySize, (ImGui_Context*,ctx)
-(double*,API_W(w))(double*,API_W(h)),
-"",
-{
-  FRAME_GUARD;
-  const ImVec2 &size { ctx->IO().DisplaySize };
-  if(API_W(w)) *API_W(w) = size.x;
-  if(API_W(h)) *API_W(h) = size.y;
-});
-
 DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
 "Enable a font for use in the given context. Fonts must be attached as soon as possible after creating the context or on a new defer cycle.",
