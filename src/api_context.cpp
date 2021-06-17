@@ -71,13 +71,6 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
     return false;
 });
 
-// DEFINE_API(void*, GetNativeHwnd, (ImGui_Context*,ctx),
-// R"(Return the native handle for the context's platform window.)",
-// {
-//   assertValid(ctx);
-//   return ctx->window()->nativeHandle();
-// });
-
 DEFINE_API(int, GetConfigFlags, (ImGui_Context*,ctx),
 "See ImGui_SetConfigFlags.",
 {
@@ -92,21 +85,6 @@ DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
   assertValid(ctx);
   ctx->IO().ConfigFlags = flags;
 });
-
-// DEFINE_API(int, GetDock, (ImGui_Context*,ctx),
-// "See ImGui_SetDock.",
-// {
-//   assertValid(ctx);
-//   return ctx->window()->dock();
-// });
-
-// DEFINE_API(void, SetDock, (ImGui_Context*,ctx)
-// (int,dock),
-// "First bit is the docking enable flag. The remaining bits are the docker index.",
-// {
-//   assertValid(ctx);
-//   ctx->setDockNextFrame(dock);
-// });
 
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
 (bool*,API_RWO(p_open)),
