@@ -183,7 +183,10 @@ bool Context::endFrame(const bool render) try
     ImGui::EndFrame();
 
   ImGui::UpdatePlatformWindows();
+#ifndef _WIN32
+  // WM_KILLFOCUS is incomplete/missing on macOS/Linux with SWELL
   updateFocus();
+#endif
 
   if(render)
     ImGui::RenderPlatformWindowsDefault();
@@ -460,12 +463,6 @@ void Context::endDrag(const bool drop)
 
 ImGuiViewport *Context::focusedViewport(bool *hasOwnedViewport) const
 {
-  // TODO: test using hasFocus docked instead of keyWindow (+ update comment)
-  //
-  // WM_ACTIVATE (wParam = WA_INACTIVE) is not fired when docked.
-  // InputView::resignFirstResponder handles change of focus within the docker's
-  // window, and isKeyWindow below handles the docker window itself losing focus.
-
   if(hasOwnedViewport)
     *hasOwnedViewport = false;
 

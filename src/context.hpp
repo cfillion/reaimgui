@@ -65,7 +65,7 @@ public:
   void beginDrag(std::vector<std::string> &&);
   void beginDrag(HDROP);
   void endDrag(bool drop);
-  void clearFocus();
+  void updateFocus();
   // void markSettingsDirty();
 
   ImGuiIO &IO();
@@ -90,11 +90,11 @@ private:
   void updateMousePos();
   void updateKeyMods();
   void updateDragDrop();
-  void updateFocus();
 
   ImGuiViewport *viewportUnder(POINT) const;
   ImGuiViewport *focusedViewport(bool *hasOwnedViewport = nullptr) const;
   void dragSources();
+  void clearFocus();
 
   bool m_inFrame;
   int m_dragState;

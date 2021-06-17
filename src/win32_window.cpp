@@ -383,7 +383,7 @@ std::optional<LRESULT> Win32Window::handleMessage
       return HTTRANSPARENT;
     break;
   case WM_KILLFOCUS:
-    m_ctx->clearFocus();
+    m_ctx->updateFocus();
     return 0;
   }
 
