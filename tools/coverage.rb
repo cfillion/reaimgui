@@ -13,13 +13,21 @@ NATIVE_ONLY = [
   'ImGuiContext* ImGui::GetCurrentContext()',
   'void ImGui::SetCurrentContext(ImGuiContext*)',
   'void ImGui::DestroyContext(ImGuiContext*)',
+
   'ImGuiIO& ImGui::GetIO()',
+  'ImGuiPlatformIO& ImGui::GetPlatformIO()',
   'ImGuiStyle& ImGui::GetStyle()',
+
   'void ImGui::NewFrame()',
   'void ImGui::EndFrame()',
   'void ImGui::Render()',
-  'ImDrawData* ImGui::GetDrawData()',
-  'ImDrawListSharedData* ImGui::GetDrawListSharedData()',
+  'void ImGui::UpdatePlatformWindows()',
+  'void ImGui::RenderPlatformWindowsDefault(void*, void*)',
+  'void ImGui::DestroyPlatformWindows()',
+
+  'ImGuiViewport* ImGui::FindViewportByID(ImGuiID)',
+  'ImGuiViewport* ImGui::FindViewportByPlatformHandle(void*)',
+
   'int ImGui::GetKeyIndex(ImGuiKey)',
   'void ImGui::CaptureMouseFromApp(bool)',
 
@@ -43,6 +51,8 @@ NATIVE_ONLY = [
   'bool ImGui::TreeNode(const char*)',
   'bool ImGui::TreeNode(const char*, const char*, ...)',
 
+  'ImDrawData* ImGui::GetDrawData()',
+  'ImDrawListSharedData* ImGui::GetDrawListSharedData()',
   'void ImDrawList::AddCallback(ImDrawCallback, void*)',
   'void ImDrawList::AddDrawCmd()',
 
@@ -156,6 +166,11 @@ NATIVE_ONLY = [
   'bool ImGui::BeginMainMenuBar()',
   'void ImGui::EndMainMenuBar()',
   'bool ImGui::BeginPopupContextVoid(const char*, ImGuiPopupFlags)',
+
+  # experimental docking API
+  'ImGuiID ImGui::DockSpace(ImGuiID, const ImVec2&, ImGuiDockNodeFlags, const ImGuiWindowClass*)',
+  'ImGuiID ImGui::DockSpaceOverViewport(const ImGuiViewport*, ImGuiDockNodeFlags, const ImGuiWindowClass*)',
+  'void ImGui::SetNextWindowClass(const ImGuiWindowClass*)',
 ]
 
 NATIVE_ONLY_CLASSES = %w[
@@ -178,14 +193,15 @@ NATIVE_ONLY_ENUMS = [
   'TreeNodeFlags_NavLeftJumpsBackHere', # marked as WIP
   /\ATableFlags_NoBordersInBody/,       # marked as alpha, to be moved to style
   /\AConfigFlags_(NavEnableGamepad|NavNoCaptureKeyboard)\z/, # not implemented
-  /\AConfigFlags_(IsSRGB|IsTouchScreen)\z/, # backend internal flags
+  /\AConfigFlags_(IsSRGB|IsTouchScreen|ViewportsEnable|DpiEnableScale(Viewports|Fonts))\z/, # backend internal flags
 
   # only for dear imgui's internal use
   'InputTextFlags_Multiline',
   'InputTextFlags_NoMarkEdited',
-  /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu)\z/,
+  /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu|DockNodeHost)\z/,
   /\AColorEditFlags__.+Mask\z/,
   /\ADrawListFlags_/,
+  /\ADockNodeFlags_/,
 ]
 
 # these functions were ported using another name (eg. overloads)
