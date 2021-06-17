@@ -151,7 +151,7 @@ void OpenGLRenderer::uploadFontTex()
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
-  io.Fonts->SetTexID(reinterpret_cast<ImTextureID>(m_textures[FontTex]));
+  io.Fonts->SetTexID(FontTex);
 }
 
 OpenGLRenderer::~OpenGLRenderer()
@@ -238,7 +238,7 @@ void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
         clipRect.z - clipRect.x, clipRect.w - clipRect.y);
 
       // Bind texture, Draw
-      glBindTexture(GL_TEXTURE_2D, (unsigned int)(intptr_t)cmd->GetTexID());
+      glBindTexture(GL_TEXTURE_2D, m_textures[cmd->GetTexID()]);
       glDrawElementsBaseVertex(GL_TRIANGLES, cmd->ElemCount,
         sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
         (void*)(intptr_t)(cmd->IdxOffset * sizeof(ImDrawIdx)),

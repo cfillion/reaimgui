@@ -99,6 +99,8 @@ inline void ReaImGui_Assert(const bool ok, const char *message)
 // Read about ImGuiBackendFlags_RendererHasVtxOffset for details.
 //#define ImDrawIdx unsigned int
 
+#define ImTextureID size_t
+
 //---- Override ImDrawCallback signature (will need to modify renderer backends accordingly)
 //struct ImDrawList;
 //struct ImDrawCmd;
