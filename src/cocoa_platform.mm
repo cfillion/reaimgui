@@ -78,7 +78,7 @@ void Platform::translatePosition(ImVec2 *pos, bool)
 }
 
 static ImGuiViewport *nextViewportUnder
-  (const NSPoint pos, const unsigned int windowNumber)
+  (const NSPoint pos, const NSInteger windowNumber)
 {
   ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
 
@@ -107,7 +107,7 @@ ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
 {
   const NSPoint point { NSMakePoint(pos.x, pos.y) };
 
-  unsigned int number { 0 };
+  NSInteger number { 0 };
   ImGuiViewport *viewport;
 
   do {
