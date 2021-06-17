@@ -66,7 +66,8 @@ class DockerHost : public Viewport {
 public:
   DockerHost(Docker *, ImGuiViewport *);
 
-  void *create() override;
+  void create() override;
+  HWND nativeHandle() const override;
   void show() override;
   void setPosition(ImVec2) override;
   ImVec2 getPosition() const override;

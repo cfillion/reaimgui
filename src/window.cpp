@@ -181,32 +181,6 @@ void Window::show()
     ShowWindow(m_hwnd.get(), SW_SHOW);
 }
 
-ImVec2 Window::getPosition() const
-{
-  POINT point {};
-  ClientToScreen(m_hwnd.get(), &point);
-
-  ImVec2 pos;
-  pos.x = point.x;
-  pos.y = point.y;
-  Platform::scalePosition(&pos);
-
-  return pos;
-}
-
-ImVec2 Window::getSize() const
-{
-  RECT rect;
-  GetClientRect(m_hwnd.get(), &rect);
-  auto width  { rect.right - rect.left },
-       height { rect.bottom - rect.top };
-#ifndef __APPLE__
-  width  /= m_viewport->DpiScale;
-  height /= m_viewport->DpiScale;
-#endif
-  return { static_cast<float>(width), static_cast<float>(height) };
-}
-
 void Window::setFocus()
 {
   SetFocus(m_hwnd.get());

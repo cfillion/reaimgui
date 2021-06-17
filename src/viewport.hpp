@@ -18,6 +18,12 @@
 #ifndef REAIMGUI_VIEWPORT_HPP
 #define REAIMGUI_VIEWPORT_HPP
 
+#ifdef _WIN32
+#  include <windows.h>
+#else
+#  include <swell/swell-types.h>
+#endif
+
 class Context;
 class Docker;
 struct ImGuiViewport;
@@ -34,12 +40,13 @@ public:
   Context *context() const { return m_ctx; }
   ImGuiViewport *viewport() const { return m_viewport; }
 
-  virtual void *create() = 0;
+  virtual void create() = 0;
+  virtual HWND nativeHandle() const = 0;
   virtual void show();
   virtual void setPosition(ImVec2) = 0;
-  virtual ImVec2 getPosition() const = 0;
+  virtual ImVec2 getPosition() const;
   virtual void setSize(ImVec2) = 0;
-  virtual ImVec2 getSize() const = 0;
+  virtual ImVec2 getSize() const;
   virtual void setFocus() = 0;
   virtual bool hasFocus() const = 0;
   virtual bool isMinimized() const = 0;

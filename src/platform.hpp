@@ -18,6 +18,12 @@
 #ifndef REAIMGUI_PLATFORM_HPP
 #define REAIMGUI_PLATFORM_HPP
 
+#ifdef _WIN32
+#  include <windows.h>
+#else
+#  include <swell/swell-types.h>
+#endif
+
 class DockerHost;
 class Window;
 struct ImGuiViewport;
@@ -29,6 +35,7 @@ namespace Platform {
   void updateMonitors();
   ImGuiViewport *viewportUnder(ImVec2);
   void scalePosition(ImVec2 *, bool toHiDpi = false);
+  float scaleForWindow(HWND);
 };
 
 #endif

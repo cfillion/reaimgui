@@ -76,7 +76,7 @@ CocoaWindow::CocoaWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 {
 }
 
-void *CocoaWindow::create()
+void CocoaWindow::create()
 {
   createSwellDialog();
   m_view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
@@ -109,8 +109,6 @@ void *CocoaWindow::create()
   [m_gl makeCurrentContext];
   m_renderer = new OpenGLRenderer;
   [NSOpenGLContext clearCurrentContext];
-
-  return m_hwnd.get();
 }
 
 CocoaWindow::~CocoaWindow()

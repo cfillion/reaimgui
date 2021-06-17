@@ -41,7 +41,7 @@ GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 {
 }
 
-void *GDKWindow::create()
+void GDKWindow::create()
 {
   createSwellDialog();
   SetWindowLongPtr(m_hwnd.get(), GWL_EXSTYLE, WS_EX_ACCEPTFILES);
@@ -52,8 +52,6 @@ void *GDKWindow::create()
     SetWindowLongPtr(m_hwnd.get(), GWL_STYLE, WS_CHILD);
 
   m_previousFlags = ~m_viewport->Flags; // update will be called before show
-
-  return m_hwnd.get();
 }
 
 GDKWindow::~GDKWindow()

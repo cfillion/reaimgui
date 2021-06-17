@@ -106,7 +106,7 @@ ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
   HWND target { WindowFromPoint(point) };
 
   ImGuiViewport *viewport { ImGui::FindViewportByPlatformHandle(target) };
-  if(viewport && viewport->PlatformUserData)
+  if(viewport && ImGui::GetMainViewport() != viewport)
     return viewport;
 
   return nullptr;
@@ -139,4 +139,9 @@ void Platform::scalePosition(ImVec2 *pos, bool toHiDpi)
 
   pos->x = info.rcMonitor.left + (diffX * scale);
   pos->y = info.rcMonitor.top  + (diffY * scale);
+}
+
+float Platform::scaleForWindow(HWND hwnd)
+{
+  return Win32Window::scaleForDpi(Win32Window::dpiForWindow(hwnd));
 }

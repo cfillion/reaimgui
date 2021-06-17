@@ -110,7 +110,7 @@ Win32Window::Win32Window(ImGuiViewport *viewport, DockerHost *dockerHost)
 {
 }
 
-void *Win32Window::create()
+void Win32Window::create()
 {
   static Class windowClass;
 
@@ -141,8 +141,6 @@ void *Win32Window::create()
   // will be freed upon RevokeDragDrop during destruction
   DropTarget *dropTarget = new DropTarget { m_ctx };
   RegisterDragDrop(m_hwnd.get(), dropTarget);
-
-  return m_hwnd.get();
 }
 
 Win32Window::~Win32Window()

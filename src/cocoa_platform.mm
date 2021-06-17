@@ -117,3 +117,8 @@ ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
 
   return viewport;
 }
+
+float Platform::scaleForWindow(HWND hwnd)
+{
+  return [[(__bridge NSView *)hwnd window] backingScaleFactor];
+}

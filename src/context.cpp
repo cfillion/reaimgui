@@ -115,9 +115,6 @@ Context::Context(const char *label, const int userConfigFlags)
 
   Platform::install();
   Viewport::install();
-
-  ImGuiViewport *main { ImGui::GetMainViewport() };
-  main->PlatformHandle = GetMainHwnd();
 }
 
 Context::~Context()
@@ -232,8 +229,9 @@ void Context::updateFrameInfo()
 {
   ImGuiIO &io { m_imgui->IO };
 
-  ImGuiPlatformIO &pio { m_imgui->PlatformIO };
-  io.DisplaySize = pio.Monitors[0].MainSize;
+  // Dear ImGui doesn't call MainViewport::getSize
+  io.DisplaySize =
+    static_cast<Viewport *>(ImGui::GetMainViewport()->PlatformUserData)->getSize();
 
   const auto now { decltype(m_lastFrame)::clock::now() };
   io.DeltaTime = std::chrono::duration<float> { now - m_lastFrame }.count();
@@ -345,7 +343,7 @@ void Context::updateMousePos()
   else
     viewportForPos = nullptr;
 
-  if(viewportForPos && viewportForPos->PlatformUserData) {
+  if(viewportForPos && ImGui::GetMainViewport() != viewportForPos) {
     Platform::scalePosition(&pos);
 
     io.MousePos.x = pos.x;
@@ -485,15 +483,15 @@ ImGuiViewport *Context::focusedViewport(bool *hasOwnedViewport) const
     *hasOwnedViewport = false;
 
   const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
-  for(int i {}; i < pio.Viewports.Size; ++i) {
+  for(int i { 1 }; i < pio.Viewports.Size; ++i) { // skip the main viewport
     ImGuiViewport *viewport { pio.Viewports[i] };
-    if(Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) }) {
-      if(hasOwnedViewport)
-        *hasOwnedViewport = true;
+    Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) };
 
-      if(instance->hasFocus())
-        return viewport;
-    }
+    if(hasOwnedViewport)
+      *hasOwnedViewport = true;
+
+    if(instance->hasFocus())
+      return viewport;
   }
 
   return nullptr;

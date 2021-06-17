@@ -24,10 +24,7 @@
 
 #include <memory>
 
-#ifdef _WIN32
-#  include <windows.h>
-#else
-#  include <swell/swell-types.h>
+#ifndef _WIN32
 #  define TEXT(str) str
 #endif
 
@@ -46,8 +43,7 @@ public:
 
   // platform callbacks
   void show() override;
-  ImVec2 getPosition() const override;
-  ImVec2 getSize() const override;
+  HWND nativeHandle() const override { return m_hwnd.get(); }
   void setFocus() override;
   bool hasFocus() const override;
   bool isMinimized() const override;
@@ -59,7 +55,6 @@ public:
   void invalidateTextures();
 
   const char *getSwellClass() const;
-  HWND nativeHandle() const { return m_hwnd.get(); }
 
 protected:
   static constexpr const auto *CLASS_NAME { TEXT("reaper_imgui_context") };

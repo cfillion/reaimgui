@@ -24,6 +24,28 @@
 
 #include <imgui/imgui.h>
 
+class MainViewport : public Viewport {
+public:
+  MainViewport();
+
+  void create() override {}
+  HWND nativeHandle() const override { return m_hwnd; }
+  void setPosition(ImVec2) override {}
+  void setSize(ImVec2) override {}
+  void setFocus() override {}
+  bool hasFocus() const override { return false; }
+  bool isMinimized() const override { return false; }
+  void setTitle(const char *) override {}
+  void update() override {}
+  void render(void *) override {}
+  float scaleFactor() const override;
+  void onChanged() override {}
+  void setImePosition(ImVec2) override {}
+
+private:
+  HWND m_hwnd;
+};
+
 static void createViewport(ImGuiViewport *viewport)
 {
   Viewport *instance;
@@ -33,10 +55,12 @@ static void createViewport(ImGuiViewport *viewport)
   else
     instance = Platform::createWindow(viewport);
 
+  instance->create();
+
   // PlatformUserData must not be set if create throws a backend_error
   // Otherwise dear imgui will complain during the destruction of the context
-  viewport->PlatformHandle   = instance->create();
   viewport->PlatformUserData = instance;
+  viewport->PlatformHandle   = instance->nativeHandle();
 }
 
 static void destroyViewport(ImGuiViewport *viewport)
@@ -89,6 +113,8 @@ void Viewport::install()
   pio.Platform_GetWindowDpiScale  = &instanceProxy<&Viewport::scaleFactor>;
   pio.Platform_OnChangedViewport  = &instanceProxy<&Viewport::onChanged>;
   pio.Platform_SetImeInputPos     = &instanceProxy<&Viewport::setImePosition>;
+
+  new MainViewport; // lifetime managed by Dear ImGui
 }
 
 void Viewport::show()
@@ -96,4 +122,47 @@ void Viewport::show()
   // FIXME: Undo this weird thing ImGui does before calling ShowWindow
   if(ImGui::GetFrameCount() < 3)
     m_viewport->Flags &= ~ImGuiViewportFlags_NoFocusOnAppearing;
+}
+
+ImVec2 Viewport::getPosition() const
+{
+  POINT point {};
+  ClientToScreen(nativeHandle(), &point);
+
+  ImVec2 pos;
+  pos.x = point.x;
+  pos.y = point.y;
+  Platform::scalePosition(&pos);
+
+  return pos;
+}
+
+ImVec2 Viewport::getSize() const
+{
+  RECT rect;
+  GetClientRect(nativeHandle(), &rect);
+
+  ImVec2 size;
+  size.x = rect.right - rect.left;
+  size.y = rect.bottom - rect.top;
+
+#ifndef __APPLE__
+  size.x /= m_viewport->DpiScale;
+  size.y /= m_viewport->DpiScale;
+#endif
+
+  return size;
+}
+
+MainViewport::MainViewport()
+  : Viewport { ImGui::GetMainViewport() }, m_hwnd { GetMainHwnd() }
+{
+  m_viewport->PlatformUserData = this;
+  m_viewport->PlatformHandle = m_hwnd;
+  m_viewport->DpiScale = scaleFactor();
+}
+
+float MainViewport::scaleFactor() const
+{
+  return Platform::scaleForWindow(m_hwnd);
 }

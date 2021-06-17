@@ -24,6 +24,7 @@
 #include <cassert>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
+#include <reaper_plugin_functions.h>
 
 Docker::Docker(const ReaDockID id)
   : m_id { id }
@@ -135,8 +136,10 @@ DockerHost::DockerHost(Docker *docker, ImGuiViewport *viewport)
 void DockerHost::activate()
 {
   m_window.reset(Platform::createWindow(m_viewport, this));
-  m_viewport->PlatformHandle = m_window->create();
+  m_window->create();
+
   HWND hwnd { m_window->nativeHandle() };
+  m_viewport->PlatformHandle = hwnd;
 
   constexpr const char *INI_KEY { "reaimgui" };
   Dock_UpdateDockID(INI_KEY, m_docker->id());
@@ -148,9 +151,13 @@ void DockerHost::activate()
     DockWindowActivate(hwnd);
 }
 
-void *DockerHost::create()
+void DockerHost::create()
 {
-  return nullptr;
+}
+
+HWND DockerHost::nativeHandle() const
+{
+  return m_window ? m_window->nativeHandle() : nullptr;
 }
 
 void DockerHost::show()
