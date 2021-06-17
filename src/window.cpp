@@ -20,6 +20,7 @@
 #include "context.hpp"
 #include "docker.hpp"
 #include "font.hpp"
+#include "platform.hpp"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
@@ -180,14 +181,15 @@ void Window::show()
 
 ImVec2 Window::getPosition() const
 {
-  POINT pos {};
-  ClientToScreen(m_hwnd.get(), &pos);
+  POINT point {};
+  ClientToScreen(m_hwnd.get(), &point);
 
-#ifdef __APPLE__
-  pos.y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - pos.y;
-#endif
+  ImVec2 pos;
+  pos.x = point.x;
+  pos.y = point.y;
+  Platform::translatePosition(&pos);
 
-  return { static_cast<float>(pos.x), static_cast<float>(pos.y) };
+  return pos;
 }
 
 ImVec2 Window::getSize() const

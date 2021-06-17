@@ -17,10 +17,34 @@
 
 #include "platform.hpp"
 
+#include "dllimport.hpp"
 #include "opengl_renderer.hpp"
 #include "win32_window.hpp"
 
 #include <imgui/imgui.h>
+
+// Windows 10 Anniversary Update (1607) and newer
+static DllImport<decltype(SetThreadDpiAwarenessContext)>
+  _SetThreadDpiAwarenessContext
+  { L"User32.dll", "SetThreadDpiAwarenessContext" };
+
+class DisableDpiAwareness {
+public:
+  DisableDpiAwareness()
+  {
+    if(_SetThreadDpiAwarenessContext)
+      m_prev = _SetThreadDpiAwarenessContext(DPI_AWARENESS_CONTEXT_UNAWARE);
+  }
+
+  ~DisableDpiAwareness()
+  {
+    if(_SetThreadDpiAwarenessContext)
+      _SetThreadDpiAwarenessContext(m_prev);
+  }
+
+private:
+  DPI_AWARENESS_CONTEXT m_prev;
+};
 
 void Platform::install()
 {
@@ -38,10 +62,14 @@ Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 
 static int CALLBACK enumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM)
 {
-  MONITORINFO info{};
+  MONITORINFO info {};
   info.cbSize = sizeof(MONITORINFO);
-  if(!GetMonitorInfo(monitor, &info))
-    return true;
+
+  { // scope for disabled DPI awareness (to still get a correct DpiScale below)
+    DisableDpiAwareness raii;
+    if(!GetMonitorInfo(monitor, &info))
+      return true;
+  }
 
   ImGuiPlatformMonitor imguiMonitor;
   imguiMonitor.MainPos.x  = info.rcMonitor.left;
@@ -84,6 +112,31 @@ ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
   return nullptr;
 }
 
-void Platform::translatePosition(ImVec2 *, bool toHiDpi)
+void Platform::translatePosition(ImVec2 *pos, bool toHiDpi)
 {
+  POINT point;
+  point.x = pos->x;
+  point.y = pos->y;
+
+  HMONITOR monitor { MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST) };
+  float scale = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
+  if(!toHiDpi)
+    scale = 1.f / scale;
+
+  MONITORINFO info {};
+  info.cbSize = sizeof(MONITORINFO);
+  if(!GetMonitorInfo(monitor, &info))
+    return;
+
+  const float diffX { pos->x - info.rcMonitor.left },
+              diffY { pos->y - info.rcMonitor.top  };
+
+  { // scope for disabled DPI awareness
+    DisableDpiAwareness raii;
+    if(!GetMonitorInfo(monitor, &info))
+      return;
+  }
+
+  pos->x = info.rcMonitor.left + (diffX * scale);
+  pos->y = info.rcMonitor.top  + (diffY * scale);
 }

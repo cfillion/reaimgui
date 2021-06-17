@@ -20,6 +20,7 @@
 #include "context.hpp"
 #include "dllimport.hpp"
 #include "opengl_renderer.hpp"
+#include "platform.hpp"
 #include "win32_unicode.hpp"
 
 #include <cassert>
@@ -198,9 +199,10 @@ void Win32Window::initGL()
   }
 }
 
-RECT Win32Window::scaledWindowRect(const ImVec2 pos, const ImVec2 size) const
+RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
 {
   const float scale { scaleForDpi(m_dpi) };
+  Platform::translatePosition(&pos, true);
 
   RECT rect;
   rect.left = pos.x;
@@ -243,7 +245,7 @@ void Win32Window::setPosition(const ImVec2 pos)
     SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
 }
 
-void Win32Window::setSize(ImVec2 size)
+void Win32Window::setSize(const ImVec2 size)
 {
   const RECT &rect { scaledWindowRect(m_viewport->Pos, size) };
   SetWindowPos(m_hwnd.get(), nullptr,
