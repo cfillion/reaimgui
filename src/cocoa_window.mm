@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "window.hpp"
+#include "cocoa_window.hpp"
 
 #include "cocoa_inputview.hpp"
 #include "context.hpp"
@@ -71,34 +71,22 @@ void Subclass::activate(NSObject *object)
   object_setClass(object, m_subclass);
 }
 
-struct Window::Impl {
-  static ImGuiViewport *nextViewportUnder
-    (const NSPoint, const unsigned int windowNumber);
-
-  NSView *view;
-  InputView *inputView;
-  NSOpenGLContext *gl;
-  OpenGLRenderer *renderer;
-  unsigned int defaultStyleMask, defaultLevel;
-  ImGuiViewportFlags previousFlags;
-};
-
-Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Viewport { viewport }, m_dockerHost { dockerHost }, m_impl { std::make_unique<Impl>() }
+CocoaWindow::CocoaWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
+  : Window { viewport, dockerHost }
 {
 }
 
-void *Window::create()
+void *CocoaWindow::create()
 {
   createSwellDialog();
-  m_impl->view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
-  [m_impl->view setWantsBestResolutionOpenGLSurface:YES]; // retina
-  m_impl->inputView = [[InputView alloc] initWithWindow:this];
+  m_view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
+  [m_view setWantsBestResolutionOpenGLSurface:YES]; // retina
+  m_inputView = [[InputView alloc] initWithWindow:this];
 
-  NSWindow *window { [m_impl->view window] };
-  m_impl->defaultStyleMask = [window styleMask];
-  m_impl->defaultLevel = [window level];
-  m_impl->previousFlags = ~m_viewport->Flags; // mark all as modified
+  NSWindow *window { [m_view window] };
+  m_defaultStyleMask = [window styleMask];
+  m_defaultLevel = [window level];
+  m_previousFlags = ~m_viewport->Flags; // mark all as modified
   // imgui calls update() before show(), it will apply the flags
 
   static Subclass swellWindowOverride
@@ -114,98 +102,63 @@ void *Window::create()
   };
 
   NSOpenGLPixelFormat *fmt { [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] };
-  m_impl->gl = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
-  if(!m_impl->gl)
+  m_gl = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
+  if(!m_gl)
     throw backend_error { "failed to initialize OpenGL 3.2 core context" };
 
-  [m_impl->gl makeCurrentContext];
-  m_impl->renderer = new OpenGLRenderer;
+  [m_gl makeCurrentContext];
+  m_renderer = new OpenGLRenderer;
   [NSOpenGLContext clearCurrentContext];
 
   return m_hwnd.get();
 }
 
-void Window::platformInstall()
+CocoaWindow::~CocoaWindow()
 {
-  // Temprarily enable repeat character input
-  // WARNING: this is application-wide!
-  NSUserDefaults *defaults { [NSUserDefaults standardUserDefaults] };
-  [defaults registerDefaults:@{@"ApplePressAndHoldEnabled":@NO}];
-
-  ImGuiIO &io { ImGui::GetIO() };
-  io.ConfigMacOSXBehaviors = false; // don't swap Cmd/Ctrl, SWELl already does it
-  io.BackendPlatformName = "reaper_imgui_cocoa";
+  [m_gl makeCurrentContext];
+  delete m_renderer;
+  [NSOpenGLContext clearCurrentContext];
 }
 
-Window::~Window()
+void CocoaWindow::show()
 {
-  [m_impl->gl makeCurrentContext];
-  delete m_impl->renderer;
-}
-
-void Window::updateMonitors()
-{
-  // TODO
-  // if(!g_monitorsChanged)
-  //   return;
-
-  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
-  pio.Monitors.resize(0); // recycle allocated memory (don't use clear here!)
-
-  NSArray<NSScreen *> *screens { [NSScreen screens] };
-  const CGFloat mainHeight { screens[0].frame.size.height };
-
-  for(NSScreen *screen in screens) {
-    const NSRect frame { [screen frame] }, workFrame { [screen visibleFrame] };
-    ImGuiPlatformMonitor monitor;
-    monitor.MainPos.x  = frame.origin.x;
-    monitor.MainPos.y  = mainHeight - frame.origin.y - frame.size.height;
-    monitor.MainSize.x = frame.size.width;
-    monitor.MainSize.y = frame.size.height;
-    monitor.WorkPos.x  = workFrame.origin.x;
-    monitor.WorkPos.y  = mainHeight - workFrame.origin.y - workFrame.size.height;
-    monitor.WorkSize.x = workFrame.size.width;
-    monitor.WorkSize.y = workFrame.size.height;
-    monitor.DpiScale   = [screen backingScaleFactor];
-
-    pio.Monitors.push_back(monitor);
-  }
-}
-
-void Window::show()
-{
-  commonShow();
-  [m_impl->gl setView:m_impl->view];
+  Window::show();
+  [m_gl setView:m_view];
 
   if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing))
-    [[m_impl->view window] makeFirstResponder:m_impl->inputView];
+    [[m_view window] makeFirstResponder:m_inputView];
 }
 
-void Window::setPosition(ImVec2 pos)
+void CocoaWindow::setPosition(ImVec2 pos)
 {
   ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
-  NSWindow *window { [m_impl->view window] };
+  NSWindow *window { [m_view window] };
   const NSRect &content { [window contentRectForFrameRect:[window frame]] };
   const CGFloat titleBarHeight { [window frame].size.height - content.size.height };
   pos.y = (pio.Monitors[0].MainSize.y - pos.y) + titleBarHeight;
   [window setFrameTopLeftPoint:NSMakePoint(pos.x, pos.y)];
 }
 
-void Window::setSize(const ImVec2 size)
+void CocoaWindow::setSize(const ImVec2 size)
 {
   // most scripts expect y=0 to be the top of the window
-  NSWindow *window { [m_impl->view window] };
+  NSWindow *window { [m_view window] };
   [window setContentSize:NSMakeSize(size.x, size.y)];
   setPosition(m_viewport->Pos); // preserve y position from the top
-  [m_impl->gl update];
+  [m_gl update];
 }
 
-void Window::update()
+void CocoaWindow::setTitle(const char *title)
 {
-  const ImGuiViewportFlags diff { m_impl->previousFlags ^ m_viewport->Flags };
-  m_impl->previousFlags = m_viewport->Flags;
+  SetWindowText(m_hwnd.get(), title);
+}
 
-  NSWindow *window { [m_impl->view window] };
+void CocoaWindow::update()
+{
+  const ImGuiViewportFlags diff { m_previousFlags ^ m_viewport->Flags };
+  m_previousFlags = m_viewport->Flags;
+
+  NSWindow *window { [m_view window] };
 
   if(diff & ImGuiViewportFlags_NoDecoration) {
     if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration) {
@@ -213,7 +166,7 @@ void Window::update()
       [window setStyleMask:NSWindowStyleMaskBorderless];
     }
     else {
-      [window setStyleMask:m_impl->defaultStyleMask];
+      [window setStyleMask:m_defaultStyleMask];
       AttachWindowTopmostButton(m_hwnd.get());
       // ask dear imgui to call setText again
       static_cast<ImGuiViewportP *>(m_viewport)->LastNameHash = 0;
@@ -224,104 +177,59 @@ void Window::update()
     if(m_viewport->Flags & ImGuiViewportFlags_TopMost)
       [window setLevel:NSStatusWindowLevel];
     else
-      [window setLevel:m_impl->defaultLevel]; // SWELL uses 1 by default
+      [window setLevel:m_defaultLevel]; // SWELL uses 1 by default
   }
 }
 
-void Window::render(void *)
+void CocoaWindow::render(void *)
 {
-  [m_impl->gl makeCurrentContext];
-  m_impl->renderer->render(m_viewport);
-  [m_impl->gl flushBuffer];
+  [m_gl makeCurrentContext];
+  m_renderer->render(m_viewport);
+  [m_gl flushBuffer];
   [NSOpenGLContext clearCurrentContext];
 }
 
-float Window::scaleFactor() const
+float CocoaWindow::scaleFactor() const
 {
-  return [[m_impl->view window] backingScaleFactor];
+  return [[m_view window] backingScaleFactor];
 }
 
-void Window::setImePosition(ImVec2 pos)
+void CocoaWindow::setImePosition(ImVec2 pos)
 {
   pos.y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - pos.y;
   pos.y -= ImGui::GetTextLineHeight();
 
-  [m_impl->inputView setImePosition:NSMakePoint(pos.x, pos.y)];
+  [m_inputView setImePosition:NSMakePoint(pos.x, pos.y)];
 }
 
-void Window::uploadFontTex()
+void CocoaWindow::uploadFontTex()
 {
-  [m_impl->gl makeCurrentContext];
-  m_impl->renderer->uploadFontTex();
+  [m_gl makeCurrentContext];
+  m_renderer->uploadFontTex();
   [NSOpenGLContext clearCurrentContext];
 }
 
-void Window::translatePosition(POINT *pos, bool) const
-{
-  pos->y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - pos->y;
-}
-
-std::optional<LRESULT> Window::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM)
+std::optional<LRESULT> CocoaWindow::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
   case WM_PAINT: // update size if it changed while we were docked & inactive
   case WM_SIZE:
-    [m_impl->gl update];
-    break; // continue handling WM_SIZE in Window::proc
+    [m_gl update];
+    break; // continue handling WM_SIZE in CocoaWindow::proc
   }
 
   return std::nullopt;
 }
 
-int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
+int Window::translateAccel(MSG *msg, accelerator_register_t *accel) // TODO
 {
-  auto *self { static_cast<Window *>(accel->user) };
+  auto *self { static_cast<CocoaWindow *>(accel->user) };
+  HWND hwnd { self->nativeHandle() };
 
-  if(self->m_hwnd.get() == msg->hwnd || IsChild(self->m_hwnd.get(), msg->hwnd)) {
-    [[self->m_impl->view window] sendEvent:[NSApp currentEvent]];
+  if(hwnd == msg->hwnd || IsChild(hwnd, msg->hwnd)) {
+    [[(__bridge NSView *)hwnd window] sendEvent:[NSApp currentEvent]];
     return Accel::EatKeystroke;
   }
 
   return Accel::NotOurWindow;
-}
-
-ImGuiViewport *Window::Impl::nextViewportUnder
-  (const NSPoint pos, const unsigned int windowNumber)
-{
-  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
-
-  for(int i { 1 }; i < pio.Viewports.Size; ++i) { // skip the main viewport
-    ImGuiViewport *viewport { pio.Viewports[i] };
-    NSView *superView { (__bridge NSView *)viewport->PlatformHandle };
-
-    // PlatformHandle is NULL for inactive DockerHosts
-    if(!superView || [[superView window] windowNumber] != windowNumber)
-      continue;
-
-    // NSView's hitTest takes a point in the coordinate system of the view's
-    // superview, not of the view itself.
-    NSPoint clientPos { [[superView window] convertScreenToBase:pos] };
-    clientPos = [superView convertPoint:clientPos fromView:nil];
-
-    NSView *inputView { [superView subviews][0] };
-    if([inputView hitTest:clientPos])
-     return viewport;
-  }
-
-  return nullptr;
-}
-
-ImGuiViewport *Window::viewportUnder(const POINT pos)
-{
-  const NSPoint point { NSMakePoint(pos.x, pos.y) };
-
-  unsigned int number { 0 };
-  ImGuiViewport *viewport;
-
-  do {
-    number = [NSWindow windowNumberAtPoint:point belowWindowWithWindowNumber:number];
-    viewport = Impl::nextViewportUnder(point, number);
-  } while(viewport && !!(viewport->Flags & ImGuiViewportFlags_NoInputs));
-
-  return viewport;
 }

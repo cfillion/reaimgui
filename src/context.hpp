@@ -69,8 +69,8 @@ public:
   // void markSettingsDirty();
 
   ImGuiIO &IO();
-  DockerList *dockers() { return m_dockers.get(); }
-  FontList *fonts() { return m_fonts.get(); }
+  DockerList &dockers() { return *m_dockers; }
+  FontList &fonts() { return *m_fonts; }
   // Settings &settings() { return m_settings; }
   HCURSOR cursor() const { return m_cursor; }
   ImGuiContext *imgui() const { return m_imgui.get(); }

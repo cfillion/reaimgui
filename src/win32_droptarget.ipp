@@ -22,10 +22,10 @@
 
 class DropTarget : public IDropTarget {
 public:
-  void setContext(Context *ctx) { m_ctx = ctx; }
+  DropTarget(Context *);
 
-  ULONG STDMETHODCALLTYPE AddRef()  { return 1; }
-  ULONG STDMETHODCALLTYPE Release() { return 0; }
+  ULONG STDMETHODCALLTYPE AddRef() override;
+  ULONG STDMETHODCALLTYPE Release() override;
   HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void **object) override;
 
   HRESULT STDMETHODCALLTYPE DragEnter(IDataObject *, DWORD keyState, POINTL, DWORD *effect) override;
@@ -35,17 +35,37 @@ public:
 
 private:
   Context *m_ctx;
+  LONG m_refCount;
 };
+
+DropTarget::DropTarget(Context *ctx)
+  : m_ctx { ctx }, m_refCount { 0 }
+{
+}
 
 HRESULT DropTarget::QueryInterface(REFIID riid, void **object)
 {
-  if(riid == IID_IDropTarget) {
+  if(riid == IID_IUnknown || riid == IID_IDropTarget) {
     *object = this;
+    AddRef();
     return S_OK;
   }
 
   *object = nullptr;
   return E_NOINTERFACE;
+}
+
+ULONG DropTarget::AddRef()
+{
+  return InterlockedIncrement(&m_refCount);
+}
+
+ULONG DropTarget::Release()
+{
+  const LONG refCount { InterlockedDecrement(&m_refCount) };
+  if(refCount == 0)
+    delete this;
+  return refCount;
 }
 
 HRESULT DropTarget::DragEnter(IDataObject *dataObj, DWORD, POINTL, DWORD *effect)

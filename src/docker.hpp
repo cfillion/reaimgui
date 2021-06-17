@@ -21,6 +21,7 @@
 #include "viewport.hpp"
 
 #include <array>
+#include <memory>
 
 using ReaDockID = unsigned int;
 using ImGuiID   = unsigned int;
@@ -80,9 +81,6 @@ public:
   float scaleFactor() const override;
   void onChanged() override;
   void setImePosition(ImVec2) override;
-
-  // TODO remove
-  void translatePosition(POINT *, bool toHiDpi = false) const override;
 
 private:
   void activate();

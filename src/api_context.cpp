@@ -157,5 +157,5 @@ DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
   if(ctx->inFrame())
     throw reascript_error { "cannot modify font texture: a frame has already begun" };
 
-  ctx->fonts()->add(font);
+  ctx->fonts().add(font);
 });

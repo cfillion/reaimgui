@@ -56,8 +56,6 @@ void Window::install()
   io.KeyMap[ImGuiKey_X]           = 'X';
   io.KeyMap[ImGuiKey_Y]           = 'Y';
   io.KeyMap[ImGuiKey_Z]           = 'Z';
-
-  platformInstall();
 }
 
 LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
@@ -76,7 +74,6 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self->m_hwnd.reset(handle);
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
     SetProp(handle, CLASS_NAME, self->m_ctx);
-    self->installHooks();
   }
   else {
     self = reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA));
@@ -103,11 +100,6 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self->m_viewport->PlatformRequestResize = true;
     return 0;
   case WM_DESTROY:
-    RemoveProp(handle, CLASS_NAME);
-    SetWindowLongPtr(handle, GWLP_USERDATA, 0);
-    // Announce to REAPER the window is no longer going to be valid
-    // (DockWindowRemove is safe to call even when not docked)
-    DockWindowRemove(handle); // may send messages
     return 0;
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
@@ -144,16 +136,46 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   return DefWindowProc(handle, msg, wParam, lParam);
 }
 
-void Window::commonShow()
+Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
+  : Viewport { viewport }, m_dockerHost { dockerHost },
+    m_accel { &translateAccel, true, this },
+    m_accelReg { "accelerator", &m_accel },
+    m_previousScale { 0.f }, m_fontTexVersion { -1 }
 {
+  static std::weak_ptr<PluginRegister> g_hwndInfo; // v6.29+
+
+  if(g_hwndInfo.expired())
+    g_hwndInfo = m_hwndInfo = std::make_shared<PluginRegister>
+      ("hwnd_info", reinterpret_cast<void *>(&Window::hwndInfo));
+  else
+    m_hwndInfo = g_hwndInfo.lock();
+
+
+  // Cannot initialize m_hwnd during construction due to handleMessage being
+  // virtual. This task is delayed to created() called once fully constructed.
+}
+
+Window::~Window()
+{
+  RemoveProp(m_hwnd.get(), CLASS_NAME);
+  // Disable message passing to the derived class (not available at this point)
+  SetWindowLongPtr(m_hwnd.get(), GWLP_USERDATA, 0);
+  // Announce to REAPER the window is no longer going to be valid
+  // (DockWindowRemove is safe to call even when not docked)
+  DockWindowRemove(m_hwnd.get()); // may send messages
+}
+
+void Window::show()
+{
+  if(m_dockerHost)
+    return;
+
   Viewport::show();
 
-  if(!m_dockerHost) {
-    if(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
-      ShowWindow(m_hwnd.get(), SW_SHOWNA);
-    else
-      ShowWindow(m_hwnd.get(), SW_SHOW);
-  }
+  if(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
+    ShowWindow(m_hwnd.get(), SW_SHOWNA);
+  else
+    ShowWindow(m_hwnd.get(), SW_SHOW);
 }
 
 ImVec2 Window::getPosition() const
@@ -202,39 +224,17 @@ bool Window::isVisible() const
   return !IsWindowVisible(m_hwnd.get());
 }
 
-#ifndef _WIN32
-void Window::setTitle(const char *title)
-{
-  SetWindowText(m_hwnd.get(), title);
-}
-#endif
-
 void Window::onChanged()
 {
   const bool scaleChanged { m_previousScale != m_viewport->DpiScale };
   m_previousScale = m_viewport->DpiScale;
 
-  const int fontTexVersion { m_ctx->fonts()->setScale(m_viewport->DpiScale) };
+  const int fontTexVersion { m_ctx->fonts().setScale(m_viewport->DpiScale) };
   if(scaleChanged || fontTexVersion != m_fontTexVersion) {
     uploadFontTex();
     m_fontTexVersion = fontTexVersion;
   }
 }
-
-#ifndef __APPLE__
-void Window::translatePosition(POINT *point, const bool toHiDpi) const
-{
-  const auto fromOriginX { point->x - m_viewport->Pos.x },
-             fromOriginY { point->y - m_viewport->Pos.y };
-
-  float scale { m_viewport->DpiScale };
-  if(!toHiDpi)
-    scale = 1.f / scale;
-
-  point->x = m_viewport->Pos.x + (fromOriginX * scale);
-  point->y = m_viewport->Pos.y + (fromOriginY * scale);
-}
-#endif
 
 void Window::mouseDown(const unsigned int msg)
 {
@@ -325,17 +325,6 @@ int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
 }
 #endif
 
-void Window::installHooks()
-{
-  static std::weak_ptr<PluginRegister> g_hwndInfo; // v6.29+
-
-  if(g_hwndInfo.expired())
-    g_hwndInfo = m_hwndInfo = std::make_shared<PluginRegister>
-      ("hwnd_info", reinterpret_cast<void *>(&Window::hwndInfo));
-  else
-    m_hwndInfo = g_hwndInfo.lock();
-}
-
 int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
 {
   enum InfoType { IsInTextField };
@@ -359,19 +348,6 @@ int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
 
   return Unknown;
 }
-
-#ifndef __APPLE__
-ImGuiViewport *Window::viewportUnder(const POINT pos)
-{
-  HWND target { WindowFromPoint(pos) };
-
-  ImGuiViewport *viewport { ImGui::FindViewportByPlatformHandle(target) };
-  if(viewport && viewport->PlatformUserData)
-    return viewport;
-
-  return nullptr;
-}
-#endif
 
 void Window::WindowDeleter::operator()(HWND window)
 {

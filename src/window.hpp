@@ -40,28 +40,18 @@ public:
   static HINSTANCE s_instance;
   static void install();
   static void updateMonitors();
-  static ImGuiViewport *viewportUnder(POINT);
 
   Window(ImGuiViewport *, DockerHost * = nullptr);
-  virtual ~Window();
+  ~Window() override;
 
   // platform callbacks
-  void *create() override;
   void show() override;
-  void setPosition(ImVec2) override;
   ImVec2 getPosition() const override;
-  void setSize(ImVec2) override;
   ImVec2 getSize() const override;
   void setFocus() override;
   bool hasFocus() const override;
   bool isVisible() const override;
-  void setTitle(const char *) override;
-  void update() override;
-  void render(void *) override;
-  float scaleFactor() const override;
   void onChanged() override;
-  void setImePosition(ImVec2) override;
-  void translatePosition(POINT *, bool toHiDpi = false) const override;
 
   void mouseDown(unsigned int msg);
   void mouseUp(unsigned int msg);
@@ -71,36 +61,30 @@ public:
 
 protected:
   static constexpr const auto *CLASS_NAME { TEXT("reaper_imgui_context") };
-  static int translateAccel(MSG *msg, accelerator_register_t *accel);
+  static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
+  static int translateAccel(MSG *msg, accelerator_register_t *accel); // TODO remove
 
   void createSwellDialog();
-  void commonShow();
 
-  static void platformInstall();
-  void uploadFontTex();
-  std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM);
+  virtual void uploadFontTex() = 0;
+  virtual std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM) = 0;
 
   DockerHost *m_dockerHost;
-
-  struct Impl;
-  std::unique_ptr<Impl> m_impl;
 
   struct WindowDeleter { void operator()(HWND); };
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
 
-private:
-  static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
-  static int hwndInfo(HWND, INT_PTR type);
-
-  void installHooks();
   HWND parentHandle();
 
-  float m_previousScale {};
-  int m_fontTexVersion {};
+private:
+  static int hwndInfo(HWND, INT_PTR type);
 
-  accelerator_register_t m_accel { &translateAccel, true, this };
-  PluginRegister m_accelReg { "accelerator", &m_accel };
+  accelerator_register_t m_accel;
+  PluginRegister m_accelReg;
   std::shared_ptr<PluginRegister> m_hwndInfo;
+
+  float m_previousScale;
+  int m_fontTexVersion;
 };
 
 #endif

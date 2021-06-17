@@ -84,7 +84,7 @@ DEFINE_API(ImGui_Font*, GetFont, (ImGui_Context*,ctx),
 "Get the current font",
 {
   FRAME_GUARD;
-  return ctx->fonts()->get(ImGui::GetFont());
+  return ctx->fonts().get(ImGui::GetFont());
 });
 
 DEFINE_API(void, PushFont, (ImGui_Context*,ctx)
@@ -92,7 +92,7 @@ DEFINE_API(void, PushFont, (ImGui_Context*,ctx)
 "Change the current font. Use nil to push the default font. See ImGui_PopFont.",
 {
   FRAME_GUARD;
-  ImGui::PushFont(ctx->fonts()->instanceOf(font));
+  ImGui::PushFont(ctx->fonts().instanceOf(font));
 });
 
 DEFINE_API(void, PopFont, (ImGui_Context*,ctx),

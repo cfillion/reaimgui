@@ -19,6 +19,7 @@
 
 #include "context.hpp"
 #include "docker.hpp"
+#include "platform.hpp"
 #include "window.hpp"
 
 #include <imgui/imgui.h>
@@ -27,10 +28,10 @@ static void createViewport(ImGuiViewport *viewport)
 {
   Viewport *instance;
 
-  if(Docker *docker { Context::current()->dockers()->findByViewport(viewport) })
+  if(Docker *docker { Context::current()->dockers().findByViewport(viewport) })
     instance = new DockerHost { docker, viewport };
   else
-    instance = new Window { viewport };
+    instance = Platform::createWindow(viewport);
 
   // PlatformUserData must not be set if create throws a backend_error
   // Otherwise dear imgui will complain during the destruction of the context

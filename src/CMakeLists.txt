@@ -52,7 +52,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 if(WIN32)
-  target_sources(${PROJECT_NAME} PRIVATE version.rc win32_font.cpp win32_window.cpp)
+  target_sources(${PROJECT_NAME} PRIVATE
+    version.rc win32_font.cpp win32_platform.cpp win32_window.cpp)
   target_compile_options(${PROJECT_NAME} PUBLIC /W3 /WX /wd4244 /wd4267 /wd4312 /wd4996 /wd5208)
   target_compile_definitions(${PROJECT_NAME} PUBLIC NOMINMAX UNICODE)
   target_link_libraries(${PROJECT_NAME} Imm32)
@@ -80,7 +81,7 @@ else()
 
   if(APPLE)
     target_sources(${PROJECT_NAME} PRIVATE
-      cocoa_font.mm cocoa_inputview.mm cocoa_window.mm)
+      cocoa_font.mm cocoa_inputview.mm cocoa_platform.mm cocoa_window.mm)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GL_SILENCE_DEPRECATION)
     target_compile_options(${PROJECT_NAME} PRIVATE
       -fobjc-arc -Wno-error=deprecated-declarations)
@@ -89,7 +90,8 @@ else()
     find_package(OpenGL REQUIRED)
     target_link_libraries(${PROJECT_NAME} ${CARBON_LIB} OpenGL::GL)
   else()
-    target_sources(${PROJECT_NAME} PRIVATE fc_font.cpp gdk_window.cpp)
+    target_sources(${PROJECT_NAME} PRIVATE
+      fc_font.cpp gdk_platform.cpp gdk_window.cpp)
 
     find_package(Fontconfig REQUIRED)
     target_link_libraries(${PROJECT_NAME} Fontconfig::Fontconfig)

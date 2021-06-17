@@ -23,8 +23,6 @@ class Docker;
 struct ImGuiViewport;
 struct ImVec2;
 
-#include <swell/swell-types.h> // TODO remove (POINT)
-
 class Viewport {
 public:
   static void install();
@@ -51,9 +49,6 @@ public:
   virtual float scaleFactor() const = 0;
   virtual void onChanged() = 0;
   virtual void setImePosition(ImVec2) = 0;
-
-  // TODO: move this elsewhere
-  virtual void translatePosition(POINT *, bool toHiDpi = false) const = 0;
 
 protected:
   Context *m_ctx;

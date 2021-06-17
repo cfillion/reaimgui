@@ -18,8 +18,10 @@
 #include "docker.hpp"
 
 #include "context.hpp"
+#include "platform.hpp"
 #include "window.hpp"
 
+#include <cassert>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -132,7 +134,7 @@ DockerHost::DockerHost(Docker *docker, ImGuiViewport *viewport)
 
 void DockerHost::activate()
 {
-  m_window.reset(new Window { m_viewport });
+  m_window.reset(Platform::createWindow(m_viewport, this));
   m_viewport->PlatformHandle = m_window->create();
   HWND hwnd { m_window->nativeHandle() };
 
@@ -232,7 +234,7 @@ void DockerHost::onChanged()
   if(m_window) {
     const int dockIndex { DockIsChildOfDock(m_window->nativeHandle(), nullptr) };
     if(static_cast<ReaDockID>(dockIndex) != m_docker->id())
-      m_docker->moveTo(m_ctx->dockers()->findById(dockIndex));
+      m_docker->moveTo(m_ctx->dockers().findById(dockIndex));
 
     m_window->onChanged();
   }
@@ -242,10 +244,4 @@ void DockerHost::setImePosition(const ImVec2 pos)
 {
   if(m_window)
     m_window->setImePosition(pos);
-}
-
-void DockerHost::translatePosition(POINT *point, bool toHiDpi) const
-{
-  if(m_window)
-    m_window->translatePosition(point, toHiDpi);
 }

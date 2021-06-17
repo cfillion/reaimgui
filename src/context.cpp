@@ -19,9 +19,8 @@
 
 #include "docker.hpp"
 #include "font.hpp"
-#include "opengl_renderer.hpp"
+#include "platform.hpp"
 #include "viewport.hpp"
-#include "window.hpp" // TODO
 
 #include <cassert>
 #include <reaper_colortheme.h>
@@ -96,9 +95,8 @@ Context::Context(const char *name, const int userConfigFlags)
   // m_settings.install(); TODO remove?
   // m_settings.load();
 
+  Platform::install();
   Viewport::install();
-  Window::install(); // TODO: change this? Platform?
-  OpenGLRenderer::install();
 
   ImGuiViewport *main { ImGui::GetMainViewport() };
   main->PlatformHandle = GetMainHwnd();
@@ -145,7 +143,7 @@ void Context::beginFrame()
 
   m_inFrame = true;
 
-  Window::updateMonitors();
+  Platform::updateMonitors(); // TODO
   m_fonts->update(); // uses the monitor list
 
   updateFrameInfo();
@@ -298,17 +296,10 @@ void Context::updateMousePos()
   ImGuiIO &io { m_imgui->IO };
 
   if(io.WantSetMousePos) {
-    POINT newPos;
-    newPos.x = io.MousePos.x;
-    newPos.y = io.MousePos.y;
-
     // convert to HiDPI on Windows, flip Y on macOS
-    if(ImGuiViewport *viewport { Window::viewportUnder(newPos) }) {
-      if(Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) })
-        instance->translatePosition(&newPos, true); // TODO static
-    }
-
-    SetCursorPos(newPos.x, newPos.y);
+    ImVec2 scaledPos { io.MousePos };
+    Platform::translatePosition(&scaledPos, true);
+    SetCursorPos(scaledPos.x, scaledPos.y);
     return;
   }
   else if(m_dragState & DragState_FakeClick) {
@@ -316,13 +307,17 @@ void Context::updateMousePos()
     return;
   }
 
-  POINT pos;
-  GetCursorPos(&pos);
-
   io.MousePos = { -FLT_MAX, -FLT_MAX };
   io.MouseHoveredViewport = 0;
 
-  ImGuiViewport *viewportForInput { Window::viewportUnder(pos) };
+  POINT point;
+  GetCursorPos(&point);
+
+  ImVec2 pos;
+  pos.x = point.x;
+  pos.y = point.y;
+
+  ImGuiViewport *viewportForInput { Platform::viewportUnder(pos) };
   ImGuiViewport *viewportForPos;
   if(viewportForInput) {
     viewportForPos = viewportForInput;
@@ -337,8 +332,7 @@ void Context::updateMousePos()
     viewportForPos = nullptr;
 
   if(viewportForPos && viewportForPos->PlatformUserData) {
-    Viewport *instance { static_cast<Viewport *>(viewportForPos->PlatformUserData) };
-    instance->translatePosition(&pos); // TODO static
+    Platform::translatePosition(&pos);
 
     io.MousePos.x = pos.x;
     io.MousePos.y = pos.y;
