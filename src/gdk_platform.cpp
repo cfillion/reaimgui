@@ -17,15 +17,89 @@
 
 #include "platform.hpp"
 
-void Platform::translatePosition(ImVec2 *pos, const bool toHiDpi)
-{
-  const float fromOriginX { pos->x - m_viewport->Pos.x },
-              fromOriginY { pos->y - m_viewport->Pos.y };
+#include "gdk_window.hpp"
+#include "opengl_renderer.hpp"
 
-  float scale { m_viewport->DpiScale };
+#include <gdk/gdk.h>
+#include <imgui/imgui.h>
+
+void Platform::install()
+{
+  ImGuiIO &io { ImGui::GetIO() };
+  io.BackendFlags &= ~ImGuiBackendFlags_HasMouseHoveredViewport;
+  io.BackendPlatformName = "reaper_imgui_gdk";
+
+  OpenGLRenderer::install();
+  Window::install();
+}
+
+Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
+{
+  return new GDKWindow { viewport, dockerHost };
+}
+
+void Platform::updateMonitors()
+{
+  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  pio.Monitors.resize(0); // recycle allocated memory (don't use clear here!)
+
+  GdkDisplay *display { gdk_display_get_default() };
+
+  const int count { gdk_display_get_n_monitors(display) };
+  for(int i {}; i < count; ++i) {
+    GdkMonitor *monitor { gdk_display_get_monitor(display, i) };
+
+    GdkRectangle geometry, workArea;
+    gdk_monitor_get_geometry(monitor, &geometry);
+    gdk_monitor_get_workarea(monitor, &workArea);
+
+    ImGuiPlatformMonitor imguiMonitor;
+    imguiMonitor.MainPos.x  = geometry.x;
+    imguiMonitor.MainPos.y  = geometry.y;
+    imguiMonitor.MainSize.x = geometry.width;
+    imguiMonitor.MainSize.y = geometry.height;
+    imguiMonitor.WorkPos.x  = workArea.x;
+    imguiMonitor.WorkPos.y  = workArea.y;
+    imguiMonitor.WorkSize.x = workArea.width;
+    imguiMonitor.WorkSize.y = workArea.height;
+    imguiMonitor.DpiScale   = gdk_monitor_get_scale_factor(monitor);
+
+    scalePosition(&imguiMonitor.MainPos);
+    scalePosition(&imguiMonitor.MainSize);
+    scalePosition(&imguiMonitor.WorkPos);
+    scalePosition(&imguiMonitor.WorkSize);
+
+    if(gdk_monitor_is_primary(monitor))
+      pio.Monitors.push_front(imguiMonitor);
+    else
+      pio.Monitors.push_back(imguiMonitor);
+  }
+}
+
+ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
+{
+  // FIXME: SWELL does not support HTTRANSPARENT or hit testing that
+  // would be required for implementing ImGui's MouseHoveredViewport
+
+  POINT point;
+  point.x = pos.x;
+  point.y = pos.y;
+
+  HWND target { WindowFromPoint(point) };
+
+  ImGuiViewport *viewport { ImGui::FindViewportByPlatformHandle(target) };
+  if(viewport && viewport->PlatformUserData)
+    return viewport;
+
+  return nullptr;
+}
+
+void Platform::scalePosition(ImVec2 *pos, const bool toHiDpi)
+{
+  float scale { GDKWindow::globalScaleFactor() };
   if(!toHiDpi)
     scale = 1.f / scale;
 
-  pos->x = m_viewport->Pos.x + (fromOriginX * scale);
-  pos->y = m_viewport->Pos.y + (fromOriginY * scale);
+  pos->x *= scale;
+  pos->y *= scale;
 }

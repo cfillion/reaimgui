@@ -28,7 +28,7 @@ namespace Platform {
   Window *createWindow(ImGuiViewport *, DockerHost * = nullptr);
   void updateMonitors();
   ImGuiViewport *viewportUnder(ImVec2);
-  void translatePosition(ImVec2 *, bool toHiDpi = false);
+  void scalePosition(ImVec2 *, bool toHiDpi = false);
 };
 
 #endif

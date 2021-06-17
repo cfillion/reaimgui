@@ -112,6 +112,11 @@ Context::~Context()
     endFrame(false);
 }
 
+void Context::ContextDeleter::operator()(ImGuiContext *imgui)
+{
+  ImGui::DestroyContext(imgui);
+}
+
 bool Context::heartbeat()
 {
   if(m_inFrame) {
@@ -301,7 +306,7 @@ void Context::updateMousePos()
   if(io.WantSetMousePos) {
     // convert to HiDPI on Windows, flip Y on macOS
     ImVec2 scaledPos { io.MousePos };
-    Platform::translatePosition(&scaledPos, true);
+    Platform::scalePosition(&scaledPos, true);
     SetCursorPos(scaledPos.x, scaledPos.y);
     return;
   }
@@ -335,7 +340,7 @@ void Context::updateMousePos()
     viewportForPos = nullptr;
 
   if(viewportForPos && viewportForPos->PlatformUserData) {
-    Platform::translatePosition(&pos);
+    Platform::scalePosition(&pos);
 
     io.MousePos.x = pos.x;
     io.MousePos.y = pos.y;
@@ -575,9 +580,4 @@ void Context::updateTheme()
   // colors[ImGuiCol_NavHighlight]          = Color::fromNative(0); // Gamepad/keyboard: current highlighted item
   // colors[ImGuiCol_NavWindowingHighlight] = Color::fromNative(0); // Highlight window when using CTRL+TAB
   // colors[ImGuiCol_NavWindowingDimBg]     = Color::fromNative(0); // Darken/colorize entire screen behind the CTRL+TAB window list, when active
-}
-
-void Context::ContextDeleter::operator()(ImGuiContext *imgui)
-{
-  ImGui::DestroyContext(imgui);
 }

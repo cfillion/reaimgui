@@ -202,7 +202,7 @@ void Win32Window::initGL()
 RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
 {
   const float scale { scaleForDpi(m_dpi) };
-  Platform::translatePosition(&pos, true);
+  Platform::scalePosition(&pos, true);
 
   RECT rect;
   rect.left = pos.x;
@@ -260,6 +260,9 @@ void Win32Window::setTitle(const char *title)
 
 void Win32Window::update()
 {
+  if(isDocked())
+    return;
+
   const DWORD prevStyle { m_style }, prevExStyle { m_exStyle };
   styleFromFlags(m_viewport->Flags, &m_style, &m_exStyle);
 
@@ -309,7 +312,7 @@ float Win32Window::scaleFactor() const
 void Win32Window::setImePosition(ImVec2 pos)
 {
   if(HIMC ime { ImmGetContext(m_hwnd.get()) }) {
-    Platform::translatePosition(&pos, true);
+    Platform::scalePosition(&pos, true);
 
     COMPOSITIONFORM cf;
     cf.ptCurrentPos.x = pos.x;

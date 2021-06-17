@@ -112,7 +112,7 @@ ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
   return nullptr;
 }
 
-void Platform::translatePosition(ImVec2 *pos, bool toHiDpi)
+void Platform::scalePosition(ImVec2 *pos, bool toHiDpi)
 {
   POINT point;
   point.x = pos->x;

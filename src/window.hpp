@@ -55,6 +55,8 @@ public:
 
   void mouseDown(unsigned int msg);
   void mouseUp(unsigned int msg);
+  bool isDocked() const { return !!m_dockerHost; }
+  void invalidateTextures();
 
   const char *getSwellClass() const;
   HWND nativeHandle() const { return m_hwnd.get(); }

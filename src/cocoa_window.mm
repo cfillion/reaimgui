@@ -155,6 +155,9 @@ void CocoaWindow::setTitle(const char *title)
 
 void CocoaWindow::update()
 {
+  if(isDocked())
+    return;
+
   const ImGuiViewportFlags diff { m_previousFlags ^ m_viewport->Flags };
   m_previousFlags = m_viewport->Flags;
 
@@ -209,7 +212,8 @@ void CocoaWindow::uploadFontTex()
   [NSOpenGLContext clearCurrentContext];
 }
 
-std::optional<LRESULT> CocoaWindow::handleMessage(const unsigned int msg, WPARAM wParam, LPARAM)
+std::optional<LRESULT> CocoaWindow::handleMessage
+  (const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
   case WM_PAINT: // update size if it changed while we were docked & inactive

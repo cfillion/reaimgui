@@ -72,7 +72,7 @@ void Platform::updateMonitors()
   }
 }
 
-void Platform::translatePosition(ImVec2 *pos, bool)
+void Platform::scalePosition(ImVec2 *pos, bool)
 {
   pos->y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - pos->y;
 }

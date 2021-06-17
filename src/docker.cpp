@@ -197,6 +197,8 @@ void DockerHost::setTitle(const char *)
 
 void DockerHost::update()
 {
+  if(m_window)
+    m_window->update();
 }
 
 void DockerHost::render(void *payload)

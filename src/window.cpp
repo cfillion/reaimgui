@@ -166,9 +166,14 @@ Window::~Window()
   DockWindowRemove(m_hwnd.get()); // may send messages
 }
 
+void Window::WindowDeleter::operator()(HWND window)
+{
+  DestroyWindow(window);
+}
+
 void Window::show()
 {
-  if(m_dockerHost)
+  if(isDocked())
     return;
 
   Viewport::show();
@@ -187,7 +192,7 @@ ImVec2 Window::getPosition() const
   ImVec2 pos;
   pos.x = point.x;
   pos.y = point.y;
-  Platform::translatePosition(&pos);
+  Platform::scalePosition(&pos);
 
   return pos;
 }
@@ -286,6 +291,12 @@ void Window::mouseUp(const unsigned int msg)
     ReleaseCapture();
 }
 
+void Window::invalidateTextures()
+{
+  // uploadFontTex will be called on the next onChanged()
+  m_fontTexVersion = -1;
+}
+
 #ifndef _WIN32
 void Window::createSwellDialog()
 {
@@ -349,9 +360,4 @@ int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
   }
 
   return Unknown;
-}
-
-void Window::WindowDeleter::operator()(HWND window)
-{
-  DestroyWindow(window);
 }
