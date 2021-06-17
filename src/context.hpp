@@ -19,10 +19,10 @@
 #define REAIMGUI_CONTEXT_HPP
 
 #include "resource.hpp"
-#include "settings.hpp"
 
 #include <array>
 #include <chrono>
+#include <string>
 #include <vector>
 
 #include <imgui/imgui.h>
@@ -50,7 +50,7 @@ public:
   static constexpr const char *api_type_name { "ImGui_Context" };
   static Context *current();
 
-  Context(const char *name, int userConfigFlags = ImGuiConfigFlags_None);
+  Context(const char *label, int userConfigFlags = ImGuiConfigFlags_None);
   ~Context();
 
   void setCurrent();
@@ -66,14 +66,13 @@ public:
   void beginDrag(HDROP);
   void endDrag(bool drop);
   void updateFocus();
-  // void markSettingsDirty();
 
   ImGuiIO &IO();
   DockerList &dockers() { return *m_dockers; }
   FontList &fonts() { return *m_fonts; }
-  // Settings &settings() { return m_settings; }
   HCURSOR cursor() const { return m_cursor; }
   ImGuiContext *imgui() const { return m_imgui.get(); }
+  const char *name() const { return m_name.c_str(); }
   const auto &draggedFiles() const { return m_draggedFiles; }
 
 protected:
@@ -89,6 +88,7 @@ private:
   void updateMouseDown();
   void updateMousePos();
   void updateKeyMods();
+  void updateSettings();
   void updateDragDrop();
 
   ImGuiViewport *viewportUnder(POINT) const;
@@ -102,7 +102,7 @@ private:
   std::array<uint8_t, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
   std::vector<std::string> m_draggedFiles;
-  Settings m_settings;
+  std::string m_name, m_iniFilename;
 
   struct ContextDeleter { void operator()(ImGuiContext *); };
   std::unique_ptr<ImGuiContext, ContextDeleter> m_imgui;

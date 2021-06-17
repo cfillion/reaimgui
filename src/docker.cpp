@@ -140,7 +140,7 @@ void DockerHost::activate()
 
   constexpr const char *INI_KEY { "reaimgui" };
   Dock_UpdateDockID(INI_KEY, m_docker->id());
-  DockWindowAddEx(hwnd, "foo", INI_KEY, true);
+  DockWindowAddEx(hwnd, m_ctx->name(), INI_KEY, true);
 
   m_window->show();
 

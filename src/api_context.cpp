@@ -34,13 +34,15 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(ImGui_Context*, CreateContext,
-(const char*,str_id)(int*,API_RO(config_flags)),
+(const char*,label)(int*,API_RO(config_flags)),
 R"(Create a new ReaImGui context. The context will remain valid as long as it is used in each defer cycle.
+
+The label is used for the tab text when windows are docked in REAPER and also as a unique identifier for storing settings.
 
 Default values: config_flags = ImGui_ConfigFlags_None)",
 {
   const int flags { valueOr(API_RO(config_flags), ImGuiConfigFlags_None) };
-  return new Context { str_id, flags };
+  return new Context { label, flags };
 });
 
 DEFINE_API(void, DestroyContext, (ImGui_Context*,ctx),

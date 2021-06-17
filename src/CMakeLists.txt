@@ -13,7 +13,6 @@ add_library(${PROJECT_NAME} SHARED
   main.cpp
   opengl_renderer.cpp
   resource.cpp
-  settings.cpp
   viewport.cpp
   window.cpp
 

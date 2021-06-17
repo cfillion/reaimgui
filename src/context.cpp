@@ -23,8 +23,8 @@
 #include "viewport.hpp"
 
 #include <cassert>
-#include <reaper_colortheme.h>
 #include <imgui/imgui_internal.h>
+#include <reaper_colortheme.h>
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h>
 
@@ -65,11 +65,32 @@ Context *Context::current()
 static ImFontAtlas * const NO_DEFAULT_ATLAS
   { reinterpret_cast<ImFontAtlas *>(-1) };
 
-Context::Context(const char *name, const int userConfigFlags)
+static std::string generateIniFilename(const char *label)
+{
+  std::string filename { GetResourcePath() };
+
+  if(!label[0]) // does not prohibit empty window titles
+    throw reascript_error { "context label is required" };
+
+  filename += WDL_DIRCHAR_STR "ReaImGui";
+  RecursiveCreateDirectory(filename.c_str(), 0);
+
+  const size_t pathSize { filename.size() };
+  filename.resize(pathSize +
+    (sizeof(ImGuiID) * 2) + strlen(WDL_DIRCHAR_STR ".ini"));
+  snprintf(&filename[pathSize], (filename.size() - pathSize) + 1,
+    WDL_DIRCHAR_STR "%0*X.ini",
+    static_cast<int>(sizeof(ImGuiID) * 2), ImHashStr(label));
+
+  return filename;
+}
+
+Context::Context(const char *label, const int userConfigFlags)
   : m_inFrame { false },
     m_dragState {}, m_cursor {}, m_mouseDown {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
-    m_settings { name },
+    m_name { label, ImGui::FindRenderedTextEnd(label) },
+    m_iniFilename { generateIniFilename(label) },
     m_imgui { ImGui::CreateContext(NO_DEFAULT_ATLAS) },
     m_dockers { std::make_unique<DockerList>() },
     m_fonts { std::make_unique<FontList>() }
@@ -92,9 +113,6 @@ Context::Context(const char *name, const int userConfigFlags)
 
   io.ConfigFlags |= userConfigFlags; // TODO setUserConfigFLags(userConfigFlags);
 
-  // m_settings.install(); TODO remove?
-  // m_settings.load();
-
   Platform::install();
   Viewport::install();
 
@@ -105,8 +123,6 @@ Context::Context(const char *name, const int userConfigFlags)
 Context::~Context()
 {
   setCurrent();
-
-  // m_window->updateSettings(); TODO
 
   if(m_inFrame)
     endFrame(false);
@@ -156,8 +172,7 @@ void Context::beginFrame()
   updateMouseDown();
   updateMousePos();
   updateKeyMods();
-
-  m_settings.update();
+  updateSettings();
 
   ImGui::NewFrame();
 
@@ -219,15 +234,6 @@ void Context::updateFrameInfo()
 
   ImGuiPlatformIO &pio { m_imgui->PlatformIO };
   io.DisplaySize = pio.Monitors[0].MainSize;
-
-//   RECT rect;
-//   GetClientRect(m_window->nativeHandle(), &rect);
-//   io.DisplaySize.x = rect.right - rect.left;
-//   io.DisplaySize.y = rect.bottom - rect.top;
-// #ifndef __APPLE__
-//   io.DisplaySize.x /= scale;
-//   io.DisplaySize.y /= scale;
-// #endif
 
   const auto now { decltype(m_lastFrame)::clock::now() };
   io.DeltaTime = std::chrono::duration<float> { now - m_lastFrame }.count();
@@ -373,8 +379,6 @@ void Context::updateKeyMods()
   io.KeyShift = GetAsyncKeyState(VK_SHIFT)   & down;
   io.KeyAlt   = GetAsyncKeyState(VK_MENU)    & down;
   io.KeySuper = GetAsyncKeyState(VK_LWIN)    & down;
-
-  io.ConfigViewportsNoDecoration = !io.KeyShift; // TODO remove!
 }
 
 void Context::keyInput(const uint8_t key, const bool down)
@@ -389,6 +393,15 @@ void Context::charInput(const ImWchar codepoint)
     return;
 
   m_imgui->IO.AddInputCharacter(codepoint);
+}
+
+void Context::updateSettings()
+{
+  ImGuiIO &io { m_imgui->IO };
+  if(io.ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings)
+    io.IniFilename = nullptr;
+  else
+    io.IniFilename = m_iniFilename.c_str();
 }
 
 void Context::updateDragDrop()
@@ -504,15 +517,6 @@ void Context::clearFocus()
 
   memset(m_imgui->IO.KeysDown, 0, sizeof(m_imgui->IO.KeysDown));
 }
-
-// void Context::markSettingsDirty()
-// {
-//   if(m_imgui->IO.ConfigFlags & ReaImGuiConfigFlags_NoSavedSettings)
-//     return;
-//
-//   TempCurrent cur { this };
-//   ImGui::MarkIniSettingsDirty();
-// }
 
 void Context::updateTheme()
 {
