@@ -314,6 +314,7 @@ void Win32Window::setImePosition(ImVec2 pos)
     COMPOSITIONFORM cf;
     cf.ptCurrentPos.x = pos.x;
     cf.ptCurrentPos.y = pos.y;
+    ScreenToClient(m_hwnd.get(), &cf.ptCurrentPos);
     cf.dwStyle = CFS_FORCE_POSITION;
     ImmSetCompositionWindow(ime, &cf);
 
