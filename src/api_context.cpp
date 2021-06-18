@@ -72,18 +72,18 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
 });
 
 DEFINE_API(int, GetConfigFlags, (ImGui_Context*,ctx),
-"See ImGui_SetConfigFlags.",
+"See ImGui_SetConfigFlags, ImGui_ConfigFlags_*.",
 {
   assertValid(ctx);
-  return ctx->IO().ConfigFlags;
+  return ctx->userConfigFlags();
 });
 
 DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
 (int,flags),
-"See ImGui_GetConfigFlags, ImGui_ConfigFlags_None.",
+"See ImGui_GetConfigFlags, ImGui_ConfigFlags_*.",
 {
   assertValid(ctx);
-  ctx->IO().ConfigFlags = flags;
+  ctx->setUserConfigFlags(flags);
 });
 
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)

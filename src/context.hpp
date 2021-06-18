@@ -53,6 +53,9 @@ public:
   Context(const char *label, int userConfigFlags = ImGuiConfigFlags_None);
   ~Context();
 
+  int userConfigFlags() const;
+  void setUserConfigFlags(int);
+
   void setCurrent();
   bool inFrame() const { return m_inFrame; }
   void enterFrame();

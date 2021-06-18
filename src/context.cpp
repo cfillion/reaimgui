@@ -44,6 +44,9 @@ enum DragState {
   DragState_Drop       = 1<<2,
 };
 
+constexpr ImGuiConfigFlags PRIVATE_CONFIG_FLAGS
+  { ImGuiConfigFlags_ViewportsEnable };
+
 class TempCurrent {
 public:
   TempCurrent(Context *ctx)
@@ -105,12 +108,11 @@ Context::Context(const char *label, const int userConfigFlags)
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
   io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
-  io.ConfigFlags  |= ImGuiConfigFlags_ViewportsEnable;
   io.ConfigViewportsNoAutoMerge = true; // disable the main viewport
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
-  io.ConfigFlags |= userConfigFlags; // TODO setUserConfigFLags(userConfigFlags);
+  setUserConfigFlags(userConfigFlags);
 
   Platform::install();
   Viewport::install();
@@ -127,6 +129,16 @@ Context::~Context()
 void Context::ContextDeleter::operator()(ImGuiContext *imgui)
 {
   ImGui::DestroyContext(imgui);
+}
+
+int Context::userConfigFlags() const
+{
+  return m_imgui->IO.ConfigFlags & ~PRIVATE_CONFIG_FLAGS;
+}
+
+void Context::setUserConfigFlags(const int userFlags)
+{
+  m_imgui->IO.ConfigFlags = userFlags | PRIVATE_CONFIG_FLAGS;
 }
 
 bool Context::heartbeat()
