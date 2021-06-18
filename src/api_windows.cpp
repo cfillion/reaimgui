@@ -267,8 +267,48 @@ DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(void, SetWindowPos, (ImGui_Context*,ctx)
+(double,pos_x)(double,pos_y)(int*,API_RO(cond)),
+R"((Not recommended) Set current window position - call within Begin()/End(). Prefer using ImGui_SetNextWindowPos(), as this may incur tearing and side-effects.
+
+Default values: cond = ImGui_Cond_Always)",
+{
+  FRAME_GUARD;
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  ImGui::SetWindowPos(ImVec2(pos_x, pos_y), cond);
+});
+
+DEFINE_API(void, SetWindowSize, (ImGui_Context*,ctx)
+(double,size_w)(double,size_h)(int*,API_RO(cond)),
+R"((Not recommended) Set current window size - call within Begin()/End(). Set size_w and size_h to 0 to force an auto-fit. Prefer using ImGui_SetNextWindowSize(), as this may incur tearing and minor side-effects.
+
+Default values: cond = ImGui_Cond_Always)",
+{
+  FRAME_GUARD;
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  ImGui::SetWindowSize(ImVec2(size_w, size_h), cond);
+});
+
+DEFINE_API(void, SetWindowCollapsed, (ImGui_Context*,ctx)
+(bool,collapsed)(int*,API_RO(cond)),
+R"((Not recommended) Set current window collapsed state. Prefer using ImGui_SetNextWindowCollapsed().
+
+Default values: cond = ImGui_Cond_Always)",
+{
+  FRAME_GUARD;
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  ImGui::SetWindowCollapsed(collapsed, cond);
+});
+
+DEFINE_API(void, SetWindowFocus, (ImGui_Context*,ctx),
+"(Not recommended) Set current window to be focused / top-most. Prefer using ImGui_SetNextWindowFocus().",
+{
+  FRAME_GUARD;
+  ImGui::SetWindowFocus();
+});
+
+DEFINE_API(void, SetWindowPosEx, (ImGui_Context*,ctx)
 (const char*,name)(double,pos_x)(double,pos_y)(int*,API_RO(cond)),
-R"(Set named window position. See ImGui_SetNextWindowPos.
+R"(Set named window position.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -277,9 +317,9 @@ Default values: cond = ImGui_Cond_Always)",
   ImGui::SetWindowPos(name, ImVec2(pos_x, pos_y), cond);
 });
 
-DEFINE_API(void, SetWindowSize, (ImGui_Context*,ctx)
+DEFINE_API(void, SetWindowSizeEx, (ImGui_Context*,ctx)
 (const char*,name)(double,size_w)(double,size_h)(int*,API_RO(cond)),
-R"(Set named window size. set axis to 0.0f to force an auto-fit on this axis. See ImGui_SetNextWindowSize.
+R"(Set named window size. set axis to 0.0f to force an auto-fit on this axis.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -288,9 +328,9 @@ Default values: cond = ImGui_Cond_Always)",
   ImGui::SetWindowSize(name, ImVec2(size_w, size_h), cond);
 });
 
-DEFINE_API(void, SetWindowCollapsed, (ImGui_Context*,ctx)
+DEFINE_API(void, SetWindowCollapsedEx, (ImGui_Context*,ctx)
 (const char*,name)(bool,collapsed)(int*,API_RO(cond)),
-R"(Set named window collapsed state. See ImGui_SetNextWindowCollapsed.
+R"(Set named window collapsed state.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -299,7 +339,7 @@ Default values: cond = ImGui_Cond_Always)",
   ImGui::SetWindowCollapsed(name, collapsed, cond);
 });
 
-DEFINE_API(void, SetWindowFocus, (ImGui_Context*,ctx)
+DEFINE_API(void, SetWindowFocusEx, (ImGui_Context*,ctx)
 (const char*,name),
 "Set named window to be focused / top-most. Use an empty name to remove focus.",
 {

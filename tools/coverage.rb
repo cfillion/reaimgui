@@ -110,13 +110,6 @@ NATIVE_ONLY = [
   'void ImGui::BulletTextV(const char*, va_list)',
   'void ImGui::LogTextV(const char*, va_list)',
 
-  # not recommended (use SetNextWindow* instead)
-  'void ImGui::SetWindowPos(const ImVec2&, ImGuiCond)',
-  'void ImGui::SetWindowSize(const ImVec2&, ImGuiCond)',
-  'void ImGui::SetWindowCollapsed(bool, ImGuiCond)',
-  'void ImGui::SetWindowFocus()',
-  'void ImGui::SetWindowFontScale(float)', # old API
-
   # use the list clipper API instead
   'void ImGui::CalcListClipping(int, float, int*, int*)',
 
@@ -161,6 +154,7 @@ NATIVE_ONLY = [
 
   # not recommended for new designs
   'void ImGui::LogButtons()',
+  'void ImGui::SetWindowFontScale(float)',
 
   # no main viewport
   'bool ImGui::BeginMainMenuBar()',
@@ -215,11 +209,16 @@ RENAMES = {
   'ImGuiTableSortSpecs* ImGui::TableGetSortSpecs()'         => 'TableGetColumnSortSpecs',
   'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'DrawList_AddTextEx',
 
-
   # variable-component input only supports double
   'bool ImGui::DragScalarN(const char*, ImGuiDataType, void*, int, float, const void*, const void*, const char*, ImGuiSliderFlags)' => 'DragDoubleN',
   'bool ImGui::SliderScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiSliderFlags)'      => 'SliderDoubleN',
   'bool ImGui::InputScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiInputTextFlags)'    => 'InputDoubleN',
+
+  # SetWindow* by name
+  'void ImGui::SetWindowPos(const char*, const ImVec2&, ImGuiCond)'  => 'SetWindowPosEx',
+  'void ImGui::SetWindowSize(const char*, const ImVec2&, ImGuiCond)' => 'SetWindowSizeEx',
+  'void ImGui::SetWindowCollapsed(const char*, bool, ImGuiCond)'     => 'SetWindowCollapsedEx',
+  'void ImGui::SetWindowFocus(const char*)'                          => 'SetWindowFocusEx',
 }
 
 ARG_RENAMES = {
