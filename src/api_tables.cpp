@@ -20,7 +20,7 @@
 #include "color.hpp"
 
 DEFINE_API(bool, BeginTable, (ImGui_Context*,ctx)
-(const char*,str_id)(int, column)(int*,API_RO(flags))
+(const char*,str_id)(int,column)(int*,API_RO(flags))
 (double*,API_RO(outer_size_w))(double*,API_RO(outer_size_h))
 (double*,API_RO(inner_width)),
 R"([BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!

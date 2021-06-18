@@ -118,7 +118,7 @@ DEFINE_API(bool, ArrowButton, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, Checkbox, (ImGui_Context*,ctx)
-(const char*, label)(bool*, API_RW(v)),
+(const char*,label)(bool*,API_RW(v)),
 "",
 {
   FRAME_GUARD;
@@ -190,7 +190,7 @@ Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0)"
 });
 
 DEFINE_API(bool, TreeNode, (ImGui_Context*,ctx)
-(const char*, label)(int*,API_RO(flags)),
+(const char*,label)(int*,API_RO(flags)),
 R"(TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
 
 Default values: flags = ImGui_TreeNodeFlags_None)",
@@ -200,7 +200,7 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
 });
 
 DEFINE_API(bool, TreeNodeEx, (ImGui_Context*,ctx)
-(const char*, str_id)(const char*, label)(int*,API_RO(flags)),
+(const char*,str_id)(const char*,label)(int*,API_RO(flags)),
 R"(Helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet(). See ImGui_TreeNode.
 
 Default values: flags = ImGui_TreeNodeFlags_None)",
@@ -262,7 +262,7 @@ R"(Only call EndMenuBar() if BeginMenuBar() returns true! See ImGui_BeginMenuBar
 });
 
 DEFINE_API(bool, BeginMenu, (ImGui_Context*,ctx)
-(const char*, label)(bool*, API_RO(enabled)),
+(const char*,label)(bool*,API_RO(enabled)),
 R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_EndMenu.
 
 Default values: enabled = true)",
