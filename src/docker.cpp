@@ -64,7 +64,7 @@ bool Docker::isActive() const
     return false;
 
   const ImGuiWindow *window { node->VisibleWindow };
-  return window && (window->Active || window->WasActive);
+  return window && (window->Active || window->WasActive) && window->DockIsActive;
 }
 
 void Docker::moveTo(Docker *target)
