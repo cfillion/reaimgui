@@ -164,6 +164,13 @@ Default values: flags = ImGui_HoveredFlags_None)",
   return ImGui::IsWindowHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
 });
 
+DEFINE_API(bool, IsWindowDocked, (ImGui_Context*,ctx),
+"Is current window docked into another window?",
+{
+  FRAME_GUARD;
+  return ImGui::IsWindowDocked();
+});
+
 DEFINE_API(void, GetWindowPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 "Get current window position in screen space (useful if you want to do your own drawing via the DrawList API)",
@@ -196,6 +203,13 @@ DEFINE_API(double, GetWindowHeight, (ImGui_Context*,ctx),
 {
   FRAME_GUARD;
   return ImGui::GetWindowHeight();
+});
+
+DEFINE_API(int, GetWindowDockID, (ImGui_Context*,ctx),
+"See ImGui_SetNextWindowDockID.",
+{
+  FRAME_GUARD;
+  return ImGui::GetWindowDockID();
 });
 
 DEFINE_API(void, SetNextWindowPos, (ImGui_Context*,ctx)
@@ -264,6 +278,17 @@ DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetNextWindowBgAlpha(alpha);
+});
+
+DEFINE_API(void, SetNextWindowDockID, (ImGui_Context*,ctx)
+(int,dock_id)(int*,API_RO(cond)),
+R"(Set next window dock ID. 0 = undocked, < 0 = REAPER docker index (-1 = first dock, -2 = second dock, etc), > 0 = Dear ImGui dockspace ID.
+
+Default values: cond = ImGui_Cond_Always)",
+{
+  FRAME_GUARD;
+  const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
+  ImGui::SetNextWindowDockID(dock_id, cond);
 });
 
 DEFINE_API(void, SetWindowPos, (ImGui_Context*,ctx)

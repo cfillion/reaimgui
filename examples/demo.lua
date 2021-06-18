@@ -233,6 +233,11 @@ function demo.ShowDemoWindow()
   r.ImGui_SetNextWindowPos(ctx, work_pos[1] + 20, work_pos[2] + 20, r.ImGui_Cond_FirstUseEver())
   r.ImGui_SetNextWindowSize(ctx, 550, 680, r.ImGui_Cond_FirstUseEver())
 
+  if demo.set_dock_id then
+    r.ImGui_SetNextWindowDockID(ctx, demo.set_dock_id)
+    demo.set_dock_id = nil
+  end
+
   -- Main body of the Demo window starts here.
   rv,open = r.ImGui_Begin(ctx, 'Dear ImGui Demo', open, window_flags)
   -- Early out if the window is collapsed
@@ -383,14 +388,6 @@ function demo.ShowDemoWindow()
       -- r.ImGui_SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
       -- r.ImGui_Text(ctx, "Also see Style->Rendering for rendering options.")
 
-      -- local dock = r.ImGui_GetDock(ctx)
-      -- local dock_index = dock >> 1
-      -- rv,dock = r.ImGui_CheckboxFlags(ctx, 'Dock in REAPER docker:', dock, 1)
-      -- if rv then r.ImGui_SetDock(ctx, dock) end
-      -- r.ImGui_SameLine(ctx)
-      -- rv,dock_index = r.ImGui_InputInt(ctx, '##docker_index', dock_index, 1)
-      -- if r.ImGui_IsItemDeactivatedAfterEdit(ctx) then r.ImGui_SetDock(ctx, 1 | (dock_index << 1)) end
-
       -- ReaImGui exclusive flags
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, r.ImGui_ConfigFlags_NoSavedSettings())
       r.ImGui_SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
@@ -479,6 +476,28 @@ function demo.ShowDemoWindow()
       r.ImGui_TableNextColumn(ctx); rv,demo.no_bring_to_front = r.ImGui_Checkbox(ctx, 'No bring to front', demo.no_bring_to_front)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_docking        = r.ImGui_Checkbox(ctx, 'No docking', demo.no_docking)
       r.ImGui_EndTable(ctx)
+    end
+
+    if not demo.no_docking then
+      r.ImGui_Spacing(ctx)
+
+      local dock_id = r.ImGui_GetWindowDockID(ctx)
+      local dock_label = dock_id < 0 and ('Docker %d'):format(~dock_id + 1) or 'Floating'
+      r.ImGui_AlignTextToFramePadding(ctx)
+      r.ImGui_Text(ctx, 'Dock in REAPER docker:')
+      r.ImGui_SameLine(ctx)
+      r.ImGui_SetNextItemWidth(ctx, 127)
+      if r.ImGui_BeginCombo(ctx, '##docker', dock_label) then
+        if r.ImGui_Selectable(ctx, 'Floating', dock_id >= 0) then
+          demo.set_dock_id = 0
+        end
+        for id = 0, 15 do
+          if r.ImGui_Selectable(ctx, ('Docker %d'):format(id + 1), dock_id == ~id) then
+            demo.set_dock_id = ~id
+          end
+        end
+        r.ImGui_EndCombo(ctx)
+      end
     end
   end
 
