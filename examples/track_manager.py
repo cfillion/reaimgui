@@ -1,7 +1,7 @@
 sys.path.append(RPR_GetResourcePath() + "/Scripts/ReaTeam Extensions/API")
 from imgui_python import *
 
-FLT_MIN = 1.17549e-38
+FLT_MIN = ImGui_NumericLimits_Float()[0]
 
 def init():
   global ctx
