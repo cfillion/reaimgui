@@ -101,6 +101,9 @@ DockerList::DockerList()
 
 void DockerList::drawAll()
 {
+  if(!(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DockingEnable))
+    return;
+
   for(Docker &docker : m_dockers)
     docker.draw();
 }

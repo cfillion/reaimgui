@@ -106,7 +106,6 @@ Context::Context(const char *label, const int userConfigFlags)
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
   io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
   io.ConfigFlags  |= ImGuiConfigFlags_ViewportsEnable;
-  io.ConfigFlags  |= ImGuiConfigFlags_DockingEnable;
   io.ConfigViewportsNoAutoMerge = true; // disable the main viewport
   io.LogFilename = logFn.c_str();
   io.UserData = this;

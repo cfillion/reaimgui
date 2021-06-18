@@ -217,6 +217,7 @@ DEFINE_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos, "Instruct navigation to mov
 // DEFINE_ENUM(ImGui, ConfigFlags_NavNoCaptureKeyboard, "Instruct navigation to not set the io.WantCaptureKeyboard flag when io.NavActive is set.");
 DEFINE_ENUM(ImGui, ConfigFlags_NoMouse,              "Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information set by the backend.");
 DEFINE_ENUM(ImGui, ConfigFlags_NoMouseCursorChange,  "Instruct backend to not alter mouse cursor shape and visibility.");
+DEFINE_ENUM(ImGui, ConfigFlags_DockingEnable,        "[BETA] Enable docking functionality.");
 
 // ImGuiComboFlags
 DEFINE_ENUM(ImGui, ComboFlags_None,           "Flags for ImGui::BeginCombo()");
