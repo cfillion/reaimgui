@@ -226,7 +226,7 @@ R"(Push word-wrapping position for Text*() commands. < 0.0f: no wrapping; 0.0f: 
 Default values: wrap_local_pos_x = 0.0)",
 {
   FRAME_GUARD;
-  ImGui::PushTextWrapPos(valueOr(API_RO(wrap_local_pos_x), 0.0));
+  ImGui::PushTextWrapPos(valueOr(API_RO(wrap_local_pos_x), 0.f));
 });
 
 DEFINE_API(void, PopTextWrapPos, (ImGui_Context*,ctx),

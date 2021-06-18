@@ -84,19 +84,19 @@ DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
-(double*,API_RO(width))(double*,API_RO(height))
+(double*,API_RO(size_w))(double*,API_RO(size_h))
 (int*,API_RO(flags)),
-"Default values: width = 0.0, height = 0.0, flags = ImGui_InputTextFlags_None",
+"Default values: size_w = 0.0, size_h = 0.0, flags = ImGui_InputTextFlags_None",
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
 
   std::string value { API_RWBIG(buf) };
+  const ImVec2 size { valueOr(API_RO(size_w), 0.f),
+                      valueOr(API_RO(size_h), 0.f) };
   const InputTextFlags flags { API_RO(flags) };
 
-  if(ImGui::InputTextMultiline(label, &value,
-      ImVec2(valueOr(API_RO(width), 0.0), valueOr(API_RO(height), 0.0)),
-      flags, nullptr, nullptr)) {
+  if(ImGui::InputTextMultiline(label, &value, size, flags, nullptr, nullptr)) {
     copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
     return true;
   }
@@ -373,9 +373,10 @@ Default values: flags = ImGui_ColorEditFlags_None, size_w = 0.0, size_h = 0.0)",
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
   const ImVec4 col { Color(col_rgba, alpha) };
+  const ImVec2 size { valueOr(API_RO(size_w), 0.f),
+                      valueOr(API_RO(size_h), 0.f) };
 
-  return ImGui::ColorButton(desc_id, col, flags,
-    ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)));
+  return ImGui::ColorButton(desc_id, col, flags, size);
 });
 
 DEFINE_API(void, SetColorEditOptions, (ImGui_Context*,ctx)
@@ -473,9 +474,9 @@ Default values: size_w = 0.0, size_h = 0.0
 See ImGui_EndListBox.)",
 {
   FRAME_GUARD;
-
-  return ImGui::BeginListBox(label,
-    ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)));
+  const ImVec2 size { valueOr(API_RO(size_w), 0.f),
+                      valueOr(API_RO(size_h), 0.f) };
+  return ImGui::BeginListBox(label, size);
 });
 
 DEFINE_API(void, EndListBox, (ImGui_Context*,ctx),

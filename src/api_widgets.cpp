@@ -86,8 +86,8 @@ Default values: size_w = 0.0, size_h = 0.0)",
 {
   FRAME_GUARD;
 
-  return ImGui::Button(label,
-    ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)));
+  ImVec2 size { valueOr(API_RO(size_w), 0.f), valueOr(API_RO(size_h), 0.f) };
+  return ImGui::Button(label, size);
 });
 
 DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
@@ -159,10 +159,9 @@ DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(overlay));
-
-  ImGui::ProgressBar(fraction,
-    ImVec2(valueOr(API_RO(size_arg_w), -FLT_MIN), valueOr(API_RO(size_arg_h), 0.0)),
-    API_RO(overlay));
+  const ImVec2 size { valueOr(API_RO(size_arg_w), -FLT_MIN),
+                      valueOr(API_RO(size_arg_h), 0.f) };
+  ImGui::ProgressBar(fraction, size, API_RO(overlay));
 });
 
 DEFINE_API(void, Bullet, (ImGui_Context*,ctx),
@@ -181,12 +180,13 @@ Neighbors selectable extend their highlight bounds in order to leave no gap betw
 Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0)",
 {
   FRAME_GUARD;
-
   bool selectedOmitted {};
   bool *selected { API_W(p_selected) ? API_W(p_selected) : &selectedOmitted };
-  return ImGui::Selectable(label, selected,
-    valueOr(API_RO(flags), ImGuiSelectableFlags_None),
-    ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)));
+  const ImGuiSelectableFlags flags
+    { valueOr(API_RO(flags), ImGuiSelectableFlags_None) };
+  const ImVec2 size { valueOr(API_RO(size_w), 0.f),
+                      valueOr(API_RO(size_h), 0.f) };
+  return ImGui::Selectable(label, selected, flags, size);
 });
 
 DEFINE_API(bool, TreeNode, (ImGui_Context*,ctx)

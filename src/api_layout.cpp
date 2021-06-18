@@ -31,7 +31,7 @@ R"(Call between widgets or groups to layout them horizontally. X position given 
 Default values: offset_from_start_x = 0.0, spacing = -1.0.)",
 {
   FRAME_GUARD;
-  ImGui::SameLine(valueOr(API_RO(offset_from_start_x), 0.0),
+  ImGui::SameLine(valueOr(API_RO(offset_from_start_x), 0.f),
     valueOr(API_RO(spacing), -1.0));
 });
 
@@ -62,7 +62,7 @@ R"(Move content position toward the right, by 'indent_w', or style.IndentSpacing
 Default values: indent_w = 0.0)",
 {
   FRAME_GUARD;
-  ImGui::Indent(valueOr(API_RO(indent_w), 0.0));
+  ImGui::Indent(valueOr(API_RO(indent_w), 0.f));
 });
 
 DEFINE_API(void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
@@ -71,7 +71,7 @@ R"(Move content position back to the left, by 'indent_w', or style.IndentSpacing
 Default values: indent_w = 0.0)",
 {
   FRAME_GUARD;
-  ImGui::Unindent(valueOr(API_RO(indent_w), 0.0));
+  ImGui::Unindent(valueOr(API_RO(indent_w), 0.f));
 });
 
 DEFINE_API(void, BeginGroup, (ImGui_Context*,ctx),

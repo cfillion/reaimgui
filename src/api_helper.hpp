@@ -78,10 +78,10 @@ using ImGui_Font = Font;
 
 #define FRAME_GUARD assertValid(ctx); ctx->enterFrame()
 
-template<typename T, typename Y>
-inline T valueOr(const T *ptr, const Y fallback)
+template<typename Output, typename Input>
+inline Output valueOr(const Input *ptr, const Output fallback)
 {
-  return ptr ? *ptr : fallback;
+  return ptr ? static_cast<Output>(*ptr) : fallback;
 }
 
 // const char *foobarInOptional from REAPER is never null no matter what

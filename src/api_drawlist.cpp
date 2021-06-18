@@ -97,7 +97,7 @@ DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddRect(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
-    Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.0),
+    Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.f),
     valueOr(API_RO(flags), ImDrawFlags_None),
     valueOr(API_RO(thickness), 1.0));
 });
@@ -109,7 +109,7 @@ DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddRectFilled(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
-    Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.0),
+    Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.f),
     valueOr(API_RO(flags), ImDrawFlags_None));
 });
 
@@ -232,7 +232,7 @@ Default values: wrap_width = 0.0, cpu_fine_clip_rect_x = nil, cpu_fine_clip_rect
   pos.x = pos_x;
   pos.y = pos_y;
 
-  const double wrap_width { valueOr(API_RO(wrap_width), 0.0) };
+  const float wrap_width { valueOr(API_RO(wrap_width), 0.f) };
 
   ImVec4 cpu_fine_clip_rect, *cpu_fine_clip_rect_ptr;
   if(API_RO(cpu_fine_clip_rect_x) && API_RO(cpu_fine_clip_rect_y) &&
@@ -413,6 +413,6 @@ DEFINE_API(void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
 "Default values: rounding = 0.0, flags = ImGui_DrawFlags_None",
 {
   draw_list->get()->PathRect(ImVec2(rect_min_x, rect_min_y),
-    ImVec2(rect_max_x, rect_max_y), valueOr(API_RO(rounding), 0.0),
+    ImVec2(rect_max_x, rect_max_y), valueOr(API_RO(rounding), 0.f),
     valueOr(API_RO(flags), ImDrawFlags_None));
 });

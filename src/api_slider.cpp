@@ -156,8 +156,8 @@ DEFINE_API(bool, DragFloatRange2, (ImGui_Context*,ctx)
   SliderFlags flags { API_RO(flags) };
 
   if(ImGui::DragFloatRange2(label, &values[0], &values[1],
-      valueOr(API_RO(v_speed), 1.0), valueOr(API_RO(v_min), 0.0),
-      valueOr(API_RO(v_max), 0.0), API_RO(format) ? API_RO(format) : "%.3f",
+      valueOr(API_RO(v_speed), 1.f), valueOr(API_RO(v_min), 0.f),
+      valueOr(API_RO(v_max), 0.f), API_RO(format) ? API_RO(format) : "%.3f",
       API_RO(format_max), flags))
     return values.commit();
   else

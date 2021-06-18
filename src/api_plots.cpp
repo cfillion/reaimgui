@@ -40,7 +40,7 @@ DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
   ImGui::PlotLines(label, &getArrayValue, values->data, values->size,
     valueOr(API_RO(values_offset), 0), API_RO(overlay_text),
     valueOr(API_RO(scale_min), FLT_MAX), valueOr(API_RO(scale_max), FLT_MAX),
-    ImVec2(valueOr(API_RO(graph_size_w), 0.0), valueOr(API_RO(graph_size_h), 0.0)));
+    ImVec2 { valueOr(API_RO(graph_size_w), 0.f), valueOr(API_RO(graph_size_h), 0.0f) });
 });
 
 DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
@@ -57,5 +57,5 @@ DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
   ImGui::PlotHistogram(label, &getArrayValue, values->data, values->size,
     valueOr(API_RO(values_offset), 0), API_RO(overlay_text),
     valueOr(API_RO(scale_min), FLT_MAX), valueOr(API_RO(scale_max), FLT_MAX),
-    ImVec2(valueOr(API_RO(graph_size_w), 0.0), valueOr(API_RO(graph_size_h), 0.0)));
+    ImVec2 { valueOr(API_RO(graph_size_w), 0.f), valueOr(API_RO(graph_size_h), 0.f) });
 });

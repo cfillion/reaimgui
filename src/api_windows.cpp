@@ -70,9 +70,11 @@ R"(Use child windows to begin into a self-contained independent scrolling/clippi
 Default values: size_w = 0.0, size_h = 0.0, border = false, flags = ImGui_WindowFlags_None)",
 {
   FRAME_GUARD;
-  return ImGui::BeginChild(str_id,
-    ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)),
-    valueOr(API_RO(border), false), valueOr(API_RO(flags), ImGuiWindowFlags_None));
+  const ImGuiWindowFlags flags { valueOr(API_RO(flags), ImGuiWindowFlags_None) };
+  const ImVec2 size { valueOr(API_RO(size_w), 0.f),
+                      valueOr(API_RO(size_h), 0.f) };
+  const bool border { valueOr(API_RO(border), false) };
+  return ImGui::BeginChild(str_id, size, border, flags);
 });
 
 DEFINE_API(void, EndChild, (ImGui_Context*,ctx),
@@ -198,8 +200,8 @@ Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
-  const ImVec2 pivot(valueOr(API_RO(pivot_x), 0.0),
-                     valueOr(API_RO(pivot_y), 0.0));
+  const ImVec2 pivot { valueOr(API_RO(pivot_x), 0.f),
+                       valueOr(API_RO(pivot_y), 0.f) };
   ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y), cond, pivot);
 });
 

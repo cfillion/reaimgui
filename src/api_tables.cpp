@@ -52,14 +52,11 @@ Default values: flags = ImGui_TableFlags_None, outer_size_w = 0.0, outer_size_h 
 {
   FRAME_GUARD;
 
-  return ImGui::BeginTable(str_id, column,
-    valueOr(API_RO(flags), ImGuiTableFlags_None),
-    ImVec2(
-      valueOr(API_RO(outer_size_w), 0.0),
-      valueOr(API_RO(outer_size_h), 0.0)
-    ),
-    valueOr(API_RO(inner_width), 0.0)
-  );
+  const ImGuiTableFlags flags { valueOr(API_RO(flags), ImGuiTableFlags_None) };
+  const ImVec2 size { valueOr(API_RO(outer_size_w), 0.f),
+                      valueOr(API_RO(outer_size_h), 0.f) };
+  const float inner_width { valueOr(API_RO(inner_width), 0.f) };
+  return ImGui::BeginTable(str_id, column, flags, size, inner_width);
 });
 
 DEFINE_API(void, EndTable, (ImGui_Context*,ctx),
@@ -76,8 +73,9 @@ R"(Append into the first cell of a new row.
 Default values: row_flags = ImGui_TableRowFlags_None, min_row_height = 0.0)",
 {
   FRAME_GUARD;
-  ImGui::TableNextRow(valueOr(API_RO(row_flags), ImGuiTableRowFlags_None),
-    valueOr(API_RO(min_row_height), 0.0));
+  const ImGuiTableRowFlags flags
+    { valueOr(API_RO(row_flags), ImGuiTableRowFlags_None) };
+  ImGui::TableNextRow(flags, valueOr(API_RO(min_row_height), 0.f));
 });
 
 DEFINE_API(bool, TableNextColumn, (ImGui_Context*,ctx),
@@ -105,7 +103,7 @@ Default values: flags = ImGui_TableColumnFlags_None, init_width_or_weight = 0.0,
   FRAME_GUARD;
   ImGui::TableSetupColumn(label,
     valueOr(API_RO(flags), ImGuiTableColumnFlags_None),
-    valueOr(API_RO(init_width_or_weight), 0.0), valueOr(API_RO(user_id), 0));
+    valueOr(API_RO(init_width_or_weight), 0.f), valueOr(API_RO(user_id), 0));
 });
 
 DEFINE_API(void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
