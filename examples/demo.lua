@@ -786,11 +786,13 @@ function demo.ShowDemoWindowWidgets()
       end
     end
 
-    rv,widgets.cheads.closable_group = r.ImGui_CollapsingHeader(ctx, 'Header with a close button', widgets.cheads.closable_group)
-    if rv then
-      r.ImGui_Text(ctx, ('IsItemHovered: %s'):format(r.ImGui_IsItemHovered(ctx)))
-      for i = 0, 4 do
-        r.ImGui_Text(ctx, ('More content %d'):format(i))
+    if widgets.cheads.closable_group then
+      rv,widgets.cheads.closable_group = r.ImGui_CollapsingHeader(ctx, 'Header with a close button', true)
+      if rv then
+        r.ImGui_Text(ctx, ('IsItemHovered: %s'):format(r.ImGui_IsItemHovered(ctx)))
+        for i = 0, 4 do
+          r.ImGui_Text(ctx, ('More content %d'):format(i))
+        end
       end
     end
 
@@ -1453,7 +1455,7 @@ label:
       if r.ImGui_BeginTabBar(ctx, 'MyTabBar', widgets.tabs.flags1) then
         for n,opened in ipairs(widgets.tabs.opened) do
           if opened then
-            rv,widgets.tabs.opened[n] = r.ImGui_BeginTabItem(ctx, names[n], opened, r.ImGui_TabItemFlags_None())
+            rv,widgets.tabs.opened[n] = r.ImGui_BeginTabItem(ctx, names[n], true, r.ImGui_TabItemFlags_None())
             if rv then
               r.ImGui_Text(ctx, ('This is the %s tab!'):format(names[n]))
               if n & 1 then
@@ -1510,18 +1512,18 @@ label:
         -- Submit our regular tabs
         local n = 1
         while n <= #widgets.tabs.active do
-          local open = true
           local name = ('%04d'):format(widgets.tabs.active[n]-1)
-          rv,open = r.ImGui_BeginTabItem(ctx, name, open, r.ImGui_TabItemFlags_None())
+          local open
+          rv,open = r.ImGui_BeginTabItem(ctx, name, true, r.ImGui_TabItemFlags_None())
           if rv then
             r.ImGui_Text(ctx, ('This is the %s tab!'):format(name))
             r.ImGui_EndTabItem(ctx)
           end
 
-          if not open then
-            table.remove(widgets.tabs.active, n)
-          else
+          if open then
             n = n + 1
+          else
+            table.remove(widgets.tabs.active, n)
           end
         end
 
@@ -3145,7 +3147,6 @@ function demo.ShowDemoWindowLayout()
         r.ImGui_Button(ctx, 'this is a 300-wide button', 300, 0)
       end
       if layout.horizontal_window.show_tree_nodes then
-        local open = true
         if r.ImGui_TreeNode(ctx, 'this is a tree node') then
           if r.ImGui_TreeNode(ctx, 'another one of those tree node...') then
             r.ImGui_Text(ctx, 'Some tree contents')
@@ -3153,7 +3154,7 @@ function demo.ShowDemoWindowLayout()
           end
           r.ImGui_TreePop(ctx)
         end
-        r.ImGui_CollapsingHeader(ctx, 'CollapsingHeader', open)
+        r.ImGui_CollapsingHeader(ctx, 'CollapsingHeader', true)
       end
       if layout.horizontal_window.show_text_wrapped then
         r.ImGui_TextWrapped(ctx, 'This text should automatically wrap on the edge of the work rectangle.')
@@ -3508,9 +3509,8 @@ function demo.ShowDemoWindowPopups()
         r.ImGui_OpenPopup(ctx, 'Stacked 2')
       end
 
-      -- Also demonstrate passing a bool* to BeginPopupModal(), this will create a regular close button which
-      -- will close the popup. Note that the visibility state of popups is owned by imgui, so the input value
-      -- of the bool actually doesn't matter here.
+      -- Also demonstrate passing p_open=true to BeginPopupModal(), this will create a regular close button which
+      -- will close the popup.
       local unused_open = true
       if r.ImGui_BeginPopupModal(ctx, 'Stacked 2', unused_open) then
         r.ImGui_Text(ctx, 'Hello from Stacked The Second!')
@@ -6355,14 +6355,14 @@ end
 
 local ExampleAppLog = {}
 function ExampleAppLog:new(ctx)
-  local obj = {
+  local instance = {
     ctx          = ctx,
     lines        = {},
     -- filter       = ImGuiTextFilter,
     auto_scroll  = true, -- Keep scrolling if already at the bottom.
   }
   self.__index = self
-  return setmetatable(obj, self)
+  return setmetatable(instance, self)
 end
 
 function ExampleAppLog.clear(self)
@@ -6491,7 +6491,8 @@ function demo.ShowExampleAppLog()
   r.ImGui_End(ctx)
 
   -- Actually call in the regular Log helper (which will Begin() into the same window as we just did)
-  return app.log:draw("Example: Log", open)
+  app.log:draw('Example: Log')
+  return open
 end
 
 -------------------------------------------------------------------------------

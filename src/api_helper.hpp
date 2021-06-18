@@ -70,8 +70,7 @@ using ImGui_Font = Font;
 #define API_RW(var)       var##InOut      // read/write
 #define API_W(var)        var##Out        // write
 #define API_W_SZ(var)     var##Out_sz     // write
-// Not using varInOutOptional because REAPER refuses to give them as null
-#define API_RWO(var)      var##InOptional // read/write, optional/nullable
+// Not using varInOutOptional because REAPER refuses to pass NULL to them
 #define API_RWBIG(var)    var##InOutNeedBig    // read/write, resizable (realloc_cmd_ptr)
 #define API_RWBIG_SZ(var) var##InOutNeedBig_sz // size of previous API_RWBIG buffer
 #define API_WBIG(var)     var##OutNeedBig
@@ -145,5 +144,18 @@ private:
   std::array<PtrType*, N> m_inputs;
   std::array<ValType, N> m_values;
 };
+
+// Common behavior for p_open throughout the API.
+// When false, set output to true to signal it's open to the caller, but give
+// NULL to Dear ImGui to signify not closable.
+inline bool *openPtrBehavior(bool *p_open)
+{
+  if(p_open && !*p_open) {
+    *p_open = true;
+    return nullptr;
+  }
+
+  return p_open;
+}
 
 #endif

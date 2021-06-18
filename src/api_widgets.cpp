@@ -173,7 +173,7 @@ DEFINE_API(void, Bullet, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_RWO(p_selected))
+(const char*,label)(bool*,API_W(p_selected))
 (int*,API_RO(flags))(double*,API_RO(size_w))(double*,API_RO(size_h)),
 R"(A selectable highlights when hovered, and can display another color when selected.
 Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
@@ -183,7 +183,7 @@ Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0)"
   FRAME_GUARD;
 
   bool selectedOmitted {};
-  bool *selected { API_RWO(p_selected) ? API_RWO(p_selected) : &selectedOmitted };
+  bool *selected { API_W(p_selected) ? API_W(p_selected) : &selectedOmitted };
   return ImGui::Selectable(label, selected,
     valueOr(API_RO(flags), ImGuiSelectableFlags_None),
     ImVec2(valueOr(API_RO(size_w), 0.0), valueOr(API_RO(size_h), 0.0)));
@@ -233,7 +233,7 @@ DEFINE_API(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, CollapsingHeader, (ImGui_Context*,ctx)
-(const char*, label)(bool*,API_RWO(p_visible))(int*,API_RO(flags)),
+(const char*,label)(bool*,API_W(p_visible))(int*,API_RO(flags)),
 R"(CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGui_TreeNodeFlags_NoTreePushOnOpen flag).
 
 This is basically the same as calling TreeNode(label, ImGui_TreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
@@ -243,8 +243,11 @@ When 'visible' is provided: if 'true' display an additional small close button o
 Default values: flags = ImGui_TreeNodeFlags_None)",
 {
   FRAME_GUARD;
+  // p_visible behavior differs from ImGui: false as input is treated the same
+  // as NULL. This is because EEL doesn't have a NULL (0 = false), API_W never
+  // receives a NULL, and API_RWO aren't listed in the output values list.
   const ImGuiTreeNodeFlags flags { valueOr(API_RO(flags), ImGuiTreeNodeFlags_None) };
-  return ImGui::CollapsingHeader(label, API_RWO(p_visible), flags);
+  return ImGui::CollapsingHeader(label, openPtrBehavior(API_W(p_visible)), flags);
 });
 
 DEFINE_API(bool, BeginMenuBar, (ImGui_Context*,ctx),
@@ -279,8 +282,8 @@ R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BeginMenu.)",
 });
 
 DEFINE_API(bool, MenuItem, (ImGui_Context*,ctx)
-(const char*, label)(const char*, API_RO(shortcut))
-(bool*, API_RWO(p_selected))(bool*, API_RO(enabled)),
+(const char*,label)(const char*,API_RO(shortcut))
+(bool*,API_W(p_selected))(bool*,API_RO(enabled)),
 R"(Return true when activated. Shortcuts are displayed for convenience but not processed by ImGui at the moment. Toggle state is written to 'selected' when provided.
 
 Default values: enabled = true)",
@@ -288,7 +291,7 @@ Default values: enabled = true)",
   FRAME_GUARD;
   nullIfEmpty(API_RO(shortcut));
 
-  return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(p_selected),
+  return ImGui::MenuItem(label, API_RO(shortcut), API_W(p_selected),
     valueOr(API_RO(enabled), true));
 });
 
@@ -310,14 +313,14 @@ DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, BeginTabItem, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
+(const char*,label)(bool*,API_W(p_open))(int*,API_RO(flags)),
 R"(Create a Tab. Returns true if the Tab is selected.
 
 Default values: p_open = nil, flags = ImGui_TabItemFlags_None
 'open' is read/write.)",
 {
   FRAME_GUARD;
-  return ImGui::BeginTabItem(label, API_RWO(p_open),
+  return ImGui::BeginTabItem(label, openPtrBehavior(API_W(p_open)),
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
 });
 
