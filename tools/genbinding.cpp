@@ -144,7 +144,14 @@ class ReaImGuiFunc<R(Args...)>
 public:
   ReaImGuiFunc(const char *name) : m_name { name }, m_proc { nullptr } {}
   operator bool() const { return proc() != nullptr; }
-  auto operator()(Args... args) { return proc()(std::forward<Args>(args)...); }
+  template<typename... CallArgs>
+  auto operator()(CallArgs... args)
+  {
+    if constexpr(sizeof...(CallArgs) < sizeof...(Args))
+      return (*this)(std::forward<CallArgs>(args)..., nullptr);
+    else
+      return proc()(std::forward<CallArgs>(args)...);
+  }
 
 private:
   R(*proc())(Args...)

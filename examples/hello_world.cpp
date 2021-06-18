@@ -39,32 +39,32 @@ static void frame()
   static int click_count;
   static char text[255] { "The quick brown fox jumps over the lazy dog" };
 
-  if(ImGui_Button(g_ctx, "Click me!", nullptr, nullptr))
+  if(ImGui_Button(g_ctx, "Click me!"))
     ++click_count;
 
   if(click_count % 2 == 1) {
-    ImGui_SameLine(g_ctx, nullptr, nullptr);
+    ImGui_SameLine(g_ctx);
     ImGui_Text(g_ctx, R"(\o/)");
   }
 
-  ImGui_InputText(g_ctx, "text input", text, sizeof(text), nullptr);
+  ImGui_InputText(g_ctx, "text input", text, sizeof(text));
 }
 
 static void loop()
 {
   if(!g_ctx)
-    g_ctx = ImGui_CreateContext("My extension", nullptr);
+    g_ctx = ImGui_CreateContext("My extension");
 
   int cond { ImGui_Cond_FirstUseEver };
   ImGui_SetNextWindowSize(g_ctx, 400, 80, &cond);
 
   bool open { true };
-  if(ImGui_Begin(g_ctx, "ReaImGui C++ example", &open, nullptr)) {
+  if(ImGui_Begin(g_ctx, "ReaImGui C++ example", &open)) {
     frame();
     ImGui_End(g_ctx);
   }
 
-  if(!open) {
+  if(!open || !ImGui_ValidatePtr(g_ctx, "ImGui_Context*")) {
     plugin_register("-timer", reinterpret_cast<void *>(&loop));
     ImGui_DestroyContext(g_ctx);
     g_ctx = nullptr;
