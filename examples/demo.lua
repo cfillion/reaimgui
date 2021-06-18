@@ -202,9 +202,10 @@ function demo.ShowDemoWindow()
   if show_app.about   then show_app.about   = demo.ShowAboutWindow(show_app.about)     end
   -- if (show_app_style_editor)
   -- {
-  --     r.ImGui_Begin("Dear ImGui Style Editor", &show_app_style_editor);
-  --     r.ImGui_ShowStyleEditor();
-  --     r.ImGui_End();
+  --     if(r.ImGui_Begin("Dear ImGui Style Editor", &show_app_style_editor)) {
+  --         r.ImGui_ShowStyleEditor();
+  --         r.ImGui_End();
+  --     }
   -- }
 
   -- Demonstrate the various window flags. Typically you would just use the default!
@@ -218,7 +219,7 @@ function demo.ShowDemoWindow()
   if demo.no_nav            then window_flags = window_flags | r.ImGui_WindowFlags_NoNav()                 end
   if demo.no_background     then window_flags = window_flags | r.ImGui_WindowFlags_NoBackground()          end
   if demo.no_bring_to_front then window_flags = window_flags | r.ImGui_WindowFlags_NoBringToFrontOnFocus() end
-  if demo.no_close          then open = nil end -- Don't pass our bool* to Begin
+  if demo.no_close          then open = false end -- disable the close button
 
   -- We specify a default position/size in case there's no data in the .ini file.
   -- We only do it to make the demo applications a little more welcoming, but typically this isn't required.
@@ -229,12 +230,8 @@ function demo.ShowDemoWindow()
 
   -- Main body of the Demo window starts here.
   rv,open = r.ImGui_Begin(ctx, 'Dear ImGui Demo', open, window_flags)
-  if demo.no_close then open = true end
-  if not rv then
-    -- Early out if the window is collapsed, as an optimization.
-    r.ImGui_End(ctx)
-    return open
-  end
+  -- Early out if the window is collapsed
+  if not rv then return open end
 
   -- Most "big" widgets share a common width settings by default. See 'Demo->Layout->Widgets Width' for details.
 
@@ -2244,21 +2241,22 @@ label:
     end
 
     if r.ImGui_TreeNode(ctx, 'Drag and drop files') then
-      r.ImGui_BeginChildFrame(ctx, '##drop_files', -FLT_MIN, 100)
-      if #widgets.dragdrop.files == 0 then
-        r.ImGui_Text(ctx, 'Drag and drop files here...')
-      else
-        r.ImGui_Text(ctx, ('Received %d file(s):'):format(#widgets.dragdrop.files))
-        r.ImGui_SameLine(ctx)
-        if r.ImGui_SmallButton(ctx, 'Clear') then
-          widgets.dragdrop.files = {}
+      if r.ImGui_BeginChildFrame(ctx, '##drop_files', -FLT_MIN, 100) then
+        if #widgets.dragdrop.files == 0 then
+          r.ImGui_Text(ctx, 'Drag and drop files here...')
+        else
+          r.ImGui_Text(ctx, ('Received %d file(s):'):format(#widgets.dragdrop.files))
+          r.ImGui_SameLine(ctx)
+          if r.ImGui_SmallButton(ctx, 'Clear') then
+            widgets.dragdrop.files = {}
+          end
         end
+        for _, file in ipairs(widgets.dragdrop.files) do
+          r.ImGui_Bullet(ctx)
+          r.ImGui_TextWrapped(ctx, file)
+        end
+        r.ImGui_EndChildFrame(ctx)
       end
-      for _, file in ipairs(widgets.dragdrop.files) do
-        r.ImGui_Bullet(ctx)
-        r.ImGui_TextWrapped(ctx, file)
-      end
-      r.ImGui_EndChildFrame(ctx)
 
       if r.ImGui_BeginDragDropTarget(ctx) then
         local rv, count = r.ImGui_AcceptDragDropPayloadFiles(ctx)
@@ -2400,47 +2398,51 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
     rv,widgets.query.embed_all_inside_a_child_window =
       r.ImGui_Checkbox(ctx, 'Embed everything inside a child window (for additional testing)',
       widgets.query.embed_all_inside_a_child_window)
+    local visible = true
     if widgets.query.embed_all_inside_a_child_window then
-      r.ImGui_BeginChild(ctx, 'outer_child', 0, r.ImGui_GetFontSize(ctx) * 20.0, true)
+      visible = r.ImGui_BeginChild(ctx, 'outer_child', 0, r.ImGui_GetFontSize(ctx) * 20.0, true)
     end
 
-    -- Testing IsWindowFocused() function with its various flags.
-    -- Note that the ImGuiFocusedFlags_XXX flags can be combined.
-    r.ImGui_BulletText(ctx, ([[IsWindowFocused() = %s
-IsWindowFocused(_ChildWindows) = %s
-IsWindowFocused(_ChildWindows|_RootWindow) = %s
-IsWindowFocused(_RootWindow) = %s
-IsWindowFocused(_AnyWindow) = %s]]):format(
-      r.ImGui_IsWindowFocused(ctx),
-      r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows()),
-      r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows() | r.ImGui_FocusedFlags_RootWindow()),
-      r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_RootWindow()),
-      r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_AnyWindow())))
+    if visible then
+      -- Testing IsWindowFocused() function with its various flags.
+      -- Note that the ImGuiFocusedFlags_XXX flags can be combined.
+      r.ImGui_BulletText(ctx, ([[IsWindowFocused() = %s
+  IsWindowFocused(_ChildWindows) = %s
+  IsWindowFocused(_ChildWindows|_RootWindow) = %s
+  IsWindowFocused(_RootWindow) = %s
+  IsWindowFocused(_AnyWindow) = %s]]):format(
+        r.ImGui_IsWindowFocused(ctx),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows()),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows() | r.ImGui_FocusedFlags_RootWindow()),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_RootWindow()),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_AnyWindow())))
 
-    -- Testing IsWindowHovered() function with its various flags.
-    -- Note that the ImGuiHoveredFlags_XXX flags can be combined.
-    r.ImGui_BulletText(ctx, ([[IsWindowHovered() = %s
-IsWindowHovered(_AllowWhenBlockedByPopup) = %s
-IsWindowHovered(_AllowWhenBlockedByActiveItem) = %s
-IsWindowHovered(_ChildWindows) = %s
-IsWindowHovered(_ChildWindows|_RootWindow) = %s
-IsWindowHovered(_ChildWindows|_AllowWhenBlockedByPopup) = %s
-IsWindowHovered(_RootWindow) = %s
-IsWindowHovered(_AnyWindow) = %s]]):format(
-      r.ImGui_IsWindowHovered(ctx),
-      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
-      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByActiveItem()),
-      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows()),
-      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_RootWindow()),
-      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
-      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_RootWindow()),
-      r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AnyWindow())))
+      -- Testing IsWindowHovered() function with its various flags.
+      -- Note that the ImGuiHoveredFlags_XXX flags can be combined.
+      r.ImGui_BulletText(ctx, ([[IsWindowHovered() = %s
+  IsWindowHovered(_AllowWhenBlockedByPopup) = %s
+  IsWindowHovered(_AllowWhenBlockedByActiveItem) = %s
+  IsWindowHovered(_ChildWindows) = %s
+  IsWindowHovered(_ChildWindows|_RootWindow) = %s
+  IsWindowHovered(_ChildWindows|_AllowWhenBlockedByPopup) = %s
+  IsWindowHovered(_RootWindow) = %s
+  IsWindowHovered(_AnyWindow) = %s]]):format(
+        r.ImGui_IsWindowHovered(ctx),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByActiveItem()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_RootWindow()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_RootWindow()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AnyWindow())))
 
-    r.ImGui_BeginChild(ctx, 'child', 0, 50, true)
-    r.ImGui_Text(ctx, 'This is another child window for testing the _ChildWindows flag.')
-    r.ImGui_EndChild(ctx)
-    if widgets.query.embed_all_inside_a_child_window then
-      r.ImGui_EndChild(ctx)
+      if r.ImGui_BeginChild(ctx, 'child', 0, 50, true) then
+        r.ImGui_Text(ctx, 'This is another child window for testing the _ChildWindows flag.')
+        r.ImGui_EndChild(ctx)
+      end
+      if widgets.query.embed_all_inside_a_child_window then
+        r.ImGui_EndChild(ctx)
+      end
     end
 
     local unused_str = 'This widget is only here to be able to tab-out of the widgets above.'
@@ -2450,16 +2452,18 @@ IsWindowHovered(_AnyWindow) = %s]]):format(
     -- This is useful in particular if you want to create a context menu associated to the title bar of a window.
     rv,widgets.query.test_window = r.ImGui_Checkbox(ctx, 'Hovered/Active tests after Begin() for title bar testing', widgets.query.test_window)
     if widgets.query.test_window then
-      rv,widgets.query.test_window = r.ImGui_Begin(ctx, 'Title bar Hovered/Active tests', widgets.query.test_window)
-      if r.ImGui_BeginPopupContextItem(ctx) then -- <-- This is using IsItemHovered()
-        if r.ImGui_MenuItem(ctx, 'Close') then widgets.query.test_window = false end
-        r.ImGui_EndPopup(ctx)
+      rv,widgets.query.test_window = r.ImGui_Begin(ctx, 'Title bar Hovered/Active tests', true)
+      if rv then
+        if r.ImGui_BeginPopupContextItem(ctx) then -- <-- This is using IsItemHovered()
+          if r.ImGui_MenuItem(ctx, 'Close') then widgets.query.test_window = false end
+          r.ImGui_EndPopup(ctx)
+        end
+        r.ImGui_Text(ctx,
+          ('IsItemHovered() after begin = %s (== is title bar hovered)\n\z
+            IsItemActive() after begin = %s (== is window being clicked/moved)\n')
+          :format(r.ImGui_IsItemHovered(ctx), r.ImGui_IsItemActive(ctx)))
+        r.ImGui_End(ctx)
       end
-      r.ImGui_Text(ctx,
-        ('IsItemHovered() after begin = %s (== is title bar hovered)\n\z
-          IsItemActive() after begin = %s (== is window being clicked/moved)\n')
-        :format(r.ImGui_IsItemHovered(ctx), r.ImGui_IsItemActive(ctx)))
-      r.ImGui_End(ctx)
     end
 
     r.ImGui_TreePop(ctx)
@@ -2491,11 +2495,12 @@ function demo.ShowDemoWindowLayout()
     if layout.child.disable_mouse_wheel then
       window_flags = window_flags | r.ImGui_WindowFlags_NoScrollWithMouse()
     end
-    r.ImGui_BeginChild(ctx, 'ChildL', r.ImGui_GetWindowContentRegionWidth(ctx) * 0.5, 260, false, window_flags)
-    for i = 0, 99 do
-      r.ImGui_Text(ctx, ('%04d: scrollable region'):format(i))
+    if r.ImGui_BeginChild(ctx, 'ChildL', r.ImGui_GetWindowContentRegionWidth(ctx) * 0.5, 260, false, window_flags) then
+      for i = 0, 99 do
+        r.ImGui_Text(ctx, ('%04d: scrollable region'):format(i))
+      end
+      r.ImGui_EndChild(ctx)
     end
-    r.ImGui_EndChild(ctx)
 
     r.ImGui_SameLine(ctx)
 
@@ -2508,23 +2513,25 @@ function demo.ShowDemoWindowLayout()
       window_flags = window_flags | r.ImGui_WindowFlags_MenuBar()
     end
     r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ChildRounding(), 5.0)
-    r.ImGui_BeginChild(ctx, 'ChildR', 0, 260, true, window_flags)
-    if not layout.child.disable_menu and r.ImGui_BeginMenuBar(ctx) then
-      if r.ImGui_BeginMenu(ctx, 'Menu') then
-        demo.ShowExampleMenuFile()
-        r.ImGui_EndMenu(ctx)
-      end
-      r.ImGui_EndMenuBar(ctx)
-    end
-    if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings()) then
-      for i = 0, 99 do
-        r.ImGui_TableNextColumn(ctx)
-        r.ImGui_Button(ctx, ('%03d'):format(i), -FLT_MIN, 0.0)
-      end
-      r.ImGui_EndTable(ctx)
-    end
-    r.ImGui_EndChild(ctx)
+    local visible = r.ImGui_BeginChild(ctx, 'ChildR', 0, 260, true, window_flags)
     r.ImGui_PopStyleVar(ctx)
+    if visible then
+      if not layout.child.disable_menu and r.ImGui_BeginMenuBar(ctx) then
+        if r.ImGui_BeginMenu(ctx, 'Menu') then
+          demo.ShowExampleMenuFile()
+          r.ImGui_EndMenu(ctx)
+        end
+        r.ImGui_EndMenuBar(ctx)
+      end
+      if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings()) then
+        for i = 0, 99 do
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Button(ctx, ('%03d'):format(i), -FLT_MIN, 0.0)
+        end
+        r.ImGui_EndTable(ctx)
+      end
+      r.ImGui_EndChild(ctx)
+    end
 
     r.ImGui_Separator(ctx)
 
@@ -2540,12 +2547,14 @@ function demo.ShowDemoWindowLayout()
 
     r.ImGui_SetCursorPosX(ctx, r.ImGui_GetCursorPosX(ctx) + layout.child.offset_x)
     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ChildBg(), 0xFF000064)
-    r.ImGui_BeginChild(ctx, 'Red', 200, 100, true, r.ImGui_WindowFlags_None())
-    for n = 0, 49 do
-      r.ImGui_Text(ctx, ('Some test %d'):format(n))
-    end
-    r.ImGui_EndChild(ctx)
+    local visible = r.ImGui_BeginChild(ctx, 'Red', 200, 100, true, r.ImGui_WindowFlags_None())
     r.ImGui_PopStyleColor(ctx)
+    if visible then
+      for n = 0, 49 do
+        r.ImGui_Text(ctx, ('Some test %d'):format(n))
+      end
+      r.ImGui_EndChild(ctx)
+    end
     local child_is_hovered = r.ImGui_IsItemHovered(ctx)
     local child_rect_min_x,child_rect_min_y = r.ImGui_GetItemRectMin(ctx)
     local child_rect_max_x,child_rect_max_y = r.ImGui_GetItemRectMax(ctx)
@@ -2944,18 +2953,17 @@ function demo.ShowDemoWindowLayout()
       r.ImGui_BeginGroup(ctx)
       r.ImGui_Text(ctx, name)
 
-      local child_is_visible = r.ImGui_BeginChild(ctx, i, child_w, 200.0, true, child_flags)
-      if r.ImGui_BeginMenuBar(ctx) then
-        r.ImGui_Text(ctx, 'abc')
-        r.ImGui_EndMenuBar(ctx)
-      end
-      if scroll_to_off then
-        r.ImGui_SetScrollY(ctx, layout.scrolling.scroll_to_off_px)
-      end
-      if scroll_to_pos then
-        r.ImGui_SetScrollFromPosY(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[2] + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
-      end
-      if child_is_visible then -- Avoid calling SetScrollHereY when running with culled items
+      if r.ImGui_BeginChild(ctx, i, child_w, 200.0, true, child_flags) then
+        if r.ImGui_BeginMenuBar(ctx) then
+          r.ImGui_Text(ctx, 'abc')
+          r.ImGui_EndMenuBar(ctx)
+        end
+        if scroll_to_off then
+          r.ImGui_SetScrollY(ctx, layout.scrolling.scroll_to_off_px)
+        end
+        if scroll_to_pos then
+          r.ImGui_SetScrollFromPosY(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[2] + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
+        end
         for item = 0, 99 do
           if layout.scrolling.enable_track and item == layout.scrolling.track_item then
             r.ImGui_TextColored(ctx, 0xFFFF00FF, ('Item %d'):format(item))
@@ -2964,11 +2972,13 @@ function demo.ShowDemoWindowLayout()
             r.ImGui_Text(ctx, ('Item %d'):format(item))
           end
         end
+        local scroll_y = r.ImGui_GetScrollY(ctx)
+        local scroll_max_y = r.ImGui_GetScrollMaxY(ctx)
+        r.ImGui_EndChild(ctx)
+        r.ImGui_Text(ctx, ('%.0f/%.0f'):format(scroll_y, scroll_max_y))
+      else
+        r.ImGui_Text(ctx, 'N/A')
       end
-      local scroll_y = r.ImGui_GetScrollY(ctx)
-      local scroll_max_y = r.ImGui_GetScrollMaxY(ctx)
-      r.ImGui_EndChild(ctx)
-      r.ImGui_Text(ctx, ('%.0f/%.0f'):format(scroll_y, scroll_max_y))
       r.ImGui_EndGroup(ctx)
     end
     r.ImGui_PopID(ctx)
@@ -2989,14 +2999,14 @@ function demo.ShowDemoWindowLayout()
       child_flags = child_flags | r.ImGui_WindowFlags_AlwaysVerticalScrollbar()
     end
     for i,name in ipairs(names) do
-      local child_is_visible = r.ImGui_BeginChild(ctx, i, -100, child_height, true, child_flags)
-      if scroll_to_off then
-        r.ImGui_SetScrollX(ctx, layout.scrolling.scroll_to_off_px)
-      end
-      if scroll_to_pos then
-        r.ImGui_SetScrollFromPosX(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[1] + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
-      end
-      if child_is_visible then -- Avoid calling SetScrollHereY when running with culled items
+      local scroll_x, scroll_max_x = 0.0, 0.0
+      if r.ImGui_BeginChild(ctx, i, -100, child_height, true, child_flags) then
+        if scroll_to_off then
+          r.ImGui_SetScrollX(ctx, layout.scrolling.scroll_to_off_px)
+        end
+        if scroll_to_pos then
+          r.ImGui_SetScrollFromPosX(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[1] + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
+        end
         for item = 0, 99 do
           if item > 0 then
             r.ImGui_SameLine(ctx)
@@ -3008,10 +3018,10 @@ function demo.ShowDemoWindowLayout()
             r.ImGui_Text(ctx, ('Item %d'):format(item))
           end
         end
+        scroll_x = r.ImGui_GetScrollX(ctx)
+        scroll_max_x = r.ImGui_GetScrollMaxX(ctx)
+        r.ImGui_EndChild(ctx)
       end
-      local scroll_x = r.ImGui_GetScrollX(ctx)
-      local scroll_max_x = r.ImGui_GetScrollMaxX(ctx)
-      r.ImGui_EndChild(ctx)
       r.ImGui_SameLine(ctx)
       r.ImGui_Text(ctx, ('%s\n%.0f/%.0f'):format(name, scroll_x, scroll_max_x))
       r.ImGui_Spacing(ctx)
@@ -3026,41 +3036,43 @@ function demo.ShowDemoWindowLayout()
     r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FrameRounding(), 3.0)
     r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), 2.0, 1.0)
     local scrolling_child_width = r.ImGui_GetFrameHeightWithSpacing(ctx) * 7 + 30
-    r.ImGui_BeginChild(ctx, 'scrolling', 0, scrolling_child_width, true, r.ImGui_WindowFlags_HorizontalScrollbar())
-    for line = 0, layout.scrolling.lines - 1 do
-      -- Display random stuff. For the sake of this trivial demo we are using basic Button() + SameLine()
-      -- If you want to create your own time line for a real application you may be better off manipulating
-      -- the cursor position yourself, aka using SetCursorPos/SetCursorScreenPos to position the widgets
-      -- yourself. You may also want to use the lower-level ImDrawList API.
-      local num_buttons = 10 + ((line & 1 ~= 0) and line * 9 or line * 3)
-      for n = 0, num_buttons - 1 do
-        if n > 0 then r.ImGui_SameLine(ctx) end
-        r.ImGui_PushID(ctx, n + line * 1000)
-        local label
-        if n % 15 == 0 then
-          label = 'FizzBuzz'
-        elseif n % 3 == 0 then
-          label = 'Fizz'
-        elseif n % 5 == 0 then
-          label = 'Buzz'
-        else
-          label = tostring(n)
+    local scroll_x, scroll_max_x = 0.0, 0.0
+    if r.ImGui_BeginChild(ctx, 'scrolling', 0, scrolling_child_width, true, r.ImGui_WindowFlags_HorizontalScrollbar()) then
+      for line = 0, layout.scrolling.lines - 1 do
+        -- Display random stuff. For the sake of this trivial demo we are using basic Button() + SameLine()
+        -- If you want to create your own time line for a real application you may be better off manipulating
+        -- the cursor position yourself, aka using SetCursorPos/SetCursorScreenPos to position the widgets
+        -- yourself. You may also want to use the lower-level ImDrawList API.
+        local num_buttons = 10 + ((line & 1 ~= 0) and line * 9 or line * 3)
+        for n = 0, num_buttons - 1 do
+          if n > 0 then r.ImGui_SameLine(ctx) end
+          r.ImGui_PushID(ctx, n + line * 1000)
+          local label
+          if n % 15 == 0 then
+            label = 'FizzBuzz'
+          elseif n % 3 == 0 then
+            label = 'Fizz'
+          elseif n % 5 == 0 then
+            label = 'Buzz'
+          else
+            label = tostring(n)
+          end
+          local hue = n * 0.05;
+          local button_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.6, 0.6, 1.0)
+          local hovered_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.7, 0.7, 1.0)
+          local active_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.8, 0.8, 1.0)
+          r.ImGui_PushStyleColor(ctx, r.ImGui_Col_Button(), button_color)
+          r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonHovered(), hovered_color)
+          r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonActive(), active_color)
+          r.ImGui_Button(ctx, label, 40.0 + math.sin(line + n) * 20.0, 0.0)
+          r.ImGui_PopStyleColor(ctx, 3)
+          r.ImGui_PopID(ctx)
         end
-        local hue = n * 0.05;
-        local button_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.6, 0.6, 1.0)
-        local hovered_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.7, 0.7, 1.0)
-        local active_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.8, 0.8, 1.0)
-        r.ImGui_PushStyleColor(ctx, r.ImGui_Col_Button(), button_color)
-        r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonHovered(), hovered_color)
-        r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonActive(), active_color)
-        r.ImGui_Button(ctx, label, 40.0 + math.sin(line + n) * 20.0, 0.0)
-        r.ImGui_PopStyleColor(ctx, 3)
-        r.ImGui_PopID(ctx)
       end
+      scroll_x = r.ImGui_GetScrollX(ctx)
+      scroll_max_x = r.ImGui_GetScrollMaxX(ctx)
+      r.ImGui_EndChild(ctx)
     end
-    local scroll_x = r.ImGui_GetScrollX(ctx)
-    local scroll_max_x = r.ImGui_GetScrollMaxX(ctx)
-    r.ImGui_EndChild(ctx)
     r.ImGui_PopStyleVar(ctx, 2)
     local scroll_x_delta = 0.0
     r.ImGui_SmallButton(ctx, '<<')
@@ -3078,9 +3090,10 @@ function demo.ShowDemoWindowLayout()
     if scroll_x_delta ~= 0.0 then
       -- Demonstrate a trick: you can use Begin to set yourself in the context of another window
       -- (here we are already out of your child window)
-      r.ImGui_BeginChild(ctx, 'scrolling')
-      r.ImGui_SetScrollX(ctx, r.ImGui_GetScrollX(ctx) + scroll_x_delta)
-      r.ImGui_EndChild(ctx)
+      if r.ImGui_BeginChild(ctx, 'scrolling') then
+        r.ImGui_SetScrollX(ctx, r.ImGui_GetScrollX(ctx) + scroll_x_delta)
+        r.ImGui_EndChild(ctx)
+      end
     end
     r.ImGui_Spacing(ctx)
 
@@ -3107,87 +3120,89 @@ function demo.ShowDemoWindowLayout()
         r.ImGui_SetNextWindowContentSize(ctx, layout.horizontal_window.contents_size_x, 0.0)
       end
       rv,layout.scrolling.show_horizontal_contents_size_demo_window =
-        r.ImGui_Begin(ctx, 'Horizontal contents size demo window',
-          layout.scrolling.show_horizontal_contents_size_demo_window,
+        r.ImGui_Begin(ctx, 'Horizontal contents size demo window', true,
           layout.horizontal_window.show_h_scrollbar and r.ImGui_WindowFlags_HorizontalScrollbar() or r.ImGui_WindowFlags_None())
-      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 2, 0)
-      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), 2, 0)
-      demo.HelpMarker("Test of different widgets react and impact the work rectangle growing when horizontal scrolling is enabled.\n\nUse 'Metrics->Tools->Show windows rectangles' to visualize rectangles.")
-      rv,layout.horizontal_window.show_h_scrollbar =
-        r.ImGui_Checkbox(ctx, 'H-scrollbar', layout.horizontal_window.show_h_scrollbar)
-      rv,layout.horizontal_window.show_button =
-        r.ImGui_Checkbox(ctx, 'Button', layout.horizontal_window.show_button)             -- Will grow contents size (unless explicitly overwritten)
-      rv,layout.horizontal_window.show_tree_nodes =
-        r.ImGui_Checkbox(ctx, 'Tree nodes', layout.horizontal_window.show_tree_nodes)     -- Will grow contents size and display highlight over full width
-      rv,layout.horizontal_window.show_text_wrapped =
-        r.ImGui_Checkbox(ctx, 'Text wrapped', layout.horizontal_window.show_text_wrapped) -- Will grow and use contents size
-      rv,layout.horizontal_window.show_columns =
-        r.ImGui_Checkbox(ctx, 'Columns', layout.horizontal_window.show_columns)           -- Will use contents size
-      rv,layout.horizontal_window.show_tab_bar =
-        r.ImGui_Checkbox(ctx, 'Tab bar', layout.horizontal_window.show_tab_bar)           -- Will use contents size
-      rv,layout.horizontal_window.show_child =
-        r.ImGui_Checkbox(ctx, 'Child', layout.horizontal_window.show_child)               -- Will grow and use contents size
-      rv,layout.horizontal_window.explicit_content_size =
-        r.ImGui_Checkbox(ctx, 'Explicit content size', layout.horizontal_window.explicit_content_size)
-      r.ImGui_Text(ctx, ('Scroll %.1f/%.1f %.1f/%.1f'):format(r.ImGui_GetScrollX(ctx), r.ImGui_GetScrollMaxX(ctx), r.ImGui_GetScrollY(ctx), r.ImGui_GetScrollMaxY(ctx)))
-      if layout.horizontal_window.explicit_content_size then
-        r.ImGui_SameLine(ctx)
-        r.ImGui_SetNextItemWidth(ctx, 100)
-        rv,layout.horizontal_window.contents_size_x =
-          r.ImGui_DragDouble(ctx, '##csx', layout.horizontal_window.contents_size_x)
-        local x, y = r.ImGui_GetCursorScreenPos(ctx)
-        local draw_list = r.ImGui_GetWindowDrawList(ctx)
-        r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + 10, y + 10, 0xFFFFFFFF)
-        r.ImGui_DrawList_AddRectFilled(draw_list, x + layout.horizontal_window.contents_size_x - 10, y, x + layout.horizontal_window.contents_size_x, y + 10, 0xFFFFFFFF)
-        r.ImGui_Dummy(ctx, 0, 10)
-      end
-      r.ImGui_PopStyleVar(ctx, 2)
-      r.ImGui_Separator(ctx)
-      if layout.horizontal_window.show_button then
-        r.ImGui_Button(ctx, 'this is a 300-wide button', 300, 0)
-      end
-      if layout.horizontal_window.show_tree_nodes then
-        if r.ImGui_TreeNode(ctx, 'this is a tree node') then
-          if r.ImGui_TreeNode(ctx, 'another one of those tree node...') then
-            r.ImGui_Text(ctx, 'Some tree contents')
+      if rv then
+        r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 2, 0)
+        r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), 2, 0)
+        demo.HelpMarker("Test of different widgets react and impact the work rectangle growing when horizontal scrolling is enabled.\n\nUse 'Metrics->Tools->Show windows rectangles' to visualize rectangles.")
+        rv,layout.horizontal_window.show_h_scrollbar =
+          r.ImGui_Checkbox(ctx, 'H-scrollbar', layout.horizontal_window.show_h_scrollbar)
+        rv,layout.horizontal_window.show_button =
+          r.ImGui_Checkbox(ctx, 'Button', layout.horizontal_window.show_button)             -- Will grow contents size (unless explicitly overwritten)
+        rv,layout.horizontal_window.show_tree_nodes =
+          r.ImGui_Checkbox(ctx, 'Tree nodes', layout.horizontal_window.show_tree_nodes)     -- Will grow contents size and display highlight over full width
+        rv,layout.horizontal_window.show_text_wrapped =
+          r.ImGui_Checkbox(ctx, 'Text wrapped', layout.horizontal_window.show_text_wrapped) -- Will grow and use contents size
+        rv,layout.horizontal_window.show_columns =
+          r.ImGui_Checkbox(ctx, 'Columns', layout.horizontal_window.show_columns)           -- Will use contents size
+        rv,layout.horizontal_window.show_tab_bar =
+          r.ImGui_Checkbox(ctx, 'Tab bar', layout.horizontal_window.show_tab_bar)           -- Will use contents size
+        rv,layout.horizontal_window.show_child =
+          r.ImGui_Checkbox(ctx, 'Child', layout.horizontal_window.show_child)               -- Will grow and use contents size
+        rv,layout.horizontal_window.explicit_content_size =
+          r.ImGui_Checkbox(ctx, 'Explicit content size', layout.horizontal_window.explicit_content_size)
+        r.ImGui_Text(ctx, ('Scroll %.1f/%.1f %.1f/%.1f'):format(r.ImGui_GetScrollX(ctx), r.ImGui_GetScrollMaxX(ctx), r.ImGui_GetScrollY(ctx), r.ImGui_GetScrollMaxY(ctx)))
+        if layout.horizontal_window.explicit_content_size then
+          r.ImGui_SameLine(ctx)
+          r.ImGui_SetNextItemWidth(ctx, 100)
+          rv,layout.horizontal_window.contents_size_x =
+            r.ImGui_DragDouble(ctx, '##csx', layout.horizontal_window.contents_size_x)
+          local x, y = r.ImGui_GetCursorScreenPos(ctx)
+          local draw_list = r.ImGui_GetWindowDrawList(ctx)
+          r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + 10, y + 10, 0xFFFFFFFF)
+          r.ImGui_DrawList_AddRectFilled(draw_list, x + layout.horizontal_window.contents_size_x - 10, y, x + layout.horizontal_window.contents_size_x, y + 10, 0xFFFFFFFF)
+          r.ImGui_Dummy(ctx, 0, 10)
+        end
+        r.ImGui_PopStyleVar(ctx, 2)
+        r.ImGui_Separator(ctx)
+        if layout.horizontal_window.show_button then
+          r.ImGui_Button(ctx, 'this is a 300-wide button', 300, 0)
+        end
+        if layout.horizontal_window.show_tree_nodes then
+          if r.ImGui_TreeNode(ctx, 'this is a tree node') then
+            if r.ImGui_TreeNode(ctx, 'another one of those tree node...') then
+              r.ImGui_Text(ctx, 'Some tree contents')
+              r.ImGui_TreePop(ctx)
+            end
             r.ImGui_TreePop(ctx)
           end
-          r.ImGui_TreePop(ctx)
+          r.ImGui_CollapsingHeader(ctx, 'CollapsingHeader', true)
         end
-        r.ImGui_CollapsingHeader(ctx, 'CollapsingHeader', true)
-      end
-      if layout.horizontal_window.show_text_wrapped then
-        r.ImGui_TextWrapped(ctx, 'This text should automatically wrap on the edge of the work rectangle.')
-      end
-      if layout.horizontal_window.show_columns then
-        r.ImGui_Text(ctx, 'Tables:')
-        if r.ImGui_BeginTable(ctx, 'table', 4, r.ImGui_TableFlags_Borders()) then
-          for n = 0, 3 do
-            r.ImGui_TableNextColumn(ctx)
-            r.ImGui_Text(ctx, ('Width %.2f'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+        if layout.horizontal_window.show_text_wrapped then
+          r.ImGui_TextWrapped(ctx, 'This text should automatically wrap on the edge of the work rectangle.')
+        end
+        if layout.horizontal_window.show_columns then
+          r.ImGui_Text(ctx, 'Tables:')
+          if r.ImGui_BeginTable(ctx, 'table', 4, r.ImGui_TableFlags_Borders()) then
+            for n = 0, 3 do
+              r.ImGui_TableNextColumn(ctx)
+              r.ImGui_Text(ctx, ('Width %.2f'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+            end
+            r.ImGui_EndTable(ctx)
           end
-          r.ImGui_EndTable(ctx)
+          -- r.ImGui_Text(ctx, 'Columns:')
+          -- r.ImGui_Columns(ctx, 4)
+          -- for n = 0, 3 do
+          --   r.ImGui_Text(ctx, ('Width %.2f'):format(r.ImGui_GetColumnWidth()))
+          --   r.ImGui_NextColumn(ctx)
+          -- end
+          -- r.ImGui_Columns(ctx, 1)
         end
-        -- r.ImGui_Text(ctx, 'Columns:')
-        -- r.ImGui_Columns(ctx, 4)
-        -- for n = 0, 3 do
-        --   r.ImGui_Text(ctx, ('Width %.2f'):format(r.ImGui_GetColumnWidth()))
-        --   r.ImGui_NextColumn(ctx)
-        -- end
-        -- r.ImGui_Columns(ctx, 1)
+        if layout.horizontal_window.show_tab_bar and r.ImGui_BeginTabBar(ctx, 'Hello') then
+          if r.ImGui_BeginTabItem(ctx, 'OneOneOne') then r.ImGui_EndTabItem(ctx) end
+          if r.ImGui_BeginTabItem(ctx, 'TwoTwoTwo') then r.ImGui_EndTabItem(ctx) end
+          if r.ImGui_BeginTabItem(ctx, 'ThreeThreeThree') then r.ImGui_EndTabItem(ctx) end
+          if r.ImGui_BeginTabItem(ctx, 'FourFourFour') then r.ImGui_EndTabItem(ctx) end
+          r.ImGui_EndTabBar(ctx)
+        end
+        if layout.horizontal_window.show_child then
+          if r.ImGui_BeginChild(ctx, 'child', 0, 0, true) then
+            r.ImGui_EndChild(ctx)
+          end
+        end
+        r.ImGui_End(ctx)
       end
-      if layout.horizontal_window.show_tab_bar and r.ImGui_BeginTabBar(ctx, 'Hello') then
-        if r.ImGui_BeginTabItem(ctx, 'OneOneOne') then r.ImGui_EndTabItem(ctx) end
-        if r.ImGui_BeginTabItem(ctx, 'TwoTwoTwo') then r.ImGui_EndTabItem(ctx) end
-        if r.ImGui_BeginTabItem(ctx, 'ThreeThreeThree') then r.ImGui_EndTabItem(ctx) end
-        if r.ImGui_BeginTabItem(ctx, 'FourFourFour') then r.ImGui_EndTabItem(ctx) end
-        r.ImGui_EndTabBar(ctx)
-      end
-      if layout.horizontal_window.show_child then
-        r.ImGui_BeginChild(ctx, 'child', 0, 0, true)
-        r.ImGui_EndChild(ctx)
-      end
-      r.ImGui_End(ctx)
     end
 
     r.ImGui_TreePop(ctx)
@@ -5564,24 +5579,26 @@ end
 --     {
 --         r.ImGui_SetNextWindowContentSize(ImVec2(1500.0f, 0.0f));
 --         ImVec2 child_size = ImVec2(0, r.ImGui_GetFontSize() * 20.0f);
---         r.ImGui_BeginChild("##ScrollingRegion", child_size, false, ImGuiWindowFlags_HorizontalScrollbar);
---         r.ImGui_Columns(10);
---
---         // Also demonstrate using clipper for large vertical lists
---         int ITEMS_COUNT = 2000;
---         ImGuiListClipper clipper;
---         clipper.Begin(ITEMS_COUNT);
---         while (clipper.Step())
+--         if (r.ImGui_BeginChild("##ScrollingRegion", child_size, false, ImGuiWindowFlags_HorizontalScrollbar))
 --         {
---             for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
---                 for (int j = 0; j < 10; j++)
---                 {
---                     r.ImGui_Text("Line %d Column %d...", i, j);
---                     r.ImGui_NextColumn();
---                 }
+--             r.ImGui_Columns(10);
+--
+--             // Also demonstrate using clipper for large vertical lists
+--             int ITEMS_COUNT = 2000;
+--             ImGuiListClipper clipper;
+--             clipper.Begin(ITEMS_COUNT);
+--             while (clipper.Step())
+--             {
+--                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+--                     for (int j = 0; j < 10; j++)
+--                     {
+--                         r.ImGui_Text("Line %d Column %d...", i, j);
+--                         r.ImGui_NextColumn();
+--                     }
+--             }
+--             r.ImGui_Columns(1);
+--             r.ImGui_EndChild();
 --         }
---         r.ImGui_Columns(1);
---         r.ImGui_EndChild();
 --         r.ImGui_TreePop();
 --     }
 --
@@ -5865,10 +5882,8 @@ end
 
 function demo.ShowAboutWindow()
   local rv,open = r.ImGui_Begin(ctx, 'About Dear ImGui', true, r.ImGui_WindowFlags_AlwaysAutoResize())
-  if not rv then
-    r.ImGui_End(ctx)
-    return open
-  end
+  if not rv then return open end
+
   r.ImGui_Separator(ctx)
   r.ImGui_Text(ctx, ('Dear ImGui %s'):format(IMGUI_VERSION))
   r.ImGui_Separator(ctx)
@@ -5946,11 +5961,12 @@ function demo.ShowExampleMenuFile()
   r.ImGui_Separator(ctx)
   if r.ImGui_BeginMenu(ctx, 'Options') then
     rv,demo.menu.enabled = r.ImGui_MenuItem(ctx, 'Enabled', "", demo.menu.enabled)
-    r.ImGui_BeginChild(ctx, 'child', 0, 60, true)
-    for i = 0, 9 do
-      r.ImGui_Text(ctx, ('Scrolling Text %d'):format(i))
+    if r.ImGui_BeginChild(ctx, 'child', 0, 60, true) then
+      for i = 0, 9 do
+        r.ImGui_Text(ctx, ('Scrolling Text %d'):format(i))
+      end
+      r.ImGui_EndChild(ctx)
     end
-    r.ImGui_EndChild(ctx)
     rv,demo.menu.f = r.ImGui_SliderDouble(ctx, 'Value', demo.menu.f, 0.0, 1.0)
     rv,demo.menu.f = r.ImGui_InputDouble(ctx, 'Input', demo.menu.f, 0.1)
     rv,demo.menu.n = r.ImGui_Combo(ctx, 'Combo', demo.menu.n, 'Yes\31No\31Maybe\31')
@@ -6054,10 +6070,7 @@ end
 --     {
 --         r.ImGui_SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
 --         if (!r.ImGui_Begin(title, p_open))
---         {
---             r.ImGui_End();
 --             return;
---         }
 --
 --         // As a specific feature guaranteed by the library, after calling Begin() the last Item represent the title bar.
 --         // So e.g. IsItemHovered() will return true when hovering the title bar.
@@ -6103,67 +6116,69 @@ end
 --
 --         // Reserve enough left-over height for 1 separator + 1 input text
 --         const float footer_height_to_reserve = r.ImGui_GetStyle().ItemSpacing.y + r.ImGui_GetFrameHeightWithSpacing();
---         r.ImGui_BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar);
---         if (r.ImGui_BeginPopupContextWindow())
+--         if (r.ImGui_BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar))
 --         {
---             if (r.ImGui_Selectable("Clear")) ClearLog();
---             r.ImGui_EndPopup();
+--             if (r.ImGui_BeginPopupContextWindow())
+--             {
+--                 if (r.ImGui_Selectable("Clear")) ClearLog();
+--                 r.ImGui_EndPopup();
+--             }
+--
+--             // Display every line as a separate entry so we can change their color or add custom widgets.
+--             // If you only want raw text you can use r.ImGui_TextUnformatted(log.begin(), log.end());
+--             // NB- if you have thousands of entries this approach may be too inefficient and may require user-side clipping
+--             // to only process visible items. The clipper will automatically measure the height of your first item and then
+--             // "seek" to display only items in the visible area.
+--             // To use the clipper we can replace your standard loop:
+--             //      for (int i = 0; i < Items.Size; i++)
+--             //   With:
+--             //      ImGuiListClipper clipper;
+--             //      clipper.Begin(Items.Size);
+--             //      while (clipper.Step())
+--             //         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+--             // - That your items are evenly spaced (same height)
+--             // - That you have cheap random access to your elements (you can access them given their index,
+--             //   without processing all the ones before)
+--             // You cannot this code as-is if a filter is active because it breaks the 'cheap random-access' property.
+--             // We would need random-access on the post-filtered list.
+--             // A typical application wanting coarse clipping and filtering may want to pre-compute an array of indices
+--             // or offsets of items that passed the filtering test, recomputing this array when user changes the filter,
+--             // and appending newly elements as they are inserted. This is left as a task to the user until we can manage
+--             // to improve this example code!
+--             // If your items are of variable height:
+--             // - Split them into same height items would be simpler and facilitate random-seeking into your list.
+--             // - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
+--             r.ImGui_PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+--             if (copy_to_clipboard)
+--                 r.ImGui_LogToClipboard();
+--             for (int i = 0; i < Items.Size; i++)
+--             {
+--                 const char* item = Items[i];
+--                 if (!Filter.PassFilter(item))
+--                     continue;
+--
+--                 // Normally you would store more information in your item than just a string.
+--                 // (e.g. make Items[] an array of structure, store color/type etc.)
+--                 ImVec4 color;
+--                 bool has_color = false;
+--                 if (strstr(item, "[error]"))          { color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); has_color = true; }
+--                 else if (strncmp(item, "# ", 2) == 0) { color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f); has_color = true; }
+--                 if (has_color)
+--                     r.ImGui_PushStyleColor(ImGuiCol_Text, color);
+--                 r.ImGui_TextUnformatted(item);
+--                 if (has_color)
+--                     r.ImGui_PopStyleColor();
+--             }
+--             if (copy_to_clipboard)
+--                 r.ImGui_LogFinish();
+--
+--             if (ScrollToBottom || (AutoScroll && r.ImGui_GetScrollY() >= r.ImGui_GetScrollMaxY()))
+--                 r.ImGui_SetScrollHereY(1.0f);
+--             ScrollToBottom = false;
+--
+--             r.ImGui_PopStyleVar();
+--             r.ImGui_EndChild();
 --         }
---
---         // Display every line as a separate entry so we can change their color or add custom widgets.
---         // If you only want raw text you can use r.ImGui_TextUnformatted(log.begin(), log.end());
---         // NB- if you have thousands of entries this approach may be too inefficient and may require user-side clipping
---         // to only process visible items. The clipper will automatically measure the height of your first item and then
---         // "seek" to display only items in the visible area.
---         // To use the clipper we can replace your standard loop:
---         //      for (int i = 0; i < Items.Size; i++)
---         //   With:
---         //      ImGuiListClipper clipper;
---         //      clipper.Begin(Items.Size);
---         //      while (clipper.Step())
---         //         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
---         // - That your items are evenly spaced (same height)
---         // - That you have cheap random access to your elements (you can access them given their index,
---         //   without processing all the ones before)
---         // You cannot this code as-is if a filter is active because it breaks the 'cheap random-access' property.
---         // We would need random-access on the post-filtered list.
---         // A typical application wanting coarse clipping and filtering may want to pre-compute an array of indices
---         // or offsets of items that passed the filtering test, recomputing this array when user changes the filter,
---         // and appending newly elements as they are inserted. This is left as a task to the user until we can manage
---         // to improve this example code!
---         // If your items are of variable height:
---         // - Split them into same height items would be simpler and facilitate random-seeking into your list.
---         // - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
---         r.ImGui_PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
---         if (copy_to_clipboard)
---             r.ImGui_LogToClipboard();
---         for (int i = 0; i < Items.Size; i++)
---         {
---             const char* item = Items[i];
---             if (!Filter.PassFilter(item))
---                 continue;
---
---             // Normally you would store more information in your item than just a string.
---             // (e.g. make Items[] an array of structure, store color/type etc.)
---             ImVec4 color;
---             bool has_color = false;
---             if (strstr(item, "[error]"))          { color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); has_color = true; }
---             else if (strncmp(item, "# ", 2) == 0) { color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f); has_color = true; }
---             if (has_color)
---                 r.ImGui_PushStyleColor(ImGuiCol_Text, color);
---             r.ImGui_TextUnformatted(item);
---             if (has_color)
---                 r.ImGui_PopStyleColor();
---         }
---         if (copy_to_clipboard)
---             r.ImGui_LogFinish();
---
---         if (ScrollToBottom || (AutoScroll && r.ImGui_GetScrollY() >= r.ImGui_GetScrollMaxY()))
---             r.ImGui_SetScrollHereY(1.0f);
---         ScrollToBottom = false;
---
---         r.ImGui_PopStyleVar();
---         r.ImGui_EndChild();
 --         r.ImGui_Separator();
 --
 --         // Command-line
@@ -6378,10 +6393,7 @@ end
 
 function ExampleAppLog.draw(self, title, p_open)
   local rv,p_open = r.ImGui_Begin(self.ctx, title, p_open)
-  if not rv then
-    r.ImGui_End(self.ctx)
-    return p_open
-  end
+  if not rv then return p_open end
 
   -- Options menu
   if r.ImGui_BeginPopup(self.ctx, 'Options') then
@@ -6401,65 +6413,67 @@ function ExampleAppLog.draw(self, title, p_open)
   -- Filter.Draw(ctx, 'Filter', -100.0)
 
   r.ImGui_Separator(self.ctx)
-  r.ImGui_BeginChild(self.ctx, 'scrolling', 0, 0, false, r.ImGui_WindowFlags_HorizontalScrollbar())
-
-  if clear then
-    self:clear()
-  end
-  if copy then
-    r.ImGui_LogToClipboard(self.ctx)
-  end
-
-  r.ImGui_PushStyleVar(self.ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0)
-  -- const char* buf = Buf.begin();
-  -- const char* buf_end = Buf.end();
-  -- if (Filter.IsActive())
-  -- {
-  --     // In this example we don't use the clipper when Filter is enabled.
-  --     // This is because we don't have a random access on the result on our filter.
-  --     // A real application processing logs with ten of thousands of entries may want to store the result of
-  --     // search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
-  --     for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
-  --     {
-  --         const char* line_start = buf + LineOffsets[line_no];
-  --         const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
-  --         if (Filter.PassFilter(line_start, line_end))
-  --             r.ImGui_TextUnformatted(line_start, line_end);
-  --     }
-  -- }
-  -- else
-  -- {
-    -- The simplest and easy way to display the entire buffer:
-    --   r.ImGui_TextUnformatted(buf_begin, buf_end);
-    -- And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward
-    -- to skip non-visible lines. Here we instead demonstrate using the clipper to only process lines that are
-    -- within the visible area.
-    -- If you have tens of thousands of items and their processing cost is non-negligible, coarse clipping them
-    -- on your side is recommended. Using ImGuiListClipper requires
-    -- - A) random access into your data
-    -- - B) items all being the  same height,
-    -- both of which we can handle since we an array pointing to the beginning of each line of text.
-    -- When using the filter (in the block of code above) we don't have random access into the data to display
-    -- anymore, which is why we don't use the clipper. Storing or skimming through the search result would make
-    -- it possible (and would be recommended if you want to search through tens of thousands of entries).
-    local clipper = r.ImGui_CreateListClipper(self.ctx)
-    r.ImGui_ListClipper_Begin(clipper, #self.lines)
-    while r.ImGui_ListClipper_Step(clipper) do
-      local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
-      for line_no = display_start, display_end - 1 do
-        r.ImGui_Text(self.ctx, self.lines[line_no + 1])
-      end
+  if r.ImGui_BeginChild(self.ctx, 'scrolling', 0, 0, false, r.ImGui_WindowFlags_HorizontalScrollbar()) then
+    if clear then
+      self:clear()
     end
-    r.ImGui_ListClipper_End(clipper)
-  -- }
-  r.ImGui_PopStyleVar(self.ctx)
+    if copy then
+      r.ImGui_LogToClipboard(self.ctx)
+    end
 
-  if self.auto_scroll and r.ImGui_GetScrollY(self.ctx) >= r.ImGui_GetScrollMaxY(self.ctx) then
-    r.ImGui_SetScrollHereY(self.ctx, 1.0)
+    r.ImGui_PushStyleVar(self.ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0)
+    -- const char* buf = Buf.begin();
+    -- const char* buf_end = Buf.end();
+    -- if (Filter.IsActive())
+    -- {
+    --     // In this example we don't use the clipper when Filter is enabled.
+    --     // This is because we don't have a random access on the result on our filter.
+    --     // A real application processing logs with ten of thousands of entries may want to store the result of
+    --     // search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
+    --     for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
+    --     {
+    --         const char* line_start = buf + LineOffsets[line_no];
+    --         const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
+    --         if (Filter.PassFilter(line_start, line_end))
+    --             r.ImGui_TextUnformatted(line_start, line_end);
+    --     }
+    -- }
+    -- else
+    -- {
+      -- The simplest and easy way to display the entire buffer:
+      --   r.ImGui_TextUnformatted(buf_begin, buf_end);
+      -- And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward
+      -- to skip non-visible lines. Here we instead demonstrate using the clipper to only process lines that are
+      -- within the visible area.
+      -- If you have tens of thousands of items and their processing cost is non-negligible, coarse clipping them
+      -- on your side is recommended. Using ImGuiListClipper requires
+      -- - A) random access into your data
+      -- - B) items all being the  same height,
+      -- both of which we can handle since we an array pointing to the beginning of each line of text.
+      -- When using the filter (in the block of code above) we don't have random access into the data to display
+      -- anymore, which is why we don't use the clipper. Storing or skimming through the search result would make
+      -- it possible (and would be recommended if you want to search through tens of thousands of entries).
+      local clipper = r.ImGui_CreateListClipper(self.ctx)
+      r.ImGui_ListClipper_Begin(clipper, #self.lines)
+      while r.ImGui_ListClipper_Step(clipper) do
+        local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
+        for line_no = display_start, display_end - 1 do
+          r.ImGui_Text(self.ctx, self.lines[line_no + 1])
+        end
+      end
+      r.ImGui_ListClipper_End(clipper)
+    -- }
+    r.ImGui_PopStyleVar(self.ctx)
+
+    if self.auto_scroll and r.ImGui_GetScrollY(self.ctx) >= r.ImGui_GetScrollMaxY(self.ctx) then
+      r.ImGui_SetScrollHereY(self.ctx, 1.0)
+    end
+
+    r.ImGui_EndChild(self.ctx)
   end
 
-  r.ImGui_EndChild(self.ctx)
   r.ImGui_End(self.ctx)
+
   return p_open
 end
 
@@ -6475,6 +6489,8 @@ function demo.ShowExampleAppLog()
   -- Most of the contents of the window will be added by the log.Draw() call.
   r.ImGui_SetNextWindowSize(ctx, 500, 400, r.ImGui_Cond_FirstUseEver())
   local rv,open = r.ImGui_Begin(ctx, 'Example: Log', true)
+  if not rv then return open end
+
   if r.ImGui_SmallButton(ctx, '[Debug] Add 5 entries') then
     local categories = { "info", "warn", "error" }
     local words = { "Bumfuzzled", "Cattywampus", "Snickersnee",
@@ -6492,6 +6508,7 @@ function demo.ShowExampleAppLog()
 
   -- Actually call in the regular Log helper (which will Begin() into the same window as we just did)
   app.log:draw('Example: Log')
+
   return open
 end
 
@@ -6509,10 +6526,7 @@ function demo.ShowExampleAppLayout()
 
   r.ImGui_SetNextWindowSize(ctx, 500, 440, r.ImGui_Cond_FirstUseEver())
   local rv,open = r.ImGui_Begin(ctx, 'Example: Simple layout', true, r.ImGui_WindowFlags_MenuBar())
-  if not rv then
-    r.ImGui_End(ctx)
-    return open
-  end
+  if not rv then return open end
 
   if r.ImGui_BeginMenuBar(ctx) then
     if r.ImGui_BeginMenu(ctx, 'File') then
@@ -6523,32 +6537,34 @@ function demo.ShowExampleAppLayout()
   end
 
   -- Left
-  r.ImGui_BeginChild(ctx, 'left pane', 150, 0, true)
-  for i = 0, 100 - 1 do
-    if r.ImGui_Selectable(ctx, ('MyObject %d'):format(i), app.layout.selected == i) then
-      app.layout.selected = i
+  if r.ImGui_BeginChild(ctx, 'left pane', 150, 0, true) then
+    for i = 0, 100 - 1 do
+      if r.ImGui_Selectable(ctx, ('MyObject %d'):format(i), app.layout.selected == i) then
+        app.layout.selected = i
+      end
     end
+    r.ImGui_EndChild(ctx)
   end
-  r.ImGui_EndChild(ctx)
   r.ImGui_SameLine(ctx)
 
   -- Right
   r.ImGui_BeginGroup(ctx)
-  r.ImGui_BeginChild(ctx, 'item view', 0, -r.ImGui_GetFrameHeightWithSpacing(ctx)) -- Leave room for 1 line below us
-  r.ImGui_Text(ctx, ("MyObject: %d"):format(app.layout.selected))
-  r.ImGui_Separator(ctx)
-  if r.ImGui_BeginTabBar(ctx, '##Tabs', r.ImGui_TabBarFlags_None()) then
-    if r.ImGui_BeginTabItem(ctx, 'Description') then
-      r.ImGui_TextWrapped(ctx, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ')
-      r.ImGui_EndTabItem(ctx)
+  if r.ImGui_BeginChild(ctx, 'item view', 0, -r.ImGui_GetFrameHeightWithSpacing(ctx)) then -- Leave room for 1 line below us
+    r.ImGui_Text(ctx, ("MyObject: %d"):format(app.layout.selected))
+    r.ImGui_Separator(ctx)
+    if r.ImGui_BeginTabBar(ctx, '##Tabs', r.ImGui_TabBarFlags_None()) then
+      if r.ImGui_BeginTabItem(ctx, 'Description') then
+        r.ImGui_TextWrapped(ctx, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ')
+        r.ImGui_EndTabItem(ctx)
+      end
+      if r.ImGui_BeginTabItem(ctx, 'Details') then
+        r.ImGui_Text(ctx, 'ID: 0123456789')
+        r.ImGui_EndTabItem(ctx)
+      end
+      r.ImGui_EndTabBar(ctx)
     end
-    if r.ImGui_BeginTabItem(ctx, 'Details') then
-      r.ImGui_Text(ctx, 'ID: 0123456789')
-      r.ImGui_EndTabItem(ctx)
-    end
-    r.ImGui_EndTabBar(ctx)
+    r.ImGui_EndChild(ctx)
   end
-  r.ImGui_EndChild(ctx)
   if r.ImGui_Button(ctx, 'Revert') then end
   r.ImGui_SameLine(ctx)
   if r.ImGui_Button(ctx, 'Save') then end
@@ -6617,10 +6633,7 @@ function demo.ShowExampleAppPropertyEditor()
 
   r.ImGui_SetNextWindowSize(ctx, 430, 450, r.ImGui_Cond_FirstUseEver())
   local rv,open = r.ImGui_Begin(ctx, 'Example: Property editor', true)
-  if not rv then
-    r.ImGui_End(ctx)
-    return open
-  end
+  if not rv then return open end
 
   demo.HelpMarker(
     'This example shows how you may implement a property editor using two columns.\n\z
@@ -6658,10 +6671,7 @@ function demo.ShowExampleAppLongText()
 
   r.ImGui_SetNextWindowSize(ctx, 520, 600, r.ImGui_Cond_FirstUseEver())
   local rv, open = r.ImGui_Begin(ctx, 'Example: Long text display', true)
-  if not rv then
-    r.ImGui_End(ctx)
-    return open
-  end
+  if not rv then return open end
 
   r.ImGui_Text(ctx, 'Printing unusually long amount of text.')
   rv,app.long_text.test_type = r.ImGui_Combo(ctx, 'Test type', app.long_text.test_type,
@@ -6679,32 +6689,36 @@ function demo.ShowExampleAppLongText()
     app.long_text.log = app.long_text.log .. newLines
     app.long_text.lines = app.long_text.lines + 1000
   end
-  r.ImGui_BeginChild(ctx, 'Log')
-  if app.long_text.test_type == 0 then
-    -- Single call to TextUnformatted() with a big buffer
-    r.ImGui_Text(ctx, app.long_text.log)
-  elseif app.long_text.test_type == 1 then
-    -- Multiple calls to Text(), manually coarsely clipped - demonstrate how to use the ImGui_ListClipper helper.
-    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0);
-    local clipper = r.ImGui_CreateListClipper(ctx);
-    r.ImGui_ListClipper_Begin(clipper, app.long_text.lines)
-    while r.ImGui_ListClipper_Step(clipper) do
-      local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
-      for i = display_start, display_end - 1 do
+
+  if r.ImGui_BeginChild(ctx, 'Log') then
+    if app.long_text.test_type == 0 then
+      -- Single call to TextUnformatted() with a big buffer
+      r.ImGui_Text(ctx, app.long_text.log)
+    elseif app.long_text.test_type == 1 then
+      -- Multiple calls to Text(), manually coarsely clipped - demonstrate how to use the ImGui_ListClipper helper.
+      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0);
+      local clipper = r.ImGui_CreateListClipper(ctx);
+      r.ImGui_ListClipper_Begin(clipper, app.long_text.lines)
+      while r.ImGui_ListClipper_Step(clipper) do
+        local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
+        for i = display_start, display_end - 1 do
+          r.ImGui_Text(ctx, ('%i The quick brown fox jumps over the lazy dog'):format(i))
+        end
+      end
+      r.ImGui_PopStyleVar(ctx)
+    elseif app.long_text.test_type == 2 then
+      -- Multiple calls to Text(), not clipped (slow)
+      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0);
+      for i = 0, app.long_text.lines do
         r.ImGui_Text(ctx, ('%i The quick brown fox jumps over the lazy dog'):format(i))
       end
+      r.ImGui_PopStyleVar(ctx)
     end
-    r.ImGui_PopStyleVar(ctx)
-  elseif app.long_text.test_type == 2 then
-    -- Multiple calls to Text(), not clipped (slow)
-    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0);
-    for i = 0, app.long_text.lines do
-      r.ImGui_Text(ctx, ('%i The quick brown fox jumps over the lazy dog'):format(i))
-    end
-    r.ImGui_PopStyleVar(ctx)
+    r.ImGui_EndChild(ctx)
   end
-  r.ImGui_EndChild(ctx)
+
   r.ImGui_End(ctx)
+
   return open
 end
 
@@ -6721,10 +6735,7 @@ function demo.ShowExampleAppAutoResize()
   end
 
   local rv,open = r.ImGui_Begin(ctx, 'Example: Auto-resizing window', true, r.ImGui_WindowFlags_AlwaysAutoResize())
-  if not rv then
-    r.ImGui_End(ctx)
-    return open
-  end
+  if not rv then return open end
 
   r.ImGui_Text(ctx,
     "Window will resize every-frame to the size of its content.\n\z
@@ -6769,27 +6780,28 @@ function demo.ShowExampleAppConstrainedResize()
 
   local flags = app.constrained_resize.auto_resize and r.ImGui_WindowFlags_AlwaysAutoResize() or 0
   local rv,open = r.ImGui_Begin(ctx, 'Example: Constrained Resize', true, flags)
-  if rv then
-    if r.ImGui_Button(ctx, '200x200') then r.ImGui_SetWindowSize(ctx, 200, 200) end r.ImGui_SameLine(ctx)
-    if r.ImGui_Button(ctx, '500x500') then r.ImGui_SetWindowSize(ctx, 500, 500) end r.ImGui_SameLine(ctx)
-    if r.ImGui_Button(ctx, '800x200') then r.ImGui_SetWindowSize(ctx, 800, 200) end
-    r.ImGui_SetNextItemWidth(ctx, 200)
-    rv,app.constrained_resize.type = r.ImGui_Combo(ctx, 'Constraint', app.constrained_resize.type,
-      "Resize vertical only\31\z
-       Resize horizontal only\31\z
-       Width > 100, Height > 100\31\z
-       Width 400-500\31\z
-       Height 400-500\31")
-       --Custom: Always Square\31\z
-       --Custom: Fixed Steps (100)\31")
-    r.ImGui_SetNextItemWidth(ctx, 200)
-    rv,app.constrained_resize.display_lines = r.ImGui_DragInt(ctx, 'Lines', app.constrained_resize.display_lines, 0.2, 1, 100)
-    rv,app.constrained_resize.auto_resize = r.ImGui_Checkbox(ctx, 'Auto-resize', app.constrained_resize.auto_resize)
-    for i = 1, app.constrained_resize.display_lines do
-      r.ImGui_Text(ctx, ('%sHello, sailor! Making this line long enough for the example.'):format((' '):rep(i * 4)))
-    end
+  if not rv then return open end
+
+  if r.ImGui_Button(ctx, '200x200') then r.ImGui_SetWindowSize(ctx, 200, 200) end r.ImGui_SameLine(ctx)
+  if r.ImGui_Button(ctx, '500x500') then r.ImGui_SetWindowSize(ctx, 500, 500) end r.ImGui_SameLine(ctx)
+  if r.ImGui_Button(ctx, '800x200') then r.ImGui_SetWindowSize(ctx, 800, 200) end
+  r.ImGui_SetNextItemWidth(ctx, 200)
+  rv,app.constrained_resize.type = r.ImGui_Combo(ctx, 'Constraint', app.constrained_resize.type,
+    "Resize vertical only\31\z
+      Resize horizontal only\31\z
+      Width > 100, Height > 100\31\z
+      Width 400-500\31\z
+      Height 400-500\31")
+      --Custom: Always Square\31\z
+      --Custom: Fixed Steps (100)\31")
+  r.ImGui_SetNextItemWidth(ctx, 200)
+  rv,app.constrained_resize.display_lines = r.ImGui_DragInt(ctx, 'Lines', app.constrained_resize.display_lines, 0.2, 1, 100)
+  rv,app.constrained_resize.auto_resize = r.ImGui_Checkbox(ctx, 'Auto-resize', app.constrained_resize.auto_resize)
+  for i = 1, app.constrained_resize.display_lines do
+    r.ImGui_Text(ctx, ('%sHello, sailor! Making this line long enough for the example.'):format((' '):rep(i * 4)))
   end
   r.ImGui_End(ctx)
+
   return open
 end
 
@@ -6829,25 +6841,26 @@ function demo.ShowExampleAppSimpleOverlay()
   r.ImGui_SetNextWindowBgAlpha(ctx, 0.35) -- Transparent background
 
   local rv,open = r.ImGui_Begin(ctx, 'Example: Simple overlay', true, window_flags)
-  if rv then
-    r.ImGui_Text(ctx, 'Simple overlay\nin the corner of the screen.\n(right-click to change position)')
-    r.ImGui_Separator(ctx)
-    if r.ImGui_IsMousePosValid(ctx) then
-      r.ImGui_Text(ctx, ('Mouse Position: (%.1f,%.1f)'):format(r.ImGui_GetMousePos(ctx)))
-    else
-      r.ImGui_Text(ctx, 'Mouse Position: <invalid>')
-    end
-    if r.ImGui_BeginPopupContextWindow(ctx) then
-      if r.ImGui_MenuItem(ctx, 'Custom',       nil, app.simple_overlay.corner == -1) then app.simple_overlay.corner = -1 end
-      if r.ImGui_MenuItem(ctx, 'Top-left',     nil, app.simple_overlay.corner ==  0) then app.simple_overlay.corner =  0 end
-      if r.ImGui_MenuItem(ctx, 'Top-right',    nil, app.simple_overlay.corner ==  1) then app.simple_overlay.corner =  1 end
-      if r.ImGui_MenuItem(ctx, 'Bottom-left',  nil, app.simple_overlay.corner ==  2) then app.simple_overlay.corner =  2 end
-      if r.ImGui_MenuItem(ctx, 'Bottom-right', nil, app.simple_overlay.corner ==  3) then app.simple_overlay.corner =  3 end
-      if r.ImGui_MenuItem(ctx, 'Close') then open = false end
-      r.ImGui_EndPopup(ctx)
-    end
+  if not rv then return open end
+
+  r.ImGui_Text(ctx, 'Simple overlay\nin the corner of the screen.\n(right-click to change position)')
+  r.ImGui_Separator(ctx)
+  if r.ImGui_IsMousePosValid(ctx) then
+    r.ImGui_Text(ctx, ('Mouse Position: (%.1f,%.1f)'):format(r.ImGui_GetMousePos(ctx)))
+  else
+    r.ImGui_Text(ctx, 'Mouse Position: <invalid>')
+  end
+  if r.ImGui_BeginPopupContextWindow(ctx) then
+    if r.ImGui_MenuItem(ctx, 'Custom',       nil, app.simple_overlay.corner == -1) then app.simple_overlay.corner = -1 end
+    if r.ImGui_MenuItem(ctx, 'Top-left',     nil, app.simple_overlay.corner ==  0) then app.simple_overlay.corner =  0 end
+    if r.ImGui_MenuItem(ctx, 'Top-right',    nil, app.simple_overlay.corner ==  1) then app.simple_overlay.corner =  1 end
+    if r.ImGui_MenuItem(ctx, 'Bottom-left',  nil, app.simple_overlay.corner ==  2) then app.simple_overlay.corner =  2 end
+    if r.ImGui_MenuItem(ctx, 'Bottom-right', nil, app.simple_overlay.corner ==  3) then app.simple_overlay.corner =  3 end
+    if r.ImGui_MenuItem(ctx, 'Close') then open = false end
+    r.ImGui_EndPopup(ctx)
   end
   r.ImGui_End(ctx)
+
   return open
 end
 
@@ -6874,24 +6887,26 @@ function demo.ShowExampleAppFullscreen()
   r.ImGui_SetNextWindowSize(ctx, getViewportSize(viewport))
 
   local rv,open = r.ImGui_Begin(ctx, 'Example: Fullscreen window', true, app.fullscreen.flags)
-  if rv then
-    rv,app.fullscreen.use_work_area = r.ImGui_Checkbox(ctx, 'Use work area instead of main area', app.fullscreen.use_work_area)
-    r.ImGui_SameLine(ctx)
-    demo.HelpMarker('Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.');
+  if not rv then return open end
 
-    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoBackground', app.fullscreen.flags, r.ImGui_WindowFlags_NoBackground())
-    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoDecoration', app.fullscreen.flags, r.ImGui_WindowFlags_NoDecoration())
-    r.ImGui_Indent(ctx)
-    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoTitleBar', app.fullscreen.flags, r.ImGui_WindowFlags_NoTitleBar())
-    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoCollapse', app.fullscreen.flags, r.ImGui_WindowFlags_NoCollapse())
-    rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoScrollbar', app.fullscreen.flags, r.ImGui_WindowFlags_NoScrollbar())
-    r.ImGui_Unindent(ctx)
+  rv,app.fullscreen.use_work_area = r.ImGui_Checkbox(ctx, 'Use work area instead of main area', app.fullscreen.use_work_area)
+  r.ImGui_SameLine(ctx)
+  demo.HelpMarker('Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.');
 
-    if r.ImGui_Button(ctx, 'Close this window') then
-      open = false
-    end
+  rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoBackground', app.fullscreen.flags, r.ImGui_WindowFlags_NoBackground())
+  rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoDecoration', app.fullscreen.flags, r.ImGui_WindowFlags_NoDecoration())
+  r.ImGui_Indent(ctx)
+  rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoTitleBar', app.fullscreen.flags, r.ImGui_WindowFlags_NoTitleBar())
+  rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoCollapse', app.fullscreen.flags, r.ImGui_WindowFlags_NoCollapse())
+  rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoScrollbar', app.fullscreen.flags, r.ImGui_WindowFlags_NoScrollbar())
+  r.ImGui_Unindent(ctx)
+
+  if r.ImGui_Button(ctx, 'Close this window') then
+    open = false
   end
+
   r.ImGui_End(ctx)
+
   return open
 end
 
@@ -6911,22 +6926,25 @@ function demo.ShowExampleAppWindowTitles()
 
   -- Using "##" to display same title but have unique identifier.
   r.ImGui_SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 100, r.ImGui_Cond_FirstUseEver())
-  r.ImGui_Begin(ctx, 'Same title as another window##1')
-  r.ImGui_Text(ctx, 'This is window 1.\nMy title is the same as window 2, but my identifier is unique.')
-  r.ImGui_End(ctx)
+  if r.ImGui_Begin(ctx, 'Same title as another window##1') then
+    r.ImGui_Text(ctx, 'This is window 1.\nMy title is the same as window 2, but my identifier is unique.')
+    r.ImGui_End(ctx)
+  end
 
   r.ImGui_SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 200, r.ImGui_Cond_FirstUseEver())
-  r.ImGui_Begin(ctx, 'Same title as another window##2')
-  r.ImGui_Text(ctx, 'This is window 2.\nMy title is the same as window 1, but my identifier is unique.')
-  r.ImGui_End(ctx)
+  if r.ImGui_Begin(ctx, 'Same title as another window##2') then
+    r.ImGui_Text(ctx, 'This is window 2.\nMy title is the same as window 1, but my identifier is unique.')
+    r.ImGui_End(ctx)
+  end
 
   -- Using "###" to display a changing title but keep a static identifier "AnimatedTitle"
   r.ImGui_SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 300, r.ImGui_Cond_FirstUseEver())
   spinners = {'|', '/', '-', '\\'}
   local spinner = math.floor(r.ImGui_GetTime(ctx) / 0.25) & 3
-  r.ImGui_Begin(ctx, ("Animated title %s %d###AnimatedTitle"):format(spinners[spinner+1], r.ImGui_GetFrameCount(ctx)))
-  r.ImGui_Text(ctx, "This window has a changing title.")
-  r.ImGui_End(ctx)
+  if r.ImGui_Begin(ctx, ("Animated title %s %d###AnimatedTitle"):format(spinners[spinner+1], r.ImGui_GetFrameCount(ctx))) then
+    r.ImGui_Text(ctx, "This window has a changing title.")
+    r.ImGui_End(ctx)
+  end
 end
 
 -------------------------------------------------------------------------------
@@ -6958,10 +6976,7 @@ function demo.ShowExampleAppCustomRendering()
   end
 
   local rv,open = r.ImGui_Begin(ctx, 'Example: Custom rendering', true)
-  if not rv then
-    r.ImGui_End(ctx)
-    return open
-  end
+  if not rv then return open end
 
   if r.ImGui_BeginTabBar(ctx, '##TabBar') then
     if r.ImGui_BeginTabItem(ctx, 'Primitives') then
@@ -7071,13 +7086,14 @@ function demo.ShowExampleAppCustomRendering()
       -- Typically you would use a BeginChild()/EndChild() pair to benefit from a clipping region + own scrolling.
       -- Here we demonstrate that this can be replaced by simple offsetting + custom drawing + PushClipRect/PopClipRect() calls.
       -- To use a child window instead we could use, e.g:
-      --      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_WindowPadding(), 0, 0) -- Disable padding
-      --      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ChildBg(), 0x323232ff)    -- Set a background color
-      --      r.ImGui_BeginChild(ctx, 'canvas', 0.0, 0.0, true, r.ImGui_WindowFlags_NoMove())
-      --      r.ImGui_PopStyleColor(ctx)
-      --      r.ImGui_PopStyleVar(ctx)
-      --      [...]
-      --      r.ImGui_EndChild(ctx)
+      --   r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_WindowPadding(), 0, 0) -- Disable padding
+      --   r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ChildBg(), 0x323232ff)    -- Set a background color
+      --   if r.ImGui_BeginChild(ctx, 'canvas', 0.0, 0.0, true, r.ImGui_WindowFlags_NoMove()) then
+      --     r.ImGui_PopStyleColor(ctx)
+      --     r.ImGui_PopStyleVar(ctx)
+      --     [...]
+      --     r.ImGui_EndChild(ctx)
+      --   end
 
       -- Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
       local canvas_p0 = {r.ImGui_GetCursorScreenPos(ctx)}      -- ImDrawList API uses screen coordinates!
@@ -7301,10 +7317,7 @@ end
 --
 --     bool window_contents_visible = r.ImGui_Begin("Example: Documents", p_open, ImGuiWindowFlags_MenuBar);
 --     if (!window_contents_visible)
---     {
---         r.ImGui_End();
 --         return;
---     }
 --
 --     // Menu
 --     if (r.ImGui_BeginMenuBar())

@@ -57,10 +57,12 @@ static void loop()
 
   int cond { ImGui_Cond_FirstUseEver };
   ImGui_SetNextWindowSize(g_ctx, 400, 80, &cond);
+
   bool open { true };
-  if(ImGui_Begin(g_ctx, "ReaImGui C++ example", &open, nullptr))
+  if(ImGui_Begin(g_ctx, "ReaImGui C++ example", &open, nullptr)) {
     frame();
-  ImGui_End(g_ctx);
+    ImGui_End(g_ctx);
+  }
 
   if(!open) {
     plugin_register("-timer", reinterpret_cast<void *>(&loop));

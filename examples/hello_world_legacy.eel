@@ -28,10 +28,12 @@ function frame() (
 );
 
 function loop() (
-  open = 1;
+  open = 1; // enable the close button
   extension_api("ImGui_SetNextWindowSize", ctx, 500, 420, extension_api("ImGui_Cond_FirstUseEver"));
-  extension_api("ImGui_Begin", ctx, "Hello World!", open) ? frame();
-  extension_api("ImGui_End", ctx);
+  extension_api("ImGui_Begin", ctx, "Hello World!", open) ? (
+    frame();
+    extension_api("ImGui_End", ctx);
+  );
   open ? defer("loop()") : extension_api("ImGui_DestroyContext", ctx);
 );
 
