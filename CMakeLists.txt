@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.19)
 
-project(reaimgui VERSION 0.4.1 LANGUAGES CXX)
+project(reaimgui VERSION 0.5.0 LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
