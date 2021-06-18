@@ -301,9 +301,10 @@ Default values: cond = ImGui_Cond_Always)",
 
 DEFINE_API(void, SetWindowFocus, (ImGui_Context*,ctx)
 (const char*,name),
-"Set named window to be focused / top-most. Use NULL to remove focus. See ImGui_SetNextWindowFocus.",
+"Set named window to be focused / top-most. Use an empty name to remove focus.",
 {
   FRAME_GUARD;
+  nullIfEmpty(name);
   ImGui::SetWindowFocus(name);
 });
 
