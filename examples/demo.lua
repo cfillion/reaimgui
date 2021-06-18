@@ -23,6 +23,7 @@ Index of this file:
 // [SECTION] Example App: Fullscreen window / ShowExampleAppFullscreen()
 // [SECTION] Example App: Manipulating window titles / ShowExampleAppWindowTitles()
 // [SECTION] Example App: Custom Rendering using ImDrawList API / ShowExampleAppCustomRendering()
+// [SECTION] Example App: Docking, DockSpace / ShowExampleAppDockSpace()
 // [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
 
 --]]
@@ -53,6 +54,7 @@ demo = {
   no_nav            = false,
   no_background     = false,
   no_bring_to_front = false,
+  no_docking        = false,
 }
 
 config  = {}
@@ -64,7 +66,7 @@ misc    = {}
 app     = {}
 
 -- Hajime!
-local ctx = r.ImGui_CreateContext('ReaImGui Demo')
+local ctx = r.ImGui_CreateContext('ReaImGui Demo', r.ImGui_ConfigFlags_DockingEnable())
 
 function demo.loop()
   demo.open = demo.ShowDemoWindow()
@@ -118,7 +120,7 @@ end
 function demo.ShowUserGuide()
   -- ImGuiIO& io = r.ImGui_GetIO() TODO
   r.ImGui_BulletText(ctx, 'Double-click on title bar to collapse window.')
-  r.ImGui_BulletText(ctx, 
+  r.ImGui_BulletText(ctx,
   'Click and drag on lower corner to resize window\n' ..
   '(double-click to auto fit window to its contents).')
   r.ImGui_BulletText(ctx, 'CTRL+Click on a slider or drag box to input value as text.')
@@ -159,6 +161,7 @@ end
 show_app = {
   -- Examples Apps (accessible from the "Examples" menu)
   -- main_menu_bar      = false,
+  -- dockspace          = false,
   documents          = false,
   console            = false,
   log                = false,
@@ -185,7 +188,8 @@ function demo.ShowDemoWindow()
   local rv, open = nil, true
 
   -- if show_app.main_menu_bar      then                               demo.ShowExampleAppMainMenuBar()       end
-  if show_app.documents          then show_app.documents          = demo.ShowExampleAppDocuments()         end
+  -- if show_app.dockspace          then show_app.dockspace          = demo.ShowExampleAppDockSpace()         end -- Process the Docking app first, as explicit DockSpace() nodes needs to be submitted early (read comments near the DockSpace function)
+  if show_app.documents          then show_app.documents          = demo.ShowExampleAppDocuments()         end -- Process the Document app next, as it may also use a DockSpace()
   if show_app.console            then show_app.console            = demo.ShowExampleAppConsole()           end
   if show_app.log                then show_app.log                = demo.ShowExampleAppLog()               end
   if show_app.layout             then show_app.layout             = demo.ShowExampleAppLayout()            end
@@ -195,7 +199,7 @@ function demo.ShowDemoWindow()
   if show_app.constrained_resize then show_app.constrained_resize = demo.ShowExampleAppConstrainedResize() end
   if show_app.simple_overlay     then show_app.simple_overlay     = demo.ShowExampleAppSimpleOverlay()     end
   if show_app.fullscreen         then show_app.fullscreen         = demo.ShowExampleAppFullscreen()        end
-  if show_app.window_titles      then demo.ShowExampleAppWindowTitles()                                    end
+  if show_app.window_titles      then                               demo.ShowExampleAppWindowTitles()      end
   if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
 
   if show_app.metrics then show_app.metrics = r.ImGui_ShowMetricsWindow(ctx, show_app.metrics) end
@@ -219,6 +223,7 @@ function demo.ShowDemoWindow()
   if demo.no_nav            then window_flags = window_flags | r.ImGui_WindowFlags_NoNav()                 end
   if demo.no_background     then window_flags = window_flags | r.ImGui_WindowFlags_NoBackground()          end
   if demo.no_bring_to_front then window_flags = window_flags | r.ImGui_WindowFlags_NoBringToFrontOnFocus() end
+  if demo.no_docking        then window_flags = window_flags | r.ImGui_WindowFlags_NoDocking()             end
   if demo.no_close          then open = false end -- disable the close button
 
   -- We specify a default position/size in case there's no data in the .ini file.
@@ -272,6 +277,8 @@ function demo.ShowDemoWindow()
         r.ImGui_MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
       rv,show_app.custom_rendering =
         r.ImGui_MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
+      -- rv,show_app.dockspace =
+      --   r.ImGui_MenuItem(ctx, 'Dockspace', nil, show_app.dockspace, false)
       rv,show_app.documents =
         r.ImGui_MenuItem(ctx, 'Documents', nil, show_app.documents, false)
       r.ImGui_EndMenu(ctx)
@@ -335,8 +342,35 @@ function demo.ShowDemoWindow()
       end
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', config.flags, r.ImGui_ConfigFlags_NoMouseCursorChange())
       r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
-      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, r.ImGui_ConfigFlags_NoSavedSettings())
-      r.ImGui_SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
+
+      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_DockingEnable', config.flags, r.ImGui_ConfigFlags_DockingEnable())
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking.\n\nDrag from window menu button (upper-left button) to undock an entire node (all windows).')
+      if config.flags & r.ImGui_ConfigFlags_DockingEnable() ~= 0 then
+        -- r.ImGui_Indent(ctx)
+        -- r.ImGui_Checkbox(ctx, 'io.ConfigDockingNoSplit', &io.ConfigDockingNoSplit)
+        -- r.ImGui_SameLine(ctx); demo.HelpMarker('Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.')
+        -- r.ImGui_Checkbox("io.ConfigDockingAlwaysTabBar", &io.ConfigDockingAlwaysTabBar)
+        -- r.ImGui_SameLine(ctx); demo.HelpMarker('Create a docking node and tab-bar on single floating windows.')
+        -- r.ImGui_Checkbox("io.ConfigDockingTransparentPayload", &io.ConfigDockingTransparentPayload)
+        -- r.ImGui_SameLine(ctx); demo.HelpMarker('Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with ConfigViewportsNoAutoMerge.')
+        -- ImGui::Unindent(ctx)
+      end
+
+      -- ImGui::CheckboxFlags("io.ConfigFlags: ViewportsEnable", &io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
+      -- ImGui::SameLine(); HelpMarker("[beta] Enable beta multi-viewports support. See ImGuiPlatformIO for details.");
+      -- if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+      -- {
+      --     ImGui::Indent();
+      --     ImGui::Checkbox("io.ConfigViewportsNoAutoMerge", &io.ConfigViewportsNoAutoMerge);
+      --     ImGui::SameLine(); HelpMarker("Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it.");
+      --     ImGui::Checkbox("io.ConfigViewportsNoTaskBarIcon", &io.ConfigViewportsNoTaskBarIcon);
+      --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the task bar icon state right away).");
+      --     ImGui::Checkbox("io.ConfigViewportsNoDecoration", &io.ConfigViewportsNoDecoration);
+      --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the decoration right away).");
+      --     ImGui::Checkbox("io.ConfigViewportsNoDefaultParent", &io.ConfigViewportsNoDefaultParent);
+      --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the parenting right away).");
+      --     ImGui::Unindent();
+      -- }
 
       -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTextCursorBlink', &io.ConfigInputTextCursorBlink)
       -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting)")
@@ -357,6 +391,10 @@ function demo.ShowDemoWindow()
       -- rv,dock_index = r.ImGui_InputInt(ctx, '##docker_index', dock_index, 1)
       -- if r.ImGui_IsItemDeactivatedAfterEdit(ctx) then r.ImGui_SetDock(ctx, 1 | (dock_index << 1)) end
 
+      -- ReaImGui exclusive flags
+      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, r.ImGui_ConfigFlags_NoSavedSettings())
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
+
       r.ImGui_SetConfigFlags(ctx, config.flags)
       r.ImGui_TreePop(ctx)
       r.ImGui_Separator(ctx)
@@ -370,10 +408,13 @@ function demo.ShowDemoWindow()
 --
 --             // Make a local copy to avoid modifying actual backend flags.
 --             ImGuiBackendFlags backend_flags = io.BackendFlags;
---             r.ImGui_CheckboxFlags("io.BackendFlags: HasGamepad",           &backend_flags, ImGuiBackendFlags_HasGamepad);
---             r.ImGui_CheckboxFlags("io.BackendFlags: HasMouseCursors",      &backend_flags, ImGuiBackendFlags_HasMouseCursors);
---             r.ImGui_CheckboxFlags("io.BackendFlags: HasSetMousePos",       &backend_flags, ImGuiBackendFlags_HasSetMousePos);
---             r.ImGui_CheckboxFlags("io.BackendFlags: RendererHasVtxOffset", &backend_flags, ImGuiBackendFlags_RendererHasVtxOffset);
+--             ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",             &backend_flags, ImGuiBackendFlags_HasGamepad);
+--             ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",        &backend_flags, ImGuiBackendFlags_HasMouseCursors);
+--             ImGui::CheckboxFlags("io.BackendFlags: HasSetMousePos",         &backend_flags, ImGuiBackendFlags_HasSetMousePos);
+--             ImGui::CheckboxFlags("io.BackendFlags: PlatformHasViewports",   &backend_flags, ImGuiBackendFlags_PlatformHasViewports);
+--             ImGui::CheckboxFlags("io.BackendFlags: HasMouseHoveredViewport",&backend_flags, ImGuiBackendFlags_HasMouseHoveredViewport);
+--             ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset",   &backend_flags, ImGuiBackendFlags_RendererHasVtxOffset);
+--             ImGui::CheckboxFlags("io.BackendFlags: RendererHasViewports",   &backend_flags, ImGuiBackendFlags_RendererHasViewports);
 --             r.ImGui_TreePop();
 --             r.ImGui_Separator();
 --         }
@@ -436,6 +477,7 @@ function demo.ShowDemoWindow()
       r.ImGui_TableNextColumn(ctx); rv,demo.no_nav            = r.ImGui_Checkbox(ctx, 'No nav', demo.no_nav)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_background     = r.ImGui_Checkbox(ctx, 'No background', demo.no_background)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_bring_to_front = r.ImGui_Checkbox(ctx, 'No bring to front', demo.no_bring_to_front)
+      r.ImGui_TableNextColumn(ctx); rv,demo.no_docking        = r.ImGui_Checkbox(ctx, 'No docking', demo.no_docking)
       r.ImGui_EndTable(ctx)
     end
   end
@@ -2450,8 +2492,11 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
 
     -- Calling IsItemHovered() after begin returns the hovered status of the title bar.
     -- This is useful in particular if you want to create a context menu associated to the title bar of a window.
+    -- This will also work when docked into a Tab (the Tab replace the Title Bar and guarantee the same properties).
     rv,widgets.query.test_window = r.ImGui_Checkbox(ctx, 'Hovered/Active tests after Begin() for title bar testing', widgets.query.test_window)
     if widgets.query.test_window then
+      -- FIXME-DOCK: This window cannot be docked within the ImGui Demo window, this will cause a feedback loop and get them stuck.
+      -- Could we fix this through an ImGuiWindowClass feature? Or an API call to tag our parent as "don't skip items"?
       rv,widgets.query.test_window = r.ImGui_Begin(ctx, 'Title bar Hovered/Active tests', true)
       if rv then
         if r.ImGui_BeginPopupContextItem(ctx) then -- <-- This is using IsItemHovered()
@@ -6782,6 +6827,9 @@ function demo.ShowExampleAppConstrainedResize()
   local rv,open = r.ImGui_Begin(ctx, 'Example: Constrained Resize', true, flags)
   if not rv then return open end
 
+  if r.ImGui_IsWindowDocked(ctx) then
+    r.ImGui_Text(ctx, "Warning: Sizing Constraints won't work if the window is docked!")
+  end
   if r.ImGui_Button(ctx, '200x200') then r.ImGui_SetWindowSize(ctx, 200, 200) end r.ImGui_SameLine(ctx)
   if r.ImGui_Button(ctx, '500x500') then r.ImGui_SetWindowSize(ctx, 500, 500) end r.ImGui_SameLine(ctx)
   if r.ImGui_Button(ctx, '800x200') then r.ImGui_SetWindowSize(ctx, 800, 200) end
@@ -6814,27 +6862,29 @@ end
 function demo.ShowExampleAppSimpleOverlay()
   if not app.simple_overlay then
     app.simple_overlay = {
-      PAD    = 10.0,
       corner = 0,
     }
   end
 
   local window_flags = r.ImGui_WindowFlags_NoDecoration()       |
+                       r.ImGui_WindowFlags_NoDocking()          |
                        r.ImGui_WindowFlags_AlwaysAutoResize()   |
                        r.ImGui_WindowFlags_NoSavedSettings()    |
                        r.ImGui_WindowFlags_NoFocusOnAppearing() |
                        r.ImGui_WindowFlags_NoNav()
 
   if app.simple_overlay.corner ~= -1 then
+    local PAD = 10.0
     local viewport = r.ImGui_GetMainViewport(ctx)
     local work_pos = {r.ImGui_Viewport_GetWorkPos(viewport)} -- Use work area to avoid menu-bar/task-bar, if any!
     local work_size = {r.ImGui_Viewport_GetWorkSize(viewport)}
     local window_pos_x, window_pos_y, window_pos_pivot_x, window_pos_pivot_y
-    window_pos_x = app.simple_overlay.corner & 1 ~= 0 and work_pos[1] + work_size[1] - app.simple_overlay.PAD or work_pos[1] + app.simple_overlay.PAD
-    window_pos_y = app.simple_overlay.corner & 2 ~= 0 and work_pos[2] + work_size[2] - app.simple_overlay.PAD or work_pos[2] + app.simple_overlay.PAD
+    window_pos_x = app.simple_overlay.corner & 1 ~= 0 and work_pos[1] + work_size[1] - PAD or work_pos[1] + PAD
+    window_pos_y = app.simple_overlay.corner & 2 ~= 0 and work_pos[2] + work_size[2] - PAD or work_pos[2] + PAD
     window_pos_pivot_x = app.simple_overlay.corner & 1 ~= 0 and 1.0 or 0.0
     window_pos_pivot_y = app.simple_overlay.corner & 2 ~= 0 and 1.0 or 0.0
     r.ImGui_SetNextWindowPos(ctx, window_pos_x, window_pos_y, r.ImGui_Cond_Always(), window_pos_pivot_x, window_pos_pivot_y)
+    -- ImGui::SetNextWindowViewport(viewport->ID) TODO?
     window_flags = window_flags | r.ImGui_WindowFlags_NoMove()
   end
 
@@ -7213,6 +7263,121 @@ function demo.ShowExampleAppCustomRendering()
   return open
 end
 
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Docking, DockSpace / ShowExampleAppDockSpace()
+-------------------------------------------------------------------------------
+
+-- Demonstrate using DockSpace() to create an explicit docking node within an existing window.
+-- Note that you dock windows into each others _without_ a dockspace, by just clicking on
+-- a window title bar or tab and moving it.
+-- DockSpace() and DockSpaceOverViewport() are only useful to construct a central docking
+-- location for your application.
+-- void ShowExampleAppDockSpace(bool* p_open)
+-- {
+--     // In 99% case you should be able to just call DockSpaceOverViewport() and ignore all the code below!
+--     // In this specific demo, we are not using DockSpaceOverViewport() because:
+--     // - we allow the host window to be floating/moveable instead of filling the viewport (when opt_fullscreen == false)
+--     // - we allow the host window to have padding (when opt_padding == true)
+--     // - we have a local menu bar in the host window (vs. you could use BeginMainMenuBar() + DockSpaceOverViewport() in your code!)
+--     // TL;DR; this demo is more complicated than what you would normally use.
+--     // If we removed all the options we are showcasing, this demo would become:
+--     //     void ShowExampleAppDockSpace()
+--     //     {
+--     //         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+--     //     }
+--
+--     static bool opt_fullscreen = true;
+--     static bool opt_padding = false;
+--     static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
+--
+--     // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
+--     // because it would be confusing to have two docking targets within each others.
+--     ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
+--     if (opt_fullscreen)
+--     {
+--         const ImGuiViewport* viewport = ImGui::GetMainViewport();
+--         ImGui::SetNextWindowPos(viewport->WorkPos);
+--         ImGui::SetNextWindowSize(viewport->WorkSize);
+--         ImGui::SetNextWindowViewport(viewport->ID);
+--         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+--         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+--         window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+--         window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+--     }
+--     else
+--     {
+--         dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
+--     }
+--
+--     // When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background
+--     // and handle the pass-thru hole, so we ask Begin() to not render a background.
+--     if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
+--         window_flags |= ImGuiWindowFlags_NoBackground;
+--
+--     // Important: note that we proceed even if Begin() returns false (aka window is collapsed).
+--     // This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
+--     // all active windows docked into it will lose their parent and become undocked.
+--     // We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
+--     // any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
+--     if (!opt_padding)
+--         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+--     ImGui::Begin("DockSpace Demo", p_open, window_flags);
+--     if (!opt_padding)
+--         ImGui::PopStyleVar();
+--
+--     if (opt_fullscreen)
+--         ImGui::PopStyleVar(2);
+--
+--     // DockSpace
+--     ImGuiIO& io = ImGui::GetIO();
+--     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+--     {
+--         ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+--         ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+--     }
+--     else
+--     {
+--         ShowDockingDisabledMessage();
+--     }
+--
+--     if (ImGui::BeginMenuBar())
+--     {
+--         if (ImGui::BeginMenu("Options"))
+--         {
+--             // Disabling fullscreen would allow the window to be moved to the front of other windows,
+--             // which we can't undo at the moment without finer window depth/z control.
+--             ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
+--             ImGui::MenuItem("Padding", NULL, &opt_padding);
+--             ImGui::Separator();
+--
+--             if (ImGui::MenuItem("Flag: NoSplit",                "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))                 { dockspace_flags ^= ImGuiDockNodeFlags_NoSplit; }
+--             if (ImGui::MenuItem("Flag: NoResize",               "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))                { dockspace_flags ^= ImGuiDockNodeFlags_NoResize; }
+--             if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))  { dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode; }
+--             if (ImGui::MenuItem("Flag: AutoHideTabBar",         "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))          { dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar; }
+--             if (ImGui::MenuItem("Flag: PassthruCentralNode",    "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0, opt_fullscreen)) { dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode; }
+--             ImGui::Separator();
+--
+--             if (ImGui::MenuItem("Close", NULL, false, p_open != NULL))
+--                 *p_open = false;
+--             ImGui::EndMenu();
+--         }
+--         HelpMarker(
+--             "When docking is enabled, you can ALWAYS dock MOST window into another! Try it now!" "\n"
+--             "- Drag from window title bar or their tab to dock/undock." "\n"
+--             "- Drag from window menu button (upper-left button) to undock an entire node (all windows)." "\n"
+--             "- Hold SHIFT to disable docking." "\n"
+--             "This demo app has nothing to do with it!" "\n\n"
+--             "This demo app only demonstrate the use of ImGui::DockSpace() which allows you to manually create a docking node _within_ another window. This is useful so you can decorate your main application window (e.g. with a menu bar)." "\n\n"
+--             "ImGui::DockSpace() comes with one hard constraint: it needs to be submitted _before_ any window which may be docked into it. Therefore, if you use a dock spot as the central point of your application, you'll probably want it to be part of the very first window you are submitting to imgui every frame." "\n\n"
+--             "(NB: because of this constraint, the implicit \"Debug\" window can not be docked into an explicit DockSpace() node, because that window is submitted as part of the NewFrame() call. An easy workaround is that you can create your own implicit \"Debug##2\" window after calling DockSpace() and leave it in the window stack for anyone to use.)"
+--         );
+--
+--         ImGui::EndMenuBar();
+--     }
+--
+--     ImGui::End();
+-- }
+
 -- //-----------------------------------------------------------------------------
 -- // [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
 -- //-----------------------------------------------------------------------------
@@ -7312,11 +7477,25 @@ end
 --     static ExampleAppDocuments app;
 --
 --     // Options
+--     enum Target
+--     {
+--         Target_None,
+--         Target_Tab,                 // Create documents as local tab into a local tab bar
+--         Target_DockSpaceAndWindow   // Create documents as regular windows, and create an embedded dockspace
+--     };
+--     static Target opt_target = Target_Tab;
 --     static bool opt_reorderable = true;
 --     static ImGuiTabBarFlags opt_fitting_flags = ImGuiTabBarFlags_FittingPolicyDefault_;
 --
+--     // When (opt_target == Target_DockSpaceAndWindow) there is the possibily that one of our child Document window (e.g. "Eggplant")
+--     // that we emit gets docked into the same spot as the parent window ("Example: Documents").
+--     // This would create a problematic feedback loop because selecting the "Eggplant" tab would make the "Example: Documents" tab
+--     // not visible, which in turn would stop submitting the "Eggplant" window.
+--     // We avoid this problem by submitting our documents window even if our parent window is not currently visible.
+--     // Another solution may be to make the "Example: Documents" window use the ImGuiWindowFlags_NoDocking.
+--
 --     bool window_contents_visible = r.ImGui_Begin("Example: Documents", p_open, ImGuiWindowFlags_MenuBar);
---     if (!window_contents_visible)
+--     if (!window_contents_visible && opt_target != Target_DockSpaceAndWindow)
 --         return;
 --
 --     // Menu
@@ -7360,10 +7539,17 @@ end
 --                 doc->DoForceClose();
 --         r.ImGui_PopID();
 --     }
+--     ImGui::PushItemWidth(ImGui::GetFontSize() * 12);
+--     ImGui::Combo("Output", (int*)&opt_target, "None\0TabBar+Tabs\0DockSpace+Window\0");
+--     ImGui::PopItemWidth();
+--     bool redock_all = false;
+--     if (opt_target == Target_Tab)                { ImGui::SameLine(); ImGui::Checkbox("Reorderable Tabs", &opt_reorderable); }
+--     if (opt_target == Target_DockSpaceAndWindow) { ImGui::SameLine(); redock_all = ImGui::Button("Redock all"); }
 --
 --     r.ImGui_Separator();
 --
---     // Submit Tab Bar and Tabs
+--     // Tabs
+--     if (opt_target == Target_Tab)
 --     {
 --         ImGuiTabBarFlags tab_bar_flags = (opt_fitting_flags) | (opt_reorderable ? ImGuiTabBarFlags_Reorderable : 0);
 --         if (r.ImGui_BeginTabBar("##tabs", tab_bar_flags))
@@ -7402,6 +7588,53 @@ end
 --
 --             r.ImGui_EndTabBar();
 --         }
+--     }
+--     else if (opt_target == Target_DockSpaceAndWindow)
+--     {
+--         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DockingEnable)
+--         {
+--             NotifyOfDocumentsClosedElsewhere(app);
+--
+--             // Create a DockSpace node where any window can be docked
+--             ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+--             ImGui::DockSpace(dockspace_id);
+--
+--             // Create Windows
+--             for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+--             {
+--                 MyDocument* doc = &app.Documents[doc_n];
+--                 if (!doc->Open)
+--                     continue;
+--
+--                 ImGui::SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+--                 ImGuiWindowFlags window_flags = (doc->Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
+--                 bool visible = ImGui::Begin(doc->Name, &doc->Open, window_flags);
+--
+--                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
+--                 if (!doc->Open && doc->Dirty)
+--                 {
+--                     doc->Open = true;
+--                     doc->DoQueueClose();
+--                 }
+--
+--                 MyDocument::DisplayContextMenu(doc);
+--                 if (visible)
+--                     MyDocument::DisplayContents(doc);
+--
+--                 ImGui::End();
+--             }
+--         }
+--         else
+--         {
+--             ShowDockingDisabledMessage();
+--         }
+--     }
+--
+--     // Early out other contents
+--     if (!window_contents_visible)
+--     {
+--         ImGui::End();
+--         return;
 --     }
 --
 --     // Update closing queue
