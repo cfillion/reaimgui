@@ -88,9 +88,7 @@ DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
 
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
 (bool*,API_W(p_open)),
-R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc.
-
-Default values: p_open = nil)",
+R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc. Set p_open to true to enable the close button.)",
 {
   FRAME_GUARD;
   ImGui::ShowMetricsWindow(openPtrBehavior(API_W(p_open)));

@@ -314,10 +314,9 @@ DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
 
 DEFINE_API(bool, BeginTabItem, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_W(p_open))(int*,API_RO(flags)),
-R"(Create a Tab. Returns true if the Tab is selected.
+R"(Create a Tab. Returns true if the Tab is selected. Set 'p_open' to true to enable the close button.
 
-Default values: p_open = nil, flags = ImGui_TabItemFlags_None
-'open' is read/write.)",
+Default values: flags = ImGui_TabItemFlags_None)",
 {
   FRAME_GUARD;
   return ImGui::BeginTabItem(label, openPtrBehavior(API_W(p_open)),

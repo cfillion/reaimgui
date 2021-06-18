@@ -23,12 +23,12 @@ DEFINE_API(bool, Begin, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_W(p_open))(int*,API_RO(flags)),
 R"(Push window to the stack and start appending to it. See ImGui_End.
 
-- Passing true to 'open' shows a window-closing widget in the upper-right corner of the window, which clicking will set the boolean to false when returned.
+- Passing true to 'p_open' shows a window-closing widget in the upper-right corner of the window, which clicking will set the boolean to false when returned.
 - You may append multiple times to the same window during the same frame by calling Begin()/End() pairs multiple times. Some information such as 'flags' or 'open' will only be considered by the first call to Begin().
 - Begin() return false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
 - Note that the bottom of window stack always contains a window called "Debug".
 
-Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
+Default values: flags = ImGui_WindowFlags_None)",
 {
   FRAME_GUARD;
 
