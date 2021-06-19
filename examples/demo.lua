@@ -1516,7 +1516,7 @@ label:
             rv,widgets.tabs.opened[n] = r.ImGui_BeginTabItem(ctx, names[n], true, r.ImGui_TabItemFlags_None())
             if rv then
               r.ImGui_Text(ctx, ('This is the %s tab!'):format(names[n]))
-              if n & 1 then
+              if n & 1 == 0 then
                 r.ImGui_Text(ctx, 'I am an odd tab.')
               end
               r.ImGui_EndTabItem(ctx)
