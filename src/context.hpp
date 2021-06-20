@@ -113,4 +113,6 @@ private:
   std::unique_ptr<FontList> m_fonts;
 };
 
+using ImGui_Context = Context; // user-facing alias
+
 #endif

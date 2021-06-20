@@ -59,6 +59,8 @@ private:
   int m_index, m_size, m_missingStyles;
 };
 
+using ImGui_Font = Font; // user-facing alias
+
 class FontList {
 public:
   FontList();

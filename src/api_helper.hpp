@@ -26,11 +26,6 @@
 #include <boost/type_index.hpp>
 #include <cstring> // strlen
 
-// user-facing aliases
-class Font;
-using ImGui_Context = Context;
-using ImGui_Font = Font;
-
 #define ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
 #define ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
 
