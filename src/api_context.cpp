@@ -19,6 +19,7 @@
 
 #include "font.hpp"
 #include "listclipper.hpp"
+#include "platform.hpp"
 #include "resource_proxy.hpp"
 #include "version.hpp"
 
@@ -126,4 +127,24 @@ DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
     throw reascript_error { "cannot modify font texture: a frame has already begun" };
 
   ctx->fonts().add(font);
+});
+
+DEFINE_API(void, PointConvertNative, (ImGui_Context*,ctx)
+(double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native)),
+R"(Convert a position from the curremt platform's native coordinate position system to ReaImGui global coordinates.
+
+This flips the Y coordinate on macOS and applies HiDPI scaling on Windows and Linux.
+
+Default values: to_native = false)",
+{
+  FRAME_GUARD; // scalePosition uses the active context and its monitor list
+  assertValid(API_RW(x));
+  assertValid(API_RW(y));
+
+  ImVec2 point;
+  point.x = *API_RW(x);
+  point.y = *API_RW(y);
+  Platform::scalePosition(&point, valueOr(API_RO(to_native), false));
+  *API_RW(x) = point.x;
+  *API_RW(y) = point.y;
 });
