@@ -74,10 +74,6 @@ Alternatively, multiple build trees can be created if desired:
     cmake -B build/portable -DCMAKE_BUILD_TYPE=RelWithDebInfo \
       -DCMAKE_INSTALL_PREFIX=/path/to/reaper/portable/install
 
-The vcpkg install is automatically detected and configured from the `VCPKG_ROOT`
-and `VCPKG_DEFAULT_TRIPLET` environment variables when creating a build tree on
-Windows.
-
 ### Compile and install
 
 To compile a build tree:
