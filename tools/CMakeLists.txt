@@ -23,9 +23,15 @@ endfunction()
 
 add_custom_target(bindings ALL)
 add_binding(cpp    "${CMAKE_CURRENT_BINARY_DIR}/reaper_imgui_functions.h")
+add_binding(human  "${CMAKE_CURRENT_BINARY_DIR}/reaper_imgui_doc.html")
 add_binding(python "${CMAKE_CURRENT_BINARY_DIR}/imgui_python.py")
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/imgui_python.py"
   DESTINATION "Scripts/ReaTeam Extensions/API"
+  OPTIONAL
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/reaper_imgui_doc.html"
+  DESTINATION "Data"
   OPTIONAL
 )

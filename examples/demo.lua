@@ -289,6 +289,9 @@ function demo.ShowDemoWindow()
       r.ImGui_EndMenu(ctx)
     end
     if r.ImGui_BeginMenu(ctx, 'Tools') then
+      if r.ImGui_MenuItem(ctx, 'Documentation', nil, false, r.CF_ShellExecute ~= nil) then
+        r.CF_ShellExecute(('%s/Data/reaper_imgui_doc.html'):format(r.GetResourcePath()))
+      end
       rv,show_app.metrics =
         r.ImGui_MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
       rv,show_app.style_editor =
