@@ -70,7 +70,8 @@ struct Function {
   std::string_view doc;
 
   bool isEnum() const { return type.isInt() && args.empty(); }
-  bool hasOutBuffers() const;
+  bool hasOutputArgs() const;
+  bool hasOptionalArgs() const;
   bool operator<(const Function &o) const { return name < o.name; }
 
   void cppSignature(std::ostream &) const;
@@ -282,10 +283,20 @@ static std::string hl(const Highlight type = Highlight::End)
   return tag;
 }
 
-bool Function::hasOutBuffers() const
+bool Function::hasOutputArgs() const
 {
   for(const Argument &arg : args) {
     if(arg.isOutput())
+      return true;
+  }
+
+  return false;
+}
+
+bool Function::hasOptionalArgs() const
+{
+  for(const Argument &arg : args) {
+    if(arg.isOptional())
       return true;
   }
 
@@ -337,10 +348,14 @@ void Function::luaSignature(std::ostream &stream) const
     stream << " = ";
   stream << "reaper." << name << '(';
   {
+    const bool listOutputs { hasOptionalArgs() };
     CommaSep cs { stream };
     for(const Argument &arg : args) {
-      if(!arg.isInput())
+      if(!arg.isInput()) {
+        if(listOutputs)
+          cs << hl(Highlight::Constant) << "nil" << hl();
         continue;
+      }
       cs << hl(Highlight::Type) << luaType(arg.type)
          << hl() << ' ' << arg.humanName();
       if(arg.isOptional())
@@ -397,7 +412,7 @@ static std::string_view pythonType(const Type type)
 
 void Function::pythonSignature(std::ostream &stream) const
 {
-  if(hasOutBuffers()) {
+  if(hasOutputArgs()) {
     CommaSep cs { stream };
     stream << '(';
     if(!type.isVoid())
@@ -405,7 +420,6 @@ void Function::pythonSignature(std::ostream &stream) const
     for(const Argument &arg : args) {
       if(!arg.isOutput())
         continue;
-
       cs << hl(Highlight::Type) << pythonType(arg.type)
          << hl() << ' ' << arg.humanName();
     }
@@ -416,10 +430,14 @@ void Function::pythonSignature(std::ostream &stream) const
 
   stream << name << '(';
   {
+    const bool listOutputs { hasOptionalArgs() };
     CommaSep cs { stream };
     for(const Argument &arg : args) {
-      if(!arg.isInput())
+      if(!arg.isInput()) {
+        if(listOutputs)
+          cs << hl(Highlight::Constant) << "None" << hl();
         continue;
+      }
       cs << hl(Highlight::Type) << pythonType(arg.type)
          << hl() << ' ' << arg.name;
       if(arg.isOptional())
@@ -675,7 +693,7 @@ static void pythonBinding(std::ostream &stream)
       stream << ")\n";
     }
 
-    if(!func.type.isVoid() || func.hasOutBuffers()) {
+    if(!func.type.isVoid() || func.hasOutputArgs()) {
       stream << "  return ";
       CommaSep cs { stream };
       if(!func.type.isVoid()) {
