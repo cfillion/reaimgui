@@ -51,9 +51,10 @@ struct Argument {
   Type type;
   std::string_view name;
 
-  bool isOutBuffer() const {
-    return name.find("In")  == std::string_view::npos &&
-           name.find("Out") != std::string_view::npos;
+  bool isOutBuffer(bool exclusive = false) const {
+    return (!exclusive || name.find("In")  == std::string_view::npos) &&
+           name.find("Out") != std::string_view::npos &&
+           (exclusive || name.find("_sz") != name.size() - 3);
   }
 
   bool isOptional() const {
@@ -75,6 +76,7 @@ struct Function {
   std::string_view doc;
 
   bool isEnum() const { return type.isInt() && args.empty(); }
+  bool hasOutBuffers() const;
   bool operator<(const Function &o) const { return name < o.name; }
 
   void cppSignature(std::ostream &) const;
@@ -279,6 +281,16 @@ static std::string hl(const Highlight type = Highlight::End)
   return tag;
 }
 
+bool Function::hasOutBuffers() const
+{
+  for(const Argument &arg : args) {
+    if(arg.isOutBuffer())
+      return true;
+  }
+
+  return false;
+}
+
 void Function::cppSignature(std::ostream &stream) const
 {
   stream << hl(Highlight::Type) << type << hl() << ' ' << name << '(';
@@ -382,22 +394,17 @@ static std::string_view pythonType(const Type type)
 
 void Function::pythonSignature(std::ostream &stream) const
 {
-  bool retAllArgs { false };
-  for(const Argument &arg : args) {
-    if(arg.type.isScalarPtr() || arg.type.isString()) {
-      retAllArgs = true;
-      break;
-    }
-  }
-
-  if(retAllArgs) {
+  if(hasOutBuffers()) {
     CommaSep cs { stream };
     stream << '(';
     if(!type.isVoid())
       cs << hl(Highlight::Type) << pythonType(type) << hl() << " retval";
     for(const Argument &arg : args) {
+      if(!arg.isOutBuffer())
+        continue;
+
       cs << hl(Highlight::Type) << pythonType(arg.type)
-         << hl() << ' ' << arg.name;
+         << hl() << ' ' << arg.humanName();
     }
     stream << ") = ";
   }
@@ -588,7 +595,7 @@ static void pythonBinding(std::ostream &stream)
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
         cs << arg.name;
-        if(arg.isOptional() || arg.isOutBuffer())
+        if(arg.isOptional() || arg.isOutBuffer(true))
           stream << " = None";
       }
     }
@@ -604,20 +611,15 @@ static void pythonBinding(std::ostream &stream)
     }
     stream << ")(proc)\n";
 
-    bool retAllArgs { false };
     if(!func.args.empty()) {
       stream << "  args = (";
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
         bool packed { false };
-        if(arg.type.isScalarPtr()) {
-          retAllArgs = true;
+        if(arg.type.isScalarPtr())
           cs << pythonCType(arg.type.removePtr());
-        }
-        else if(arg.type.isString()) {
-          retAllArgs = true;
+        else if(arg.type.isString())
           cs << (arg.type.isConst() ? "rpr_packsc" : "rpr_packs");
-        }
         else if(arg.type.isPointer()) {
           packed = true;
           cs << "rpr_packp('" << arg.type << "', " << arg.name << ')';
@@ -627,7 +629,7 @@ static void pythonBinding(std::ostream &stream)
 
         if(!packed) {
           stream << '(' << arg.name;
-          if(arg.isOutBuffer())
+          if(arg.isOutBuffer(true))
             stream << " if " << arg.name << " != None else 0";
           stream << ')';
         }
@@ -665,7 +667,7 @@ static void pythonBinding(std::ostream &stream)
       stream << ")\n";
     }
 
-    if(!func.type.isVoid() || !func.args.empty()) {
+    if(!func.type.isVoid() || func.hasOutBuffers()) {
       stream << "  return ";
       CommaSep cs { stream };
       if(!func.type.isVoid()) {
@@ -676,19 +678,19 @@ static void pythonBinding(std::ostream &stream)
         else
           cs << "rval";
       }
-      if(retAllArgs) {
-        for(size_t i { 0 }; i < func.args.size(); ++i) {
-          const Argument &arg { func.args[i] };
-          if(arg.type.isScalarPtr())
-            cs << pythonScalarType(arg.type.removePtr())
-              << "(args[" << i << "" << "].value)";
-          else if(arg.type.isString() && !arg.type.isConst())
-            cs << "rpr_unpacks(" << "args[" << i << "])";
-          else
-            cs << arg.name;
-          if(arg.isOptional())
-            stream << " if " << arg.name << " != None else None";
-        }
+      for(size_t i { 0 }; i < func.args.size(); ++i) {
+        const Argument &arg { func.args[i] };
+        if(!arg.isOutBuffer())
+          continue;
+        if(arg.type.isScalarPtr())
+          cs << pythonScalarType(arg.type.removePtr())
+            << "(args[" << i << "" << "].value)";
+        else if(arg.type.isString() && !arg.type.isConst())
+          cs << "rpr_unpacks(" << "args[" << i << "])";
+        else
+          cs << arg.name;
+        if(arg.isOptional())
+          stream << " if " << arg.name << " != None else None";
       }
       stream << "\n";
     }

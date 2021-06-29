@@ -1,18 +1,18 @@
 sys.path.append(RPR_GetResourcePath() + "/Scripts/ReaTeam Extensions/API")
 from imgui_python import *
 
-FLT_MIN = ImGui_NumericLimits_Float()[0]
+FLT_MIN, FLT_MAX = ImGui_NumericLimits_Float()
 
 def init():
   global ctx
-  ctx = ImGui_CreateContext("Track manager")[0]
+  ctx = ImGui_CreateContext("Track manager")
   loop()
 
 def paramCheckbox(track, param):
   value = RPR_GetMediaTrackInfo_Value(track, param)
-  checkbox = ImGui_Checkbox(ctx, "##" + param, value)
-  if checkbox[0]:
-    RPR_SetMediaTrackInfo_Value(track, param, checkbox[3])
+  changed, checked = ImGui_Checkbox(ctx, "##" + param, value)
+  if changed:
+    RPR_SetMediaTrackInfo_Value(track, param, checked)
     return True
 
   return False
@@ -22,10 +22,10 @@ def trackRow(ti):
 
   if ImGui_TableSetColumnIndex(ctx, 0):
     color = ImGui_ColorConvertNative(RPR_GetTrackColor(track))
-    colorEdit = ImGui_ColorEdit3(ctx, "##color", color,
+    changed, color = ImGui_ColorEdit3(ctx, "##color", color,
       ImGui_ColorEditFlags_NoInputs() | ImGui_ColorEditFlags_NoLabel())
-    if colorEdit[0]:
-      RPR_SetTrackColor(track, ImGui_ColorConvertNative(colorEdit[3]))
+    if changed:
+      RPR_SetTrackColor(track, ImGui_ColorConvertNative(color))
 
   if ImGui_TableSetColumnIndex(ctx, 1):
     selected = RPR_IsTrackSelected(track)
@@ -41,9 +41,9 @@ def trackRow(ti):
   if ImGui_TableSetColumnIndex(ctx, 2):
     name = RPR_GetSetMediaTrackInfo_String(track, 'P_NAME', '', False)[3]
     ImGui_SetNextItemWidth(ctx, -FLT_MIN)
-    inputText = ImGui_InputText(ctx, "##name", name, 0)
-    if inputText[0]:
-      RPR_GetSetMediaTrackInfo_String(track, 'P_NAME', inputText[3], True)
+    changed, name = ImGui_InputText(ctx, "##name", name, 0)
+    if changed:
+      RPR_GetSetMediaTrackInfo_String(track, 'P_NAME', name, True)
 
   if ImGui_TableSetColumnIndex(ctx, 3):
     if paramCheckbox(track, 'B_SHOWINTCP'):
@@ -81,7 +81,7 @@ def trackTable():
           ImGui_TableFlags_Reorderable()    | ImGui_TableFlags_ScrollY() | \
           ImGui_TableFlags_Resizable()      | ImGui_TableFlags_Hideable()
 
-  if not ImGui_BeginTable(ctx, "tracks", 12, flags)[0]:
+  if not ImGui_BeginTable(ctx, "tracks", 12, flags):
     return
 
   ImGui_TableSetupScrollFreeze(ctx, 0, 1)
@@ -104,7 +104,7 @@ def trackTable():
   clipper = ImGui_CreateListClipper(ctx)
   ImGui_ListClipper_Begin(clipper, trackCount)
   while ImGui_ListClipper_Step(clipper):
-    _, displayStart, displayEnd = ImGui_ListClipper_GetDisplayRange(clipper)
+    displayStart, displayEnd = ImGui_ListClipper_GetDisplayRange(clipper)
     for ti in range(displayStart, displayEnd):
       ImGui_TableNextRow(ctx)
       ImGui_PushID(ctx, ti)
@@ -115,17 +115,17 @@ def trackTable():
 
 def loop():
   ImGui_SetNextWindowSize(ctx, 700, 500, ImGui_Cond_FirstUseEver())
-  begin = ImGui_Begin(ctx, "Track manager", True)
+  visible, open = ImGui_Begin(ctx, "Track manager", True)
 
-  if begin[0]:
-    if ImGui_Button(ctx, "Add track")[0]:
+  if visible:
+    if ImGui_Button(ctx, "Add track"):
       RPR_InsertTrackAtIndex(-1, True)
 
     trackTable()
 
     ImGui_End(ctx)
 
-  if begin[3]:
+  if open:
     RPR_defer("loop()")
   else:
     ImGui_DestroyContext(ctx)
