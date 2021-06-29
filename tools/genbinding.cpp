@@ -58,7 +58,7 @@ struct Argument {
   bool isOptional() const
     { return name.find("Optional") != std::string_view::npos; }
   bool isBufSize() const
-    { return isOutput() && name.find("_sz") == name.size() - 3; }
+    { return name.find("_sz") == name.size() - 3; }
 
   std::string_view humanName() const;
 };
@@ -337,7 +337,7 @@ void Function::luaSignature(std::ostream &stream) const
       hasReturns = true;
     }
     for(const Argument &arg : args) {
-      if(arg.isOutput()) {
+      if(arg.isOutput() && !arg.isBufSize()) {
         cs << hl(Highlight::Type) << luaType(arg.type) << hl();
         stream << ' ' << arg.humanName();
         hasReturns = true;
@@ -351,7 +351,9 @@ void Function::luaSignature(std::ostream &stream) const
     const bool listOutputs { hasOptionalArgs() };
     CommaSep cs { stream };
     for(const Argument &arg : args) {
-      if(!arg.isInput()) {
+      if(arg.isBufSize())
+        continue;
+      else if(!arg.isInput()) {
         if(listOutputs)
           cs << hl(Highlight::Constant) << "nil" << hl();
         continue;
@@ -378,7 +380,7 @@ void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
   for(const Argument &arg : args) {
     if(arg.isBufSize())
       continue;
-    if(arg.type.isString()) {
+    else if(arg.type.isString()) {
       if(arg.isOutput())
         cs << hl(Highlight::Reference) << '#' << arg.humanName() << hl();
       else
@@ -418,7 +420,7 @@ void Function::pythonSignature(std::ostream &stream) const
     if(!type.isVoid())
       cs << hl(Highlight::Type) << pythonType(type) << hl() << " retval";
     for(const Argument &arg : args) {
-      if(!arg.isOutput())
+      if(!arg.isOutput() || arg.isBufSize())
         continue;
       cs << hl(Highlight::Type) << pythonType(arg.type)
          << hl() << ' ' << arg.humanName();
@@ -706,9 +708,9 @@ static void pythonBinding(std::ostream &stream)
       }
       for(size_t i { 0 }; i < func.args.size(); ++i) {
         const Argument &arg { func.args[i] };
-        if(!arg.isOutput())
+        if(!arg.isOutput() || arg.isBufSize())
           continue;
-        if(arg.type.isScalarPtr())
+        else if(arg.type.isScalarPtr())
           cs << pythonScalarType(arg.type.removePtr())
             << "(args[" << i << "" << "].value)";
         else if(arg.type.isString() && !arg.type.isConst())
