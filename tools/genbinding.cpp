@@ -51,20 +51,14 @@ struct Argument {
   Type type;
   std::string_view name;
 
-  bool isOutBuffer(bool exclusive = false) const {
-    return (!exclusive || name.find("In")  == std::string_view::npos) &&
-           name.find("Out") != std::string_view::npos &&
-           (exclusive || name.find("_sz") != name.size() - 3);
-  }
-
-  bool isOptional() const {
-    return name.find("Optional") != std::string_view::npos;
-  }
-
-  bool isBufSize() const {
-    return name.find("Out") != std::string_view::npos &&
-           name.find("_sz") == name.size() - 3;
-  }
+  bool isInput() const
+    { return !isOutput() || name.find("In") != std::string_view::npos; }
+  bool isOutput() const
+    { return name.find("Out") != std::string_view::npos; }
+  bool isOptional() const
+    { return name.find("Optional") != std::string_view::npos; }
+  bool isBufSize() const
+    { return isOutput() && name.find("_sz") == name.size() - 3; }
 
   std::string_view humanName() const;
 };
@@ -291,7 +285,7 @@ static std::string hl(const Highlight type = Highlight::End)
 bool Function::hasOutBuffers() const
 {
   for(const Argument &arg : args) {
-    if(arg.isOutBuffer())
+    if(arg.isOutput())
       return true;
   }
 
@@ -332,7 +326,7 @@ void Function::luaSignature(std::ostream &stream) const
       hasReturns = true;
     }
     for(const Argument &arg : args) {
-      if(arg.isOutBuffer()) {
+      if(arg.isOutput()) {
         cs << hl(Highlight::Type) << luaType(arg.type) << hl();
         stream << ' ' << arg.humanName();
         hasReturns = true;
@@ -345,11 +339,11 @@ void Function::luaSignature(std::ostream &stream) const
   {
     CommaSep cs { stream };
     for(const Argument &arg : args) {
-      if(arg.isBufSize())
+      if(!arg.isInput())
         continue;
       cs << hl(Highlight::Type) << luaType(arg.type)
          << hl() << ' ' << arg.humanName();
-      if(arg.isOutBuffer() || arg.isOptional())
+      if(arg.isOptional())
         stream << " = " << hl(Highlight::Constant) << "nil" << hl();
     }
   }
@@ -370,7 +364,7 @@ void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
     if(arg.isBufSize())
       continue;
     if(arg.type.isString()) {
-      if(arg.isOutBuffer())
+      if(arg.isOutput())
         cs << hl(Highlight::Reference) << '#' << arg.humanName() << hl();
       else
         cs << hl(Highlight::String) << '"' << arg.humanName() << '"' << hl();
@@ -379,7 +373,7 @@ void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
       cs << "";
       if(!arg.type.removePtr().isDouble())
         stream << hl(Highlight::Type) << arg.type.removePtr() << hl() << ' ';
-      if(arg.isOutBuffer())
+      if(arg.isOutput())
         stream << hl(Highlight::Reference) << "&amp;" << hl();
       stream << arg.humanName();
     }
@@ -409,7 +403,7 @@ void Function::pythonSignature(std::ostream &stream) const
     if(!type.isVoid())
       cs << hl(Highlight::Type) << pythonType(type) << hl() << " retval";
     for(const Argument &arg : args) {
-      if(!arg.isOutBuffer())
+      if(!arg.isOutput())
         continue;
 
       cs << hl(Highlight::Type) << pythonType(arg.type)
@@ -424,6 +418,8 @@ void Function::pythonSignature(std::ostream &stream) const
   {
     CommaSep cs { stream };
     for(const Argument &arg : args) {
+      if(!arg.isInput())
+        continue;
       cs << hl(Highlight::Type) << pythonType(arg.type)
          << hl() << ' ' << arg.name;
       if(arg.isOptional())
@@ -607,7 +603,7 @@ static void pythonBinding(std::ostream &stream)
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
         cs << arg.name;
-        if(arg.isOptional() || arg.isOutBuffer(true))
+        if(arg.isOptional() || !arg.isInput())
           stream << " = None";
       }
     }
@@ -641,7 +637,7 @@ static void pythonBinding(std::ostream &stream)
 
         if(!packed) {
           stream << '(' << arg.name;
-          if(arg.isOutBuffer(true))
+          if(!arg.isInput())
             stream << " if " << arg.name << " != None else 0";
           stream << ')';
         }
@@ -692,7 +688,7 @@ static void pythonBinding(std::ostream &stream)
       }
       for(size_t i { 0 }; i < func.args.size(); ++i) {
         const Argument &arg { func.args[i] };
-        if(!arg.isOutBuffer())
+        if(!arg.isOutput())
           continue;
         if(arg.type.isScalarPtr())
           cs << pythonScalarType(arg.type.removePtr())
