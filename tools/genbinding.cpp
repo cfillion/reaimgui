@@ -376,7 +376,9 @@ void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
         cs << hl(Highlight::String) << '"' << arg.humanName() << '"' << hl();
     }
     else {
-      cs << hl(Highlight::Type) << arg.type.removePtr() << hl() << ' ';
+      cs << "";
+      if(!arg.type.removePtr().isDouble())
+        stream << hl(Highlight::Type) << arg.type.removePtr() << hl() << ' ';
       if(arg.isOutBuffer())
         stream << hl(Highlight::Reference) << "&amp;" << hl();
       stream << arg.humanName();
