@@ -351,7 +351,7 @@ DEFINE_API(void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
   draw_list->get()->PathLineToMergeDuplicate(ImVec2(pos_x, pos_y));
 });
 
-DEFINE_API(void, PathFillConvex, (ImGui_DrawList*,draw_list)
+DEFINE_API(void, DrawList_PathFillConvex, (ImGui_DrawList*,draw_list)
 (int,col_rgba),
 "Note: Anti-aliased filling requires points to be in clockwise order.",
 {
