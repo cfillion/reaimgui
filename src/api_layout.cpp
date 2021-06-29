@@ -50,14 +50,14 @@ DEFINE_API(void, Spacing, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, Dummy, (ImGui_Context*,ctx)(double,size_w)(double,size_h),
-"Add a dummy item of given size. unlike InvisibleButton(), Dummy() won't take the mouse click or be navigable into.",
+"Add a dummy item of given size. unlike ImGui_InvisibleButton, Dummy() won't take the mouse click or be navigable into.",
 {
   FRAME_GUARD;
   ImGui::Dummy(ImVec2(size_w, size_h));
 });
 
 DEFINE_API(void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
-R"(Move content position toward the right, by 'indent_w', or style.IndentSpacing if 'indent_w' <= 0
+R"(Move content position toward the right, by 'indent_w', or ImGui_StyleVar_IndentSpacing if 'indent_w' <= 0
 
 Default values: indent_w = 0.0)",
 {
@@ -66,7 +66,7 @@ Default values: indent_w = 0.0)",
 });
 
 DEFINE_API(void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
-R"(Move content position back to the left, by 'indent_w', or style.IndentSpacing if 'indent_w' <= 0
+R"(Move content position back to the left, by 'indent_w', or ImGui_StyleVar_IndentSpacing if 'indent_w' <= 0
 
 Default values: indent_w = 0.0)",
 {
@@ -82,7 +82,7 @@ DEFINE_API(void, BeginGroup, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, EndGroup, (ImGui_Context*,ctx),
-R"(Unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered() or layout primitives such as SameLine() on whole group, etc.).
+R"(Unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use ImGui_IsItemHovered or layout primitives such as ImGui_SameLine on whole group, etc.).
 
 See ImGui_BeginGroup.)",
 {
@@ -140,7 +140,7 @@ DEFINE_API(void, SetCursorPosY, (ImGui_Context*,ctx)
 
 DEFINE_API(void, GetCursorStartPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-"Initial cursor position in window coordinates",
+"Initial cursor position in window coordinates.",
 {
   FRAME_GUARD;
   const ImVec2 &pos { ImGui::GetCursorStartPos() };
@@ -150,7 +150,7 @@ DEFINE_API(void, GetCursorStartPos, (ImGui_Context*,ctx)
 
 DEFINE_API(void, GetCursorScreenPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-"Cursor position in absolute screen coordinates [0..io.DisplaySize] (useful to work with ImDrawList API)",
+"Cursor position in absolute screen coordinates (useful to work with the DrawList API).",
 {
   FRAME_GUARD;
   const ImVec2 &pos { ImGui::GetCursorScreenPos() };
@@ -160,14 +160,14 @@ DEFINE_API(void, GetCursorScreenPos, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetCursorScreenPos, (ImGui_Context*,ctx)
 (double,pos_x)(double,pos_y),
-"Cursor position in absolute screen coordinates [0..io.DisplaySize]",
+"Cursor position in absolute screen coordinates.",
 {
   FRAME_GUARD;
   ImGui::SetCursorScreenPos(ImVec2(pos_x, pos_y));
 });
 
 DEFINE_API(void, AlignTextToFramePadding, (ImGui_Context*,ctx),
-"Vertically align upcoming text baseline to FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)",
+"Vertically align upcoming text baseline to ImGui_StyleVar_FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)",
 {
   FRAME_GUARD;
   ImGui::AlignTextToFramePadding();
@@ -181,21 +181,21 @@ DEFINE_API(double, GetTextLineHeight, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(double, GetTextLineHeightWithSpacing, (ImGui_Context*,ctx),
-"~ FontSize + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of text)",
+"~ ImGui_GetFontSize + ImGui_StyleVar_ItemSpacing.y (distance in pixels between 2 consecutive lines of text)",
 {
   FRAME_GUARD;
   return ImGui::GetTextLineHeightWithSpacing();
 });
 
 DEFINE_API(double, GetFrameHeight, (ImGui_Context*,ctx),
-"~ FontSize + style.FramePadding.y * 2",
+"~ ImGui_GetFontSize + ImGui_StyleVar_FramePadding.y * 2",
 {
   FRAME_GUARD;
   return ImGui::GetFrameHeight();
 });
 
 DEFINE_API(double, GetFrameHeightWithSpacing, (ImGui_Context*,ctx),
-"~ FontSize + style.FramePadding.y * 2 + style.ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)",
+"~ ImGui_GetFontSize + ImGui_StyleVar_FramePadding.y * 2 + ImGui_StyleVar_ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)",
 {
   FRAME_GUARD;
   return ImGui::GetFrameHeightWithSpacing();
@@ -205,7 +205,7 @@ DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
 (double,clip_rect_max_x)(double,clip_rect_max_y)
 (bool,intersect_with_current_clip_rect),
-"Mouse hovering is affected by ImGui::PushClipRect() calls, unlike direct calls to ImDrawList::PushClipRect() which are render only. See ImGui_PopClipRect.",
+"Mouse hovering is affected by PushClipRect() calls, unlike direct calls to ImGui_DrawList_PushClipRect which are render only. See ImGui_PopClipRect.",
 {
   FRAME_GUARD;
   ImGui::PushClipRect(

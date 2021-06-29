@@ -62,7 +62,8 @@ DEFINE_API(bool, BeginChild, (ImGui_Context*,ctx)
 (const char*,str_id)(double*,API_RO(size_w))(double*,API_RO(size_h))
 (bool*,API_RO(border))(int*,API_RO(flags)),
 R"(Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window. Child windows can embed their own child.
-- For each independent axis of 'size': ==0.0f: use remaining host window size / >0.0f: fixed size / <0.0f: use remaining window size minus abs(size) / Each axis can use a different mode, e.g. ImVec2(0,400).
+
+- For each independent axis of 'size': ==0.0f: use remaining host window size / >0.0f: fixed size / <0.0f: use remaining window size minus abs(size) / Each axis can use a different mode, e.g. size = 0x400.
 - BeginChild() returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
 
 See ImGui_EndChild.
@@ -110,7 +111,7 @@ DEFINE_API(void, EndChildFrame, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
-"Begin/append a tooltip window. to create full-featured tooltip (with any kind of items).",
+"Begin/append a tooltip window. To create full-featured tooltip (with any kind of items).",
 {
   FRAME_GUARD;
   ImGui::BeginTooltip();
@@ -124,7 +125,7 @@ DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
-"Set a text-only tooltip, typically use with ImGui_IsItemHovered(). override any previous call to SetTooltip().",
+"Set a text-only tooltip, typically use with ImGui_IsItemHovered. override any previous call to ImGui_SetTooltip.",
 {
   FRAME_GUARD;
   ImGui::SetTooltip("%s", text);
@@ -165,7 +166,7 @@ Default values: flags = ImGui_HoveredFlags_None)",
 });
 
 DEFINE_API(bool, IsWindowDocked, (ImGui_Context*,ctx),
-"Is current window docked into another window?",
+"Is current window docked into another window or a REAPER docker?",
 {
   FRAME_GUARD;
   return ImGui::IsWindowDocked();
@@ -215,7 +216,7 @@ DEFINE_API(int, GetWindowDockID, (ImGui_Context*,ctx),
 DEFINE_API(void, SetNextWindowPos, (ImGui_Context*,ctx)
 (double,pos_x)(double,pos_y)(int*,API_RO(cond))
 (double*,API_RO(pivot_x))(double*,API_RO(pivot_y)),
-R"(Set next window position. Call before Begin(). Use pivot=(0.5,0.5) to center on given point, etc.
+R"(Set next window position. Call before ImGui_Begin. Use pivot=(0.5,0.5) to center on given point, etc.
 
 Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
 {
@@ -228,7 +229,7 @@ Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
 
 DEFINE_API(void, SetNextWindowSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h)(int*,API_RO(cond)),
-R"(Set next window size. set axis to 0.0f to force an auto-fit on this axis. Call before Begin().
+R"(Set next window size. set axis to 0.0f to force an auto-fit on this axis. Call before ImGui_Begin.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -248,7 +249,7 @@ DEFINE_API(void, SetNextWindowSizeConstraints, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetNextWindowContentSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h),
-"Set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor WindowPadding. set an axis to 0.0f to leave it automatic. Call before Begin().",
+"Set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor ImGui_StyleVar_WindowPadding. set an axis to 0.0f to leave it automatic. Call before ImGui_Begin.",
 {
   FRAME_GUARD;
   ImGui::SetNextWindowContentSize(ImVec2(size_w, size_h));
@@ -256,7 +257,7 @@ DEFINE_API(void, SetNextWindowContentSize, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetNextWindowCollapsed, (ImGui_Context*,ctx)
 (bool,collapsed)(int*,API_RO(cond)),
-R"(Set next window collapsed state. Call before Begin().
+R"(Set next window collapsed state. Call before ImGui_Begin.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -266,7 +267,7 @@ Default values: cond = ImGui_Cond_Always)",
 });
 
 DEFINE_API(void, SetNextWindowFocus, (ImGui_Context*,ctx),
-"Set next window to be focused / top-most. Call before Begin().",
+"Set next window to be focused / top-most. Call before ImGui_Begin.",
 {
   FRAME_GUARD;
   ImGui::SetNextWindowFocus();
@@ -274,7 +275,7 @@ DEFINE_API(void, SetNextWindowFocus, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
 (double,alpha),
-"Set next window background color alpha. helper to easily override the Alpha component of ImGuiCol_WindowBg/ChildBg/PopupBg. you may also use ImGui_WindowFlags_NoBackground.",
+"Set next window background color alpha. helper to easily override the Alpha component of ImGui_Col_WindowBg/ChildBg/PopupBg. you may also use ImGui_WindowFlags_NoBackground.",
 {
   FRAME_GUARD;
   ImGui::SetNextWindowBgAlpha(alpha);
@@ -283,6 +284,8 @@ DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
 DEFINE_API(void, SetNextWindowDockID, (ImGui_Context*,ctx)
 (int,dock_id)(int*,API_RO(cond)),
 R"(Set next window dock ID. 0 = undocked, < 0 = REAPER docker index (-1 = first dock, -2 = second dock, etc), > 0 = Dear ImGui dockspace ID.
+
+See ImGui_GetWindowDockID, ImGui_IsWindowDocked.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -293,7 +296,7 @@ Default values: cond = ImGui_Cond_Always)",
 
 DEFINE_API(void, SetWindowPos, (ImGui_Context*,ctx)
 (double,pos_x)(double,pos_y)(int*,API_RO(cond)),
-R"((Not recommended) Set current window position - call within Begin()/End(). Prefer using ImGui_SetNextWindowPos(), as this may incur tearing and side-effects.
+R"((Not recommended) Set current window position - call within ImGui_Begin/ImGui_End. Prefer using ImGui_SetNextWindowPos, as this may incur tearing and side-effects.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -304,7 +307,7 @@ Default values: cond = ImGui_Cond_Always)",
 
 DEFINE_API(void, SetWindowSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h)(int*,API_RO(cond)),
-R"((Not recommended) Set current window size - call within Begin()/End(). Set size_w and size_h to 0 to force an auto-fit. Prefer using ImGui_SetNextWindowSize(), as this may incur tearing and minor side-effects.
+R"((Not recommended) Set current window size - call within ImGui_Begin/ImGui_End. Set size_w and size_h to 0 to force an auto-fit. Prefer using ImGui_SetNextWindowSize, as this may incur tearing and minor side-effects.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -315,7 +318,7 @@ Default values: cond = ImGui_Cond_Always)",
 
 DEFINE_API(void, SetWindowCollapsed, (ImGui_Context*,ctx)
 (bool,collapsed)(int*,API_RO(cond)),
-R"((Not recommended) Set current window collapsed state. Prefer using ImGui_SetNextWindowCollapsed().
+R"((Not recommended) Set current window collapsed state. Prefer using ImGui_SetNextWindowCollapsed.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -325,7 +328,7 @@ Default values: cond = ImGui_Cond_Always)",
 });
 
 DEFINE_API(void, SetWindowFocus, (ImGui_Context*,ctx),
-"(Not recommended) Set current window to be focused / top-most. Prefer using ImGui_SetNextWindowFocus().",
+"(Not recommended) Set current window to be focused / top-most. Prefer using ImGui_SetNextWindowFocus.",
 {
   FRAME_GUARD;
   ImGui::SetWindowFocus();
@@ -344,7 +347,7 @@ Default values: cond = ImGui_Cond_Always)",
 
 DEFINE_API(void, SetWindowSizeEx, (ImGui_Context*,ctx)
 (const char*,name)(double,size_w)(double,size_h)(int*,API_RO(cond)),
-R"(Set named window size. set axis to 0.0f to force an auto-fit on this axis.
+R"(Set named window size. Set axis to 0.0f to force an auto-fit on this axis.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -375,7 +378,7 @@ DEFINE_API(void, SetWindowFocusEx, (ImGui_Context*,ctx)
 
 DEFINE_API(void, GetContentRegionAvail, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-"== GetContentRegionMax() - GetCursorPos()",
+"== ImGui_GetContentRegionMax() - ImGui_GetCursorPos()",
 {
   FRAME_GUARD;
 
@@ -386,7 +389,7 @@ DEFINE_API(void, GetContentRegionAvail, (ImGui_Context*,ctx)
 
 DEFINE_API(void, GetContentRegionMax, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-"Current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates",
+"Current content boundaries (typically window boundaries including scrolling, or current column boundaries), in windows coordinates.",
 {
   FRAME_GUARD;
 
@@ -397,7 +400,7 @@ DEFINE_API(void, GetContentRegionMax, (ImGui_Context*,ctx)
 
 DEFINE_API(void, GetWindowContentRegionMin, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-"Content boundaries min (roughly (0,0)-Scroll), in window coordinates",
+"Content boundaries min (roughly (0,0)-Scroll), in window coordinates.",
 {
   FRAME_GUARD;
 
@@ -408,7 +411,7 @@ DEFINE_API(void, GetWindowContentRegionMin, (ImGui_Context*,ctx)
 
 DEFINE_API(void, GetWindowContentRegionMax, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-"Content boundaries max (roughly (0,0)+Size-Scroll) where Size can be override with SetNextWindowContentSize(), in window coordinates",
+"Content boundaries max (roughly (0,0)+Size-Scroll) where Size can be override with ImGui_SetNextWindowContentSize, in window coordinates.",
 {
   FRAME_GUARD;
 
@@ -426,14 +429,14 @@ DEFINE_API(double, GetWindowContentRegionWidth, (ImGui_Context*,ctx),
 
 // Windows Scrolling
 DEFINE_API(double, GetScrollX, (ImGui_Context*,ctx),
-"Get scrolling amount [0 .. GetScrollMaxX()]",
+"Get scrolling amount [0 .. ImGui_GetScrollMaxX()]",
 {
   FRAME_GUARD;
   return ImGui::GetScrollX();
 });
 
 DEFINE_API(double, GetScrollY, (ImGui_Context*,ctx),
-"Get scrolling amount [0 .. GetScrollMaxY()]",
+"Get scrolling amount [0 .. ImGui_GetScrollMaxY()]",
 {
   FRAME_GUARD;
   return ImGui::GetScrollY();
@@ -441,7 +444,7 @@ DEFINE_API(double, GetScrollY, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetScrollX, (ImGui_Context*,ctx)
 (double,scroll_x),
-"Set scrolling amount [0 .. GetScrollMaxX()]",
+"Set scrolling amount [0 .. ImGui_GetScrollMaxX()]",
 {
   FRAME_GUARD;
   ImGui::SetScrollX(scroll_x);
@@ -449,7 +452,7 @@ DEFINE_API(void, SetScrollX, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetScrollY, (ImGui_Context*,ctx)
 (double,scroll_y),
-"Set scrolling amount [0 .. GetScrollMaxY()]",
+"Set scrolling amount [0 .. ImGui_GetScrollMaxY()]",
 {
   FRAME_GUARD;
   ImGui::SetScrollY(scroll_y);
@@ -471,7 +474,7 @@ DEFINE_API(double, GetScrollMaxY, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetScrollHereX, (ImGui_Context*,ctx)
 (double*,API_RO(center_x_ratio)),
-R"(Adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+R"(Adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using ImGui_SetItemDefaultFocus instead.
 
 Default values: center_x_ratio = 0.5)",
 {
@@ -481,7 +484,7 @@ Default values: center_x_ratio = 0.5)",
 
 DEFINE_API(void, SetScrollHereY, (ImGui_Context*,ctx)
 (double*,API_RO(center_y_ratio)),
-R"(Adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus() instead.
+R"(Adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using ImGui_SetItemDefaultFocus instead.
 
 Default values: center_y_ratio = 0.5)",
 {
@@ -491,7 +494,7 @@ Default values: center_y_ratio = 0.5)",
 
 DEFINE_API(void, SetScrollFromPosX, (ImGui_Context*,ctx)
 (double,local_x)(double*,API_RO(center_x_ratio)),
-R"(Adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+R"(Adjust scrolling amount to make given position visible. Generally ImGui_GetCursorStartPos() + offset to compute a valid position.
 
 Default values: center_x_ratio = 0.5)",
 {
@@ -501,7 +504,7 @@ Default values: center_x_ratio = 0.5)",
 
 DEFINE_API(void, SetScrollFromPosY, (ImGui_Context*,ctx)
 (double,local_y)(double*,API_RO(center_y_ratio)),
-R"(Adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
+R"(Adjust scrolling amount to make given position visible. Generally ImGui_GetCursorStartPos() + offset to compute a valid position.
 
 Default values: center_y_ratio = 0.5)",
 {

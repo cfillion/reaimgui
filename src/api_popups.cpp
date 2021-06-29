@@ -20,14 +20,15 @@
 DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
 R"(Popups, Modals
+
 - They block normal mouse hovering detection (and therefore most mouse interactions) behind them.
 - If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
 - Their visibility state (~bool) is held internally instead of being held by the programmer as we are used to with regular Begin*() calls.
 - The 3 properties above are related: we need to retain popup visibility state in the library because popups may be closed as any time.
-- You can bypass the hovering restriction by using ImGuiHoveredFlags_AllowWhenBlockedByPopup when calling IsItemHovered() or IsWindowHovered().
-- IMPORTANT: Popup identifiers are relative to the current ID stack, so OpenPopup and BeginPopup generally needs to be at the same level of the stack.
+- You can bypass the hovering restriction by using ImGui_HoveredFlags_AllowWhenBlockedByPopup when calling ImGui_IsItemHovered or ImGui_IsWindowHovered.
+- IMPORTANT: Popup identifiers are relative to the current ID stack, so ImGui_OpenPopup and BeginPopup generally needs to be at the same level of the stack.
 
-Query popup state, if open start appending into the window. Call EndPopup() afterwards. ImGuiWindowFlags are forwarded to the window.
+Query popup state, if open start appending into the window. Call ImGui_EndPopup afterwards. ImGui_WindowFlags* are forwarded to the window.
 
 Return true if the popup is open, and you can start outputting to it.
 
@@ -49,7 +50,7 @@ Default values: flags = ImGui_WindowFlags_None)",
 });
 
 DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
-"only call EndPopup() if BeginPopupXXX() returns true!",
+"Only call EndPopup() if BeginPopupXXX() returns true!",
 {
   FRAME_GUARD;
   ImGui::EndPopup();
@@ -60,7 +61,7 @@ DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
 R"(Set popup state to open (don't call every frame!). ImGuiPopupFlags are available for opening options.
 
 If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
-Use ImGuiPopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level. This is equivalent to e.g. testing for !IsAnyPopupOpen() prior to OpenPopup().
+Use ImGui_PopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level.
 
 Default values: popup_flags = ImGui_PopupFlags_None)",
 {
@@ -82,9 +83,9 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 });
 
 DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
-R"(Manually close the popup we have begin-ed into. Use inside the BeginPopup()/EndPopup() scope to close manually.
+R"(Manually close the popup we have begin-ed into. Use inside the ImGUi_BeginPopup/ImGui_EndPopup scope to close manually.
 
-CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activateda)",
+CloseCurrentPopup() is called by default by ImGui_Selectable/ImGui_MenuItem when activated.)",
 {
   FRAME_GUARD;
   ImGui::CloseCurrentPopup();
@@ -92,12 +93,12 @@ CloseCurrentPopup() is called by default by Selectable()/MenuItem() when activat
 
 DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
-R"(This is a helper to handle the simplest case of associating one named popup to one given widget. You can pass a NULL str_id to use the identifier of the last item. This is essentially the same as calling OpenPopupOnItemClick() + BeginPopup() but written to avoid computing the ID twice because BeginPopupContextXXX functions may be called very frequently.
+R"(This is a helper to handle the simplest case of associating one named popup to one given widget. You can pass a NULL str_id to use the identifier of the last item. This is essentially the same as calling ImGui_OpenPopupOnItemClick + ImGui_BeginPopup but written to avoid computing the ID twice because BeginPopupContextXXX functions may be called very frequently.
 
-Open+begin popup when clicked on last item. if you can pass a NULL str_id only if the previous item had an id. If you want to use that on a non-interactive item such as Text() you need to pass in an explicit ID here.
+Open+begin popup when clicked on last item. if you can pass a NULL str_id only if the previous item had an id. If you want to use that on a non-interactive item such as ImGui_Text you need to pass in an explicit ID here.
 
-- IMPORTANT: Notice that BeginPopupContextXXX takes ImGuiPopupFlags just like OpenPopup() and unlike BeginPopup().
-- IMPORTANT: we exceptionally default their flags to 1 (== ImGuiPopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGuiPopupFlags_MouseButtonRight.
+- IMPORTANT: Notice that BeginPopupContextXXX takes ImGui_PopupFlags just like ImGui_OpenPopup and unlike ImGui_BeginPopup.
+- IMPORTANT: We exceptionally default their flags to 1 (== ImGui_PopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGui_PopupFlags_MouseButtonRight.
 
 Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 {
@@ -123,10 +124,10 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 
 DEFINE_API(bool, IsPopupOpen, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
-R"(Return true if the popup is open at the current BeginPopup() level of the popup stack.
+R"(Return true if the popup is open at the current ImGui_BeginPopup level of the popup stack.
 
-With ImGuiPopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.
-With ImGuiPopupFlags_AnyPopupId + ImGuiPopupFlags_AnyPopupLevel: return true if any popup is open.
+With ImGui_PopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.
+With ImGui_PopupFlags_AnyPopupId + ImGui_PopupFlags_AnyPopupLevel: return true if any popup is open.
 
 Default values: flags = ImGui_PopupFlags_None)",
 {

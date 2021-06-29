@@ -65,7 +65,7 @@ DEFINE_API(bool, IsMouseReleased, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
 (int,button),
-"Did mouse button double-clicked? (note that a double-click will also report IsMouseClicked() == true)",
+"Did mouse button double-clicked? (note that a double-click will also report ImGui_IsMouseClicked() == true)",
 {
   FRAME_GUARD;
   return ImGui::IsMouseDoubleClicked(button);

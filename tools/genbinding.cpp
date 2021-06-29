@@ -85,6 +85,13 @@ struct Function {
   void pythonSignature(std::ostream &) const;
 };
 
+struct FunctionComp {
+  bool operator()(const std::string_view &n, const Function &f) const
+    { return n < f.name; }
+  bool operator()(const Function &f, const std::string_view &n) const
+    { return f.name < n; }
+};
+
 static std::vector<Function> g_funcs;
 
 static void addFunc(const char *name, const char *def)
@@ -428,11 +435,14 @@ static void formatHtmlText(std::ostream &stream, std::string_view text)
 {
   size_t nextLink { text.find("ImGui_") };
   for(size_t i {}; i < text.size(); ++i) {
+    size_t linkStart { i };
     if(i == nextLink) {
-      size_t linkStart { i };
-      do { ++i; } while(isalpha(text[i]) || text[i] == '_');
-      std::string_view linkTo { &text[linkStart], i - linkStart };
-      stream << "<a href=\"#" << linkTo << "\">" << linkTo << "</a>";
+      do { ++i; } while(isalnum(text[i]) || text[i] == '_');
+      const std::string_view linkTo { &text[linkStart], i - linkStart };
+      if(std::binary_search(g_funcs.begin(), g_funcs.end(), linkTo, FunctionComp{}))
+        stream << "<a href=\"#" << linkTo << "\">" << linkTo << "</a>";
+      else
+        stream << linkTo;
       nextLink = text.find("ImGui_", i);
     }
 
@@ -532,21 +542,21 @@ static void humanBinding(std::ostream &stream)
   stream << R"(<p>EOF</p>
 
   <script>
-  function openTarget()
-  {
+  function openTarget() {
     var hash = location.hash.substring(1);
     var target = hash && document.getElementById(hash);
-    if(target && target.tagName.toLowerCase() === 'details')
+    if(target && target.tagName.toLowerCase() === 'details') {
       target.open = true;
+      target.scrollIntoView();
+    }
   }
 
   window.addEventListener('hashchange', openTarget);
   openTarget();
 
   document.body.addEventListener('click', function(e) {
-    var details = e.target.parentNode;
-    if(details && details.tagName.toLowerCase() === 'details')
-      history.replaceState(null, '', location.pathname + '#' + details.id);
+    if(e.target.tagName.toLowerCase() === 'summary' && !e.target.parentNode.open)
+      history.replaceState(null, '', location.pathname + '#' + e.target.parentNode.id);
     else if(e.target.tagName.toLowerCase() === 'code')
       navigator.clipboard.writeText(e.target.textContent);
   });

@@ -31,7 +31,7 @@ static bool isUserType(const char *type)
 
 // Drag and Drop
 DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)(int*,API_RO(flags)),
-R"(Call when the current item is active. If this return true, you can call SetDragDropPayload() + EndDragDropSource().
+R"(Call when the current item is active. If this return true, you can call ImGui_SetDragDropPayload + ImGui_EndDragDropSource.
 
 If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).
 
@@ -58,14 +58,14 @@ Default values: cond = ImGui_Cond_Always)",
 });
 
 DEFINE_API(void, EndDragDropSource, (ImGui_Context*,ctx),
-"Only call EndDragDropSource() if BeginDragDropSource() returns true!",
+"Only call EndDragDropSource() if ImGui_BeginDragDropSource returns true!",
 {
   FRAME_GUARD;
   ImGui::EndDragDropSource();
 });
 
 DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
-"Call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload() + EndDragDropTarget()",
+"Call after submitting an item that may receive a payload. If this returns true, you can call ImGui_AcceptDragDropPayload + ImGui_EndDragDropTarget.",
 {
   FRAME_GUARD;
   return ImGui::BeginDragDropTarget();
@@ -132,7 +132,7 @@ static bool AcceptDragDropPayloadColor(int *color, bool alpha, ImGuiDragDropFlag
 
 DEFINE_API(bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
 (int*,API_W(rgb))(int*,API_RO(flags)),
-R"(Accept contents of a RGB color. See ImGui_AcceptDragDropPayload.
+R"(Accept a RGB color. See ImGui_AcceptDragDropPayload.
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
@@ -143,7 +143,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
 
 DEFINE_API(bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
 (int*,API_W(rgba))(int*,API_RO(flags)),
-R"(Accept contents of a RGBA color. See ImGui_AcceptDragDropPayload.
+R"(Accept a RGBA color. See ImGui_AcceptDragDropPayload.
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
@@ -154,7 +154,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
 
 DEFINE_API(bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
 (int*,API_W(count))(int*,API_RO(flags)),
-R"(Accept contents of a RGBA color. See ImGui_AcceptDragDropPayload.
+R"(Accept a list of dropped files. See ImGui_AcceptDragDropPayload and ImGui_GetDragDropPayloadFile.
 
 Default values: flags = ImGui_DragDropFlags_None)",
 {
@@ -171,7 +171,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
 });
 
 DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
-"Only call EndDragDropTarget() if BeginDragDropTarget() returns true!",
+"Only call EndDragDropTarget() if ImGui_BeginDragDropTarget returns true!",
 {
   FRAME_GUARD;
   ImGui::EndDragDropTarget();
@@ -200,7 +200,7 @@ DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
 (int,index)(char*,API_W(filename))(int,API_W_SZ(filename)),
-"",
+"Get a filename from the list of dropped files. Returns false if index is out of bounds.",
 {
   FRAME_GUARD;
 

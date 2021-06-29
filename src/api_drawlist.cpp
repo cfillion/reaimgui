@@ -316,7 +316,7 @@ DEFINE_API(void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
 (double,clip_rect_max_x)(double,clip_rect_max_y)
 (bool*,API_RO(intersect_with_current_clip_rect)),
-R"(Render-level scissoring. Prefer using higher-level ImGui_PushClipRect() to affect logic (hit-testing and widget culling). See ImGui_PushClipRect.
+R"(Render-level scissoring. Prefer using higher-level ImGui_PushClipRect to affect logic (hit-testing and widget culling).
 
 Default values: intersect_with_current_clip_rect = false)",
 {
@@ -346,7 +346,7 @@ DEFINE_API(void, DrawList_PathClear, (ImGui_DrawList*,draw_list),
 
 DEFINE_API(void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
 (double,pos_x)(double,pos_y),
-"Stateful path API, add points then finish with PathFillConvex() or PathStroke()",
+"Stateful path API, add points then finish with ImGui_DrawList_PathFillConvex or ImGui_DrawList_PathStroke.",
 {
   draw_list->get()->PathLineToMergeDuplicate(ImVec2(pos_x, pos_y));
 });

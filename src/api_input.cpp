@@ -281,7 +281,7 @@ DEFINE_API(bool, ColorEdit4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgba))(int*,API_RO(flags)),
 R"(Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xXXRRGGBB (XX is ignored and will not be modified).
 
-tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
+Tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
 
 Default values: flags = ImGui_ColorEditFlags_None)",
 {
@@ -306,7 +306,7 @@ DEFINE_API(bool, ColorEdit3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgb))(int*,API_RO(flags)),
 R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.
 
-tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
+Tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
 
 Default values: flags = ImGui_ColorEditFlags_None)",
 {
@@ -413,7 +413,7 @@ static std::vector<const char *> splitString(char *list)
 
 DEFINE_API(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
 (const char*,preview_value)(int*,API_RO(flags)),
-R"(The BeginCombo()/EndCombo() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() items.
+R"(The ImGui_BeginCombo/ImGui_EndCombo API allows you to manage your contents and selection state however you want it, by creating e.g. ImGui_Selectable items.
 
 Default values: flags = ImGui_ComboFlags_None)",
 {
@@ -424,7 +424,7 @@ Default values: flags = ImGui_ComboFlags_None)",
 });
 
 DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
-"Only call EndCombo() if BeginCombo() returns true!",
+"Only call EndCombo() if ImGui_BeginCombo returns true!",
 {
   FRAME_GUARD;
   ImGui::EndCombo();
@@ -433,7 +433,7 @@ DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
 DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(current_item))(char*,items)
 (int*,API_RO(popup_max_height_in_items)),
-R"(Helper over BeginCombo()/EndCombo() for convenience purpose. Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
+R"(Helper over ImGui_BeginCombo/ImGui_EndCombo for convenience purpose. Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
 
 Default values: popup_max_height_in_items = -1)",
 {
@@ -447,7 +447,7 @@ Default values: popup_max_height_in_items = -1)",
 // Widgets: List Boxes
 DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(current_item))(char*,items)(int*,API_RO(height_in_items)),
-R"(This is an helper over BeginListBox()/EndListBox() for convenience purpose. This is analoguous to how Combos are created.
+R"(This is an helper over ImGui_BeginListBox/ImGui_EndListBox for convenience purpose. This is analoguous to how Combos are created.
 
 Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
 
@@ -462,9 +462,9 @@ Default values: height_in_items = -1)",
 
 DEFINE_API(bool, BeginListBox, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Open a framed scrolling region.  This is essentially a thin wrapper to using BeginChild/EndChild with some stylistic changes.
+R"(Open a framed scrolling region.  This is essentially a thin wrapper to using ImGui_BeginChild/ImGui_EndChild with some stylistic changes.
 
-The BeginListBox()/EndListBox() api allows you to manage your contents and selection state however you want it, by creating e.g. Selectable() or any items.
+The ImGui_BeginListBox/ImGui_EndListBox API allows you to manage your contents and selection state however you want it, by creating e.g. ImGui_Selectable or any items.
 
 - Choose frame width:   width  > 0.0: custom  /  width  < 0.0 or -FLT_MIN: right-align   /  width  = 0.0 (default): use current ItemWidth
 - Choose frame height:  height > 0.0: custom  /  height < 0.0 or -FLT_MIN: bottom-align  /  height = 0.0 (default): arbitrary default height which can fit ~7 items
@@ -480,9 +480,7 @@ See ImGui_EndListBox.)",
 });
 
 DEFINE_API(void, EndListBox, (ImGui_Context*,ctx),
-R"(Only call EndListBox() if BeginListBox() returned true!
-
-See ImGui_BeginListBox.)",
+"Only call EndListBox() if ImGui_BeginListBox returned true!",
 {
   FRAME_GUARD;
   ImGui::EndListBox();

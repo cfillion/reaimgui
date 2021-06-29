@@ -24,21 +24,20 @@ DEFINE_API(bool, BeginTable, (ImGui_Context*,ctx)
 (double*,API_RO(outer_size_w))(double*,API_RO(outer_size_h))
 (double*,API_RO(inner_width)),
 R"([BETA API] API may evolve slightly! If you use this, please update to the next version when it comes out!
-- Full-featured replacement for old Columns API.
+
 - See Demo->Tables for demo code.
 - See top of imgui_tables.cpp for general commentary.
-- See ImGuiTableFlags_ and ImGuiTableColumnFlags_ enums for a description of available flags.
+- See ImGui_TableFlags* and ImGui_TableColumnFlags* enums for a description of available flags.
 The typical call flow is:
-- 1. Call BeginTable().
-- 2. Optionally call TableSetupColumn() to submit column name/flags/defaults.
-- 3. Optionally call TableSetupScrollFreeze() to request scroll freezing of columns/rows.
-- 4. Optionally call TableHeadersRow() to submit a header row. Names are pulled from TableSetupColumn() data.
+- 1. Call ImGui_BeginTable.
+- 2. Optionally call ImGui_TableSetupColumn to submit column name/flags/defaults.
+- 3. Optionally call ImGui_TableSetupScrollFreeze to request scroll freezing of columns/rows.
+- 4. Optionally call ImGui_TableHeadersRow to submit a header row. Names are pulled from ImGui_TableSetupColumn data.
 - 5. Populate contents:
-   - In most situations you can use TableNextRow() + TableSetColumnIndex(N) to start appending into a column.
+   - In most situations you can use ImGui_TableNextRow + ImGui_TableSetColumnIndex(N) to start appending into a column.
    - If you are using tables as a sort of grid, where every columns is holding the same type of contents,
-     you may prefer using TableNextColumn() instead of TableNextRow() + TableSetColumnIndex().
-     TableNextColumn() will automatically wrap-around into the next row if needed.
-   - IMPORTANT: Comparatively to the old Columns() API, we need to call TableNextColumn() for the first column!
+     you may prefer using ImGui_TableNextColumn instead of ImGui_TableNextRow + ImGui_TableSetColumnIndex.
+     ImGui_TableNextColumn will automatically wrap-around into the next row if needed.
    - Summary of possible call flow:
        --------------------------------------------------------------------------------------------------------
        TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
@@ -46,7 +45,7 @@ The typical call flow is:
                          TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
        TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
        --------------------------------------------------------------------------------------------------------
-- 5. Call EndTable()
+- 5. Call ImGui_EndTable.
 
 Default values: flags = ImGui_TableFlags_None, outer_size_w = 0.0, outer_size_h = 0.0, inner_width = 0.0)",
 {
@@ -96,7 +95,7 @@ DEFINE_API(bool, TableSetColumnIndex, (ImGui_Context*,ctx)
 DEFINE_API(void, TableSetupColumn, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags))(double*,API_RO(init_width_or_weight))
 (int*,API_RO(user_id)),
-R"(Use TableSetupColumn() to specify label, resizing policy, default width/weight, id, various other flags etc.
+R"(Use to specify label, resizing policy, default width/weight, id, various other flags etc.
 
 Default values: flags = ImGui_TableColumnFlags_None, init_width_or_weight = 0.0, user_id = 0)",
 {
@@ -115,7 +114,7 @@ DEFINE_API(void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(void, TableHeadersRow, (ImGui_Context*,ctx),
-"Submit all headers cells based on data provided to TableSetupColumn() + submit context menu",
+"Submit all headers cells based on data provided to ImGui_TableSetupColumn + submit context menu.",
 {
   FRAME_GUARD;
   ImGui::TableHeadersRow();
@@ -123,7 +122,7 @@ DEFINE_API(void, TableHeadersRow, (ImGui_Context*,ctx),
 
 DEFINE_API(void, TableHeader, (ImGui_Context*,ctx)
 (const char*,label),
-"Submit one header cell manually (rarely used). See ImGui_TableSetColumn",
+"Submit one header cell manually (rarely used). See ImGui_TableSetupColumn.",
 {
   FRAME_GUARD;
   ImGui::TableHeader(label);
@@ -131,7 +130,7 @@ DEFINE_API(void, TableHeader, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, TableNeedSort, (ImGui_Context*,ctx)
 (bool*,API_W(has_specs)),
-"Return true once when sorting specs have changed since last call, or the first time. 'has_specs' is false when not sorting. See ImGui_TableSortSpecs_GetColumnSpecs.",
+"Return true once when sorting specs have changed since last call, or the first time. 'has_specs' is false when not sorting. See ImGui_TableGetColumnSortSpecs.",
 {
   FRAME_GUARD;
   if(ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() }) {
@@ -152,10 +151,10 @@ DEFINE_API(bool, TableGetColumnSortSpecs, (ImGui_Context*,ctx)
 (int*,API_W(sort_order))(int*,API_W(sort_direction)),
 R"(Sorting specification for one column of a table. Call while incrementing id from 0 until false is returned.
 
-ColumnUserID:  User id of the column (if specified by a TableSetupColumn() call)
+ColumnUserID:  User id of the column (if specified by a ImGui_TableSetupColumn call)
 ColumnIndex:   Index of the column
-SortOrder:     Index within parent ImGuiTableSortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
-SortDirection: ImGuiSortDirection_Ascending or ImGuiSortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
+SortOrder:     Index within parent SortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
+SortDirection: ImGui_SortDirection_Ascending or ImGui_SortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
 
 See ImGui_TableNeedSort.)",
 {
@@ -174,7 +173,7 @@ See ImGui_TableNeedSort.)",
 });
 
 DEFINE_API(int, TableGetColumnCount, (ImGui_Context*,ctx),
-"Return number of columns (value passed to BeginTable)",
+"Return number of columns (value passed to ImGui_BeginTable).",
 {
   FRAME_GUARD;
   return ImGui::TableGetColumnCount();
@@ -196,7 +195,7 @@ DEFINE_API(int, TableGetRowIndex, (ImGui_Context*,ctx),
 
 DEFINE_API(const char*, TableGetColumnName, (ImGui_Context*,ctx)
 (int*,API_RO(column_n)),
-R"(Return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
+R"(Return "" if column didn't have a name declared by ImGui_TableSetupColumn. Pass -1 to use current column.
 
 Default values: column_n = -1)",
 {
@@ -216,7 +215,7 @@ Default values: column_n = -1)",
 
 DEFINE_API(void, TableSetColumnEnabled, (ImGui_Context*,ctx)
 (int,column_n)(bool,v),
-"Change enabled/disabled state of a column, set to false to hide the column. Note that end-user can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)",
+"Change enabled/disabled state of a column, set to false to hide the column. Note that end-user can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGui_TableFlags_ContextMenuInBody).",
 {
   FRAME_GUARD;
   ImGui::TableSetColumnEnabled(column_n, v);
@@ -224,7 +223,7 @@ DEFINE_API(void, TableSetColumnEnabled, (ImGui_Context*,ctx)
 
 DEFINE_API(void, TableSetBgColor, (ImGui_Context*,ctx)
 (int,target)(int,color_rgba)(int*,API_RO(column_n)),
-R"(Change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
+R"(Change the color of a cell, row, or column. See ImGui_TableBgTarget_* flags for details.
 
 Default values: column_n = -1)",
 {

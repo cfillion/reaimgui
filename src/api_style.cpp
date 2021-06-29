@@ -232,7 +232,7 @@ DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
 
 DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
 (int,idx),
-"Retrieve style color as stored in ImGuiStyle structure. Use to feed back into PushStyleColor(), Otherwise use ImGui_GetColor() to get style color with style alpha baked in. See ImGui_Col_* for available style colors.",
+"Retrieve style color as stored in ImGuiStyle structure. Use to feed back into ImGui_PushStyleColor, Otherwise use ImGui_GetColor to get style color with style alpha baked in. See ImGui_Col_* for available style colors.",
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);

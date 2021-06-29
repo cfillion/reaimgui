@@ -29,7 +29,7 @@ DEFINE_API(void, Text, (ImGui_Context*,ctx)
 
 DEFINE_API(void, TextColored, (ImGui_Context*,ctx)
 (int,col_rgba)(const char*,text),
-"Shortcut for PushStyleColor(ImGuiCol_Text, color); Text(text); PopStyleColor();",
+"Shortcut for ImGui_PushStyleColor(ImGui_Col_Text, color); ImGui_Text(text); ImGui_PopStyleColor();",
 {
   FRAME_GUARD;
 
@@ -52,7 +52,7 @@ DEFINE_API(void, TextDisabled, (ImGui_Context*,ctx)
 
 DEFINE_API(void, TextWrapped, (ImGui_Context*,ctx)
 (const char*,text),
-"Shortcut for PushTextWrapPos(0.0f); Text(fmt, ...); PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using SetNextWindowSize().",
+"Shortcut for ImGui_PushTextWrapPos(0.0f); ImGui_Text(fmt, ...); ImGui_PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using ImGui_SetNextWindowSize.",
 {
   FRAME_GUARD;
   ImGui::PushTextWrapPos(0.0f);
@@ -70,7 +70,7 @@ DEFINE_API(void, LabelText, (ImGui_Context*,ctx)
 
 DEFINE_API(void, BulletText, (ImGui_Context*,ctx)
 (const char*,text),
-"Shortcut for Bullet()+Text()",
+"Shortcut for ImGui_Bullet + ImGui_Text.",
 {
   FRAME_GUARD;
   ImGui::Bullet();
@@ -80,7 +80,7 @@ DEFINE_API(void, BulletText, (ImGui_Context*,ctx)
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
 R"(Most widgets return true when the value has been changed or when pressed/selected
-You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.
+You may also use one of the many IsItemXXX functions (e.g. ImGui_IsItemActive, ImGui_IsItemHovered, etc.) to query widget state.
 
 Default values: size_w = 0.0, size_h = 0.0)",
 {
@@ -92,7 +92,7 @@ Default values: size_w = 0.0, size_h = 0.0)",
 
 DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
 (const char*,label),
-"Button with FramePadding=(0,0) to easily embed within text",
+"Button with ImGui_StyleVar_FramePadding=(0,0) to easily embed within text.",
 {
   FRAME_GUARD;
   return ImGui::SmallButton(label);
@@ -100,7 +100,7 @@ DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, InvisibleButton, (ImGui_Context*,ctx)
 (const char*,str_id)(double,size_w)(double,size_h)(int*,API_RO(flags)),
-R"(Flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).
+R"(Flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with ImGui_IsItemActive, ImGui_IsItemHovered, etc.).
 
 Default values: flags = ImGui_ButtonFlags_None)",
 {
@@ -111,7 +111,7 @@ Default values: flags = ImGui_ButtonFlags_None)",
 
 DEFINE_API(bool, ArrowButton, (ImGui_Context*,ctx)
 (const char*,str_id)(int,dir),
-"Square button with an arrow shape",
+"Square button with an arrow shape.",
 {
   FRAME_GUARD;
   return ImGui::ArrowButton(str_id, dir);
@@ -165,7 +165,7 @@ DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(void, Bullet, (ImGui_Context*,ctx),
-"Draw a small circle + keep the cursor on the same line. advance cursor x position by GetTreeNodeToLabelSpacing(), same distance that TreeNode() uses.",
+"Draw a small circle + keep the cursor on the same line. Advance cursor x position by ImGui_GetTreeNodeToLabelSpacing, same distance that ImGui_TreeNode uses.",
 {
   FRAME_GUARD;
   ImGui::Bullet();
@@ -191,7 +191,7 @@ Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0)"
 
 DEFINE_API(bool, TreeNode, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags)),
-R"(TreeNode functions return true when the node is open, in which case you need to also call TreePop() when you are finished displaying the tree node contents.
+R"(TreeNode functions return true when the node is open, in which case you need to also call ImGui_TreePop when you are finished displaying the tree node contents.
 
 Default values: flags = ImGui_TreeNodeFlags_None)",
 {
@@ -201,7 +201,7 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
 
 DEFINE_API(bool, TreeNodeEx, (ImGui_Context*,ctx)
 (const char*,str_id)(const char*,label)(int*,API_RO(flags)),
-R"(Helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a TreeNode() you can use Bullet(). See ImGui_TreeNode.
+R"(Helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a ImGui_TreeNode you can use ImGui_Bullet.
 
 Default values: flags = ImGui_TreeNodeFlags_None)",
 {
@@ -212,21 +212,21 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
 
 DEFINE_API(void, TreePush, (ImGui_Context*,ctx)
 (const char*,str_id),
-"~ Indent()+PushId(). Already called by TreeNode() when returning true, but you can call TreePush/TreePop yourself if desired.",
+"~ ImGui_Indent()+ImGui_PushID(). Already called by ImGui_TreeNode when returning true, but you can call ImGui_TreePush/ImGui_TreePop yourself if desired.",
 {
   FRAME_GUARD;
   ImGui::TreePush(str_id);
 });
 
 DEFINE_API(void, TreePop, (ImGui_Context*,ctx),
-"Unindent()+PopId()",
+"ImGui_Unindent()+ImGui_PopId()",
 {
   FRAME_GUARD;
   ImGui::TreePop();
 });
 
 DEFINE_API(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
-"Horizontal distance preceding label when using TreeNode*() or Bullet() == (g.FontSize + style.FramePadding.x*2) for a regular unframed TreeNode",
+"Horizontal distance preceding label when using ImGui_TreeNode*() or ImGui_Bullet() == (ImGui_GetFontSize + ImGui_StyleVar_FramePadding.x*2) for a regular unframed ImGui_TreeNode.",
 {
   FRAME_GUARD;
   return ImGui::GetTreeNodeToLabelSpacing();
@@ -234,9 +234,9 @@ DEFINE_API(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
 
 DEFINE_API(bool, CollapsingHeader, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_W(p_visible))(int*,API_RO(flags)),
-R"(CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGui_TreeNodeFlags_NoTreePushOnOpen flag).
+R"(Returns true when opened but do not indent nor push into the ID stack (because of the ImGui_TreeNodeFlags_NoTreePushOnOpen flag).
 
-This is basically the same as calling TreeNode(label, ImGui_TreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
+This is basically the same as calling TreeNode(label, ImGui_TreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal ImGui_TreeNode.
 
 When 'visible' is provided: if 'true' display an additional small close button on upper right of the header which will set the bool to false when clicked, if 'false' don't display the header.
 
@@ -258,7 +258,7 @@ R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag
 });
 
 DEFINE_API(void, EndMenuBar, (ImGui_Context*,ctx),
-R"(Only call EndMenuBar() if BeginMenuBar() returns true! See ImGui_BeginMenuBar.)",
+"Only call EndMenuBar if ImGui_BeginMenuBar returns true!",
 {
   FRAME_GUARD;
   ImGui::EndMenuBar();
@@ -266,7 +266,7 @@ R"(Only call EndMenuBar() if BeginMenuBar() returns true! See ImGui_BeginMenuBar
 
 DEFINE_API(bool, BeginMenu, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RO(enabled)),
-R"(Create a sub-menu entry. only call EndMenu() if this returns true! See ImGui_EndMenu.
+R"(Create a sub-menu entry. only call ImGui_EndMenu if this returns true!
 
 Default values: enabled = true)",
 {
@@ -275,7 +275,7 @@ Default values: enabled = true)",
 });
 
 DEFINE_API(void, EndMenu, (ImGui_Context*,ctx),
-R"(Only call EndMenu() if BeginMenu() returns true! See ImGui_BeginMenu.)",
+R"(Only call EndMenu() if ImGui_BeginMenu returns true!)",
 {
   FRAME_GUARD;
   ImGui::EndMenu();
@@ -343,7 +343,7 @@ Default values: flags = ImGui_TabItemFlags_None)",
 
 DEFINE_API(void, SetTabItemClosed, (ImGui_Context*,ctx)
 (const char*,tab_or_docked_window_label),
-"Notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after BeginTabBar() and before Tab submissions. Otherwise call with a window name.",
+"Notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after ImGui_BeginTabBar and before Tab submissions. Otherwise call with a window name.",
 {
   FRAME_GUARD;
   ImGui::SetTabItemClosed(tab_or_docked_window_label);

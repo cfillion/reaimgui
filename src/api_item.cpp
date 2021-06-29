@@ -58,9 +58,9 @@ DEFINE_API(bool, IsItemFocused, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, IsItemClicked, (ImGui_Context*,ctx)(int*,API_RO(mouse_button)),
-R"(Is the last item clicked? (e.g. button/node just clicked on) == IsMouseClicked(mouse_button) && IsItemHovered().
+R"(Is the last item clicked? (e.g. button/node just clicked on) == ImGui_IsMouseClicked(mouse_button) && ImGui_IsItemHovered().
 
-This is NOT equivalent to the behavior of e.g.Button(). Most widgets have specific reactions based on mouse-up/down state, mouse position etc.
+This is NOT equivalent to the behavior of e.g. ImGui_Button. Most widgets have specific reactions based on mouse-up/down state, mouse position etc.
 
 Default values: mouse_button = ImGui_MouseButton_Left)",
 {
@@ -97,35 +97,35 @@ DEFINE_API(bool, IsItemDeactivated, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, IsItemDeactivatedAfterEdit, (ImGui_Context*,ctx),
-"Was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that requires continuous editing. Note that you may get false positives (some widgets such as Combo()/ListBox()/Selectable() will return true even when clicking an already selected item).",
+"Was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that requires continuous editing. Note that you may get false positives (some widgets such as ImGui_Combo/ImGui_ListBox/ImGui_Selectable will return true even when clicking an already selected item).",
 {
   FRAME_GUARD;
   return ImGui::IsItemDeactivatedAfterEdit();
 });
 
 DEFINE_API(bool, IsItemToggledOpen, (ImGui_Context*,ctx),
-"Was the last item open state toggled? Set by TreeNode().",
+"Was the last item open state toggled? Set by ImGui_TreeNode.",
 {
   FRAME_GUARD;
   return ImGui::IsItemToggledOpen();
 });
 
 DEFINE_API(bool, IsAnyItemHovered, (ImGui_Context*,ctx),
-"is any item hovered?",
+"",
 {
   FRAME_GUARD;
   return ImGui::IsAnyItemHovered();
 });
 
 DEFINE_API(bool, IsAnyItemActive, (ImGui_Context*,ctx),
-"is any item active?",
+"",
 {
   FRAME_GUARD;
   return ImGui::IsAnyItemActive();
 });
 
 DEFINE_API(bool, IsAnyItemFocused, (ImGui_Context*,ctx),
-"is any item focused?",
+"",
 {
   FRAME_GUARD;
   return ImGui::IsAnyItemFocused();
@@ -172,7 +172,7 @@ DEFINE_API(void, SetItemAllowOverlap, (ImGui_Context*,ctx),
 DEFINE_API(void, SetItemDefaultFocus, (ImGui_Context*,ctx),
 R"~(Make last item the default focused item of a window.
 
-Prefer using "SetItemDefaultFocus()" over "if (IsWindowAppearing()) SetScrollHereY()" when applicable to signify "this is the default item")~",
+Prefer using "SetItemDefaultFocus()" over "if (ImGui_IsWindowAppearing()) ImGui_SetScrollHereY()" when applicable to signify "this is the default item")~",
 {
   FRAME_GUARD;
   ImGui::SetItemDefaultFocus();
@@ -205,7 +205,7 @@ DEFINE_API(void, PopAllowKeyboardFocus, (ImGui_Context*,ctx),
 
 DEFINE_API(void, PushButtonRepeat, (ImGui_Context*,ctx)
 (bool,repeat),
-"In 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call IsItemActive() after any Button() to tell if the button is held in the current frame.",
+"In 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call ImGui_IsItemActive after any ImGui_Button to tell if the button is held in the current frame.",
 {
   FRAME_GUARD;
   ImGui::PushButtonRepeat(repeat);
@@ -253,7 +253,7 @@ DEFINE_API(void, PopItemWidth, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetNextItemOpen, (ImGui_Context*,ctx)
 (bool,is_open)(int*,API_RO(cond)),
-R"(Set next TreeNode/CollapsingHeader open state. Can also be done with the ImGui_TreeNodeFlags_DefaultOpen flag.
+R"(Set next ImGui_TreeNode/ImGui_CollapsingHeader open state. Can also be done with the ImGui_TreeNodeFlags_DefaultOpen flag.
 
 Default values: cond = ImGui_Cond_Always.)",
 {

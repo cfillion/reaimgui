@@ -79,7 +79,7 @@ The returned clipper object is tied to the context and is valid as long as it is
 DEFINE_API(void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
 (int,items_count)(double*,API_RO(items_height)),
 R"(items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
-items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing() or GetFrameHeightWithSpacing().
+items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically ImGui_GetTextLineHeightWithSpacing or ImGui_GetFrameHeightWithSpacing.
 
 Default values: items_height = -1.0)",
 {
@@ -88,13 +88,13 @@ Default values: items_height = -1.0)",
 });
 
 DEFINE_API(bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
-"Call until it returns false. The DisplayStart/DisplayEnd fields will be set and you can process/draw those items.",
+"Call until it returns false. The display_start/display_end fields from ImGui_ListClipper_GetDisplayRange will be set and you can process/draw those items.",
 {
   return ListClipper::use(clipper)->Step();
 });
 
 DEFINE_API(void, ListClipper_End, (ImGui_ListClipper*,clipper),
-"Automatically called on the last call of Step() that returns false. See ImGui_ListClipper_Step.",
+"Automatically called on the last call of ImGui_ListClipper_Step that returns false.",
 {
   ListClipper::use(clipper)->End();
 });
