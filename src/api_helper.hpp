@@ -29,6 +29,7 @@
 #define ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
 #define ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
 
+#define NO_ARGS (,)
 #define DEFARGS(r, data, i, arg) BOOST_PP_COMMA_IF(i) ARG_TYPE(arg) ARG_NAME(arg)
 #define DOCARGS(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
@@ -55,11 +56,13 @@
         BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
       BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                \
         BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
-      help                                                      \
+      help "\0"                                                 \
+      API_FILE "\0" BOOST_PP_STRINGIZE(__LINE__)                \
     ))                                                          \
   }
 
-#define NO_ARGS (,)
+#define DEFINE_ENUM(prefix, name, doc) \
+  DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
 
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write

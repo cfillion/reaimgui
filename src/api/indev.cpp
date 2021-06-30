@@ -270,3 +270,27 @@ Default values: want_capture_keyboard_value = true)",
   const bool value { valueOr(API_RO(want_capture_keyboard_value), true) };
   ImGui::CaptureKeyboardFromApp(value);
 });
+
+// ImGuiKeyModFlags
+DEFINE_ENUM(ImGui, KeyModFlags_None,  "");
+DEFINE_ENUM(ImGui, KeyModFlags_Ctrl,  "");
+DEFINE_ENUM(ImGui, KeyModFlags_Shift, "");
+DEFINE_ENUM(ImGui, KeyModFlags_Alt,   "");
+DEFINE_ENUM(ImGui, KeyModFlags_Super, "");
+
+// ImGuiMouseButton
+DEFINE_ENUM(ImGui, MouseButton_Left,   "");
+DEFINE_ENUM(ImGui, MouseButton_Right,  "");
+DEFINE_ENUM(ImGui, MouseButton_Middle, "");
+
+// ImGuiMouseCursor
+// DEFINE_ENUM(ImGui, MouseCursor_None,       "");
+DEFINE_ENUM(ImGui, MouseCursor_Arrow,      "");
+DEFINE_ENUM(ImGui, MouseCursor_TextInput,  "When hovering over ImGui_InputText, etc.");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeAll,  "(Unused by Dear ImGui functions)");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeNS,   "When hovering over an horizontal border.");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeEW,   "When hovering over a vertical border or a column.");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeNESW, "When hovering over the bottom-left corner of a window.");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeNWSE, "When hovering over the bottom-right corner of a window.");
+DEFINE_ENUM(ImGui, MouseCursor_Hand,       "(Unused by Dear ImGui functions. Use for e.g. hyperlinks)");
+DEFINE_ENUM(ImGui, MouseCursor_NotAllowed, "When hovering something with disallowed interaction. Usually a crossed circle.");

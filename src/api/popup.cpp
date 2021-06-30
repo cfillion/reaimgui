@@ -135,3 +135,35 @@ Default values: flags = ImGui_PopupFlags_None)",
   const ImGuiPopupFlags flags { valueOr(API_RO(flags), ImGuiPopupFlags_None) };
   return ImGui::IsPopupOpen(str_id, flags);
 });
+
+DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
+"Begin/append a tooltip window. To create full-featured tooltip (with any kind of items).",
+{
+  FRAME_GUARD;
+  ImGui::BeginTooltip();
+});
+
+DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
+"",
+{
+  FRAME_GUARD;
+  ImGui::EndTooltip();
+});
+
+DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
+"Set a text-only tooltip, typically use with ImGui_IsItemHovered. override any previous call to ImGui_SetTooltip.",
+{
+  FRAME_GUARD;
+  ImGui::SetTooltip("%s", text);
+});
+
+// ImGuiPopupFlags
+DEFINE_ENUM(ImGui, PopupFlags_None,                    "Flags for OpenPopup*(), BeginPopupContext*(), ImGui_IsPopupOpen.");
+DEFINE_ENUM(ImGui, PopupFlags_MouseButtonLeft,         "For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGui_MouseButton_Left).");
+DEFINE_ENUM(ImGui, PopupFlags_MouseButtonRight,        "For BeginPopupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as ImGui_MouseButton_Right).");
+DEFINE_ENUM(ImGui, PopupFlags_MouseButtonMiddle,       "For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGui_MouseButton_Middle).");
+DEFINE_ENUM(ImGui, PopupFlags_NoOpenOverExistingPopup, "For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup at the same level of the popup stack.");
+DEFINE_ENUM(ImGui, PopupFlags_NoOpenOverItems,         "For ImGui_BeginPopupContextWindow: don't return true when hovering items, only when hovering empty space.");
+DEFINE_ENUM(ImGui, PopupFlags_AnyPopupId,              "For ImGui_IsPopupOpen: ignore the str_id parameter and test for any popup.");
+DEFINE_ENUM(ImGui, PopupFlags_AnyPopupLevel,           "For ImGui_IsPopupOpen: search/test at any level of the popup stack (default test in the current level).");
+DEFINE_ENUM(ImGui, PopupFlags_AnyPopup,                "ImGui_PopupFlags_AnyPopupId | ImGui_PopupFlags_AnyPopupLevel");

@@ -416,3 +416,18 @@ DEFINE_API(void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
     ImVec2(rect_max_x, rect_max_y), valueOr(API_RO(rounding), 0.f),
     valueOr(API_RO(flags), ImDrawFlags_None));
 });
+
+// ImDrawFlags
+DEFINE_ENUM(Im, DrawFlags_None,                         "");
+DEFINE_ENUM(Im, DrawFlags_Closed,                       "ImGui_DrawList_PathStroke, ImGui_DrawList_AddPolyline: specify that shape should be closed (Important: this is always == 1 for legacy reason).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopLeft,          "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding top-left corner only (when rounding > 0.0f, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopRight,         "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding top-right corner only (when rounding > 0.0f, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomLeft,       "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding bottom-left corner only (when rounding > 0.0f, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomRight,      "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding bottom-right corner only (when rounding > 0.0f, we default to all corners).");
+
+DEFINE_ENUM(Im, DrawFlags_RoundCornersNone            , "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: disable rounding on all corners (when rounding > 0.0f). This is NOT zero, NOT an implicit flag!.");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTop             , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottom          , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersLeft            , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersRight           , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersAll             , "");

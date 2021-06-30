@@ -166,27 +166,6 @@ DEFINE_API(void, SetCursorScreenPos, (ImGui_Context*,ctx)
   ImGui::SetCursorScreenPos(ImVec2(pos_x, pos_y));
 });
 
-DEFINE_API(void, AlignTextToFramePadding, (ImGui_Context*,ctx),
-"Vertically align upcoming text baseline to ImGui_StyleVar_FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)",
-{
-  FRAME_GUARD;
-  ImGui::AlignTextToFramePadding();
-});
-
-DEFINE_API(double, GetTextLineHeight, (ImGui_Context*,ctx),
-"Same as ImGui_GetFontSize",
-{
-  FRAME_GUARD;
-  return ImGui::GetTextLineHeight();
-});
-
-DEFINE_API(double, GetTextLineHeightWithSpacing, (ImGui_Context*,ctx),
-"~ ImGui_GetFontSize + ImGui_StyleVar_ItemSpacing.y (distance in pixels between 2 consecutive lines of text)",
-{
-  FRAME_GUARD;
-  return ImGui::GetTextLineHeightWithSpacing();
-});
-
 DEFINE_API(double, GetFrameHeight, (ImGui_Context*,ctx),
 "~ ImGui_GetFontSize + ImGui_StyleVar_FramePadding.y * 2",
 {

@@ -110,27 +110,6 @@ DEFINE_API(void, EndChildFrame, (ImGui_Context*,ctx),
   ImGui::EndChildFrame();
 });
 
-DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
-"Begin/append a tooltip window. To create full-featured tooltip (with any kind of items).",
-{
-  FRAME_GUARD;
-  ImGui::BeginTooltip();
-});
-
-DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
-"",
-{
-  FRAME_GUARD;
-  ImGui::EndTooltip();
-});
-
-DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
-"Set a text-only tooltip, typically use with ImGui_IsItemHovered. override any previous call to ImGui_SetTooltip.",
-{
-  FRAME_GUARD;
-  ImGui::SetTooltip("%s", text);
-});
-
 DEFINE_API(bool, IsWindowAppearing, (ImGui_Context*,ctx),
 "",
 {
@@ -511,3 +490,46 @@ Default values: center_y_ratio = 0.5)",
   FRAME_GUARD;
   ImGui::SetScrollFromPosY(local_y, valueOr(API_RO(center_y_ratio), 0.5));
 });
+
+DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
+(bool*,API_W(p_open)),
+R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc. Set p_open to true to enable the close button.)",
+{
+  FRAME_GUARD;
+  ImGui::ShowMetricsWindow(openPtrBehavior(API_W(p_open)));
+});
+
+// ImGuiFocusedFlags
+DEFINE_ENUM(ImGui, FocusedFlags_None,                "Flags for ImGui_IsWindowFocused.");
+DEFINE_ENUM(ImGui, FocusedFlags_ChildWindows,        "ImGui_IsWindowFocused: Return true if any children of the window is focused.");
+DEFINE_ENUM(ImGui, FocusedFlags_RootWindow,          "ImGui_IsWindowFocused: Test from root window (top most parent of the current hierarchy).");
+DEFINE_ENUM(ImGui, FocusedFlags_AnyWindow,           "ImGui_IsWindowFocused: Return true if any window is focused. Important: If you are trying to tell how to dispatch your low-level inputs, do NOT use this. Use 'io.WantCaptureMouse' instead! Please read the FAQ!.");
+DEFINE_ENUM(ImGui, FocusedFlags_RootAndChildWindows, "ImGui_FocusedFlags_RootWindow | ImGui_FocusedFlags_ChildWindows");
+
+// ImGuiWindowFlags
+// for Begin(), BeginChild()
+DEFINE_ENUM(ImGui, WindowFlags_None,                      "Default flag. See ImGui_Begin.");
+DEFINE_ENUM(ImGui, WindowFlags_NoTitleBar,                "Disable title-bar.");
+DEFINE_ENUM(ImGui, WindowFlags_NoResize,                  "Disable user resizing with the lower-right grip.");
+DEFINE_ENUM(ImGui, WindowFlags_NoMove,                    "Disable user moving the window.");
+DEFINE_ENUM(ImGui, WindowFlags_NoScrollbar,               "Disable scrollbars (window can still scroll with mouse or programmatically).");
+DEFINE_ENUM(ImGui, WindowFlags_NoScrollWithMouse,         "Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.");
+DEFINE_ENUM(ImGui, WindowFlags_NoCollapse,                "Disable user collapsing window by double-clicking on it.");
+DEFINE_ENUM(ImGui, WindowFlags_AlwaysAutoResize,          "Resize every window to its content every frame.");
+DEFINE_ENUM(ImGui, WindowFlags_NoBackground,              "Disable drawing background color (WindowBg, etc.) and outside border. Similar as using ImGui_SetNextWindowBgAlpha(0.0).");
+DEFINE_ENUM(ImGui, WindowFlags_NoSavedSettings,           "Never load/save settings in .ini file.");
+DEFINE_ENUM(ImGui, WindowFlags_NoMouseInputs,             "Disable catching mouse, hovering test with pass through.");
+DEFINE_ENUM(ImGui, WindowFlags_MenuBar,                   "Has a menu-bar.");
+DEFINE_ENUM(ImGui, WindowFlags_HorizontalScrollbar,     R"(Allow horizontal scrollbar to appear (off by default). You may use ImGui_SetNextWindowContentSize(width, 0.0) prior to calling ImGui_Begin() to specify width. Read code in the demo's "Horizontal Scrolling" section.)");
+DEFINE_ENUM(ImGui, WindowFlags_NoFocusOnAppearing,        "Disable taking focus when transitioning from hidden to visible state.");
+DEFINE_ENUM(ImGui, WindowFlags_NoBringToFrontOnFocus,     "Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus).");
+DEFINE_ENUM(ImGui, WindowFlags_AlwaysVerticalScrollbar,   "Always show vertical scrollbar (even if ContentSize.y < Size.y).");
+DEFINE_ENUM(ImGui, WindowFlags_AlwaysHorizontalScrollbar, "Always show horizontal scrollbar (even if ContentSize.x < Size.x).");
+DEFINE_ENUM(ImGui, WindowFlags_AlwaysUseWindowPadding,    "Ensure child windows without border uses ImGui_StyleVar_WindowPadding (ignored by default for non-bordered child windows, because more convenient).");
+DEFINE_ENUM(ImGui, WindowFlags_NoNavInputs,               "No gamepad/keyboard navigation within the window.");
+DEFINE_ENUM(ImGui, WindowFlags_NoNavFocus,                "No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB).");
+DEFINE_ENUM(ImGui, WindowFlags_UnsavedDocument,           "Append '*' to title without affecting the ID, as a convenience to avoid using the ### operator. When used in a tab/docking context, tab is selected on closure and closure is deferred by one frame to allow code to cancel the closure (with a confirmation popup, etc.) without flicker.");
+DEFINE_ENUM(ImGui, WindowFlags_NoDocking,                 "Disable docking of this window.");
+DEFINE_ENUM(ImGui, WindowFlags_NoNav,                     "ImGui_WindowFlags_NoNavInputs | ImGui_WindowFlags_NoNavFocus");
+DEFINE_ENUM(ImGui, WindowFlags_NoDecoration,              "ImGui_WindowFlags_NoTitleBar | ImGui_WindowFlags_NoResize | ImGui_WindowFlags_NoScrollbar | ImGui_WindowFlags_NoCollapse");
+DEFINE_ENUM(ImGui, WindowFlags_NoInputs,                  "ImGui_WindowFlags_NoMouseInputs | ImGui_WindowFlags_NoNavInputs | ImGui_WindowFlags_NoNavFocus");

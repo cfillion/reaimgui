@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <iostream>
+#include <map>
+#include <set>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -67,7 +69,7 @@ struct Function {
   std::string_view name;
   Type type;
   std::vector<Argument> args;
-  std::string_view doc;
+  std::string_view doc, file, line;
 
   bool isEnum() const { return type.isInt() && args.empty(); }
   bool hasOutputArgs() const;
@@ -85,17 +87,54 @@ struct FunctionComp {
     { return n < f.name; }
   bool operator()(const Function &f, const std::string_view &n) const
     { return f.name < n; }
+
+  bool operator()(const Function *a, const Function *b) const
+    { return *a < *b; }
 };
 
-static std::vector<Function> g_funcs;
+static std::set<Function> g_funcs;
+static std::map<std::string_view, std::set<const Function *, FunctionComp>> g_groups;
+static std::unordered_map<std::string_view, std::string_view> g_groupAliases {
+  { "button",      "Button" },
+  { "coloredit",   "Color Edit" },
+  { "context",     "Context" },
+  { "dragndrop",   "Drag & Drop" },
+  { "drawlist",    "Draw List" },
+  { "font",        "Font" },
+  { "indev",       "Keyboard & Mouse" },
+  { "input",       "Text & Scalar Input" },
+  { "item",        "Item & Status" },
+  { "layout",      "Layout" },
+  { "listclipper", "List Clipper" },
+  { "menu",        "Menu" },
+  { "plot",        "Plot" },
+  { "popup",       "Popup & Modal" },
+  { "select",      "Combo & List" },
+  { "slider",      "Drag & Slider" },
+  { "style",       "Style" },
+  { "tabbar",      "Tab Bar" },
+  { "table",       "Table" },
+  { "text",        "Text" },
+  { "treenode",    "Tree Node" },
+  { "utility",     "Utility" },
+  { "viewport",    "Viewport" },
+  { "window",      "Window" },
+};
+
+static const char *nextString(const char *&str)
+{
+  return str += strlen(str) + 1;
+}
 
 static void addFunc(const char *name, const char *def)
 {
   Function func { name, def };
 
-  std::string_view argTypes { def += strlen(def) + 1 };
-  std::string_view argNames { def += strlen(def) + 1 };
-  func.doc = { def += strlen(def) + 1 };
+  std::string_view argTypes { nextString(def) };
+  std::string_view argNames { nextString(def) };
+  func.doc = { nextString(def) };
+  func.file = { nextString(def) };
+  func.line = { nextString(def) };
 
   while(argTypes.size() > 0 && argNames.size() > 0) {
     size_t typeLen { argTypes.find(',') },
@@ -113,7 +152,12 @@ static void addFunc(const char *name, const char *def)
     argNames.remove_prefix(nameLen + 1);
   }
 
-  g_funcs.push_back(func);
+  const auto &alias { g_groupAliases.find(func.file) };
+  const std::string_view &group
+    { alias == g_groupAliases.end() ? func.file : alias->second };
+
+  auto [it, _] { g_funcs.insert(func) };
+  g_groups[group].insert(&*it);
 }
 
 struct CommaSep {
@@ -449,7 +493,7 @@ void Function::pythonSignature(std::ostream &stream) const
   stream << ')';
 }
 
-static void formatHtmlText(std::ostream &stream, std::string_view text)
+static void formatHtmlText(std::ostream &stream, const std::string_view &text)
 {
   size_t nextLink { text.find("ImGui_") };
   for(size_t i {}; i < text.size(); ++i) {
@@ -483,6 +527,21 @@ static void formatHtmlText(std::ostream &stream, std::string_view text)
   }
 }
 
+static void formatHtmlSlug(std::ostream &stream, const std::string_view &text)
+{
+  bool prevWasPrintable { false };
+  for(const char c : text) {
+    if(isalnum(c)) {
+      stream << static_cast<char>(tolower(c));
+      prevWasPrintable = true;
+    }
+    else if(prevWasPrintable) {
+      stream << '-';
+      prevWasPrintable = false;
+    }
+  }
+}
+
 static void humanBinding(std::ostream &stream)
 {
   stream << R"(<!DOCTYPE html>
@@ -497,11 +556,37 @@ static void humanBinding(std::ostream &stream)
     font-family: monospace;
     font-size: 15px;
     line-height: 20px;
+    margin: 0;
     overflow-anchor: none;
   }
+  aside {
+    background-color: #262626; /* Grey15 */
+    border-right: 1px solid #6f6f6f;
+    overflow-y: auto;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    width: 200px;
+  }
+  aside ol {
+    list-style-type: none;
+    padding-left: 0;
+  }
+  aside li a {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  main {
+    margin-left: 200px;
+    box-shadow: 0 0 10px #080808;
+    position: absolute;
+  }
+  aside p, aside li a, main { padding-left: 1em; }
   details { margin-left: 20px; }
   a { text-decoration: none; }
-  a, summary { color: #00ff87; }
+  a, summary { color: #00ff87; /* SpringGreen1 */ }
   a:hover, summary:hover { text-decoration: underline; }
   summary {
     cursor: pointer;
@@ -523,41 +608,74 @@ static void humanBinding(std::ostream &stream)
   table + pre { margin-top: 1em; }
   code { border-radius: 3px; color: white; }
   code:hover { text-decoration: underline; cursor: copy; }
-  code:active { background-color: #3a3a3a; }
+  code:active, aside a:hover { background-color: #3a3a3a; }
   .st { color: #87afff; /* SkyBlue2 */ }
   .ss { color: #5faf5f; /* DarkSeaGreen4 */ }
   .sc { color: #5f87d7; /* SteelBlue3 */ }
   .sr { color: #d7875f; /* LightSalmon3 */ }
+  .source a { color: gray; }
   </style>
 </head>
 <body>
-  <h1>ReaImGui Documentation</h1>
-  <p>)" << GENERATED_FOR << "</p>\n\n";
+  <aside>
+    <p><strong>Table of Contents</strong></p>
+    <ol>)";
 
-  for(const Function &func : g_funcs) {
-    stream << "<details id=\"" << func.name << "\"><summary>";
-    stream << (func.isEnum() ? "Constant: " : "Function: ");
-    stream << func.name << "</summary>";
+  for(const auto &group : g_groups) {
+    if(group.first.empty())
+      continue;
 
-    stream << "<table>"
-           << "<tr><th>C++</th><td><code>"; func.cppSignature(stream); stream << "</code></td></tr>"
-           << "<tr><th>EEL</th><td><code>"; func.eelSignature(stream, false); stream << "</code></td></tr>"
-           << "<tr><th>Legacy EEL</th><td><code>";
-                             func.eelSignature(stream, true);  stream << "</code></td></tr>"
-           << "<tr><th>Lua</th><td><code>"; func.luaSignature(stream); stream << "</code></td></tr>"
-           << "<tr><th>Python</th><td><code>"; func.pythonSignature(stream); stream << "</code></td></tr>"
-           << "</table>";
+    stream << "<li><a href=\"#";
+    formatHtmlSlug(stream, group.first); stream << "\">";
+    formatHtmlText(stream, group.first);
+    stream << "</a></li>";
+  }
 
-    if(!func.doc.empty()) {
-      stream << "<pre>";
-      formatHtmlText(stream, func.doc);
-      stream << "</pre>";
+  stream << R"(
+    </ol>
+  </aside>
+  <main>
+    <h1>ReaImGui Documentation</h1>
+    <p>)" << GENERATED_FOR << "</p>\n\n";
+
+  for(const auto &group : g_groups) {
+    if(!group.first.empty()) {
+      stream << "<h2 id=\""; formatHtmlSlug(stream, group.first); stream << "\">";
+      formatHtmlText(stream, group.first);
+      stream << "</h2>";
     }
+    
+    for(const Function *func : group.second) {
+      stream << "<details id=\"" << func->name << "\"><summary>";
+      stream << (func->isEnum() ? "Constant: " : "Function: ");
+      stream << func->name << "</summary>";
 
-    stream << "</details>";
+      stream << "<table>"
+            << "<tr><th>C++</th><td><code>"; func->cppSignature(stream); stream << "</code></td></tr>"
+            << "<tr><th>EEL</th><td><code>"; func->eelSignature(stream, false); stream << "</code></td></tr>"
+            << "<tr><th>Legacy EEL</th><td><code>";
+                              func->eelSignature(stream, true);  stream << "</code></td></tr>"
+            << "<tr><th>Lua</th><td><code>"; func->luaSignature(stream); stream << "</code></td></tr>"
+            << "<tr><th>Python</th><td><code>"; func->pythonSignature(stream); stream << "</code></td></tr>"
+            << "</table>";
+
+      if(!func->doc.empty()) {
+        stream << "<pre>";
+        formatHtmlText(stream, func->doc);
+        stream << "</pre>";
+      }
+
+      stream << "<p class=\"source\">"
+                "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
+                REAIMGUI_VERSION "/src/api/" << func->file << ".cpp#L"
+             << func->line << "\">Edit on GitHub</a></p>";
+
+      stream << "</details>";
+    }
   }
 
   stream << R"(<p>EOF</p>
+  </main>
 
   <script>
   function openTarget() {
@@ -751,8 +869,6 @@ int main(int argc, const char *argv[])
   rec.GetFunc = getFunc;
 
   REAPER_PLUGIN_ENTRYPOINT(nullptr, &rec);
-
-  std::sort(g_funcs.begin(), g_funcs.end());
 
   const std::string_view lang { argc >= 2 ? argv[1] : "cpp" };
 

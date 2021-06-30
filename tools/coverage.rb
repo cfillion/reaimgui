@@ -4,7 +4,7 @@
 # This tool also performs various sanity checks on the exported API
 
 IMGUI_H = File.join __dir__, '..', 'vendor', 'imgui', 'imgui.h'
-REAIMGUI_API_CPP = File.join __dir__, '..', 'src', 'api_*.cpp'
+REAIMGUI_API_CPP = File.join __dir__, '..', 'src', 'api/*.cpp'
 
 # these functions we cannot port
 NATIVE_ONLY = [

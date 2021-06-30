@@ -17,8 +17,6 @@
 
 #include "api_helper.hpp"
 
-#include "color.hpp"
-
 #include <imgui/imgui_internal.h> // internal ImGuiInputTextFlags
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
@@ -272,216 +270,25 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
     API_RO(format), flags);
 });
 
-static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
-{
-  flags &= ~ImGuiColorEditFlags_HDR; // enforce 0.0..1.0 limits
-}
-
-DEFINE_API(bool, ColorEdit4, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgba))(int*,API_RO(flags)),
-R"(Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xXXRRGGBB (XX is ignored and will not be modified).
-
-Tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
-
-Default values: flags = ImGui_ColorEditFlags_None)",
-{
-  FRAME_GUARD;
-  assertValid(API_RW(col_rgba));
-
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
-  sanitizeColorEditFlags(flags);
-
-  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
-  float col[4];
-  Color(*API_RW(col_rgba), alpha).unpack(col);
-  if(ImGui::ColorEdit4(label, col, flags)) {
-    // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
-    *API_RW(col_rgba) = Color{col}.pack(alpha, *API_RW(col_rgba));
-    return true;
-  }
-  return false;
-});
-
-DEFINE_API(bool, ColorEdit3, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgb))(int*,API_RO(flags)),
-R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.
-
-Tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
-
-Default values: flags = ImGui_ColorEditFlags_None)",
-{
-  // unneeded, only to show Edit3 in the error message instead of Edit4
-  FRAME_GUARD;
-  assertValid(API_RW(col_rgb));
-
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
-  flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorEdit4(ctx, label, API_RW(col_rgb), &flags);
-});
-
-DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgba))(int*,API_RO(flags))(int*,API_RO(ref_col)),
-"Default values: flags = ImGui_ColorEditFlags_None, ref_col = nil",
-{
-  FRAME_GUARD;
-  assertValid(API_RW(col_rgba));
-
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
-  sanitizeColorEditFlags(flags);
-
-  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
-
-  float col[4], refCol[4];
-  Color(*API_RW(col_rgba), alpha).unpack(col);
-  if(API_RO(ref_col))
-    Color(*API_RO(ref_col), alpha).unpack(refCol);
-
-  if(ImGui::ColorPicker4(label, col, flags, API_RO(ref_col) ? refCol : nullptr)) {
-    // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
-    *API_RW(col_rgba) = Color{col}.pack(alpha, *API_RW(col_rgba));
-    return true;
-  }
-  return false;
-});
-
-DEFINE_API(bool, ColorPicker3, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgb))(int*,API_RO(flags)),
-R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.
-
-Default values: flags = ImGui_ColorEditFlags_None)",
-{
-  // unneeded, only to show Picker3 in the error message instead of Picker4
-  FRAME_GUARD;
-  assertValid(API_RW(col_rgb));
-
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
-  flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorPicker4(ctx, label, API_RW(col_rgb), &flags, nullptr);
-});
-
-DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)
-(const char*,desc_id)(int,col_rgba)(int*,API_RO(flags))
-(double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Display a color square/button, hover for details, return true when pressed.
-
-Default values: flags = ImGui_ColorEditFlags_None, size_w = 0.0, size_h = 0.0)",
-{
-  FRAME_GUARD;
-
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
-  sanitizeColorEditFlags(flags);
-
-  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
-  const ImVec4 col { Color(col_rgba, alpha) };
-  const ImVec2 size { valueOr(API_RO(size_w), 0.f),
-                      valueOr(API_RO(size_h), 0.f) };
-
-  return ImGui::ColorButton(desc_id, col, flags, size);
-});
-
-DEFINE_API(void, SetColorEditOptions, (ImGui_Context*,ctx)
-(int,flags),
-"Picker type, etc. User will be able to change many settings, unless you pass the _NoOptions flag to your calls.",
-{
-  FRAME_GUARD;
-  sanitizeColorEditFlags(flags);
-  ImGui::SetColorEditOptions(flags);
-});
-
-// Allowing ReaScripts to input a null-separated string would be unsafe.
-// REAPER's buf, buf_sz mechanism does not handle strings containing null
-// bytes, so the user would have to specify the size manually. This would
-// enable reading from arbitrary memory locations.
-static std::vector<const char *> splitString(char *list)
-{
-  constexpr char ITEM_SEP { '\x1f' }; // ASCII Unit Separator
-  const auto len { strlen(list) };
-
-  if(len < 1 || list[len - 1] != ITEM_SEP || list[len] != '\0')
-    throw reascript_error { "items are not terminated with \\31 (unit separator)" };
-
-  std::vector<const char *> strings;
-
-  do {
-    strings.push_back(list);
-    while(*list != ITEM_SEP) ++list;
-    *list = '\0';
-  } while(*++list);
-
-  return strings;
-}
-
-DEFINE_API(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
-(const char*,preview_value)(int*,API_RO(flags)),
-R"(The ImGui_BeginCombo/ImGui_EndCombo API allows you to manage your contents and selection state however you want it, by creating e.g. ImGui_Selectable items.
-
-Default values: flags = ImGui_ComboFlags_None)",
-{
-  FRAME_GUARD;
-
-  return ImGui::BeginCombo(label, preview_value,
-    valueOr(API_RO(flags), ImGuiComboFlags_None));
-});
-
-DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
-"Only call EndCombo() if ImGui_BeginCombo returns true!",
-{
-  FRAME_GUARD;
-  ImGui::EndCombo();
-});
-
-DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(current_item))(char*,items)
-(int*,API_RO(popup_max_height_in_items)),
-R"(Helper over ImGui_BeginCombo/ImGui_EndCombo for convenience purpose. Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
-
-Default values: popup_max_height_in_items = -1)",
-{
-  FRAME_GUARD;
-
-  const auto &strings { splitString(items) };
-  return ImGui::Combo(label, API_RW(current_item), strings.data(), strings.size(),
-    valueOr(API_RO(popup_max_height_in_items), -1));
-});
-
-// Widgets: List Boxes
-DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
-(int*,API_RW(current_item))(char*,items)(int*,API_RO(height_in_items)),
-R"(This is an helper over ImGui_BeginListBox/ImGui_EndListBox for convenience purpose. This is analoguous to how Combos are created.
-
-Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
-
-Default values: height_in_items = -1)",
-{
-  FRAME_GUARD;
-
-  const auto &strings { splitString(items) };
-  return ImGui::ListBox(label, API_RW(current_item), strings.data(), strings.size(),
-    valueOr(API_RO(height_in_items), -1));
-});
-
-DEFINE_API(bool, BeginListBox, (ImGui_Context*,ctx)
-(const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Open a framed scrolling region.  This is essentially a thin wrapper to using ImGui_BeginChild/ImGui_EndChild with some stylistic changes.
-
-The ImGui_BeginListBox/ImGui_EndListBox API allows you to manage your contents and selection state however you want it, by creating e.g. ImGui_Selectable or any items.
-
-- Choose frame width:   width  > 0.0: custom  /  width  < 0.0 or -FLT_MIN: right-align   /  width  = 0.0 (default): use current ItemWidth
-- Choose frame height:  height > 0.0: custom  /  height < 0.0 or -FLT_MIN: bottom-align  /  height = 0.0 (default): arbitrary default height which can fit ~7 items
-
-Default values: size_w = 0.0, size_h = 0.0
-
-See ImGui_EndListBox.)",
-{
-  FRAME_GUARD;
-  const ImVec2 size { valueOr(API_RO(size_w), 0.f),
-                      valueOr(API_RO(size_h), 0.f) };
-  return ImGui::BeginListBox(label, size);
-});
-
-DEFINE_API(void, EndListBox, (ImGui_Context*,ctx),
-"Only call EndListBox() if ImGui_BeginListBox returned true!",
-{
-  FRAME_GUARD;
-  ImGui::EndListBox();
-});
+// ImGuiInputTextFlags
+DEFINE_ENUM(ImGui, InputTextFlags_None,                "Most of the InputTextFlags flags are only useful for ImGui_InputText and not for InputIntX, InputDouble etc.");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsDecimal,        "Allow 0123456789.+-*/.");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsHexadecimal,    "Allow 0123456789ABCDEFabcdef.");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsUppercase,      "Turn a..z into A..Z.");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsNoBlank,        "Filter out spaces, tabs.");
+DEFINE_ENUM(ImGui, InputTextFlags_AutoSelectAll,       "Select entire text when first taking mouse focus.");
+DEFINE_ENUM(ImGui, InputTextFlags_EnterReturnsTrue,    "Return 'true' when Enter is pressed (as opposed to every time the value was modified). Consider looking at the ImGui_IsItemDeactivatedAfterEdit function.");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackCompletion,  "Callback on pressing TAB (for completion handling).");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackHistory,     "Callback on pressing Up/Down arrows (for history handling).");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackAlways,      "Callback on each iteration. User code may query cursor position, modify text buffer.");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackCharFilter,  "Callback on character inputs to replace or discard them. Modify 'EventChar' to replace or discard, or return 1 in callback to discard.");
+DEFINE_ENUM(ImGui, InputTextFlags_AllowTabInput,       "Pressing TAB input a '\\t' character into the text field.");
+DEFINE_ENUM(ImGui, InputTextFlags_CtrlEnterForNewLine, "In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter (default is opposite: unfocus with Ctrl+Enter, add line with Enter).");
+DEFINE_ENUM(ImGui, InputTextFlags_NoHorizontalScroll,  "Disable following the cursor horizontally.");
+DEFINE_ENUM(ImGui, InputTextFlags_AlwaysOverwrite,     "Overwrite mode.");
+DEFINE_ENUM(ImGui, InputTextFlags_ReadOnly,            "Read-only mode.");
+DEFINE_ENUM(ImGui, InputTextFlags_Password,            "Password mode, display all characters as '*'.");
+DEFINE_ENUM(ImGui, InputTextFlags_NoUndoRedo,          "Disable undo/redo. Note that input text owns the text data while active.");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsScientific,     "Allow 0123456789.+-*/eE (Scientific notation input).");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackResize,      "Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this).");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackEdit,        "Callback on any edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active).");
