@@ -69,7 +69,7 @@ struct Function {
   std::string_view name;
   Type type;
   std::vector<Argument> args;
-  std::string_view doc, file, line;
+  std::string_view doc, file, firstLine, lastLine;
 
   bool isEnum() const { return type.isInt() && args.empty(); }
   bool hasOutputArgs() const;
@@ -134,7 +134,8 @@ static void addFunc(const char *name, const char *def)
   std::string_view argNames { nextString(def) };
   func.doc = { nextString(def) };
   func.file = { nextString(def) };
-  func.line = { nextString(def) };
+  func.firstLine = { nextString(def) };
+  func.lastLine  = { nextString(def) };
 
   while(argTypes.size() > 0 && argNames.size() > 0) {
     size_t typeLen { argTypes.find(',') },
@@ -156,7 +157,7 @@ static void addFunc(const char *name, const char *def)
   const std::string_view &group
     { alias == g_groupAliases.end() ? func.file : alias->second };
 
-  auto [it, _] { g_funcs.insert(func) };
+  const auto &it { g_funcs.insert(func).first };
   g_groups[group].insert(&*it);
 }
 
@@ -668,7 +669,7 @@ static void humanBinding(std::ostream &stream)
       stream << "<p class=\"source\">"
                 "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
                 REAIMGUI_VERSION "/src/api/" << func->file << ".cpp#L"
-             << func->line << "\">Edit on GitHub</a></p>";
+             << func->firstLine << "-L" << func->lastLine << "\">Edit on GitHub</a></p>";
 
       stream << "</details>";
     }

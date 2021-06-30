@@ -17,7 +17,7 @@
 
 #include "api_helper.hpp"
 
-DEFINE_API(bool, BeginTabBar, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, bool, BeginTabBar, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
 R"(Create and append into a TabBar.
 
@@ -27,14 +27,14 @@ Default values: flags = ImGui_TabBarFlags_None)",
   return ImGui::BeginTabBar(str_id, valueOr(API_RO(flags), ImGuiTabBarFlags_None));
 });
 
-DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
+DEFINE_API(__LINE__, void, EndTabBar, (ImGui_Context*,ctx),
 "Only call EndTabBar() if BeginTabBar() returns true!",
 {
   FRAME_GUARD;
   ImGui::EndTabBar();
 });
 
-DEFINE_API(bool, BeginTabItem, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, bool, BeginTabItem, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_W(p_open))(int*,API_RO(flags)),
 R"(Create a Tab. Returns true if the Tab is selected. Set 'p_open' to true to enable the close button.
 
@@ -45,14 +45,14 @@ Default values: flags = ImGui_TabItemFlags_None)",
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
 });
 
-DEFINE_API(void, EndTabItem, (ImGui_Context*,ctx),
+DEFINE_API(__LINE__, void, EndTabItem, (ImGui_Context*,ctx),
 "Only call EndTabItem() if BeginTabItem() returns true!",
 {
   FRAME_GUARD;
   ImGui::EndTabItem();
 });
 
-DEFINE_API(bool, TabItemButton, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, bool, TabItemButton, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags)),
 R"(Create a Tab behaving like a button. return true when clicked. cannot be selected in the tab bar.
 
@@ -63,7 +63,7 @@ Default values: flags = ImGui_TabItemFlags_None)",
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
 });
 
-DEFINE_API(void, SetTabItemClosed, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, SetTabItemClosed, (ImGui_Context*,ctx)
 (const char*,tab_or_docked_window_label),
 "Notify TabBar or Docking system of a closed tab/window ahead (useful to reduce visual flicker on reorderable tab bars). For tab-bar: call after ImGui_BeginTabBar and before Tab submissions. Otherwise call with a window name.",
 {

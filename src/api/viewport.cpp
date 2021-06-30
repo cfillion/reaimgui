@@ -41,7 +41,7 @@ struct ImGui_Viewport {
 
 ResourceProxy Viewport { ImGui_Viewport::Main };
 
-DEFINE_API(ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
+DEFINE_API(__LINE__, ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
 R"(Currently represents the Platform Window created by the ReaImGui context which is hosting our Dear ImGui windows.",
 
 - Main Area = entire viewport.
@@ -52,7 +52,7 @@ Windows are generally trying to stay within the Work Area of their host viewport
   return ResourceProxy::encode<ImGui_Viewport>(ctx, ImGui_Viewport::Main);
 });
 
-DEFINE_API(void, Viewport_GetPos, (ImGui_Viewport*,viewport)
+DEFINE_API(__LINE__, void, Viewport_GetPos, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
 "Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)",
 {
@@ -61,7 +61,7 @@ DEFINE_API(void, Viewport_GetPos, (ImGui_Viewport*,viewport)
   if(API_W(y)) *API_W(y) = pos.y;
 });
 
-DEFINE_API(void, Viewport_GetSize, (ImGui_Viewport*,viewport)
+DEFINE_API(__LINE__, void, Viewport_GetSize, (ImGui_Viewport*,viewport)
 (double*,API_W(w))(double*,API_W(h)),
 "Main Area: Size of the viewport.",
 {
@@ -70,7 +70,7 @@ DEFINE_API(void, Viewport_GetSize, (ImGui_Viewport*,viewport)
   if(API_W(h)) *API_W(h) = size.y;
 });
 
-DEFINE_API(void, Viewport_GetCenter, (ImGui_Viewport*,viewport)
+DEFINE_API(__LINE__, void, Viewport_GetCenter, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
 "Main Area: Center of the viewport.",
 {
@@ -79,7 +79,7 @@ DEFINE_API(void, Viewport_GetCenter, (ImGui_Viewport*,viewport)
   if(API_W(y)) *API_W(y) = pos.y;
 });
 
-DEFINE_API(void, Viewport_GetWorkPos, (ImGui_Viewport*,viewport)
+DEFINE_API(__LINE__, void, Viewport_GetWorkPos, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
 "Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos)",
 {
@@ -88,7 +88,7 @@ DEFINE_API(void, Viewport_GetWorkPos, (ImGui_Viewport*,viewport)
   if(API_W(y)) *API_W(y) = pos.y;
 });
 
-DEFINE_API(void, Viewport_GetWorkSize, (ImGui_Viewport*,viewport)
+DEFINE_API(__LINE__, void, Viewport_GetWorkSize, (ImGui_Viewport*,viewport)
 (double*,API_W(w))(double*,API_W(h)),
 "Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)",
 {
@@ -97,7 +97,7 @@ DEFINE_API(void, Viewport_GetWorkSize, (ImGui_Viewport*,viewport)
   if(API_W(h)) *API_W(h) = size.y;
 });
 
-DEFINE_API(void, Viewport_GetWorkCenter, (ImGui_Viewport*,viewport)
+DEFINE_API(__LINE__, void, Viewport_GetWorkCenter, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
 "Work Area: Center of the viewport.",
 {

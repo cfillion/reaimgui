@@ -19,7 +19,7 @@
 
 #include "color.hpp"
 
-DEFINE_API(bool, BeginTable, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, bool, BeginTable, (ImGui_Context*,ctx)
 (const char*,str_id)(int,column)(int*,API_RO(flags))
 (double*,API_RO(outer_size_w))(double*,API_RO(outer_size_h))
 (double*,API_RO(inner_width)),
@@ -58,14 +58,14 @@ Default values: flags = ImGui_TableFlags_None, outer_size_w = 0.0, outer_size_h 
   return ImGui::BeginTable(str_id, column, flags, size, inner_width);
 });
 
-DEFINE_API(void, EndTable, (ImGui_Context*,ctx),
+DEFINE_API(__LINE__, void, EndTable, (ImGui_Context*,ctx),
 "Only call EndTable() if BeginTable() returns true!",
 {
   FRAME_GUARD;
   ImGui::EndTable();
 });
 
-DEFINE_API(void, TableNextRow, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, TableNextRow, (ImGui_Context*,ctx)
 (int*,API_RO(row_flags))(double*,API_RO(min_row_height)),
 R"(Append into the first cell of a new row.
 
@@ -77,14 +77,14 @@ Default values: row_flags = ImGui_TableRowFlags_None, min_row_height = 0.0)",
   ImGui::TableNextRow(flags, valueOr(API_RO(min_row_height), 0.f));
 });
 
-DEFINE_API(bool, TableNextColumn, (ImGui_Context*,ctx),
+DEFINE_API(__LINE__, bool, TableNextColumn, (ImGui_Context*,ctx),
 "Append into the next column (or first column of next row if currently in last column). Return true when column is visible.",
 {
   FRAME_GUARD;
   return ImGui::TableNextColumn();
 });
 
-DEFINE_API(bool, TableSetColumnIndex, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, bool, TableSetColumnIndex, (ImGui_Context*,ctx)
 (int,column_n),
 "Append into the specified column. Return true when column is visible.",
 {
@@ -92,7 +92,7 @@ DEFINE_API(bool, TableSetColumnIndex, (ImGui_Context*,ctx)
   return ImGui::TableSetColumnIndex(column_n);
 });
 
-DEFINE_API(void, TableSetupColumn, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, TableSetupColumn, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags))(double*,API_RO(init_width_or_weight))
 (int*,API_RO(user_id)),
 R"(Use to specify label, resizing policy, default width/weight, id, various other flags etc.
@@ -105,7 +105,7 @@ Default values: flags = ImGui_TableColumnFlags_None, init_width_or_weight = 0.0,
     valueOr(API_RO(init_width_or_weight), 0.f), valueOr(API_RO(user_id), 0));
 });
 
-DEFINE_API(void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
 (int,cols)(int,rows),
 "Lock columns/rows so they stay visible when scrolled.",
 {
@@ -113,14 +113,14 @@ DEFINE_API(void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
   ImGui::TableSetupScrollFreeze(cols, rows);
 });
 
-DEFINE_API(void, TableHeadersRow, (ImGui_Context*,ctx),
+DEFINE_API(__LINE__, void, TableHeadersRow, (ImGui_Context*,ctx),
 "Submit all headers cells based on data provided to ImGui_TableSetupColumn + submit context menu.",
 {
   FRAME_GUARD;
   ImGui::TableHeadersRow();
 });
 
-DEFINE_API(void, TableHeader, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, TableHeader, (ImGui_Context*,ctx)
 (const char*,label),
 "Submit one header cell manually (rarely used). See ImGui_TableSetupColumn.",
 {
@@ -128,7 +128,7 @@ DEFINE_API(void, TableHeader, (ImGui_Context*,ctx)
   ImGui::TableHeader(label);
 });
 
-DEFINE_API(bool, TableNeedSort, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, bool, TableNeedSort, (ImGui_Context*,ctx)
 (bool*,API_W(has_specs)),
 "Return true once when sorting specs have changed since last call, or the first time. 'has_specs' is false when not sorting. See ImGui_TableGetColumnSortSpecs.",
 {
@@ -145,7 +145,7 @@ DEFINE_API(bool, TableNeedSort, (ImGui_Context*,ctx)
   return false;
 });
 
-DEFINE_API(bool, TableGetColumnSortSpecs, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, bool, TableGetColumnSortSpecs, (ImGui_Context*,ctx)
 (int,id)
 (int*,API_W(column_user_id))(int*,API_W(column_index))
 (int*,API_W(sort_order))(int*,API_W(sort_direction)),
@@ -172,28 +172,28 @@ See ImGui_TableNeedSort.)",
   return true;
 });
 
-DEFINE_API(int, TableGetColumnCount, (ImGui_Context*,ctx),
+DEFINE_API(__LINE__, int, TableGetColumnCount, (ImGui_Context*,ctx),
 "Return number of columns (value passed to ImGui_BeginTable).",
 {
   FRAME_GUARD;
   return ImGui::TableGetColumnCount();
 });
 
-DEFINE_API(int, TableGetColumnIndex, (ImGui_Context*,ctx),
+DEFINE_API(__LINE__, int, TableGetColumnIndex, (ImGui_Context*,ctx),
 "Return current column index.",
 {
   FRAME_GUARD;
   return ImGui::TableGetColumnIndex();
 });
 
-DEFINE_API(int, TableGetRowIndex, (ImGui_Context*,ctx),
+DEFINE_API(__LINE__, int, TableGetRowIndex, (ImGui_Context*,ctx),
 "Return current row index.",
 {
   FRAME_GUARD;
   return ImGui::TableGetRowIndex();
 });
 
-DEFINE_API(const char*, TableGetColumnName, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, const char*, TableGetColumnName, (ImGui_Context*,ctx)
 (int*,API_RO(column_n)),
 R"(Return "" if column didn't have a name declared by ImGui_TableSetupColumn. Pass -1 to use current column.
 
@@ -203,7 +203,7 @@ Default values: column_n = -1)",
   return ImGui::TableGetColumnName(valueOr(API_RO(column_n), -1));
 });
 
-DEFINE_API(int, TableGetColumnFlags, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, int, TableGetColumnFlags, (ImGui_Context*,ctx)
 (int*,API_RO(column_n)),
 R"(Return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
 
@@ -213,7 +213,7 @@ Default values: column_n = -1)",
   return ImGui::TableGetColumnFlags(valueOr(API_RO(column_n), -1));
 });
 
-DEFINE_API(void, TableSetColumnEnabled, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, TableSetColumnEnabled, (ImGui_Context*,ctx)
 (int,column_n)(bool,v),
 "Change enabled/disabled state of a column, set to false to hide the column. Note that end-user can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGui_TableFlags_ContextMenuInBody).",
 {
@@ -221,7 +221,7 @@ DEFINE_API(void, TableSetColumnEnabled, (ImGui_Context*,ctx)
   ImGui::TableSetColumnEnabled(column_n, v);
 });
 
-DEFINE_API(void, TableSetBgColor, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, TableSetBgColor, (ImGui_Context*,ctx)
 (int,target)(int,color_rgba)(int*,API_RO(column_n)),
 R"(Change the color of a cell, row, or column. See ImGui_TableBgTarget_* flags for details.
 

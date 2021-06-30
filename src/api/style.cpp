@@ -63,7 +63,7 @@ static StyleVarType styleVarType(const ImGuiStyleVar var)
     return StyleVarType::Unknown;
 }
 
-DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, PushStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,val1)(double*,API_RO(val2)),
 R"(See ImGui_StyleVar_* for possible values of 'var_idx'.
 
@@ -87,7 +87,7 @@ Default values: val2 = nil)",
   }
 });
 
-DEFINE_API(void, PopStyleVar, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, PopStyleVar, (ImGui_Context*,ctx)
 (int*,API_RO(count)),
 R"(Reset a style variable.
 
@@ -108,7 +108,7 @@ Default values: count = 1)",
     if(API_W(val2)) *API_W(val2) = style.var.y; \
     break;
 
-DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, GetStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double*,API_W(val1))(double*,API_W(val2)),
 "",
 {
@@ -150,7 +150,7 @@ DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 #undef CASE_FLOAT_VAR
 #undef CASE_IMVEC2_VAR
 
-DEFINE_API(int, GetColor, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, int, GetColor, (ImGui_Context*,ctx)
 (int,idx)(double*,API_RO(alpha_mul)),
 R"(Retrieve given style color with style alpha applied and optional extra alpha multiplier, packed as a 32-bit value (RGBA). See ImGui_Col_* for available style colors.
 
@@ -161,7 +161,7 @@ Default values: alpha_mul = 1.0)",
   return Color::abgr2rgba(ImGui::GetColorU32(idx, valueOr(API_RO(alpha_mul), 1.0)));
 });
 
-DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, int, GetColorEx, (ImGui_Context*,ctx)
 (int,col_rgba),
 "Retrieve given color with style alpha applied, packed as a 32-bit value (RGBA).",
 {
@@ -169,7 +169,7 @@ DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
   return Color::abgr2rgba(ImGui::GetColorU32(Color::rgba2abgr(col_rgba)));
 });
 
-DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, int, GetStyleColor, (ImGui_Context*,ctx)
 (int,idx),
 "Retrieve style color as stored in ImGuiStyle structure. Use to feed back into ImGui_PushStyleColor, Otherwise use ImGui_GetColor to get style color with style alpha baked in. See ImGui_Col_* for available style colors.",
 {
@@ -179,13 +179,13 @@ DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
   return Color{col}.pack();
 });
 
-DEFINE_API(const char*, GetStyleColorName, (int,idx),
+DEFINE_API(__LINE__, const char*, GetStyleColorName, (int,idx),
 "Get a string corresponding to the enum value (for display, saving, etc.).",
 {
   return ImGui::GetStyleColorName(idx);
 });
 
-DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, PushStyleColor, (ImGui_Context*,ctx)
 (int,idx)(int,col_rgba),
 "Modify a style color. Call ImGui_PopStyleColor to undo after use (before the end of the frame). See ImGui_Col_* for available style colors.",
 {
@@ -194,7 +194,7 @@ DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
   ImGui::PushStyleColor(idx, ImVec4{Color(col_rgba)});
 });
 
-DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
+DEFINE_API(__LINE__, void, PopStyleColor, (ImGui_Context*,ctx)
 (int*,API_RO(count)),
 "Default values: count = 1",
 {
