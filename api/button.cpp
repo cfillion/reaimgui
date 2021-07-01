@@ -17,97 +17,102 @@
 
 #include "helper.hpp"
 
-DEFINE_API(__LINE__, bool, Button, (ImGui_Context*,ctx)
-(const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Most widgets return true when the value has been changed or when pressed/selected
-You may also use one of the many IsItemXXX functions (e.g. ImGui_IsItemActive, ImGui_IsItemHovered, etc.) to query widget state.
-
-Default values: size_w = 0.0, size_h = 0.0)",
+/// Most widgets return true when the value has been changed or when pressed/selected
+/// You may also use one of the many IsItemXXX functions (e.g. ImGui_IsItemActive, ImGui_IsItemHovered, etc.) to query widget state.
+///
+/// Default values: size_w = 0.0, size_h = 0.0)
+REAIMGUI_API bool Button(ImGui_Context* ctx,
+  const char* label, double* API_RO(size_w), double* API_RO(size_h))
 {
   FRAME_GUARD;
 
   ImVec2 size { valueOr(API_RO(size_w), 0.f), valueOr(API_RO(size_h), 0.f) };
   return ImGui::Button(label, size);
-});
+}
 
-DEFINE_API(__LINE__, bool, SmallButton, (ImGui_Context*,ctx)
-(const char*,label),
-"Button with ImGui_StyleVar_FramePadding=(0,0) to easily embed within text.",
+/// "Button with ImGui_StyleVar_FramePadding=(0,0) to easily embed within text.
+REAIMGUI_API bool SmallButton(ImGui_Context* ctx, const char* label)
 {
   FRAME_GUARD;
   return ImGui::SmallButton(label);
-});
+}
 
-DEFINE_API(__LINE__, bool, InvisibleButton, (ImGui_Context*,ctx)
-(const char*,str_id)(double,size_w)(double,size_h)(int*,API_RO(flags)),
-R"(Flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with ImGui_IsItemActive, ImGui_IsItemHovered, etc.).
-
-Default values: flags = ImGui_ButtonFlags_None)",
+/// Flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with ImGui_IsItemActive, ImGui_IsItemHovered, etc.).
+///
+/// Default values: flags = ImGui_ButtonFlags_None)
+REAIMGUI_API bool InvisibleButton(ImGui_Context* ctx,
+  const char* str_id, double size_w, double size_h, int* API_RO(flags))
 {
   FRAME_GUARD;
   return ImGui::InvisibleButton(str_id, ImVec2(size_w, size_h),
     valueOr(API_RO(flags), ImGuiButtonFlags_None));
-});
+}
 
-DEFINE_API(__LINE__, bool, ArrowButton, (ImGui_Context*,ctx)
-(const char*,str_id)(int,dir),
-"Square button with an arrow shape.",
+/// Square button with an arrow shape.
+REAIMGUI_API bool ArrowButton(ImGui_Context* ctx, const char* str_id, int dir)
 {
   FRAME_GUARD;
   return ImGui::ArrowButton(str_id, dir);
-});
+}
 
-DEFINE_API(__LINE__, bool, Checkbox, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_RW(v)),
-"",
+REAIMGUI_API bool Checkbox(ImGui_Context* ctx,
+  const char* label, bool* API_RW(v))
 {
   FRAME_GUARD;
   if(!API_RW(v))
     return false;
   return ImGui::Checkbox(label, API_RW(v));
-});
+}
 
-DEFINE_API(__LINE__, bool, CheckboxFlags, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(flags))(int,flags_value),
-"",
+REAIMGUI_API bool CheckboxFlags(ImGui_Context* ctx,
+  const char* label, int* API_RW(flags), int flags_value)
 {
   FRAME_GUARD;
   return ImGui::CheckboxFlags(label, API_RW(flags), flags_value);
-});
+}
 
-DEFINE_API(__LINE__, bool, RadioButton, (ImGui_Context*,ctx)
-(const char*,label)(bool,active),
-R"(Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })",
+/// Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })
+REAIMGUI_API bool RadioButton(ImGui_Context* ctx,
+  const char* label, bool active)
 {
   FRAME_GUARD;
   return ImGui::RadioButton(label, active);
-});
+}
 
-DEFINE_API(__LINE__, bool, RadioButtonEx, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(v))(int,v_button),
-"Shortcut to handle RadioButton's example pattern when value is an integer",
+/// Shortcut to handle RadioButton's example pattern when value is an integer
+REAIMGUI_API bool RadioButtonEx(ImGui_Context* ctx,
+  const char* label, int* API_RW(v), int v_button)
 {
   FRAME_GUARD;
   return ImGui::RadioButton(label, API_RW(v), v_button);
-});
+}
 
-DEFINE_API(__LINE__, void, PushButtonRepeat, (ImGui_Context*,ctx)
-(bool,repeat),
-"In 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call ImGui_IsItemActive after any ImGui_Button to tell if the button is held in the current frame.",
+/// In 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call ImGui_IsItemActive after any ImGui_Button to tell if the button is held in the current frame.
+REAIMGUI_API void PushButtonRepeat(ImGui_Context* ctx, bool repeat)
 {
   FRAME_GUARD;
   ImGui::PushButtonRepeat(repeat);
-});
+}
 
-DEFINE_API(__LINE__, void, PopButtonRepeat, (ImGui_Context*,ctx),
-"See ImGui_PushButtonRepeat",
+/// See ImGui_PushButtonRepeat
+REAIMGUI_API void PopButtonRepeat(ImGui_Context* ctx)
 {
   FRAME_GUARD;
   ImGui::PopButtonRepeat();
-});
+}
 
-// ImGuiButtonFlags
-DEFINE_ENUM(ImGui, ButtonFlags_None,              "Flags for ImGui_InvisibleButton.");
-DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonLeft,   "React on left mouse button (default).");
-DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonRight,  "React on right mouse button.");
-DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonMiddle, "React on center mouse button.");
+REAIMGUI_API
+  API_DOC("Flags for ImGui_InvisibleButton.")
+  API_CONST(ImGui, ButtonFlags_None)
+
+REAIMGUI_API
+  API_DOC("React on left mouse button (default).")
+  API_CONST(ImGui, ButtonFlags_MouseButtonLeft)
+
+REAIMGUI_API
+  API_DOC("React on right mouse button.")
+  API_CONST(ImGui, ButtonFlags_MouseButtonRight)
+
+REAIMGUI_API
+  API_DOC("React on center mouse button.")
+  API_CONST(ImGui, ButtonFlags_MouseButtonMiddle)

@@ -22,14 +22,14 @@ R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag
 {
   FRAME_GUARD;
   return ImGui::BeginMenuBar();
-});
+}
 
 DEFINE_API(__LINE__, void, EndMenuBar, (ImGui_Context*,ctx),
 "Only call EndMenuBar if ImGui_BeginMenuBar returns true!",
 {
   FRAME_GUARD;
   ImGui::EndMenuBar();
-});
+}
 
 DEFINE_API(__LINE__, bool, BeginMenu, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RO(enabled)),
@@ -39,14 +39,14 @@ Default values: enabled = true)",
 {
   FRAME_GUARD;
   return ImGui::BeginMenu(label, valueOr(API_RO(enabled), true));
-});
+}
 
 DEFINE_API(__LINE__, void, EndMenu, (ImGui_Context*,ctx),
 R"(Only call EndMenu() if ImGui_BeginMenu returns true!)",
 {
   FRAME_GUARD;
   ImGui::EndMenu();
-});
+}
 
 DEFINE_API(__LINE__, bool, MenuItem, (ImGui_Context*,ctx)
 (const char*,label)(const char*,API_RO(shortcut))
@@ -60,4 +60,4 @@ Default values: enabled = true)",
 
   return ImGui::MenuItem(label, API_RO(shortcut), API_RW(p_selected),
     valueOr(API_RO(enabled), true));
-});
+}

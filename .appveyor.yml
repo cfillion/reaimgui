@@ -62,9 +62,9 @@ for:
       esac
     artifacts:
       - path: build/src/reaper_imgui*.so
-      - path: build/tools/imgui_python.py
-      - path: build/tools/reaper_imgui_doc.html
-      - path: build/tools/reaper_imgui_functions.h
+      - path: build/tools/genbinding/imgui_python.py
+      - path: build/tools/genbinding/reaper_imgui_doc.html
+      - path: build/tools/genbinding/reaper_imgui_functions.h
 
   - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
     cache:
@@ -82,9 +82,9 @@ for:
       - sudo xcode-select -s /Applications/Xcode-$XCODE_VERSION.app
     artifacts:
       - path: build/src/reaper_imgui*.dylib
-      - path: build/tools/imgui_python.py
-      - path: build/tools/reaper_imgui_doc.html
-      - path: build/tools/reaper_imgui_functions.h
+      - path: build/tools/genbinding/imgui_python.py
+      - path: build/tools/genbinding/reaper_imgui_doc.html
+      - path: build/tools/genbinding/reaper_imgui_functions.h
 
   - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2019 ] }
     cache:
@@ -94,6 +94,8 @@ for:
       - if "%ARCH%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
       - if "%ARCH%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
     build_script:
+      - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      - sleep 60m
       - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
         -DVCPKG_TARGET_TRIPLET=%ARCH%-windows-static
         -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake
@@ -101,9 +103,9 @@ for:
     artifacts:
       - path: build\src\reaper_imgui*.dll
       - path: build\src\reaper_imgui*.pdb
-      - path: build\tools\imgui_python.py
-      - path: build\tools\reaper_imgui_doc.html
-      - path: build\tools\reaper_imgui_functions.h
+      - path: build\tools\genbinding\imgui_python.py
+      - path: build\tools\genbinding\reaper_imgui_doc.html
+      - path: build\tools\genbinding\reaper_imgui_functions.h
 
 environment:
   matrix:

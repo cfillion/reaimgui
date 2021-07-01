@@ -22,48 +22,15 @@
 #include "api_vararg.hpp"
 #include "context.hpp"
 
-#include <boost/preprocessor.hpp>
 #include <boost/type_index.hpp>
 #include <cstring> // strlen
 
+#define REAIMGUI_API __attribute__((annotate("reaimgui_api")))
+#define API_DOC(doc) __attribute__((annotate("reaimgui_doc=" doc)))
+#define API_CONST(prefix, name) int name() { return prefix##name; }
+
 #define ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
 #define ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
-
-#define NO_ARGS (,)
-#define DEFARGS(r, data, i, arg) BOOST_PP_COMMA_IF(i) ARG_TYPE(arg) ARG_NAME(arg)
-#define DOCARGS(r, macro, i, arg) \
-  BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
-
-#define API_CATCH(name, type, except) \
-  catch(const except &e) {            \
-    API::handleError(#name, e);       \
-    return static_cast<type>(0);      \
-  }
-
-#define DEFINE_API(line, type, name, args, help, ...)           \
-  type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _,           \
-    BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))) noexcept               \
-  try __VA_ARGS__                                               \
-  API_CATCH(name, type, reascript_error)                        \
-  API_CATCH(name, type, imgui_error)                            \
-                                                                \
-  static const API API_reg_##name { #name,                      \
-    reinterpret_cast<void *>(&API_##name),                      \
-    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>), \
-    reinterpret_cast<void *>(const_cast<char *>(                \
-      #type "\0"                                                \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE,                \
-        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                \
-        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
-      help "\0"                                                 \
-      API_FILE "\0" BOOST_PP_STRINGIZE(line) "\0"               \
-      BOOST_PP_STRINGIZE(__LINE__)                              \
-    ))                                                          \
-  }
-
-#define DEFINE_ENUM(prefix, name, doc) \
-  DEFINE_API(__LINE__, int, name, NO_ARGS, doc, { return prefix##name; })
 
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write

@@ -65,19 +65,19 @@ DEFINE_API(__LINE__, ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
 "The draw list associated to the current window, to append your own drawing primitives",
 {
   return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Window);
-});
+}
 
 DEFINE_API(__LINE__, ImGui_DrawList*, GetBackgroundDrawList, (ImGui_Context*,ctx),
 "This draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.",
 {
   return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Background);
-});
+}
 
 DEFINE_API(__LINE__, ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
 "This draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.",
 {
   return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Foreground);
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
@@ -87,7 +87,7 @@ DEFINE_API(__LINE__, void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
   draw_list->get()->AddLine(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
     Color::rgba2abgr(col_rgba), valueOr(API_RO(thickness), 1.0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
@@ -100,7 +100,7 @@ DEFINE_API(__LINE__, void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
     Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.f),
     valueOr(API_RO(flags), ImDrawFlags_None),
     valueOr(API_RO(thickness), 1.0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
@@ -111,7 +111,7 @@ DEFINE_API(__LINE__, void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.f),
     valueOr(API_RO(flags), ImDrawFlags_None));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
@@ -122,7 +122,7 @@ DEFINE_API(__LINE__, void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,dr
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     Color::rgba2abgr(col_upr_left),  Color::rgba2abgr(col_upr_right),
     Color::rgba2abgr(col_bot_right), Color::rgba2abgr(col_bot_left));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddQuad, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
@@ -134,7 +134,7 @@ DEFINE_API(__LINE__, void, DrawList_AddQuad, (ImGui_DrawList*,draw_list)
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     ImVec2(p4_x, p4_y), Color::rgba2abgr(col_rgba),
     valueOr(API_RO(thickness), 1.0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddQuadFilled, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
@@ -145,7 +145,7 @@ DEFINE_API(__LINE__, void, DrawList_AddQuadFilled, (ImGui_DrawList*,draw_list)
   draw_list->get()->AddQuadFilled(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     ImVec2(p4_x, p4_y), Color::rgba2abgr(col_rgba));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddTriangle, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
@@ -155,7 +155,7 @@ DEFINE_API(__LINE__, void, DrawList_AddTriangle, (ImGui_DrawList*,draw_list)
   draw_list->get()->AddTriangle(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     Color::rgba2abgr(col_rgba), valueOr(API_RO(thickness), 1.0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
@@ -165,7 +165,7 @@ DEFINE_API(__LINE__, void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_lis
   draw_list->get()->AddTriangleFilled(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     Color::rgba2abgr(col_rgba));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddCircle, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
@@ -177,7 +177,7 @@ Default values: num_segments = 0, thickness = 1.0)",
   draw_list->get()->AddCircle(ImVec2(center_x, center_y),
     radius, Color::rgba2abgr(col_rgba), valueOr(API_RO(num_segments), 0),
     valueOr(API_RO(thickness), 1.0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddCircleFilled, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
@@ -188,7 +188,7 @@ Default values: num_segments = 0)",
 {
   draw_list->get()->AddCircleFilled(ImVec2(center_x, center_y),
     radius, Color::rgba2abgr(col_rgba), valueOr(API_RO(num_segments), 0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
@@ -198,7 +198,7 @@ DEFINE_API(__LINE__, void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
   draw_list->get()->AddNgon(ImVec2(center_x, center_y),
     radius, Color::rgba2abgr(col_rgba), num_segments,
     valueOr(API_RO(thickness), 1.0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
@@ -207,14 +207,14 @@ DEFINE_API(__LINE__, void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddNgonFilled(ImVec2(center_x, center_y),
     radius, Color::rgba2abgr(col_rgba), num_segments);
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddText, (ImGui_DrawList*,draw_list)
 (double,x)(double,y)(int,col_rgba)(const char*,text),
 "",
 {
   draw_list->get()->AddText(ImVec2(x, y), Color::rgba2abgr(col_rgba), text);
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
 (ImGui_Font*,font)(double,font_size)(double,pos_x)(double,pos_y)
@@ -248,7 +248,7 @@ Default values: wrap_width = 0.0, cpu_fine_clip_rect_x = nil, cpu_fine_clip_rect
   Context *ctx;
   draw_list->get(&ctx)->AddText(ctx->fonts().instanceOf(font), font_size,
     pos, col_rgba, text, nullptr, wrap_width, cpu_fine_clip_rect_ptr);
-});
+}
 
 static std::vector<ImVec2> makePointsArray(const reaper_array *points)
 {
@@ -272,7 +272,7 @@ DEFINE_API(__LINE__, void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
   draw_list->get()->AddPolyline(
     vec2points.data(), vec2points.size(), Color::rgba2abgr(col_rgba),
     flags, thickness);
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
 (reaper_array*,points)(int,num_points)(int,col_rgba),
@@ -281,7 +281,7 @@ DEFINE_API(__LINE__, void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_l
   const std::vector<ImVec2> vec2points { makePointsArray(points) };
   draw_list->get()->AddConvexPolyFilled(
     vec2points.data(), vec2points.size(), Color::rgba2abgr(col_rgba));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddBezierCubic, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
@@ -295,7 +295,7 @@ Default values: num_segments = 0)",
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
     ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y), Color::rgba2abgr(col_rgba),
     thickness, valueOr(API_RO(num_segments), 0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)
@@ -308,7 +308,7 @@ Default values: num_segments = 0)",
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
     ImVec2(p3_x, p3_y), Color::rgba2abgr(col_rgba),
     thickness, valueOr(API_RO(num_segments), 0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
@@ -322,39 +322,39 @@ Default values: intersect_with_current_clip_rect = false)",
     ImVec2(clip_rect_min_x, clip_rect_min_y),
     ImVec2(clip_rect_max_x, clip_rect_max_y),
     valueOr(API_RO(intersect_with_current_clip_rect), false));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PushClipRectFullScreen, (ImGui_DrawList*,draw_list),
 "",
 {
   draw_list->get()->PushClipRectFullScreen();
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
 "See DrawList_PushClipRect",
 {
   draw_list->get()->PopClipRect();
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PathClear, (ImGui_DrawList*,draw_list),
 "",
 {
   draw_list->get()->PathClear();
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
 (double,pos_x)(double,pos_y),
 "Stateful path API, add points then finish with ImGui_DrawList_PathFillConvex or ImGui_DrawList_PathStroke.",
 {
   draw_list->get()->PathLineToMergeDuplicate(ImVec2(pos_x, pos_y));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PathFillConvex, (ImGui_DrawList*,draw_list)
 (int,col_rgba),
 "Note: Anti-aliased filling requires points to be in clockwise order.",
 {
   draw_list->get()->PathFillConvex(Color::rgba2abgr(col_rgba));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
 (int,col_rgba)(int*,API_RO(flags))(double*,API_RO(thickness)),
@@ -363,7 +363,7 @@ DEFINE_API(__LINE__, void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
   draw_list->get()->PathStroke(
     Color::rgba2abgr(col_rgba), valueOr(API_RO(flags), ImDrawFlags_None),
     valueOr(API_RO(thickness), 1.0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(double,a_min)(double,a_max)
@@ -372,7 +372,7 @@ DEFINE_API(__LINE__, void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->PathArcTo(ImVec2(center_x, center_y),
     radius, a_min, a_max, valueOr(API_RO(num_segments), 10));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)
@@ -381,7 +381,7 @@ DEFINE_API(__LINE__, void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->PathArcToFast(
     ImVec2(center_x, center_y), radius, a_min_of_12, a_max_of_12);
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PathBezierCubicCurveTo, (ImGui_DrawList*,draw_list)
 (double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
@@ -393,7 +393,7 @@ Default values: num_segments = 0)",
   draw_list->get()->PathBezierCubicCurveTo(
     ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
     valueOr(API_RO(num_segments), 0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PathBezierQuadraticCurveTo, (ImGui_DrawList*,draw_list)
 (double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(int*,API_RO(num_segments)),
@@ -403,7 +403,7 @@ Default values: num_segments = 0)",
 {
   draw_list->get()->PathBezierQuadraticCurveTo(
     ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), valueOr(API_RO(num_segments), 0));
-});
+}
 
 DEFINE_API(__LINE__, void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
 (double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y)
@@ -413,7 +413,7 @@ DEFINE_API(__LINE__, void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
   draw_list->get()->PathRect(ImVec2(rect_min_x, rect_min_y),
     ImVec2(rect_max_x, rect_max_y), valueOr(API_RO(rounding), 0.f),
     valueOr(API_RO(flags), ImDrawFlags_None));
-});
+}
 
 // ImDrawFlags
 DEFINE_ENUM(Im, DrawFlags_None,                         "");

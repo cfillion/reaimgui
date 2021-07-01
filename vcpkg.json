@@ -2,10 +2,10 @@
   "name": "reaimgui",
   "version-string": "current",
   "dependencies": [
-    "boost-preprocessor",
     "boost-type-index",
     { "name": "boost-variant", "platform": "osx" },
     { "name": "freetype", "default-features": false },
-    { "name": "gl3w", "platform": "windows" }
+    { "name": "gl3w", "platform": "windows" },
+    { "name": "llvm", "features": [ "clang" ], "default-features": false }
   ]
 }

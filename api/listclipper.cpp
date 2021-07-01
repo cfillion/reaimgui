@@ -74,7 +74,7 @@ The returned clipper object is tied to the context and is valid as long as it is
 {
   assertValid(ctx);
   return new ListClipper { ctx };
-});
+}
 
 DEFINE_API(__LINE__, void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
 (int,items_count)(double*,API_RO(items_height)),
@@ -85,19 +85,19 @@ Default values: items_height = -1.0)",
 {
   ListClipper::use(clipper)
     ->Begin(items_count, valueOr(API_RO(items_height), -1.0));
-});
+}
 
 DEFINE_API(__LINE__, bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
 "Call until it returns false. The display_start/display_end fields from ImGui_ListClipper_GetDisplayRange will be set and you can process/draw those items.",
 {
   return ListClipper::use(clipper)->Step();
-});
+}
 
 DEFINE_API(__LINE__, void, ListClipper_End, (ImGui_ListClipper*,clipper),
 "Automatically called on the last call of ImGui_ListClipper_Step that returns false.",
 {
   ListClipper::use(clipper)->End();
-});
+}
 
 DEFINE_API(__LINE__, void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
 (int*,API_W(display_start))(int*,API_W(display_end)),
@@ -106,4 +106,4 @@ DEFINE_API(__LINE__, void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clip
   ImGuiListClipper *imclipper { ListClipper::use(clipper) };
   if(API_W(display_start)) *API_W(display_start) = imclipper->DisplayStart;
   if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
-});
+}

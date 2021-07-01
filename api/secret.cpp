@@ -41,14 +41,14 @@ DEFINE_SECRET_API(bool, CheckVersionAndDataLayout, (const char*,version)
       *p_error = e.what();
     return false;
   }
-});
+}
 
 DEFINE_SECRET_API(void, GetAllocatorFunctions,
 (ImGuiMemAllocFunc*,p_alloc_func)(ImGuiMemFreeFunc*,p_free_func)
 (void**,p_user_data),
 {
   ImGui::GetAllocatorFunctions(p_alloc_func, p_free_func, p_user_data);
-});
+}
 
 DEFINE_SECRET_API(ImGuiContext*, GetInternalContext, (ImGui_Context*,ctx)
 (bool,enterFrame),
@@ -60,4 +60,4 @@ DEFINE_SECRET_API(ImGuiContext*, GetInternalContext, (ImGui_Context*,ctx)
     ctx->enterFrame();
 
   return ctx->imgui();
-});
+}

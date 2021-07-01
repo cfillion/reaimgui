@@ -56,14 +56,14 @@ Default values: flags = ImGui_TableFlags_None, outer_size_w = 0.0, outer_size_h 
                       valueOr(API_RO(outer_size_h), 0.f) };
   const float inner_width { valueOr(API_RO(inner_width), 0.f) };
   return ImGui::BeginTable(str_id, column, flags, size, inner_width);
-});
+}
 
 DEFINE_API(__LINE__, void, EndTable, (ImGui_Context*,ctx),
 "Only call EndTable() if BeginTable() returns true!",
 {
   FRAME_GUARD;
   ImGui::EndTable();
-});
+}
 
 DEFINE_API(__LINE__, void, TableNextRow, (ImGui_Context*,ctx)
 (int*,API_RO(row_flags))(double*,API_RO(min_row_height)),
@@ -75,14 +75,14 @@ Default values: row_flags = ImGui_TableRowFlags_None, min_row_height = 0.0)",
   const ImGuiTableRowFlags flags
     { valueOr(API_RO(row_flags), ImGuiTableRowFlags_None) };
   ImGui::TableNextRow(flags, valueOr(API_RO(min_row_height), 0.f));
-});
+}
 
 DEFINE_API(__LINE__, bool, TableNextColumn, (ImGui_Context*,ctx),
 "Append into the next column (or first column of next row if currently in last column). Return true when column is visible.",
 {
   FRAME_GUARD;
   return ImGui::TableNextColumn();
-});
+}
 
 DEFINE_API(__LINE__, bool, TableSetColumnIndex, (ImGui_Context*,ctx)
 (int,column_n),
@@ -90,7 +90,7 @@ DEFINE_API(__LINE__, bool, TableSetColumnIndex, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::TableSetColumnIndex(column_n);
-});
+}
 
 DEFINE_API(__LINE__, void, TableSetupColumn, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags))(double*,API_RO(init_width_or_weight))
@@ -103,7 +103,7 @@ Default values: flags = ImGui_TableColumnFlags_None, init_width_or_weight = 0.0,
   ImGui::TableSetupColumn(label,
     valueOr(API_RO(flags), ImGuiTableColumnFlags_None),
     valueOr(API_RO(init_width_or_weight), 0.f), valueOr(API_RO(user_id), 0));
-});
+}
 
 DEFINE_API(__LINE__, void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
 (int,cols)(int,rows),
@@ -111,14 +111,14 @@ DEFINE_API(__LINE__, void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::TableSetupScrollFreeze(cols, rows);
-});
+}
 
 DEFINE_API(__LINE__, void, TableHeadersRow, (ImGui_Context*,ctx),
 "Submit all headers cells based on data provided to ImGui_TableSetupColumn + submit context menu.",
 {
   FRAME_GUARD;
   ImGui::TableHeadersRow();
-});
+}
 
 DEFINE_API(__LINE__, void, TableHeader, (ImGui_Context*,ctx)
 (const char*,label),
@@ -126,7 +126,7 @@ DEFINE_API(__LINE__, void, TableHeader, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::TableHeader(label);
-});
+}
 
 DEFINE_API(__LINE__, bool, TableNeedSort, (ImGui_Context*,ctx)
 (bool*,API_W(has_specs)),
@@ -143,7 +143,7 @@ DEFINE_API(__LINE__, bool, TableNeedSort, (ImGui_Context*,ctx)
 
   if(API_W(has_specs)) *API_W(has_specs) = false;
   return false;
-});
+}
 
 DEFINE_API(__LINE__, bool, TableGetColumnSortSpecs, (ImGui_Context*,ctx)
 (int,id)
@@ -170,28 +170,28 @@ See ImGui_TableNeedSort.)",
   if(API_W(sort_order))     *API_W(sort_order)     = spec.SortOrder;
   if(API_W(sort_direction)) *API_W(sort_direction) = spec.SortDirection;
   return true;
-});
+}
 
 DEFINE_API(__LINE__, int, TableGetColumnCount, (ImGui_Context*,ctx),
 "Return number of columns (value passed to ImGui_BeginTable).",
 {
   FRAME_GUARD;
   return ImGui::TableGetColumnCount();
-});
+}
 
 DEFINE_API(__LINE__, int, TableGetColumnIndex, (ImGui_Context*,ctx),
 "Return current column index.",
 {
   FRAME_GUARD;
   return ImGui::TableGetColumnIndex();
-});
+}
 
 DEFINE_API(__LINE__, int, TableGetRowIndex, (ImGui_Context*,ctx),
 "Return current row index.",
 {
   FRAME_GUARD;
   return ImGui::TableGetRowIndex();
-});
+}
 
 DEFINE_API(__LINE__, const char*, TableGetColumnName, (ImGui_Context*,ctx)
 (int*,API_RO(column_n)),
@@ -201,7 +201,7 @@ Default values: column_n = -1)",
 {
   FRAME_GUARD;
   return ImGui::TableGetColumnName(valueOr(API_RO(column_n), -1));
-});
+}
 
 DEFINE_API(__LINE__, int, TableGetColumnFlags, (ImGui_Context*,ctx)
 (int*,API_RO(column_n)),
@@ -211,7 +211,7 @@ Default values: column_n = -1)",
 {
   FRAME_GUARD;
   return ImGui::TableGetColumnFlags(valueOr(API_RO(column_n), -1));
-});
+}
 
 DEFINE_API(__LINE__, void, TableSetColumnEnabled, (ImGui_Context*,ctx)
 (int,column_n)(bool,v),
@@ -219,7 +219,7 @@ DEFINE_API(__LINE__, void, TableSetColumnEnabled, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::TableSetColumnEnabled(column_n, v);
-});
+}
 
 DEFINE_API(__LINE__, void, TableSetBgColor, (ImGui_Context*,ctx)
 (int,target)(int,color_rgba)(int*,API_RO(column_n)),
@@ -230,7 +230,7 @@ Default values: column_n = -1)",
   FRAME_GUARD;
   ImGui::TableSetBgColor(target,
     Color::rgba2abgr(color_rgba), valueOr(API_RO(column_n), -1));
-});
+}
 
 // ImGuiSortDirection
 DEFINE_ENUM(ImGui, SortDirection_None,       "");

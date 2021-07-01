@@ -25,7 +25,7 @@ DEFINE_API(__LINE__, void, Text, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::TextUnformatted(text);
-});
+}
 
 DEFINE_API(__LINE__, void, TextColored, (ImGui_Context*,ctx)
 (int,col_rgba)(const char*,text),
@@ -37,7 +37,7 @@ DEFINE_API(__LINE__, void, TextColored, (ImGui_Context*,ctx)
   ImGui::PushStyleColor(ImGuiCol_Text, color);
   ImGui::TextUnformatted(text);
   ImGui::PopStyleColor();
-});
+}
 
 DEFINE_API(__LINE__, void, TextDisabled, (ImGui_Context*,ctx)
 (const char*,text),
@@ -48,7 +48,7 @@ DEFINE_API(__LINE__, void, TextDisabled, (ImGui_Context*,ctx)
   ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
   ImGui::TextUnformatted(text);
   ImGui::PopStyleColor();
-});
+}
 
 DEFINE_API(__LINE__, void, TextWrapped, (ImGui_Context*,ctx)
 (const char*,text),
@@ -58,7 +58,7 @@ DEFINE_API(__LINE__, void, TextWrapped, (ImGui_Context*,ctx)
   ImGui::PushTextWrapPos(0.0f);
   ImGui::TextUnformatted(text);
   ImGui::PopTextWrapPos();
-});
+}
 
 DEFINE_API(__LINE__, void, LabelText, (ImGui_Context*,ctx)
 (const char*,label)(const char*,text),
@@ -66,14 +66,14 @@ DEFINE_API(__LINE__, void, LabelText, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::LabelText(label, "%s", text);
-});
+}
 
 DEFINE_API(__LINE__, void, Bullet, (ImGui_Context*,ctx),
 "Draw a small circle + keep the cursor on the same line. Advance cursor x position by ImGui_GetTreeNodeToLabelSpacing, same distance that ImGui_TreeNode uses.",
 {
   FRAME_GUARD;
   ImGui::Bullet();
-});
+}
 
 DEFINE_API(__LINE__, void, BulletText, (ImGui_Context*,ctx)
 (const char*,text),
@@ -82,7 +82,7 @@ DEFINE_API(__LINE__, void, BulletText, (ImGui_Context*,ctx)
   FRAME_GUARD;
   ImGui::Bullet();
   ImGui::TextUnformatted(text);
-});
+}
 
 DEFINE_API(__LINE__, void, PushTextWrapPos, (ImGui_Context*,ctx)
 (double*,API_RO(wrap_local_pos_x)),
@@ -92,35 +92,35 @@ Default values: wrap_local_pos_x = 0.0)",
 {
   FRAME_GUARD;
   ImGui::PushTextWrapPos(valueOr(API_RO(wrap_local_pos_x), 0.f));
-});
+}
 
 DEFINE_API(__LINE__, void, PopTextWrapPos, (ImGui_Context*,ctx),
 "",
 {
   FRAME_GUARD;
   ImGui::PopTextWrapPos();
-});
+}
 
 DEFINE_API(__LINE__, void, AlignTextToFramePadding, (ImGui_Context*,ctx),
 "Vertically align upcoming text baseline to ImGui_StyleVar_FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)",
 {
   FRAME_GUARD;
   ImGui::AlignTextToFramePadding();
-});
+}
 
 DEFINE_API(__LINE__, double, GetTextLineHeight, (ImGui_Context*,ctx),
 "Same as ImGui_GetFontSize",
 {
   FRAME_GUARD;
   return ImGui::GetTextLineHeight();
-});
+}
 
 DEFINE_API(__LINE__, double, GetTextLineHeightWithSpacing, (ImGui_Context*,ctx),
 "~ ImGui_GetFontSize + ImGui_StyleVar_ItemSpacing.y (distance in pixels between 2 consecutive lines of text)",
 {
   FRAME_GUARD;
   return ImGui::GetTextLineHeightWithSpacing();
-});
+}
 
 DEFINE_API(__LINE__, void, CalcTextSize, (ImGui_Context*,ctx)
 (const char*,text)(double*,API_W(w))(double*,API_W(h))
@@ -135,4 +135,4 @@ DEFINE_API(__LINE__, void, CalcTextSize, (ImGui_Context*,ctx)
   };
   if(API_W(w)) *API_W(w) = size.x;
   if(API_W(h)) *API_W(h) = size.y;
-});
+}

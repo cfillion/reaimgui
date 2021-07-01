@@ -33,7 +33,7 @@ Default values: flags = ImGui_FontFlags_None)",
 {
   const int flags { valueOr(API_RO(flags), ReaImGuiFontFlags_None) };
   return new Font { family_or_file, size, flags };
-});
+}
 
 DEFINE_API(__LINE__, void, AttachFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
@@ -46,14 +46,14 @@ DEFINE_API(__LINE__, void, AttachFont, (ImGui_Context*,ctx)
     throw reascript_error { "cannot modify font texture: a frame has already begun" };
 
   ctx->fonts().add(font);
-});
+}
 
 DEFINE_API(__LINE__, ImGui_Font*, GetFont, (ImGui_Context*,ctx),
 "Get the current font",
 {
   FRAME_GUARD;
   return ctx->fonts().get(ImGui::GetFont());
-});
+}
 
 DEFINE_API(__LINE__, void, PushFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
@@ -61,21 +61,21 @@ DEFINE_API(__LINE__, void, PushFont, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::PushFont(ctx->fonts().instanceOf(font));
-});
+}
 
 DEFINE_API(__LINE__, void, PopFont, (ImGui_Context*,ctx),
 "See ImGui_PushFont.",
 {
   FRAME_GUARD;
   ImGui::PopFont();
-});
+}
 
 DEFINE_API(__LINE__, double, GetFontSize, (ImGui_Context*,ctx),
 "Get current font size (= height in pixels) of current font with current scale applied",
 {
   FRAME_GUARD;
   return ImGui::GetFontSize();
-});
+}
 
 DEFINE_ENUM(ReaImGui, FontFlags_None, "");
 DEFINE_ENUM(ReaImGui, FontFlags_Bold, "");

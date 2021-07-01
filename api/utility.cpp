@@ -33,7 +33,7 @@ DEFINE_API(__LINE__, void, GetVersion,
     snprintf(API_W(imgui_version), API_W_SZ(imgui_version), "%s", IMGUI_VERSION);
   if(API_W(reaimgui_version))
     snprintf(API_W(reaimgui_version), API_W_SZ(reaimgui_version), "%s", REAIMGUI_VERSION);
-});
+}
 
 DEFINE_API(__LINE__, bool, ValidatePtr, (void*,pointer)(const char*,type),
 R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_ListClipper* and ImGui_Viewport*.)",
@@ -52,7 +52,7 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
     return Viewport.decode<Context>(pointer, &proxyKey);
   else
     return false;
-});
+}
 
 DEFINE_API(__LINE__, int, ColorConvertHSVtoRGB,
 (double,h)(double,s)(double,v)(double*,API_RO(alpha))
@@ -70,7 +70,7 @@ Default values: alpha = nil)",
   if(API_W(g)) *API_W(g) = color.y;
   if(API_W(b)) *API_W(b) = color.z;
   return Color{color}.pack(alpha);
-});
+}
 
 DEFINE_API(__LINE__, int, ColorConvertRGBtoHSV,
 (double,r)(double,g)(double,b)(double*,API_RO(alpha))
@@ -88,14 +88,14 @@ Default values: alpha = nil)",
   if(API_W(s)) *API_W(s) = color.y;
   if(API_W(v)) *API_W(v) = color.z;
   return Color{color}.pack(alpha);
-});
+}
 
 DEFINE_API(__LINE__, int, ColorConvertNative,
 (int,rgb),
 "Convert native colors coming from REAPER. This swaps the red and blue channels of the specified 0xRRGGBB color on Windows.",
 {
   return Color::convertNative(rgb);
-});
+}
 
 DEFINE_API(__LINE__, void, PointConvertNative, (ImGui_Context*,ctx)
 (double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native)),
@@ -115,7 +115,7 @@ Default values: to_native = false)",
   Platform::scalePosition(&point, valueOr(API_RO(to_native), false));
   *API_RW(x) = point.x;
   *API_RW(y) = point.y;
-});
+}
 
 DEFINE_API(__LINE__, void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
 "Returns FLT_MIN and FLT_MAX for this system.",
@@ -124,7 +124,7 @@ DEFINE_API(__LINE__, void, NumericLimits_Float, (double*,API_W(min))(double*,API
   assertValid(API_W(max));
   *API_W(min) = FLT_MIN;
   *API_W(max) = FLT_MAX;
-});
+}
 
 DEFINE_API(__LINE__, void, PushID, (ImGui_Context*,ctx)
 (const char*,str_id),
@@ -134,14 +134,14 @@ You can also use the "Label##foobar" syntax within widget label to distinguish t
 {
   FRAME_GUARD;
   ImGui::PushID(str_id);
-});
+}
 
 DEFINE_API(__LINE__, void, PopID, (ImGui_Context*,ctx),
 "Pop from the ID stack.",
 {
   FRAME_GUARD;
   ImGui::PopID();
-});
+}
 
 DEFINE_API(__LINE__, void, LogToTTY, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth)),
@@ -151,7 +151,7 @@ Default values: auto_open_depth = -1)",
 {
   FRAME_GUARD;
   ImGui::LogToTTY(valueOr(API_RO(auto_open_depth), -1));
-});
+}
 
 DEFINE_API(__LINE__, void, LogToFile, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth))(const char*,API_RO(filename)),
@@ -162,7 +162,7 @@ Default values: auto_open_depth = -1, filename = nil)",
   FRAME_GUARD;
   nullIfEmpty(API_RO(filename));
   ImGui::LogToFile(valueOr(API_RO(auto_open_depth), -1), API_RO(filename));
-});
+}
 
 DEFINE_API(__LINE__, void, LogToClipboard, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth)),
@@ -172,14 +172,14 @@ Default values: auto_open_depth = -1)",
 {
   FRAME_GUARD;
   ImGui::LogToClipboard(valueOr(API_RO(auto_open_depth), -1));
-});
+}
 
 DEFINE_API(__LINE__, void, LogFinish, (ImGui_Context*,ctx),
 "Stop logging (close file, etc.)",
 {
   FRAME_GUARD;
   ImGui::LogFinish();
-});
+}
 
 DEFINE_API(__LINE__, void, LogText, (ImGui_Context*,ctx)
 (const char*,text),
@@ -187,7 +187,7 @@ DEFINE_API(__LINE__, void, LogText, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::LogText("%s", text);
-});
+}
 
 DEFINE_API(__LINE__, const char*, GetClipboardText, (ImGui_Context*,ctx),
 "See ImGui_SetClipboardText.",
@@ -195,7 +195,7 @@ DEFINE_API(__LINE__, const char*, GetClipboardText, (ImGui_Context*,ctx),
   assertValid(ctx);
   ctx->setCurrent();
   return ImGui::GetClipboardText();
-});
+}
 
 DEFINE_API(__LINE__, void, SetClipboardText, (ImGui_Context*,ctx)
 (const char*,text),
@@ -204,7 +204,7 @@ DEFINE_API(__LINE__, void, SetClipboardText, (ImGui_Context*,ctx)
   assertValid(ctx);
   ctx->setCurrent();
   return ImGui::SetClipboardText(text);
-});
+}
 
 DEFINE_API(__LINE__, void, ProgressBar, (ImGui_Context*,ctx)
 (double,fraction)
@@ -217,7 +217,7 @@ DEFINE_API(__LINE__, void, ProgressBar, (ImGui_Context*,ctx)
   const ImVec2 size { valueOr(API_RO(size_arg_w), -FLT_MIN),
                       valueOr(API_RO(size_arg_h), 0.f) };
   ImGui::ProgressBar(fraction, size, API_RO(overlay));
-});
+}
 
 // ImGuiCond
 DEFINE_ENUM(ImGui, Cond_Always,       "No condition (always set the variable).");

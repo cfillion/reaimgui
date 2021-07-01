@@ -1,29 +1,29 @@
 add_library(api OBJECT
   button.cpp
-  coloredit.cpp
-  context.cpp
-  dragndrop.cpp
-  drawlist.cpp
-  font.cpp
-  indev.cpp
-  input.cpp
-  item.cpp
-  layout.cpp
-  listclipper.cpp
-  menu.cpp
-  plot.cpp
-  popup.cpp
-  secret.cpp
-  select.cpp
-  slider.cpp
-  style.cpp
-  tabbar.cpp
-  table.cpp
-  text.cpp
-  treenode.cpp
-  utility.cpp
-  viewport.cpp
-  window.cpp
+  # coloredit.cpp
+  # context.cpp
+  # dragndrop.cpp
+  # drawlist.cpp
+  # font.cpp
+  # indev.cpp
+  # input.cpp
+  # item.cpp
+  # layout.cpp
+  # listclipper.cpp
+  # menu.cpp
+  # plot.cpp
+  # popup.cpp
+  # secret.cpp
+  # select.cpp
+  # slider.cpp
+  # style.cpp
+  # tabbar.cpp
+  # table.cpp
+  # text.cpp
+  # treenode.cpp
+  # utility.cpp
+  # viewport.cpp
+  # window.cpp
 )
 
 target_include_directories(api PRIVATE
@@ -34,8 +34,17 @@ get_target_property(API_FILES api SOURCES)
 
 foreach(API_FILE IN LISTS API_FILES)
   get_filename_component(API_BASENAME "${API_FILE}" NAME_WE)
-  set_property(SOURCE "${API_FILE}"
-    PROPERTY COMPILE_DEFINITIONS API_FILE=\"${API_BASENAME}\")
+  set(API_FILE_DEF "${CMAKE_CURRENT_BINARY_DIR}/${API_BASENAME}.apidef.cpp")
+
+  add_custom_command(
+    OUTPUT "${API_FILE_DEF}"
+    COMMAND $<TARGET_FILE:genapidef> "${API_FILE}" -- -I../src > "${API_FILE_DEF}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    DEPENDS $<TARGET_FILE:genapidef> "${API_FILE}"
+    COMMAND_EXPAND_LISTS
+  )
+
+  target_sources(api PRIVATE "${API_FILE_DEF}")
 endforeach()
 
 find_package(Boost REQUIRED)

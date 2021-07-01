@@ -50,14 +50,14 @@ Default values: flags = ImGui_ComboFlags_None)",
 
   return ImGui::BeginCombo(label, preview_value,
     valueOr(API_RO(flags), ImGuiComboFlags_None));
-});
+}
 
 DEFINE_API(__LINE__, void, EndCombo, (ImGui_Context*,ctx),
 "Only call EndCombo() if ImGui_BeginCombo returns true!",
 {
   FRAME_GUARD;
   ImGui::EndCombo();
-});
+}
 
 DEFINE_API(__LINE__, bool, Combo, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(current_item))(char*,items)
@@ -71,7 +71,7 @@ Default values: popup_max_height_in_items = -1)",
   const auto &strings { splitString(items) };
   return ImGui::Combo(label, API_RW(current_item), strings.data(), strings.size(),
     valueOr(API_RO(popup_max_height_in_items), -1));
-});
+}
 
 // Widgets: List Boxes
 DEFINE_API(__LINE__, bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
@@ -87,7 +87,7 @@ Default values: height_in_items = -1)",
   const auto &strings { splitString(items) };
   return ImGui::ListBox(label, API_RW(current_item), strings.data(), strings.size(),
     valueOr(API_RO(height_in_items), -1));
-});
+}
 
 DEFINE_API(__LINE__, bool, BeginListBox, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
@@ -106,14 +106,14 @@ See ImGui_EndListBox.)",
   const ImVec2 size { valueOr(API_RO(size_w), 0.f),
                       valueOr(API_RO(size_h), 0.f) };
   return ImGui::BeginListBox(label, size);
-});
+}
 
 DEFINE_API(__LINE__, void, EndListBox, (ImGui_Context*,ctx),
 "Only call EndListBox() if ImGui_BeginListBox returned true!",
 {
   FRAME_GUARD;
   ImGui::EndListBox();
-});
+}
 
 // ImGuiComboFlags
 DEFINE_ENUM(ImGui, ComboFlags_None,           "Flags for ImGui_BeginCombo.");
@@ -141,7 +141,7 @@ Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0)"
   const ImVec2 size { valueOr(API_RO(size_w), 0.f),
                       valueOr(API_RO(size_h), 0.f) };
   return ImGui::Selectable(label, selected, flags, size);
-});
+}
 
 // ImGuiSelectableFlags
 DEFINE_ENUM(ImGui, SelectableFlags_None,             "Flags for ImGui_Selectable.");

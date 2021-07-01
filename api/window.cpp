@@ -49,14 +49,14 @@ Default values: flags = ImGui_WindowFlags_None)",
     ImGui::End();
 
   return rv;
-});
+}
 
 DEFINE_API(__LINE__, void, End, (ImGui_Context*,ctx),
 R"(Pop window from the stack. See ImGui_Begin.)",
 {
   FRAME_GUARD;
   ImGui::End();
-});
+}
 
 DEFINE_API(__LINE__, bool, BeginChild, (ImGui_Context*,ctx)
 (const char*,str_id)(double*,API_RO(size_w))(double*,API_RO(size_h))
@@ -79,14 +79,14 @@ Default values: size_w = 0.0, size_h = 0.0, border = false, flags = ImGui_Window
   if(!rv)
     ImGui::EndChild();
   return rv;
-});
+}
 
 DEFINE_API(__LINE__, void, EndChild, (ImGui_Context*,ctx),
 "See ImGui_BeginChild.",
 {
   FRAME_GUARD;
   ImGui::EndChild();
-});
+}
 
 DEFINE_API(__LINE__, bool, BeginChildFrame, (ImGui_Context*,ctx)
 (const char*,str_id)(double,size_w)(double,size_h)(int*,API_RO(flags)),
@@ -101,28 +101,28 @@ Default values: flags = ImGui_WindowFlags_None)",
   if(!rv)
     ImGui::EndChildFrame();
   return rv;
-});
+}
 
 DEFINE_API(__LINE__, void, EndChildFrame, (ImGui_Context*,ctx),
 "See ImGui_BeginChildFrame.",
 {
   FRAME_GUARD;
   ImGui::EndChildFrame();
-});
+}
 
 DEFINE_API(__LINE__, bool, IsWindowAppearing, (ImGui_Context*,ctx),
 "",
 {
   FRAME_GUARD;
   return ImGui::IsWindowAppearing();
-});
+}
 
 DEFINE_API(__LINE__, bool, IsWindowCollapsed, (ImGui_Context*,ctx),
 "",
 {
   FRAME_GUARD;
   return ImGui::IsWindowCollapsed();
-});
+}
 
 DEFINE_API(__LINE__, bool, IsWindowFocused, (ImGui_Context*,ctx)
 (int*,API_RO(flags)),
@@ -132,7 +132,7 @@ Default values: flags = ImGui_FocusedFlags_None)",
 {
   FRAME_GUARD;
   return ImGui::IsWindowFocused(valueOr(API_RO(flags), ImGuiFocusedFlags_None));
-});
+}
 
 DEFINE_API(__LINE__, bool, IsWindowHovered, (ImGui_Context*,ctx)
 (int*,API_RO(flags)),
@@ -142,14 +142,14 @@ Default values: flags = ImGui_HoveredFlags_None)",
 {
   FRAME_GUARD;
   return ImGui::IsWindowHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
-});
+}
 
 DEFINE_API(__LINE__, bool, IsWindowDocked, (ImGui_Context*,ctx),
 "Is current window docked into another window or a REAPER docker?",
 {
   FRAME_GUARD;
   return ImGui::IsWindowDocked();
-});
+}
 
 DEFINE_API(__LINE__, void, GetWindowPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -159,7 +159,7 @@ DEFINE_API(__LINE__, void, GetWindowPos, (ImGui_Context*,ctx)
   const ImVec2 &vec { ImGui::GetWindowPos() };
   if(API_W(x)) *API_W(x) = vec.x;
   if(API_W(y)) *API_W(y) = vec.y;
-});
+}
 
 DEFINE_API(__LINE__, void, GetWindowSize, (ImGui_Context*,ctx)
 (double*,API_W(w))(double*,API_W(h)),
@@ -169,28 +169,28 @@ DEFINE_API(__LINE__, void, GetWindowSize, (ImGui_Context*,ctx)
   const ImVec2 &vec { ImGui::GetWindowSize() };
   if(API_W(w)) *API_W(w) = vec.x;
   if(API_W(h)) *API_W(h) = vec.y;
-});
+}
 
 DEFINE_API(__LINE__, double, GetWindowWidth, (ImGui_Context*,ctx),
 "Get current window width (shortcut for ({ImGui_GetWindowSize()})[1])",
 {
   FRAME_GUARD;
   return ImGui::GetWindowWidth();
-});
+}
 
 DEFINE_API(__LINE__, double, GetWindowHeight, (ImGui_Context*,ctx),
 "Get current window height (shortcut for ({ImGui_GetWindowSize()})[2])",
 {
   FRAME_GUARD;
   return ImGui::GetWindowHeight();
-});
+}
 
 DEFINE_API(__LINE__, int, GetWindowDockID, (ImGui_Context*,ctx),
 "See ImGui_SetNextWindowDockID.",
 {
   FRAME_GUARD;
   return ImGui::GetWindowDockID();
-});
+}
 
 DEFINE_API(__LINE__, void, SetNextWindowPos, (ImGui_Context*,ctx)
 (double,pos_x)(double,pos_y)(int*,API_RO(cond))
@@ -204,7 +204,7 @@ Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
   const ImVec2 pivot { valueOr(API_RO(pivot_x), 0.f),
                        valueOr(API_RO(pivot_y), 0.f) };
   ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y), cond, pivot);
-});
+}
 
 DEFINE_API(__LINE__, void, SetNextWindowSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h)(int*,API_RO(cond)),
@@ -215,7 +215,7 @@ Default values: cond = ImGui_Cond_Always)",
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
   ImGui::SetNextWindowSize(ImVec2(size_w, size_h), cond);
-});
+}
 
 DEFINE_API(__LINE__, void, SetNextWindowSizeConstraints, (ImGui_Context*,ctx)
 (double,size_min_w)(double,size_min_h)(double,size_max_w)(double,size_max_h),
@@ -224,7 +224,7 @@ DEFINE_API(__LINE__, void, SetNextWindowSizeConstraints, (ImGui_Context*,ctx)
   FRAME_GUARD;
   ImGui::SetNextWindowSizeConstraints(
     ImVec2(size_min_w, size_min_h), ImVec2(size_max_w, size_max_h));
-});
+}
 
 DEFINE_API(__LINE__, void, SetNextWindowContentSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h),
@@ -232,7 +232,7 @@ DEFINE_API(__LINE__, void, SetNextWindowContentSize, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetNextWindowContentSize(ImVec2(size_w, size_h));
-});
+}
 
 DEFINE_API(__LINE__, void, SetNextWindowCollapsed, (ImGui_Context*,ctx)
 (bool,collapsed)(int*,API_RO(cond)),
@@ -243,14 +243,14 @@ Default values: cond = ImGui_Cond_Always)",
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
   ImGui::SetNextWindowCollapsed(collapsed, cond);
-});
+}
 
 DEFINE_API(__LINE__, void, SetNextWindowFocus, (ImGui_Context*,ctx),
 "Set next window to be focused / top-most. Call before ImGui_Begin.",
 {
   FRAME_GUARD;
   ImGui::SetNextWindowFocus();
-});
+}
 
 DEFINE_API(__LINE__, void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
 (double,alpha),
@@ -258,7 +258,7 @@ DEFINE_API(__LINE__, void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetNextWindowBgAlpha(alpha);
-});
+}
 
 DEFINE_API(__LINE__, void, SetNextWindowDockID, (ImGui_Context*,ctx)
 (int,dock_id)(int*,API_RO(cond)),
@@ -271,7 +271,7 @@ Default values: cond = ImGui_Cond_Always)",
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
   ImGui::SetNextWindowDockID(dock_id, cond);
-});
+}
 
 DEFINE_API(__LINE__, void, SetWindowPos, (ImGui_Context*,ctx)
 (double,pos_x)(double,pos_y)(int*,API_RO(cond)),
@@ -282,7 +282,7 @@ Default values: cond = ImGui_Cond_Always)",
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
   ImGui::SetWindowPos(ImVec2(pos_x, pos_y), cond);
-});
+}
 
 DEFINE_API(__LINE__, void, SetWindowSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h)(int*,API_RO(cond)),
@@ -293,7 +293,7 @@ Default values: cond = ImGui_Cond_Always)",
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
   ImGui::SetWindowSize(ImVec2(size_w, size_h), cond);
-});
+}
 
 DEFINE_API(__LINE__, void, SetWindowCollapsed, (ImGui_Context*,ctx)
 (bool,collapsed)(int*,API_RO(cond)),
@@ -304,14 +304,14 @@ Default values: cond = ImGui_Cond_Always)",
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
   ImGui::SetWindowCollapsed(collapsed, cond);
-});
+}
 
 DEFINE_API(__LINE__, void, SetWindowFocus, (ImGui_Context*,ctx),
 "(Not recommended) Set current window to be focused / top-most. Prefer using ImGui_SetNextWindowFocus.",
 {
   FRAME_GUARD;
   ImGui::SetWindowFocus();
-});
+}
 
 DEFINE_API(__LINE__, void, SetWindowPosEx, (ImGui_Context*,ctx)
 (const char*,name)(double,pos_x)(double,pos_y)(int*,API_RO(cond)),
@@ -322,7 +322,7 @@ Default values: cond = ImGui_Cond_Always)",
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
   ImGui::SetWindowPos(name, ImVec2(pos_x, pos_y), cond);
-});
+}
 
 DEFINE_API(__LINE__, void, SetWindowSizeEx, (ImGui_Context*,ctx)
 (const char*,name)(double,size_w)(double,size_h)(int*,API_RO(cond)),
@@ -333,7 +333,7 @@ Default values: cond = ImGui_Cond_Always)",
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
   ImGui::SetWindowSize(name, ImVec2(size_w, size_h), cond);
-});
+}
 
 DEFINE_API(__LINE__, void, SetWindowCollapsedEx, (ImGui_Context*,ctx)
 (const char*,name)(bool,collapsed)(int*,API_RO(cond)),
@@ -344,7 +344,7 @@ Default values: cond = ImGui_Cond_Always)",
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
   ImGui::SetWindowCollapsed(name, collapsed, cond);
-});
+}
 
 DEFINE_API(__LINE__, void, SetWindowFocusEx, (ImGui_Context*,ctx)
 (const char*,name),
@@ -353,7 +353,7 @@ DEFINE_API(__LINE__, void, SetWindowFocusEx, (ImGui_Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(name);
   ImGui::SetWindowFocus(name);
-});
+}
 
 DEFINE_API(__LINE__, void, GetContentRegionAvail, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -364,7 +364,7 @@ DEFINE_API(__LINE__, void, GetContentRegionAvail, (ImGui_Context*,ctx)
   const ImVec2 &vec { ImGui::GetContentRegionAvail() };
   if(API_W(x)) *API_W(x) = vec.x;
   if(API_W(y)) *API_W(y) = vec.y;
-});
+}
 
 DEFINE_API(__LINE__, void, GetContentRegionMax, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -375,7 +375,7 @@ DEFINE_API(__LINE__, void, GetContentRegionMax, (ImGui_Context*,ctx)
   const ImVec2 &vec { ImGui::GetContentRegionMax() };
   if(API_W(x)) *API_W(x) = vec.x;
   if(API_W(y)) *API_W(y) = vec.y;
-});
+}
 
 DEFINE_API(__LINE__, void, GetWindowContentRegionMin, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -386,7 +386,7 @@ DEFINE_API(__LINE__, void, GetWindowContentRegionMin, (ImGui_Context*,ctx)
   const ImVec2 &vec { ImGui::GetWindowContentRegionMin() };
   if(API_W(x)) *API_W(x) = vec.x;
   if(API_W(y)) *API_W(y) = vec.y;
-});
+}
 
 DEFINE_API(__LINE__, void, GetWindowContentRegionMax, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -397,14 +397,14 @@ DEFINE_API(__LINE__, void, GetWindowContentRegionMax, (ImGui_Context*,ctx)
   const ImVec2 &vec { ImGui::GetWindowContentRegionMax() };
   if(API_W(x)) *API_W(x) = vec.x;
   if(API_W(y)) *API_W(y) = vec.y;
-});
+}
 
 DEFINE_API(__LINE__, double, GetWindowContentRegionWidth, (ImGui_Context*,ctx),
 "",
 {
   FRAME_GUARD;
   return ImGui::GetWindowContentRegionWidth();
-});
+}
 
 // Windows Scrolling
 DEFINE_API(__LINE__, double, GetScrollX, (ImGui_Context*,ctx),
@@ -412,14 +412,14 @@ DEFINE_API(__LINE__, double, GetScrollX, (ImGui_Context*,ctx),
 {
   FRAME_GUARD;
   return ImGui::GetScrollX();
-});
+}
 
 DEFINE_API(__LINE__, double, GetScrollY, (ImGui_Context*,ctx),
 "Get scrolling amount [0 .. ImGui_GetScrollMaxY()]",
 {
   FRAME_GUARD;
   return ImGui::GetScrollY();
-});
+}
 
 DEFINE_API(__LINE__, void, SetScrollX, (ImGui_Context*,ctx)
 (double,scroll_x),
@@ -427,7 +427,7 @@ DEFINE_API(__LINE__, void, SetScrollX, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetScrollX(scroll_x);
-});
+}
 
 DEFINE_API(__LINE__, void, SetScrollY, (ImGui_Context*,ctx)
 (double,scroll_y),
@@ -435,21 +435,21 @@ DEFINE_API(__LINE__, void, SetScrollY, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetScrollY(scroll_y);
-});
+}
 
 DEFINE_API(__LINE__, double, GetScrollMaxX, (ImGui_Context*,ctx),
 "Get maximum scrolling amount ~~ ContentSize.x - WindowSize.x - DecorationsSize.x",
 {
   FRAME_GUARD;
   return ImGui::GetScrollMaxX();
-});
+}
 
 DEFINE_API(__LINE__, double, GetScrollMaxY, (ImGui_Context*,ctx),
 "Get maximum scrolling amount ~~ ContentSize.y - WindowSize.y - DecorationsSize.y",
 {
   FRAME_GUARD;
   return ImGui::GetScrollMaxY();
-});
+}
 
 DEFINE_API(__LINE__, void, SetScrollHereX, (ImGui_Context*,ctx)
 (double*,API_RO(center_x_ratio)),
@@ -459,7 +459,7 @@ Default values: center_x_ratio = 0.5)",
 {
   FRAME_GUARD;
   ImGui::SetScrollHereX(valueOr(API_RO(center_x_ratio), 0.5));
-});
+}
 
 DEFINE_API(__LINE__, void, SetScrollHereY, (ImGui_Context*,ctx)
 (double*,API_RO(center_y_ratio)),
@@ -469,7 +469,7 @@ Default values: center_y_ratio = 0.5)",
 {
   FRAME_GUARD;
   ImGui::SetScrollHereY(valueOr(API_RO(center_y_ratio), 0.5));
-});
+}
 
 DEFINE_API(__LINE__, void, SetScrollFromPosX, (ImGui_Context*,ctx)
 (double,local_x)(double*,API_RO(center_x_ratio)),
@@ -479,7 +479,7 @@ Default values: center_x_ratio = 0.5)",
 {
   FRAME_GUARD;
   ImGui::SetScrollFromPosX(local_x, valueOr(API_RO(center_x_ratio), 0.5));
-});
+}
 
 DEFINE_API(__LINE__, void, SetScrollFromPosY, (ImGui_Context*,ctx)
 (double,local_y)(double*,API_RO(center_y_ratio)),
@@ -489,7 +489,7 @@ Default values: center_y_ratio = 0.5)",
 {
   FRAME_GUARD;
   ImGui::SetScrollFromPosY(local_y, valueOr(API_RO(center_y_ratio), 0.5));
-});
+}
 
 DEFINE_API(__LINE__, void, ShowMetricsWindow, (ImGui_Context*,ctx)
 (bool*,API_RW(p_open)),
@@ -497,7 +497,7 @@ R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw c
 {
   FRAME_GUARD;
   ImGui::ShowMetricsWindow(openPtrBehavior(API_RW(p_open)));
-});
+}
 
 // ImGuiFocusedFlags
 DEFINE_ENUM(ImGui, FocusedFlags_None,                "Flags for ImGui_IsWindowFocused.");
