@@ -87,7 +87,7 @@ Default values: val2 = nil)",
     ImGui::PushStyleVar(var_idx, ImVec2(val1, *API_RO(val2)));
     break;
   }
-});
+}
 
 DEFINE_API(void, PopStyleVar, (ImGui_Context*,ctx)
 (int*,API_RO(count)),
@@ -97,7 +97,7 @@ Default values: count = 1)",
 {
   FRAME_GUARD;
   ImGui::PopStyleVar(valueOr(API_RO(count), 1));
-});
+}
 
 #define CASE_FLOAT_VAR(var)                   \
   case ImGuiStyleVar_##var:                   \
@@ -148,7 +148,7 @@ DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
   default:
     throw reascript_error { "unknown style variable" };
   }
-});
+}
 
 #undef CASE_FLOAT_VAR
 #undef CASE_IMVEC2_VAR
@@ -162,7 +162,7 @@ Default values: alpha_mul = 1.0)",
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
   return Color::abgr2rgba(ImGui::GetColorU32(idx, valueOr(API_RO(alpha_mul), 1.0)));
-});
+}
 
 DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
 (int,col_rgba),
@@ -170,7 +170,7 @@ DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return Color::abgr2rgba(ImGui::GetColorU32(Color::rgba2abgr(col_rgba)));
-});
+}
 
 DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
 (int,idx),
@@ -180,7 +180,7 @@ DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
   const ImVec4 &col { ImGui::GetStyleColorVec4(idx) };
   return Color{col}.pack();
-});
+}
 
 DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
 (int,idx)(int,col_rgba),
@@ -189,7 +189,7 @@ DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
   ImGui::PushStyleColor(idx, ImVec4{Color(col_rgba)});
-});
+}
 
 DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
 (int*,API_RO(count)),
@@ -197,7 +197,7 @@ DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::PopStyleColor(valueOr(API_RO(count), 1));
-});
+}
 
 // ImGuiCol
 DEFINE_ENUM(ImGui, Col_Text,                  "");

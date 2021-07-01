@@ -63,9 +63,9 @@ for:
       esac
     artifacts:
       - path: build/reaper_imgui*.so
-      - path: build/tools/imgui_python.py
-      - path: build/tools/reaper_imgui_doc.html
-      - path: build/tools/reaper_imgui_functions.h
+      - path: build/tools/genbinding/imgui_python.py
+      - path: build/tools/genbinding/reaper_imgui_doc.html
+      - path: build/tools/genbinding/reaper_imgui_functions.h
 
   - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
     cache:
@@ -86,9 +86,9 @@ for:
       - sudo curl -k https://curl.se/ca/cacert.pem -o /etc/ssl/cert.pem
     artifacts:
       - path: build/reaper_imgui*.dylib
-      - path: build/tools/imgui_python.py
-      - path: build/tools/reaper_imgui_doc.html
-      - path: build/tools/reaper_imgui_functions.h
+      - path: build/tools/genbinding/imgui_python.py
+      - path: build/tools/genbinding/reaper_imgui_doc.html
+      - path: build/tools/genbinding/reaper_imgui_functions.h
 
   - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2022 ] }
     cache:
@@ -104,9 +104,9 @@ for:
     artifacts:
       - path: build\reaper_imgui*.dll
       - path: build\reaper_imgui*.pdb
-      - path: build\tools\imgui_python.py
-      - path: build\tools\reaper_imgui_doc.html
-      - path: build\tools\reaper_imgui_functions.h
+      - path: build\tools\genbinding\imgui_python.py
+      - path: build\tools\genbinding\reaper_imgui_doc.html
+      - path: build\tools\genbinding\reaper_imgui_functions.h
 
 environment:
   matrix:

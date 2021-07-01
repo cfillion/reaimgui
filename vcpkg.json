@@ -2,7 +2,6 @@
   "name": "reaimgui",
   "version-string": "current",
   "dependencies": [
-    "boost-preprocessor",
     "boost-type-index",
     { "name": "boost-variant", "platform": "osx" },
     { "name": "freetype", "default-features": false },

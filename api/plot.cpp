@@ -41,7 +41,7 @@ DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
     valueOr(API_RO(values_offset), 0), API_RO(overlay_text),
     valueOr(API_RO(scale_min), FLT_MAX), valueOr(API_RO(scale_max), FLT_MAX),
     ImVec2 { valueOr(API_RO(graph_size_w), 0.f), valueOr(API_RO(graph_size_h), 0.0f) });
-});
+}
 
 DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)(int*,API_RO(values_offset))
@@ -58,4 +58,4 @@ DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
     valueOr(API_RO(values_offset), 0), API_RO(overlay_text),
     valueOr(API_RO(scale_min), FLT_MAX), valueOr(API_RO(scale_max), FLT_MAX),
     ImVec2 { valueOr(API_RO(graph_size_w), 0.f), valueOr(API_RO(graph_size_h), 0.f) });
-});
+}

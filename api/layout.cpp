@@ -22,7 +22,7 @@ DEFINE_API(void, Separator, (ImGui_Context*,ctx),
 {
   FRAME_GUARD;
   ImGui::Separator();
-});
+}
 
 DEFINE_API(void, SameLine, (ImGui_Context*,ctx)
 (double*,API_RO(offset_from_start_x))(double*,API_RO(spacing)),
@@ -33,28 +33,28 @@ Default values: offset_from_start_x = 0.0, spacing = -1.0.)",
   FRAME_GUARD;
   ImGui::SameLine(valueOr(API_RO(offset_from_start_x), 0.f),
     valueOr(API_RO(spacing), -1.0));
-});
+}
 
 DEFINE_API(void, NewLine, (ImGui_Context*,ctx),
 "Undo a SameLine() or force a new line when in an horizontal-layout context.",
 {
   FRAME_GUARD;
   ImGui::NewLine();
-});
+}
 
 DEFINE_API(void, Spacing, (ImGui_Context*,ctx),
 "Add vertical spacing.",
 {
   FRAME_GUARD;
   ImGui::Spacing();
-});
+}
 
 DEFINE_API(void, Dummy, (ImGui_Context*,ctx)(double,size_w)(double,size_h),
 "Add a dummy item of given size. unlike ImGui_InvisibleButton, Dummy() won't take the mouse click or be navigable into.",
 {
   FRAME_GUARD;
   ImGui::Dummy(ImVec2(size_w, size_h));
-});
+}
 
 DEFINE_API(void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
 R"(Move content position toward the right, by 'indent_w', or ImGui_StyleVar_IndentSpacing if 'indent_w' <= 0
@@ -63,7 +63,7 @@ Default values: indent_w = 0.0)",
 {
   FRAME_GUARD;
   ImGui::Indent(valueOr(API_RO(indent_w), 0.f));
-});
+}
 
 DEFINE_API(void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
 R"(Move content position back to the left, by 'indent_w', or ImGui_StyleVar_IndentSpacing if 'indent_w' <= 0
@@ -72,14 +72,14 @@ Default values: indent_w = 0.0)",
 {
   FRAME_GUARD;
   ImGui::Unindent(valueOr(API_RO(indent_w), 0.f));
-});
+}
 
 DEFINE_API(void, BeginGroup, (ImGui_Context*,ctx),
 "Lock horizontal starting position. See ImGui_EndGroup.",
 {
   FRAME_GUARD;
   ImGui::BeginGroup();
-});
+}
 
 DEFINE_API(void, EndGroup, (ImGui_Context*,ctx),
 R"(Unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use ImGui_IsItemHovered or layout primitives such as ImGui_SameLine on whole group, etc.).
@@ -88,7 +88,7 @@ See ImGui_BeginGroup.)",
 {
   FRAME_GUARD;
   ImGui::EndGroup();
-});
+}
 
 DEFINE_API(void, GetCursorPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -98,21 +98,21 @@ DEFINE_API(void, GetCursorPos, (ImGui_Context*,ctx)
   const ImVec2 &pos { ImGui::GetCursorPos() };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}
 
 DEFINE_API(double, GetCursorPosX, (ImGui_Context*,ctx),
 "Cursor X position in window",
 {
   FRAME_GUARD;
   return ImGui::GetCursorPosX();
-});
+}
 
 DEFINE_API(double, GetCursorPosY, (ImGui_Context*,ctx),
 "Cursor Y position in window",
 {
   FRAME_GUARD;
   return ImGui::GetCursorPosY();
-});
+}
 
 DEFINE_API(void, SetCursorPos, (ImGui_Context*,ctx)
 (double,local_pos_x)(double,local_pos_y),
@@ -120,7 +120,7 @@ DEFINE_API(void, SetCursorPos, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetCursorPos(ImVec2(local_pos_x, local_pos_y));
-});
+}
 
 DEFINE_API(void, SetCursorPosX, (ImGui_Context*,ctx)
 (double,local_x),
@@ -128,7 +128,7 @@ DEFINE_API(void, SetCursorPosX, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetCursorPosX(local_x);
-});
+}
 
 DEFINE_API(void, SetCursorPosY, (ImGui_Context*,ctx)
 (double,local_y),
@@ -136,7 +136,7 @@ DEFINE_API(void, SetCursorPosY, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetCursorPosY(local_y);
-});
+}
 
 DEFINE_API(void, GetCursorStartPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -146,7 +146,7 @@ DEFINE_API(void, GetCursorStartPos, (ImGui_Context*,ctx)
   const ImVec2 &pos { ImGui::GetCursorStartPos() };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}
 
 DEFINE_API(void, GetCursorScreenPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -156,7 +156,7 @@ DEFINE_API(void, GetCursorScreenPos, (ImGui_Context*,ctx)
   const ImVec2 &pos { ImGui::GetCursorScreenPos() };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}
 
 DEFINE_API(void, SetCursorScreenPos, (ImGui_Context*,ctx)
 (double,pos_x)(double,pos_y),
@@ -164,21 +164,21 @@ DEFINE_API(void, SetCursorScreenPos, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetCursorScreenPos(ImVec2(pos_x, pos_y));
-});
+}
 
 DEFINE_API(double, GetFrameHeight, (ImGui_Context*,ctx),
 "~ ImGui_GetFontSize + ImGui_StyleVar_FramePadding.y * 2",
 {
   FRAME_GUARD;
   return ImGui::GetFrameHeight();
-});
+}
 
 DEFINE_API(double, GetFrameHeightWithSpacing, (ImGui_Context*,ctx),
 "~ ImGui_GetFontSize + ImGui_StyleVar_FramePadding.y * 2 + ImGui_StyleVar_ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)",
 {
   FRAME_GUARD;
   return ImGui::GetFrameHeightWithSpacing();
-});
+}
 
 DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
@@ -192,14 +192,14 @@ DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
     ImVec2(clip_rect_max_x, clip_rect_max_y),
     intersect_with_current_clip_rect
   );
-});
+}
 
 DEFINE_API(void, PopClipRect, (ImGui_Context*,ctx),
 "See ImGui_PushClipRect",
 {
   FRAME_GUARD;
   ImGui::PopClipRect();
-});
+}
 
 DEFINE_API(bool, IsRectVisible, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h),
@@ -207,7 +207,7 @@ DEFINE_API(bool, IsRectVisible, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::IsRectVisible(ImVec2(size_w, size_h));
-});
+}
 
 DEFINE_API(bool, IsRectVisibleEx, (ImGui_Context*,ctx)
 (double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y),
@@ -216,4 +216,4 @@ DEFINE_API(bool, IsRectVisibleEx, (ImGui_Context*,ctx)
   FRAME_GUARD;
   return ImGui::IsRectVisible(
     ImVec2(rect_min_x, rect_min_y), ImVec2(rect_max_x, rect_max_y));
-});
+}

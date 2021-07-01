@@ -47,7 +47,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
     return true;
   }
   return false;
-});
+}
 
 DEFINE_API(bool, ColorEdit3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgb))(int*,API_RO(flags)),
@@ -64,7 +64,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
   ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   flags |= ImGuiColorEditFlags_NoAlpha;
   return API_ColorEdit4(ctx, label, API_RW(col_rgb), &flags);
-});
+}
 
 DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgba))(int*,API_RO(flags))(int*,API_RO(ref_col)),
@@ -89,7 +89,7 @@ DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
     return true;
   }
   return false;
-});
+}
 
 DEFINE_API(bool, ColorPicker3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgb))(int*,API_RO(flags)),
@@ -104,7 +104,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
   ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
   flags |= ImGuiColorEditFlags_NoAlpha;
   return API_ColorPicker4(ctx, label, API_RW(col_rgb), &flags, nullptr);
-});
+}
 
 DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)
 (const char*,desc_id)(int,col_rgba)(int*,API_RO(flags))
@@ -124,7 +124,7 @@ Default values: flags = ImGui_ColorEditFlags_None, size_w = 0.0, size_h = 0.0)",
                       valueOr(API_RO(size_h), 0.f) };
 
   return ImGui::ColorButton(desc_id, col, flags, size);
-});
+}
 
 DEFINE_API(void, SetColorEditOptions, (ImGui_Context*,ctx)
 (int,flags),
@@ -133,7 +133,7 @@ DEFINE_API(void, SetColorEditOptions, (ImGui_Context*,ctx)
   FRAME_GUARD;
   sanitizeColorEditFlags(flags);
   ImGui::SetColorEditOptions(flags);
-});
+}
 
 // ImGuiColorEditFlags
 DEFINE_ENUM(ImGui, ColorEditFlags_None,             "Flags for ImGui_ColorEdit3 / ImGui_ColorEdit4 / ImGui_ColorPicker3 / ImGui_ColorPicker4 / ImGui_ColorButton.");

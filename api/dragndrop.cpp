@@ -39,7 +39,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
 {
   FRAME_GUARD;
   return ImGui::BeginDragDropSource(valueOr(API_RO(flags), ImGuiDragDropFlags_None));
-});
+}
 
 DEFINE_API(bool, SetDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)(const char*,data)(int*,API_RO(cond)),
@@ -55,21 +55,21 @@ Default values: cond = ImGui_Cond_Always)",
 
   return ImGui::SetDragDropPayload(type, data, data ? strlen(data) : 0,
     valueOr(API_RO(cond), ImGuiCond_Always));
-});
+}
 
 DEFINE_API(void, EndDragDropSource, (ImGui_Context*,ctx),
 "Only call EndDragDropSource() if ImGui_BeginDragDropSource returns true!",
 {
   FRAME_GUARD;
   ImGui::EndDragDropSource();
-});
+}
 
 DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
 "Call after submitting an item that may receive a payload. If this returns true, you can call ImGui_AcceptDragDropPayload + ImGui_EndDragDropTarget.",
 {
   FRAME_GUARD;
   return ImGui::BeginDragDropTarget();
-});
+}
 
 static void copyPayload(const ImGuiPayload *payload, char **reabuf, const int reabuf_sz)
 {
@@ -108,7 +108,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
     copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
 
   return payload;
-});
+}
 
 static bool AcceptDragDropPayloadColor(int *color, bool alpha, ImGuiDragDropFlags flags)
 {
@@ -139,7 +139,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
   FRAME_GUARD;
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   return AcceptDragDropPayloadColor(API_W(rgb), false, flags);
-});
+}
 
 DEFINE_API(bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
 (int*,API_W(rgba))(int*,API_RO(flags)),
@@ -150,7 +150,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
   FRAME_GUARD;
   const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
   return AcceptDragDropPayloadColor(API_W(rgba), true, flags);
-});
+}
 
 DEFINE_API(bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
 (int*,API_W(count))(int*,API_RO(flags)),
@@ -168,14 +168,14 @@ Default values: flags = ImGui_DragDropFlags_None)",
     *API_W(count) = ctx->draggedFiles().size();
 
   return payload;
-});
+}
 
 DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
 "Only call EndDragDropTarget() if ImGui_BeginDragDropTarget returns true!",
 {
   FRAME_GUARD;
   ImGui::EndDragDropTarget();
-});
+}
 
 DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
 (char*,API_W(type))(int,API_W_SZ(type))
@@ -196,7 +196,7 @@ DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
   if(API_W(is_delivery)) *API_W(is_delivery) = payload->Delivery;
 
   return true;
-});
+}
 
 DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
 (int,index)(char*,API_W(filename))(int,API_W_SZ(filename)),
@@ -215,7 +215,7 @@ DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
   snprintf(API_W(filename), API_W_SZ(filename), "%s", files[index].c_str());
 
   return true;
-});
+}
 
 // ImGuiDragDropFlags
 DEFINE_ENUM(ImGui, DragDropFlags_None,                     "Flags for ImGui_BeginDragDropSource, ImGui_AcceptDragDropPayload.");

@@ -164,7 +164,8 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION "${REAPER_USER_PLUGINS}" # Windows .dll
   LIBRARY DESTINATION "${REAPER_USER_PLUGINS}" # Linux .so/macOS .dylib
 )
+add_subdirectory(tools/genapidef)
+add_subdirectory(tools/genbinding)
 add_subdirectory(api)
 add_subdirectory(src)
-add_subdirectory(tools)
 target_link_libraries(${PROJECT_NAME} PRIVATE api src)

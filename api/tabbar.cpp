@@ -25,14 +25,14 @@ Default values: flags = ImGui_TabBarFlags_None)",
 {
   FRAME_GUARD;
   return ImGui::BeginTabBar(str_id, valueOr(API_RO(flags), ImGuiTabBarFlags_None));
-});
+}
 
 DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
 "Only call EndTabBar() if BeginTabBar() returns true!",
 {
   FRAME_GUARD;
   ImGui::EndTabBar();
-});
+}
 
 DEFINE_API(bool, BeginTabItem, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
@@ -43,14 +43,14 @@ Default values: p_open = nil, flags = ImGui_TabItemFlags_None)",
   FRAME_GUARD;
   return ImGui::BeginTabItem(label, openPtrBehavior(API_RWO(p_open)),
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
-});
+}
 
 DEFINE_API(void, EndTabItem, (ImGui_Context*,ctx),
 "Only call EndTabItem() if BeginTabItem() returns true!",
 {
   FRAME_GUARD;
   ImGui::EndTabItem();
-});
+}
 
 DEFINE_API(bool, TabItemButton, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags)),
@@ -61,7 +61,7 @@ Default values: flags = ImGui_TabItemFlags_None)",
   FRAME_GUARD;
   return ImGui::TabItemButton(label,
     valueOr(API_RO(flags), ImGuiTabItemFlags_None));
-});
+}
 
 DEFINE_API(void, SetTabItemClosed, (ImGui_Context*,ctx)
 (const char*,tab_or_docked_window_label),
@@ -69,7 +69,7 @@ DEFINE_API(void, SetTabItemClosed, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetTabItemClosed(tab_or_docked_window_label);
-});
+}
 
 // ImGuiTabBarFlags
 DEFINE_ENUM(ImGui, TabBarFlags_None,                         "Flags for ImGui_BeginTabBar.");

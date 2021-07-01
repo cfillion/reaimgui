@@ -39,7 +39,7 @@ Default values: flags = ImGui_WindowFlags_None)",
   FRAME_GUARD;
   WindowFlags flags { API_RO(flags) };
   return ImGui::BeginPopup(str_id, flags);
-});
+}
 
 DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
@@ -50,14 +50,14 @@ Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
   FRAME_GUARD;
   WindowFlags flags { API_RO(flags) };
   return ImGui::BeginPopupModal(name, openPtrBehavior(API_RWO(p_open)), flags);
-});
+}
 
 DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
 "Only call EndPopup() if BeginPopupXXX() returns true!",
 {
   FRAME_GUARD;
   ImGui::EndPopup();
-});
+}
 
 DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(popup_flags)),
@@ -70,7 +70,7 @@ Default values: popup_flags = ImGui_PopupFlags_None)",
 {
   FRAME_GUARD;
   ImGui::OpenPopup(str_id, valueOr(API_RO(popup_flags), ImGuiPopupFlags_None));
-});
+}
 
 DEFINE_API(void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
@@ -83,7 +83,7 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 
   ImGui::OpenPopupOnItemClick(API_RO(str_id),
     valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
-});
+}
 
 DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
 R"(Manually close the popup we have begin-ed into. Use inside the ImGui_BeginPopup/ImGui_EndPopup scope to close manually.
@@ -92,7 +92,7 @@ CloseCurrentPopup() is called by default by ImGui_Selectable/ImGui_MenuItem when
 {
   FRAME_GUARD;
   ImGui::CloseCurrentPopup();
-});
+}
 
 DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
@@ -110,7 +110,7 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 
   return ImGui::BeginPopupContextItem(API_RO(str_id),
     valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
-});
+}
 
 DEFINE_API(bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
@@ -123,7 +123,7 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 
   return ImGui::BeginPopupContextWindow(API_RO(str_id),
     valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
-});
+}
 
 DEFINE_API(bool, IsPopupOpen, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
@@ -137,28 +137,28 @@ Default values: flags = ImGui_PopupFlags_None)",
   FRAME_GUARD;
   const ImGuiPopupFlags flags { valueOr(API_RO(flags), ImGuiPopupFlags_None) };
   return ImGui::IsPopupOpen(str_id, flags);
-});
+}
 
 DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
 "Begin/append a tooltip window. To create full-featured tooltip (with any kind of items).",
 {
   FRAME_GUARD;
   ImGui::BeginTooltip();
-});
+}
 
 DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
 "",
 {
   FRAME_GUARD;
   ImGui::EndTooltip();
-});
+}
 
 DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
 "Set a text-only tooltip, typically use with ImGui_IsItemHovered. override any previous call to ImGui_SetTooltip.",
 {
   FRAME_GUARD;
   ImGui::SetTooltip("%s", text);
-});
+}
 
 // ImGuiPopupFlags
 DEFINE_ENUM(ImGui, PopupFlags_None,                    "Flags for OpenPopup*(), BeginPopupContext*(), ImGui_IsPopupOpen.");

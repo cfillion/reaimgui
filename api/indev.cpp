@@ -25,7 +25,7 @@ DEFINE_API(bool, IsMouseDown, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::IsMouseDown(button);
-});
+}
 
 DEFINE_API(double, GetMouseDownDuration, (ImGui_Context*,ctx)
 (int,button),
@@ -34,7 +34,7 @@ DEFINE_API(double, GetMouseDownDuration, (ImGui_Context*,ctx)
   FRAME_GUARD;
   IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(ImGuiIO::MouseDownDuration));
   return ctx->IO().MouseDownDuration[button];
-});
+}
 
 DEFINE_API(bool, IsMouseClicked, (ImGui_Context*,ctx)
 (int,button)(bool*,API_RO(repeat)),
@@ -44,7 +44,7 @@ Default values: repeat = false)",
 {
   FRAME_GUARD;
   return ImGui::IsMouseClicked(button, valueOr(API_RO(repeat), false));
-});
+}
 
 DEFINE_API(void, GetMouseClickedPos, (ImGui_Context*,ctx)
 (int,button)(double*,API_W(x))(double*,API_W(y)),
@@ -55,7 +55,7 @@ DEFINE_API(void, GetMouseClickedPos, (ImGui_Context*,ctx)
   const ImVec2 &pos { ctx->IO().MouseClickedPos[button] };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}
 
 DEFINE_API(bool, IsMouseReleased, (ImGui_Context*,ctx)
 (int,button),
@@ -63,7 +63,7 @@ DEFINE_API(bool, IsMouseReleased, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::IsMouseReleased(button);
-});
+}
 
 DEFINE_API(bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
 (int,button),
@@ -71,7 +71,7 @@ DEFINE_API(bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::IsMouseDoubleClicked(button);
-});
+}
 
 DEFINE_API(int, GetMouseClickedCount, (ImGui_Context*,ctx)
 (int,button),
@@ -92,7 +92,7 @@ Default values: clip = true)",
   return ImGui::IsMouseHoveringRect(
     ImVec2(r_min_x, r_min_y), ImVec2(r_max_x, r_max_y),
     valueOr(API_RO(clip), true));
-});
+}
 
 DEFINE_API(bool, IsMousePosValid, (ImGui_Context*,ctx)
 (double*,API_RO(mouse_pos_x))(double*,API_RO(mouse_pos_y)),
@@ -108,14 +108,14 @@ DEFINE_API(bool, IsMousePosValid, (ImGui_Context*,ctx)
   }
 
   return ImGui::IsMousePosValid(customPos ? &pos : nullptr);
-});
+}
 
 DEFINE_API(bool, IsAnyMouseDown, (ImGui_Context*,ctx),
 "Is any mouse button held?",
 {
   FRAME_GUARD;
   return ImGui::IsAnyMouseDown();
-});
+}
 
 DEFINE_API(void, GetMousePos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -125,7 +125,7 @@ DEFINE_API(void, GetMousePos, (ImGui_Context*,ctx)
   const ImVec2 &pos { ctx->IO().MousePos };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}
 
 DEFINE_API(void, GetMousePosOnOpeningCurrentPopup, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -135,7 +135,7 @@ DEFINE_API(void, GetMousePosOnOpeningCurrentPopup, (ImGui_Context*,ctx)
   const ImVec2 &pos { ImGui::GetMousePosOnOpeningCurrentPopup() };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}
 
 DEFINE_API(void, GetMouseWheel, (ImGui_Context*,ctx)
 (double*,API_W(vertical))(double*,API_W(horizontal)),
@@ -145,7 +145,7 @@ DEFINE_API(void, GetMouseWheel, (ImGui_Context*,ctx)
   const ImGuiIO &io { ctx->IO() };
   if(API_W(vertical))   *API_W(vertical)   = io.MouseWheel;
   if(API_W(horizontal)) *API_W(horizontal) = io.MouseWheelH;
-});
+}
 
 DEFINE_API(bool, IsMouseDragging, (ImGui_Context*,ctx)
 (int,button)(double*,API_RO(lock_threshold)),
@@ -155,7 +155,7 @@ Default values: lock_threshold = -1.0)",
 {
   FRAME_GUARD;
   return ImGui::IsMouseDragging(button, valueOr(API_RO(lock_threshold), -1.0));
-});
+}
 
 DEFINE_API(void, GetMouseDelta, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
@@ -164,7 +164,7 @@ DEFINE_API(void, GetMouseDelta, (ImGui_Context*,ctx)
   FRAME_GUARD;
   const ImVec2 &delta { ctx->IO().MouseDelta };
   *API_W(x) = delta.x, *API_W(y) = delta.y;
-});
+}
 
 DEFINE_API(void, GetMouseDragDelta, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y))
@@ -180,7 +180,7 @@ Default values: button = ImGui_MouseButton_Left, lock_threshold = -1.0)",
   };
   if(API_W(x)) *API_W(x) = delta.x;
   if(API_W(y)) *API_W(y) = delta.y;
-});
+}
 
 DEFINE_API(void, ResetMouseDragDelta, (ImGui_Context*,ctx)
 (int*,API_RO(button)),
@@ -188,14 +188,14 @@ DEFINE_API(void, ResetMouseDragDelta, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::ResetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left));
-});
+}
 
 DEFINE_API(int, GetMouseCursor, (ImGui_Context*,ctx),
 "Get desired cursor type, reset every frame. This is updated during the frame.",
 {
   FRAME_GUARD;
   return ImGui::GetMouseCursor();
-});
+}
 
 DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
 (int,cursor_type),
@@ -204,7 +204,7 @@ DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
   FRAME_GUARD;
   IM_ASSERT(cursor_type >= 0 && cursor_type < ImGuiMouseCursor_COUNT);
   ImGui::SetMouseCursor(cursor_type);
-});
+}
 
 DEFINE_API(bool, IsKeyDown, (ImGui_Context*,ctx)
 (int,key),
@@ -212,7 +212,7 @@ DEFINE_API(bool, IsKeyDown, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::IsKeyDown(key);
-});
+}
 
 DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
 (int,key),
@@ -220,7 +220,7 @@ DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::GetKeyData(key)->DownDuration;
-});
+}
 
 DEFINE_API(bool, IsKeyPressed, (ImGui_Context*,ctx)
 (int,key)(bool*,API_RO(repeat)),
@@ -230,7 +230,7 @@ Default values: repeat = true)",
 {
   FRAME_GUARD;
   return ImGui::IsKeyPressed(key, valueOr(API_RO(repeat), true));
-});
+}
 
 DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
 (int,key),
@@ -238,7 +238,7 @@ DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::IsKeyReleased(key);
-});
+}
 
 DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
 (int,key)(double,repeat_delay)(double,rate),
@@ -246,7 +246,7 @@ DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
-});
+}
 
 DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
 (int,idx)(int*,API_W(unicode_char)),
@@ -260,7 +260,7 @@ DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
   }
 
   return false;
-});
+}
 
 DEFINE_API(void, CaptureKeyboardFromApp, (ImGui_Context*,ctx)
 (bool*,API_RO(want_capture_keyboard_value)),
@@ -271,7 +271,7 @@ Default values: want_capture_keyboard_value = true)",
   FRAME_GUARD;
   const bool value { valueOr(API_RO(want_capture_keyboard_value), true) };
   ImGui::CaptureKeyboardFromApp(value);
-});
+}
 
 // ImGuiMouseButton
 DEFINE_ENUM(ImGui, MouseButton_Left,   "");

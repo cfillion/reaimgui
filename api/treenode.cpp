@@ -25,7 +25,7 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
 {
   FRAME_GUARD;
   return ImGui::TreeNodeEx(label, valueOr(API_RO(flags), ImGuiTreeNodeFlags_None));
-});
+}
 
 DEFINE_API(bool, TreeNodeEx, (ImGui_Context*,ctx)
 (const char*,str_id)(const char*,label)(int*,API_RO(flags)),
@@ -36,7 +36,7 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
   FRAME_GUARD;
   const ImGuiTreeNodeFlags flags { valueOr(API_RO(flags), ImGuiTreeNodeFlags_None) };
   return ImGui::TreeNodeEx(str_id, flags, "%s", label);
-});
+}
 
 DEFINE_API(void, TreePush, (ImGui_Context*,ctx)
 (const char*,str_id),
@@ -44,21 +44,21 @@ DEFINE_API(void, TreePush, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::TreePush(str_id);
-});
+}
 
 DEFINE_API(void, TreePop, (ImGui_Context*,ctx),
 "ImGui_Unindent()+ImGui_PopID()",
 {
   FRAME_GUARD;
   ImGui::TreePop();
-});
+}
 
 DEFINE_API(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
 "Horizontal distance preceding label when using ImGui_TreeNode*() or ImGui_Bullet() == (ImGui_GetFontSize + ImGui_StyleVar_FramePadding.x*2) for a regular unframed ImGui_TreeNode.",
 {
   FRAME_GUARD;
   return ImGui::GetTreeNodeToLabelSpacing();
-});
+}
 
 DEFINE_API(bool, CollapsingHeader, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RW(p_visible))(int*,API_RO(flags)),
@@ -76,7 +76,7 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
   // receives a NULL, and API_RWO aren't listed in the output values list.
   const ImGuiTreeNodeFlags flags { valueOr(API_RO(flags), ImGuiTreeNodeFlags_None) };
   return ImGui::CollapsingHeader(label, openPtrBehavior(API_RW(p_visible)), flags);
-});
+}
 
 DEFINE_API(void, SetNextItemOpen, (ImGui_Context*,ctx)
 (bool,is_open)(int*,API_RO(cond)),
@@ -86,14 +86,14 @@ Default values: cond = ImGui_Cond_Always.)",
 {
   FRAME_GUARD;
   ImGui::SetNextItemOpen(is_open, valueOr(API_RO(cond), ImGuiCond_Always));
-});
+}
 
 DEFINE_API(bool, IsItemToggledOpen, (ImGui_Context*,ctx),
 "Was the last item open state toggled? Set by ImGui_TreeNode.",
 {
   FRAME_GUARD;
   return ImGui::IsItemToggledOpen();
-});
+}
 
 // ImGuiTreeNodeFlags
 DEFINE_ENUM(ImGui, TreeNodeFlags_None,                 "Flags for ImGui_TreeNode, ImGui_TreeNodeEx, ImGui_CollapsingHeader.");

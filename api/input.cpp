@@ -58,7 +58,7 @@ DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
     return true;
   }
   return false;
-});
+}
 
 DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
@@ -79,7 +79,7 @@ DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
     return true;
   }
   return false;
-});
+}
 
 DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 (const char*,label)(const char*,hint)
@@ -98,7 +98,7 @@ DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
     return true;
   }
   return false;
-});
+}
 
 DEFINE_API(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v))(int*,API_RO(step))(int*,API_RO(step_fast))
@@ -110,7 +110,7 @@ DEFINE_API(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
   const InputTextFlags flags { API_RO(flags) };
   return ImGui::InputInt(label, API_RW(v),
     valueOr(API_RO(step), 1), valueOr(API_RO(step_fast), 100), flags);
-});
+}
 
 DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RO(flags)),
@@ -125,7 +125,7 @@ DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
@@ -141,7 +141,7 @@ DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
@@ -158,7 +158,7 @@ DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v))(double*,API_RO(step))(double*,API_RO(step_fast))
@@ -173,7 +173,7 @@ DEFINE_API(bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
   return ImGui::InputDouble(label, API_RW(v),
     valueOr(API_RO(step), 0.0), valueOr(API_RO(step_fast), 0.0),
     API_RO(format) ? API_RO(format) : "%.3f", flags);
-});
+}
 
 static bool inputDoubleN(const char *label, double *data, const size_t size,
   const char *format, const ImGuiInputTextFlags flags)
@@ -197,7 +197,7 @@ DEFINE_API(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
@@ -214,7 +214,7 @@ DEFINE_API(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
@@ -232,7 +232,7 @@ DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
 (reaper_array*,values)(double*,API_RO(step))(double*,API_RO(step_fast))
@@ -248,7 +248,7 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
   return ImGui::InputScalarN(label, ImGuiDataType_Double,
     values->data, values->size, API_RO(step), API_RO(step_fast),
     API_RO(format), flags);
-});
+}
 
 // ImGuiInputTextFlags
 DEFINE_ENUM(ImGui, InputTextFlags_None,                "Most of the InputTextFlags flags are only useful for ImGui_InputText and not for InputIntX, InputDouble etc.");

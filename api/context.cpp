@@ -27,21 +27,21 @@ Default values: config_flags = ImGui_ConfigFlags_None)",
 {
   const int flags { valueOr(API_RO(config_flags), ImGuiConfigFlags_None) };
   return new Context { label, flags };
-});
+}
 
 DEFINE_API(void, DestroyContext, (ImGui_Context*,ctx),
 R"(Close and free the resources used by a context.)",
 {
   assertValid(ctx);
   delete ctx;
-});
+}
 
 DEFINE_API(int, GetConfigFlags, (ImGui_Context*,ctx),
 "See ImGui_SetConfigFlags, ImGui_ConfigFlags_*.",
 {
   assertValid(ctx);
   return ctx->userConfigFlags();
-});
+}
 
 DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
 (int,flags),
@@ -49,28 +49,28 @@ DEFINE_API(void, SetConfigFlags, (ImGui_Context*,ctx)
 {
   assertValid(ctx);
   ctx->setUserConfigFlags(flags);
-});
+}
 
 DEFINE_API(double, GetTime, (ImGui_Context*,ctx),
 "Get global imgui time. Incremented every frame.",
 {
   FRAME_GUARD;
   return ImGui::GetTime();
-});
+}
 
 DEFINE_API(double, GetDeltaTime, (ImGui_Context*,ctx),
 "Time elapsed since last frame, in seconds.",
 {
   FRAME_GUARD;
   return ctx->IO().DeltaTime;
-});
+}
 
 DEFINE_API(int, GetFrameCount, (ImGui_Context*,ctx),
 "Get global imgui frame count. incremented by 1 every frame.",
 {
   FRAME_GUARD;
   return ImGui::GetFrameCount();
-});
+}
 
 // ImGuiConfigFlags
 DEFINE_ENUM(ImGui, ConfigFlags_None,                 "Flags for ImGui_SetConfigFlags.");
