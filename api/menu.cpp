@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "api_helper.hpp"
+#include "helper.hpp"
 
 DEFINE_API(__LINE__, bool, BeginMenuBar, (ImGui_Context*,ctx),
 R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag set on parent window). See ImGui_EndMenuBar.)",

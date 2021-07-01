@@ -668,8 +668,9 @@ static void humanBinding(std::ostream &stream)
 
       stream << "<p class=\"source\">"
                 "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
-                REAIMGUI_VERSION "/src/api/" << func->file << ".cpp#L"
-             << func->firstLine << "-L" << func->lastLine << "\">Edit on GitHub</a></p>";
+                REAIMGUI_VERSION "/api/" << func->file << ".cpp#L"
+             << func->firstLine << "-L" << func->lastLine
+             << "\">Edit on GitHub</a></p>";
 
       stream << "</details>";
     }

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "api_helper.hpp"
+#include "helper.hpp"
 
 DEFINE_API(__LINE__, bool, IsMouseDown, (ImGui_Context*,ctx)
 (int,button),

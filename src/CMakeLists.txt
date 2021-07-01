@@ -28,8 +28,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   OUTPUT_NAME "reaper_imgui-${ARCH_NAME}"
 )
 
-add_subdirectory(api)
-
 if(WIN32)
   target_sources(${PROJECT_NAME} PRIVATE
     version.rc win32_font.cpp win32_platform.cpp win32_window.cpp)

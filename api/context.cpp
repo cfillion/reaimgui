@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "api_helper.hpp"
+#include "helper.hpp"
 
 DEFINE_API(__LINE__, ImGui_Context*, CreateContext,
 (const char*,label)(int*,API_RO(config_flags)),

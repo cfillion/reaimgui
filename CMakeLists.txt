@@ -89,6 +89,7 @@ else()
 endif()
 
 add_subdirectory(src)
+add_subdirectory(api)
 add_subdirectory(tools)
 
 set(REAPER_USER_PLUGINS "UserPlugins")

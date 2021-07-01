@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "api_helper.hpp"
+#include "helper.hpp"
 
 // Undocumented & unsupported APIs. Use the functions below at your own risks.
 

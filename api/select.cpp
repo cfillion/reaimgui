@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "api_helper.hpp"
+#include "helper.hpp"
 
 // Allowing ReaScripts to input a null-separated string would be unsafe.
 // REAPER's buf, buf_sz mechanism does not handle strings containing null
