@@ -17,59 +17,31 @@
 
 #include "cocoa_window.hpp"
 
+#include "cocoa_inject.hpp"
 #include "cocoa_inputview.hpp"
 #include "context.hpp"
 #include "opengl_renderer.hpp"
 
 #include <imgui/imgui_internal.h>
-#include <objc/runtime.h>
 #include <reaper_plugin_secrets.h>
 
 static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
-@interface SWELLWindowOverride : NSObject
+@interface SWELLWindowOverride : NSWindow
 - (NSRect)constrainFrameRect:(NSRect)frameRect toScreen:(NSScreen *)screen;
 @end
 
 @implementation SWELLWindowOverride
 - (NSRect)constrainFrameRect:(NSRect)frameRect toScreen:(NSScreen *)screen
 {
+  if(!CocoaInject::isTarget(self))
+    return [super constrainFrameRect:frameRect toScreen:screen];
+
   // allow setPosition to move the window outside of the woring area
   return frameRect;
 }
 @end
-
-class Subclass {
-public:
-  Subclass(Class parent, Class chind, const char *name);
-  void activate(NSObject *);
-
-private:
-  Class m_subclass;
-};
-
-Subclass::Subclass(Class parent, Class child, const char *name)
-{
-  unsigned int methodCount {};
-  Method *methods
-    { class_copyMethodList(child, &methodCount) };
-
-  m_subclass = objc_allocateClassPair(parent, name, 0);
-  for(unsigned int i {}; i < methodCount; ++i) {
-    Method method { methods[i] };
-    class_addMethod(m_subclass, method_getName(method),
-      method_getImplementation(method), method_getTypeEncoding(method));
-  }
-  objc_registerClassPair(m_subclass);
-
-  free(methods);
-}
-
-void Subclass::activate(NSObject *object)
-{
-  object_setClass(object, m_subclass);
-}
 
 CocoaWindow::CocoaWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Window { viewport, dockerHost }
@@ -89,9 +61,7 @@ void CocoaWindow::create()
   m_previousFlags = ~m_viewport->Flags; // mark all as modified
   // imgui calls update() before show(), it will apply the flags
 
-  static Subclass swellWindowOverride
-    { [window class], [SWELLWindowOverride class], "ReaImGui_SWELLWindow" };
-  swellWindowOverride.activate(window);
+  CocoaInject::inject([SWELLWindowOverride class], window);
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,

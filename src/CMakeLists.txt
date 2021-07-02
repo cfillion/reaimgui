@@ -57,8 +57,8 @@ else()
   endif()
 
   if(APPLE)
-    target_sources(${PROJECT_NAME} PRIVATE
-      cocoa_font.mm cocoa_inputview.mm cocoa_platform.mm cocoa_window.mm)
+    target_sources(${PROJECT_NAME} PRIVATE cocoa_font.mm cocoa_inject.mm
+      cocoa_inputview.mm cocoa_platform.mm cocoa_window.mm)
     target_compile_definitions(${PROJECT_NAME} PRIVATE GL_SILENCE_DEPRECATION)
     target_compile_options(${PROJECT_NAME} PRIVATE
       -fobjc-arc -Wno-error=deprecated-declarations)
