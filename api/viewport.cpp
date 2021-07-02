@@ -42,7 +42,7 @@ struct ImGui_Viewport {
 ResourceProxy Viewport { ImGui_Viewport::Main };
 
 DEFINE_API(__LINE__, ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
-R"(Currently represents the Platform Window created by the ReaImGui context which is hosting our Dear ImGui windows.",
+R"(Currently represents REAPER's main window (arrange view). This may change in the future.",
 
 - Main Area = entire viewport.
 - Work Area = entire viewport minus sections used by main menu bars (for platform windows), or by task bar (for platform monitor).
