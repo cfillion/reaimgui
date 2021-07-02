@@ -101,7 +101,6 @@ DEFINE_API(__LINE__, void, PopTextWrapPos, (ImGui_Context*,ctx),
   ImGui::PopTextWrapPos();
 });
 
-
 DEFINE_API(__LINE__, void, AlignTextToFramePadding, (ImGui_Context*,ctx),
 "Vertically align upcoming text baseline to ImGui_StyleVar_FramePadding.y so that it will align properly to regularly framed items (call if you have text on a line before a framed item)",
 {

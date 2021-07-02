@@ -200,7 +200,6 @@ DEFINE_API(__LINE__, void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
     valueOr(API_RO(thickness), 1.0));
 });
 
-
 DEFINE_API(__LINE__, void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
 (int,num_segments),
@@ -297,7 +296,6 @@ Default values: num_segments = 0)",
     ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y), Color::rgba2abgr(col_rgba),
     thickness, valueOr(API_RO(num_segments), 0));
 });
-
 
 DEFINE_API(__LINE__, void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)

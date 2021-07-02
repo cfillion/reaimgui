@@ -99,7 +99,6 @@ DEFINE_API(__LINE__, void, PushButtonRepeat, (ImGui_Context*,ctx)
   ImGui::PushButtonRepeat(repeat);
 });
 
-
 DEFINE_API(__LINE__, void, PopButtonRepeat, (ImGui_Context*,ctx),
 "See ImGui_PushButtonRepeat",
 {

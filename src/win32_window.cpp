@@ -273,7 +273,6 @@ void Win32Window::update()
     else
       AttachWindowTopmostButton(m_hwnd.get());
 
-
     HWND insertAfter;
     unsigned int flags { SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW };
     if((prevExStyle & m_exStyle) ^ WS_EX_TOPMOST) {

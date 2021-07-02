@@ -143,7 +143,6 @@ DEFINE_API(__LINE__, void, PopID, (ImGui_Context*,ctx),
   ImGui::PopID();
 });
 
-
 DEFINE_API(__LINE__, void, LogToTTY, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth)),
 R"(Start logging all text output from the interface to the TTY (stdout). By default, tree nodes are automatically opened during logging.
