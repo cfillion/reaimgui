@@ -101,18 +101,14 @@ REAIMGUI_API void PopButtonRepeat(ImGui_Context* ctx)
   ImGui::PopButtonRepeat();
 }
 
-REAIMGUI_API
-  API_DOC("Flags for ImGui_InvisibleButton.")
-  API_CONST(ImGui, ButtonFlags_None)
+/// Flags for ImGui_InvisibleButton.
+REAIMGUI_API API_CONST(ImGui, ButtonFlags_None)
 
-REAIMGUI_API
-  API_DOC("React on left mouse button (default).")
-  API_CONST(ImGui, ButtonFlags_MouseButtonLeft)
+/// React on left mouse button (default).
+REAIMGUI_API API_CONST(ImGui, ButtonFlags_MouseButtonLeft)
 
-REAIMGUI_API
-  API_DOC("React on right mouse button.")
-  API_CONST(ImGui, ButtonFlags_MouseButtonRight)
+/// React on right mouse button.
+REAIMGUI_API API_CONST(ImGui, ButtonFlags_MouseButtonRight)
 
-REAIMGUI_API
-  API_DOC("React on center mouse button.")
-  API_CONST(ImGui, ButtonFlags_MouseButtonMiddle)
+/// React on center mouse button.
+REAIMGUI_API API_CONST(ImGui, ButtonFlags_MouseButtonMiddle)

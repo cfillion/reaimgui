@@ -18,19 +18,13 @@
 #ifndef REAIMGUI_API_HELPER_HPP
 #define REAIMGUI_API_HELPER_HPP
 
-#include "api.hpp"
-#include "api_vararg.hpp"
 #include "context.hpp"
 
 #include <boost/type_index.hpp>
 #include <cstring> // strlen
 
 #define REAIMGUI_API __attribute__((annotate("reaimgui_api")))
-#define API_DOC(doc) __attribute__((annotate("reaimgui_doc=" doc)))
 #define API_CONST(prefix, name) int name() { return prefix##name; }
-
-#define ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
-#define ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
 
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write

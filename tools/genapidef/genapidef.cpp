@@ -1,227 +1,298 @@
-#include <clang/AST/Attr.h>
-#include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/FrontendActions.h>
-#include <clang/Tooling/CompilationDatabase.h>
-#include <clang/Tooling/Tooling.h>
+// cmake --build build --target genapidef && build/tools/genapidef/genapidef api/button.cpp -Isrc -std=c++17 -Ivendor -Ivendor/WDL -Ivendor/WDL/WDL -I/usr/local/Cellar/boost/1.76.0/include
 
-struct ListPrinter {
-  ListPrinter(llvm::raw_ostream &stream, const std::string &glue = ", ")
-    : m_stream { stream }, m_first { true }, m_glue { glue } {}
+#include <clang-c/Index.h>
 
-  void next()
-  {
-    if(m_first)
-      m_first = false;
-    else
-      m_stream << m_glue;
-  }
+#include <cstdio>
+#include <iostream>
+#include <string>
+#include <vector>
 
-  template<typename T>
-  llvm::raw_ostream &operator<<(const T rhs)
-  {
-    next();
-    m_stream << rhs;
-    return m_stream;
-  }
+#include <unistd.h>
+#include <sys/types.h>
 
-private:
-  llvm::raw_ostream &m_stream;
-  bool m_first;
-  std::string m_glue;
+struct Argument {
+  std::string type, name;
 };
 
-class Function {
-public:
-  Function(const clang::FunctionDecl *);
-  bool isInMainFile() const;
-  bool isApiExport() const;
-  std::string helpText() const;
+struct Function {
+  bool isAPI;
+  std::string type, name, help, file;
+  unsigned int firstLine, lastLine;
+  std::vector<Argument> args;
 
-  void printExportDecl(llvm::raw_ostream &) const;
-
-private:
-  bool getAnnotation(const char *key, std::string *value = nullptr) const;
-  std::string makeReaperDef() const;
-
-  void printType(llvm::raw_ostream &, const clang::QualType &) const;
-  void printParameters(llvm::raw_ostream &,
+  void printExport(std::ostream &) const;
+  void printParameters(std::ostream &,
     bool types, bool names, const std::string &glue = ", ") const;
-  void printCatch(llvm::raw_ostream &, const char *execptionType) const;
-  void printStringLiteral(llvm::raw_ostream &, const std::string &) const;
-
-  const clang::FunctionDecl *m_decl;
-  const clang::ASTContext &m_ctx;
-  const clang::SourceManager &m_sm;
+  void printCatch(std::ostream &, const char *exceptionType) const;
 };
 
-Function::Function(const clang::FunctionDecl *decl)
-  : m_decl { decl }, m_ctx { decl->getASTContext() },
-    m_sm { m_ctx.getSourceManager() }
-{
-}
+struct UnitData {
+  std::vector<Function> funcs;
+};
 
-bool Function::isInMainFile() const
+static void getLineRange(CXCursor cursor, unsigned int *begin, unsigned int *end)
 {
-  return m_sm.isInMainFile(m_sm.getExpansionLoc(m_decl->getLocation()));
-}
+  CXSourceRange sourceRange { clang_getCursorExtent(cursor) };
+  CXSourceLocation beginLoc { clang_getRangeStart(sourceRange) },
+                   endLoc   { clang_getRangeEnd(sourceRange) };
+  clang_getPresumedLocation(beginLoc, nullptr, begin, nullptr);
+  clang_getPresumedLocation(endLoc,   nullptr, end, nullptr);
 
-bool Function::isApiExport() const
-{
-  return getAnnotation("reaimgui_api");
-}
+  CXSourceRange comment { clang_Cursor_getCommentRange(cursor) };
+  if(!clang_Range_isNull(comment)) {
+    CXSourceLocation commentLoc { clang_getRangeStart(comment) };
+    unsigned int commentLine;
+    clang_getPresumedLocation(commentLoc, nullptr, &commentLine, nullptr);
 
-bool Function::getAnnotation(const char *key, std::string *value) const
-{
-  const auto &annotations { m_decl->specific_attrs<clang::AnnotateAttr>() };
-  for(const clang::AnnotateAttr *attr : annotations) {
-    const std::string &text { attr->getAnnotation() };
-    const size_t sep { text.find('=') };
-
-    if(!text.compare(0, sep, key)) {
-      if(value && sep != std::string::npos)
-        *value = text.substr(sep + 1);
-      return true;
-    }
+    if(commentLine && commentLine < *begin)
+      *begin = commentLine;
   }
-  return false;
 }
 
-std::string Function::helpText() const
+static std::string getString(CXString str)
 {
-  if(const clang::RawComment *c { m_ctx.getRawCommentForAnyRedecl(m_decl) })
-    return c->getFormattedText(m_sm, m_ctx.getDiagnostics());
-
-  std::string doc;
-  getAnnotation("reaimgui_doc", &doc);
-  return doc;
+  const char *cstr { clang_getCString(str) };
+  std::string out { cstr ? cstr : "" };
+  clang_disposeString(str);
+  return out;
 }
 
-void Function::printType(llvm::raw_ostream &out, const clang::QualType &type) const
+static std::string getTypeString(CXType type)
 {
-  std::string str { type.getAsString(m_ctx.getPrintingPolicy()) };
-  const size_t pos { str.find(" *") };
+  std::string out { getString(clang_getTypeSpelling(type)) };
+
+  const size_t pos { out.find(" *") };
   if(pos != std::string::npos)
-    str.erase(pos, 1);
-  out << str;
+    out.erase(pos, 1);
+
+  return out;
 }
 
-void Function::printParameters(llvm::raw_ostream &out,
+static void visitFuncAttr(CXCursor cursor, Function *func)
+{
+  CXString spelling { clang_getCursorSpelling(cursor) };
+  if(!strcmp(clang_getCString(spelling), "reaimgui_api"))
+    func->isAPI = true;
+  clang_disposeString(spelling);
+}
+
+static CXChildVisitResult visitFunctionChild(CXCursor cursor, CXCursor, CXClientData data)
+{
+  Function *func { static_cast<Function *>(data) };
+
+  switch(clang_getCursorKind(cursor)) {
+  case CXCursorKind::CXCursor_AnnotateAttr:
+    visitFuncAttr(cursor, func);
+    break;
+  default:
+    break;
+  }
+
+  return CXChildVisit_Continue;
+}
+
+static void visitFunction(CXCursor cursor, UnitData *ud)
+{
+  Function func{};
+  clang_visitChildren(cursor, &visitFunctionChild, &func);
+
+  if(!func.isAPI)
+    return;
+
+  getLineRange(cursor, &func.firstLine, &func.lastLine);
+
+  const CXType type { clang_getCursorType(cursor) };
+  func.type = getTypeString(clang_getResultType(type));
+  func.name = getString(clang_getCursorSpelling(cursor));
+  func.help = getString(clang_Cursor_getRawCommentText(cursor));
+
+  const int argc { clang_Cursor_getNumArguments(cursor) };
+  for(int i {}; i < argc; ++i) {
+    CXCursor argCursor { clang_Cursor_getArgument(cursor, i) };
+
+    func.args.push_back({
+      getTypeString(clang_getArgType(type, i)),
+      getString(clang_getCursorSpelling(argCursor)),
+    });
+  }
+
+  ud->funcs.push_back(func);
+}
+
+static CXChildVisitResult visitRoot(CXCursor cursor, CXCursor, CXClientData data)
+{
+  if(!clang_Location_isFromMainFile(clang_getCursorLocation(cursor)))
+    return CXChildVisit_Continue;
+
+  UnitData *unitData { static_cast<UnitData *>(data) };
+
+  switch(clang_getCursorKind(cursor)) {
+  case CXCursorKind::CXCursor_FunctionDecl:
+    visitFunction(cursor, unitData);
+    break;
+  default:
+    break;
+  }
+
+  return CXChildVisit_Continue;
+}
+
+static int exec(const std::vector<char *> &args, std::string &output)
+{
+  int fd[2];
+  if(pipe(fd)) {
+    perror("pipe() failed");
+    return -1;
+  }
+
+  const pid_t pid { fork() };
+
+  if(pid == -1) {
+    perror("fork() failed");
+    return -1;
+  }
+  else if(pid == 0) {
+    close(fd[0]);
+    dup2(fd[1], STDOUT_FILENO);
+    execvp(args[0], args.data());
+    perror("execvp() failed");
+    exit(1);
+  }
+
+  close(fd[1]);
+
+  char buf[1024];
+  ssize_t size;
+  while((size = read(fd[0], buf, std::size(buf))) && size >= 0)
+    output.append(buf, size);
+  close(fd[0]);
+
+  if(size < 0) {
+    perror("read() failed");
+    return -1;
+  }
+
+  int status;
+  wait(&status);
+
+  return WEXITSTATUS(status);
+}
+
+static int preprocess(int argc, char *argv[], std::string &source)
+{
+  std::vector<char *> args { argv, argv + argc };
+  args[0] = const_cast<char *>("clang++");
+  args.push_back(const_cast<char *>("-E"));
+  args.push_back(const_cast<char *>("-C"));
+  args.push_back(nullptr);
+  return exec(args, source);
+}
+
+void Function::printParameters(std::ostream &out,
   bool types, bool names, const std::string &glue) const
 {
-  ListPrinter lp { out, glue };
-  for(const clang::ParmVarDecl *param : m_decl->parameters()) {
-    lp.next();
+  // ListPrinter lp { out, glue };
+  for(const Argument &arg : args) {
+    // lp.next();
 
     if(types)
-      printType(out, param->getType());
+      out << arg.type;
     if(types && names)
       out << ' ';
     if(names) {
-      if(const clang::IdentifierInfo *id { param->getIdentifier() })
-        out << id->getName();
-      else
+      if(arg.name.empty())
         out << "UNNAMED";
+      else
+        out << arg.name;
     }
   }
 }
 
-void Function::printExportDecl(llvm::raw_ostream &out) const
+void Function::printExport(std::ostream &out) const
 {
   out << "\n"
-         "// " << m_decl->getDeclName() << " from ";
-  m_decl->getBeginLoc().print(out, m_sm);
-  out << '\n';
+         "// " << name << " at " << file << ':' << firstLine << '\n';
 
-  out << "extern ";
-  printType(out, m_decl->getReturnType());
-  out << ' ' << m_decl->getDeclName() << '(';
+  out << "extern " << type;
+  out << ' ' << name << '(';
   printParameters(out, true, false);
   out << ");\n";
 
-  printType(out, m_decl->getReturnType());
-  out << " APIcall_" << m_decl->getDeclName() << '(';
+  out << type << " APIcall_" << name << '(';
   printParameters(out, true, true);
   out << ") noexcept\n"
          "try {\n"
-         "  return " << m_decl->getDeclName() << '(';
+         "  return " << name << '(';
   printParameters(out, false, true);
   out << ");\n"
          "}\n";
   printCatch(out, "reascript_error");
   printCatch(out, "imgui_error");
 
-  out << "static const API APIdecl_" << m_decl->getDeclName() << " {\n"
+  out << "static const API APIdecl_" << name << " {\n"
          "  ";
-  printStringLiteral(out, m_decl->getDeclName().getAsString());
+  // printStringLiteral(out, m_decl->getDeclName().getAsString());
   out << ",\n"
-         "  reinterpret_cast<void *>(&APIcall_" << m_decl->getDeclName() << "),\n"
+         "  reinterpret_cast<void *>(&APIcall_" << name << "),\n"
          "  reinterpret_cast<void *>(&InvokeReaScriptAPI<&APIcall_"
-      <<      m_decl->getDeclName() << ">),\n"
+      <<      name << ">),\n"
          "  reinterpret_cast<void *>(const_cast<char *>(\n"
          "    ";
-  printStringLiteral(out, makeReaperDef());
+  // printStringLiteral(out, makeReaperDef());
   out << "\n"
          "  ))\n"
          "};\n";
 }
 
-void Function::printCatch(llvm::raw_ostream &out, const char *exceptionType) const
+void Function::printCatch(std::ostream &out, const char *exceptionType) const
 {
   out << "catch(const " << exceptionType << " &e) {\n"
          "  API::handleError(";
-  printStringLiteral(out, m_decl->getDeclName().getAsString());
+  // printStringLiteral(out, m_decl->getDeclName().getAsString());
   out << ", e);\n"
-         "  return static_cast<";
-  printType(out, m_decl->getReturnType());
-  out << ">(0);\n"
+         "  return static_cast<" << type << ">(0);\n"
          "}\n";
 }
 
-void Function::printStringLiteral(llvm::raw_ostream &out, const std::string &str) const
+int main(int argc, char *argv[])
 {
-  clang::StringLiteral::Create(m_ctx, str, clang::StringLiteral::Ascii, false, {}, {})
-    ->outputString(out);
-};
+  const char *fn { argv[1] };
 
-std::string Function::makeReaperDef() const
-{
-  const clang::PresumedLoc &startLoc { m_sm.getPresumedLoc(m_decl->getBeginLoc()) },
-                           &endLoc   { m_sm.getPresumedLoc(m_decl->getEndLoc()) };
-
-  std::string str;
-  llvm::raw_string_ostream out { str };
-  ListPrinter lp { out, { "\0", 1 } };
-  lp.next(); printType(out, m_decl->getReturnType());
-  lp.next(); printParameters(out, true, false, ",");
-  lp.next(); printParameters(out, false, true, ",");
-  lp << helpText();
-  lp << "group";
-  lp << startLoc.getLine();
-  lp << endLoc.getLine();
-  return out.str();
-}
-
-class ASTConsumer : public clang::ASTConsumer {
-public:
-  bool HandleTopLevelDecl(clang::DeclGroupRef group) override
-  {
-    for(clang::Decl *decl : group) {
-      if(auto funcDecl { dynamic_cast<clang::FunctionDecl *>(decl) }) {
-        Function func { funcDecl };
-        if(func.isInMainFile() && func.isApiExport() && funcDecl->isThisDeclarationADefinition())
-          func.printExportDecl(llvm::outs());
-      }
-    }
-    return true;
+  // libclang does not support expanding proprecessor macros at this time
+  std::string source;
+  const int status { preprocess(argc, argv, source) };
+  if(status) {
+    fprintf(stderr, "failed to preprocess %s\n", fn);
+    return status;
   }
-};
 
-class GenApiDefAction : public clang::ASTFrontendAction {
-public:
-  std::unique_ptr<clang::ASTConsumer>
-  CreateASTConsumer(clang::CompilerInstance &ci, clang::StringRef) override
-  {
-    llvm::outs() << R"(// DO NOT EDIT THIS FILE BY HAND
+  CXUnsavedFile files[] {
+    { fn, source.c_str(), source.size() },
+  };
+
+  constexpr int flags {
+    CXTranslationUnit_KeepGoing |
+    CXTranslationUnit_SingleFileParse
+  };
+
+  CXIndex index { clang_createIndex(1, 0) };
+  CXTranslationUnit unit
+    { clang_parseTranslationUnit(index, fn,
+        &argv[2], argc - 2, files, std::size(files), flags) };
+
+  if(!unit) {
+    fprintf(stderr, "failed to parse %s\n", fn);
+    return 1;
+  }
+
+  UnitData data;
+  CXCursor root { clang_getTranslationUnitCursor(unit) };
+  clang_visitChildren(root, visitRoot, &data);
+
+  clang_disposeTranslationUnit(unit);
+  clang_disposeIndex(index);
+
+  std::cout << R"(// DO NOT EDIT THIS FILE BY HAND
 
 #include "api.hpp"
 #include "api_vararg.hpp"
@@ -234,29 +305,11 @@ using ImGui_Font = Font;
 class Viewport;
 using ImGui_Viewport = Viewport;
 class ImGui_ListClipper;
-class reaper_array;
+struct reaper_array;
 )";
 
-    // ci.getPreprocessor().SetSuppressIncludeNotFoundError(true);
-    ci.getDiagnostics().setSuppressAllDiagnostics(true);
-    return std::make_unique<ASTConsumer>();
-  }
-};
+  for(const Function &func : data.funcs)
+    func.printExport(std::cout);
 
-int main(int argc, const char *argv[])
-{
-  std::string error;
-  auto compilationDatabase
-    { clang::tooling::FixedCompilationDatabase::loadFromCommandLine
-      (argc, argv, error) };
-  if(!compilationDatabase || argc < 2) {
-    // '--' was not found in argv or there was no source_file
-    llvm::errs() << "Usage: genapidef source_file -- clang_options...\n";
-    return 1;
-  }
-
-  auto frontend { clang::tooling::newFrontendActionFactory<GenApiDefAction>() };
-
-  clang::tooling::ClangTool tool { *compilationDatabase, { argv[1] } };
-  return tool.run(frontend.get());
+  return 0;
 }

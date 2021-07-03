@@ -38,8 +38,9 @@ foreach(API_FILE IN LISTS API_FILES)
 
   add_custom_command(
     OUTPUT "${API_FILE_DEF}"
-    COMMAND $<TARGET_FILE:genapidef> "${API_FILE}" -- -I../src > "${API_FILE_DEF}"
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    COMMAND $<TARGET_FILE:genapidef> "${CMAKE_CURRENT_SOURCE_DIR}/${API_FILE}"
+      -Isrc -Ivendor -Ivendor/WDL -Ivendor/WDL/WDL > "${API_FILE_DEF}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     DEPENDS $<TARGET_FILE:genapidef> "${API_FILE}"
     COMMAND_EXPAND_LISTS
   )
