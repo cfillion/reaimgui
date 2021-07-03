@@ -1,4 +1,4 @@
-set(API_FILES
+add_library(api OBJECT
   button.cpp
   coloredit.cpp
   context.cpp
@@ -26,12 +26,25 @@ set(API_FILES
   window.cpp
 )
 
+target_include_directories(api PRIVATE
+  ${CMAKE_SOURCE_DIR}/src ${CMAKE_BINARY_DIR}/src)
+target_link_libraries(api common)
+
+get_target_property(API_FILES api SOURCES)
+
 foreach(API_FILE IN LISTS API_FILES)
-  string(REGEX REPLACE "^(.+)\.cpp$" "\\1" API_BASENAME "${API_FILE}")
-  target_sources(${PROJECT_NAME} PRIVATE "${API_FILE}")
-  set_source_files_properties(
-    "${API_FILE}" TARGET_DIRECTORY ${PROJECT_NAME}
-    PROPERTIES
-      COMPILE_DEFINITIONS API_FILE=\"${API_BASENAME}\"
-  )
+  get_filename_component(API_BASENAME "${API_FILE}" NAME_WE)
+  set_property(SOURCE "${API_FILE}"
+    PROPERTY COMPILE_DEFINITIONS API_FILE=\"${API_BASENAME}\")
 endforeach()
+
+find_package(Boost REQUIRED)
+target_link_libraries(api Boost::headers)
+
+find_package(ImGui REQUIRED)
+target_link_libraries(api ImGui::ImGui)
+
+if(NOT WIN32)
+  find_package(SWELL REQUIRED)
+  target_link_libraries(api SWELL::swell)
+endif()

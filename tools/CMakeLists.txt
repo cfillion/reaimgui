@@ -1,11 +1,12 @@
 add_executable(genbinding EXCLUDE_FROM_ALL genbinding.cpp)
-target_compile_features(genbinding PRIVATE cxx_std_17)
-target_include_directories(genbinding PRIVATE
-  ${CMAKE_SOURCE_DIR}/vendor/reaper-sdk/sdk
-  ${CMAKE_SOURCE_DIR}/vendor/WDL
-  ${CMAKE_BINARY_DIR}/src
-)
+target_link_libraries(genbinding common)
+target_include_directories(genbinding PRIVATE ${CMAKE_BINARY_DIR}/src)
 target_link_libraries(genbinding ${PROJECT_NAME})
+
+if(NOT WIN32)
+  find_package(SWELL REQUIRED)
+  target_link_libraries(genbinding SWELL::swell)
+endif()
 
 function(add_binding lang output)
   add_custom_command(

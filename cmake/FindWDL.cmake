@@ -1,4 +1,4 @@
-if(WDL_FOUND)
+if(TARGET WDL::WDL)
   return()
 endif()
 

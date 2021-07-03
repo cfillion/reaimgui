@@ -14,7 +14,7 @@
 
 #pragma once
 
-#include "errors.hpp"
+#include "src/errors.hpp"
 
 inline void ReaImGui_Assert(const bool ok, const char *message)
 {

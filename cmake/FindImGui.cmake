@@ -1,4 +1,4 @@
-if(ImGui_FOUND)
+if(TARGET ImGui::ImGui)
   return()
 endif()
 
@@ -32,7 +32,7 @@ add_library(imgui
 
 target_compile_features(imgui PRIVATE cxx_std_17)
 target_compile_definitions(imgui PUBLIC
-  "IMGUI_USER_CONFIG=\"${CMAKE_CURRENT_SOURCE_DIR}/imconfig.h\"")
+  "IMGUI_USER_CONFIG=\"${CMAKE_SOURCE_DIR}/imconfig.h\"")
 target_include_directories(imgui PUBLIC ${ImGui_INCLUDE_DIR})
 
 if(VCPKG_TOOLCHAIN)
