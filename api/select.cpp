@@ -126,7 +126,7 @@ DEFINE_ENUM(ImGui, ComboFlags_NoArrowButton,  "Display on the preview box withou
 DEFINE_ENUM(ImGui, ComboFlags_NoPreview,      "Display only a square arrow button.");
 
 DEFINE_API(__LINE__, bool, Selectable, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_W(p_selected))
+(const char*,label)(bool*,API_RW(p_selected))
 (int*,API_RO(flags))(double*,API_RO(size_w))(double*,API_RO(size_h)),
 R"(A selectable highlights when hovered, and can display another color when selected.
 Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.
@@ -135,7 +135,7 @@ Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0)"
 {
   FRAME_GUARD;
   bool selectedOmitted {};
-  bool *selected { API_W(p_selected) ? API_W(p_selected) : &selectedOmitted };
+  bool *selected { API_RW(p_selected) ? API_RW(p_selected) : &selectedOmitted };
   const ImGuiSelectableFlags flags
     { valueOr(API_RO(flags), ImGuiSelectableFlags_None) };
   const ImVec2 size { valueOr(API_RO(size_w), 0.f),

@@ -20,7 +20,7 @@
 #include <imgui/imgui.h>
 
 DEFINE_API(__LINE__, bool, Begin, (ImGui_Context*,ctx)
-(const char*,name)(bool*,API_W(p_open))(int*,API_RO(flags)),
+(const char*,name)(bool*,API_RW(p_open))(int*,API_RO(flags)),
 R"(Push window to the stack and start appending to it. See ImGui_End.
 
 - Passing true to 'p_open' shows a window-closing widget in the upper-right corner of the window, which clicking will set the boolean to false when returned.
@@ -40,7 +40,7 @@ Default values: flags = ImGui_WindowFlags_None)",
              ImGuiWindowFlags_NoResize   ;
   }
 
-  const bool rv { ImGui::Begin(name, openPtrBehavior(API_W(p_open)), flags) };
+  const bool rv { ImGui::Begin(name, openPtrBehavior(API_RW(p_open)), flags) };
 
   if(!ctx->IO().ConfigViewportsNoDecoration)
     ImGui::PopStyleVar();
@@ -492,11 +492,11 @@ Default values: center_y_ratio = 0.5)",
 });
 
 DEFINE_API(__LINE__, void, ShowMetricsWindow, (ImGui_Context*,ctx)
-(bool*,API_W(p_open)),
+(bool*,API_RW(p_open)),
 R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc. Set p_open to true to enable the close button.)",
 {
   FRAME_GUARD;
-  ImGui::ShowMetricsWindow(openPtrBehavior(API_W(p_open)));
+  ImGui::ShowMetricsWindow(openPtrBehavior(API_RW(p_open)));
 });
 
 // ImGuiFocusedFlags

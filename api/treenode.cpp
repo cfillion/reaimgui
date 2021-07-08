@@ -61,7 +61,7 @@ DEFINE_API(__LINE__, double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(__LINE__, bool, CollapsingHeader, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_W(p_visible))(int*,API_RO(flags)),
+(const char*,label)(bool*,API_RW(p_visible))(int*,API_RO(flags)),
 R"(Returns true when opened but do not indent nor push into the ID stack (because of the ImGui_TreeNodeFlags_NoTreePushOnOpen flag).
 
 This is basically the same as calling TreeNode(label, ImGui_TreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal ImGui_TreeNode.
@@ -75,7 +75,7 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
   // as NULL. This is because EEL doesn't have a NULL (0 = false), API_W never
   // receives a NULL, and API_RWO aren't listed in the output values list.
   const ImGuiTreeNodeFlags flags { valueOr(API_RO(flags), ImGuiTreeNodeFlags_None) };
-  return ImGui::CollapsingHeader(label, openPtrBehavior(API_W(p_visible)), flags);
+  return ImGui::CollapsingHeader(label, openPtrBehavior(API_RW(p_visible)), flags);
 });
 
 DEFINE_API(__LINE__, void, SetNextItemOpen, (ImGui_Context*,ctx)
