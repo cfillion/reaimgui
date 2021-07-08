@@ -488,18 +488,12 @@ void Context::endDrag(const bool drop)
   }
 }
 
-ImGuiViewport *Context::focusedViewport(bool *hasOwnedViewport) const
+ImGuiViewport *Context::focusedViewport() const
 {
-  if(hasOwnedViewport)
-    *hasOwnedViewport = false;
-
   const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
   for(int i { 1 }; i < pio.Viewports.Size; ++i) { // skip the main viewport
     ImGuiViewport *viewport { pio.Viewports[i] };
     Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) };
-
-    if(hasOwnedViewport)
-      *hasOwnedViewport = true;
 
     if(instance->hasFocus())
       return viewport;
@@ -510,8 +504,11 @@ ImGuiViewport *Context::focusedViewport(bool *hasOwnedViewport) const
 
 void Context::updateFocus()
 {
-  bool hasOwnedViewport;
-  if(!focusedViewport(&hasOwnedViewport) && hasOwnedViewport)
+  // don't clear focus before any windows have been opened
+  // (so that the first window can have it)
+  const bool hasOwnedViewport { m_imgui->PlatformIO.Viewports.Size > 1 };
+
+  if(hasOwnedViewport && !focusedViewport())
     clearFocus();
 }
 

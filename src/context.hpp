@@ -95,7 +95,7 @@ private:
   void updateDragDrop();
 
   ImGuiViewport *viewportUnder(POINT) const;
-  ImGuiViewport *focusedViewport(bool *hasOwnedViewport = nullptr) const;
+  ImGuiViewport *focusedViewport() const;
   void dragSources();
   void clearFocus();
 
