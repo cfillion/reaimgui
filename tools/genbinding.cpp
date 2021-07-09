@@ -500,7 +500,8 @@ static void formatHtmlText(std::ostream &stream, const std::string_view &text)
   for(size_t i {}; i < text.size(); ++i) {
     size_t linkStart { i };
     if(i == nextLink) {
-      do { ++i; } while(isalnum(text[i]) || text[i] == '_');
+      while(i < text.size() - 1 && (isalnum(text[i]) || text[i] == '_'))
+        ++i;
       const std::string_view linkTo { &text[linkStart], i - linkStart };
       if(std::binary_search(g_funcs.begin(), g_funcs.end(), linkTo, FunctionComp{}))
         stream << "<a href=\"#" << linkTo << "\">" << linkTo << "</a>";
@@ -518,8 +519,6 @@ static void formatHtmlText(std::ostream &stream, const std::string_view &text)
       break;
     case '&':
       stream << "&amp;";
-      break;
-    case '\0': // if the string ended with a link
       break;
     default:
       stream << text[i];
