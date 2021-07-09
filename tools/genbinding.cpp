@@ -553,12 +553,12 @@ static void humanBinding(std::ostream &stream)
   body {
     background-color: #080808;
     color: #d9d3d3;
-    font-family: monospace;
     font-size: 15px;
     line-height: 20px;
     margin: 0;
     overflow-anchor: none;
   }
+  body, pre, code { font-family: Consolas, monospace; }
   aside {
     background-color: #262626; /* Grey15 */
     border-right: 1px solid #6f6f6f;
