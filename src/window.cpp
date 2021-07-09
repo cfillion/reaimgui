@@ -188,12 +188,7 @@ void Window::setFocus()
 
 bool Window::hasFocus() const
 {
-  // the focused control is a child of the window's hwnd on macOS (InputView)
-  HWND foreground { GetFocus() };
-#ifdef __APPLE__
-  foreground = GetParent(foreground);
-#endif
-  return foreground == m_hwnd.get();
+  return GetFocus() == m_hwnd.get();
 }
 
 bool Window::isMinimized() const

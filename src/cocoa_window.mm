@@ -116,6 +116,18 @@ void CocoaWindow::setSize(const ImVec2 size)
   [m_gl update];
 }
 
+void CocoaWindow::setFocus()
+{
+  NSWindow *window { [m_view window] };
+  [window makeKeyAndOrderFront:nil];
+  [window makeFirstResponder:m_inputView];
+}
+
+bool CocoaWindow::hasFocus() const
+{
+  return GetFocus() == (__bridge HWND)m_inputView;
+}
+
 void CocoaWindow::setTitle(const char *title)
 {
   SetWindowText(m_hwnd.get(), title);

@@ -36,6 +36,8 @@ public:
   void show() override;
   void setPosition(ImVec2) override;
   void setSize(ImVec2) override;
+  void setFocus() override;
+  bool hasFocus() const override;
   void setTitle(const char *) override;
   void update() override;
   void render(void *) override;
