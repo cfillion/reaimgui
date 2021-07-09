@@ -121,7 +121,6 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   case WM_LBUTTONDOWN:
   case WM_MBUTTONDOWN:
   case WM_RBUTTONDOWN:
-    SetFocus(handle); // give keyboard focus when docked
     self->mouseDown(msg);
     return 0;
   case WM_LBUTTONUP:
@@ -229,6 +228,9 @@ void Window::mouseDown(const unsigned int msg)
 
   if(GetCapture() == nullptr)
     SetCapture(m_hwnd.get());
+
+  // give keyboard focus when docked (+ focus on right/middle click on macOS)
+  setFocus();
 
   m_ctx->mouseInput(btn, true);
 }
