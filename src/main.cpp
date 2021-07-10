@@ -94,7 +94,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
 static bool isAlreadyLoaded()
 {
   if(plugin_getapi("ImGui_GetVersion")) {
-    fatalError("More than one copy of ReaImGui is currently installed. "
+    fatalError("More than one copy of ReaImGui are currently installed. "
                "Only one will be loaded.");
     return true;
   }
