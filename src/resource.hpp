@@ -38,6 +38,8 @@ public:
     return exists(resource) && dynamic_cast<T *>(resource);
   }
 
+  static void destroyAll();
+
 protected:
   virtual bool heartbeat();
 

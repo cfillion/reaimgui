@@ -20,6 +20,7 @@
 #include <reaper_plugin_secrets.h>
 
 #include "api.hpp"
+#include "resource.hpp"
 #include "version.hpp"
 #include "window.hpp"
 
@@ -106,6 +107,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
 {
   if(!rec) {
     API::unregisterAll();
+    Resource::destroyAll(); // save context settings
     return 0;
   }
   else if(rec->caller_version != REAPER_PLUGIN_VERSION

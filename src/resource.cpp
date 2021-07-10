@@ -19,6 +19,7 @@
 
 #include "errors.hpp"
 
+#include <cassert>
 #include <reaper_plugin_functions.h>
 #include <unordered_set>
 #include <WDL/wdltypes.h>
@@ -149,4 +150,10 @@ template<>
 bool Resource::exists<Resource>(Resource *rs)
 {
   return rs && g_rsx.count(rs) > 0;
+}
+
+void Resource::destroyAll()
+{
+  for(auto it { g_rsx.begin() }; it != g_rsx.end(); delete *it++);
+  assert(g_rsx.empty());
 }
