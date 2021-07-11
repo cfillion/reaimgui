@@ -38,7 +38,8 @@ ImFont *Font::load(ImFontAtlas *atlas, const float scale) try
 {
   ImFontConfig cfg;
   // light hinting solves uneven glyph height on macOS
-  cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LightHinting;
+  cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_LightHinting |
+                          ImGuiFreeTypeBuilderFlags_LoadColor;
   if(m_missingStyles & ReaImGuiFontFlags_Bold)
     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Bold;
   if(m_missingStyles & ReaImGuiFontFlags_Italic)
