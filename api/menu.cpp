@@ -17,21 +17,21 @@
 
 #include "helper.hpp"
 
-DEFINE_API(__LINE__, bool, BeginMenuBar, (ImGui_Context*,ctx),
+DEFINE_API(bool, BeginMenuBar, (ImGui_Context*,ctx),
 R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag set on parent window). See ImGui_EndMenuBar.)",
 {
   FRAME_GUARD;
   return ImGui::BeginMenuBar();
 });
 
-DEFINE_API(__LINE__, void, EndMenuBar, (ImGui_Context*,ctx),
+DEFINE_API(void, EndMenuBar, (ImGui_Context*,ctx),
 "Only call EndMenuBar if ImGui_BeginMenuBar returns true!",
 {
   FRAME_GUARD;
   ImGui::EndMenuBar();
 });
 
-DEFINE_API(__LINE__, bool, BeginMenu, (ImGui_Context*,ctx)
+DEFINE_API(bool, BeginMenu, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RO(enabled)),
 R"(Create a sub-menu entry. only call ImGui_EndMenu if this returns true!
 
@@ -41,14 +41,14 @@ Default values: enabled = true)",
   return ImGui::BeginMenu(label, valueOr(API_RO(enabled), true));
 });
 
-DEFINE_API(__LINE__, void, EndMenu, (ImGui_Context*,ctx),
+DEFINE_API(void, EndMenu, (ImGui_Context*,ctx),
 R"(Only call EndMenu() if ImGui_BeginMenu returns true!)",
 {
   FRAME_GUARD;
   ImGui::EndMenu();
 });
 
-DEFINE_API(__LINE__, bool, MenuItem, (ImGui_Context*,ctx)
+DEFINE_API(bool, MenuItem, (ImGui_Context*,ctx)
 (const char*,label)(const char*,API_RO(shortcut))
 (bool*,API_RW(p_selected))(bool*,API_RO(enabled)),
 R"(Return true when activated. Shortcuts are displayed for convenience but not processed by ImGui at the moment. Toggle state is written to 'selected' when provided.

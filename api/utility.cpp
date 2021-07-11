@@ -24,7 +24,7 @@
 #include "resource_proxy.hpp"
 #include "version.hpp"
 
-DEFINE_API(__LINE__, void, GetVersion,
+DEFINE_API(void, GetVersion,
 (char*,API_W(imgui_version))(int,API_W_SZ(imgui_version))
 (char*,API_W(reaimgui_version))(int,API_W_SZ(reaimgui_version)),
 "",
@@ -35,7 +35,7 @@ DEFINE_API(__LINE__, void, GetVersion,
     snprintf(API_W(reaimgui_version), API_W_SZ(reaimgui_version), "%s", REAIMGUI_VERSION);
 });
 
-DEFINE_API(__LINE__, bool, ValidatePtr, (void*,pointer)(const char*,type),
+DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
 R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_ListClipper* and ImGui_Viewport*.)",
 {
   ResourceProxy::Key proxyKey;
@@ -54,7 +54,7 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
     return false;
 });
 
-DEFINE_API(__LINE__, int, ColorConvertHSVtoRGB,
+DEFINE_API(int, ColorConvertHSVtoRGB,
 (double,h)(double,s)(double,v)(double*,API_RO(alpha))
 (double*,API_W(r))(double*,API_W(g))(double*,API_W(b)),
 R"(Return 0x00RRGGBB or, if alpha is provided, 0xRRGGBBAA.
@@ -72,7 +72,7 @@ Default values: alpha = nil)",
   return Color{color}.pack(alpha);
 });
 
-DEFINE_API(__LINE__, int, ColorConvertRGBtoHSV,
+DEFINE_API(int, ColorConvertRGBtoHSV,
 (double,r)(double,g)(double,b)(double*,API_RO(alpha))
 (double*,API_W(h))(double*,API_W(s))(double*,API_W(v)),
 R"(Return 0x00HHSSVV or, if alpha is provided, 0xHHSSVVAA.
@@ -90,14 +90,14 @@ Default values: alpha = nil)",
   return Color{color}.pack(alpha);
 });
 
-DEFINE_API(__LINE__, int, ColorConvertNative,
+DEFINE_API(int, ColorConvertNative,
 (int,rgb),
 "Convert native colors coming from REAPER. This swaps the red and blue channels of the specified 0xRRGGBB color on Windows.",
 {
   return Color::convertNative(rgb);
 });
 
-DEFINE_API(__LINE__, void, PointConvertNative, (ImGui_Context*,ctx)
+DEFINE_API(void, PointConvertNative, (ImGui_Context*,ctx)
 (double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native)),
 R"(Convert a position from the current platform's native coordinate position system to ReaImGui global coordinates (or vice versa).
 
@@ -117,7 +117,7 @@ Default values: to_native = false)",
   *API_RW(y) = point.y;
 });
 
-DEFINE_API(__LINE__, void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
+DEFINE_API(void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
 "Returns FLT_MIN and FLT_MAX for this system.",
 {
   assertValid(API_W(min));
@@ -126,7 +126,7 @@ DEFINE_API(__LINE__, void, NumericLimits_Float, (double*,API_W(min))(double*,API
   *API_W(max) = FLT_MAX;
 });
 
-DEFINE_API(__LINE__, void, PushID, (ImGui_Context*,ctx)
+DEFINE_API(void, PushID, (ImGui_Context*,ctx)
 (const char*,str_id),
 R"(Push string into the ID stack. Read the FAQ for more details about how ID are handled in dear imgui.
 If you are creating widgets in a loop you most likely want to push a unique identifier (e.g. object pointer, loop index) to uniquely differentiate them.
@@ -136,14 +136,14 @@ You can also use the "Label##foobar" syntax within widget label to distinguish t
   ImGui::PushID(str_id);
 });
 
-DEFINE_API(__LINE__, void, PopID, (ImGui_Context*,ctx),
+DEFINE_API(void, PopID, (ImGui_Context*,ctx),
 "Pop from the ID stack.",
 {
   FRAME_GUARD;
   ImGui::PopID();
 });
 
-DEFINE_API(__LINE__, void, LogToTTY, (ImGui_Context*,ctx)
+DEFINE_API(void, LogToTTY, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth)),
 R"(Start logging all text output from the interface to the TTY (stdout). By default, tree nodes are automatically opened during logging.
 
@@ -153,7 +153,7 @@ Default values: auto_open_depth = -1)",
   ImGui::LogToTTY(valueOr(API_RO(auto_open_depth), -1));
 });
 
-DEFINE_API(__LINE__, void, LogToFile, (ImGui_Context*,ctx)
+DEFINE_API(void, LogToFile, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth))(const char*,API_RO(filename)),
 R"(Start logging all text output from the interface to a file. By default, tree nodes are automatically opened during logging. The data is saved to $resource_path/imgui_log.txt if filename is nil.
 
@@ -164,7 +164,7 @@ Default values: auto_open_depth = -1, filename = nil)",
   ImGui::LogToFile(valueOr(API_RO(auto_open_depth), -1), API_RO(filename));
 });
 
-DEFINE_API(__LINE__, void, LogToClipboard, (ImGui_Context*,ctx)
+DEFINE_API(void, LogToClipboard, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth)),
 R"(Start logging all text output from the interface to the OS clipboard. By default, tree nodes are automatically opened during logging. See also ImGui_SetClipboardText.
 
@@ -174,14 +174,14 @@ Default values: auto_open_depth = -1)",
   ImGui::LogToClipboard(valueOr(API_RO(auto_open_depth), -1));
 });
 
-DEFINE_API(__LINE__, void, LogFinish, (ImGui_Context*,ctx),
+DEFINE_API(void, LogFinish, (ImGui_Context*,ctx),
 "Stop logging (close file, etc.)",
 {
   FRAME_GUARD;
   ImGui::LogFinish();
 });
 
-DEFINE_API(__LINE__, void, LogText, (ImGui_Context*,ctx)
+DEFINE_API(void, LogText, (ImGui_Context*,ctx)
 (const char*,text),
 "Pass text data straight to log (without being displayed)",
 {
@@ -189,7 +189,7 @@ DEFINE_API(__LINE__, void, LogText, (ImGui_Context*,ctx)
   ImGui::LogText("%s", text);
 });
 
-DEFINE_API(__LINE__, const char*, GetClipboardText, (ImGui_Context*,ctx),
+DEFINE_API(const char*, GetClipboardText, (ImGui_Context*,ctx),
 "See ImGui_SetClipboardText.",
 {
   assertValid(ctx);
@@ -197,7 +197,7 @@ DEFINE_API(__LINE__, const char*, GetClipboardText, (ImGui_Context*,ctx),
   return ImGui::GetClipboardText();
 });
 
-DEFINE_API(__LINE__, void, SetClipboardText, (ImGui_Context*,ctx)
+DEFINE_API(void, SetClipboardText, (ImGui_Context*,ctx)
 (const char*,text),
 "See also the ImGui_LogToClipboard function to capture GUI into clipboard, or easily output text data to the clipboard.",
 {
@@ -206,7 +206,7 @@ DEFINE_API(__LINE__, void, SetClipboardText, (ImGui_Context*,ctx)
   return ImGui::SetClipboardText(text);
 });
 
-DEFINE_API(__LINE__, void, ProgressBar, (ImGui_Context*,ctx)
+DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
 (double,fraction)
 (double*,API_RO(size_arg_w))(double*,API_RO(size_arg_h))
 (const char*,API_RO(overlay)),

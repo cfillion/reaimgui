@@ -62,7 +62,7 @@ private:
   ImGuiInputTextFlags m_flags;
 };
 
-DEFINE_API(__LINE__, bool, InputText, (ImGui_Context*,ctx)
+DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags)),
 "Default values: flags = ImGui_InputTextFlags_None",
@@ -80,7 +80,7 @@ DEFINE_API(__LINE__, bool, InputText, (ImGui_Context*,ctx)
   return false;
 });
 
-DEFINE_API(__LINE__, bool, InputTextMultiline, (ImGui_Context*,ctx)
+DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (double*,API_RO(size_w))(double*,API_RO(size_h))
 (int*,API_RO(flags)),
@@ -101,7 +101,7 @@ DEFINE_API(__LINE__, bool, InputTextMultiline, (ImGui_Context*,ctx)
   return false;
 });
 
-DEFINE_API(__LINE__, bool, InputTextWithHint, (ImGui_Context*,ctx)
+DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 (const char*,label)(const char*,hint)
 (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags)),
@@ -120,7 +120,7 @@ DEFINE_API(__LINE__, bool, InputTextWithHint, (ImGui_Context*,ctx)
   return false;
 });
 
-DEFINE_API(__LINE__, bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v))(int*,API_RO(step))(int*,API_RO(step_fast))
 (int*,API_RO(flags)),
 "Default values: step = 1, step_fast = 100, flags = ImGui_InputTextFlags_None",
@@ -132,7 +132,7 @@ DEFINE_API(__LINE__, bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
     valueOr(API_RO(step), 1), valueOr(API_RO(step_fast), 100), flags);
 });
 
-DEFINE_API(__LINE__, bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RO(flags)),
 "Default values: flags = ImGui_InputTextFlags_None",
 {
@@ -147,7 +147,7 @@ DEFINE_API(__LINE__, bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
     return false;
 });
 
-DEFINE_API(__LINE__, bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RO(flags)),
 "Default values: flags = ImGui_InputTextFlags_None",
@@ -163,7 +163,7 @@ DEFINE_API(__LINE__, bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
     return false;
 });
 
-DEFINE_API(__LINE__, bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RW(v4))(int*,API_RO(flags)),
 "Default values: flags = ImGui_InputTextFlags_None",
@@ -180,7 +180,7 @@ DEFINE_API(__LINE__, bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
     return false;
 });
 
-DEFINE_API(__LINE__, bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v))(double*,API_RO(step))(double*,API_RO(step_fast))
 (const char*,API_RO(format))(int*,API_RO(flags)),
 "Default values: step = 0.0, step_fast = 0.0, format = '%.3f', flags = ImGui_InputTextFlags_None",
@@ -202,7 +202,7 @@ static bool inputDoubleN(const char *label, double *data, const size_t size,
     nullptr, nullptr, format ? format : "%.3f", flags);
 }
 
-DEFINE_API(__LINE__, bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
 (const char*,API_RO(format))(int*,API_RO(flags)),
 "Default values: format = '%.3f', flags = ImGui_InputTextFlags_None",
@@ -219,7 +219,7 @@ DEFINE_API(__LINE__, bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
     return false;
 });
 
-DEFINE_API(__LINE__, bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (const char*,API_RO(format))(int*,API_RO(flags)),
 "Default values: format = '%.3f', flags = ImGui_InputTextFlags_None",
@@ -236,7 +236,7 @@ DEFINE_API(__LINE__, bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
     return false;
 });
 
-DEFINE_API(__LINE__, bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double*,API_RW(v4))(const char*,API_RO(format))(int*,API_RO(flags)),
 "Default values: format = '%.3f', flags = ImGui_InputTextFlags_None",
@@ -254,7 +254,7 @@ DEFINE_API(__LINE__, bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
     return false;
 });
 
-DEFINE_API(__LINE__, bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
 (reaper_array*,values)(double*,API_RO(step))(double*,API_RO(step_fast))
 (const char*,API_RO(format))(int*,API_RO(flags)),
 "Default values: step = nil, format = nil, step_fast = nil, format = '%.3f', flags = ImGui_InputTextFlags_None",

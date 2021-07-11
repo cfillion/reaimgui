@@ -19,7 +19,7 @@
 
 #include "font.hpp"
 
-DEFINE_API(__LINE__, ImGui_Font*, CreateFont,
+DEFINE_API(ImGui_Font*, CreateFont,
 (const char*,family_or_file)(int,size)(int*,API_RO(flags)),
 R"(Load a font matching a font family name or from a font file. The font will remain valid while it's attached to a context. See ImGui_AttachFont.
 
@@ -35,7 +35,7 @@ Default values: flags = ImGui_FontFlags_None)",
   return new Font { family_or_file, size, flags };
 });
 
-DEFINE_API(__LINE__, void, AttachFont, (ImGui_Context*,ctx)
+DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
 "Enable a font for use in the given context. Fonts must be attached as soon as possible after creating the context or on a new defer cycle.",
 {
@@ -48,14 +48,14 @@ DEFINE_API(__LINE__, void, AttachFont, (ImGui_Context*,ctx)
   ctx->fonts().add(font);
 });
 
-DEFINE_API(__LINE__, ImGui_Font*, GetFont, (ImGui_Context*,ctx),
+DEFINE_API(ImGui_Font*, GetFont, (ImGui_Context*,ctx),
 "Get the current font",
 {
   FRAME_GUARD;
   return ctx->fonts().get(ImGui::GetFont());
 });
 
-DEFINE_API(__LINE__, void, PushFont, (ImGui_Context*,ctx)
+DEFINE_API(void, PushFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
 "Change the current font. Use nil to push the default font. See ImGui_PopFont.",
 {
@@ -63,14 +63,14 @@ DEFINE_API(__LINE__, void, PushFont, (ImGui_Context*,ctx)
   ImGui::PushFont(ctx->fonts().instanceOf(font));
 });
 
-DEFINE_API(__LINE__, void, PopFont, (ImGui_Context*,ctx),
+DEFINE_API(void, PopFont, (ImGui_Context*,ctx),
 "See ImGui_PushFont.",
 {
   FRAME_GUARD;
   ImGui::PopFont();
 });
 
-DEFINE_API(__LINE__, double, GetFontSize, (ImGui_Context*,ctx),
+DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
 "Get current font size (= height in pixels) of current font with current scale applied",
 {
   FRAME_GUARD;

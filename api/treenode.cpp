@@ -17,7 +17,7 @@
 
 #include "helper.hpp"
 
-DEFINE_API(__LINE__, bool, TreeNode, (ImGui_Context*,ctx)
+DEFINE_API(bool, TreeNode, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags)),
 R"(TreeNode functions return true when the node is open, in which case you need to also call ImGui_TreePop when you are finished displaying the tree node contents.
 
@@ -27,7 +27,7 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
   return ImGui::TreeNodeEx(label, valueOr(API_RO(flags), ImGuiTreeNodeFlags_None));
 });
 
-DEFINE_API(__LINE__, bool, TreeNodeEx, (ImGui_Context*,ctx)
+DEFINE_API(bool, TreeNodeEx, (ImGui_Context*,ctx)
 (const char*,str_id)(const char*,label)(int*,API_RO(flags)),
 R"(Helper variation to easily decorelate the id from the displayed string. Read the FAQ about why and how to use ID. to align arbitrary text at the same level as a ImGui_TreeNode you can use ImGui_Bullet.
 
@@ -38,7 +38,7 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
   return ImGui::TreeNodeEx(str_id, flags, "%s", label);
 });
 
-DEFINE_API(__LINE__, void, TreePush, (ImGui_Context*,ctx)
+DEFINE_API(void, TreePush, (ImGui_Context*,ctx)
 (const char*,str_id),
 "~ ImGui_Indent()+ImGui_PushID(). Already called by ImGui_TreeNode when returning true, but you can call ImGui_TreePush/ImGui_TreePop yourself if desired.",
 {
@@ -46,21 +46,21 @@ DEFINE_API(__LINE__, void, TreePush, (ImGui_Context*,ctx)
   ImGui::TreePush(str_id);
 });
 
-DEFINE_API(__LINE__, void, TreePop, (ImGui_Context*,ctx),
+DEFINE_API(void, TreePop, (ImGui_Context*,ctx),
 "ImGui_Unindent()+ImGui_PopID()",
 {
   FRAME_GUARD;
   ImGui::TreePop();
 });
 
-DEFINE_API(__LINE__, double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
+DEFINE_API(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
 "Horizontal distance preceding label when using ImGui_TreeNode*() or ImGui_Bullet() == (ImGui_GetFontSize + ImGui_StyleVar_FramePadding.x*2) for a regular unframed ImGui_TreeNode.",
 {
   FRAME_GUARD;
   return ImGui::GetTreeNodeToLabelSpacing();
 });
 
-DEFINE_API(__LINE__, bool, CollapsingHeader, (ImGui_Context*,ctx)
+DEFINE_API(bool, CollapsingHeader, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RW(p_visible))(int*,API_RO(flags)),
 R"(Returns true when opened but do not indent nor push into the ID stack (because of the ImGui_TreeNodeFlags_NoTreePushOnOpen flag).
 
@@ -78,7 +78,7 @@ Default values: flags = ImGui_TreeNodeFlags_None)",
   return ImGui::CollapsingHeader(label, openPtrBehavior(API_RW(p_visible)), flags);
 });
 
-DEFINE_API(__LINE__, void, SetNextItemOpen, (ImGui_Context*,ctx)
+DEFINE_API(void, SetNextItemOpen, (ImGui_Context*,ctx)
 (bool,is_open)(int*,API_RO(cond)),
 R"(Set next ImGui_TreeNode/ImGui_CollapsingHeader open state. Can also be done with the ImGui_TreeNodeFlags_DefaultOpen flag.
 
@@ -88,7 +88,7 @@ Default values: cond = ImGui_Cond_Always.)",
   ImGui::SetNextItemOpen(is_open, valueOr(API_RO(cond), ImGuiCond_Always));
 });
 
-DEFINE_API(__LINE__, bool, IsItemToggledOpen, (ImGui_Context*,ctx),
+DEFINE_API(bool, IsItemToggledOpen, (ImGui_Context*,ctx),
 "Was the last item open state toggled? Set by ImGui_TreeNode.",
 {
   FRAME_GUARD;

@@ -26,7 +26,7 @@ static float getArrayValue(void *data, const int index)
 }
 
 // Widgets: Data Plotting
-DEFINE_API(__LINE__, void, PlotLines, (ImGui_Context*,ctx)
+DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)(int*,API_RO(values_offset))
 (const char*,API_RO(overlay_text))
 (double*,API_RO(scale_min))(double*,API_RO(scale_max))
@@ -43,7 +43,7 @@ DEFINE_API(__LINE__, void, PlotLines, (ImGui_Context*,ctx)
     ImVec2 { valueOr(API_RO(graph_size_w), 0.f), valueOr(API_RO(graph_size_h), 0.0f) });
 });
 
-DEFINE_API(__LINE__, void, PlotHistogram, (ImGui_Context*,ctx)
+DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)(int*,API_RO(values_offset))
 (const char*,API_RO(overlay_text))
 (double*,API_RO(scale_min))(double*,API_RO(scale_max))

@@ -40,7 +40,7 @@ static std::vector<const char *> splitString(char *list)
   return strings;
 }
 
-DEFINE_API(__LINE__, bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
 (const char*,preview_value)(int*,API_RO(flags)),
 R"(The ImGui_BeginCombo/ImGui_EndCombo API allows you to manage your contents and selection state however you want it, by creating e.g. ImGui_Selectable items.
 
@@ -52,14 +52,14 @@ Default values: flags = ImGui_ComboFlags_None)",
     valueOr(API_RO(flags), ImGuiComboFlags_None));
 });
 
-DEFINE_API(__LINE__, void, EndCombo, (ImGui_Context*,ctx),
+DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
 "Only call EndCombo() if ImGui_BeginCombo returns true!",
 {
   FRAME_GUARD;
   ImGui::EndCombo();
 });
 
-DEFINE_API(__LINE__, bool, Combo, (ImGui_Context*,ctx)
+DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(current_item))(char*,items)
 (int*,API_RO(popup_max_height_in_items)),
 R"(Helper over ImGui_BeginCombo/ImGui_EndCombo for convenience purpose. Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
@@ -74,7 +74,7 @@ Default values: popup_max_height_in_items = -1)",
 });
 
 // Widgets: List Boxes
-DEFINE_API(__LINE__, bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
+DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(current_item))(char*,items)(int*,API_RO(height_in_items)),
 R"(This is an helper over ImGui_BeginListBox/ImGui_EndListBox for convenience purpose. This is analoguous to how Combos are created.
 
@@ -89,7 +89,7 @@ Default values: height_in_items = -1)",
     valueOr(API_RO(height_in_items), -1));
 });
 
-DEFINE_API(__LINE__, bool, BeginListBox, (ImGui_Context*,ctx)
+DEFINE_API(bool, BeginListBox, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
 R"(Open a framed scrolling region.  This is essentially a thin wrapper to using ImGui_BeginChild/ImGui_EndChild with some stylistic changes.
 
@@ -108,7 +108,7 @@ See ImGui_EndListBox.)",
   return ImGui::BeginListBox(label, size);
 });
 
-DEFINE_API(__LINE__, void, EndListBox, (ImGui_Context*,ctx),
+DEFINE_API(void, EndListBox, (ImGui_Context*,ctx),
 "Only call EndListBox() if ImGui_BeginListBox returned true!",
 {
   FRAME_GUARD;
@@ -125,7 +125,7 @@ DEFINE_ENUM(ImGui, ComboFlags_HeightLargest,  "As many fitting items as possible
 DEFINE_ENUM(ImGui, ComboFlags_NoArrowButton,  "Display on the preview box without the square arrow button.");
 DEFINE_ENUM(ImGui, ComboFlags_NoPreview,      "Display only a square arrow button.");
 
-DEFINE_API(__LINE__, bool, Selectable, (ImGui_Context*,ctx)
+DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RW(p_selected))
 (int*,API_RO(flags))(double*,API_RO(size_w))(double*,API_RO(size_h)),
 R"(A selectable highlights when hovered, and can display another color when selected.

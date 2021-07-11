@@ -17,7 +17,7 @@
 
 #include "helper.hpp"
 
-DEFINE_API(__LINE__, bool, BeginPopup, (ImGui_Context*,ctx)
+DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
 R"(Popups, Modals
 
@@ -38,7 +38,7 @@ Default values: flags = ImGui_WindowFlags_None)",
   return ImGui::BeginPopup(str_id, valueOr(API_RO(flags), ImGuiWindowFlags_None));
 });
 
-DEFINE_API(__LINE__, bool, BeginPopupModal, (ImGui_Context*,ctx)
+DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RW(p_open))(int*,API_RO(flags)),
 R"(Block every interactions behind the window, cannot be closed by user, add a dimming background, has a title bar. Return true if the modal is open, and you can start outputting to it. See ImGui_BeginPopup.
 
@@ -49,14 +49,14 @@ Default values: flags = ImGui_WindowFlags_None)",
     valueOr(API_RO(flags), ImGuiWindowFlags_None));
 });
 
-DEFINE_API(__LINE__, void, EndPopup, (ImGui_Context*,ctx),
+DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
 "Only call EndPopup() if BeginPopupXXX() returns true!",
 {
   FRAME_GUARD;
   ImGui::EndPopup();
 });
 
-DEFINE_API(__LINE__, void, OpenPopup, (ImGui_Context*,ctx)
+DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(popup_flags)),
 R"(Set popup state to open (don't call every frame!). ImGuiPopupFlags are available for opening options.
 
@@ -69,7 +69,7 @@ Default values: popup_flags = ImGui_PopupFlags_None)",
   ImGui::OpenPopup(str_id, valueOr(API_RO(popup_flags), ImGuiPopupFlags_None));
 });
 
-DEFINE_API(__LINE__, void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
+DEFINE_API(void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
 R"(Helper to open popup when clicked on last item. return true when just opened. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
 
@@ -82,7 +82,7 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
     valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
 });
 
-DEFINE_API(__LINE__, void, CloseCurrentPopup, (ImGui_Context*,ctx),
+DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
 R"(Manually close the popup we have begin-ed into. Use inside the ImGUi_BeginPopup/ImGui_EndPopup scope to close manually.
 
 CloseCurrentPopup() is called by default by ImGui_Selectable/ImGui_MenuItem when activated.)",
@@ -91,7 +91,7 @@ CloseCurrentPopup() is called by default by ImGui_Selectable/ImGui_MenuItem when
   ImGui::CloseCurrentPopup();
 });
 
-DEFINE_API(__LINE__, bool, BeginPopupContextItem, (ImGui_Context*,ctx)
+DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
 R"(This is a helper to handle the simplest case of associating one named popup to one given widget. You can pass a NULL str_id to use the identifier of the last item. This is essentially the same as calling ImGui_OpenPopupOnItemClick + ImGui_BeginPopup but written to avoid computing the ID twice because BeginPopupContextXXX functions may be called very frequently.
 
@@ -109,7 +109,7 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
     valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
 });
 
-DEFINE_API(__LINE__, bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
+DEFINE_API(bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
 R"(Open+begin popup when clicked on current window.
 
@@ -122,7 +122,7 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
     valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
 });
 
-DEFINE_API(__LINE__, bool, IsPopupOpen, (ImGui_Context*,ctx)
+DEFINE_API(bool, IsPopupOpen, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
 R"(Return true if the popup is open at the current ImGui_BeginPopup level of the popup stack.
 
@@ -136,21 +136,21 @@ Default values: flags = ImGui_PopupFlags_None)",
   return ImGui::IsPopupOpen(str_id, flags);
 });
 
-DEFINE_API(__LINE__, void, BeginTooltip, (ImGui_Context*,ctx),
+DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
 "Begin/append a tooltip window. To create full-featured tooltip (with any kind of items).",
 {
   FRAME_GUARD;
   ImGui::BeginTooltip();
 });
 
-DEFINE_API(__LINE__, void, EndTooltip, (ImGui_Context*,ctx),
+DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
 "",
 {
   FRAME_GUARD;
   ImGui::EndTooltip();
 });
 
-DEFINE_API(__LINE__, void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
+DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
 "Set a text-only tooltip, typically use with ImGui_IsItemHovered. override any previous call to ImGui_SetTooltip.",
 {
   FRAME_GUARD;

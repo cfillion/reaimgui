@@ -47,7 +47,7 @@ ImGuiListClipper *ListClipper::use(ListClipper *lc)
 
 using ImGui_ListClipper = ListClipper;
 
-DEFINE_API(__LINE__, ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
+DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
 R"(Helper: Manually clip large list of items.
 If you are submitting lots of evenly spaced items and you have a random access to the list, you can perform coarse
 clipping based on visibility to save yourself from processing those items at all.
@@ -76,7 +76,7 @@ The returned clipper object is tied to the context and is valid as long as it is
   return new ListClipper { ctx };
 });
 
-DEFINE_API(__LINE__, void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
+DEFINE_API(void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
 (int,items_count)(double*,API_RO(items_height)),
 R"(items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
 items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically ImGui_GetTextLineHeightWithSpacing or ImGui_GetFrameHeightWithSpacing.
@@ -87,19 +87,19 @@ Default values: items_height = -1.0)",
     ->Begin(items_count, valueOr(API_RO(items_height), -1.0));
 });
 
-DEFINE_API(__LINE__, bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
+DEFINE_API(bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
 "Call until it returns false. The display_start/display_end fields from ImGui_ListClipper_GetDisplayRange will be set and you can process/draw those items.",
 {
   return ListClipper::use(clipper)->Step();
 });
 
-DEFINE_API(__LINE__, void, ListClipper_End, (ImGui_ListClipper*,clipper),
+DEFINE_API(void, ListClipper_End, (ImGui_ListClipper*,clipper),
 "Automatically called on the last call of ImGui_ListClipper_Step that returns false.",
 {
   ListClipper::use(clipper)->End();
 });
 
-DEFINE_API(__LINE__, void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
+DEFINE_API(void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
 (int*,API_W(display_start))(int*,API_W(display_end)),
 "",
 {

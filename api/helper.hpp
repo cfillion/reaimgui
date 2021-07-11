@@ -40,7 +40,7 @@
     return static_cast<type>(0);      \
   }
 
-#define DEFINE_API(line, type, name, args, help, ...)           \
+#define DEFINE_API(type, name, args, help, ...)                 \
   type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _,           \
     BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))) noexcept               \
   try __VA_ARGS__                                               \
@@ -57,13 +57,12 @@
       BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                \
         BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
       help "\0"                                                 \
-      API_FILE "\0" BOOST_PP_STRINGIZE(line) "\0"               \
-      BOOST_PP_STRINGIZE(__LINE__)                              \
+      API_FILE "\0" BOOST_PP_STRINGIZE(__LINE__)                \
     ))                                                          \
   }
 
 #define DEFINE_ENUM(prefix, name, doc) \
-  DEFINE_API(__LINE__, int, name, NO_ARGS, doc, { return prefix##name; })
+  DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
 
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write

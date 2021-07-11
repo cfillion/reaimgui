@@ -30,7 +30,7 @@ static bool isUserType(const char *type)
 }
 
 // Drag and Drop
-DEFINE_API(__LINE__, bool, BeginDragDropSource, (ImGui_Context*,ctx)(int*,API_RO(flags)),
+DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)(int*,API_RO(flags)),
 R"(Call when the current item is active. If this return true, you can call ImGui_SetDragDropPayload + ImGui_EndDragDropSource.
 
 If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).
@@ -41,7 +41,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
   return ImGui::BeginDragDropSource(valueOr(API_RO(flags), ImGuiDragDropFlags_None));
 });
 
-DEFINE_API(__LINE__, bool, SetDragDropPayload, (ImGui_Context*,ctx)
+DEFINE_API(bool, SetDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)(const char*,data)(int*,API_RO(cond)),
 R"(type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
 
@@ -57,14 +57,14 @@ Default values: cond = ImGui_Cond_Always)",
     valueOr(API_RO(cond), ImGuiCond_Always));
 });
 
-DEFINE_API(__LINE__, void, EndDragDropSource, (ImGui_Context*,ctx),
+DEFINE_API(void, EndDragDropSource, (ImGui_Context*,ctx),
 "Only call EndDragDropSource() if ImGui_BeginDragDropSource returns true!",
 {
   FRAME_GUARD;
   ImGui::EndDragDropSource();
 });
 
-DEFINE_API(__LINE__, bool, BeginDragDropTarget, (ImGui_Context*,ctx),
+DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
 "Call after submitting an item that may receive a payload. If this returns true, you can call ImGui_AcceptDragDropPayload + ImGui_EndDragDropTarget.",
 {
   FRAME_GUARD;
@@ -88,7 +88,7 @@ static void copyPayload(const ImGuiPayload *payload, char **reabuf, const int re
   }
 }
 
-DEFINE_API(__LINE__, bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
+DEFINE_API(bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
 (int*,API_RO(flags)),
@@ -130,7 +130,7 @@ static bool AcceptDragDropPayloadColor(int *color, bool alpha, ImGuiDragDropFlag
   return true;
 }
 
-DEFINE_API(__LINE__, bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
+DEFINE_API(bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
 (int*,API_W(rgb))(int*,API_RO(flags)),
 R"(Accept a RGB color. See ImGui_AcceptDragDropPayload.
 
@@ -141,7 +141,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
   return AcceptDragDropPayloadColor(API_W(rgb), false, flags);
 });
 
-DEFINE_API(__LINE__, bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
+DEFINE_API(bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
 (int*,API_W(rgba))(int*,API_RO(flags)),
 R"(Accept a RGBA color. See ImGui_AcceptDragDropPayload.
 
@@ -152,7 +152,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
   return AcceptDragDropPayloadColor(API_W(rgba), true, flags);
 });
 
-DEFINE_API(__LINE__, bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
+DEFINE_API(bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
 (int*,API_W(count))(int*,API_RO(flags)),
 R"(Accept a list of dropped files. See ImGui_AcceptDragDropPayload and ImGui_GetDragDropPayloadFile.
 
@@ -170,14 +170,14 @@ Default values: flags = ImGui_DragDropFlags_None)",
   return payload;
 });
 
-DEFINE_API(__LINE__, void, EndDragDropTarget, (ImGui_Context*,ctx),
+DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
 "Only call EndDragDropTarget() if ImGui_BeginDragDropTarget returns true!",
 {
   FRAME_GUARD;
   ImGui::EndDragDropTarget();
 });
 
-DEFINE_API(__LINE__, bool, GetDragDropPayload, (ImGui_Context*,ctx)
+DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
 (char*,API_W(type))(int,API_W_SZ(type))
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
 (bool*,API_W(is_preview))(bool*,API_W(is_delivery)),
@@ -198,7 +198,7 @@ DEFINE_API(__LINE__, bool, GetDragDropPayload, (ImGui_Context*,ctx)
   return true;
 });
 
-DEFINE_API(__LINE__, bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
+DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
 (int,index)(char*,API_W(filename))(int,API_W_SZ(filename)),
 "Get a filename from the list of dropped files. Returns false if index is out of bounds.",
 {
