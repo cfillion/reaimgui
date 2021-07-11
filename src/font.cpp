@@ -34,7 +34,7 @@ Font::Font(const char *family, const int size, const int flags)
   }
 }
 
-ImFont *Font::load(ImFontAtlas *atlas, const float scale) try
+ImFont *Font::load(ImFontAtlas *atlas, const float scale)
 {
   ImFontConfig cfg;
   // light hinting solves uneven glyph height on macOS
@@ -60,10 +60,6 @@ ImFont *Font::load(ImFontAtlas *atlas, const float scale) try
   font->Scale = 1.f / scale;
 
   return font;
-}
-catch(const imgui_error &)
-{
-  return nullptr;
 }
 
 FontList::FontList()
