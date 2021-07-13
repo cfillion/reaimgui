@@ -522,7 +522,7 @@ DEFINE_ENUM(ImGui, WindowFlags_NoMouseInputs,             "Disable catching mous
 DEFINE_ENUM(ImGui, WindowFlags_MenuBar,                   "Has a menu-bar.");
 DEFINE_ENUM(ImGui, WindowFlags_HorizontalScrollbar,     R"(Allow horizontal scrollbar to appear (off by default). You may use ImGui_SetNextWindowContentSize(width, 0.0) prior to calling ImGui_Begin() to specify width. Read code in the demo's "Horizontal Scrolling" section.)");
 DEFINE_ENUM(ImGui, WindowFlags_NoFocusOnAppearing,        "Disable taking focus when transitioning from hidden to visible state.");
-DEFINE_ENUM(ImGui, WindowFlags_NoBringToFrontOnFocus,     "Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus).");
+// DEFINE_ENUM(ImGui, WindowFlags_NoBringToFrontOnFocus,     "Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus).");
 DEFINE_ENUM(ImGui, WindowFlags_AlwaysVerticalScrollbar,   "Always show vertical scrollbar (even if ContentSize.y < Size.y).");
 DEFINE_ENUM(ImGui, WindowFlags_AlwaysHorizontalScrollbar, "Always show horizontal scrollbar (even if ContentSize.x < Size.x).");
 DEFINE_ENUM(ImGui, WindowFlags_AlwaysUseWindowPadding,    "Ensure child windows without border uses ImGui_StyleVar_WindowPadding (ignored by default for non-bordered child windows, because more convenient).");

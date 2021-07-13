@@ -53,7 +53,7 @@ demo = {
   no_close          = false,
   no_nav            = false,
   no_background     = false,
-  no_bring_to_front = false,
+  -- no_bring_to_front = false,
   no_docking        = false,
 }
 
@@ -222,7 +222,7 @@ function demo.ShowDemoWindow()
   if demo.no_collapse       then window_flags = window_flags | r.ImGui_WindowFlags_NoCollapse()            end
   if demo.no_nav            then window_flags = window_flags | r.ImGui_WindowFlags_NoNav()                 end
   if demo.no_background     then window_flags = window_flags | r.ImGui_WindowFlags_NoBackground()          end
-  if demo.no_bring_to_front then window_flags = window_flags | r.ImGui_WindowFlags_NoBringToFrontOnFocus() end
+  -- if demo.no_bring_to_front then window_flags = window_flags | r.ImGui_WindowFlags_NoBringToFrontOnFocus() end
   if demo.no_docking        then window_flags = window_flags | r.ImGui_WindowFlags_NoDocking()             end
   if demo.no_close          then open = false end -- disable the close button
 
@@ -476,7 +476,7 @@ function demo.ShowDemoWindow()
       r.ImGui_TableNextColumn(ctx); rv,demo.no_close          = r.ImGui_Checkbox(ctx, 'No close', demo.no_close)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_nav            = r.ImGui_Checkbox(ctx, 'No nav', demo.no_nav)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_background     = r.ImGui_Checkbox(ctx, 'No background', demo.no_background)
-      r.ImGui_TableNextColumn(ctx); rv,demo.no_bring_to_front = r.ImGui_Checkbox(ctx, 'No bring to front', demo.no_bring_to_front)
+      -- r.ImGui_TableNextColumn(ctx); rv,demo.no_bring_to_front = r.ImGui_Checkbox(ctx, 'No bring to front', demo.no_bring_to_front)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_docking        = r.ImGui_Checkbox(ctx, 'No docking', demo.no_docking)
       r.ImGui_EndTable(ctx)
     end
