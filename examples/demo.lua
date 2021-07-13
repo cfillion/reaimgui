@@ -485,18 +485,25 @@ function demo.ShowDemoWindow()
       r.ImGui_Spacing(ctx)
 
       local dock_id = r.ImGui_GetWindowDockID(ctx)
-      local dock_label = dock_id < 0 and ('Docker %d'):format(~dock_id + 1) or 'Floating'
+      local dock_label
+      if dock_id < 0 then
+        dock_label = ('REAPER docker %d'):format(math.abs(dock_id))
+      elseif dock_id > 0 then
+        dock_label = ('ImGui docker %d'):format(dock_id)
+      else
+        dock_label = 'Floating'
+      end
       r.ImGui_AlignTextToFramePadding(ctx)
-      r.ImGui_Text(ctx, 'Dock in REAPER docker:')
+      r.ImGui_Text(ctx, 'Dock in docker:')
       r.ImGui_SameLine(ctx)
-      r.ImGui_SetNextItemWidth(ctx, 127)
+      r.ImGui_SetNextItemWidth(ctx, 150)
       if r.ImGui_BeginCombo(ctx, '##docker', dock_label) then
-        if r.ImGui_Selectable(ctx, 'Floating', dock_id >= 0) then
+        if r.ImGui_Selectable(ctx, 'Floating', dock_id == 0) then
           demo.set_dock_id = 0
         end
-        for id = 0, 15 do
-          if r.ImGui_Selectable(ctx, ('Docker %d'):format(id + 1), dock_id == ~id) then
-            demo.set_dock_id = ~id
+        for id = -1, -16, -1 do
+          if r.ImGui_Selectable(ctx, ('REAPER docker %d'):format(math.abs(id)), dock_id == id) then
+            demo.set_dock_id = id
           end
         end
         r.ImGui_EndCombo(ctx)
