@@ -56,17 +56,28 @@ void Docker::draw()
   ImGui::End();
 }
 
-bool Docker::isActive() const
+static bool isNodeActive(const ImGuiDockNode *node)
 {
-  const ImGuiDockNode *node { ImGui::DockBuilderGetNode(nodeId()) };
-
   if(!node || node->IsEmpty())
     return false;
 
-  const ImGuiWindow *window { node->VisibleWindow };
-  return window &&
-    (window->Active || window->WasActive) &&
-    (window->DockIsActive || window->DockTabIsVisible);
+  for(int i {}; i < node->Windows.Size; ++i) {
+    const ImGuiWindow *window { node->Windows[i] };
+    const bool windowActive {
+      (window->Active || window->WasActive) &&
+      (window->DockIsActive || window->DockTabIsVisible)
+    };
+
+    if(windowActive)
+      return true;
+  }
+
+  return isNodeActive(node->ChildNodes[0]) || isNodeActive(node->ChildNodes[1]);
+}
+
+bool Docker::isActive() const
+{
+  return isNodeActive(ImGui::DockBuilderGetNode(nodeId()));
 }
 
 void Docker::moveTo(Docker *target)
