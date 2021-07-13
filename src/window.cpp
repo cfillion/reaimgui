@@ -226,6 +226,8 @@ void Window::mouseDown(const unsigned int msg)
     return;
   }
 
+  // Not needed on macOS for receiving mouse up messages outside of the
+  // windows's boundaries. It is instead used by Context::updateMousePos.
   if(GetCapture() == nullptr)
     SetCapture(m_hwnd.get());
 
