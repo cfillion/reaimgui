@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(reaimgui VERSION 0.5.2 LANGUAGES CXX)
+project(reaimgui VERSION 0.5.3 LANGUAGES CXX)
 
 include(CheckCompilerFlag)
 include(CheckIncludeFileCXX)
