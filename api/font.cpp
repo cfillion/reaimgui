@@ -25,7 +25,7 @@ R"(Load a font matching a font family name or from a font file. The font will re
 
 The family name can be an installed font or one of the generic fonts: sans-serif, serif, monospace, cursive, fantasy.
 
-If 'family_or_file' specifies a filename:
+If 'family_or_file' specifies a path to a font file (contains a / or \):
 - The first byte of 'flags' is used as the font index within the file
 - The font styles in 'flags' are simulated by the font renderer
 
