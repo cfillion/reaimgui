@@ -21,6 +21,7 @@
 #include "cocoa_inputview.hpp"
 #include "context.hpp"
 #include "opengl_renderer.hpp"
+#include "platform.hpp"
 
 #include <imgui/imgui_internal.h>
 #include <reaper_plugin_secrets.h>
@@ -99,12 +100,12 @@ void CocoaWindow::show()
 
 void CocoaWindow::setPosition(ImVec2 pos)
 {
-  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  Platform::scalePosition(&pos, true);
+
   NSWindow *window { [m_view window] };
   const NSRect &content { [window contentRectForFrameRect:[window frame]] };
   const CGFloat titleBarHeight { [window frame].size.height - content.size.height };
-  pos.y = (pio.Monitors[0].MainSize.y - pos.y) + titleBarHeight;
-  [window setFrameTopLeftPoint:NSMakePoint(pos.x, pos.y)];
+  [window setFrameTopLeftPoint:NSMakePoint(pos.x, pos.y + titleBarHeight)];
 }
 
 void CocoaWindow::setSize(const ImVec2 size)
@@ -179,7 +180,7 @@ float CocoaWindow::scaleFactor() const
 
 void CocoaWindow::setImePosition(ImVec2 pos)
 {
-  pos.y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - pos.y;
+  Platform::scalePosition(&pos, true);
   pos.y -= ImGui::GetTextLineHeight();
 
   [m_inputView setImePosition:NSMakePoint(pos.x, pos.y)];
