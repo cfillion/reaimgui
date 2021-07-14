@@ -239,10 +239,8 @@ void DockerHost::onChanged()
 {
   const bool isActive { m_docker->isActive() };
   if(isActive ^ !!m_window) {
-    if(isActive) {
+    if(isActive)
       activate();
-      m_window->show();
-    }
     else if(!ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
             !ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
       m_viewport->PlatformHandle = nullptr;
