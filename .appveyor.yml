@@ -61,7 +61,7 @@ for:
         ;;
       esac
     artifacts:
-      - path: build/src/reaper_imgui*.so
+      - path: build/reaper_imgui*.so
       - path: build/tools/imgui_python.py
       - path: build/tools/reaper_imgui_doc.html
       - path: build/tools/reaper_imgui_functions.h
@@ -81,7 +81,7 @@ for:
 
       - sudo xcode-select -s /Applications/Xcode-$XCODE_VERSION.app
     artifacts:
-      - path: build/src/reaper_imgui*.dylib
+      - path: build/reaper_imgui*.dylib
       - path: build/tools/imgui_python.py
       - path: build/tools/reaper_imgui_doc.html
       - path: build/tools/reaper_imgui_functions.h
@@ -99,8 +99,8 @@ for:
         -DCMAKE_TOOLCHAIN_FILE=C:\Tools\vcpkg\scripts\buildsystems\vcpkg.cmake
       - cmake --build build
     artifacts:
-      - path: build\src\reaper_imgui*.dll
-      - path: build\src\reaper_imgui*.pdb
+      - path: build\reaper_imgui*.dll
+      - path: build\reaper_imgui*.pdb
       - path: build\tools\imgui_python.py
       - path: build\tools\reaper_imgui_doc.html
       - path: build\tools\reaper_imgui_functions.h
