@@ -1,3 +1,5 @@
+# Warning: Python ReaScripts have significant CPU overhead compared to Lua/EEL2
+
 sys.path.append(RPR_GetResourcePath() + "/Scripts/ReaTeam Extensions/API")
 from imgui_python import *
 
