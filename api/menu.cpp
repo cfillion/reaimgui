@@ -50,7 +50,7 @@ R"(Only call EndMenu() if ImGui_BeginMenu returns true!)",
 
 DEFINE_API(bool, MenuItem, (ImGui_Context*,ctx)
 (const char*,label)(const char*,API_RO(shortcut))
-(bool*,API_RW(p_selected))(bool*,API_RO(enabled)),
+(bool*,API_RWO(p_selected))(bool*,API_RO(enabled)),
 R"(Return true when activated. Shortcuts are displayed for convenience but not processed by ImGui at the moment. Toggle state is written to 'selected' when provided.
 
 Default values: enabled = true)",
@@ -58,6 +58,6 @@ Default values: enabled = true)",
   FRAME_GUARD;
   nullIfEmpty(API_RO(shortcut));
 
-  return ImGui::MenuItem(label, API_RO(shortcut), API_RW(p_selected),
+  return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(p_selected),
     valueOr(API_RO(enabled), true));
 });
