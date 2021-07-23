@@ -495,7 +495,7 @@ ImGuiViewport *Context::focusedViewport() const
     ImGuiViewport *viewport { pio.Viewports[i] };
     Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) };
 
-    if(instance->hasFocus())
+    if(instance && instance->hasFocus())
       return viewport;
   }
 
