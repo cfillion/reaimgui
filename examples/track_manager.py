@@ -57,7 +57,7 @@ def trackRow(ti):
 
   if ImGui_TableSetColumnIndex(ctx, 5):
     fxCount = RPR_TrackFX_GetCount(track)
-    if ImGui_Selectable(ctx, fxCount if fxCount > 0 else '')[0]:
+    if ImGui_Selectable(ctx, fxCount if fxCount > 0 else '', False)[0]:
       RPR_TrackFX_Show(track, 0, 1)
 
   if ImGui_TableSetColumnIndex(ctx, 6):
