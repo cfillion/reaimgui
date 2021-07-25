@@ -188,6 +188,7 @@ NATIVE_ONLY_ENUMS = [
   /\ATableFlags_NoBordersInBody/,       # marked as alpha, to be moved to style
   /\AConfigFlags_(NavEnableGamepad|NavNoCaptureKeyboard)\z/, # not implemented
   /\AConfigFlags_(IsSRGB|IsTouchScreen|ViewportsEnable|DpiEnableScale(Viewports|Fonts))\z/, # backend internal flags
+  'WindowFlags_NoBringToFrontOnFocus', # not supported with per-window viewports
 
   # only for dear imgui's internal use
   'InputTextFlags_Multiline',
