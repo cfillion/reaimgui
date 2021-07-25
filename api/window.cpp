@@ -17,6 +17,7 @@
 
 #include "helper.hpp"
 
+#include "version.hpp"
 #include <imgui/imgui.h>
 
 DEFINE_API(bool, Begin, (ImGui_Context*,ctx)
@@ -489,6 +490,27 @@ Default values: center_y_ratio = 0.5)",
 {
   FRAME_GUARD;
   ImGui::SetScrollFromPosY(local_y, valueOr(API_RO(center_y_ratio), 0.5));
+});
+
+DEFINE_API(void, ShowAboutWindow, (ImGui_Context*,ctx)
+(bool*,API_RW(p_open)),
+R"(Create About window. Display ReaImGui version, Dear ImGui version, credits and build/system information.)",
+{
+  FRAME_GUARD;
+
+  constexpr ImGuiWindowFlags flags { ImGuiWindowFlags_AlwaysAutoResize };
+  if(ImGui::Begin("About Dear ImGui", openPtrBehavior(API_RW(p_open)), flags)) {
+    ImGui::Separator();
+    ImGui::Text("reaper_imgui %s", REAIMGUI_VERSION);
+    ImGui::Separator();
+    ImGui::TextUnformatted("By Christian Fillion and contributors.");
+    ImGui::TextUnformatted("ReaImGui is licensed under the LGPL.");
+    ImGui::Spacing();
+    ImGui::Separator();
+  }
+  ImGui::End();
+
+  ImGui::ShowAboutWindow(); // appends to the same window by title
 });
 
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)

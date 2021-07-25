@@ -32,7 +32,6 @@ NATIVE_ONLY = [
   'void ImGui::CaptureMouseFromApp(bool)',
 
   'void ImGui::ShowDemoWindow(bool*)',
-  'void ImGui::ShowAboutWindow(bool*)',
   'void ImGui::ShowUserGuide()',
   'void ImGui::ShowStyleEditor(ImGuiStyle*)',
   'bool ImGui::ShowStyleSelector(const char*)',

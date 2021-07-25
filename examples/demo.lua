@@ -10,7 +10,6 @@ Index of this file:
 // - sub section: ShowDemoWindowPopups()
 // - sub section: ShowDemoWindowTables()
 // - sub section: ShowDemoWindowMisc()
-// [SECTION] About Window / ShowAboutWindow()
 // [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
 // [SECTION] Example App: Debug Console / ShowExampleAppConsole()
 // [SECTION] Example App: Debug Log / ShowExampleAppLog()
@@ -203,7 +202,7 @@ function demo.ShowDemoWindow()
   if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
 
   if show_app.metrics then show_app.metrics = r.ImGui_ShowMetricsWindow(ctx, show_app.metrics) end
-  if show_app.about   then show_app.about   = demo.ShowAboutWindow(show_app.about)     end
+  if show_app.about   then show_app.about   = r.ImGui_ShowAboutWindow(ctx,   show_app.about)   end
   -- if (show_app_style_editor)
   -- {
   --     if(r.ImGui_Begin("Dear ImGui Style Editor", &show_app_style_editor)) {
@@ -5947,33 +5946,6 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_TreePop(ctx)
     end
   end
-end
-
--------------------------------------------------------------------------------
--- [SECTION] About Window / ShowAboutWindow()
--- Access from Dear ImGui Demo -> Tools -> About
--------------------------------------------------------------------------------
-
-function demo.ShowAboutWindow()
-  local rv,open = r.ImGui_Begin(ctx, 'About Dear ImGui', true, r.ImGui_WindowFlags_AlwaysAutoResize())
-  if not rv then return open end
-
-  r.ImGui_Separator(ctx)
-  r.ImGui_Text(ctx, ('Dear ImGui %s'):format(IMGUI_VERSION))
-  r.ImGui_Separator(ctx)
-  r.ImGui_Text(ctx, 'By Omar Cornut and all Dear ImGui contributors.')
-  r.ImGui_Text(ctx, 'Dear ImGui is licensed under the MIT License.')
-
-  r.ImGui_Spacing(ctx)
-
-  r.ImGui_Separator(ctx)
-  r.ImGui_Text(ctx, ('reaper_imgui %s'):format(REAIMGUI_VERSION))
-  r.ImGui_Separator(ctx)
-  r.ImGui_Text(ctx, 'By Christian Fillion and contributors.')
-  r.ImGui_Text(ctx, 'ReaImGui is licensed under the LGPL.')
-  r.ImGui_End(ctx)
-
-  return open
 end
 
 -------------------------------------------------------------------------------
