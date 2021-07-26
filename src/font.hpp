@@ -67,6 +67,7 @@ public:
   ~FontList();
 
   void add(Font *);
+  void remove(Font *);
   void keepAliveAll();
   void update();
   int texVersion() const { return m_version; }
@@ -75,6 +76,7 @@ public:
   ImFont *instanceOf(Font *) const;
 
 private:
+  void invalidate();
   void build(float scale);
   void migrateActiveFonts();
   ImFont *toCurrentAtlas(ImFont *) const;

@@ -35,17 +35,32 @@ Default values: flags = ImGui_FontFlags_None)",
   return new Font { family_or_file, size, flags };
 });
 
+static void outOfFrameCheck(Context *ctx)
+{
+  if(ctx->inFrame())
+    throw reascript_error { "cannot modify font texture: a frame has already begun" };
+}
+
 DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
 "Enable a font for use in the given context. Fonts must be attached as soon as possible after creating the context or on a new defer cycle.",
 {
   assertValid(ctx);
   assertValid(font);
-
-  if(ctx->inFrame())
-    throw reascript_error { "cannot modify font texture: a frame has already begun" };
+  outOfFrameCheck(ctx);
 
   ctx->fonts().add(font);
+});
+
+DEFINE_API(void, DetachFont, (ImGui_Context*,ctx)
+(ImGui_Font*,font),
+"Unload a font from the given context. The font will be destroyed if is not attached to any context.",
+{
+  assertValid(ctx);
+  assertValid(font);
+  outOfFrameCheck(ctx);
+
+  ctx->fonts().remove(font);
 });
 
 DEFINE_API(ImGui_Font*, GetFont, (ImGui_Context*,ctx),

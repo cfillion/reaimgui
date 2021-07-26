@@ -73,13 +73,28 @@ FontList::~FontList()
     pair.second->Locked = false;
 }
 
+void FontList::invalidate()
+{
+  m_rebuild = !m_atlases.empty(); // don't rebuild before the first frame
+}
+
 void FontList::add(Font *font)
 {
   if(std::find(m_fonts.begin(), m_fonts.end(), font) != m_fonts.end())
     return; // the font was already attached
 
   m_fonts.push_back(font);
-  m_rebuild = !m_atlases.empty(); // don't rebuild before the first frame
+  invalidate();
+}
+
+void FontList::remove(Font *font)
+{
+  const auto it { std::find(m_fonts.begin(), m_fonts.end(), font) };
+  if(it == m_fonts.end())
+    throw reascript_error { "the font is not attached to this context" };
+
+  m_fonts.erase(it);
+  invalidate();
 }
 
 void FontList::keepAliveAll()
