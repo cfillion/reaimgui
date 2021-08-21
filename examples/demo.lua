@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.83)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.84)
 
 --[[
 Index of this file:
@@ -53,6 +53,7 @@ demo = {
   no_nav            = false,
   no_background     = false,
   -- no_bring_to_front = false,
+  unsaved_document  = false,
   no_docking        = false,
 }
 
@@ -222,6 +223,7 @@ function demo.ShowDemoWindow()
   if demo.no_nav            then window_flags = window_flags | r.ImGui_WindowFlags_NoNav()                 end
   if demo.no_background     then window_flags = window_flags | r.ImGui_WindowFlags_NoBackground()          end
   -- if demo.no_bring_to_front then window_flags = window_flags | r.ImGui_WindowFlags_NoBringToFrontOnFocus() end
+  if demo.unsaved_document  then window_flags = window_flags | r.ImGui_WindowFlags_UnsavedDocument()       end
   if demo.no_docking        then window_flags = window_flags | r.ImGui_WindowFlags_NoDocking()             end
   if demo.no_close          then open = false end -- disable the close button
 
@@ -476,6 +478,7 @@ function demo.ShowDemoWindow()
       r.ImGui_TableNextColumn(ctx); rv,demo.no_nav            = r.ImGui_Checkbox(ctx, 'No nav', demo.no_nav)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_background     = r.ImGui_Checkbox(ctx, 'No background', demo.no_background)
       -- r.ImGui_TableNextColumn(ctx); rv,demo.no_bring_to_front = r.ImGui_Checkbox(ctx, 'No bring to front', demo.no_bring_to_front)
+      r.ImGui_TableNextColumn(ctx); rv,demo.unsaved_document  = r.ImGui_Checkbox(ctx, 'Unsaved document', demo.unsaved_document)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_docking        = r.ImGui_Checkbox(ctx, 'No docking', demo.no_docking)
       r.ImGui_EndTable(ctx)
     end
@@ -527,6 +530,10 @@ end
 function demo.ShowDemoWindowWidgets()
   if not r.ImGui_CollapsingHeader(ctx, 'Widgets') then
     return
+  end
+
+  if widgets.disable_all then
+    r.ImGui_BeginDisabled(ctx)
   end
 
   local rv
@@ -1053,8 +1060,8 @@ function demo.ShowDemoWindowWidgets()
     -- (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
     -- stored in the object itself, etc.)
     local combo_items = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" }
-    local combo_label = combo_items[widgets.combos.current_item1] -- Label to preview before opening the combo (technically it could be anything)
-    if r.ImGui_BeginCombo(ctx, 'combo 1', combo_label, widgets.combos.flags) then
+    local combo_preview_value = combo_items[widgets.combos.current_item1] -- Pass in the preview value visible before opening the combo (it could be anything)
+    if r.ImGui_BeginCombo(ctx, 'combo 1', combo_preview_value, widgets.combos.flags) then
       for i,v in ipairs(combo_items) do
         local is_selected = widgets.combos.current_item1 == i
         if r.ImGui_Selectable(ctx, combo_items[i], is_selected) then
@@ -1070,6 +1077,7 @@ function demo.ShowDemoWindowWidgets()
     end
 
     -- Simplified one-liner Combo() API, using values packed in a single constant string
+    -- This is a convenience for when the selection set is small and known when writing the script.
     combo_items = 'aaaa\31bbbb\31cccc\31dddd\31eeee\31'
     rv,widgets.combos.current_item2 = r.ImGui_Combo(ctx, 'combo 2 (one-liner)', widgets.combos.current_item2, combo_items)
 
@@ -1163,7 +1171,7 @@ function demo.ShowDemoWindowWidgets()
     if r.ImGui_TreeNode(ctx, 'Basic') then
       rv,widgets.selectables.basic[1] = r.ImGui_Selectable(ctx, '1. I am selectable', widgets.selectables.basic[1])
       rv,widgets.selectables.basic[2] = r.ImGui_Selectable(ctx, '2. I am selectable', widgets.selectables.basic[2])
-      r.ImGui_Text(ctx, '3. I am not selectable')
+      r.ImGui_Text(ctx, '(I am not selectable)')
       rv,widgets.selectables.basic[4] = r.ImGui_Selectable(ctx, '4. I am selectable', widgets.selectables.basic[4])
       if r.ImGui_Selectable(ctx, '5. I am double clickable', widgets.selectables.basic[5], r.ImGui_SelectableFlags_AllowDoubleClick()) then
         if r.ImGui_IsMouseDoubleClicked(ctx, 0) then
@@ -1204,15 +1212,15 @@ function demo.ShowDemoWindowWidgets()
       r.ImGui_TreePop(ctx)
     end
     if r.ImGui_TreeNode(ctx, 'In columns') then
-      if r.ImGui_BeginTable(ctx, 'split1', 3, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings()) then
+      if r.ImGui_BeginTable(ctx, 'split1', 3, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings() | r.ImGui_TableFlags_Borders()) then
         for i,sel in ipairs(widgets.selectables.columns) do
           r.ImGui_TableNextColumn(ctx)
           rv,widgets.selectables.columns[i] = r.ImGui_Selectable(ctx, ('Item %d'):format(i-1), sel);
         end
         r.ImGui_EndTable(ctx)
       end
-      r.ImGui_Separator(ctx)
-      if r.ImGui_BeginTable(ctx, 'split2', 3, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings()) then
+      r.ImGui_Spacing(ctx)
+      if r.ImGui_BeginTable(ctx, 'split2', 3, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings() | r.ImGui_TableFlags_Borders()) then
         for i,sel in ipairs(widgets.selectables.columns) do
           r.ImGui_TableNextRow(ctx)
           r.ImGui_TableNextColumn(ctx)
@@ -2347,7 +2355,7 @@ label:
     r.ImGui_TreePop(ctx)
   end
 
-  if r.ImGui_TreeNode(ctx, 'Querying Status (Edited/Active/Focused/Hovered etc.)') then
+  if r.ImGui_TreeNode(ctx, 'Querying Status (Edited/Active/Hovered etc.)') then
     if not widgets.query then
       widgets.query = {
         item_type   = 1,
@@ -2364,14 +2372,18 @@ label:
     -- Select an item type
     rv,widgets.query.item_type = r.ImGui_Combo(ctx, 'Item Type', widgets.query.item_type,
       'Text\31Button\31Button (w/ repeat)\31Checkbox\31SliderDouble\31\z
-       InputText\31InputDouble\31InputDouble3\31ColorEdit\31MenuItem\31\z
-       TreeNode\31TreeNode (w/ double-click)\31Combo\31ListBox\31')
+       InputText\31InputDouble\31InputDouble3\31ColorEdit4\31Selectable\31\z
+       MenuItem\31TreeNode\31TreeNode (w/ double-click)\31Combo\31ListBox\31')
 
     r.ImGui_SameLine(ctx)
     demo.HelpMarker(
       'Testing how various types of items are interacting with the IsItemXXX \z
        functions. Note that the bool return value of most ImGui function is \z
        generally equivalent to calling r.ImGui_IsItemHovered().')
+
+    if widgets.query.item_disabled then
+      r.ImGui_BeginDisabled(ctx, true)
+    end
 
     -- Submit selected item item so we can query their status in the code following it.
     local item_type = widgets.query.item_type
@@ -2405,21 +2417,24 @@ label:
     if item_type == 8  then -- Testing multi-component items (IsItemXXX flags are reported merged)
       rv,widgets.query.color = r.ImGui_ColorEdit4(ctx, 'ITEM: ColorEdit', widgets.query.color)
     end
-    if item_type == 9  then -- Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
+    if item_type == 9 then -- Testing selectable item
+      rv = ImGui_Selectable(ctx, 'ITEM: Selectable')
+    end
+    if item_type == 10  then -- Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
       rv = r.ImGui_MenuItem(ctx, 'ITEM: MenuItem')
     end
-    if item_type == 10 then -- Testing tree node
+    if item_type == 11 then -- Testing tree node
       rv = r.ImGui_TreeNode(ctx, 'ITEM: TreeNode')
       if rv then r.ImGui_TreePop(ctx) end
     end
-    if item_type == 11 then -- Testing tree node with ImGuiButtonFlags_PressedOnDoubleClick button policy.
+    if item_type == 12 then -- Testing tree node with ImGuiButtonFlags_PressedOnDoubleClick button policy.
       rv = r.ImGui_TreeNode(ctx, 'ITEM: TreeNode w/ ImGuiTreeNodeFlags_OpenOnDoubleClick',
         r.ImGui_TreeNodeFlags_OpenOnDoubleClick() | r.ImGui_TreeNodeFlags_NoTreePushOnOpen())
     end
-    if item_type == 12 then
+    if item_type == 13 then
       rv,widgets.query.current = r.ImGui_Combo(ctx, 'ITEM: Combo', widgets.query.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
     end
-    if item_type == 13 then
+    if item_type == 14 then
       rv,widgets.query.current = r.ImGui_ListBox(ctx, 'ITEM: ListBox', widgets.query.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
     end
 
@@ -2433,6 +2448,7 @@ IsItemHovered() = %s
 IsItemHovered(_AllowWhenBlockedByPopup) = %s
 IsItemHovered(_AllowWhenBlockedByActiveItem) = %s
 IsItemHovered(_AllowWhenOverlapped) = %s
+IsItemHovered(_AllowWhenDisabled) = %d
 IsItemHovered(_RectOnly) = %s
 IsItemActive() = %s
 IsItemEdited() = %s
@@ -2451,6 +2467,7 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
       r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
       r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByActiveItem()),
       r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_AllowWhenOverlapped()),
+      r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_AllowWhenDisabled()),
       r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_RectOnly()),
       r.ImGui_IsItemActive(ctx),
       r.ImGui_IsItemEdited(ctx),
@@ -2464,6 +2481,10 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
       ({r.ImGui_GetItemRectMax(ctx)})[1], ({r.ImGui_GetItemRectMax(ctx)})[2],
       ({r.ImGui_GetItemRectSize(ctx)})[1], ({r.ImGui_GetItemRectSize(ctx)})[2]
     ))
+
+    if widgets.query.item_disabled then
+      r.ImGui_EndDisabled(ctx)
+    end
 
     rv,widgets.query.embed_all_inside_a_child_window =
       r.ImGui_Checkbox(ctx, 'Embed everything inside a child window (for additional testing)',
@@ -2541,6 +2562,18 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
 
     r.ImGui_TreePop(ctx)
   end
+
+  -- Demonstrate BeginDisabled/EndDisabled using a checkbox located at the bottom of the section (which is a bit odd:
+  -- logically we'd have this checkbox at the top of the section, but we don't want this feature to steal that space)
+  if widgets.disable_all then
+    r.ImGui_EndDisabled(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Disable block') then
+    rv,widgets.disable_all = r.ImGui_Checkbox(ctx, 'Disable entire section above', widgets.disable_all);
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Demonstrate using BeginDisabled()/EndDisabled() across this section.')
+    r.ImGui_TreePop(ctx)
+  end
 end
 
 function demo.ShowDemoWindowLayout()
@@ -2614,7 +2647,7 @@ function demo.ShowDemoWindowLayout()
     --   You can also call SetNextWindowPos() to position the child window. The parent window will effectively
     --   layout from this position.
     -- - Using r.ImGui_GetItemRectMin/Max() to query the "item" state (because the child window is an item from
-    --   the POV of the parent window). See 'Demo->Querying Status (Active/Focused/Hovered etc.)' for details.
+    --   the POV of the parent window). See 'Demo->Querying Status (Edited/Active/Hovered etc.)' for details.
     r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 8)
     rv,layout.child.offset_x = r.ImGui_DragInt(ctx, 'Offset X', layout.child.offset_x, 1.0, -1000, 1000)
 
@@ -3771,6 +3804,7 @@ function demo.EditTableColumnsFlags(flags)
   local width_mask = r.ImGui_TableColumnFlags_WidthStretch() |
                      r.ImGui_TableColumnFlags_WidthFixed()
 
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_Disabled', flags, r.ImGui_TableColumnFlags_Disabled()); r.ImGui_SameLine(ctx); demo.HelpMarker('Master disable flag (also hide from context menu)')
   rv,flags = r.ImGui_CheckboxFlags(ctx, '_DefaultHide', flags, r.ImGui_TableColumnFlags_DefaultHide())
   rv,flags = r.ImGui_CheckboxFlags(ctx, '_DefaultSort', flags, r.ImGui_TableColumnFlags_DefaultSort())
   rv,flags = r.ImGui_CheckboxFlags(ctx, '_WidthStretch', flags, r.ImGui_TableColumnFlags_WidthStretch())
@@ -3781,18 +3815,19 @@ function demo.EditTableColumnsFlags(flags)
   if rv then
     flags = flags & ~(width_mask ^ r.ImGui_TableColumnFlags_WidthFixed())
   end
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoResize', flags, r.ImGui_TableColumnFlags_NoResize());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoReorder', flags, r.ImGui_TableColumnFlags_NoReorder());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoHide', flags, r.ImGui_TableColumnFlags_NoHide());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoClip', flags, r.ImGui_TableColumnFlags_NoClip());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoSort', flags, r.ImGui_TableColumnFlags_NoSort());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoSortAscending', flags, r.ImGui_TableColumnFlags_NoSortAscending());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoSortDescending', flags, r.ImGui_TableColumnFlags_NoSortDescending());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoHeaderWidth', flags, r.ImGui_TableColumnFlags_NoHeaderWidth());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_PreferSortAscending', flags, r.ImGui_TableColumnFlags_PreferSortAscending());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_PreferSortDescending', flags, r.ImGui_TableColumnFlags_PreferSortDescending());
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_IndentEnable', flags, r.ImGui_TableColumnFlags_IndentEnable()); r.ImGui_SameLine(ctx); demo.HelpMarker("Default for column 0")
-  rv,flags = r.ImGui_CheckboxFlags(ctx, '_IndentDisable', flags, r.ImGui_TableColumnFlags_IndentDisable()); r.ImGui_SameLine(ctx); demo.HelpMarker("Default for column >0")
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoResize', flags, r.ImGui_TableColumnFlags_NoResize())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoReorder', flags, r.ImGui_TableColumnFlags_NoReorder())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoHide', flags, r.ImGui_TableColumnFlags_NoHide())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoClip', flags, r.ImGui_TableColumnFlags_NoClip())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoSort', flags, r.ImGui_TableColumnFlags_NoSort())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoSortAscending', flags, r.ImGui_TableColumnFlags_NoSortAscending())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoSortDescending', flags, r.ImGui_TableColumnFlags_NoSortDescending())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoHeaderLabel', flags, r.ImGui_TableColumnFlags_NoHeaderLabel())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_NoHeaderWidth', flags, r.ImGui_TableColumnFlags_NoHeaderWidth())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_PreferSortAscending', flags, r.ImGui_TableColumnFlags_PreferSortAscending())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_PreferSortDescending', flags, r.ImGui_TableColumnFlags_PreferSortDescending())
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_IndentEnable', flags, r.ImGui_TableColumnFlags_IndentEnable()); r.ImGui_SameLine(ctx); demo.HelpMarker('Default for column 0')
+  rv,flags = r.ImGui_CheckboxFlags(ctx, '_IndentDisable', flags, r.ImGui_TableColumnFlags_IndentDisable()); r.ImGui_SameLine(ctx); demo.HelpMarker('Default for column >0')
 
   return flags
 end
@@ -7497,7 +7532,10 @@ end
 --
 --     bool window_contents_visible = r.ImGui_Begin("Example: Documents", p_open, ImGuiWindowFlags_MenuBar);
 --     if (!window_contents_visible && opt_target != Target_DockSpaceAndWindow)
+--     {
+--         r.ImGui_End();
 --         return;
+--     }
 --
 --     // Menu
 --     if (r.ImGui_BeginMenuBar())
@@ -7540,14 +7578,24 @@ end
 --                 doc->DoForceClose();
 --         r.ImGui_PopID();
 --     }
---     ImGui::PushItemWidth(ImGui::GetFontSize() * 12);
---     ImGui::Combo("Output", (int*)&opt_target, "None\0TabBar+Tabs\0DockSpace+Window\0");
---     ImGui::PopItemWidth();
+--     r.ImGui_PushItemWidth(r.ImGui_GetFontSize() * 12);
+--     r.ImGui_Combo("Output", (int*)&opt_target, "None\0TabBar+Tabs\0DockSpace+Window\0");
+--     r.ImGui_PopItemWidth();
 --     bool redock_all = false;
---     if (opt_target == Target_Tab)                { ImGui::SameLine(); ImGui::Checkbox("Reorderable Tabs", &opt_reorderable); }
---     if (opt_target == Target_DockSpaceAndWindow) { ImGui::SameLine(); redock_all = ImGui::Button("Redock all"); }
+--     if (opt_target == Target_Tab)                { r.ImGui_SameLine(); r.ImGui_Checkbox("Reorderable Tabs", &opt_reorderable); }
+--     if (opt_target == Target_DockSpaceAndWindow) { r.ImGui_SameLine(); redock_all = r.ImGui_Button("Redock all"); }
 --
 --     r.ImGui_Separator();
+--
+--     // About the ImGuiWindowFlags_UnsavedDocument / ImGuiTabItemFlags_UnsavedDocument flags.
+--     // They have multiple effects:
+--     // - Display a dot next to the title.
+--     // - Tab is selected when clicking the X close button.
+--     // - Closure is not assumed (will wait for user to stop submitting the tab).
+--     //   Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
+--     //   We need to assume closure by default otherwise waiting for "lack of submission" on the next frame would leave an empty
+--     //   hole for one-frame, both in the tab-bar and in tab-contents when closing a tab/window.
+--     //   The rarely used SetTabItemClosed() function is a way to notify of programmatic closure to avoid the one-frame hole.
 --
 --     // Tabs
 --     if (opt_target == Target_Tab)
@@ -7592,13 +7640,13 @@ end
 --     }
 --     else if (opt_target == Target_DockSpaceAndWindow)
 --     {
---         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DockingEnable)
+--         if (r.ImGui_GetIO().ConfigFlags & ImGuiConfigFlags_DockingEnable)
 --         {
 --             NotifyOfDocumentsClosedElsewhere(app);
 --
 --             // Create a DockSpace node where any window can be docked
---             ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
---             ImGui::DockSpace(dockspace_id);
+--             ImGuiID dockspace_id = r.ImGui_GetID("MyDockSpace");
+--             r.ImGui_DockSpace(dockspace_id);
 --
 --             // Create Windows
 --             for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
@@ -7607,9 +7655,9 @@ end
 --                 if (!doc->Open)
 --                     continue;
 --
---                 ImGui::SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+--                 r.ImGui_SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
 --                 ImGuiWindowFlags window_flags = (doc->Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
---                 bool visible = ImGui::Begin(doc->Name, &doc->Open, window_flags);
+--                 bool visible = r.ImGui_Begin(doc->Name, &doc->Open, window_flags);
 --
 --                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
 --                 if (!doc->Open && doc->Dirty)
@@ -7622,7 +7670,7 @@ end
 --                 if (visible)
 --                     MyDocument::DisplayContents(doc);
 --
---                 ImGui::End();
+--                 r.ImGui_End();
 --             }
 --         }
 --         else
@@ -7634,7 +7682,7 @@ end
 --     // Early out other contents
 --     if (!window_contents_visible)
 --     {
---         ImGui::End();
+--         r.ImGui_End();
 --         return;
 --     }
 --
@@ -7673,20 +7721,20 @@ end
 --         {
 --             if (!r.ImGui_IsPopupOpen("Save?"))
 --                 r.ImGui_OpenPopup("Save?");
---             if (ImGui::BeginPopupModal("Save?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+--             if (r.ImGui_BeginPopupModal("Save?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 --             {
 --                 r.ImGui_Text("Save change to the following items?");
---                 float item_height = ImGui::GetTextLineHeightWithSpacing();
---                 if (ImGui::BeginChildFrame(ImGui::GetID("frame"), ImVec2(-FLT_MIN, 6.25f * item_height)))
+--                 float item_height = r.ImGui_GetTextLineHeightWithSpacing();
+--                 if (r.ImGui_BeginChildFrame(r.ImGui_GetID("frame"), ImVec2(-FLT_MIN, 6.25f * item_height)))
 --                 {
 --                     for (int n = 0; n < close_queue.Size; n++)
 --                         if (close_queue[n]->Dirty)
 --                             r.ImGui_Text("%s", close_queue[n]->Name);
---                     ImGui::EndChildFrame();
+--                     r.ImGui_EndChildFrame();
 --                 }
 --
---                 ImVec2 button_size(ImGui::GetFontSize() * 7.0f, 0.0f);
---                 if (ImGui::Button("Yes", button_size))
+--                 ImVec2 button_size(r.ImGui_GetFontSize() * 7.0f, 0.0f);
+--                 if (r.ImGui_Button("Yes", button_size))
 --                 {
 --                     for (int n = 0; n < close_queue.Size; n++)
 --                     {
@@ -7698,7 +7746,7 @@ end
 --                     r.ImGui_CloseCurrentPopup();
 --                 }
 --                 r.ImGui_SameLine();
---                 if (ImGui::Button("No", button_size))
+--                 if (r.ImGui_Button("No", button_size))
 --                 {
 --                     for (int n = 0; n < close_queue.Size; n++)
 --                         close_queue[n]->DoForceClose();
@@ -7706,7 +7754,7 @@ end
 --                     r.ImGui_CloseCurrentPopup();
 --                 }
 --                 r.ImGui_SameLine();
---                 if (ImGui::Button("Cancel", button_size))
+--                 if (r.ImGui_Button("Cancel", button_size))
 --                 {
 --                     close_queue.clear();
 --                     r.ImGui_CloseCurrentPopup();
