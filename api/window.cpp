@@ -550,7 +550,7 @@ DEFINE_ENUM(ImGui, WindowFlags_AlwaysHorizontalScrollbar, "Always show horizonta
 DEFINE_ENUM(ImGui, WindowFlags_AlwaysUseWindowPadding,    "Ensure child windows without border uses ImGui_StyleVar_WindowPadding (ignored by default for non-bordered child windows, because more convenient).");
 DEFINE_ENUM(ImGui, WindowFlags_NoNavInputs,               "No gamepad/keyboard navigation within the window.");
 DEFINE_ENUM(ImGui, WindowFlags_NoNavFocus,                "No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB).");
-DEFINE_ENUM(ImGui, WindowFlags_UnsavedDocument,           "Append '*' to title without affecting the ID, as a convenience to avoid using the ### operator. When used in a tab/docking context, tab is selected on closure and closure is deferred by one frame to allow code to cancel the closure (with a confirmation popup, etc.) without flicker.");
+DEFINE_ENUM(ImGui, WindowFlags_UnsavedDocument,           "Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.");
 DEFINE_ENUM(ImGui, WindowFlags_NoDocking,                 "Disable docking of this window.");
 DEFINE_ENUM(ImGui, WindowFlags_NoNav,                     "ImGui_WindowFlags_NoNavInputs | ImGui_WindowFlags_NoNavFocus");
 DEFINE_ENUM(ImGui, WindowFlags_NoDecoration,              "ImGui_WindowFlags_NoTitleBar | ImGui_WindowFlags_NoResize | ImGui_WindowFlags_NoScrollbar | ImGui_WindowFlags_NoCollapse");

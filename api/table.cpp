@@ -215,7 +215,11 @@ Default values: column_n = -1)",
 
 DEFINE_API(void, TableSetColumnEnabled, (ImGui_Context*,ctx)
 (int,column_n)(bool,v),
-"Change enabled/disabled state of a column, set to false to hide the column. Note that end-user can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGui_TableFlags_ContextMenuInBody).",
+R"(Change user-accessible enabled/disabled state of a column, set to false to hide the column. Note that end-user can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGui_TableFlags_ContextMenuInBody).
+
+- Require table to have the ImGui_TableFlags_Hideable flag because we are manipulating user accessible state.
+- Request will be applied during next layout, which happens on the first call to ImGui_TableNextRow after Begin_Table.
+- For the getter you can test (ImGui_TableGetColumnFlags() & ImGui_TableColumnFlags_IsEnabled) != 0.)",
 {
   FRAME_GUARD;
   ImGui::TableSetColumnEnabled(column_n, v);
