@@ -193,7 +193,6 @@ NATIVE_ONLY_ENUMS = [
   'InputTextFlags_Multiline',
   'InputTextFlags_NoMarkEdited',
   /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu|DockNodeHost)\z/,
-  /\AColorEditFlags__.+Mask\z/,
   /\ADrawListFlags_/,
   /\ADockNodeFlags_/,
 ]
@@ -491,7 +490,7 @@ File.foreach IMGUI_H do |line|
     imgui_funcs << Function.new($~[:type], $~[:name], args, namespace)
   elsif line =~ IMGUI_ENUM_R
     next if $~[:name].end_with? '_COUNT'
-    next if $~[:name].end_with? '_'
+    next if $~[:name].end_with? '_' # internal flags and masks
     imgui_enums << $~[:name]
   elsif line.chomp == '#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS'
     in_obsolete = true

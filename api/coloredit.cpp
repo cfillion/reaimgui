@@ -161,4 +161,3 @@ DEFINE_ENUM(ImGui, ColorEditFlags_PickerHueBar,     "ColorPicker: bar for Hue, r
 DEFINE_ENUM(ImGui, ColorEditFlags_PickerHueWheel,   "ColorPicker: wheel for Hue, triangle for Sat/Value.");
 DEFINE_ENUM(ImGui, ColorEditFlags_InputRGB,         "ColorEdit, ColorPicker: input and output data in RGB format.");
 DEFINE_ENUM(ImGui, ColorEditFlags_InputHSV,         "ColorEdit, ColorPicker: input and output data in HSV format.");
-DEFINE_ENUM(ImGui, ColorEditFlags__OptionsDefault,  "Defaults Options. You can set application defaults using ImGui_SetColorEditOptions. The intent is that you probably don't want to override them in most of your calls. Let the user choose via the option menu and/or call SetColorEditOptions() once during startup.");
