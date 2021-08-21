@@ -79,7 +79,7 @@ The returned clipper object is tied to the context and is valid as long as it is
 DEFINE_API(void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
 (int,items_count)(double*,API_RO(items_height)),
 R"(items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
-items_height: Use -1.0f to be calculated automatically on first step. Otherwise pass in the distance between your items, typically ImGui_GetTextLineHeightWithSpacing or ImGui_GetFrameHeightWithSpacing.
+items_height: Use -1.0 to be calculated automatically on first step. Otherwise pass in the distance between your items, typically ImGui_GetTextLineHeightWithSpacing or ImGui_GetFrameHeightWithSpacing.
 
 Default values: items_height = -1.0)",
 {

@@ -91,7 +91,7 @@ DEFINE_API(void, PopAllowKeyboardFocus, (ImGui_Context*,ctx),
 
 DEFINE_API(void, PushItemWidth, (ImGui_Context*,ctx)
 (double,item_width),
-R"(Push width of items for common large "item+label" widgets. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side). 0.0f = default to ~2/3 of windows width,)",
+R"(Push width of items for common large "item+label" widgets. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side). 0.0 = default to ~2/3 of windows width,)",
 {
   FRAME_GUARD;
   ImGui::PushItemWidth(item_width);
@@ -106,7 +106,7 @@ DEFINE_API(void, PopItemWidth, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetNextItemWidth, (ImGui_Context*,ctx)
 (double,item_width),
-R"(Set width of the _next_ common large "item+label" widget. >0.0f: width in pixels, <0.0f align xx pixels to the right of window (so -FLT_MIN always align width to the right side))",
+R"(Set width of the _next_ common large "item+label" widget. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side))",
 {
   FRAME_GUARD;
   ImGui::SetNextItemWidth(item_width);

@@ -151,12 +151,12 @@ DEFINE_ENUM(ImGui, ColorEditFlags_NoBorder,         "ColorButton: disable border
 DEFINE_ENUM(ImGui, ColorEditFlags_AlphaBar,         "ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.");
 DEFINE_ENUM(ImGui, ColorEditFlags_AlphaPreview,     "ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a checkerboard, instead of opaque.");
 DEFINE_ENUM(ImGui, ColorEditFlags_AlphaPreviewHalf, "ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead of opaque.");
-// DEFINE_ENUM(ImGui, ColorEditFlags_HDR,              "(WIP) ColorEdit: Currently only disable 0.0f..1.0f limits in RGBA edition (note: you probably want to use ImGuiColorEditFlags_Float flag as well).");
+// DEFINE_ENUM(ImGui, ColorEditFlags_HDR,              "(WIP) ColorEdit: Currently only disable 0.0..1.0 limits in RGBA edition (note: you probably want to use ImGuiColorEditFlags_Float flag as well).");
 DEFINE_ENUM(ImGui, ColorEditFlags_DisplayRGB,       "ColorEdit: override _display_ type to RGB. ColorPicker: select any combination using one or more of RGB/HSV/Hex.");
 DEFINE_ENUM(ImGui, ColorEditFlags_DisplayHSV,       "ColorEdit: override _display_ type to HSV. ColorPicker: select any combination using one or more of RGB/HSV/Hex.");
 DEFINE_ENUM(ImGui, ColorEditFlags_DisplayHex,       "ColorEdit: override _display_ type to Hex. ColorPicker: select any combination using one or more of RGB/HSV/Hex.");
 DEFINE_ENUM(ImGui, ColorEditFlags_Uint8,            "ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0..255.");
-DEFINE_ENUM(ImGui, ColorEditFlags_Float,            "ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0f..1.0f floats instead of 0..255 integers. No round-trip of value via integers.");
+DEFINE_ENUM(ImGui, ColorEditFlags_Float,            "ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0..1.0 floats instead of 0..255 integers. No round-trip of value via integers.");
 DEFINE_ENUM(ImGui, ColorEditFlags_PickerHueBar,     "ColorPicker: bar for Hue, rectangle for Sat/Value.");
 DEFINE_ENUM(ImGui, ColorEditFlags_PickerHueWheel,   "ColorPicker: wheel for Hue, triangle for Sat/Value.");
 DEFINE_ENUM(ImGui, ColorEditFlags_InputRGB,         "ColorEdit, ColorPicker: input and output data in RGB format.");

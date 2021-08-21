@@ -52,7 +52,7 @@ DEFINE_API(void, TextDisabled, (ImGui_Context*,ctx)
 
 DEFINE_API(void, TextWrapped, (ImGui_Context*,ctx)
 (const char*,text),
-"Shortcut for ImGui_PushTextWrapPos(0.0f); ImGui_Text(fmt, ...); ImGui_PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using ImGui_SetNextWindowSize.",
+"Shortcut for ImGui_PushTextWrapPos(0.0); ImGui_Text(fmt, ...); ImGui_PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using ImGui_SetNextWindowSize.",
 {
   FRAME_GUARD;
   ImGui::PushTextWrapPos(0.0f);
@@ -86,7 +86,7 @@ DEFINE_API(void, BulletText, (ImGui_Context*,ctx)
 
 DEFINE_API(void, PushTextWrapPos, (ImGui_Context*,ctx)
 (double*,API_RO(wrap_local_pos_x)),
-R"(Push word-wrapping position for Text*() commands. < 0.0f: no wrapping; 0.0f: wrap to end of window (or column); > 0.0f: wrap at 'wrap_pos_x' position in window local space.
+R"(Push word-wrapping position for Text*() commands. < 0.0: no wrapping; 0.0: wrap to end of window (or column); > 0.0: wrap at 'wrap_pos_x' position in window local space.
 
 Default values: wrap_local_pos_x = 0.0)",
 {

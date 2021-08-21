@@ -27,7 +27,7 @@ DEFINE_API(bool, IsMouseDown, (ImGui_Context*,ctx)
 
 DEFINE_API(double, GetMouseDownDuration, (ImGui_Context*,ctx)
 (int,button),
-"Duration the mouse button has been down (0.0f == just clicked)",
+"Duration the mouse button has been down (0.0 == just clicked)",
 {
   FRAME_GUARD;
   IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(ImGuiIO::MouseDownDuration));
@@ -159,7 +159,7 @@ DEFINE_API(void, GetMouseDelta, (ImGui_Context*,ctx)
 DEFINE_API(void, GetMouseDragDelta, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y))
 (int*,API_RO(button))(double*,API_RO(lock_threshold)),
-R"(Return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0f until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0f, uses io.MouseDraggingThreshold).
+R"(Return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses io.MouseDraggingThreshold).
 
 Default values: button = ImGui_MouseButton_Left, lock_threshold = -1.0)",
 {
@@ -206,7 +206,7 @@ DEFINE_API(bool, IsKeyDown, (ImGui_Context*,ctx)
 
 DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
 (int,key_code),
-"Duration the keyboard key has been down (0.0f == just pressed)",
+"Duration the keyboard key has been down (0.0 == just pressed)",
 {
   FRAME_GUARD;
   IM_ASSERT(key_code >= 0 && key_code < IM_ARRAYSIZE(ImGuiIO::KeysDownDuration));

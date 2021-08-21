@@ -64,7 +64,7 @@ DEFINE_API(bool, BeginChild, (ImGui_Context*,ctx)
 (bool*,API_RO(border))(int*,API_RO(flags)),
 R"(Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window. Child windows can embed their own child.
 
-- For each independent axis of 'size': ==0.0f: use remaining host window size / >0.0f: fixed size / <0.0f: use remaining window size minus abs(size) / Each axis can use a different mode, e.g. size = 0x400.
+- For each independent axis of 'size': ==0.0: use remaining host window size / >0.0: fixed size / <0.0: use remaining window size minus abs(size) / Each axis can use a different mode, e.g. size = 0x400.
 - BeginChild() returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
 
 See ImGui_EndChild.
@@ -209,7 +209,7 @@ Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
 
 DEFINE_API(void, SetNextWindowSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h)(int*,API_RO(cond)),
-R"(Set next window size. set axis to 0.0f to force an auto-fit on this axis. Call before ImGui_Begin.
+R"(Set next window size. set axis to 0.0 to force an auto-fit on this axis. Call before ImGui_Begin.
 
 Default values: cond = ImGui_Cond_Always)",
 {
@@ -229,7 +229,7 @@ DEFINE_API(void, SetNextWindowSizeConstraints, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetNextWindowContentSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h),
-"Set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor ImGui_StyleVar_WindowPadding. set an axis to 0.0f to leave it automatic. Call before ImGui_Begin.",
+"Set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor ImGui_StyleVar_WindowPadding. set an axis to 0.0 to leave it automatic. Call before ImGui_Begin.",
 {
   FRAME_GUARD;
   ImGui::SetNextWindowContentSize(ImVec2(size_w, size_h));
@@ -327,7 +327,7 @@ Default values: cond = ImGui_Cond_Always)",
 
 DEFINE_API(void, SetWindowSizeEx, (ImGui_Context*,ctx)
 (const char*,name)(double,size_w)(double,size_h)(int*,API_RO(cond)),
-R"(Set named window size. Set axis to 0.0f to force an auto-fit on this axis.
+R"(Set named window size. Set axis to 0.0 to force an auto-fit on this axis.
 
 Default values: cond = ImGui_Cond_Always)",
 {
