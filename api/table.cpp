@@ -323,6 +323,7 @@ DEFINE_ENUM(ImGui, TableFlags_SortTristate,               "Allow no sorting, dis
 // ImGuiTableColumnFlags
 DEFINE_ENUM(ImGui, TableColumnFlags_None,                 "Flags for ImGui_TableSetupColumn.");
 // Input configuration flags
+DEFINE_ENUM(ImGui, TableColumnFlags_Disabled,             "Overriding/master disable flag: hide column, won't show in context menu (unlike calling ImGui_TableSetColumnEnabled which manipulates the user accessible state)");
 DEFINE_ENUM(ImGui, TableColumnFlags_DefaultHide,          "Default as a hidden/disabled column.");
 DEFINE_ENUM(ImGui, TableColumnFlags_DefaultSort,          "Default as a sorting column.");
 DEFINE_ENUM(ImGui, TableColumnFlags_WidthStretch,         "Column will stretch. Preferable with horizontal scrolling disabled (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).");
@@ -334,6 +335,7 @@ DEFINE_ENUM(ImGui, TableColumnFlags_NoClip,               "Disable clipping for 
 DEFINE_ENUM(ImGui, TableColumnFlags_NoSort,               "Disable ability to sort on this field (even if ImGui_TableFlags_Sortable is set on the table).");
 DEFINE_ENUM(ImGui, TableColumnFlags_NoSortAscending,      "Disable ability to sort in the ascending direction.");
 DEFINE_ENUM(ImGui, TableColumnFlags_NoSortDescending,     "Disable ability to sort in the descending direction.");
+DEFINE_ENUM(ImGui, TableColumnFlags_NoHeaderLabel,        "ImGui_TableHeadersRow will not submit label for this column. Convenient for some small columns. Name will still appear in context menu.");
 DEFINE_ENUM(ImGui, TableColumnFlags_NoHeaderWidth,        "Disable header text width contribution to automatic column width.");
 DEFINE_ENUM(ImGui, TableColumnFlags_PreferSortAscending,  "Make the initial sort direction Ascending when first sorting on this column (default).");
 DEFINE_ENUM(ImGui, TableColumnFlags_PreferSortDescending, "Make the initial sort direction Descending when first sorting on this column.");
