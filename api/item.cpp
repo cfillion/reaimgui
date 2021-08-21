@@ -54,6 +54,26 @@ DEFINE_API(void, SetItemAllowOverlap, (ImGui_Context*,ctx),
   ImGui::SetItemAllowOverlap();
 });
 
+DEFINE_API(void, BeginDisabled, (ImGui_Context*,ctx)
+(bool*,API_RO(disabled)),
+R"(
+Disable all user interactions and dim items visuals (applying style.DisabledAlpha over current colors).
+
+ImGui_BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling ImGui_BeginDisabled(False)/ImGui_EndDisabled() best to avoid it.
+
+Defalt values: disabled = true)",
+{
+  FRAME_GUARD;
+  ImGui::BeginDisabled(valueOr(API_RO(disabled), true));
+});
+
+DEFINE_API(void, EndDisabled, (ImGui_Context*,ctx),
+"See ImGui_BeginDisabled.",
+{
+  FRAME_GUARD;
+  ImGui::EndDisabled();
+});
+
 // Focus, Activation
 DEFINE_API(void, SetItemDefaultFocus, (ImGui_Context*,ctx),
 R"~(Make last item the default focused item of a window.
