@@ -139,7 +139,7 @@ int FontList::setScale(const float scale)
 void FontList::build(const float scale)
 {
   auto &atlas { m_atlases.at(scale) }; // don't insert
-  atlas->Clear();
+  atlas->ClearFonts();
 
   ImFontConfig cfg;
   cfg.SizePixels = 13.f * scale;
@@ -151,6 +151,8 @@ void FontList::build(const float scale)
 
   atlas->Flags |= ImFontAtlasFlags_NoMouseCursors;
   atlas->Build();
+  atlas->ClearInputData();
+  atlas->TexReady = true; // FIXME: ocornut/imgui#4455@4a7c21d
 }
 
 void FontList::migrateActiveFonts()
