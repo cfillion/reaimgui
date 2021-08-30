@@ -521,7 +521,7 @@ void Context::clearFocus()
   else
     ImGui::FocusWindow(nullptr); // also calls ClearActiveID
 
-  memset(m_imgui->IO.KeysDown, 0, sizeof(m_imgui->IO.KeysDown));
+  m_imgui->IO.ClearInputKeys();
 }
 
 void Context::updateTheme()
