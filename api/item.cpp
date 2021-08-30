@@ -61,7 +61,7 @@ Disable all user interactions and dim items visuals (applying style.DisabledAlph
 
 ImGui_BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling ImGui_BeginDisabled(False)/ImGui_EndDisabled() best to avoid it.
 
-Defalt values: disabled = true)",
+Default values: disabled = true)",
 {
   FRAME_GUARD;
   ImGui::BeginDisabled(valueOr(API_RO(disabled), true));
