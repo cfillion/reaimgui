@@ -158,10 +158,8 @@ void CocoaWindow::update()
   }
 
   if(diff & ImGuiViewportFlags_TopMost) {
-    if(m_viewport->Flags & ImGuiViewportFlags_TopMost)
-      [window setLevel:NSStatusWindowLevel];
-    else
-      [window setLevel:m_defaultLevel]; // SWELL uses 1 by default
+    const bool topmost { (m_viewport->Flags & ImGuiViewportFlags_TopMost) != 0 };
+    SWELL_SetWindowWantRaiseAmt(m_hwnd.get(), topmost);
   }
 }
 
