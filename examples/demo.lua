@@ -483,33 +483,41 @@ function demo.ShowDemoWindow()
       r.ImGui_EndTable(ctx)
     end
 
-    if not demo.no_docking then
-      r.ImGui_Spacing(ctx)
+    local docking_disabled = demo.no_docking or
+      (r.ImGui_GetConfigFlags(ctx) & r.ImGui_ConfigFlags_DockingEnable()) == 0
 
-      local dock_id = r.ImGui_GetWindowDockID(ctx)
-      local dock_label
-      if dock_id < 0 then
-        dock_label = ('REAPER docker %d'):format(math.abs(dock_id))
-      elseif dock_id > 0 then
-        dock_label = ('ImGui docker %d'):format(dock_id)
-      else
-        dock_label = 'Floating'
+    r.ImGui_Spacing(ctx)
+    if docking_disabled then
+      r.ImGui_BeginDisabled(ctx)
+    end
+
+    local dock_id = r.ImGui_GetWindowDockID(ctx)
+    local dock_label
+    if dock_id < 0 then
+      dock_label = ('REAPER docker %d'):format(math.abs(dock_id))
+    elseif dock_id > 0 then
+      dock_label = ('ImGui docker %d'):format(dock_id)
+    else
+      dock_label = 'Floating'
+    end
+    r.ImGui_AlignTextToFramePadding(ctx)
+    r.ImGui_Text(ctx, 'Dock in docker:')
+    r.ImGui_SameLine(ctx)
+    r.ImGui_SetNextItemWidth(ctx, 150)
+    if r.ImGui_BeginCombo(ctx, '##docker', dock_label) then
+      if r.ImGui_Selectable(ctx, 'Floating', dock_id == 0) then
+        demo.set_dock_id = 0
       end
-      r.ImGui_AlignTextToFramePadding(ctx)
-      r.ImGui_Text(ctx, 'Dock in docker:')
-      r.ImGui_SameLine(ctx)
-      r.ImGui_SetNextItemWidth(ctx, 150)
-      if r.ImGui_BeginCombo(ctx, '##docker', dock_label) then
-        if r.ImGui_Selectable(ctx, 'Floating', dock_id == 0) then
-          demo.set_dock_id = 0
+      for id = -1, -16, -1 do
+        if r.ImGui_Selectable(ctx, ('REAPER docker %d'):format(math.abs(id)), dock_id == id) then
+          demo.set_dock_id = id
         end
-        for id = -1, -16, -1 do
-          if r.ImGui_Selectable(ctx, ('REAPER docker %d'):format(math.abs(id)), dock_id == id) then
-            demo.set_dock_id = id
-          end
-        end
-        r.ImGui_EndCombo(ctx)
       end
+      r.ImGui_EndCombo(ctx)
+    end
+
+    if docking_disabled then
+      r.ImGui_EndDisabled(ctx)
     end
   end
 
