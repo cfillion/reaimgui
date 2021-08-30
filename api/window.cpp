@@ -20,6 +20,11 @@
 #include "version.hpp"
 #include <imgui/imgui.h>
 
+enum {
+  // NoBringToFrontOnFocus isn't exposed in ReaImGui
+  ReaImGuiWindowFlags_TopMost = ImGuiWindowFlags_NoBringToFrontOnFocus,
+};
+
 DEFINE_API(bool, Begin, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RW(p_open))(int*,API_RO(flags)),
 R"(Push window to the stack and start appending to it. See ImGui_End.
@@ -34,6 +39,18 @@ Default values: flags = ImGui_WindowFlags_None)",
   FRAME_GUARD;
 
   ImGuiWindowFlags flags { valueOr(API_RO(flags), ImGuiWindowFlags_None) };
+
+  if(flags & ReaImGuiWindowFlags_TopMost) {
+    ImGuiWindowClass topmost;
+    topmost.ClassId = ImGui::GetID("TopMost");
+    topmost.ViewportFlagsOverrideSet = ImGuiViewportFlags_TopMost;
+    ImGui::SetNextWindowClass(&topmost);
+    flags &= ~ReaImGuiWindowFlags_TopMost; // unset NoBringToFrontOnFocus
+  }
+  else {
+    static ImGuiWindowClass normal;
+    ImGui::SetNextWindowClass(&normal);
+  }
 
   if(!ctx->IO().ConfigViewportsNoDecoration) {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
@@ -555,3 +572,5 @@ DEFINE_ENUM(ImGui, WindowFlags_NoDocking,                 "Disable docking of th
 DEFINE_ENUM(ImGui, WindowFlags_NoNav,                     "ImGui_WindowFlags_NoNavInputs | ImGui_WindowFlags_NoNavFocus");
 DEFINE_ENUM(ImGui, WindowFlags_NoDecoration,              "ImGui_WindowFlags_NoTitleBar | ImGui_WindowFlags_NoResize | ImGui_WindowFlags_NoScrollbar | ImGui_WindowFlags_NoCollapse");
 DEFINE_ENUM(ImGui, WindowFlags_NoInputs,                  "ImGui_WindowFlags_NoMouseInputs | ImGui_WindowFlags_NoNavInputs | ImGui_WindowFlags_NoNavFocus");
+
+DEFINE_ENUM(ReaImGui, WindowFlags_TopMost,                "Show the window above all non-topmost windows (ImGui_Begin only).");
