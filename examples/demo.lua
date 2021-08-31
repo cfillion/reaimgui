@@ -469,6 +469,7 @@ function demo.ShowDemoWindow()
 
   if r.ImGui_CollapsingHeader(ctx, 'Window options') then
     if r.ImGui_BeginTable(ctx, 'split', 3) then
+      r.ImGui_TableNextColumn(ctx); rv,demo.topmost           = r.ImGui_Checkbox(ctx, 'Always on top', demo.topmost)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_titlebar       = r.ImGui_Checkbox(ctx, 'No titlebar', demo.no_titlebar)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_scrollbar      = r.ImGui_Checkbox(ctx, 'No scrollbar', demo.no_scrollbar)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_menu           = r.ImGui_Checkbox(ctx, 'No menu', demo.no_menu)
@@ -480,7 +481,6 @@ function demo.ShowDemoWindow()
       r.ImGui_TableNextColumn(ctx); rv,demo.no_background     = r.ImGui_Checkbox(ctx, 'No background', demo.no_background)
       -- r.ImGui_TableNextColumn(ctx); rv,demo.no_bring_to_front = r.ImGui_Checkbox(ctx, 'No bring to front', demo.no_bring_to_front)
       r.ImGui_TableNextColumn(ctx); rv,demo.no_docking        = r.ImGui_Checkbox(ctx, 'No docking', demo.no_docking)
-      r.ImGui_TableNextColumn(ctx); rv,demo.topmost           = r.ImGui_Checkbox(ctx, 'Top most', demo.topmost)
       r.ImGui_TableNextColumn(ctx); rv,demo.unsaved_document  = r.ImGui_Checkbox(ctx, 'Unsaved document', demo.unsaved_document)
       r.ImGui_EndTable(ctx)
     end
@@ -5940,7 +5940,7 @@ function demo.ShowDemoWindowMisc()
     end
 
     if r.ImGui_TreeNode(ctx, 'Dragging') then
-      r.ImGui_TextWrapped(ctx, 'You can use r.ImGui_GetMouseDragDelta(0) to query for the dragged amount on any widget.')
+      r.ImGui_TextWrapped(ctx, 'You can use GetMouseDragDelta(0) to query for the dragged amount on any widget.')
       for button = 0, 2 do
         r.ImGui_Text(ctx, ('IsMouseDragging(%d):'):format(button))
         r.ImGui_Text(ctx, ('  w/ default threshold: %s,'):format(r.ImGui_IsMouseDragging(ctx, button)))
