@@ -158,6 +158,11 @@ void CocoaWindow::update()
   }
 
   if(diff & ImGuiViewportFlags_TopMost) {
+    // Using SWELL_SetWindowWantRaiseAmt instead of [NSWindow setLevel]
+    // to automaticaly restore the level when the application regains focus.
+    //
+    // 0=normal/1=topmost as observed via a breakpoint when clicking on
+    // AttachWindowTopmostButton's thumbstack button.
     const bool topmost { (m_viewport->Flags & ImGuiViewportFlags_TopMost) != 0 };
     SWELL_SetWindowWantRaiseAmt(m_hwnd.get(), topmost);
   }
