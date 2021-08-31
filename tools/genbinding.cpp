@@ -586,7 +586,6 @@ static void humanBinding(std::ostream &stream)
   main {
     margin-left: 200px;
     box-shadow: 0 0 10px #080808;
-    position: absolute;
   }
   aside p, aside li a, main { padding-left: 1em; }
   details { margin-left: 20px; }
