@@ -56,10 +56,9 @@ DEFINE_API(void, SetItemAllowOverlap, (ImGui_Context*,ctx),
 
 DEFINE_API(void, BeginDisabled, (ImGui_Context*,ctx)
 (bool*,API_RO(disabled)),
-R"(
-Disable all user interactions and dim items visuals (applying style.DisabledAlpha over current colors).
+R"(Disable all user interactions and dim items visuals (applying ImGui_StyleVar_DisabledAlpha over current colors).
 
-ImGui_BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling ImGui_BeginDisabled(False)/ImGui_EndDisabled() best to avoid it.
+ImGui_BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling ImGui_BeginDisabled(false)/ImGui_EndDisabled() best to avoid it.
 
 Default values: disabled = true)",
 {

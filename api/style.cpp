@@ -264,7 +264,7 @@ DEFINE_ENUM(ImGui, Col_ModalWindowDimBg,      "Darken/colorize entire screen beh
 
 // ImGuiStyleVar
 DEFINE_ENUM(ImGui, StyleVar_Alpha,               "Global alpha applies to everything in Dear ImGui.");
-DEFINE_ENUM(ImGui, StyleVar_DisabledAlpha,       "Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.");
+DEFINE_ENUM(ImGui, StyleVar_DisabledAlpha,       "Additional alpha multiplier applied by ImGui_BeginDisabled. Multiply over current value of Alpha.");
 DEFINE_ENUM(ImGui, StyleVar_WindowPadding,       "Padding within a window.");
 DEFINE_ENUM(ImGui, StyleVar_WindowRounding,      "Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.");
 DEFINE_ENUM(ImGui, StyleVar_WindowBorderSize,    "Thickness of border around windows. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).");
