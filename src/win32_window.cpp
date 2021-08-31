@@ -343,10 +343,9 @@ std::optional<LRESULT> Win32Window::handleMessage
     break;
   }
   case WM_ACTIVATEAPP:
-    // WM_EX_TOPMOST is lost when REAPER is minimized
-    if(wParam && m_viewport->Flags & ImGuiViewportFlags_TopMost) {
-      SetWindowPos(m_hwnd.get(), HWND_TOPMOST, 0, 0, 0, 0,
-        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+    if(m_viewport->Flags & ImGuiViewportFlags_TopMost) {
+      SetWindowPos(m_hwnd.get(), wParam ? HWND_TOPMOST : HWND_NOTOPMOST,
+        0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
     break;
   case WM_DPICHANGED: {
