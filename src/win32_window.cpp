@@ -342,9 +342,13 @@ std::optional<LRESULT> Win32Window::handleMessage
       _EnableNonClientDpiScaling(m_hwnd.get());
     break;
   }
-  case WM_CHAR:
-    m_ctx->charInput(wParam);
-    return 0;
+  case WM_ACTIVATEAPP:
+    // WM_EX_TOPMOST is lost when REAPER is minimized
+    if(wParam && m_viewport->Flags & ImGuiViewportFlags_TopMost) {
+      SetWindowPos(m_hwnd.get(), HWND_TOPMOST, 0, 0, 0, 0,
+        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+    }
+    break;
   case WM_DPICHANGED: {
     m_dpi = LOWORD(wParam);
     m_viewport->DpiScale = scaleForDpi(m_dpi);
@@ -377,6 +381,9 @@ std::optional<LRESULT> Win32Window::handleMessage
   case WM_SYSKEYUP:
     if(wParam < 256)
       m_ctx->keyInput(wParam, false);
+    return 0;
+  case WM_CHAR:
+    m_ctx->charInput(wParam);
     return 0;
   case WM_NCHITTEST:
     if(m_viewport->Flags & ImGuiViewportFlags_NoInputs)
