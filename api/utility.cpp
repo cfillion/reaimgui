@@ -36,7 +36,7 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_ListClipper* and ImGui_Viewport*.)",
+R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_Font*, ImGui_ListClipper* and ImGui_Viewport*.)",
 {
   ResourceProxy::Key proxyKey;
 
