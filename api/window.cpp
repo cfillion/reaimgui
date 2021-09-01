@@ -26,7 +26,7 @@ enum {
 };
 
 DEFINE_API(bool, Begin, (ImGui_Context*,ctx)
-(const char*,name)(bool*,API_RW(p_open))(int*,API_RO(flags)),
+(const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
 R"(Push window to the stack and start appending to it. See ImGui_End.
 
 - Passing true to 'p_open' shows a window-closing widget in the upper-right corner of the window, which clicking will set the boolean to false when returned.
@@ -34,7 +34,7 @@ R"(Push window to the stack and start appending to it. See ImGui_End.
 - Begin() return false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
 - Note that the bottom of window stack always contains a window called "Debug".
 
-Default values: flags = ImGui_WindowFlags_None)",
+Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 {
   FRAME_GUARD;
 
@@ -58,7 +58,7 @@ Default values: flags = ImGui_WindowFlags_None)",
              ImGuiWindowFlags_NoResize   ;
   }
 
-  const bool rv { ImGui::Begin(name, openPtrBehavior(API_RW(p_open)), flags) };
+  const bool rv { ImGui::Begin(name, openPtrBehavior(API_RWO(p_open)), flags) };
 
   if(!ctx->IO().ConfigViewportsNoDecoration)
     ImGui::PopStyleVar();
@@ -510,13 +510,15 @@ Default values: center_y_ratio = 0.5)",
 });
 
 DEFINE_API(void, ShowAboutWindow, (ImGui_Context*,ctx)
-(bool*,API_RW(p_open)),
-R"(Create About window. Display ReaImGui version, Dear ImGui version, credits and build/system information.)",
+(bool*,API_RWO(p_open)),
+R"(Create About window. Display ReaImGui version, Dear ImGui version, credits and build/system information.
+
+Default values: p_open = nil)",
 {
   FRAME_GUARD;
 
   constexpr ImGuiWindowFlags flags { ImGuiWindowFlags_AlwaysAutoResize };
-  if(ImGui::Begin("About Dear ImGui", openPtrBehavior(API_RW(p_open)), flags)) {
+  if(ImGui::Begin("About Dear ImGui", openPtrBehavior(API_RWO(p_open)), flags)) {
     ImGui::Separator();
     ImGui::Text("reaper_imgui %s", REAIMGUI_VERSION);
     ImGui::Separator();
@@ -531,11 +533,13 @@ R"(Create About window. Display ReaImGui version, Dear ImGui version, credits an
 });
 
 DEFINE_API(void, ShowMetricsWindow, (ImGui_Context*,ctx)
-(bool*,API_RW(p_open)),
-R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc. Set p_open to true to enable the close button.)",
+(bool*,API_RWO(p_open)),
+R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw commands, various internal state, etc. Set p_open to true to enable the close button.
+
+Default values: p_open = nil)",
 {
   FRAME_GUARD;
-  ImGui::ShowMetricsWindow(openPtrBehavior(API_RW(p_open)));
+  ImGui::ShowMetricsWindow(openPtrBehavior(API_RWO(p_open)));
 });
 
 // ImGuiFocusedFlags
