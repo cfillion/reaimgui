@@ -169,7 +169,7 @@ NATIVE_ONLY = [
 NATIVE_ONLY_CLASSES = %w[
   ImGuiIO ImFontAtlas ImFont ImDrawData ImDrawListSplitter ImGuiStoragePair
   ImGuiStyle ImGuiInputTextCallbackData ImFontGlyphRangesBuilder
-  ImGuiTextBuffer ImGuiTextFilter
+  ImGuiTextBuffer IMGuiTextFilter ImFontConfig
 ]
 
 NATIVE_ONLY_ENUMS = [
@@ -313,17 +313,13 @@ class Function < Struct.new :type, :name, :args, :namespace, :match
   def normalized
     return @normalized if @normalized
 
-    ns = case namespace
-         when 'ImGui'
-           nil
-         when /\AIm(?:Gui)?/
-           namespace[$~[0].size..-1]
-         end
-
     normal = self.class.new
-    normal.type = cpp_type_to_reascript_type type
-    normal.namespace = nil
-    normal.name = RENAMES[sig] || (ns ? "#{ns}_#{name}" : name)
+    normal.type = if constructor?
+                    cpp_type_to_reascript_type namespace + '*'
+                  else
+                    cpp_type_to_reascript_type type
+                  end
+    normal.name = RENAMES[sig] || normalized_name
     normal.name.gsub! /Float(?=\b|\d)/, 'Double'
     normal.args = args.dup
     normal.args = args.flat_map do |arg|
@@ -364,16 +360,12 @@ private
       "double#{$~[1]}"
     when /unsigned int(\*)?/, /size_t(\*)?/
       "int#{$~[1]}"
-    when 'ImDrawList*'
-      'ImGui_DrawList*'
     when /\AIm(?:Gui|Draw)[^\*]+(?:Flags\*)?\z/, 'ImU32'
       'int'
     when 'const char* const'
       'const char*'
-    when 'ImGuiViewport*'
-      'ImGui_Viewport*'
-    when 'ImFont*', 'const ImFont*'
-      'ImGui_Font*'
+    when /\A(?:const )?Im(?:Gui)?(?!Vec)(\w+)\*\z/
+      "ImGui_#{$1}*"
     else
       type
     end
@@ -460,12 +452,29 @@ private
 
     out
   end
+
+  def constructor?
+    namespace == name
+  end
+
+  def normalized_name
+    ns = case namespace
+         when 'ImGui'
+           nil
+         when /\AIm(?:Gui)?/
+           namespace[$~[0].size..-1]
+         end
+
+    return name unless ns
+    return "Create#{ns}" if constructor?
+    return "#{ns}_#{name}"
+  end
 end
 
 Argument = Struct.new :type, :name, :default, :size
 
 # load ImGui definitions
-IMGUI_FUNC_R  = /IMGUI_API \s+ (?<type>[\w\*\&\s]+?) \s+ (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
+IMGUI_FUNC_R  = /IMGUI_API \s+ (?:(?<type>[\w\*\&\s]+?) \s+)? (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
 IMGUI_ARG_R   = /\A(?<type>[\w\*&\s\<\>]+) \s+ (?<name>\w+) (?:\[ (?<size>\d*) \])? (?:\s*=\s*(?<default>.+))?\z/x
 IMGUI_ENUM_R  = /\A\s* Im(?:Gui)?(?<name>[\w_]+) \s* (?:,|=)/x
 IMGUI_CLASS_R = /(?:namespace|struct) (?<name>\w+)/
