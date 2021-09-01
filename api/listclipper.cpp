@@ -45,8 +45,6 @@ ImGuiListClipper *ListClipper::use(ListClipper *lc)
   return &lc->m_imlc;
 }
 
-using ImGui_ListClipper = ListClipper;
-
 DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
 R"(Helper: Manually clip large list of items.
 If you are submitting lots of evenly spaced items and you have a random access to the list, you can perform coarse

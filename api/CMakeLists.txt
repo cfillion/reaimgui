@@ -20,6 +20,7 @@ add_library(api OBJECT
   tabbar.cpp
   table.cpp
   text.cpp
+  textfilter.cpp
   treenode.cpp
   utility.cpp
   viewport.cpp

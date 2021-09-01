@@ -22,6 +22,7 @@
 #include "listclipper.hpp"
 #include "platform.hpp"
 #include "resource_proxy.hpp"
+#include "textfilter.hpp"
 #include "version.hpp"
 
 DEFINE_API(void, GetVersion,
@@ -36,7 +37,7 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_Font*, ImGui_ListClipper* and ImGui_Viewport*.)",
+R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_Font*, ImGui_ListClipper*, ImGui_TextFilter* and ImGui_Viewport*.)",
 {
   ResourceProxy::Key proxyKey;
 
@@ -48,6 +49,8 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
     return Resource::exists(static_cast<Font *>(pointer));
   else if(!strcmp(type, "ImGui_ListClipper*"))
     return ListClipper::validate(static_cast<ListClipper *>(pointer));
+  else if(!strcmp(type, "ImGui_TextFilter*"))
+    return Resource::exists(static_cast<TextFilter *>(pointer));
   else if(!strcmp(type, "ImGui_Viewport*"))
     return Viewport.decode<Context>(pointer, &proxyKey);
   else

@@ -151,6 +151,9 @@ NATIVE_ONLY = [
   'void ImGui::Value(const char*, unsigned int)',
   'void ImGui::Value(const char*, float, const char*)',
 
+  # we're providing a more useful TextFilter_Set function
+  'void ImGuiTextFilter::Build()',
+
   # not recommended for new designs
   'void ImGui::LogButtons()',
   'void ImGui::SetWindowFontScale(float)',
@@ -169,7 +172,7 @@ NATIVE_ONLY = [
 NATIVE_ONLY_CLASSES = %w[
   ImGuiIO ImFontAtlas ImFont ImDrawData ImDrawListSplitter ImGuiStoragePair
   ImGuiStyle ImGuiInputTextCallbackData ImFontGlyphRangesBuilder
-  ImGuiTextBuffer IMGuiTextFilter ImFontConfig
+  ImGuiTextBuffer ImFontConfig
 ]
 
 NATIVE_ONLY_ENUMS = [
@@ -273,6 +276,8 @@ OVERRIDES = {
 
   # ImGuiID -> str_id
   'bool ImGui::BeginChildFrame(ImGuiID, const ImVec2&, ImGuiWindowFlags)' => 'bool BeginChildFrame(const char*, double, double, int*)',
+
+  'bool ImGuiTextFilter::Draw(const char*, float)' => 'bool TextFilter_Draw(ImGui_Context*, const char*, double*)',
 }
 
 # argument position & name are checked
@@ -281,6 +286,7 @@ RESOURCES = {
   'ImGui_DrawList*'    => 'draw_list',
   'ImGui_Font*'        => 'font',
   'ImGui_ListClipper*' => 'clipper',
+  'ImGui_TextFilter*'  => 'filter',
   'ImGui_Viewport*'    => 'viewport',
 }
 

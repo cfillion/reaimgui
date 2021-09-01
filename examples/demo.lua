@@ -5762,22 +5762,35 @@ end
 function demo.ShowDemoWindowMisc()
   local rv
 
---     if (r.ImGui_CollapsingHeader("Filtering"))
---     {
---         // Helper class to easy setup a text filter.
---         // You may want to implement a more feature-full filtering scheme in your own application.
---         static ImGuiTextFilter filter;
---         r.ImGui_Text("Filter usage:\n"
---                     "  \"\"         display all lines\n"
---                     "  \"xxx\"      display lines containing \"xxx\"\n"
---                     "  \"xxx,yyy\"  display lines containing \"xxx\" or \"yyy\"\n"
---                     "  \"-xxx\"     hide lines containing \"xxx\"");
---         filter.Draw();
---         const char* lines[] = { "aaa1.c", "bbb1.c", "ccc1.c", "aaa2.cpp", "bbb2.cpp", "ccc2.cpp", "abc.h", "hello, world" };
---         for (int i = 0; i < IM_ARRAYSIZE(lines); i++)
---             if (filter.PassFilter(lines[i]))
---                 r.ImGui_BulletText("%s", lines[i]);
---     }
+  if r.ImGui_CollapsingHeader(ctx, 'Filtering') then
+    -- Helper class to easy setup a text filter.
+    if not misc.filtering then
+      misc.filtering = {
+        filter = nil,
+        text   = '',
+      }
+    end
+
+    -- the filter object is destroyed once unused for one or more frames
+    if not r.ImGui_ValidatePtr(misc.filtering.filter, 'ImGui_TextFilter*') then
+      misc.filtering.filter = r.ImGui_CreateTextFilter(misc.filtering.text)
+    end
+
+    r.ImGui_Text(ctx, [[Filter usage:
+  ""         display all lines
+  "xxx"      display lines containing "xxx"
+  "xxx,yyy"  display lines containing "xxx" or "yyy"
+  "-xxx"     hide lines containing "xxx"]])
+    if r.ImGui_TextFilter_Draw(misc.filtering.filter, ctx) then
+      misc.filtering.text = r.ImGui_TextFilter_Get(misc.filtering.filter)
+    end
+    local lines = { 'aaa1.c', 'bbb1.c', 'ccc1.c', 'aaa2.cpp', 'bbb2.cpp', 'ccc2.cpp', 'abc.h', 'hello, world' }
+    for i, line in ipairs(lines) do
+      if r.ImGui_TextFilter_PassFilter(misc.filtering.filter, line) then
+        r.ImGui_BulletText(ctx, line)
+      end
+    end
+  end
 
   if r.ImGui_CollapsingHeader(ctx, 'Inputs, Navigation & Focus') then
     -- Display ImGuiIO output flags

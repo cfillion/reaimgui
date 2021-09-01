@@ -115,6 +115,7 @@ static std::unordered_map<std::string_view, std::string_view> g_groupAliases {
   { "tabbar",      "Tab Bar" },
   { "table",       "Table" },
   { "text",        "Text" },
+  { "textfilter",  "Text Filter" },
   { "treenode",    "Tree Node" },
   { "utility",     "Utility" },
   { "viewport",    "Viewport" },
@@ -194,6 +195,7 @@ class ImGui_Context;
 class ImGui_DrawList;
 class ImGui_Font;
 class ImGui_ListClipper;
+class ImGui_TextFilter;
 class ImGui_Viewport;
 
 struct reaper_array;

@@ -15,24 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_LISTCLIPPER_HPP
-#define REAIMGUI_LISTCLIPPER_HPP
+#ifndef REAIMGUI_TEXTFILTER_HPP
+#define REAIMGUI_TEXTFILTER_HPP
 
 #include "resource.hpp"
 
-class ListClipper : public Resource {
+class TextFilter : public Resource {
 public:
-  static ImGuiListClipper *use(ListClipper *);
-  static bool validate(ListClipper *);
+  static constexpr const char *api_type_name { "ImGui_TextFilter" };
 
-  ListClipper(Context *ctx);
-  ~ListClipper();
+  TextFilter(const char *filter);
+  void set(const char *filter);
+  ImGuiTextFilter *operator->();
 
 private:
-  Context *m_ctx;
-  ImGuiListClipper m_imlc;
+  ImGuiTextFilter m_filter;
 };
 
-using ImGui_ListClipper = ListClipper;
+using ImGui_TextFilter = TextFilter;
 
 #endif
