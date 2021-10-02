@@ -81,6 +81,9 @@ for:
         esac
 
       - sudo xcode-select -s /Applications/Xcode-$XCODE_VERSION.app
+
+      # https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
+      - sudo curl -k https://curl.se/ca/cacert.pem -o /etc/ssl/cert.pem
     artifacts:
       - path: build/reaper_imgui*.dylib
       - path: build/tools/imgui_python.py
