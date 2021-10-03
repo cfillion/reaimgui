@@ -108,7 +108,6 @@ Context::Context(const char *label, const int userConfigFlags)
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
   io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
-  io.ConfigViewportsNoAutoMerge = true; // disable the main viewport
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
@@ -183,6 +182,12 @@ void Context::beginFrame()
   updateSettings();
 
   ImGui::NewFrame();
+
+  // Disable hosting windows in the non-rendered main viewport.
+  // ConfigViewportsNoAutoMerge doesn't apply to popups/tooltips/menus.
+  // CanHostOtherWindows applies to everything but it's reset at every NewFrame.
+  const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
+  pio.Viewports[0]->Flags &= ~ImGuiViewportFlags_CanHostOtherWindows;
 
   dragSources();
   m_dockers->drawAll();
