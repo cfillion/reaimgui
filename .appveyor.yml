@@ -18,29 +18,23 @@ for:
     install: |-
       set -e
 
-      sudo rm /etc/apt/sources.list.d/*.list
-      sudo sed -i '/ubuntu\.com/!d; /arch=/! s/^deb/deb [arch=amd64,i386]/' \
-        /etc/apt/sources.list
+      sudo sed -i '/arch=/! s/^deb/deb [arch=amd64,i386]/' /etc/apt/sources.list
       awk '
+      $3 !~ /ubuntu\.com/ { next }
       $1 == "deb" {
         $2 = "[arch=armhf,arm64]";
         $3 = "http://ports.ubuntu.com/ubuntu-ports/"
-      } 1' /etc/apt/sources.list | sudo dd of=/etc/apt/sources.list.d/ports.list
+      } 1' /etc/apt/sources.list | sudo tee /etc/apt/sources.list.d/ports.list > /dev/null
 
       install-deps() {
         local arch="$1"; shift
         local native=("$@")
         local target=(libboost-dev libgtk-3-dev)
 
-        # escape dependency hell
-        sudo apt-get autoremove -qq libicu-dev > /dev/null
-
         sudo dpkg --add-architecture $arch
         sudo apt-get update -qq
         sudo apt-get install -qq aptitude > /dev/null
-        sudo aptitude install -yR ${native[@]} ${target[@]/%/:$arch}  \
-          -o Aptitude::ProblemResolver::SolutionCost=canceled-actions \
-          > /dev/null
+        sudo aptitude install -yR ${native[@]} ${target[@]/%/:$arch} > /dev/null
       }
 
       sudo update-alternatives --set gcc /usr/bin/gcc-7
