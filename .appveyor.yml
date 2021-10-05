@@ -95,6 +95,9 @@ for:
       - set PATH=C:\Ruby30\bin;%PATH%
       - if "%ARCH%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
       - if "%ARCH%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+
+      # downgrade FreeType to 2.10.4 to workaround https://gitlab.freedesktop.org/freetype/freetype/-/issues/1075
+      - git -C C:\Tools\vcpkg restore -s dd6fd59ff22c6d924b637b7352751b5c244228d6~1 ports\freetype
     build_script:
       - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
         -DVCPKG_TARGET_TRIPLET=%ARCH%-windows-static
