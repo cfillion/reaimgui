@@ -183,12 +183,6 @@ void Context::beginFrame()
 
   ImGui::NewFrame();
 
-  // Disable hosting windows in the non-rendered main viewport.
-  // ConfigViewportsNoAutoMerge doesn't apply to popups/tooltips/menus.
-  // CanHostOtherWindows applies to everything but it's reset at every NewFrame.
-  const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
-  pio.Viewports[0]->Flags &= ~ImGuiViewportFlags_CanHostOtherWindows;
-
   dragSources();
   m_dockers->drawAll();
 }
