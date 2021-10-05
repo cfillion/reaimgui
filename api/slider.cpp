@@ -17,22 +17,9 @@
 
 #include "helper.hpp"
 
+#include "flags.hpp"
+
 #include <reaper_plugin_secrets.h> // reaper_array
-
-class SliderFlags {
-public:
-  SliderFlags(int *flags)
-    : m_flags { valueOr(flags, ImGuiSliderFlags_None) }
-  {
-    // dear imgui will assert if these bits are set
-    m_flags &= ~ImGuiSliderFlags_InvalidMask_;
-  }
-
-  operator ImGuiSliderFlags() const { return m_flags; }
-
-private:
-  ImGuiSliderFlags m_flags;
-};
 
 DEFINE_API(bool, DragInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(double*,API_RO(v_speed))

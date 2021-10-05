@@ -17,7 +17,8 @@
 
 #include "helper.hpp"
 
-#include <imgui/imgui_internal.h> // internal ImGuiInputTextFlags
+#include "flags.hpp"
+
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
 #include <reaper_plugin_secrets.h>   // reaper_array
@@ -36,31 +37,6 @@ static void copyToBuffer(const std::string &value, char *buf, const size_t bufSi
     buf[limit] = '\0';
   }
 }
-
-class InputTextFlags {
-public:
-  InputTextFlags(int *flags)
-    : m_flags { valueOr(flags, ImGuiInputTextFlags_None) }
-  {
-    m_flags &= ~(
-      // don't expose these to users
-      ImGuiInputTextFlags_CallbackCompletion |
-      ImGuiInputTextFlags_CallbackHistory    |
-      ImGuiInputTextFlags_CallbackAlways     |
-      ImGuiInputTextFlags_CallbackCharFilter |
-      ImGuiInputTextFlags_CallbackEdit       |
-      ImGuiInputTextFlags_CallbackResize     |
-
-      // reserved for ImGui's internal use
-      ImGuiInputTextFlags_Multiline | ImGuiInputTextFlags_NoMarkEdited
-    );
-  }
-
-  operator ImGuiInputTextFlags() const { return m_flags; }
-
-private:
-  ImGuiInputTextFlags m_flags;
-};
 
 DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))

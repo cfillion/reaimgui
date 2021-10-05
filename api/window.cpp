@@ -17,13 +17,9 @@
 
 #include "helper.hpp"
 
+#include "flags.hpp"
 #include "version.hpp"
 #include <imgui/imgui.h>
-
-enum {
-  // NoBringToFrontOnFocus isn't exposed in ReaImGui
-  ReaImGuiWindowFlags_TopMost = ImGuiWindowFlags_NoBringToFrontOnFocus,
-};
 
 DEFINE_API(bool, Begin, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
@@ -38,19 +34,7 @@ Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 {
   FRAME_GUARD;
 
-  ImGuiWindowFlags flags { valueOr(API_RO(flags), ImGuiWindowFlags_None) };
-
-  if(flags & ReaImGuiWindowFlags_TopMost) {
-    ImGuiWindowClass topmost;
-    topmost.ClassId = ImGui::GetID("TopMost");
-    topmost.ViewportFlagsOverrideSet = ImGuiViewportFlags_TopMost;
-    ImGui::SetNextWindowClass(&topmost);
-    flags &= ~ReaImGuiWindowFlags_TopMost; // unset NoBringToFrontOnFocus
-  }
-  else {
-    static ImGuiWindowClass normal;
-    ImGui::SetNextWindowClass(&normal);
-  }
+  WindowFlags flags { API_RO(flags) };
 
   if(!ctx->IO().ConfigViewportsNoDecoration) {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);

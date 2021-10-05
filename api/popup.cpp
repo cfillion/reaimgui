@@ -17,6 +17,8 @@
 
 #include "helper.hpp"
 
+#include "flags.hpp"
+
 DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
 R"(Popups, Modals
@@ -35,7 +37,8 @@ Return true if the popup is open, and you can start outputting to it.
 Default values: flags = ImGui_WindowFlags_None)",
 {
   FRAME_GUARD;
-  return ImGui::BeginPopup(str_id, valueOr(API_RO(flags), ImGuiWindowFlags_None));
+  WindowFlags flags { API_RO(flags) };
+  return ImGui::BeginPopup(str_id, flags);
 });
 
 DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
@@ -45,8 +48,8 @@ R"(Block every interactions behind the window, cannot be closed by user, add a d
 Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 {
   FRAME_GUARD;
-  return ImGui::BeginPopupModal(name, openPtrBehavior(API_RWO(p_open)),
-    valueOr(API_RO(flags), ImGuiWindowFlags_None));
+  WindowFlags flags { API_RO(flags) };
+  return ImGui::BeginPopupModal(name, openPtrBehavior(API_RWO(p_open)), flags);
 });
 
 DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
