@@ -561,4 +561,4 @@ DEFINE_ENUM(ImGui, WindowFlags_NoNav,                     "ImGui_WindowFlags_NoN
 DEFINE_ENUM(ImGui, WindowFlags_NoDecoration,              "ImGui_WindowFlags_NoTitleBar | ImGui_WindowFlags_NoResize | ImGui_WindowFlags_NoScrollbar | ImGui_WindowFlags_NoCollapse");
 DEFINE_ENUM(ImGui, WindowFlags_NoInputs,                  "ImGui_WindowFlags_NoMouseInputs | ImGui_WindowFlags_NoNavInputs | ImGui_WindowFlags_NoNavFocus");
 
-DEFINE_ENUM(ReaImGui, WindowFlags_TopMost,                "Show the window above all non-topmost windows (ImGui_Begin only).");
+DEFINE_ENUM(ReaImGui, WindowFlags_TopMost,                "Show the window above all non-topmost windows.");
