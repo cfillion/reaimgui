@@ -234,9 +234,11 @@ DEFINE_ENUM(ImGui, HoveredFlags_None,                         "Return true if di
 DEFINE_ENUM(ImGui, HoveredFlags_ChildWindows,                 "ImGui_IsWindowHovered only: Return true if any children of the window is hovered.");
 DEFINE_ENUM(ImGui, HoveredFlags_RootWindow,                   "ImGui_IsWindowHovered only: Test from root window (top most parent of the current hierarchy).");
 DEFINE_ENUM(ImGui, HoveredFlags_AnyWindow,                    "ImGui_IsWindowHovered only: Return true if any window is hovered.");
+DEFINE_ENUM(ImGui, HoveredFlags_NoPopupHierarchy,             "ImGui_IsWindowHovered only: Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow).");
+DEFINE_ENUM(ImGui, HoveredFlags_DockHierarchy,                "ImGui_IsWindowHovered only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow).");
 DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenBlockedByPopup,      "Return true even if a popup window is normally blocking access to this item/window.");
 DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenBlockedByActiveItem, "Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.");
-DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenOverlapped,          "Return true even if the position is obstructed or overlapped by another window.");
-DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenDisabled,            "Return true even if the item is disabled.");
+DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenOverlapped,          "ImGui_IsItemHovered only: Return true even if the position is obstructed or overlapped by another window.");
+DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenDisabled,            "ImGui_IsItemHovered only: Return true even if the item is disabled.");
 DEFINE_ENUM(ImGui, HoveredFlags_RectOnly,                     "ImGui_HoveredFlags_AllowWhenBlockedByPopup | ImGui_HoveredFlags_AllowWhenBlockedByActiveItem | ImGui_HoveredFlags_AllowWhenOverlapped");
 DEFINE_ENUM(ImGui, HoveredFlags_RootAndChildWindows,          "ImGui_HoveredFlags_RootWindow | ImGui_HoveredFlags_ChildWindows");

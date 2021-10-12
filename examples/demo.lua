@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.84)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.85)
 
 --[[
 Index of this file:
@@ -177,6 +177,7 @@ show_app = {
 
   -- Dear ImGui Apps (accessible from the "Tools" menu)
   metrics      = false,
+  stack_tool   = false,
   -- style_editor = false
   about        = false,
 }
@@ -202,8 +203,9 @@ function demo.ShowDemoWindow()
   if show_app.window_titles      then                               demo.ShowExampleAppWindowTitles()      end
   if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
 
-  if show_app.metrics then show_app.metrics = r.ImGui_ShowMetricsWindow(ctx, show_app.metrics) end
-  if show_app.about   then show_app.about   = r.ImGui_ShowAboutWindow(ctx,   show_app.about)   end
+  if show_app.metrics    then show_app.metrics    = r.ImGui_ShowMetricsWindow(ctx,   show_app.metrics)    end
+  if show_app.stack_tool then show_app.stack_tool = r.ImGui_ShowStackToolWindow(ctx, show_app.stack_tool) end
+  if show_app.about      then show_app.about      = r.ImGui_ShowAboutWindow(ctx,     show_app.about)      end
   -- if (show_app_style_editor)
   -- {
   --     if(r.ImGui_Begin("Dear ImGui Style Editor", &show_app_style_editor)) {
@@ -290,12 +292,15 @@ function demo.ShowDemoWindow()
         r.ImGui_MenuItem(ctx, 'Documents', nil, show_app.documents, false)
       r.ImGui_EndMenu(ctx)
     end
+    -- if r.ImGui_MenuItem(ctx, 'MenuItem') then end -- You can also use MenuItem() inside a menu bar!
     if r.ImGui_BeginMenu(ctx, 'Tools') then
       if r.ImGui_MenuItem(ctx, 'Documentation', nil, false, r.CF_ShellExecute ~= nil) then
         r.CF_ShellExecute(('%s/Data/reaper_imgui_doc.html'):format(r.GetResourcePath()))
       end
       rv,show_app.metrics =
         r.ImGui_MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
+      rv,show_app.stack_tool =
+        r.ImGui_MenuItem(ctx, 'Stack Tool', nil, show_app.stack_tool)
       rv,show_app.style_editor =
         r.ImGui_MenuItem(ctx, 'Style Editor', nil, show_app.style_editor, false)
       rv,show_app.about =
@@ -1651,7 +1656,9 @@ label:
 
     rv,widgets.plots.animate = r.ImGui_Checkbox(ctx, 'Animate', widgets.plots.animate)
 
+    -- Plot as lines and plot as histogram
     r.ImGui_PlotLines(ctx, 'Frame Times', widgets.plots.frame_times)
+    r.ImGui_PlotHistogram(ctx, 'Histogram', widgets.plots.frame_times, 0, nil, 0.0, 1.0, 0, 80.0)
 
     -- Fill an array of contiguous float values to plot
     if not widgets.plots.animate or widgets.plots.plot1.refresh_time == 0.0 then
@@ -1675,9 +1682,7 @@ label:
     local overlay = ('avg %f'):format(average)
     r.ImGui_PlotLines(ctx, 'Lines', widgets.plots.plot1.data, widgets.plots.plot1.offset - 1, overlay, -1.0, 1.0, 0, 80.0)
 
-    r.ImGui_PlotHistogram(ctx, 'Histogram', widgets.plots.frame_times, 0, nil, 0.0, 1.0, 0, 80.0)
     r.ImGui_Separator(ctx)
-
     r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 8)
     rv,widgets.plots.plot2.func = r.ImGui_Combo(ctx, 'func', widgets.plots.plot2.func, 'Sin\31Saw\31')
     local funcChanged = rv
@@ -2365,22 +2370,20 @@ label:
     r.ImGui_TreePop(ctx)
   end
 
-  if r.ImGui_TreeNode(ctx, 'Querying Status (Edited/Active/Hovered etc.)') then
-    if not widgets.query then
-      widgets.query = {
+  if r.ImGui_TreeNode(ctx, 'Querying Item Status (Edited/Active/Hovered etc.)') then
+    if not widgets.query_item then
+      widgets.query_item = {
         item_type   = 1,
         b           = false,
         color       = 0xFF8000FF,
         str         = '',
         current     = 1,
         d4a         = { 1.0, 0.5, 0.0, 1.0 },
-        embed_all_inside_a_child_window = false,
-        test_window = false,
       }
     end
 
     -- Select an item type
-    rv,widgets.query.item_type = r.ImGui_Combo(ctx, 'Item Type', widgets.query.item_type,
+    rv,widgets.query_item.item_type = r.ImGui_Combo(ctx, 'Item Type', widgets.query_item.item_type,
       'Text\31Button\31Button (w/ repeat)\31Checkbox\31SliderDouble\31\z
        InputText\31InputDouble\31InputDouble3\31ColorEdit4\31Selectable\31\z
        MenuItem\31TreeNode\31TreeNode (w/ double-click)\31Combo\31ListBox\31')
@@ -2391,12 +2394,12 @@ label:
        functions. Note that the bool return value of most ImGui function is \z
        generally equivalent to calling r.ImGui_IsItemHovered().')
 
-    if widgets.query.item_disabled then
+    if widgets.query_item.item_disabled then
       r.ImGui_BeginDisabled(ctx, true)
     end
 
     -- Submit selected item item so we can query their status in the code following it.
-    local item_type = widgets.query.item_type
+    local item_type = widgets.query_item.item_type
     if item_type == 0  then -- Testing text items with no identifier/interaction
       r.ImGui_Text(ctx, 'ITEM: Text')
     end
@@ -2409,23 +2412,23 @@ label:
       r.ImGui_PopButtonRepeat(ctx)
     end
     if item_type == 3  then -- Testing checkbox
-      rv,widgets.query.b = r.ImGui_Checkbox(ctx, 'ITEM: Checkbox', widgets.query.b)
+      rv,widgets.query_item.b = r.ImGui_Checkbox(ctx, 'ITEM: Checkbox', widgets.query_item.b)
     end
     if item_type == 4  then -- Testing basic item
-      rv,widgets.query.d4a[1] = r.ImGui_SliderDouble(ctx, 'ITEM: SliderDouble', widgets.query.d4a[1], 0.0, 1.0)
+      rv,widgets.query_item.d4a[1] = r.ImGui_SliderDouble(ctx, 'ITEM: SliderDouble', widgets.query_item.d4a[1], 0.0, 1.0)
     end
     if item_type == 5  then -- Testing input text (which handles tabbing)
-      rv,widgets.query.str = r.ImGui_InputText(ctx, 'ITEM: InputText', widgets.query.str)
+      rv,widgets.query_item.str = r.ImGui_InputText(ctx, 'ITEM: InputText', widgets.query_item.str)
     end
     if item_type == 6  then -- Testing +/- buttons on scalar input
-      rv,widgets.query.d4a[1] = r.ImGui_InputDouble(ctx, 'ITEM: InputDouble', widgets.query.d4a[1], 1.0)
+      rv,widgets.query_item.d4a[1] = r.ImGui_InputDouble(ctx, 'ITEM: InputDouble', widgets.query_item.d4a[1], 1.0)
     end
     if item_type == 7  then -- Testing multi-component items (IsItemXXX flags are reported merged)
-      local d4a = widgets.query.d4a
+      local d4a = widgets.query_item.d4a
       rv,d4a[1],d4a[2],d4a[3] = r.ImGui_InputDouble3(ctx, 'ITEM: InputDouble3', d4a[1], d4a[2], d4a[3])
     end
     if item_type == 8  then -- Testing multi-component items (IsItemXXX flags are reported merged)
-      rv,widgets.query.color = r.ImGui_ColorEdit4(ctx, 'ITEM: ColorEdit', widgets.query.color)
+      rv,widgets.query_item.color = r.ImGui_ColorEdit4(ctx, 'ITEM: ColorEdit', widgets.query_item.color)
     end
     if item_type == 9 then -- Testing selectable item
       rv = ImGui_Selectable(ctx, 'ITEM: Selectable')
@@ -2442,10 +2445,10 @@ label:
         r.ImGui_TreeNodeFlags_OpenOnDoubleClick() | r.ImGui_TreeNodeFlags_NoTreePushOnOpen())
     end
     if item_type == 13 then
-      rv,widgets.query.current = r.ImGui_Combo(ctx, 'ITEM: Combo', widgets.query.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
+      rv,widgets.query_item.current = r.ImGui_Combo(ctx, 'ITEM: Combo', widgets.query_item.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
     end
     if item_type == 14 then
-      rv,widgets.query.current = r.ImGui_ListBox(ctx, 'ITEM: ListBox', widgets.query.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
+      rv,widgets.query_item.current = r.ImGui_ListBox(ctx, 'ITEM: ListBox', widgets.query_item.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
     end
 
     -- Display the values of IsItemHovered() and other common item state functions.
@@ -2492,74 +2495,106 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
       ({r.ImGui_GetItemRectSize(ctx)})[1], ({r.ImGui_GetItemRectSize(ctx)})[2]
     ))
 
-    if widgets.query.item_disabled then
+    if widgets.query_item.item_disabled then
       r.ImGui_EndDisabled(ctx)
     end
 
-    rv,widgets.query.embed_all_inside_a_child_window =
-      r.ImGui_Checkbox(ctx, 'Embed everything inside a child window (for additional testing)',
-      widgets.query.embed_all_inside_a_child_window)
+    r.ImGui_InputText(ctx, 'unused', '', r.ImGui_InputTextFlags_ReadOnly())
+    r.ImGui_SameLine(ctx)
+    demo.HelpMarker('This widget is only here to be able to tab-out of the widgets above and see e.g. Deactivated() status.')
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Querying Window Status (Focused/Hovered etc.)') then
+    if not widgets.query_window then
+      widgets.query_window = {
+        embed_all_inside_a_child_window = false,
+        test_window = false,
+      }
+    end
+    rv,widgets.query_window.embed_all_inside_a_child_window =
+      r.ImGui_Checkbox(ctx, 'Embed everything inside a child window for testing _RootWindow flag.',
+      widgets.query_window.embed_all_inside_a_child_window)
     local visible = true
-    if widgets.query.embed_all_inside_a_child_window then
+    if widgets.query_window.embed_all_inside_a_child_window then
       visible = r.ImGui_BeginChild(ctx, 'outer_child', 0, r.ImGui_GetFontSize(ctx) * 20.0, true)
     end
 
     if visible then
       -- Testing IsWindowFocused() function with its various flags.
-      -- Note that the ImGuiFocusedFlags_XXX flags can be combined.
       r.ImGui_BulletText(ctx, ([[IsWindowFocused() = %s
   IsWindowFocused(_ChildWindows) = %s
+  IsWindowFocused(_ChildWindows|_NoPopupHierarchy) = %s
+  IsWindowFocused(_ChildWindows|_DockHierarchy) = %s
   IsWindowFocused(_ChildWindows|_RootWindow) = %s
+  IsWindowFocused(_ChildWindows|_RootWindow|_NoPopupHierarchy) = %s
+  IsWindowFocused(_ChildWindows|_RootWindow|_DockHierarchy) = %s
   IsWindowFocused(_RootWindow) = %s
+  IsWindowFocused(_RootWindow|_NoPopupHierarchy) = %s
+  IsWindowFocused(_RootWindow|_DockHierarchy) = %s
   IsWindowFocused(_AnyWindow) = %s]]):format(
         r.ImGui_IsWindowFocused(ctx),
         r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows()),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows() | r.ImGui_FocusedFlags_NoPopupHierarchy()),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows() | r.ImGui_FocusedFlags_DockHierarchy()),
         r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows() | r.ImGui_FocusedFlags_RootWindow()),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows() | r.ImGui_FocusedFlags_RootWindow() | r.ImGui_FocusedFlags_NoPopupHierarchy()),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_ChildWindows() | r.ImGui_FocusedFlags_RootWindow() | r.ImGui_FocusedFlags_DockHierarchy()),
         r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_RootWindow()),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_RootWindow() | r.ImGui_FocusedFlags_NoPopupHierarchy()),
+        r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_RootWindow() | r.ImGui_FocusedFlags_DockHierarchy()),
         r.ImGui_IsWindowFocused(ctx, r.ImGui_FocusedFlags_AnyWindow())))
 
       -- Testing IsWindowHovered() function with its various flags.
-      -- Note that the ImGuiHoveredFlags_XXX flags can be combined.
       r.ImGui_BulletText(ctx, ([[IsWindowHovered() = %s
   IsWindowHovered(_AllowWhenBlockedByPopup) = %s
   IsWindowHovered(_AllowWhenBlockedByActiveItem) = %s
   IsWindowHovered(_ChildWindows) = %s
+  IsWindowHovered(_ChildWindows|_NoPopupHierarchy) = %s
+  IsWindowHovered(_ChildWindows|_DockHierarchy) = %s
   IsWindowHovered(_ChildWindows|_RootWindow) = %s
-  IsWindowHovered(_ChildWindows|_AllowWhenBlockedByPopup) = %s
+  IsWindowHovered(_ChildWindows|_RootWindow|_NoPopupHierarchy) = %s
+  IsWindowHovered(_ChildWindows|_RootWindow|_DockHierarchy) = %s
   IsWindowHovered(_RootWindow) = %s
+  IsWindowHovered(_RootWindow|_NoPopupHierarchy) = %s
+  IsWindowHovered(_RootWindow|_DockHierarchy) = %s
+  IsWindowHovered(_ChildWindows|_AllowWhenBlockedByPopup) = %s
   IsWindowHovered(_AnyWindow) = %s]]):format(
         r.ImGui_IsWindowHovered(ctx),
         r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
         r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AllowWhenBlockedByActiveItem()),
         r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_NoPopupHierarchy()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_DockHierarchy()),
         r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_RootWindow()),
-        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_RootWindow() | r.ImGui_HoveredFlags_NoPopupHierarchy()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_RootWindow() | r.ImGui_HoveredFlags_DockHierarchy()),
         r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_RootWindow()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_RootWindow() | r.ImGui_HoveredFlags_NoPopupHierarchy()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_RootWindow() | r.ImGui_HoveredFlags_DockHierarchy()),
+        r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_ChildWindows() | r.ImGui_HoveredFlags_AllowWhenBlockedByPopup()),
         r.ImGui_IsWindowHovered(ctx, r.ImGui_HoveredFlags_AnyWindow())))
 
       if r.ImGui_BeginChild(ctx, 'child', 0, 50, true) then
         r.ImGui_Text(ctx, 'This is another child window for testing the _ChildWindows flag.')
         r.ImGui_EndChild(ctx)
       end
-      if widgets.query.embed_all_inside_a_child_window then
+      if widgets.query_window.embed_all_inside_a_child_window then
         r.ImGui_EndChild(ctx)
       end
     end
 
-    local unused_str = 'This widget is only here to be able to tab-out of the widgets above.'
-    r.ImGui_InputText(ctx, 'unused', unused_str, r.ImGui_InputTextFlags_ReadOnly())
-
     -- Calling IsItemHovered() after begin returns the hovered status of the title bar.
     -- This is useful in particular if you want to create a context menu associated to the title bar of a window.
     -- This will also work when docked into a Tab (the Tab replace the Title Bar and guarantee the same properties).
-    rv,widgets.query.test_window = r.ImGui_Checkbox(ctx, 'Hovered/Active tests after Begin() for title bar testing', widgets.query.test_window)
-    if widgets.query.test_window then
+    rv,widgets.query_window.test_window = r.ImGui_Checkbox(ctx, 'Hovered/Active tests after Begin() for title bar testing', widgets.query_window.test_window)
+    if widgets.query_window.test_window then
       -- FIXME-DOCK: This window cannot be docked within the ImGui Demo window, this will cause a feedback loop and get them stuck.
       -- Could we fix this through an ImGuiWindowClass feature? Or an API call to tag our parent as "don't skip items"?
-      rv,widgets.query.test_window = r.ImGui_Begin(ctx, 'Title bar Hovered/Active tests', true)
+      rv,widgets.query_window.test_window = r.ImGui_Begin(ctx, 'Title bar Hovered/Active tests', true)
       if rv then
         if r.ImGui_BeginPopupContextItem(ctx) then -- <-- This is using IsItemHovered()
-          if r.ImGui_MenuItem(ctx, 'Close') then widgets.query.test_window = false end
+          if r.ImGui_MenuItem(ctx, 'Close') then widgets.query_window.test_window = false end
           r.ImGui_EndPopup(ctx)
         end
         r.ImGui_Text(ctx,
@@ -2611,7 +2646,7 @@ function demo.ShowDemoWindowLayout()
     if layout.child.disable_mouse_wheel then
       window_flags = window_flags | r.ImGui_WindowFlags_NoScrollWithMouse()
     end
-    if r.ImGui_BeginChild(ctx, 'ChildL', r.ImGui_GetWindowContentRegionWidth(ctx) * 0.5, 260, false, window_flags) then
+    if r.ImGui_BeginChild(ctx, 'ChildL', r.ImGui_GetContentRegionAvail(ctx) * 0.5, 260, false, window_flags) then
       for i = 0, 99 do
         r.ImGui_Text(ctx, ('%04d: scrollable region'):format(i))
       end
@@ -5795,6 +5830,7 @@ function demo.ShowDemoWindowMisc()
   if r.ImGui_CollapsingHeader(ctx, 'Inputs, Navigation & Focus') then
     -- Display ImGuiIO output flags
     -- r.ImGui_Text("WantCaptureMouse: %d", io.WantCaptureMouse);
+    -- r.ImGui_Text("WantCaptureMouseUnlessPopupClose: %d", io.WantCaptureMouseUnlessPopupClose);
     -- r.ImGui_Text("WantCaptureKeyboard: %d", io.WantCaptureKeyboard);
     -- r.ImGui_Text("WantTextInput: %d", io.WantTextInput);
     -- r.ImGui_Text("WantSetMousePos: %d", io.WantSetMousePos);

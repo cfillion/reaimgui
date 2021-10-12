@@ -401,13 +401,6 @@ DEFINE_API(void, GetWindowContentRegionMax, (ImGui_Context*,ctx)
   if(API_W(y)) *API_W(y) = vec.y;
 });
 
-DEFINE_API(double, GetWindowContentRegionWidth, (ImGui_Context*,ctx),
-"",
-{
-  FRAME_GUARD;
-  return ImGui::GetWindowContentRegionWidth();
-});
-
 // Windows Scrolling
 DEFINE_API(double, GetScrollX, (ImGui_Context*,ctx),
 "Get scrolling amount [0 .. ImGui_GetScrollMaxX()]",
@@ -526,11 +519,23 @@ Default values: p_open = nil)",
   ImGui::ShowMetricsWindow(openPtrBehavior(API_RWO(p_open)));
 });
 
+DEFINE_API(void, ShowStackToolWindow, (ImGui_Context*,ctx)
+(bool*,API_RWO(p_open)),
+R"(Create Stack Tool window. Hover items with mouse to query information about the source of their unique ID.
+
+Default values: p_open = nil)",
+{
+  FRAME_GUARD;
+  ImGui::ShowStackToolWindow(openPtrBehavior(API_RWO(p_open)));
+});
+
 // ImGuiFocusedFlags
 DEFINE_ENUM(ImGui, FocusedFlags_None,                "Flags for ImGui_IsWindowFocused.");
-DEFINE_ENUM(ImGui, FocusedFlags_ChildWindows,        "ImGui_IsWindowFocused: Return true if any children of the window is focused.");
-DEFINE_ENUM(ImGui, FocusedFlags_RootWindow,          "ImGui_IsWindowFocused: Test from root window (top most parent of the current hierarchy).");
-DEFINE_ENUM(ImGui, FocusedFlags_AnyWindow,           "ImGui_IsWindowFocused: Return true if any window is focused. Important: If you are trying to tell how to dispatch your low-level inputs, do NOT use this. Use 'io.WantCaptureMouse' instead! Please read the FAQ!.");
+DEFINE_ENUM(ImGui, FocusedFlags_ChildWindows,        "Return true if any children of the window is focused.");
+DEFINE_ENUM(ImGui, FocusedFlags_RootWindow,          "Test from root window (top most parent of the current hierarchy).");
+DEFINE_ENUM(ImGui, FocusedFlags_AnyWindow,           "Return true if any window is focused.");
+DEFINE_ENUM(ImGui, FocusedFlags_NoPopupHierarchy,    "Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow).");
+DEFINE_ENUM(ImGui, FocusedFlags_DockHierarchy,       "Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow).");
 DEFINE_ENUM(ImGui, FocusedFlags_RootAndChildWindows, "ImGui_FocusedFlags_RootWindow | ImGui_FocusedFlags_ChildWindows");
 
 // ImGuiWindowFlags
