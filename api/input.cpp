@@ -49,6 +49,10 @@ DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
   std::string value { API_RWBIG(buf) };
   const InputTextFlags flags { API_RO(flags) };
 
+  // The output buffer is updated only when true is returned.
+  // This differs from upstream Dear ImGui when InputTextFlags_EnterReturnsTrue
+  // is used. However it makes the behavior consistent with the scalar input
+  // functions (eg. InputDouble). https://github.com/ocornut/imgui/issues/3946
   if(ImGui::InputText(label, &value, flags, nullptr, nullptr)) {
     copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
     return true;
