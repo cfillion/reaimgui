@@ -161,10 +161,10 @@ void DockerHost::activate()
   Dock_UpdateDockID(INI_KEY, m_docker->id());
   DockWindowAddEx(hwnd, m_ctx->name(), INI_KEY, true);
 
-  m_window->show();
-
   if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing))
     DockWindowActivate(hwnd);
+
+  m_window->show();
 }
 
 void DockerHost::create()
@@ -178,6 +178,8 @@ HWND DockerHost::nativeHandle() const
 
 void DockerHost::show()
 {
+  // undo ImGui unconditionally setting NoFocusOnAppearing in the first 3 frames
+  Viewport::show();
 }
 
 void DockerHost::setPosition(ImVec2)
