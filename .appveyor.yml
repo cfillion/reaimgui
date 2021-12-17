@@ -88,13 +88,12 @@ for:
       - path: build/tools/reaper_imgui_doc.html
       - path: build/tools/reaper_imgui_functions.h
 
-  - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2019 ] }
+  - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2022 ] }
     cache:
       - build\vcpkg_installed -> vcpkg.json
     install:
-      - set PATH=C:\Ruby30\bin;%PATH%
-      - if "%ARCH%" == "x64" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
-      - if "%ARCH%" == "x86" call "%ProgramFiles(x86)%\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
+      - if "%ARCH%" == "x64" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+      - if "%ARCH%" == "x86" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
 
         # use khrplatform.h from the egl-registry port
         # (TODO: remove on the next image update)
