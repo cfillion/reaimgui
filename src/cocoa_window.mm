@@ -170,6 +170,11 @@ void CocoaWindow::update()
 
 void CocoaWindow::render(void *)
 {
+  // the intial setView in show() may fail if the view doesn't have a "device"
+  // (eg. when docked not activated = hidden NSView)
+  if(![m_gl view])
+    [m_gl setView:m_view];
+
   [m_gl makeCurrentContext];
   m_renderer->render(m_viewport);
   [m_gl flushBuffer];
