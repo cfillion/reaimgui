@@ -240,8 +240,11 @@ void Context::updateFrameInfo()
   ImGuiIO &io { m_imgui->IO };
 
   // Dear ImGui doesn't call MainViewport::getSize
-  io.DisplaySize =
-    static_cast<Viewport *>(ImGui::GetMainViewport()->PlatformUserData)->getSize();
+  ImGuiViewport *mainViewport { ImGui::GetMainViewport() };
+  mainViewport->Pos =
+    static_cast<Viewport *>(mainViewport->PlatformUserData)->getPosition();
+  io.DisplaySize = mainViewport->Size =
+    static_cast<Viewport *>(mainViewport->PlatformUserData)->getSize();
 
   const auto now { decltype(m_lastFrame)::clock::now() };
   io.DeltaTime = std::chrono::duration<float> { now - m_lastFrame }.count();
