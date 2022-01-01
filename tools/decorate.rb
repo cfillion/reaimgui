@@ -28,7 +28,7 @@ end
 
 __END__
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021  Christian Fillion
+ * Copyright (C) 2021-2022  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
