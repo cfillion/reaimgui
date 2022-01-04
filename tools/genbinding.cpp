@@ -208,7 +208,7 @@ class ReaImGuiFunc<R(Args...)>
 {
 public:
   ReaImGuiFunc(const char *name) : m_name { name }, m_proc { nullptr } {}
-  operator bool() const { return proc() != nullptr; }
+  operator bool() { return proc() != nullptr; }
   template<typename... CallArgs>
   auto operator()(CallArgs... args)
   {
