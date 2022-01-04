@@ -27,6 +27,7 @@ using ReaDockID = unsigned int;
 using ImGuiID   = unsigned int;
 
 class Window;
+struct ImGuiDockNode;
 
 class Docker {
 public:
@@ -39,10 +40,12 @@ public:
 
   void draw();
   bool isActive() const;
+  bool isNoFocus() const;
   void moveTo(Docker *other);
 
 private:
   void reset();
+  ImGuiDockNode *rootNode() const;
 
   ReaDockID m_id;
   ImGuiID m_windowId;

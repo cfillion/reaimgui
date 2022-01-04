@@ -42,7 +42,7 @@ public:
 
   virtual void create() = 0;
   virtual HWND nativeHandle() const = 0;
-  virtual void show();
+  virtual void show() = 0;
   virtual void setPosition(ImVec2) = 0;
   virtual ImVec2 getPosition() const;
   virtual void setSize(ImVec2) = 0;

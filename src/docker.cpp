@@ -56,28 +56,40 @@ void Docker::draw()
   ImGui::End();
 }
 
-static bool isNodeActive(const ImGuiDockNode *node)
+ImGuiDockNode *Docker::rootNode() const
+{
+  return ImGui::DockBuilderGetNode(nodeId());
+}
+
+static bool anyNodeWindow(const ImGuiDockNode *node,
+  bool(*callback)(ImGuiWindow*))
 {
   if(!node || node->IsEmpty())
     return false;
 
   for(int i {}; i < node->Windows.Size; ++i) {
-    const ImGuiWindow *window { node->Windows[i] };
-    const bool windowActive {
-      (window->Active || window->WasActive) &&
-      (window->DockIsActive || window->DockTabIsVisible)
-    };
-
-    if(windowActive)
+    if(callback(node->Windows[i]))
       return true;
   }
 
-  return isNodeActive(node->ChildNodes[0]) || isNodeActive(node->ChildNodes[1]);
+  return anyNodeWindow(node->ChildNodes[0], callback) ||
+         anyNodeWindow(node->ChildNodes[1], callback);
 }
 
 bool Docker::isActive() const
 {
-  return isNodeActive(ImGui::DockBuilderGetNode(nodeId()));
+  return anyNodeWindow(rootNode(), [](ImGuiWindow *window) {
+    return
+      (window->Active || window->WasActive) &&
+      (window->DockIsActive || window->DockTabIsVisible);
+  });
+}
+
+bool Docker::isNoFocus() const
+{
+  return anyNodeWindow(rootNode(), [](ImGuiWindow *window) {
+    return (window->Flags & ImGuiWindowFlags_NoFocusOnAppearing) != 0;
+  });
 }
 
 void Docker::moveTo(Docker *target)
@@ -161,7 +173,9 @@ void DockerHost::activate()
   Dock_UpdateDockID(INI_KEY, m_docker->id());
   DockWindowAddEx(hwnd, m_ctx->name(), INI_KEY, true);
 
-  if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing))
+  // ImGuiViewportFlags_NoFocusOnAppearing is not inherited from the
+  // docked windows, but would from the Begin in Docker::draw
+  if(!m_docker->isNoFocus())
     DockWindowActivate(hwnd);
 
   m_window->show();
@@ -178,8 +192,6 @@ HWND DockerHost::nativeHandle() const
 
 void DockerHost::show()
 {
-  // undo ImGui unconditionally setting NoFocusOnAppearing in the first 3 frames
-  Viewport::show();
 }
 
 void DockerHost::setPosition(ImVec2)

@@ -82,6 +82,7 @@ private:
 
   float m_previousScale;
   int m_fontTexVersion;
+  bool m_noFocus;
 };
 
 #endif

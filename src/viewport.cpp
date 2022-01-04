@@ -30,6 +30,7 @@ public:
 
   void create() override {}
   HWND nativeHandle() const override { return m_hwnd; }
+  void show() override {}
   void setPosition(ImVec2) override {}
   void setSize(ImVec2) override {}
   void setFocus() override {}
@@ -115,13 +116,6 @@ void Viewport::install()
   pio.Platform_SetImeInputPos     = &instanceProxy<&Viewport::setImePosition>;
 
   new MainViewport; // lifetime managed by Dear ImGui
-}
-
-void Viewport::show()
-{
-  // FIXME: Undo this weird thing ImGui does before calling ShowWindow
-  if(ImGui::GetFrameCount() < 3)
-    m_viewport->Flags &= ~ImGuiViewportFlags_NoFocusOnAppearing;
 }
 
 ImVec2 Viewport::getPosition() const

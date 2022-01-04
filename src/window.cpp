@@ -22,6 +22,7 @@
 #include "platform.hpp"
 
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 
 #ifndef _WIN32
 #  include <swell/swell.h>
@@ -138,7 +139,7 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Viewport { viewport }, m_dockerHost { dockerHost },
     m_accel { &translateAccel, true, this },
     m_accelReg { "accelerator", &m_accel },
-    m_previousScale { 0.f }, m_fontTexVersion { -1 }
+    m_previousScale { 0.f }, m_fontTexVersion { -1 }, m_noFocus { false }
 {
   static std::weak_ptr<PluginRegister> g_hwndInfo; // v6.29+
 
@@ -147,6 +148,12 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
       ("hwnd_info", reinterpret_cast<void *>(&Window::hwndInfo));
   else
     m_hwndInfo = g_hwndInfo.lock();
+
+  // HACK: See Window::show. Not using ViewportFlags because it would always be
+  // set when using BeginPopup.
+  ImGuiViewportP *viewportPrivate { static_cast<ImGuiViewportP *>(viewport) };
+  if(ImGuiWindow *userWindow { viewportPrivate->Window })
+    m_noFocus = userWindow->Flags & ImGuiWindowFlags_NoFocusOnAppearing;
 
   // Cannot initialize m_hwnd during construction due to handleMessage being
   // virtual. This task is delayed to created() called once fully constructed.
@@ -172,7 +179,9 @@ void Window::show()
   if(isDocked())
     return;
 
-  Viewport::show();
+  // HACK: Undo this weird thing ImGui does right before calling ShowWindow
+  if(ImGui::GetFrameCount() < 3 && !m_noFocus)
+    m_viewport->Flags &= ~ImGuiViewportFlags_NoFocusOnAppearing;
 
   if(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
     ShowWindow(m_hwnd.get(), SW_SHOWNA);
