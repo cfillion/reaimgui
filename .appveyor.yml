@@ -67,9 +67,9 @@ for:
 
   - matrix: { only: [ appveyor_build_worker_image: macos, appveyor_build_worker_image: macos-mojave ] }
     cache:
-      - build/vcpkg_installed -> vcpkg.json, cmake/vcpkg-triplets/auto-osx.cmake
+      - build/vcpkg_installed -> vcpkg.json, cmake/vcpkg-triplets/arch-env.cmake
     install:
-      - TRIPLET=auto-osx TOOLCHAIN=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+      - TRIPLET=arch-env TOOLCHAIN=~/vcpkg/scripts/buildsystems/vcpkg.cmake
       - export VCPKG_OVERLAY_TRIPLETS=cmake/vcpkg-triplets
 
       - |-
