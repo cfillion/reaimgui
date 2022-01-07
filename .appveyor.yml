@@ -94,14 +94,6 @@ for:
     install:
       - if "%ARCH%" == "x64" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
       - if "%ARCH%" == "x86" call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars32.bat"
-
-        # use khrplatform.h from the egl-registry port
-        # (TODO: remove on the next image update)
-      - git -C C:\Tools\vcpkg fetch
-      - git -C C:\Tools\vcpkg restore -s 42ef1e94f0000828f264e4cd476e17fa6d09804c ports\gl3w
-
-      # downgrade FreeType to 2.10.4 to workaround https://gitlab.freedesktop.org/freetype/freetype/-/issues/1075
-      - git -C C:\Tools\vcpkg restore -s dd6fd59ff22c6d924b637b7352751b5c244228d6~1 ports\freetype
     build_script:
       - cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo
         -DVCPKG_TARGET_TRIPLET=%ARCH%-windows-static
