@@ -109,9 +109,6 @@ NATIVE_ONLY = [
   'void ImGui::BulletTextV(const char*, va_list)',
   'void ImGui::LogTextV(const char*, va_list)',
 
-  # use the list clipper API instead
-  'void ImGui::CalcListClipping(int, float, int*, int*)',
-
   # single-component scalar input
   'bool ImGui::DragScalar(const char*, ImGuiDataType, void*, float, const void*, const void*, const char*, ImGuiSliderFlags)',
   'bool ImGui::SliderScalar(const char*, ImGuiDataType, void*, const void*, const void*, const char*, ImGuiSliderFlags)',

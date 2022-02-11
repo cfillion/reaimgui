@@ -19,12 +19,37 @@
 
 #include "listclipper.hpp"
 
+#include <imgui/imgui_internal.h>
 #include <reaper_plugin_functions.h>
 
 ListClipper::ListClipper(Context *ctx) : m_ctx { ctx } {}
 
-// ensure the assert in ~ImGuiListClipper doesn't trip
-ListClipper::~ListClipper() { m_imlc.ItemsCount = -1; }
+ListClipper::~ListClipper()
+{
+  // do ~ImGuiListClipper's work to allow out-of-order destruction
+
+  m_imlc.ItemsCount = -1;
+
+  if(m_imlc.TempData && Resource::exists(m_ctx)) {
+    ImGuiContext *ctx { ImGui::GetCurrentContext() };
+    --ctx->ClipperTempDataStacked;
+
+    bool shift { false };
+    for(int i { 0 }; i < ctx->ClipperTempDataStacked; ++i) {
+      ImGuiListClipperData &data { ctx->ClipperTempData[i] };
+      if(data.ListClipper == &m_imlc)
+        shift = true;
+      else if(shift) {
+        // i > 0 because shift can only be true from the second iteration
+        ImGuiListClipperData &prevData { ctx->ClipperTempData[i - 1] };
+        prevData.ListClipper->TempData = &data;
+        prevData = data;
+      }
+    }
+  }
+
+  m_imlc.TempData = nullptr;
+}
 
 bool ListClipper::validate(ListClipper *lc)
 {
@@ -47,10 +72,9 @@ ImGuiListClipper *ListClipper::use(ListClipper *lc)
 
 DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
 R"(Helper: Manually clip large list of items.
-If you are submitting lots of evenly spaced items and you have a random access to the list, you can perform coarse
-clipping based on visibility to save yourself from processing those items at all.
+If you have lots evenly spaced items and you have a random access to the list, you can perform coarse clipping based on visibility to only submit items that are in view.
 The clipper calculates the range of visible items and advance the cursor to compensate for the non-visible items we have skipped.
-(Dear ImGui already clip items based on their bounds but it needs to measure text size to do so, whereas manual coarse clipping before submission makes this cost and your own data fetching/submission cost almost null)
+(Dear ImGui already clip items based on their bounds but: it needs to first layout the item to do so, and generally fetching/submitting your own data incurs additional cost. Coarse clipping using ImGui_ListClipper allows you to easily scale using lists with tens of thousands of items without a problem)
 
 Usage:
   local clipper = reaper.ImGui_CreateListClipper(ctx)
@@ -63,10 +87,11 @@ Usage:
 
 Generally what happens is:
 - Clipper lets you process the first element (DisplayStart = 0, DisplayEnd = 1) regardless of it being visible or not.
-- User code submit one element.
+- User code submit that one element.
 - Clipper can measure the height of the first element
 - Clipper calculate the actual range of elements to display based on the current clipping rectangle, position the cursor before the first visible element.
 - User code submit visible elements.
+- The clipper also handles various subtleties related to keyboard/gamepad navigation, wrapping etc.
 
 The returned clipper object is tied to the context and is valid as long as it is used in each defer cycle. See ImGui_ListClipper_Begin.)",
 {
@@ -104,4 +129,13 @@ DEFINE_API(void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
   ImGuiListClipper *imclipper { ListClipper::use(clipper) };
   if(API_W(display_start)) *API_W(display_start) = imclipper->DisplayStart;
   if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
+});
+
+DEFINE_API(void, ListClipper_ForceDisplayRangeByIndices, (ImGui_ListClipper*,clipper)
+(int,item_min)(int,item_max),
+R"(Call ImGui_ListClipper_ForceDisplayRangeByIndices before first call to ImGui_ListClipper_Step if you need a range of items to be displayed regardless of visibility.
+
+item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due to alignment/padding of certain items it is likely that an extra item may be included on either end of the display range.)",
+{
+  ListClipper::use(clipper)->ForceDisplayRangeByIndices(item_min, item_max);
 });

@@ -36,7 +36,7 @@ DEFINE_API(double, GetMouseDownDuration, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsMouseClicked, (ImGui_Context*,ctx)
 (int,button)(bool*,API_RO(repeat)),
-R"(Did mouse button clicked? (went from !Down to Down)
+R"(Did mouse button clicked? (went from !Down to Down). Same as ImGui_GetMouseClickedCount() == 1.
 
 Default values: repeat = false)",
 {
@@ -65,10 +65,18 @@ DEFINE_API(bool, IsMouseReleased, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
 (int,button),
-"Did mouse button double-clicked? (note that a double-click will also report ImGui_IsMouseClicked() == true)",
+"Did mouse button double-clicked? Same as ImGui_GetMouseClickedCount() == 2. (note that a double-click will also report ImGui_IsMouseClicked() == true)",
 {
   FRAME_GUARD;
   return ImGui::IsMouseDoubleClicked(button);
+});
+
+DEFINE_API(int, GetMouseClickedCount, (ImGui_Context*,ctx)
+(int,button),
+"Return the number of successive mouse-clicks at the time where a click happen (otherwise 0).",
+{
+  FRAME_GUARD;
+  return ImGui::GetMouseClickedCount(button);
 });
 
 DEFINE_API(bool, IsMouseHoveringRect, (ImGui_Context*,ctx)

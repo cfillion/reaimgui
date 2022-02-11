@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.85)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.86)
 
 --[[
 Index of this file:
@@ -125,6 +125,7 @@ function demo.ShowUserGuide()
   '(double-click to auto fit window to its contents).')
   r.ImGui_BulletText(ctx, 'CTRL+Click on a slider or drag box to input value as text.')
   r.ImGui_BulletText(ctx, 'TAB/SHIFT+TAB to cycle through keyboard editable fields.')
+  r.ImGui_BulletText(ctx, 'CTRL+Tab to select a window.')
   -- if (io.FontAllowUserScaling)
   --     r.ImGui_BulletText(ctx, 'CTRL+Mouse Wheel to zoom window contents.')
   r.ImGui_BulletText(ctx, 'While inputing text:\n')
@@ -143,7 +144,6 @@ function demo.ShowUserGuide()
   r.ImGui_BulletText(ctx, 'Return to input text into a widget.');
   r.ImGui_BulletText(ctx, 'Escape to deactivate a widget, close popup, exit child window.')
   r.ImGui_BulletText(ctx, 'Alt to jump to the menu layer of a window.')
-  r.ImGui_BulletText(ctx, 'CTRL+Tab to select a window.')
   r.ImGui_Unindent(ctx)
 end
 
@@ -359,12 +359,19 @@ function demo.ShowDemoWindow()
       r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
 
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_DockingEnable', config.flags, r.ImGui_ConfigFlags_DockingEnable())
-      r.ImGui_SameLine(ctx); demo.HelpMarker('Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking.\n\nDrag from window menu button (upper-left button) to undock an entire node (all windows).')
+      r.ImGui_SameLine(ctx)
+      -- if io.ConfigDockingWithShift then
+      --   demo.HelpMarker('Drag from window title bar or their tab to dock/undock. Hold SHIFT to enable docking.\n\nDrag from window menu button (upper-left button) to undock an entire node (all windows).')
+      -- else
+          demo.HelpMarker('Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking.\n\nDrag from window menu button (upper-left button) to undock an entire node (all windows).')
+      -- end
       if config.flags & r.ImGui_ConfigFlags_DockingEnable() ~= 0 then
         -- r.ImGui_Indent(ctx)
         -- r.ImGui_Checkbox(ctx, 'io.ConfigDockingNoSplit', &io.ConfigDockingNoSplit)
         -- r.ImGui_SameLine(ctx); demo.HelpMarker('Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.')
-        -- r.ImGui_Checkbox("io.ConfigDockingAlwaysTabBar", &io.ConfigDockingAlwaysTabBar)
+        -- r.ImGui_Checkbox(ctx, 'io.ConfigDockingAlwaysTabBar', &io.ConfigDockingAlwaysTabBar)
+        -- r.ImGui_Checkbox(ctx, 'io.ConfigDockingWithShift', &io.ConfigDockingWithShift)
+        -- r.ImGui_SameLine(ctx); demo.HelpMarker('Enable docking when holding Shift only (allow to drop in wider space, reduce visual noise)')
         -- r.ImGui_SameLine(ctx); demo.HelpMarker('Create a docking node and tab-bar on single floating windows.')
         -- r.ImGui_Checkbox("io.ConfigDockingTransparentPayload", &io.ConfigDockingTransparentPayload)
         -- r.ImGui_SameLine(ctx); demo.HelpMarker('Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with ConfigViewportsNoAutoMerge.')
@@ -802,6 +809,7 @@ function demo.ShowDemoWindowWidgets()
 
       for i = 0, 5 do
         -- Disable the default "open on single-click behavior" + set Selected flag according to our selection.
+        -- To alter selection we use IsItemClicked() && !IsItemToggledOpen(), so clicking on an arrow doesn't alter selection.
         local node_flags = widgets.trees.base_flags
         local is_selected = (widgets.trees.selection_mask & (1 << i)) ~= 0
         if is_selected then
@@ -810,7 +818,7 @@ function demo.ShowDemoWindowWidgets()
         if i < 3 then
           -- Items 0..2 are Tree Node
           local node_open = r.ImGui_TreeNodeEx(ctx, i, ('Selectable Node %d'):format(i), node_flags)
-          if r.ImGui_IsItemClicked(ctx) then
+          if r.ImGui_IsItemClicked(ctx) and not r.ImGui_IsItemToggledOpen(ctx) then
             node_clicked = i
           end
           if widgets.trees.test_drag_and_drop and r.ImGui_BeginDragDropSource(ctx) then
@@ -828,7 +836,7 @@ function demo.ShowDemoWindowWidgets()
           -- use BulletText() or advance the cursor by GetTreeNodeToLabelSpacing() and call Text().
           node_flags = node_flags | r.ImGui_TreeNodeFlags_Leaf() | r.ImGui_TreeNodeFlags_NoTreePushOnOpen() -- | r.ImGui_TreeNodeFlags_Bullet()
           r.ImGui_TreeNodeEx(ctx, i, ('Selectable Leaf %d'):format(i), node_flags)
-          if r.ImGui_IsItemClicked(ctx) then
+          if r.ImGui_IsItemClicked(ctx) and not r.ImGui_IsItemToggledOpen(ctx) then
             node_clicked = i
           end
           if widgets.trees.test_drag_and_drop and r.ImGui_BeginDragDropSource(ctx) then
@@ -1625,7 +1633,7 @@ label:
     r.ImGui_TreePop(ctx)
   end
 
-  if r.ImGui_TreeNode(ctx, 'Plots Widgets') then
+  if r.ImGui_TreeNode(ctx, 'Plotting') then
     local PLOT1_SIZE = 90
     local plot2_funcs   = {
       function(i) return math.sin(i * 0.1) end, -- sin
@@ -2385,8 +2393,8 @@ label:
     -- Select an item type
     rv,widgets.query_item.item_type = r.ImGui_Combo(ctx, 'Item Type', widgets.query_item.item_type,
       'Text\31Button\31Button (w/ repeat)\31Checkbox\31SliderDouble\31\z
-       InputText\31InputDouble\31InputDouble3\31ColorEdit4\31Selectable\31\z
-       MenuItem\31TreeNode\31TreeNode (w/ double-click)\31Combo\31ListBox\31')
+       InputText\31InputTextMultiline\31InputDouble\31InputDouble3\31ColorEdit4\31\z
+       Selectable\31MenuItem\31TreeNode\31TreeNode (w/ double-click)\31Combo\31ListBox\31')
 
     r.ImGui_SameLine(ctx)
     demo.HelpMarker(
@@ -2420,34 +2428,37 @@ label:
     if item_type == 5  then -- Testing input text (which handles tabbing)
       rv,widgets.query_item.str = r.ImGui_InputText(ctx, 'ITEM: InputText', widgets.query_item.str)
     end
-    if item_type == 6  then -- Testing +/- buttons on scalar input
+    if item_type == 6  then -- Testing input text (which uses a child window)
+      rv,widgets.query_item.str = r.ImGui_InputTextMultiline(ctx, 'ITEM: InputTextMultiline', widgets.query_item.str)
+    end
+    if item_type == 7  then -- Testing +/- buttons on scalar input
       rv,widgets.query_item.d4a[1] = r.ImGui_InputDouble(ctx, 'ITEM: InputDouble', widgets.query_item.d4a[1], 1.0)
     end
-    if item_type == 7  then -- Testing multi-component items (IsItemXXX flags are reported merged)
+    if item_type == 8  then -- Testing multi-component items (IsItemXXX flags are reported merged)
       local d4a = widgets.query_item.d4a
       rv,d4a[1],d4a[2],d4a[3] = r.ImGui_InputDouble3(ctx, 'ITEM: InputDouble3', d4a[1], d4a[2], d4a[3])
     end
-    if item_type == 8  then -- Testing multi-component items (IsItemXXX flags are reported merged)
+    if item_type == 9  then -- Testing multi-component items (IsItemXXX flags are reported merged)
       rv,widgets.query_item.color = r.ImGui_ColorEdit4(ctx, 'ITEM: ColorEdit', widgets.query_item.color)
     end
-    if item_type == 9 then -- Testing selectable item
+    if item_type == 10 then -- Testing selectable item
       rv = ImGui_Selectable(ctx, 'ITEM: Selectable')
     end
-    if item_type == 10  then -- Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
+    if item_type == 11  then -- Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
       rv = r.ImGui_MenuItem(ctx, 'ITEM: MenuItem')
     end
-    if item_type == 11 then -- Testing tree node
+    if item_type == 12 then -- Testing tree node
       rv = r.ImGui_TreeNode(ctx, 'ITEM: TreeNode')
       if rv then r.ImGui_TreePop(ctx) end
     end
-    if item_type == 12 then -- Testing tree node with ImGuiButtonFlags_PressedOnDoubleClick button policy.
+    if item_type == 13 then -- Testing tree node with ImGuiButtonFlags_PressedOnDoubleClick button policy.
       rv = r.ImGui_TreeNode(ctx, 'ITEM: TreeNode w/ ImGuiTreeNodeFlags_OpenOnDoubleClick',
         r.ImGui_TreeNodeFlags_OpenOnDoubleClick() | r.ImGui_TreeNodeFlags_NoTreePushOnOpen())
     end
-    if item_type == 13 then
+    if item_type == 14 then
       rv,widgets.query_item.current = r.ImGui_Combo(ctx, 'ITEM: Combo', widgets.query_item.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
     end
-    if item_type == 14 then
+    if item_type == 15 then
       rv,widgets.query_item.current = r.ImGui_ListBox(ctx, 'ITEM: ListBox', widgets.query_item.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
     end
 
@@ -2865,7 +2876,7 @@ function demo.ShowDemoWindowLayout()
 
     -- Manually wrapping
     -- (we should eventually provide this as an automatic layout feature, but for now you can do it manually)
-    r.ImGui_Text(ctx, 'Manually wrapping:')
+    r.ImGui_Text(ctx, 'Manual wrapping:')
     local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[1]
     local buttons_count = 20
     local window_visible_x2 = ({r.ImGui_GetWindowPos(ctx)})[1] + ({r.ImGui_GetWindowContentRegionMax(ctx)})[1]
@@ -3525,11 +3536,23 @@ function demo.ShowDemoWindowPopups()
     end
 
     -- Call the more complete ShowExampleMenuFile which we use in various places of this demo
-    if r.ImGui_Button(ctx, 'File Menu..') then
+    if r.ImGui_Button(ctx, 'With a menu..') then
       r.ImGui_OpenPopup(ctx, 'my_file_popup')
     end
-    if r.ImGui_BeginPopup(ctx, 'my_file_popup') then
-      demo.ShowExampleMenuFile()
+    if r.ImGui_BeginPopup(ctx, 'my_file_popup', r.ImGui_WindowFlags_MenuBar()) then
+      if r.ImGui_BeginMenuBar(ctx) then
+        if r.ImGui_BeginMenu(ctx, 'File') then
+          demo.ShowExampleMenuFile()
+          r.ImGui_EndMenu(ctx)
+        end
+        if r.ImGui_BeginMenu(ctx, 'Edit') then
+          r.ImGui_MenuItem(ctx, 'Dummy')
+          r.ImGui_EndMenu(ctx)
+        end
+        r.ImGui_EndMenuBar(ctx)
+      end
+      r.ImGui_Text(ctx, 'Hello from popup!')
+      r.ImGui_Button(ctx, 'This is a dummy button..')
       r.ImGui_EndPopup(ctx)
     end
 
@@ -5846,14 +5869,6 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_Text(ctx, ('Mouse delta: (%g, %g)'):format(r.ImGui_GetMouseDelta(ctx)))
 
       local buttons = { r.ImGui_MouseButton_Left(), r.ImGui_MouseButton_Right(), r.ImGui_MouseButton_Middle() }
-      local function MouseState(stateFunc)
-        for _,button in ipairs(buttons) do
-          if stateFunc(ctx, button) then
-            r.ImGui_SameLine(ctx)
-            r.ImGui_Text(ctx, ('b%d'):format(button))
-          end
-        end
-      end
       r.ImGui_Text(ctx, 'Mouse down:')
       for _,button in ipairs(buttons) do
         if r.ImGui_IsMouseDown(ctx, button) then
@@ -5862,9 +5877,20 @@ function demo.ShowDemoWindowMisc()
           r.ImGui_Text(ctx, ('b%d (%.02f secs)'):format(button, duration))
         end
       end
-      r.ImGui_Text(ctx, 'Mouse clicked:');  MouseState(r.ImGui_IsMouseClicked)
-      r.ImGui_Text(ctx, 'Mouse dblclick:'); MouseState(r.ImGui_IsMouseDoubleClicked)
-      r.ImGui_Text(ctx, 'Mouse released:'); MouseState(r.ImGui_IsMouseReleased)
+      r.ImGui_Text(ctx, 'Mouse clicked:')
+      for _,button in ipairs(buttons) do
+        if r.ImGui_IsMouseClicked(ctx, button) then
+          r.ImGui_SameLine(ctx)
+          r.ImGui_Text(ctx, ('b%d (%d)'):format(button, r.ImGui_GetMouseClickedCount(ctx, button)))
+        end
+      end
+      r.ImGui_Text(ctx, 'Mouse released:')
+      for _,button in ipairs(buttons) do
+        if r.ImGui_IsMouseReleased(ctx, button) then
+          r.ImGui_SameLine(ctx)
+          r.ImGui_Text(ctx, ('b%d'):format(button))
+        end
+      end
       r.ImGui_Text(ctx, ('Mouse wheel: %.1f'):format(r.ImGui_GetMouseWheel(ctx)))
       -- r.ImGui_Text(cxt, ('Pen Pressure: %.1f'):format(r.ImGui_GetPenPressure(ctx))) -- Note: currently unused
       r.ImGui_TreePop(ctx)
@@ -7460,8 +7486,9 @@ end
 --             "When docking is enabled, you can ALWAYS dock MOST window into another! Try it now!" "\n"
 --             "- Drag from window title bar or their tab to dock/undock." "\n"
 --             "- Drag from window menu button (upper-left button) to undock an entire node (all windows)." "\n"
---             "- Hold SHIFT to disable docking." "\n"
---             "This demo app has nothing to do with it!" "\n\n"
+--             "- Hold SHIFT to disable docking (if io.ConfigDockingWithShift == false, default)" "\n"
+--             "- Hold SHIFT to enable docking (if io.ConfigDockingWithShift == true)" "\n"
+--             "This demo app has nothing to do with enabling docking!" "\n\n"-
 --             "This demo app only demonstrate the use of ImGui::DockSpace() which allows you to manually create a docking node _within_ another window. This is useful so you can decorate your main application window (e.g. with a menu bar)." "\n\n"
 --             "ImGui::DockSpace() comes with one hard constraint: it needs to be submitted _before_ any window which may be docked into it. Therefore, if you use a dock spot as the central point of your application, you'll probably want it to be part of the very first window you are submitting to imgui every frame." "\n\n"
 --             "(NB: because of this constraint, the implicit \"Debug\" window can not be docked into an explicit DockSpace() node, because that window is submitted as part of the NewFrame() call. An easy workaround is that you can create your own implicit \"Debug##2\" window after calling DockSpace() and leave it in the window stack for anyone to use.)"
