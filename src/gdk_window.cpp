@@ -72,6 +72,7 @@ void GDKWindow::initGl()
   if(error) {
     const backend_error ex { error->message };
     g_clear_error(&error);
+    assert(!m_gl);
     throw ex;
   }
 
@@ -83,7 +84,7 @@ void GDKWindow::initGl()
   if(error) {
     const backend_error ex { error->message };
     g_clear_error(&error);
-    g_object_unref(m_gl);
+    g_clear_object(&m_gl);
     throw ex;
   }
 
@@ -93,7 +94,8 @@ void GDKWindow::initGl()
   gdk_gl_context_get_version(m_gl, &major, &minor);
   if(major < OpenGLRenderer::MIN_MAJOR ||
       (major == OpenGLRenderer::MIN_MAJOR && minor < OpenGLRenderer::MIN_MINOR)) {
-    g_object_unref(m_gl);
+    gdk_gl_context_clear_current();
+    g_clear_object(&m_gl);
 
     char msg[1024];
     snprintf(msg, sizeof(msg), "OpenGL v%d.%d or newer required, got v%d.%d",
