@@ -37,7 +37,7 @@
 #undef Window
 
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }, m_window { nullptr }, m_gl { nullptr }
+  : Window { viewport, dockerHost }, m_gl { nullptr }
 {
 }
 
@@ -65,10 +65,32 @@ void GDKWindow::LICEDeleter::operator()(LICE_IBitmap *bm)
   LICE__Destroy(bm);
 }
 
+void GDKWindow::initSoftwareBlit()
+{
+  m_pixels.reset(LICE_CreateBitmap(0, 0, 0));
+
+  static std::weak_ptr<GdkWindow> g_offscreen;
+
+  if(g_offscreen.expired()) {
+    GdkWindowAttr attr {};
+    attr.window_type = GDK_WINDOW_TOPLEVEL;
+    GdkWindow *window { gdk_window_new(nullptr, &attr, 0) };
+    std::shared_ptr<GdkWindow> offscreen { window, g_object_unref };
+    g_offscreen = m_offscreen = offscreen;
+  }
+  else
+    m_offscreen = g_offscreen.lock();
+}
+
 void GDKWindow::initGl()
 {
+  GdkWindow *window { m_offscreen ? m_offscreen.get() : m_hwnd->m_oswindow };
+
+  if(static_cast<void *>(window) == m_hwnd.get())
+    throw backend_error { "headless SWELL is not supported" };
+
   GError *error {};
-  m_gl = gdk_window_create_gl_context(m_window, &error);
+  m_gl = gdk_window_create_gl_context(window, &error);
   if(error) {
     const backend_error ex { error->message };
     g_clear_error(&error);
@@ -133,35 +155,6 @@ void GDKWindow::resizeTextures()
   }
 }
 
-void GDKWindow::findOSWindow()
-{
-  m_windowOwner = m_hwnd.get();
-  while(m_windowOwner && !m_windowOwner->m_oswindow) {
-    HWND parent { GetParent(m_windowOwner) };
-    m_windowOwner = IsWindowVisible(parent) ? parent : nullptr;
-  }
-
-  m_window = m_windowOwner ? m_windowOwner->m_oswindow : nullptr;
-
-  if(static_cast<void *>(m_window) == m_hwnd.get())
-    m_window = nullptr; // headless SWELL
-}
-
-void GDKWindow::checkOSWindowChanged()
-{
-  GdkWindow *prevWindow { m_window };
-  findOSWindow();
-
-  if(!m_pixels && isDocked())
-    m_pixels.reset(LICE_CreateBitmap(0, 0, 0));
-
-  if(m_window && prevWindow != m_window) {
-    teardownGl();
-    initGl();
-    invalidateTextures();
-  }
-}
-
 void GDKWindow::teardownGl()
 {
   gdk_gl_context_make_current(m_gl);
@@ -182,14 +175,13 @@ void GDKWindow::show()
   Window::show();
 
   if(isDocked())
-    m_pixels.reset(LICE_CreateBitmap(0, 0, 0));
+    initSoftwareBlit();
 
-  findOSWindow();
   initGl();
 
   // prevent invalidation (= displaying garbage) when moving another window over
   if(!isDocked())
-    gdk_window_freeze_updates(m_window);
+    gdk_window_freeze_updates(m_hwnd->m_oswindow);
 }
 
 void GDKWindow::setPosition(ImVec2 pos)
@@ -234,7 +226,7 @@ void GDKWindow::update()
 
     // SetWindowLongPtr hides the window
     // it sets an internal "need show" flag that's used by SetWindowPos
-    if(m_window) {
+    if(m_hwnd->m_oswindow) {
       setPosition(m_viewport->Pos);
       setSize(m_viewport->Size);
     }
@@ -268,23 +260,24 @@ void GDKWindow::render(void *)
 
   ImDrawData *drawData { m_viewport->DrawData };
 
-  const cairo_region_t *region { gdk_window_get_clip_region(m_window) };
-  GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(m_window, region) };
+  GdkWindow *window { m_hwnd->m_oswindow };
+  const cairo_region_t *region { gdk_window_get_clip_region(window) };
+  GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(window, region) };
   cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
-  gdk_cairo_draw_from_gl(cairoContext, m_window,
+  gdk_cairo_draw_from_gl(cairoContext, window,
     m_tex, GL_TEXTURE, 1, 0, 0,
     drawData->DisplaySize.x * drawData->FramebufferScale.x,
     drawData->DisplaySize.y * drawData->FramebufferScale.y);
-  gdk_window_end_draw_frame(m_window, drawContext);
+  gdk_window_end_draw_frame(window, drawContext);
 
   // required for making the window visible on GNOME
-  gdk_window_thaw_updates(m_window); // schedules an update
-  gdk_window_freeze_updates(m_window);
+  gdk_window_thaw_updates(window); // schedules an update
+  gdk_window_freeze_updates(window);
 
   gdk_gl_context_clear_current();
 }
 
-void GDKWindow::liceBlit()
+void GDKWindow::softwareBlit()
 {
   constexpr int LICE_BLIT_MODE_COPY      { 0x00000 },
                 LICE_BLIT_IGNORE_SCALING { 0x20000 };
@@ -307,12 +300,6 @@ float GDKWindow::globalScaleFactor()
 {
   static float scale { SWELL_GetScaling256() / 256.f };
   return scale;
-}
-
-void GDKWindow::onChanged()
-{
-  checkOSWindowChanged(); // <-- may invalidate textures
-  Window::onChanged();    // <-- will reload them if so
 }
 
 void GDKWindow::setImePosition(ImVec2)
@@ -382,7 +369,7 @@ std::optional<LRESULT> GDKWindow::handleMessage
     return 0;
   case WM_PAINT:
     if(m_pixels)
-      liceBlit();
+      softwareBlit();
     return 0;
   }
 

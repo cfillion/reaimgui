@@ -47,7 +47,6 @@ public:
   void update() override;
   void render(void *) override;
   float scaleFactor() const override { return globalScaleFactor(); }
-  void onChanged() override;
   void setImePosition(ImVec2) override;
 
   void uploadFontTex() override;
@@ -58,20 +57,19 @@ private:
   void initGl();
   void resizeTextures();
   void teardownGl();
-  void checkOSWindowChanged();
-  void findOSWindow();
-  void liceBlit();
+  void initSoftwareBlit();
+  void softwareBlit();
 
-  HWND m_windowOwner;
-  GdkWindow *m_window;
   GdkGLContext *m_gl;
   unsigned int m_tex, m_fbo;
   OpenGLRenderer *m_renderer;
   ImGuiViewportFlags m_previousFlags;
   int m_defaultDecorations;
 
-  struct LICEDeleter { void operator()(LICE_IBitmap *bm); };
-  std::unique_ptr<LICE_IBitmap, LICEDeleter> m_pixels; // used when docked
+  // for docking
+  struct LICEDeleter { void operator()(LICE_IBitmap *); };
+  std::unique_ptr<LICE_IBitmap, LICEDeleter> m_pixels;
+  std::shared_ptr<GdkWindow> m_offscreen;
 };
 
 #endif
