@@ -182,12 +182,6 @@ DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
   return Color{col}.pack();
 });
 
-DEFINE_API(const char*, GetStyleColorName, (int,idx),
-"Get a string corresponding to the enum value (for display, saving, etc.).",
-{
-  return ImGui::GetStyleColorName(idx);
-});
-
 DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
 (int,idx)(int,col_rgba),
 "Modify a style color. Call ImGui_PopStyleColor to undo after use (before the end of the frame). See ImGui_Col_* for available style colors.",

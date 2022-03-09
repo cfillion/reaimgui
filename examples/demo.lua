@@ -6142,8 +6142,7 @@ function demo.ShowExampleMenuFile()
   if r.ImGui_BeginMenu(ctx, 'Colors') then
     local sz = r.ImGui_GetTextLineHeight(ctx)
     local draw_list = r.ImGui_GetWindowDrawList(ctx)
-    for i = 0, r.ImGui_Col_ModalWindowDimBg() do
-      local name = r.ImGui_GetStyleColorName(i)
+    for i, name in demo.EnumStyleColors() do
       local x, y = r.ImGui_GetCursorScreenPos(ctx)
       r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + sz, y + sz, r.ImGui_GetColor(ctx, i))
       r.ImGui_Dummy(ctx, sz, sz)
@@ -6166,6 +6165,26 @@ function demo.ShowExampleMenuFile()
   end
   if r.ImGui_MenuItem(ctx, 'Checked', nil, true) then end
   if r.ImGui_MenuItem(ctx, 'Quit', 'Alt+F4') then end
+end
+
+function demo.EnumStyleColors()
+  if not demo.style_colors then
+    demo.style_colors = {}
+    for func_name, func in pairs(reaper) do
+      local color_name = func_name:match('^ImGui_Col_(.+)$')
+      if color_name then
+        table.insert(demo.style_colors, { func(), color_name })
+      end
+    end
+    table.sort(demo.style_colors, function(a, b) return a[1] < b[1] end)
+  end
+
+  local i = 0
+  return function()
+    i = i + 1
+    if not demo.style_colors[i] then return end
+    return table.unpack(demo.style_colors[i])
+  end
 end
 
 -- //-----------------------------------------------------------------------------
