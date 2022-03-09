@@ -64,7 +64,7 @@ popups  = {}
 tables  = {}
 misc    = {}
 app     = {}
-cache   = {}
+local cache = {}
 
 -- Hajime!
 local ctx = r.ImGui_CreateContext('ReaImGui Demo', r.ImGui_ConfigFlags_DockingEnable())
@@ -6240,7 +6240,7 @@ function demo.ShowStyleEditor()
           if rv then app.style_editor.style.vars[var] = val end
         end
       end
-      --
+
       r.ImGui_Text(ctx, 'Main')
       slider('WindowPadding',     0.0, 20.0, '%.0f')
       slider('FramePadding',      0.0, 20.0, '%.0f')
@@ -6288,11 +6288,12 @@ function demo.ShowStyleEditor()
           output_dest = 0,
           output_only_modified = true,
           alpha_flags = r.ImGui_ColorEditFlags_None(),
+          filter_text = '',
         }
       end
       -- the filter object is destroyed once unused for one or more frames
       if not r.ImGui_ValidatePtr(app.style_editor.colors.filter, 'ImGui_TextFilter*') then
-        app.style_editor.colors.filter = r.ImGui_CreateTextFilter('')
+        app.style_editor.colors.filter = r.ImGui_CreateTextFilter(app.style_editor.colors.filter_text)
       end
 
       if r.ImGui_Button(ctx, 'Export') then
@@ -6322,7 +6323,9 @@ function demo.ShowStyleEditor()
       r.ImGui_SameLine(ctx); r.ImGui_SetNextItemWidth(ctx, 120); rv,app.style_editor.colors.output_dest = r.ImGui_Combo(ctx, '##output_type', app.style_editor.colors.output_dest, 'To Clipboard\31To TTY\31')
       r.ImGui_SameLine(ctx); rv,app.style_editor.colors.output_only_modified = r.ImGui_Checkbox(ctx, 'Only Modified Colors', app.style_editor.colors.output_only_modified)
 
-      r.ImGui_TextFilter_Draw(app.style_editor.colors.filter, ctx, 'Filter colors', r.ImGui_GetFontSize(ctx) * 16)
+      if r.ImGui_TextFilter_Draw(app.style_editor.colors.filter, ctx, 'Filter colors', r.ImGui_GetFontSize(ctx) * 16) then
+        app.style_editor.colors.filter_text = r.ImGui_TextFilter_Get(app.style_editor.colors.filter)
+      end
 
       if r.ImGui_RadioButton(ctx, 'Opaque', app.style_editor.colors.alpha_flags == r.ImGui_ColorEditFlags_None()) then
         app.style_editor.colors.alpha_flags = r.ImGui_ColorEditFlags_None()
@@ -6347,7 +6350,7 @@ function demo.ShowStyleEditor()
                          -- r.ImGui_WindowFlags_NavFlattened()) TODO: BETA/INTERNAL, not exposed yet
                             0) then
         r.ImGui_PushItemWidth(ctx, -160)
-        local inner_spacing = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1]
+        local inner_spacing = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())
         for i, name in demo.EachEnum('Col') do
           if r.ImGui_TextFilter_PassFilter(app.style_editor.colors.filter, name) then
             r.ImGui_PushID(ctx, i)
