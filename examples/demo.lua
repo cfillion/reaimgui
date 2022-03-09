@@ -64,19 +64,39 @@ popups  = {}
 tables  = {}
 misc    = {}
 app     = {}
+cache   = {}
 
 -- Hajime!
 local ctx = r.ImGui_CreateContext('ReaImGui Demo', r.ImGui_ConfigFlags_DockingEnable())
 
 function demo.loop()
+  local custom_style = app.style_editor ~= nil
+
+  if custom_style then
+    for i, value in pairs(app.style_editor.style.vars) do
+      if type(value) == 'table' then
+        r.ImGui_PushStyleVar(ctx, i, table.unpack(value))
+      else
+        r.ImGui_PushStyleVar(ctx, i, value)
+      end
+    end
+    for i, value in pairs(app.style_editor.style.colors) do
+      r.ImGui_PushStyleColor(ctx, i, value)
+    end
+  end
+
   demo.open = demo.ShowDemoWindow()
+
+  if custom_style then
+    r.ImGui_PopStyleColor(ctx, #cache['Col'])
+    r.ImGui_PopStyleVar(ctx, #cache['StyleVar'])
+  end
 
   if demo.open then
     r.defer(demo.loop)
   else
     r.ImGui_DestroyContext(ctx)
   end
-
 end
 
 reaper.defer(demo.loop)
@@ -206,13 +226,13 @@ function demo.ShowDemoWindow()
   if show_app.metrics    then show_app.metrics    = r.ImGui_ShowMetricsWindow(ctx,   show_app.metrics)    end
   if show_app.stack_tool then show_app.stack_tool = r.ImGui_ShowStackToolWindow(ctx, show_app.stack_tool) end
   if show_app.about      then show_app.about      = r.ImGui_ShowAboutWindow(ctx,     show_app.about)      end
-  -- if (show_app_style_editor)
-  -- {
-  --     if(r.ImGui_Begin("Dear ImGui Style Editor", &show_app_style_editor)) {
-  --         r.ImGui_ShowStyleEditor();
-  --         r.ImGui_End();
-  --     }
-  -- }
+  if show_app.style_editor then
+    rv, show_app.style_editor = r.ImGui_Begin(ctx, 'Dear ImGui Style Editor', true)
+    if rv then
+      demo.ShowStyleEditor()
+      r.ImGui_End(ctx)
+    end
+  end
 
   -- Demonstrate the various window flags. Typically you would just use the default!
   local window_flags = r.ImGui_WindowFlags_None()
@@ -302,7 +322,7 @@ function demo.ShowDemoWindow()
       rv,show_app.stack_tool =
         r.ImGui_MenuItem(ctx, 'Stack Tool', nil, show_app.stack_tool)
       rv,show_app.style_editor =
-        r.ImGui_MenuItem(ctx, 'Style Editor', nil, show_app.style_editor, false)
+        r.ImGui_MenuItem(ctx, 'Style Editor', nil, show_app.style_editor)
       rv,show_app.about =
         r.ImGui_MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
       r.ImGui_EndMenu(ctx)
@@ -432,14 +452,13 @@ function demo.ShowDemoWindow()
 --             r.ImGui_TreePop();
 --             r.ImGui_Separator();
 --         }
---
---         if (r.ImGui_TreeNode("Style"))
---         {
---             HelpMarker("The same contents can be accessed in 'Tools->Style Editor' or by calling the ShowStyleEditor() function.");
---             r.ImGui_ShowStyleEditor();
---             r.ImGui_TreePop();
---             r.ImGui_Separator();
---         }
+
+    if r.ImGui_TreeNode(ctx, 'Style') then
+      demo.HelpMarker("The same contents can be accessed in 'Tools->Style Editor'.")
+      demo.ShowStyleEditor()
+      r.ImGui_TreePop(ctx)
+      r.ImGui_Separator(ctx)
+    end
 
     if r.ImGui_TreeNode(ctx, 'Capture/Logging') then
       if not config.logging then
@@ -1301,9 +1320,9 @@ function demo.ShowDemoWindowWidgets()
 
     if r.ImGui_TreeNode(ctx, 'Alignment') then
       demo.HelpMarker(
-        'By default, Selectables uses style.SelectableTextAlign but it can be overridden on a per-item ' ..
-        "basis using PushStyleVar(). You'll probably want to always keep your default situation to " ..
-        'left-align otherwise it becomes difficult to layout multiple items on a same line')
+        "By default, Selectables uses style.SelectableTextAlign but it can be overridden on a per-item \z
+         basis using PushStyleVar(). You'll probably want to always keep your default situation to \z
+         left-align otherwise it becomes difficult to layout multiple items on a same line")
 
       for y = 1, 3 do
         for x = 1, 3 do
@@ -6069,6 +6088,392 @@ function demo.ShowDemoWindowMisc()
 end
 
 -------------------------------------------------------------------------------
+-- [SECTION] Style Editor / ShowStyleEditor()
+-------------------------------------------------------------------------------
+-- - ShowFontSelector()
+-- - ShowStyleSelector()
+-- - ShowStyleEditor()
+-------------------------------------------------------------------------------
+
+-- Demo helper function to select among loaded fonts.
+-- Here we use the regular BeginCombo()/EndCombo() api which is more the more flexible one.
+-- void ImGui::ShowFontSelector(const char* label)
+-- {
+--     ImGuiIO& io = r.ImGui_GetIO();
+--     ImFont* font_current = r.ImGui_GetFont();
+--     if (r.ImGui_BeginCombo(label, font_current->GetDebugName()))
+--     {
+--         for (int n = 0; n < io.Fonts->Fonts.Size; n++)
+--         {
+--             ImFont* font = io.Fonts->Fonts[n];
+--             r.ImGui_PushID((void*)font);
+--             if (r.ImGui_Selectable(font->GetDebugName(), font == font_current))
+--                 io.FontDefault = font;
+--             r.ImGui_PopID();
+--         }
+--         r.ImGui_EndCombo();
+--     }
+--     r.ImGui_SameLine();
+--     HelpMarker(
+--         "- Load additional fonts with io.Fonts->AddFontFromFileTTF().\n"
+--         "- The font atlas is built when calling io.Fonts->GetTexDataAsXXXX() or io.Fonts->Build().\n"
+--         "- Read FAQ and docs/FONTS.md for more details.\n"
+--         "- If you need to add/remove fonts at runtime (e.g. for DPI change), do it before calling NewFrame().");
+-- }
+
+-- Demo helper function to select among default colors. See ShowStyleEditor() for more advanced options.
+-- Here we use the simplified Combo() api that packs items into a single literal string.
+-- Useful for quick combo boxes where the choices are known locally.
+-- bool ImGui::ShowStyleSelector(const char* label)
+-- {
+--     static int style_idx = -1;
+--     if (r.ImGui_Combo(label, &style_idx, "Dark\0Light\0Classic\0"))
+--     {
+--         switch (style_idx)
+--         {
+--         case 0: r.ImGui_StyleColorsDark(); break;
+--         case 1: r.ImGui_StyleColorsLight(); break;
+--         case 2: r.ImGui_StyleColorsClassic(); break;
+--         }
+--         return true;
+--     }
+--     return false;
+-- }
+
+function demo.GetStyleData()
+  local data = { vars={}, colors={} }
+  local vec2 = {
+    'ButtonTextAlign', 'SelectableTextAlign', 'CellPadding', 'ItemSpacing',
+    'ItemInnerSpacing', 'FramePadding', 'WindowPadding', 'WindowMinSize',
+    'WindowTitleAlign',
+  }
+
+  for i, name in demo.EachEnum('StyleVar') do
+    local rv = {r.ImGui_GetStyleVar(ctx, i)}
+    local is_vec2 = false
+    for _, vec2_name in ipairs(vec2) do
+      if vec2_name == name then
+        is_vec2 = true
+        break
+      end
+    end
+    data.vars[i] = is_vec2 and rv or rv[1]
+  end
+  for i in demo.EachEnum('Col') do
+    data.colors[i] = r.ImGui_GetStyleColor(ctx, i)
+  end
+  return data
+end
+
+function demo.CopyStyleData(source, target)
+  for i, value in pairs(source.vars) do
+    if type(value) == 'table' then
+      target.vars[i] = {table.unpack(value)}
+    else
+      target.vars[i] = value
+    end
+  end
+  for i, value in pairs(source.colors) do
+    target.colors[i] = value
+  end
+end
+
+function demo.ShowStyleEditor()
+  local rv
+
+  if not app.style_editor then
+    app.style_editor = {
+      style  = demo.GetStyleData(),
+      ref    = demo.GetStyleData(),
+    }
+  end
+
+  r.ImGui_PushItemWidth(ctx, r.ImGui_GetWindowWidth(ctx) * 0.50)
+
+--     if (r.ImGui_ShowStyleSelector("Colors##Selector"))
+--         ref_saved_style = style;
+--     r.ImGui_ShowFontSelector("Fonts##Selector");
+
+  -- Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0f or 1.0f)
+  local FrameRounding, GrabRounding = r.ImGui_StyleVar_FrameRounding(),
+                                      r.ImGui_StyleVar_GrabRounding()
+  rv,app.style_editor.style.vars[FrameRounding] = r.ImGui_SliderDouble(ctx, 'FrameRounding', app.style_editor.style.vars[FrameRounding], 0.0, 12.0, '%.0f')
+  if rv then
+    app.style_editor.style.vars[GrabRounding] = app.style_editor.style.vars[FrameRounding] -- Make GrabRounding always the same value as FrameRounding
+  end
+
+  local borders = { 'WindowBorder', 'FrameBorder', 'PopupBorder' }
+  for i, name in ipairs(borders) do
+    local var = r[('ImGui_StyleVar_%sSize'):format(name)]()
+    local enable = app.style_editor.style.vars[var] > 0
+    if i > 1 then r.ImGui_SameLine(ctx) end
+    rv, enable = r.ImGui_Checkbox(ctx, name, enable)
+    if rv then app.style_editor.style.vars[var] = enable and 1 or 0 end
+  end
+
+  -- Save/Revert button
+  if r.ImGui_Button(ctx, 'Save Ref') then
+    demo.CopyStyleData(app.style_editor.style, app.style_editor.ref)
+  end
+  r.ImGui_SameLine(ctx)
+  if r.ImGui_Button(ctx, 'Revert Ref') then
+    demo.CopyStyleData(app.style_editor.ref, app.style_editor.style)
+  end
+  r.ImGui_SameLine(ctx)
+  demo.HelpMarker(
+    'Save/Revert in local non-persistent storage. Default Colors definition are not affected. \z
+     Use "Export" below to save them somewhere.')
+
+  r.ImGui_Separator(ctx)
+
+  if r.ImGui_BeginTabBar(ctx, '##tabs', r.ImGui_TabBarFlags_None()) then
+    if r.ImGui_BeginTabItem(ctx, 'Sizes') then
+      local slider = function(varname, min, max, format)
+        local func = r['ImGui_StyleVar_' .. varname]
+        assert(func, ('%s is not exposed as a StyleVar'):format(varname))
+        local var = func()
+        if type(app.style_editor.style.vars[var]) == 'table' then
+          local rv,val1,val2 = r.ImGui_SliderDouble2(ctx, varname, app.style_editor.style.vars[var][1], app.style_editor.style.vars[var][2], min, max, format)
+          if rv then app.style_editor.style.vars[var] = { val1, val2 } end
+        else
+          local rv,val = r.ImGui_SliderDouble(ctx, varname, app.style_editor.style.vars[var], min, max, format)
+          if rv then app.style_editor.style.vars[var] = val end
+        end
+      end
+      --
+      r.ImGui_Text(ctx, 'Main')
+      slider('WindowPadding',     0.0, 20.0, '%.0f')
+      slider('FramePadding',      0.0, 20.0, '%.0f')
+      slider('CellPadding',       0.0, 20.0, '%.0f')
+      slider('ItemSpacing',       0.0, 20.0, '%.0f')
+      slider('ItemInnerSpacing',  0.0, 20.0, '%.0f')
+      -- slider('TouchExtraPadding', 0.0, 10.0, '%.0f')
+      slider('IndentSpacing',     0.0, 30.0, '%.0f')
+      slider('ScrollbarSize',     1.0, 20.0, '%.0f')
+      slider('GrabMinSize',       1.0, 20.0, '%.0f')
+      r.ImGui_Text(ctx, 'Borders')
+      slider('WindowBorderSize', 0.0, 1.0, '%.0f')
+      slider('ChildBorderSize',  0.0, 1.0, '%.0f')
+      slider('PopupBorderSize',  0.0, 1.0, '%.0f')
+      slider('FrameBorderSize',  0.0, 1.0, '%.0f')
+      -- slider('TabBorderSize',    0.0, 1.0, '%.0f')
+      r.ImGui_Text(ctx, 'Rounding')
+      slider('WindowRounding',    0.0, 12.0, '%.0f')
+      slider('ChildRounding',     0.0, 12.0, '%.0f')
+      slider('FrameRounding',     0.0, 12.0, '%.0f')
+      slider('PopupRounding',     0.0, 12.0, '%.0f')
+      slider('ScrollbarRounding', 0.0, 12.0, '%.0f')
+      slider('GrabRounding',      0.0, 12.0, '%.0f')
+      -- slider('LogSliderDeadzone', 0.0, 12.0, '%.0f')
+      slider('TabRounding',       0.0, 12.0, '%.0f')
+      r.ImGui_Text(ctx, 'Alignment')
+      slider('WindowTitleAlign', 0.0, 1.0, '%.2f')
+      -- int window_menu_button_position = app.style_editor.style.WindowMenuButtonPosition + 1
+      -- if (ctx, r.ImGui_Combo(ctx, 'WindowMenuButtonPosition', (ctx, int*)&window_menu_button_position, "None\0Left\0Right\0"))
+      --     app.style_editor.style.WindowMenuButtonPosition = window_menu_button_position - 1
+      -- r.ImGui_Combo(ctx, 'ColorButtonPosition', (ctx, int*)&app.style_editor.style.ColorButtonPosition, "Left\0Right\0")
+      slider('ButtonTextAlign', 0.0, 1.0, '%.2f')
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Alignment applies when a button is larger than its text content.')
+      slider('SelectableTextAlign', 0.0, 1.0, '%.2f')
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Alignment applies when a selectable is larger than its text content.')
+      -- r.ImGui_Text(ctx, 'Safe Area Padding')
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker('Adjust if you cannot see the edges of your screen (ctx, e.g. on a TV where scaling has not been configured).')
+      -- slider('DisplaySafeAreaPadding', 0.0, 30.0, '%.0f')
+      r.ImGui_EndTabItem(ctx)
+    end
+
+    if r.ImGui_BeginTabItem(ctx, 'Colors') then
+      if not app.style_editor.colors then
+        app.style_editor.colors = {
+          output_dest = 0,
+          output_only_modified = true,
+          alpha_flags = r.ImGui_ColorEditFlags_None(),
+        }
+      end
+      -- the filter object is destroyed once unused for one or more frames
+      if not r.ImGui_ValidatePtr(app.style_editor.colors.filter, 'ImGui_TextFilter*') then
+        app.style_editor.colors.filter = r.ImGui_CreateTextFilter('')
+      end
+
+      if r.ImGui_Button(ctx, 'Export') then
+        local export, name_maxlen = {}, 0
+        for i, name in demo.EachEnum('Col') do
+          local color = app.style_editor.style.colors[i]
+          if not app.style_editor.colors.output_only_modified or color ~= app.style_editor.ref.colors[i] then
+            table.insert(export, { name, color & 0xffffffff })
+            name_maxlen = math.max(name_maxlen, name:len())
+          end
+        end
+
+        if app.style_editor.colors.output_dest == 0 then
+          r.ImGui_LogToClipboard(ctx)
+        else
+          r.ImGui_LogToTTY(ctx)
+        end
+        for _, color in ipairs(export) do
+          r.ImGui_LogText(ctx, ('reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_Col_%s(),%s 0x%08X)\n'):
+            format(color[1], string.rep('\x20', name_maxlen - color[1]:len()), color[2]))
+        end
+        if #export > 0 then
+          r.ImGui_LogText(ctx, ('\nreaper.ImGui_PopStyleVar(ctx, %d)\n'):format(#export))
+        end
+        r.ImGui_LogFinish(ctx)
+      end
+      r.ImGui_SameLine(ctx); r.ImGui_SetNextItemWidth(ctx, 120); rv,app.style_editor.colors.output_dest = r.ImGui_Combo(ctx, '##output_type', app.style_editor.colors.output_dest, 'To Clipboard\31To TTY\31')
+      r.ImGui_SameLine(ctx); rv,app.style_editor.colors.output_only_modified = r.ImGui_Checkbox(ctx, 'Only Modified Colors', app.style_editor.colors.output_only_modified)
+
+      r.ImGui_TextFilter_Draw(app.style_editor.colors.filter, ctx, 'Filter colors', r.ImGui_GetFontSize(ctx) * 16)
+
+      if r.ImGui_RadioButton(ctx, 'Opaque', app.style_editor.colors.alpha_flags == r.ImGui_ColorEditFlags_None()) then
+        app.style_editor.colors.alpha_flags = r.ImGui_ColorEditFlags_None()
+      end
+      r.ImGui_SameLine(ctx)
+      if r.ImGui_RadioButton(ctx, 'Alpha',  app.style_editor.colors.alpha_flags == r.ImGui_ColorEditFlags_AlphaPreview()) then
+        app.style_editor.colors.alpha_flags = r.ImGui_ColorEditFlags_AlphaPreview()
+      end
+      r.ImGui_SameLine(ctx)
+      if r.ImGui_RadioButton(ctx, 'Both',   app.style_editor.colors.alpha_flags == r.ImGui_ColorEditFlags_AlphaPreviewHalf()) then
+        app.style_editor.colors.alpha_flags = r.ImGui_ColorEditFlags_AlphaPreviewHalf()
+      end
+      r.ImGui_SameLine(ctx)
+      demo.HelpMarker(
+        'In the color list:\n\z
+         Left-click on color square to open color picker,\n\z
+         Right-click to open edit options menu.')
+
+      if r.ImGui_BeginChild(ctx, '##colors', 0, 0, true,
+                            r.ImGui_WindowFlags_AlwaysVerticalScrollbar()   |
+                            r.ImGui_WindowFlags_AlwaysHorizontalScrollbar() |
+                         -- r.ImGui_WindowFlags_NavFlattened()) TODO: BETA/INTERNAL, not exposed yet
+                            0) then
+        r.ImGui_PushItemWidth(ctx, -160)
+        local inner_spacing = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1]
+        for i, name in demo.EachEnum('Col') do
+          if r.ImGui_TextFilter_PassFilter(app.style_editor.colors.filter, name) then
+            r.ImGui_PushID(ctx, i)
+            rv, app.style_editor.style.colors[i] = r.ImGui_ColorEdit4(ctx, '##color', app.style_editor.style.colors[i], r.ImGui_ColorEditFlags_AlphaBar() | app.style_editor.colors.alpha_flags)
+            if app.style_editor.style.colors[i] ~= app.style_editor.ref.colors[i] then
+              -- Tips: in a real user application, you may want to merge and use an icon font into the main font,
+              -- so instead of "Save"/"Revert" you'd use icons!
+              -- Read the FAQ and docs/FONTS.md about using icon fonts. It's really easy and super convenient!
+              r.ImGui_SameLine(ctx, 0.0, inner_spacing)
+              if r.ImGui_Button(ctx, 'Save') then
+                app.style_editor.ref.colors[i] = app.style_editor.style.colors[i]
+              end
+              r.ImGui_SameLine(ctx, 0.0, inner_spacing)
+              if r.ImGui_Button(ctx, 'Revert') then
+                app.style_editor.style.colors[i] = app.style_editor.ref.colors[i]
+              end
+            end
+            r.ImGui_SameLine(ctx, 0.0, inner_spacing)
+            r.ImGui_Text(ctx, name)
+            r.ImGui_PopID(ctx)
+          end
+        end
+        r.ImGui_PopItemWidth(ctx)
+        r.ImGui_EndChild(ctx)
+      end
+
+      r.ImGui_EndTabItem(ctx)
+    end
+
+--         if (r.ImGui_BeginTabItem("Fonts"))
+--         {
+--             ImGuiIO& io = r.ImGui_GetIO();
+--             ImFontAtlas* atlas = io.Fonts;
+--             HelpMarker("Read FAQ and docs/FONTS.md for details on font loading.");
+--             r.ImGui_ShowFontAtlas(atlas);
+--
+--             // Post-baking font scaling. Note that this is NOT the nice way of scaling fonts, read below.
+--             // (we enforce hard clamping manually as by default DragFloat/SliderFloat allows CTRL+Click text to get out of bounds).
+--             const float MIN_SCALE = 0.3f;
+--             const float MAX_SCALE = 2.0f;
+--             HelpMarker(
+--                 "Those are old settings provided for convenience.\n"
+--                 "However, the _correct_ way of scaling your UI is currently to reload your font at the designed size, "
+--                 "rebuild the font atlas, and call app.style_editor.style.ScaleAllSizes() on a reference ImGuiStyle structure.\n"
+--                 "Using those settings here will give you poor quality results.");
+--             static float window_scale = 1.0f;
+--             r.ImGui_PushItemWidth(r.ImGui_GetFontSize() * 8);
+--             if (r.ImGui_DragFloat("window scale", &window_scale, 0.005f, MIN_SCALE, MAX_SCALE, "%.2f", ImGuiSliderFlags_AlwaysClamp)) // Scale only this window
+--                 r.ImGui_SetWindowFontScale(window_scale);
+--             r.ImGui_DragFloat("global scale", &io.FontGlobalScale, 0.005f, MIN_SCALE, MAX_SCALE, "%.2f", ImGuiSliderFlags_AlwaysClamp); // Scale everything
+--             r.ImGui_PopItemWidth();
+--
+--             r.ImGui_EndTabItem();
+--         }
+--
+--         if (r.ImGui_BeginTabItem("Rendering"))
+--         {
+--             r.ImGui_Checkbox("Anti-aliased lines", &style.AntiAliasedLines);
+--             r.ImGui_SameLine();
+--             HelpMarker("When disabling anti-aliasing lines, you'll probably want to disable borders in your style as well.");
+--
+--             r.ImGui_Checkbox("Anti-aliased lines use texture", &style.AntiAliasedLinesUseTex);
+--             r.ImGui_SameLine();
+--             HelpMarker("Faster lines using texture data. Require backend to render with bilinear filtering (not point/nearest filtering).");
+--
+--             r.ImGui_Checkbox("Anti-aliased fill", &style.AntiAliasedFill);
+--             r.ImGui_PushItemWidth(r.ImGui_GetFontSize() * 8);
+--             r.ImGui_DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.10f, 10.0f, "%.2f");
+--             if (style.CurveTessellationTol < 0.10f) style.CurveTessellationTol = 0.10f;
+--
+--             // When editing the "Circle Segment Max Error" value, draw a preview of its effect on auto-tessellated circles.
+--             r.ImGui_DragFloat("Circle Tessellation Max Error", &style.CircleTessellationMaxError , 0.005f, 0.10f, 5.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+--             if (r.ImGui_IsItemActive())
+--             {
+--                 r.ImGui_SetNextWindowPos(r.ImGui_GetCursorScreenPos());
+--                 r.ImGui_BeginTooltip();
+--                 r.ImGui_TextUnformatted("(R = radius, N = number of segments)");
+--                 r.ImGui_Spacing();
+--                 ImDrawList* draw_list = r.ImGui_GetWindowDrawList();
+--                 const float min_widget_width = r.ImGui_CalcTextSize("N: MMM\nR: MMM").x;
+--                 for (int n = 0; n < 8; n++)
+--                 {
+--                     const float RAD_MIN = 5.0f;
+--                     const float RAD_MAX = 70.0f;
+--                     const float rad = RAD_MIN + (RAD_MAX - RAD_MIN) * (float)n / (8.0f - 1.0f);
+--
+--                     r.ImGui_BeginGroup();
+--
+--                     r.ImGui_Text("R: %.f\nN: %d", rad, draw_list->_CalcCircleAutoSegmentCount(rad));
+--
+--                     const float canvas_width = IM_MAX(min_widget_width, rad * 2.0f);
+--                     const float offset_x     = floorf(canvas_width * 0.5f);
+--                     const float offset_y     = floorf(RAD_MAX);
+--
+--                     const ImVec2 p1 = r.ImGui_GetCursorScreenPos();
+--                     draw_list->AddCircle(ImVec2(p1.x + offset_x, p1.y + offset_y), rad, r.ImGui_GetColorU32(ImGuiCol_Text));
+--                     r.ImGui_Dummy(ImVec2(canvas_width, RAD_MAX * 2));
+--
+--                     /*
+--                     const ImVec2 p2 = r.ImGui_GetCursorScreenPos();
+--                     draw_list->AddCircleFilled(ImVec2(p2.x + offset_x, p2.y + offset_y), rad, r.ImGui_GetColorU32(ImGuiCol_Text));
+--                     r.ImGui_Dummy(ImVec2(canvas_width, RAD_MAX * 2));
+--                     */
+--
+--                     r.ImGui_EndGroup();
+--                     r.ImGui_SameLine();
+--                 }
+--                 r.ImGui_EndTooltip();
+--             }
+--             r.ImGui_SameLine();
+--             HelpMarker("When drawing circle primitives with \"num_segments == 0\" tesselation will be calculated automatically.");
+--
+--             r.ImGui_DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20f, 1.0f, "%.2f"); // Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
+--             r.ImGui_DragFloat("Disabled Alpha", &style.DisabledAlpha, 0.005f, 0.0f, 1.0f, "%.2f"); r.ImGui_SameLine(); HelpMarker("Additional alpha multiplier for disabled items (multiply over current value of Alpha).");
+--             r.ImGui_PopItemWidth();
+--
+--             r.ImGui_EndTabItem();
+--         }
+
+    r.ImGui_EndTabBar(ctx)
+  end
+
+  r.ImGui_PopItemWidth(ctx)
+end
+
+-------------------------------------------------------------------------------
 -- [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
 -------------------------------------------------------------------------------
 -- - ShowExampleAppMainMenuBar()
@@ -6142,7 +6547,7 @@ function demo.ShowExampleMenuFile()
   if r.ImGui_BeginMenu(ctx, 'Colors') then
     local sz = r.ImGui_GetTextLineHeight(ctx)
     local draw_list = r.ImGui_GetWindowDrawList(ctx)
-    for i, name in demo.EnumStyleColors() do
+    for i, name in demo.EachEnum('Col') do
       local x, y = r.ImGui_GetCursorScreenPos(ctx)
       r.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + sz, y + sz, r.ImGui_GetColor(ctx, i))
       r.ImGui_Dummy(ctx, sz, sz)
@@ -6167,23 +6572,26 @@ function demo.ShowExampleMenuFile()
   if r.ImGui_MenuItem(ctx, 'Quit', 'Alt+F4') then end
 end
 
-function demo.EnumStyleColors()
-  if not demo.style_colors then
-    demo.style_colors = {}
+function demo.EachEnum(enum)
+  local enum_cache = cache[enum]
+  if not enum_cache then
+    enum_cache = {}
+    cache[enum] = enum_cache
+
     for func_name, func in pairs(reaper) do
-      local color_name = func_name:match('^ImGui_Col_(.+)$')
-      if color_name then
-        table.insert(demo.style_colors, { func(), color_name })
+      local enum_name = func_name:match(('^ImGui_%s_(.+)$'):format(enum))
+      if enum_name then
+        table.insert(enum_cache, { func(), enum_name })
       end
     end
-    table.sort(demo.style_colors, function(a, b) return a[1] < b[1] end)
+    table.sort(enum_cache, function(a, b) return a[1] < b[1] end)
   end
 
   local i = 0
   return function()
     i = i + 1
-    if not demo.style_colors[i] then return end
-    return table.unpack(demo.style_colors[i])
+    if not enum_cache[i] then return end
+    return table.unpack(enum_cache[i])
   end
 end
 
