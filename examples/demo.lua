@@ -5956,13 +5956,15 @@ function demo.ShowDemoWindowMisc()
       -- r.ImGui_Text(ctx, 'NavInputs down:');     for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputs[i] > 0.0f)              { r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '[%d] %.2f (%.02f secs)', i, io.NavInputs[i], io.NavInputsDownDuration[i]); }
       -- r.ImGui_Text('NavInputs pressed:');  for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] == 0.0f) { r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '[%d]', i); }
 
-      -- r.ImGui_Button("Hovering me sets the\nkeyboard capture flag");
-      -- if (r.ImGui_IsItemHovered())
-      --     r.ImGui_CaptureKeyboardFromApp(true);
-      -- r.ImGui_SameLine();
-      -- r.ImGui_Button("Holding me clears the\nthe keyboard capture flag");
-      -- if (r.ImGui_IsItemActive())
-      --     r.ImGui_CaptureKeyboardFromApp(false);
+      r.ImGui_Button(ctx, 'Hovering me sets the\nkeyboard capture flag')
+      if r.ImGui_IsItemHovered(ctx) then
+        r.ImGui_CaptureKeyboardFromApp(ctx, true)
+      end
+      r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, 'Holding me clears the\nthe keyboard capture flag')
+      if r.ImGui_IsItemActive(ctx) then
+        r.ImGui_CaptureKeyboardFromApp(ctx, false)
+      end
 
       r.ImGui_TreePop(ctx)
     end
