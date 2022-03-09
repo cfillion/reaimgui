@@ -314,9 +314,6 @@ function demo.ShowDemoWindow()
     end
     -- if r.ImGui_MenuItem(ctx, 'MenuItem') then end -- You can also use MenuItem() inside a menu bar!
     if r.ImGui_BeginMenu(ctx, 'Tools') then
-      if r.ImGui_MenuItem(ctx, 'Documentation', nil, false, r.CF_ShellExecute ~= nil) then
-        r.CF_ShellExecute(('%s/Data/reaper_imgui_doc.html'):format(r.GetResourcePath()))
-      end
       rv,show_app.metrics =
         r.ImGui_MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
       rv,show_app.stack_tool =
@@ -326,6 +323,10 @@ function demo.ShowDemoWindow()
       rv,show_app.about =
         r.ImGui_MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
       r.ImGui_EndMenu(ctx)
+    end
+    if r.ImGui_SmallButton(ctx, 'Documentation') then
+      local doc = ('%s/Data/reaper_imgui_doc.html'):format(r.GetResourcePath())
+      if r.CF_ShellExecute then r.CF_ShellExecute(doc) else r.MB(doc, 'ReaImGui Documentation', 0) end
     end
     r.ImGui_EndMenuBar(ctx)
   end
