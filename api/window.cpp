@@ -113,7 +113,7 @@ DEFINE_API(void, EndChildFrame, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, IsWindowAppearing, (ImGui_Context*,ctx),
-"",
+"Use after ImGui_Begin/ImGui_BeginPopup/ImGui_BeginPopupModal to tell if a window just opened.",
 {
   FRAME_GUARD;
   return ImGui::IsWindowAppearing();
