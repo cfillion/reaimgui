@@ -141,6 +141,9 @@ void Win32Window::create()
   // will be freed upon RevokeDragDrop during destruction
   DropTarget *dropTarget = new DropTarget { m_ctx };
   RegisterDragDrop(m_hwnd.get(), dropTarget);
+
+  // disable IME by default
+  ImmAssociateContextEx(m_hwnd.get(), nullptr, 0);
 }
 
 Win32Window::~Win32Window()
@@ -310,6 +313,8 @@ float Win32Window::scaleFactor() const
 
 void Win32Window::setIME(ImGuiPlatformImeData *data)
 {
+  ImmAssociateContextEx(m_hwnd.get(), nullptr, data->WantVisible ? IACE_DEFAULT : 0);
+
   if(HIMC ime { ImmGetContext(m_hwnd.get()) }) {
     ImVec2 pos { data->InputPos };
     Platform::scalePosition(&pos, true);
