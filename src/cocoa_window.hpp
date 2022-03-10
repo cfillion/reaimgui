@@ -21,8 +21,8 @@
 #include "window.hpp"
 
 @class InputView;
-@class NSView;
 @class NSOpenGLContext;
+@class NSView;
 
 class OpenGLRenderer;
 using ImGuiViewportFlags = int;

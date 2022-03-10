@@ -188,7 +188,12 @@ float CocoaWindow::scaleFactor() const
 
 void CocoaWindow::setIME(ImGuiPlatformImeData *data)
 {
-  // TODO: use data->WantVisible
+  if(!data->WantVisible) {
+    NSTextInputContext *inputContext { [m_inputView inputContext] };
+    [inputContext discardMarkedText];
+    [inputContext invalidateCharacterCoordinates];
+  }
+
   ImVec2 pos { data->InputPos };
   Platform::scalePosition(&pos, true);
   pos.y -= data->InputLineHeight;
