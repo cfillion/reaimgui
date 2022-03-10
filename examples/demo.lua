@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.86)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.87)
 
 --[[
 Index of this file:
@@ -155,7 +155,6 @@ function demo.ShowUserGuide()
   r.ImGui_BulletText(ctx, 'CTRL+X/C/V to use clipboard cut/copy/paste.')
   r.ImGui_BulletText(ctx, 'CTRL+Z,CTRL+Y to undo/redo.')
   r.ImGui_BulletText(ctx, 'ESCAPE to revert.')
-  r.ImGui_BulletText(ctx, 'You can apply arithmetic operators +,*,/ on numerical values.\nUse +- to subtract.')
   r.ImGui_Unindent(ctx)
   r.ImGui_BulletText(ctx, 'With keyboard navigation enabled:')
   r.ImGui_Indent(ctx)
@@ -372,7 +371,7 @@ function demo.ShowDemoWindow()
           r.ImGui_SameLine(ctx)
           r.ImGui_Text(ctx, '<<PRESS SPACE TO DISABLE>>')
         end
-        if r.ImGui_IsKeyPressed(ctx, 0x20) then
+        if r.ImGui_IsKeyPressed(ctx, r.ImGui_Key_Space()) then
           config.flags = config.flags & ~r.ImGui_ConfigFlags_NoMouse()
         end
       end
@@ -415,8 +414,10 @@ function demo.ShowDemoWindow()
       --     ImGui::Unindent();
       -- }
 
+      -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTrickleEventQueue', &io.ConfigInputTrickleEventQueue)
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
       -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTextCursorBlink', &io.ConfigInputTextCursorBlink)
-      -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting)")
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting).")
       -- r.ImGui_Checkbox(ctx, 'io.ConfigDragClickToInputText', &io.ConfigDragClickToInputText)
       -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
       -- r.ImGui_Checkbox("io.ConfigWindowsResizeFromEdges", &io.ConfigWindowsResizeFromEdges)
@@ -442,6 +443,7 @@ function demo.ShowDemoWindow()
 --                 "Here we expose then as read-only fields to avoid breaking interactions with your backend.");
 --
 --             // Make a local copy to avoid modifying actual backend flags.
+--             // FIXME: We don't use BeginDisabled() to keep label bright, maybe we need a BeginReadonly() equivalent..
 --             ImGuiBackendFlags backend_flags = io.BackendFlags;
 --             ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",             &backend_flags, ImGuiBackendFlags_HasGamepad);
 --             ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",        &backend_flags, ImGuiBackendFlags_HasMouseCursors);
@@ -701,10 +703,6 @@ function demo.ShowDemoWindowWidgets()
     rv,widgets.basic.str1 = r.ImGui_InputTextWithHint(ctx, 'input text (w/ hint)', 'enter text here', widgets.basic.str1);
 
     rv,widgets.basic.i0 = r.ImGui_InputInt(ctx, 'input int', widgets.basic.i0)
-    r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'You can apply arithmetic operators +,*,/ on numerical values.\n' ..
-      '  e.g. [ 100 ], input \'*2\', result becomes [ 200 ]\n' ..
-      'Use +- to subtract.')
 
     rv,widgets.basic.d0 = r.ImGui_InputDouble(ctx, 'input double', widgets.basic.d0, 0.01, 1.0, '%.8f')
     rv,widgets.basic.d1 = r.ImGui_InputDouble(ctx, 'input scientific', widgets.basic.d1, 0.0, 0.0, '%e')
@@ -5917,7 +5915,7 @@ function demo.ShowDemoWindowMisc()
     end
 
     -- Display Keyboard/Mouse state
-    if r.ImGui_TreeNode(ctx, 'Keyboard & Navigation State') then
+    if r.ImGui_TreeNode(ctx, 'Keyboard, Gamepad & Navigation State') then
       r.ImGui_Text(ctx, 'Keys down:')
       for key, name in demo.EachEnum('Key') do
         if r.ImGui_IsKeyDown(ctx, key) then
@@ -6144,7 +6142,7 @@ end
 -------------------------------------------------------------------------------
 
 -- Demo helper function to select among loaded fonts.
--- Here we use the regular BeginCombo()/EndCombo() api which is more the more flexible one.
+-- Here we use the regular BeginCombo()/EndCombo() api which the more flexible one.
 -- void ImGui::ShowFontSelector(const char* label)
 -- {
 --     ImGuiIO& io = r.ImGui_GetIO();
@@ -7793,8 +7791,8 @@ function demo.ShowExampleAppCustomRendering()
 
       -- Context menu (under default mouse threshold)
       local drag_delta = {r.ImGui_GetMouseDragDelta(ctx, 0, 0, r.ImGui_MouseButton_Right())}
-      if app.rendering.opt_enable_context_menu and r.ImGui_IsMouseReleased(ctx, r.ImGui_MouseButton_Right()) and drag_delta[1] == 0.0 and drag_delta[2] == 0.0 then
-        r.ImGui_OpenPopupOnItemClick(ctx, 'context')
+      if app.rendering.opt_enable_context_menu and drag_delta[1] == 0.0 and drag_delta[2] == 0.0 then
+        r.ImGui_OpenPopupOnItemClick(ctx, 'context', r.ImGui_PopupFlags_MouseButtonRight())
       end
       if r.ImGui_BeginPopup(ctx, 'context') then
         if app.rendering.adding_line then
