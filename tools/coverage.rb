@@ -477,7 +477,7 @@ Argument = Struct.new :type, :name, :default, :size
 # load ImGui definitions
 IMGUI_FUNC_R  = /IMGUI_API \s+ (?:(?<type>[\w\*\&\s]+?) \s+)? (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
 IMGUI_ARG_R   = /\A(?<type>[\w\*&\s\<\>]+) \s+ (?<name>\w+) (?:\[ (?<size>\d*) \])? (?:\s*=\s*(?<default>.+))?\z/x
-IMGUI_ENUM_R  = /\A\s* Im(?:Gui)?(?<name>[\w_]+) \s* (?:,|=)/x
+IMGUI_ENUM_R  = /(?:\A|,) \s* Im(?:Gui)?(?<name>[\w_]+) \s* (?=,|=)/x
 IMGUI_CLASS_R = /(?:namespace|struct) (?<name>\w+)/
 
 def split_imgui_args(args)
@@ -488,22 +488,29 @@ def split_imgui_args(args)
 end
 
 imgui_funcs, imgui_enums = [], []
-namespace = '', in_obsolete = false
+namespace = '', in_obsolete = false, in_enum = false
 File.foreach IMGUI_H do |line|
-  if in_obsolete
-    in_obsolete = false if line.chomp == '#endif'
-    next
-  end
-
-  if line =~ IMGUI_FUNC_R
+  line.strip!
+  if line.start_with? '//'
+  elsif in_obsolete
+    in_obsolete = false if line == '#endif'
+  elsif line.start_with? '#ifndef IMGUI_DISABLE_OBSOLETE_' # FUNCTIONS, KEYIO
+    in_obsolete = true
+  elsif in_enum
+    if line.include? '}'
+      in_enum = false
+    elsif enums = line.scan(IMGUI_ENUM_R)
+      enums.flatten.each {|enum|
+        next if enum.end_with? '_COUNT'
+        next if enum.end_with? '_' # internal flags and masks
+        imgui_enums << enum
+      }
+    end
+  elsif line =~ IMGUI_FUNC_R
     args = split_imgui_args $~[:args]
     imgui_funcs << Function.new($~[:type], $~[:name], args, namespace)
-  elsif line =~ IMGUI_ENUM_R
-    next if $~[:name].end_with? '_COUNT'
-    next if $~[:name].end_with? '_' # internal flags and masks
-    imgui_enums << $~[:name]
-  elsif line.chomp.start_with? '#ifndef IMGUI_DISABLE_OBSOLETE_' # FUNCTIONS, KEYIO
-    in_obsolete = true
+  elsif line.start_with? 'enum '
+    in_enum = true
   elsif line =~ IMGUI_CLASS_R
     namespace = $~[:name]
   end
@@ -628,6 +635,21 @@ NATIVE_ONLY_ENUMS.each do |rule|
     warn "enum marked as native only but exported anyway: #{enum}"
   end
 end
+
+skipped_enums = 0
+(imgui_enums - reaimgui_enums).each do |im_enum|
+  if NATIVE_ONLY_ENUMS.any? { im_enum.match? _1 }
+    skipped_enums += 1
+    next
+  end
+
+  warn "missing enum: #{im_enum}"
+end
+
+# (reaimgui_enums - imgui_enums).each do |extra_enum|
+#   warn "unknown exported enum: #{extra_enum}"
+# end
+
 # link dear imgui functions to their corresponding ReaImGui counterparts
 perfect_count = manual_count = missing_overloads = missing_count = skipped_count = 0
 imgui_funcs.each do |imgui_func|
@@ -701,18 +723,6 @@ reaimgui_funcs.each do |func|
         warn "#{func.name}: argument ##{i+1} '#{raw_name}' has documented default value #{rea_arg.default}, expected #{imgui_arg.default}"
       end
     end
-  end
-end
-
-skipped_enums = 0
-imgui_enums.each do |im_enum|
-  unless reaimgui_enums.include? im_enum
-    if NATIVE_ONLY_ENUMS.any? { im_enum.match? _1 }
-      skipped_enums += 1
-      next
-    end
-
-    warn "missing enum: #{im_enum}"
   end
 end
 
