@@ -41,7 +41,7 @@ public:
   void render(void *) override {}
   float scaleFactor() const override;
   void onChanged() override {}
-  void setImePosition(ImVec2) override {}
+  void setIME(ImGuiPlatformImeData *) override {}
 
 private:
   HWND m_hwnd;
@@ -113,7 +113,9 @@ void Viewport::install()
   pio.Platform_RenderWindow       = &instanceProxy<&Viewport::render>;
   pio.Platform_GetWindowDpiScale  = &instanceProxy<&Viewport::scaleFactor>;
   pio.Platform_OnChangedViewport  = &instanceProxy<&Viewport::onChanged>;
-  pio.Platform_SetImeInputPos     = &instanceProxy<&Viewport::setImePosition>;
+
+  ImGuiIO &io { ImGui::GetIO() };
+  io.SetPlatformImeDataFn = &instanceProxy<&Viewport::setIME>;
 
   new MainViewport; // lifetime managed by Dear ImGui
 }

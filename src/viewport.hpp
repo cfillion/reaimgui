@@ -26,6 +26,7 @@
 
 class Context;
 class Docker;
+struct ImGuiPlatformImeData;
 struct ImGuiViewport;
 struct ImVec2;
 
@@ -55,7 +56,7 @@ public:
   virtual void render(void *) = 0;
   virtual float scaleFactor() const = 0;
   virtual void onChanged() = 0;
-  virtual void setImePosition(ImVec2) = 0;
+  virtual void setIME(ImGuiPlatformImeData *) = 0;
 
 protected:
   Context *m_ctx;

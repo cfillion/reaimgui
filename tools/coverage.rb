@@ -28,7 +28,6 @@ NATIVE_ONLY = [
   'ImGuiViewport* ImGui::FindViewportByID(ImGuiID)',
   'ImGuiViewport* ImGui::FindViewportByPlatformHandle(void*)',
 
-  'int ImGui::GetKeyIndex(ImGuiKey)',
   'void ImGui::CaptureMouseFromApp(bool)',
 
   'const char* ImGui::GetStyleColorName(ImGuiCol)',
@@ -176,11 +175,11 @@ NATIVE_ONLY_CLASSES = %w[
 NATIVE_ONLY_ENUMS = [
   /\AInputTextFlags_Callback/,
   /\ADataType_/,
+  /\AKey_(NamedKey|KeysData)/,
   /\ANavInput_/,
   /\ABackendFlags_/,
   /\AFontAtlasFlags_/,
   'Cond_None',          # alias for Cond_Always
-  /\AKey_.+/,           # for GetKeyIndex, not implemented
   'ColorEditFlags_HDR', # not allowed, would break float[4]<->int conversion
   /\AViewportFlags_/,
   'MouseCursor_None',   # not implemented under SWELL
@@ -222,9 +221,7 @@ RENAMES = {
 }
 
 ARG_RENAMES = {
-  'IsKeyDown'     => { 'user_key_index' => 'key_code' },
-  'IsKeyPressed'  => { 'user_key_index' => 'key_code' },
-  'IsKeyReleased' => { 'user_key_index' => 'key_code' },
+  # 'FuncName' => { 'imgui_name' => 'reaimgui_name' },
 }
 
 # these functions were not ported 1:1 (same name, otherwise add to RENAMES above too!)
@@ -505,7 +502,7 @@ File.foreach IMGUI_H do |line|
     next if $~[:name].end_with? '_COUNT'
     next if $~[:name].end_with? '_' # internal flags and masks
     imgui_enums << $~[:name]
-  elsif line.chomp == '#ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS'
+  elsif line.chomp.start_with? '#ifndef IMGUI_DISABLE_OBSOLETE_' # FUNCTIONS, KEYIO
     in_obsolete = true
   elsif line =~ IMGUI_CLASS_R
     namespace = $~[:name]

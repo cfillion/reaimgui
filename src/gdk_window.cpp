@@ -302,7 +302,7 @@ float GDKWindow::globalScaleFactor()
   return scale;
 }
 
-void GDKWindow::setImePosition(ImVec2)
+void GDKWindow::setIME(ImGuiPlatformImeData *)
 {
 }
 

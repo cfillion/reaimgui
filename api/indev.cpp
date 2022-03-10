@@ -17,6 +17,8 @@
 
 #include "helper.hpp"
 
+#include <imgui/imgui_internal.h> // GetKeyData
+
 DEFINE_API(bool, IsMouseDown, (ImGui_Context*,ctx)
 (int,button),
 "Is mouse button held?",
@@ -205,46 +207,45 @@ DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, IsKeyDown, (ImGui_Context*,ctx)
-(int,key_code),
+(int,key),
 "Is key being held.",
 {
   FRAME_GUARD;
-  return ImGui::IsKeyDown(key_code);
+  return ImGui::IsKeyDown(key);
 });
 
 DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
-(int,key_code),
+(int,key),
 "Duration the keyboard key has been down (0.0 == just pressed)",
 {
   FRAME_GUARD;
-  IM_ASSERT(key_code >= 0 && key_code < IM_ARRAYSIZE(ImGuiIO::KeysDownDuration));
-  return ctx->IO().KeysDownDuration[key_code];
+  return ImGui::GetKeyData(key)->DownDuration;
 });
 
 DEFINE_API(bool, IsKeyPressed, (ImGui_Context*,ctx)
-(int,key_code)(bool*,API_RO(repeat)),
+(int,key)(bool*,API_RO(repeat)),
 R"(Was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
 
 Default values: repeat = true)",
 {
   FRAME_GUARD;
-  return ImGui::IsKeyPressed(key_code, valueOr(API_RO(repeat), true));
+  return ImGui::IsKeyPressed(key, valueOr(API_RO(repeat), true));
 });
 
 DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
-(int,key_code),
+(int,key),
 "Was key released (went from Down to !Down)?",
 {
   FRAME_GUARD;
-  return ImGui::IsKeyReleased(key_code);
+  return ImGui::IsKeyReleased(key);
 });
 
 DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
-(int,key_index)(double,repeat_delay)(double,rate),
+(int,key)(double,repeat_delay)(double,rate),
 "Uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate",
 {
   FRAME_GUARD;
-  return ImGui::GetKeyPressedAmount(key_index, repeat_delay, rate);
+  return ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
 });
 
 DEFINE_API(int, GetKeyMods, (ImGui_Context*,ctx),

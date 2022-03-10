@@ -306,9 +306,10 @@ float Win32Window::scaleFactor() const
   return m_viewport->DpiScale;
 }
 
-void Win32Window::setImePosition(ImVec2 pos)
+void Win32Window::setIME(ImGuiPlatformImeData *data)
 {
   if(HIMC ime { ImmGetContext(m_hwnd.get()) }) {
+    ImVec2 pos { data->InputPos };
     Platform::scalePosition(&pos, true);
 
     COMPOSITIONFORM cf;

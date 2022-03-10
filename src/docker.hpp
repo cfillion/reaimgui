@@ -84,7 +84,7 @@ public:
   void render(void *) override;
   float scaleFactor() const override;
   void onChanged() override;
-  void setImePosition(ImVec2) override;
+  void setIME(ImGuiPlatformImeData *) override;
 
 private:
   void activate();

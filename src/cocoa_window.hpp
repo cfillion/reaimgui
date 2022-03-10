@@ -42,7 +42,7 @@ public:
   void update() override;
   void render(void *) override;
   float scaleFactor() const override;
-  void setImePosition(ImVec2) override;
+  void setIME(ImGuiPlatformImeData *) override;
 
   void uploadFontTex() override;
   std::optional<LRESULT> handleMessage

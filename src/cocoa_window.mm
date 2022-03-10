@@ -186,10 +186,12 @@ float CocoaWindow::scaleFactor() const
   return [[m_view window] backingScaleFactor];
 }
 
-void CocoaWindow::setImePosition(ImVec2 pos)
+void CocoaWindow::setIME(ImGuiPlatformImeData *data)
 {
+  // TODO: use data->WantVisible
+  ImVec2 pos { data->InputPos };
   Platform::scalePosition(&pos, true);
-  pos.y -= ImGui::GetTextLineHeight();
+  pos.y -= data->InputLineHeight;
 
   [m_inputView setImePosition:NSMakePoint(pos.x, pos.y)];
 }

@@ -278,8 +278,8 @@ void DockerHost::onChanged()
   }
 }
 
-void DockerHost::setImePosition(const ImVec2 pos)
+void DockerHost::setIME(ImGuiPlatformImeData *data)
 {
   if(m_window)
-    m_window->setImePosition(pos);
+    m_window->setIME(data);
 }
