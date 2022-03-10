@@ -312,12 +312,17 @@ void Win32Window::setIME(ImGuiPlatformImeData *data)
     ImVec2 pos { data->InputPos };
     Platform::scalePosition(&pos, true);
 
-    COMPOSITIONFORM cf;
-    cf.ptCurrentPos.x = pos.x;
-    cf.ptCurrentPos.y = pos.y;
-    ScreenToClient(m_hwnd.get(), &cf.ptCurrentPos);
-    cf.dwStyle = CFS_FORCE_POSITION;
-    ImmSetCompositionWindow(ime, &cf);
+    COMPOSITIONFORM composition;
+    composition.dwStyle = CFS_FORCE_POSITION;
+    composition.ptCurrentPos.x = pos.x;
+    composition.ptCurrentPos.y = pos.y;
+    ScreenToClient(m_hwnd.get(), &composition.ptCurrentPos);
+    ImmSetCompositionWindow(ime, &composition);
+
+    CANDIDATEFORM candidate;
+    candidate.dwStyle = CFS_CANDIDATEPOS;
+    candidate.ptCurrentPos = composition.ptCurrentPos;
+    ImmSetCandidateWindow(ime, &candidate);
 
     ImmReleaseContext(m_hwnd.get(), ime);
   }
