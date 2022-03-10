@@ -35,8 +35,7 @@
 enum DragState {
   DragState_None,
   DragState_FirstFrame = 1<<0,
-  DragState_FakeClick  = 1<<1,
-  DragState_Drop       = 1<<2,
+  DragState_Drop       = 1<<1,
 };
 
 constexpr ImGuiConfigFlags PRIVATE_CONFIG_FLAGS
@@ -288,10 +287,6 @@ void Context::updateMouseData()
     SetCursorPos(scaledPos.x, scaledPos.y);
     return;
   }
-  else if(m_dragState & DragState_FakeClick) {
-    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
-    return;
-  }
 
   POINT point;
   GetCursorPos(&point);
@@ -426,8 +421,11 @@ void Context::dragSources()
 void Context::beginDrag(std::vector<std::string> &&files)
 {
   m_draggedFiles = std::move(files);
-  mouseInput(ImGuiMouseButton_Left, true);
-  m_dragState = DragState_FirstFrame | DragState_FakeClick;
+  m_dragState = DragState_FirstFrame;
+
+  TempCurrent cur { this };
+  m_imgui->IO.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+  m_imgui->IO.AddMouseButtonEvent(ImGuiMouseButton_Left, true);
 }
 
 #ifndef __APPLE__
@@ -452,11 +450,12 @@ void Context::beginDrag(HDROP drop)
 
 void Context::endDrag(const bool drop)
 {
-  mouseInput(ImGuiMouseButton_Left, false);
+  TempCurrent cur { this };
+  m_imgui->IO.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
   if(drop)
     m_dragState = DragState_Drop | (m_dragState & DragState_FirstFrame);
   else {
-    m_dragState = DragState_FakeClick;
+    m_imgui->IO.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
     m_draggedFiles.clear();
   }
 }
