@@ -377,6 +377,12 @@ std::optional<LRESULT> Win32Window::handleMessage
     return 0;
   case WM_GETDLGCODE:
     return DLGC_WANTALLKEYS; // eat all inputs, don't let Tab steal focus
+  case WM_XBUTTONDOWN:
+    mouseDown(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? 3 : 4);
+    return 0;
+  case WM_XBUTTONUP:
+    mouseUp(GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? 3 : 4);
+    return 0;
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
     if(wParam < 256)

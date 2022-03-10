@@ -29,6 +29,7 @@
 #endif
 
 class DockerHost;
+typedef int ImGuiMouseButton;
 
 class Window : public Viewport {
 public:
@@ -49,8 +50,8 @@ public:
   bool isMinimized() const override;
   void onChanged() override;
 
-  void mouseDown(unsigned int msg);
-  void mouseUp(unsigned int msg);
+  void mouseDown(ImGuiMouseButton);
+  void mouseUp(ImGuiMouseButton);
   bool isDocked() const { return !!m_dockerHost; }
   void invalidateTextures();
 

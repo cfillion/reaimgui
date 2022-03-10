@@ -278,12 +278,6 @@ void Context::updateCursor()
     SetCursor(m_cursor = cursor);
 }
 
-void Context::mouseInput(const int button, const bool down)
-{
-  TempCurrent cur { this };
-  m_imgui->IO.AddMouseButtonEvent(button, down);
-}
-
 void Context::updateMouseData()
 {
   ImGuiIO &io { m_imgui->IO };
@@ -329,6 +323,12 @@ void Context::updateMouseData()
   // disabled by the GDK backend
   if(io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
     io.AddMouseViewportEvent(hoveredViewport);
+}
+
+void Context::mouseInput(const int button, const bool down)
+{
+  TempCurrent cur { this };
+  m_imgui->IO.AddMouseButtonEvent(button, down);
 }
 
 void Context::mouseWheel(const bool horizontal, float delta)

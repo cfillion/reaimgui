@@ -5888,9 +5888,9 @@ function demo.ShowDemoWindowMisc()
       end
       r.ImGui_Text(ctx, ('Mouse delta: (%g, %g)'):format(r.ImGui_GetMouseDelta(ctx)))
 
-      local buttons = { r.ImGui_MouseButton_Left(), r.ImGui_MouseButton_Right(), r.ImGui_MouseButton_Middle() }
+      local buttons = 4
       r.ImGui_Text(ctx, 'Mouse down:')
-      for _,button in ipairs(buttons) do
+      for button = 0, buttons do
         if r.ImGui_IsMouseDown(ctx, button) then
           local duration = r.ImGui_GetMouseDownDuration(ctx, button)
           r.ImGui_SameLine(ctx)
@@ -5898,14 +5898,14 @@ function demo.ShowDemoWindowMisc()
         end
       end
       r.ImGui_Text(ctx, 'Mouse clicked:')
-      for _,button in ipairs(buttons) do
+      for button = 0, buttons do
         if r.ImGui_IsMouseClicked(ctx, button) then
           r.ImGui_SameLine(ctx)
           r.ImGui_Text(ctx, ('b%d (%d)'):format(button, r.ImGui_GetMouseClickedCount(ctx, button)))
         end
       end
       r.ImGui_Text(ctx, 'Mouse released:')
-      for _,button in ipairs(buttons) do
+      for button = 0, buttons do
         if r.ImGui_IsMouseReleased(ctx, button) then
           r.ImGui_SameLine(ctx)
           r.ImGui_Text(ctx, ('b%d'):format(button))

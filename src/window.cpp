@@ -120,14 +120,22 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 #endif
 #ifndef __APPLE__ // these are handled by InputView, bypassing SWELL
   case WM_LBUTTONDOWN:
-  case WM_MBUTTONDOWN:
-  case WM_RBUTTONDOWN:
-    self->mouseDown(msg);
+    self->mouseDown(ImGuiMouseButton_Left);
     return 0;
   case WM_LBUTTONUP:
+    self->mouseUp(ImGuiMouseButton_Left);
+    return 0;
+  case WM_MBUTTONDOWN:
+    self->mouseDown(ImGuiMouseButton_Middle);
+    return 0;
   case WM_MBUTTONUP:
+    self->mouseUp(ImGuiMouseButton_Middle);
+    return 0;
+  case WM_RBUTTONDOWN:
+    self->mouseDown(ImGuiMouseButton_Right);
+    return 0;
   case WM_RBUTTONUP:
-    self->mouseUp(msg);
+    self->mouseUp(ImGuiMouseButton_Right);
     return 0;
 #endif // __APPLE__
   }
@@ -217,24 +225,8 @@ void Window::onChanged()
   }
 }
 
-void Window::mouseDown(const unsigned int msg)
+void Window::mouseDown(const ImGuiMouseButton btn)
 {
-  size_t btn;
-
-  switch(msg) {
-  case WM_LBUTTONDOWN:
-    btn = ImGuiMouseButton_Left;
-    break;
-  case WM_MBUTTONDOWN:
-    btn = ImGuiMouseButton_Middle;
-    break;
-  case WM_RBUTTONDOWN:
-    btn = ImGuiMouseButton_Right;
-    break;
-  default:
-    return;
-  }
-
   // Not needed on macOS for receiving mouse up messages outside of the
   // windows's boundaries. It is instead used by Context::updateMouseData.
   if(GetCapture() == nullptr)
@@ -247,24 +239,8 @@ void Window::mouseDown(const unsigned int msg)
   m_mouseDown |= 1 << btn;
 }
 
-void Window::mouseUp(const unsigned int msg)
+void Window::mouseUp(const ImGuiMouseButton btn)
 {
-  size_t btn;
-
-  switch(msg) {
-  case WM_LBUTTONUP:
-    btn = ImGuiMouseButton_Left;
-    break;
-  case WM_MBUTTONUP:
-    btn = ImGuiMouseButton_Middle;
-    break;
-  case WM_RBUTTONUP:
-    btn = ImGuiMouseButton_Right;
-    break;
-  default:
-    return;
-  }
-
   m_ctx->mouseInput(btn, false);
   m_mouseDown &= ~(1 << btn);
 
