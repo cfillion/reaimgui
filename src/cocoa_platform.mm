@@ -31,11 +31,9 @@ void Platform::install()
   [defaults registerDefaults:@{@"ApplePressAndHoldEnabled":@NO}];
 
   ImGuiIO &io { ImGui::GetIO() };
-  io.ConfigMacOSXBehaviors = false; // don't swap Cmd/Ctrl, SWELl already does it
   io.BackendPlatformName = "reaper_imgui_cocoa";
 
   OpenGLRenderer::install();
-  Window::install();
 }
 
 Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)

@@ -54,6 +54,9 @@ private:
   void initPixelFormat();
   void initGL();
   RECT scaledWindowRect(ImVec2 pos, ImVec2 size) const;
+  void keyEvent(unsigned int, WPARAM, LPARAM);
+  bool modKeyEvent(WPARAM vk, bool down);
+  void unstuckModifiers();
 
   HDC m_dc;
   HGLRC m_gl;

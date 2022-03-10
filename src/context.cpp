@@ -19,6 +19,7 @@
 
 #include "docker.hpp"
 #include "font.hpp"
+#include "keymap.hpp"
 #include "platform.hpp"
 #include "viewport.hpp"
 
@@ -171,7 +172,6 @@ void Context::beginFrame()
   updateFrameInfo();
   updateTheme();
   updateMouseData();
-  updateKeyMods();
   updateSettings();
 
   ImGui::NewFrame();
@@ -347,20 +347,17 @@ void Context::mouseWheel(const bool horizontal, float delta)
     m_imgui->IO.AddMouseWheelEvent(0.0f, delta);
 }
 
-void Context::updateKeyMods()
+void Context::keyInput(ImGuiKey key, const bool down)
 {
-  constexpr int down { 0x8000 };
+  TempCurrent cur { this };
 
-  ImGuiIO &io { m_imgui->IO };
-  io.KeyCtrl  = GetAsyncKeyState(VK_CONTROL) & down;
-  io.KeyShift = GetAsyncKeyState(VK_SHIFT)   & down;
-  io.KeyAlt   = GetAsyncKeyState(VK_MENU)    & down;
-  io.KeySuper = GetAsyncKeyState(VK_LWIN)    & down;
-}
+  if(ImGui::IsLegacyKey(key)) {
+    const ImGuiKey imKey { KeyMap::translateVirtualKey(key) };
+    m_imgui->IO.SetKeyEventNativeData(imKey, key, -1);
+    key = imKey;
+  }
 
-void Context::keyInput(const ImGuiKey key, const bool down)
-{
-  m_imgui->IO.KeysDown[key] = down;
+  m_imgui->IO.AddKeyEvent(key, down);
 }
 
 void Context::charInput(const ImWchar codepoint)
@@ -369,6 +366,7 @@ void Context::charInput(const ImWchar codepoint)
       (codepoint >= 0xf700 && codepoint <= 0xf7ff)) // unicode private range
     return;
 
+  TempCurrent cur { this };
   m_imgui->IO.AddInputCharacter(codepoint);
 }
 

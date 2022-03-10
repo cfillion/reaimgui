@@ -52,7 +52,6 @@ void Platform::install()
   io.BackendPlatformName = "reaper_imgui_win32";
 
   OpenGLRenderer::install();
-  Window::install();
 }
 
 Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)

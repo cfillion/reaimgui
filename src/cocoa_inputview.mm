@@ -19,7 +19,9 @@
 
 #include "context.hpp"
 
+#define KeyMap CarbonKeyMap
 #include <Carbon/Carbon.h>
+#undef KeyMap
 
 // prevent name conflicts between Carbon.h and swell-functions.h
 #define CreateEvent     SWELL_CreateEvent
@@ -33,27 +35,13 @@
 #define ShowWindow      SWELL_ShowWindow
 #define IsWindowVisible SWELL_IsWindowVisible
 #include <swell/swell.h>
+#include "keymap.hpp"
 #include "window.hpp"
 
 static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
 constexpr NSRange kEmptyRange { NSNotFound, 0 };
-
-constexpr uint8_t
-  VK_APPS       { 0x5D },
-  VK_OEM_PLUS   { 0xBB },
-  VK_OEM_COMMA  { 0xBC },
-  VK_OEM_MINUS  { 0xBD },
-  VK_OEM_PERIOD { 0xBE },
-  VK_OEM_1      { 0xBA }, // ;:
-  VK_OEM_2      { 0xBF }, // /?
-  VK_OEM_3      { 0xC0 }, // `~
-  VK_OEM_4      { 0xDB }, // [(
-  VK_OEM_5      { 0xDC }, // \|
-  VK_OEM_6      { 0xDD }, // ])
-  VK_OEM_7      { 0xDE }, // '"
-  VK_OEM_102    { 0xE2 };
 
 static NSString *eventCharsIgnoringMods(NSEvent *event)
 {
@@ -80,12 +68,13 @@ static NSString *eventCharsIgnoringMods(NSEvent *event)
     return [event charactersIgnoringModifiers];
 }
 
-static uint8_t virtualKeyCode(NSEvent *event)
+static int translateKeyCode(NSEvent *event)
 {
   const uint16_t keyCode { [event keyCode] };
 
   // hard-code these keys based on their physical location on the keyboard
-  // https://developer.apple.com/library/archive/documentation/mac/pdf/MacintoshToolboxEssentials.pdf (figure 2-10)
+  // https://developer.apple.com/library/archive/documentation/mac/pdf/MacintoshToolboxEssentials.pdf
+  // (figure 2-10, page 86)
   switch(keyCode) {
   case 0x33: return VK_BACK;
   case 0x72: return VK_INSERT;
@@ -100,7 +89,7 @@ static uint8_t virtualKeyCode(NSEvent *event)
   case 0x7e: return VK_UP;
   case 0x7d: return VK_DOWN;
 
-  case 0x0a: return VK_OEM_102;
+  // case 0x0a: return VK_OEM_102;
   case 0x2a: return VK_OEM_5;
 
   // number row
@@ -122,7 +111,7 @@ static uint8_t virtualKeyCode(NSEvent *event)
   case 0x43: return VK_MULTIPLY;
   case 0x4e: return VK_SUBTRACT;
   case 0x45: return VK_ADD;
-  case 0x4c: return VK_RETURN;
+  case 0x4c: return ImGuiKey_KeypadEnter;
   case 0x41: return VK_DECIMAL;
   case 0x52: return VK_NUMPAD0;
   case 0x53: return VK_NUMPAD1;
@@ -152,7 +141,7 @@ static uint8_t virtualKeyCode(NSEvent *event)
   else if(charValue >= 'a' && charValue <= 'z')
     charValue += 'A'-'a';
 
-  // attempt to be compatible with QWERTY/AZERTY, may be innacurate
+  // attempt to be compatible with QWERTY/AZERTY, may be inaccurate
   switch(charValue) {
   case '-':  return VK_OEM_MINUS;
   case '=':  return VK_OEM_PLUS;
@@ -248,38 +237,55 @@ static uint8_t virtualKeyCode(NSEvent *event)
   // Send key to the system input manager. It will reply by sending insertText.
   [self interpretKeyEvents:@[event]];
 
-  m_window->context()->keyInput(virtualKeyCode(event), true);
+  m_window->context()->keyInput(translateKeyCode(event), true);
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-  m_window->context()->keyInput(virtualKeyCode(event), false);
+  m_window->context()->keyInput(translateKeyCode(event), false);
 }
 
 - (void)flagsChanged:(NSEvent *)event
 {
+  struct Key {
+    unsigned short keyCode;
+    ImGuiKey key;
+    unsigned long mask;
+  };
   struct Modifier {
-    unsigned short keyCode; unsigned long modFlag; uint8_t virtualKeyCode;
+    ImGuiKey modkey;
+    unsigned long flag;
+    Key keys[2];
   };
 
   constexpr Modifier modifiers[] {
-    { kVK_Shift,        NSEventModifierFlagShift,   VK_SHIFT   },
-    { kVK_RightShift,   NSEventModifierFlagShift,   VK_SHIFT   },
-    { kVK_Control,      NSEventModifierFlagControl, VK_CONTROL },
-    { kVK_RightControl, NSEventModifierFlagControl, VK_CONTROL },
-    { kVK_Option,       NSEventModifierFlagOption,  VK_MENU    },
-    { kVK_RightOption,  NSEventModifierFlagOption,  VK_MENU    },
-    { kVK_Command,      NSEventModifierFlagCommand, VK_LWIN    },
-    { kVK_RightCommand, NSEventModifierFlagCommand, VK_LWIN    },
+    { ImGuiKey_ModCtrl,  NSEventModifierFlagControl, {
+      { kVK_Control,      ImGuiKey_LeftCtrl, 0x0001 },
+      { kVK_RightControl, ImGuiKey_RightCtrl, 0x2000 }
+    }},
+    { ImGuiKey_ModShift, NSEventModifierFlagShift, {
+      { kVK_Shift,      ImGuiKey_LeftShift, 0x0002 },
+      { kVK_RightShift, ImGuiKey_RightShift, 0x0004 }
+    }},
+    { ImGuiKey_ModSuper, NSEventModifierFlagCommand, {
+      { kVK_Command,      ImGuiKey_LeftSuper, 0x0008 },
+      { kVK_RightCommand, ImGuiKey_RightSuper, 0x0010 },
+    }},
+    { ImGuiKey_ModAlt,   NSEventModifierFlagOption, {
+      { kVK_Option,      ImGuiKey_LeftAlt, 0x0020 },
+      { kVK_RightOption, ImGuiKey_RightAlt, 0x0040 },
+    }},
   };
 
   const unsigned short keyCode { [event keyCode] };
   const unsigned long modFlags { [event modifierFlags] };
 
   for(const auto &modifier : modifiers) {
-    if(modifier.keyCode == keyCode) {
-      m_window->context()->keyInput(modifier.virtualKeyCode, modFlags & modifier.modFlag);
-      return;
+    m_window->context()->keyInput(modifier.modkey, modFlags & modifier.flag);
+
+    for(const auto &key : modifier.keys) {
+      if(key.keyCode == keyCode)
+        m_window->context()->keyInput(key.key, modFlags & key.mask);
     }
   }
 }

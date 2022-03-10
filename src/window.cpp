@@ -31,33 +31,6 @@
 
 HINSTANCE Window::s_instance;
 
-void Window::install()
-{
-  ImGuiIO &io { ImGui::GetIO() };
-  io.KeyMap[ImGuiKey_Tab]         = VK_TAB;
-  io.KeyMap[ImGuiKey_LeftArrow]   = VK_LEFT;
-  io.KeyMap[ImGuiKey_RightArrow]  = VK_RIGHT;
-  io.KeyMap[ImGuiKey_UpArrow]     = VK_UP;
-  io.KeyMap[ImGuiKey_DownArrow]   = VK_DOWN;
-  io.KeyMap[ImGuiKey_PageUp]      = VK_PRIOR;
-  io.KeyMap[ImGuiKey_PageDown]    = VK_NEXT;
-  io.KeyMap[ImGuiKey_Home]        = VK_HOME;
-  io.KeyMap[ImGuiKey_End]         = VK_END;
-  io.KeyMap[ImGuiKey_Insert]      = VK_INSERT;
-  io.KeyMap[ImGuiKey_Delete]      = VK_DELETE;
-  io.KeyMap[ImGuiKey_Backspace]   = VK_BACK;
-  io.KeyMap[ImGuiKey_Space]       = VK_SPACE;
-  io.KeyMap[ImGuiKey_Enter]       = VK_RETURN;
-  io.KeyMap[ImGuiKey_Escape]      = VK_ESCAPE;
-  io.KeyMap[ImGuiKey_KeypadEnter] = VK_RETURN;
-  io.KeyMap[ImGuiKey_A]           = 'A';
-  io.KeyMap[ImGuiKey_C]           = 'C';
-  io.KeyMap[ImGuiKey_V]           = 'V';
-  io.KeyMap[ImGuiKey_X]           = 'X';
-  io.KeyMap[ImGuiKey_Y]           = 'Y';
-  io.KeyMap[ImGuiKey_Z]           = 'Z';
-}
-
 LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   const WPARAM wParam, const LPARAM lParam)
 {
@@ -235,6 +208,7 @@ void Window::mouseDown(const ImGuiMouseButton btn)
   // give keyboard focus when docked (+ focus on right/middle click on macOS)
   setFocus();
 
+  updateModifiers();
   m_ctx->mouseInput(btn, true);
   m_mouseDown |= 1 << btn;
 }
@@ -246,6 +220,27 @@ void Window::mouseUp(const ImGuiMouseButton btn)
 
   if(GetCapture() == m_hwnd.get() && m_mouseDown == 0)
     ReleaseCapture();
+}
+
+void Window::updateModifiers()
+{
+  struct Modifiers { int vkey; ImGuiKey key; };
+  constexpr Modifiers modifiers[] {
+#ifdef __APPLE__ // SWELL swaps those two
+    { VK_CONTROL, ImGuiKey_ModSuper },
+    { VK_LWIN,    ImGuiKey_ModCtrl  },
+#else
+    { VK_CONTROL, ImGuiKey_ModCtrl  },
+    { VK_LWIN,    ImGuiKey_ModSuper },
+#endif
+    { VK_SHIFT,   ImGuiKey_ModShift },
+    { VK_MENU,    ImGuiKey_ModAlt   },
+  };
+
+  for(const auto &modifier : modifiers) {
+    if(GetAsyncKeyState(modifier.vkey) & 0x8000)
+      m_ctx->keyInput(modifier.key, true);
+  }
 }
 
 void Window::invalidateTextures()

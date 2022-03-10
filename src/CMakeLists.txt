@@ -6,6 +6,7 @@ add_library(src OBJECT
   context.cpp
   docker.cpp
   font.cpp
+  keymap.cpp
   main.cpp
   opengl_renderer.cpp
   resource.cpp

@@ -36,7 +36,6 @@ public:
   enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
 
   static HINSTANCE s_instance;
-  static void install();
   static void updateMonitors();
 
   Window(ImGuiViewport *, DockerHost * = nullptr);
@@ -74,6 +73,7 @@ protected:
 private:
   static int hwndInfo(HWND, INT_PTR type);
   static int translateAccel(MSG *msg, accelerator_register_t *accel);
+  void updateModifiers();
 
   DockerHost *m_dockerHost;
 

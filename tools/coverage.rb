@@ -30,7 +30,9 @@ NATIVE_ONLY = [
 
   'void ImGui::CaptureMouseFromApp(bool)',
 
+  'const char* ImGui::GetKeyName(ImGuiKey)',
   'const char* ImGui::GetStyleColorName(ImGuiCol)',
+
   'void ImGui::ShowDemoWindow(bool*)',
   'void ImGui::ShowUserGuide()',
   'void ImGui::ShowStyleEditor(ImGuiStyle*)',
@@ -175,6 +177,7 @@ NATIVE_ONLY_CLASSES = %w[
 NATIVE_ONLY_ENUMS = [
   /\AInputTextFlags_Callback/,
   /\ADataType_/,
+  'Key_None',
   /\AKey_(NamedKey|KeysData)/,
   /\ANavInput_/,
   /\ABackendFlags_/,

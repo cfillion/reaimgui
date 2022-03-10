@@ -87,7 +87,6 @@ private:
   void updateTheme();
   void updateCursor();
   void updateMouseData();
-  void updateKeyMods();
   void updateSettings();
   void updateDragDrop();
 

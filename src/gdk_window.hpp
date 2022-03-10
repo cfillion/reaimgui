@@ -59,6 +59,7 @@ private:
   void teardownGl();
   void initSoftwareBlit();
   void softwareBlit();
+  void keyEvent(int vkey, bool down);
 
   GdkGLContext *m_gl;
   unsigned int m_tex, m_fbo;

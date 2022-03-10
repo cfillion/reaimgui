@@ -258,6 +258,8 @@ void Win32Window::setTitle(const char *title)
 
 void Win32Window::update()
 {
+  unstuckModifiers();
+
   if(isDocked())
     return;
 
@@ -368,7 +370,7 @@ std::optional<LRESULT> Win32Window::handleMessage
     return 0;
   }
   case WM_DPICHANGED_BEFOREPARENT:
-    // Tthis messages is sent when docked.
+    // This message is sent when docked.
     // Only top-level windows receive WM_DPICHANGED.
     m_dpi = dpiForWindow(m_hwnd.get());
     m_viewport->DpiScale = scaleForDpi(m_dpi);
@@ -385,13 +387,9 @@ std::optional<LRESULT> Win32Window::handleMessage
     return 0;
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
-    if(wParam < 256)
-      m_ctx->keyInput(wParam, true);
-    return 0;
   case WM_KEYUP:
   case WM_SYSKEYUP:
-    if(wParam < 256)
-      m_ctx->keyInput(wParam, false);
+    keyEvent(msg, wParam, lParam);
     return 0;
   case WM_CHAR:
     m_ctx->charInput(wParam);
@@ -406,4 +404,67 @@ std::optional<LRESULT> Win32Window::handleMessage
   }
 
   return std::nullopt;
+}
+
+static bool IsVkDown(const int vk)
+{
+  return (GetAsyncKeyState(vk) & 0x8000) != 0;
+}
+
+void Win32Window::keyEvent(unsigned int msg,
+  const WPARAM vk, const LPARAM lParam)
+{
+  if(vk > 255)
+    return;
+
+  const bool down { msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN };
+
+  if(vk == VK_RETURN && (HIWORD(lParam) & KF_EXTENDED))
+    m_ctx->keyInput(ImGuiKey_KeypadEnter, down);
+  else if(!modKeyEvent(vk, down))
+    m_ctx->keyInput(vk, down);
+}
+
+struct ModKey { uint8_t vk; ImGuiKey ik; };
+struct Modifier { uint8_t modVK; ImGuiKey modKey; ModKey keys[2]; };
+constexpr Modifier modifiers[] {
+  { VK_CONTROL, ImGuiKey_ModCtrl, {
+    { VK_LCONTROL, ImGuiKey_LeftCtrl }, { VK_RCONTROL, ImGuiKey_RightCtrl },
+  }},
+  { VK_SHIFT, ImGuiKey_ModShift, {
+    { VK_LSHIFT, ImGuiKey_LeftShift }, { VK_RSHIFT, ImGuiKey_RightShift },
+  }},
+  { VK_MENU, ImGuiKey_ModAlt, {
+    { VK_LMENU, ImGuiKey_LeftAlt }, { VK_RMENU, ImGuiKey_RightAlt },
+  }},
+  { VK_LWIN, ImGuiKey_ModSuper, {
+    { VK_LWIN, ImGuiKey_LeftSuper }, { VK_RWIN, ImGuiKey_RightSuper },
+  }},
+};
+
+bool Win32Window::modKeyEvent(const WPARAM vk, const bool down)
+{
+  for(const auto &modifier : modifiers) {
+    if(vk != modifier.modVK)
+      continue;
+    if(IsVkDown(modifier.modVK) == down)
+      m_ctx->keyInput(modifier.modKey, down);
+    for(const auto &modkey : modifier.keys) {
+      if(IsVkDown(modkey.vk) == down)
+        m_ctx->keyInput(modkey.ik, down);
+    }
+    return true;
+  }
+  return false;
+}
+
+void Win32Window::unstuckModifiers()
+{
+  // Windows doesn't send KEYUP events when both LSHIFT+RSHIFT are down and one is released
+  for(const auto &modifier : modifiers) {
+    for(const auto &modkey : modifier.keys) {
+      if(ImGui::IsKeyDown(modkey.ik) && !IsVkDown(modkey.vk))
+        m_ctx->keyInput(modkey.ik, false);
+    }
+  }
 }

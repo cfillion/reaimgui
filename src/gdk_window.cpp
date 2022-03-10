@@ -360,12 +360,12 @@ std::optional<LRESULT> GDKWindow::handleMessage
     // No access to the orignal GDK key event, unfortunately.
     if(unsigned int c { unmangleSwellChar(wParam, lParam) })
       m_ctx->charInput(c);
-    if(wParam < 256)
-      m_ctx->keyInput(wParam, true);
-    return 0;
+    [[fallthrough]];
+  case WM_SYSKEYDOWN:
   case WM_KEYUP:
+  case WM_SYSKEYUP:
     if(wParam < 256)
-      m_ctx->keyInput(wParam, false);
+      keyEvent(wParam, msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
     return 0;
   case WM_PAINT:
     if(m_pixels)
@@ -374,4 +374,28 @@ std::optional<LRESULT> GDKWindow::handleMessage
   }
 
   return std::nullopt;
+}
+
+void GDKWindow::keyEvent(const int vkey, const bool down)
+{
+  struct Modifier { int vkey; ImGuiKey modkey, ikey; };
+  constexpr Modifier modifiers[] {
+    { VK_CONTROL, ImGuiKey_ModCtrl,  ImGuiKey_LeftCtrl  },
+    { VK_SHIFT,   ImGuiKey_ModShift, ImGuiKey_LeftShift },
+    { VK_MENU,    ImGuiKey_ModAlt,   ImGuiKey_LeftAlt   },
+    { VK_LWIN,    ImGuiKey_ModSuper, ImGuiKey_LeftSuper },
+  };
+
+  for(const auto &modifier : modifiers) {
+    if(vkey != modifier.vkey)
+      continue;
+    // post key events only when both sides of the modifier have the same state
+    if(!!(GetAsyncKeyState(vkey) & 0x8000) == down) {
+      m_ctx->keyInput(modifier.modkey, down);
+      m_ctx->keyInput(modifier.ikey, down);
+    }
+    return;
+  }
+
+  m_ctx->keyInput(vkey, down);
 }

@@ -5918,20 +5918,19 @@ function demo.ShowDemoWindowMisc()
 
     -- Display Keyboard/Mouse state
     if r.ImGui_TreeNode(ctx, 'Keyboard & Navigation State') then
-      local max_key = 512
       r.ImGui_Text(ctx, 'Keys down:')
-      for i = 0, max_key - 1 do
-        if r.ImGui_IsKeyDown(ctx, i) then
-          local duration = r.ImGui_GetKeyDownDuration(ctx, i)
+      for key, name in demo.EachEnum('Key') do
+        if r.ImGui_IsKeyDown(ctx, key) then
+          local duration = r.ImGui_GetKeyDownDuration(ctx, key)
           r.ImGui_SameLine(ctx)
-          r.ImGui_Text(ctx, ('%d (0x%X) (%.02f secs)'):format(i, i, duration))
+          r.ImGui_Text(ctx, ('"%s" %d (%.02f secs)'):format(name, key, duration))
         end
       end
       local function KeyboardState(stateFunc)
-        for i = 0, max_key - 1 do
-          if stateFunc(ctx, i) then
+        for key, name in demo.EachEnum('Key') do
+          if stateFunc(ctx, key) then
             r.ImGui_SameLine(ctx)
-            r.ImGui_Text(ctx, ('%d (0x%X)'):format(i, i))
+            r.ImGui_Text(ctx, ('"%s" %d'):format(name, key))
           end
         end
       end
@@ -5957,6 +5956,53 @@ function demo.ShowDemoWindowMisc()
       -- r.ImGui_Text(ctx, 'NavInputs down:');     for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputs[i] > 0.0f)              { r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '[%d] %.2f (%.02f secs)', i, io.NavInputs[i], io.NavInputsDownDuration[i]); }
       -- r.ImGui_Text('NavInputs pressed:');  for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] == 0.0f) { r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '[%d]', i); }
 
+      -- Draw an arbitrary US keyboard layout to visualize translated keys
+      do
+        local key_size = { x=35.0, y=35.0 }
+        local key_rounding = 3.0
+        local key_face_size = { x=25.0, y=25.0 }
+        local key_face_pos = { x=5.0, y=3.0 }
+        local key_face_rounding = 2.0
+        local key_label_pos = { x=7.0, y=4.0 }
+        local key_step = { x=key_size.x - 1.0, y=key_size.y - 1.0 }
+        local key_row_offset = 9.0
+
+        local board_min = {r.ImGui_GetCursorScreenPos(ctx)}
+        local board_max = { x=board_min[1] + 3 * key_step.x + 2 * key_row_offset + 10.0, y=board_min[2] + 3 * key_step.y + 10.0 }
+        local start_pos = { x=board_min[1] + 5.0 - key_step.x, y=board_min[2] }
+
+        -- Row, Col, Label, Key
+        local keys_to_display = {
+          { 0, 0, '', r.ImGui_Key_Tab() },      { 0, 1, 'Q', r.ImGui_Key_Q() }, { 0, 2, 'W', r.ImGui_Key_W() }, { 0, 3, 'E', r.ImGui_Key_E() }, { 0, 4, 'R', r.ImGui_Key_R() },
+          { 1, 0, '', r.ImGui_Key_CapsLock() }, { 1, 1, 'A', r.ImGui_Key_A() }, { 1, 2, 'S', r.ImGui_Key_S() }, { 1, 3, 'D', r.ImGui_Key_D() }, { 1, 4, 'F', r.ImGui_Key_F() },
+          { 2, 0, '', r.ImGui_Key_LeftShift() },{ 2, 1, 'Z', r.ImGui_Key_Z() }, { 2, 2, 'X', r.ImGui_Key_X() }, { 2, 3, 'C', r.ImGui_Key_C() }, { 2, 4, 'V', r.ImGui_Key_V() }
+        }
+
+        local draw_list = r.ImGui_GetWindowDrawList(ctx)
+        r.ImGui_DrawList_PushClipRect(draw_list, board_min[1], board_min[2], board_max.x, board_max.y, true)
+        for n, key_data in ipairs(keys_to_display) do
+          local key_min = { x=start_pos.x + key_data[2] * key_step.x + key_data[1] * key_row_offset, y=start_pos.y + key_data[1] * key_step.y }
+          local key_max = { x=key_min.x + key_size.x, y=key_min.y + key_size.y }
+          r.ImGui_DrawList_AddRectFilled(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0xCCCCCCFF, key_rounding)
+          r.ImGui_DrawList_AddRect(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0x181818FF, key_rounding)
+          local face_min = { x=key_min.x + key_face_pos.x, y=key_min.y + key_face_pos.y }
+          local face_max = { x=face_min.x + key_face_size.x, y=face_min.y + key_face_size.y }
+          r.ImGui_DrawList_AddRect(draw_list, face_min.x, face_min.y, face_max.x, face_max.y, 0xC1C1C1FF, key_face_rounding, r.ImGui_DrawFlags_None(), 2.0)
+          r.ImGui_DrawList_AddRectFilled(draw_list, face_min.x, face_min.y, face_max.x, face_max.y, 0xFFFFFFFF, key_face_rounding)
+          local label_min = { x=key_min.x + key_label_pos.x, y=key_min.y + key_label_pos.y }
+          r.ImGui_DrawList_AddText(draw_list, label_min.x, label_min.y, 0x404040FF, key_data[3])
+          if r.ImGui_IsKeyDown(ctx, key_data[4]) then
+            r.ImGui_DrawList_AddRectFilled(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0xFF000080, key_rounding)
+          end
+        end
+        r.ImGui_DrawList_PopClipRect(draw_list)
+        r.ImGui_Dummy(ctx, board_max.x - board_min[1], board_max.y - board_min[2])
+      end
+
+      r.ImGui_TreePop(ctx)
+    end
+
+    if r.ImGui_TreeNode(ctx, 'Capture override') then
       r.ImGui_Button(ctx, 'Hovering me sets the\nkeyboard capture flag')
       if r.ImGui_IsItemHovered(ctx) then
         r.ImGui_CaptureKeyboardFromApp(ctx, true)
@@ -5966,7 +6012,6 @@ function demo.ShowDemoWindowMisc()
       if r.ImGui_IsItemActive(ctx) then
         r.ImGui_CaptureKeyboardFromApp(ctx, false)
       end
-
       r.ImGui_TreePop(ctx)
     end
 
