@@ -22,6 +22,7 @@
 #include "api_vararg.hpp"
 #include "context.hpp"
 
+#include <array>
 #include <boost/preprocessor.hpp>
 #include <boost/type_index.hpp>
 #include <cstring> // strlen

@@ -81,7 +81,7 @@ private:
   std::shared_ptr<PluginRegister> m_hwndInfo;
 
   float m_previousScale;
-  int m_fontTexVersion;
+  int m_fontTexVersion, m_mouseDown;
   bool m_noFocus;
 };
 

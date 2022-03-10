@@ -20,7 +20,6 @@
 
 #include "resource.hpp"
 
-#include <array>
 #include <chrono>
 #include <string>
 #include <vector>
@@ -61,9 +60,8 @@ public:
   void enterFrame();
 
   void mouseInput(int button, bool down);
-  bool anyMouseDown() const;
-  void mouseWheel(bool horizontal, short delta);
-  void keyInput(uint8_t key, bool down);
+  void mouseWheel(bool horizontal, float delta);
+  void keyInput(ImGuiKey key, bool down);
   void charInput(ImWchar);
   void beginDrag(std::vector<std::string> &&);
   void beginDrag(HDROP);
@@ -88,8 +86,7 @@ private:
   void updateFrameInfo();
   void updateTheme();
   void updateCursor();
-  void updateMouseDown();
-  void updateMousePos();
+  void updateMouseData();
   void updateKeyMods();
   void updateSettings();
   void updateDragDrop();
@@ -102,7 +99,6 @@ private:
   bool m_inFrame;
   int m_dragState;
   HCURSOR m_cursor;
-  std::array<uint8_t, IM_ARRAYSIZE(ImGuiIO::MouseDown)> m_mouseDown;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
   std::vector<std::string> m_draggedFiles;
   std::string m_name, m_iniFilename;

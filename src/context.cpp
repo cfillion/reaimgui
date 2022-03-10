@@ -32,11 +32,6 @@
 #  include "win32_unicode.hpp"
 #endif
 
-enum ButtonState {
-  ButtonState_Down       = 1<<0,
-  ButtonState_DownUnread = 1<<1,
-};
-
 enum DragState {
   DragState_None,
   DragState_FirstFrame = 1<<0,
@@ -90,7 +85,7 @@ static std::string generateIniFilename(const char *label)
 
 Context::Context(const char *label, const int userConfigFlags)
   : m_inFrame { false },
-    m_dragState {}, m_cursor {}, m_mouseDown {},
+    m_dragState {}, m_cursor {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_name { label, ImGui::FindRenderedTextEnd(label) },
     m_iniFilename { generateIniFilename(label) },
@@ -176,8 +171,7 @@ void Context::beginFrame()
 
   updateFrameInfo();
   updateTheme();
-  updateMouseDown();
-  updateMousePos();
+  updateMouseData();
   updateKeyMods();
   updateSettings();
 
@@ -284,72 +278,41 @@ void Context::updateCursor()
     SetCursor(m_cursor = cursor);
 }
 
-bool Context::anyMouseDown() const
-{
-  for(const auto state : m_mouseDown) {
-    if(state & ButtonState_Down)
-      return true;
-  }
-
-  return false;
-}
-
 void Context::mouseInput(const int button, const bool down)
 {
-  if(down)
-    m_mouseDown[button] = ButtonState_Down | ButtonState_DownUnread;
-  else {
-    // keep ButtonState_DownUnread set to catch clicks shorted than one frame
-    m_mouseDown[button] &= ~ButtonState_Down;
-  }
+  TempCurrent cur { this };
+  m_imgui->IO.AddMouseButtonEvent(button, down);
 }
 
-void Context::updateMouseDown()
-{
-  ImGuiIO &io { m_imgui->IO };
-
-  size_t i {};
-  for(auto &state : m_mouseDown) {
-    io.MouseDown[i++] = (state & ButtonState_DownUnread) ||
-                        (state & ButtonState_Down);
-    state &= ~ButtonState_DownUnread;
-  }
-}
-
-void Context::updateMousePos()
+void Context::updateMouseData()
 {
   ImGuiIO &io { m_imgui->IO };
 
   if(io.WantSetMousePos) {
-    // convert to HiDPI on Windows, flip Y on macOS
     ImVec2 scaledPos { io.MousePos };
     Platform::scalePosition(&scaledPos, true);
     SetCursorPos(scaledPos.x, scaledPos.y);
     return;
   }
   else if(m_dragState & DragState_FakeClick) {
-    io.MousePos = { -FLT_MAX, -FLT_MAX };
+    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
     return;
   }
 
-  io.MousePos = { -FLT_MAX, -FLT_MAX };
-  io.MouseHoveredViewport = 0;
-
   POINT point;
   GetCursorPos(&point);
-
   ImVec2 pos;
   pos.x = point.x;
   pos.y = point.y;
 
-  ImGuiViewport *viewportForInput { Platform::viewportUnder(pos) };
+  ImGuiID hoveredViewport { 0 };
   ImGuiViewport *viewportForPos;
-  if(viewportForInput) {
+  if(ImGuiViewport *viewportForInput { Platform::viewportUnder(pos) }) {
     viewportForPos = viewportForInput;
-    // Viewports with NoInputs set go through WindowFromPoint with
-    // WM_NCHITTEST->HTTRANSPARENT when decorations are enabled on Windows
+    // WindowFromPoint returns viewports with NoInputs set (despite using
+    // WM_NCHITTEST->HTTRANSPARENT) when decorations are enabled on Windows
     if(!(viewportForInput->Flags & ImGuiViewportFlags_NoInputs))
-      io.MouseHoveredViewport = viewportForInput->ID;
+      hoveredViewport = viewportForInput->ID;
   }
   else if(HWND capture { GetCapture() })
     viewportForPos = ImGui::FindViewportByPlatformHandle(capture);
@@ -358,13 +321,17 @@ void Context::updateMousePos()
 
   if(viewportForPos && ImGui::GetMainViewport() != viewportForPos) {
     Platform::scalePosition(&pos);
-
-    io.MousePos.x = pos.x;
-    io.MousePos.y = pos.y;
+    io.AddMousePosEvent(pos.x, pos.y);
   }
+  else
+    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+
+  // disabled by the GDK backend
+  if(io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
+    io.AddMouseViewportEvent(hoveredViewport);
 }
 
-void Context::mouseWheel(const bool horizontal, const short delta)
+void Context::mouseWheel(const bool horizontal, float delta)
 {
 #ifndef WHEEL_DELTA
   constexpr float WHEEL_DELTA {
@@ -376,9 +343,13 @@ void Context::mouseWheel(const bool horizontal, const short delta)
   };
 #endif
 
-  ImGuiIO &io { m_imgui->IO };
-  float &wheel { horizontal ? io.MouseWheelH : io.MouseWheel };
-  wheel += static_cast<float>(delta) / static_cast<float>(WHEEL_DELTA);
+  delta /= WHEEL_DELTA;
+
+  TempCurrent cur { this };
+  if(horizontal)
+    m_imgui->IO.AddMouseWheelEvent(delta, 0.0f);
+  else
+    m_imgui->IO.AddMouseWheelEvent(0.0f, delta);
 }
 
 void Context::updateKeyMods()
@@ -392,7 +363,7 @@ void Context::updateKeyMods()
   io.KeySuper = GetAsyncKeyState(VK_LWIN)    & down;
 }
 
-void Context::keyInput(const uint8_t key, const bool down)
+void Context::keyInput(const ImGuiKey key, const bool down)
 {
   m_imgui->IO.KeysDown[key] = down;
 }
@@ -455,7 +426,7 @@ void Context::dragSources()
 void Context::beginDrag(std::vector<std::string> &&files)
 {
   m_draggedFiles = std::move(files);
-  m_mouseDown[ImGuiMouseButton_Left] = ButtonState_Down | ButtonState_DownUnread;
+  mouseInput(ImGuiMouseButton_Left, true);
   m_dragState = DragState_FirstFrame | DragState_FakeClick;
 }
 
@@ -481,7 +452,7 @@ void Context::beginDrag(HDROP drop)
 
 void Context::endDrag(const bool drop)
 {
-  m_mouseDown[ImGuiMouseButton_Left] &= ~ButtonState_Down;
+  mouseInput(ImGuiMouseButton_Left, false);
   if(drop)
     m_dragState = DragState_Drop | (m_dragState & DragState_FirstFrame);
   else {

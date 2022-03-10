@@ -138,8 +138,8 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Viewport { viewport }, m_dockerHost { dockerHost },
     m_accel { &translateAccel, true, this },
-    m_accelReg { "accelerator", &m_accel },
-    m_previousScale { 0.f }, m_fontTexVersion { -1 }, m_noFocus { false }
+    m_accelReg { "accelerator", &m_accel }, m_previousScale { 0.f },
+    m_fontTexVersion { -1 }, m_mouseDown { 0 }, m_noFocus { false }
 {
   static std::weak_ptr<PluginRegister> g_hwndInfo; // v6.29+
 
@@ -236,7 +236,7 @@ void Window::mouseDown(const unsigned int msg)
   }
 
   // Not needed on macOS for receiving mouse up messages outside of the
-  // windows's boundaries. It is instead used by Context::updateMousePos.
+  // windows's boundaries. It is instead used by Context::updateMouseData.
   if(GetCapture() == nullptr)
     SetCapture(m_hwnd.get());
 
@@ -244,6 +244,7 @@ void Window::mouseDown(const unsigned int msg)
   setFocus();
 
   m_ctx->mouseInput(btn, true);
+  m_mouseDown |= 1 << btn;
 }
 
 void Window::mouseUp(const unsigned int msg)
@@ -265,8 +266,9 @@ void Window::mouseUp(const unsigned int msg)
   }
 
   m_ctx->mouseInput(btn, false);
+  m_mouseDown &= ~(1 << btn);
 
-  if(GetCapture() == m_hwnd.get() && !m_ctx->anyMouseDown())
+  if(GetCapture() == m_hwnd.get() && m_mouseDown == 0)
     ReleaseCapture();
 }
 
