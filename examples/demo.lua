@@ -181,6 +181,29 @@ function demo.ShowUserGuide()
   r.ImGui_Unindent(ctx)
 end
 
+function demo.EachEnum(enum)
+  local enum_cache = cache[enum]
+  if not enum_cache then
+    enum_cache = {}
+    cache[enum] = enum_cache
+
+    for func_name, func in pairs(reaper) do
+      local enum_name = func_name:match(('^ImGui_%s_(.+)$'):format(enum))
+      if enum_name then
+        table.insert(enum_cache, { func(), enum_name })
+      end
+    end
+    table.sort(enum_cache, function(a, b) return a[1] < b[1] end)
+  end
+
+  local i = 0
+  return function()
+    i = i + 1
+    if not enum_cache[i] then return end
+    return table.unpack(enum_cache[i])
+  end
+end
+
 -------------------------------------------------------------------------------
 -- [SECTION] Demo Window / ShowDemoWindow()
 -------------------------------------------------------------------------------
@@ -678,7 +701,7 @@ function demo.ShowDemoWindowWidgets()
     end
     r.ImGui_PopButtonRepeat(ctx)
     r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, ("%d"):format(widgets.basic.counter))
+    r.ImGui_Text(ctx, ('%d'):format(widgets.basic.counter))
 
     r.ImGui_Text(ctx, 'Hover over me')
     if r.ImGui_IsItemHovered(ctx) then
@@ -700,7 +723,7 @@ function demo.ShowDemoWindowWidgets()
 
     -- Using the _simplified_ one-liner Combo() api here
     -- See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
-    local items = "AAAA\31BBBB\31CCCC\31DDDD\31EEEE\31FFFF\31GGGG\31HHHH\31IIIIIII\31JJJJ\31KKKKKKK\31"
+    local items = 'AAAA\31BBBB\31CCCC\31DDDD\31EEEE\31FFFF\31GGGG\31HHHH\31IIIIIII\31JJJJ\31KKKKKKK\31'
     rv,widgets.basic.curitem = r.ImGui_Combo(ctx, 'combo', widgets.basic.curitem, items)
     r.ImGui_SameLine(ctx); demo.HelpMarker(
       'Using the simplified one-liner Combo API here.\n' ..
@@ -708,13 +731,13 @@ function demo.ShowDemoWindowWidgets()
 
     rv,widgets.basic.str0 = r.ImGui_InputText(ctx, 'input text', widgets.basic.str0);
     r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'USER:\n' ..
-      'Hold SHIFT or use mouse to select text.\n' ..
-      'CTRL+Left/Right to word jump.\n' ..
-      'CTRL+A or double-click to select all.\n' ..
-      'CTRL+X,CTRL+C,CTRL+V clipboard.\n' ..
-      'CTRL+Z,CTRL+Y undo/redo.\n' ..
-      'ESCAPE to revert.\n\n')
+      'USER:\n\z
+       Hold SHIFT or use mouse to select text.\n\z
+       CTRL+Left/Right to word jump.\n\z
+       CTRL+A or double-click to select all.\n\z
+       CTRL+X,CTRL+C,CTRL+V clipboard.\n\z
+       CTRL+Z,CTRL+Y undo/redo.\n\z
+       ESCAPE to revert.\n\n')
 
     rv,widgets.basic.str1 = r.ImGui_InputTextWithHint(ctx, 'input text (w/ hint)', 'enter text here', widgets.basic.str1);
 
@@ -723,16 +746,16 @@ function demo.ShowDemoWindowWidgets()
     rv,widgets.basic.d0 = r.ImGui_InputDouble(ctx, 'input double', widgets.basic.d0, 0.01, 1.0, '%.8f')
     rv,widgets.basic.d1 = r.ImGui_InputDouble(ctx, 'input scientific', widgets.basic.d1, 0.0, 0.0, '%e')
     r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'You can input value using the scientific notation,\n' ..
-      '  e.g. "1e+8" becomes "100000000".')
+      'You can input value using the scientific notation,\n\z
+       e.g. "1e+8" becomes "100000000".')
 
     r.ImGui_InputDoubleN(ctx, 'input reaper.array', widgets.basic.vec4a)
 
     rv,widgets.basic.i1 = r.ImGui_DragInt(ctx, 'drag int', widgets.basic.i1, 1)
     r.ImGui_SameLine(ctx); demo.HelpMarker(
-        'Click and drag to edit value.\n' ..
-        'Hold SHIFT/ALT for faster/slower edit.\n' ..
-        'Double-click or CTRL+click to input value.')
+      'Click and drag to edit value.\n\z
+       Hold SHIFT/ALT for faster/slower edit.\n\z
+       Double-click or CTRL+click to input value.')
 
     rv,widgets.basic.i2 = r.ImGui_DragInt(ctx, 'drag int 0..100', widgets.basic.i2, 1, 0, 100, '%d%%', r.ImGui_SliderFlags_AlwaysClamp())
 
@@ -756,8 +779,7 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_SameLine(ctx)
     demo.HelpMarker(
       'Using the format string parameter to display a name instead \z
-       of the underlying integer.'
-    )
+       of the underlying integer.')
 
     foo = widgets.basic.col1
     rv,widgets.basic.col1 = r.ImGui_ColorEdit3(ctx, 'color 1', widgets.basic.col1)
@@ -765,8 +787,7 @@ function demo.ShowDemoWindowWidgets()
       'Click on the color square to open a color picker.\n\z
        Click and hold to use drag and drop.\n\z
        Right-click on the color square to show options.\n\z
-       CTRL+click on individual component to input value.'
-    )
+       CTRL+click on individual component to input value.')
 
     rv, widgets.basic.col2 = r.ImGui_ColorEdit4(ctx, 'color 2', widgets.basic.col2)
 
@@ -778,8 +799,7 @@ function demo.ShowDemoWindowWidgets()
     demo.HelpMarker(
       'Using the simplified one-liner ListBox API here.\n\z
        Refer to the "List boxes" section below for an explanation of how to use\z
-       the more flexible and general BeginListBox/EndListBox API.'
-    )
+       the more flexible and general BeginListBox/EndListBox API.')
 
     r.ImGui_TreePop(ctx)
   end
@@ -794,8 +814,8 @@ function demo.ShowDemoWindowWidgets()
     if not widgets.trees then
       widgets.trees = {
         base_flags = r.ImGui_TreeNodeFlags_OpenOnArrow() |
-                    r.ImGui_TreeNodeFlags_OpenOnDoubleClick() |
-                    r.ImGui_TreeNodeFlags_SpanAvailWidth(),
+                     r.ImGui_TreeNodeFlags_OpenOnDoubleClick() |
+                     r.ImGui_TreeNodeFlags_SpanAvailWidth(),
         align_label_with_current_x_position = false,
         test_drag_and_drop = false,
         selection_mask = 1 << 2,
@@ -822,14 +842,14 @@ function demo.ShowDemoWindowWidgets()
 
     if r.ImGui_TreeNode(ctx, 'Advanced, with Selectable nodes') then
       demo.HelpMarker(
-        'This is a more typical looking tree with selectable nodes.\n' ..
-        'Click to select, CTRL+Click to toggle, click on arrows or double-click to open.')
+        'This is a more typical looking tree with selectable nodes.\n\z
+         Click to select, CTRL+Click to toggle, click on arrows or double-click to open.')
       rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnArrow',       widgets.trees.base_flags, r.ImGui_TreeNodeFlags_OpenOnArrow())
       rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnDoubleClick', widgets.trees.base_flags, r.ImGui_TreeNodeFlags_OpenOnDoubleClick())
       rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_SpanAvailWidth',    widgets.trees.base_flags, r.ImGui_TreeNodeFlags_SpanAvailWidth()); r.ImGui_SameLine(ctx); demo.HelpMarker('Extend hit area to all available width instead of allowing more items to be laid out after the node.')
       rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTreeNodeFlags_SpanFullWidth', widgets.trees.base_flags, r.ImGui_TreeNodeFlags_SpanFullWidth());
-      rv,widgets.trees.align_label_with_current_x_position = r.ImGui_Checkbox(ctx, "Align label with current X position", widgets.trees.align_label_with_current_x_position);
-      rv,widgets.trees.test_drag_and_drop = r.ImGui_Checkbox(ctx, "Test tree node as drag source", widgets.trees.test_drag_and_drop);
+      rv,widgets.trees.align_label_with_current_x_position = r.ImGui_Checkbox(ctx, 'Align label with current X position', widgets.trees.align_label_with_current_x_position);
+      rv,widgets.trees.test_drag_and_drop = r.ImGui_Checkbox(ctx, 'Test tree node as drag source', widgets.trees.test_drag_and_drop);
       r.ImGui_Text(ctx, 'Hello!')
       if widgets.trees.align_label_with_current_x_position then
         r.ImGui_Unindent(ctx, r.ImGui_GetTreeNodeToLabelSpacing(ctx))
@@ -887,7 +907,7 @@ function demo.ShowDemoWindowWidgets()
         if (r.ImGui_GetKeyMods(ctx) & r.ImGui_KeyModFlags_Ctrl()) ~= 0 then -- CTRL+click to toggle
           widgets.trees.selection_mask = widgets.trees.selection_mask ~ (1 << node_clicked)
         elseif widgets.trees.selection_mask & (1 << node_clicked) == 0 then -- Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
-          widgets.trees.selection_mask = (1 << node_clicked)              -- Click to single-select
+          widgets.trees.selection_mask = (1 << node_clicked)                -- Click to single-select
         end
       end
 
@@ -1116,7 +1136,7 @@ function demo.ShowDemoWindowWidgets()
     -- Using the generic BeginCombo() API, you have full control over how to display the combo contents.
     -- (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
     -- stored in the object itself, etc.)
-    local combo_items = { "AAAA", "BBBB", "CCCC", "DDDD", "EEEE", "FFFF", "GGGG", "HHHH", "IIII", "JJJJ", "KKKK", "LLLLLLL", "MMMM", "OOOOOOO" }
+    local combo_items = { 'AAAA', 'BBBB', 'CCCC', 'DDDD', 'EEEE', 'FFFF', 'GGGG', 'HHHH', 'IIII', 'JJJJ', 'KKKK', 'LLLLLLL', 'MMMM', 'OOOOOOO' }
     local combo_preview_value = combo_items[widgets.combos.current_item1] -- Pass in the preview value visible before opening the combo (it could be anything)
     if r.ImGui_BeginCombo(ctx, 'combo 1', combo_preview_value, widgets.combos.flags) then
       for i,v in ipairs(combo_items) do
@@ -1158,10 +1178,7 @@ function demo.ShowDemoWindowWidgets()
     -- Using the generic BeginListBox() API, you have full control over how to display the combo contents.
     -- (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
     -- stored in the object itself, etc.)
-    local items = {
-      'AAAA', 'BBBB', 'CCCC', 'DDDD', 'EEEE', 'FFFF', 'GGGG',
-      'HHHH', 'IIII', 'JJJJ', 'KKKK', 'LLLLLLL', 'MMMM', 'OOOOOOO'
-    }
+    local items = { 'AAAA', 'BBBB', 'CCCC', 'DDDD', 'EEEE', 'FFFF', 'GGGG', 'HHHH', 'IIII', 'JJJJ', 'KKKK', 'LLLLLLL', 'MMMM', 'OOOOOOO' }
     if r.ImGui_BeginListBox(ctx, 'listbox 1') then
       for n,v in ipairs(items) do
         local is_selected = widgets.lists.current_idx == n
@@ -1924,7 +1941,7 @@ label:
     r.ImGui_SameLine(ctx); demo.HelpMarker(
       "ColorEdit defaults to displaying RGB inputs if you don't specify a display mode, \z
        but the user can change it with a right-click.\n\nColorPicker defaults to displaying RGB+HSV+Hex \z
-       if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().");
+       if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().")
     rv,widgets.colors.picker_mode = r.ImGui_Combo(ctx, 'Picker Mode', widgets.colors.picker_mode,
       'Auto/Current\31Hue bar + SV rect\31Hue wheel + SV triangle\31')
     r.ImGui_SameLine(ctx); demo.HelpMarker('User can right-click the picker to change mode.');
@@ -2038,9 +2055,9 @@ label:
       }
     end
 
-    rv,widgets.range.begin_f,widgets.range.end_f = r.ImGui_DragFloatRange2(ctx, 'range float', widgets.range.begin_f, widgets.range.end_f, 0.25, 0.0, 100.0, 'Min: %.1f %%', "Max: %.1f %%", r.ImGui_SliderFlags_AlwaysClamp())
-    rv,widgets.range.begin_i,widgets.range.end_i = r.ImGui_DragIntRange2(ctx, 'range int', widgets.range.begin_i, widgets.range.end_i, 5, 0, 1000, 'Min: %d units', "Max: %d units")
-    rv,widgets.range.begin_i,widgets.range.end_i = r.ImGui_DragIntRange2(ctx, 'range int (no bounds)', widgets.range.begin_i, widgets.range.end_i, 5, 0, 0, 'Min: %d units', "Max: %d units")
+    rv,widgets.range.begin_f,widgets.range.end_f = r.ImGui_DragFloatRange2(ctx, 'range float', widgets.range.begin_f, widgets.range.end_f, 0.25, 0.0, 100.0, 'Min: %.1f %%', 'Max: %.1f %%', r.ImGui_SliderFlags_AlwaysClamp())
+    rv,widgets.range.begin_i,widgets.range.end_i = r.ImGui_DragIntRange2(ctx, 'range int', widgets.range.begin_i, widgets.range.end_i, 5, 0, 1000, 'Min: %d units', 'Max: %d units')
+    rv,widgets.range.begin_i,widgets.range.end_i = r.ImGui_DragIntRange2(ctx, 'range int (no bounds)', widgets.range.begin_i, widgets.range.end_i, 5, 0, 0, 'Min: %d units', 'Max: %d units')
     r.ImGui_TreePop(ctx)
   end
 
@@ -3136,7 +3153,7 @@ function demo.ShowDemoWindowLayout()
       layout.scrolling.enable_track = false
     end
 
-    local names = { "Top", "25%", "Center", "75%", "Bottom" }
+    local names = { 'Top', '25%', 'Center', '75%', 'Bottom' }
     local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[1]
     local child_w = (({r.ImGui_GetContentRegionAvail(ctx)})[1] - 4 * item_spacing_x) / #names
     local child_flags = layout.scrolling.enable_extra_decorations and r.ImGui_WindowFlags_MenuBar() or r.ImGui_WindowFlags_None()
@@ -3430,13 +3447,13 @@ function demo.ShowDemoWindowLayout()
       end
       local p0 = {r.ImGui_GetItemRectMin(ctx)}
       local p1 = {r.ImGui_GetItemRectMax(ctx)}
-      local text_str = "Line 1 hello\nLine 2 clip me!"
+      local text_str = 'Line 1 hello\nLine 2 clip me!'
       local text_pos = { p0[1] + layout.clipping.offset[1], p0[2] + layout.clipping.offset[2] }
 
       local draw_list = r.ImGui_GetWindowDrawList(ctx)
       if n == 0 then
         demo.HelpMarker(
-          'Using r.ImGui_PushClipRect():\n\z
+          'Using PushClipRect():\n\z
            Will alter ImGui hit-testing logic + ImDrawList rendering.\n\z
            (use this if you want your clipping rectangle to affect interactions)')
         r.ImGui_PushClipRect(ctx, p0[1], p0[2], p1[1], p1[2], true)
@@ -3445,7 +3462,7 @@ function demo.ShowDemoWindowLayout()
         r.ImGui_PopClipRect(ctx)
       elseif n == 1 then
         demo.HelpMarker(
-          'Using ImDrawList::PushClipRect():\n\z
+          'Using DrawList_PushClipRect():\n\z
            Will alter ImDrawList rendering only.\n\z
            (use this as a shortcut if you are only using ImDrawList calls)')
         r.ImGui_DrawList_PushClipRect(draw_list, p0[1], p0[2], p1[1], p1[2], true)
@@ -3454,8 +3471,8 @@ function demo.ShowDemoWindowLayout()
         r.ImGui_DrawList_PopClipRect(draw_list)
       elseif n == 2 then
         demo.HelpMarker(
-          'Using ImDrawList::AddText() with a fine ClipRect:\n\z
-           Will alter only this specific ImDrawList::AddText() rendering.\n\z
+          'Using DrawList_AddText() with a fine ClipRect:\n\z
+           Will alter only this specific DrawList_AddText() rendering.\n\z
            (this is often used internally to avoid altering the clipping rectangle and minimize draw calls)')
         local clip_rect = { p0[1], p0[2], p1[1], p1[2] }
         r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
@@ -3505,7 +3522,7 @@ function demo.ShowDemoWindowPopups()
 
     r.ImGui_TextWrapped(ctx,
       'When a popup is active, it inhibits interacting with windows that are behind the popup. \z
-       Clicking outside the popup closes it.');
+       Clicking outside the popup closes it.')
 
     local names = { 'Bream', 'Haddock', 'Mackerel', 'Pollock', 'Tilefish' }
 
@@ -3659,7 +3676,7 @@ function demo.ShowDemoWindowPopups()
     -- we need to make sure your item identifier is stable.
     -- In this example we showcase altering the item label while preserving its identifier, using the ### operator (see FAQ).
     demo.HelpMarker('Showcase using a popup ID linked to item ID, with the item having a changing label + stable ID using the ### operator.')
-    r.ImGui_Button(ctx, ("Button: %s###Button"):format(popups.context.name)) -- ### operator override ID ignoring the preceding label
+    r.ImGui_Button(ctx, ('Button: %s###Button'):format(popups.context.name)) -- ### operator override ID ignoring the preceding label
     if r.ImGui_BeginPopupContextItem(ctx) then
       r.ImGui_Text(ctx, 'Edit name:')
       rv,popups.context.name = r.ImGui_InputText(ctx, '##edit', popups.context.name)
@@ -4034,8 +4051,8 @@ function demo.ShowDemoWindowTables()
     -- as TableNextColumn() will automatically wrap around and create new roes as needed.
     -- This is generally more convenient when your cells all contains the same type of data.
     demo.HelpMarker(
-      "Only using TableNextColumn(), which tends to be convenient for tables where every cells contains the same type of contents.\n\z
-       This is also more similar to the old NextColumn() function of the Columns API, and provided to facilitate the Columns->Tables API transition.")
+      'Only using TableNextColumn(), which tends to be convenient for tables where every cells contains the same type of contents.\n\z
+       This is also more similar to the old NextColumn() function of the Columns API, and provided to facilitate the Columns->Tables API transition.')
     if r.ImGui_BeginTable(ctx, 'table3', 3) then
       for item = 0, 13 do
         r.ImGui_TableNextColumn(ctx)
@@ -4987,15 +5004,15 @@ function demo.ShowDemoWindowTables()
 
       -- Simple storage to output a dummy file-system.
       local nodes = {
-        { name="Root",                          type="Folder",      size=-1,     child_idx= 1,  child_count= 3 }, -- 0
-        { name="Music",                         type="Folder",      size=-1,     child_idx= 4,  child_count= 2 }, -- 1
-        { name="Textures",                      type="Folder",      size=-1,     child_idx= 6,  child_count= 3 }, -- 2
-        { name="desktop.ini",                   type="System file", size= 1024,   child_idx=-1, child_count=-1 }, -- 3
-        { name="File1_a.wav",                   type="Audio file",  size= 123000, child_idx=-1, child_count=-1 }, -- 4
-        { name="File1_b.wav",                   type="Audio file",  size= 456000, child_idx=-1, child_count=-1 }, -- 5
-        { name="Image001.png",                  type="Image file",  size= 203128, child_idx=-1, child_count=-1 }, -- 6
-        { name="Copy of Image001.png",          type="Image file",  size= 203256, child_idx=-1, child_count=-1 }, -- 7
-        { name="Copy of Image001 (Final2).png", type="Image file",  size= 203512, child_idx=-1, child_count=-1 }, -- 8
+        { name='Root',                          type='Folder',      size=-1,     child_idx= 1,  child_count= 3 }, -- 0
+        { name='Music',                         type='Folder',      size=-1,     child_idx= 4,  child_count= 2 }, -- 1
+        { name='Textures',                      type='Folder',      size=-1,     child_idx= 6,  child_count= 3 }, -- 2
+        { name='desktop.ini',                   type='System file', size= 1024,   child_idx=-1, child_count=-1 }, -- 3
+        { name='File1_a.wav',                   type='Audio file',  size= 123000, child_idx=-1, child_count=-1 }, -- 4
+        { name='File1_b.wav',                   type='Audio file',  size= 456000, child_idx=-1, child_count=-1 }, -- 5
+        { name='Image001.png',                  type='Image file',  size= 203128, child_idx=-1, child_count=-1 }, -- 6
+        { name='Copy of Image001.png',          type='Image file',  size= 203256, child_idx=-1, child_count=-1 }, -- 7
+        { name='Copy of Image001 (Final2).png', type='Image file',  size= 203512, child_idx=-1, child_count=-1 }, -- 8
       }
 
       local function DisplayNode(node)
@@ -6640,29 +6657,6 @@ function demo.ShowExampleMenuFile()
   if r.ImGui_MenuItem(ctx, 'Quit', 'Alt+F4') then end
 end
 
-function demo.EachEnum(enum)
-  local enum_cache = cache[enum]
-  if not enum_cache then
-    enum_cache = {}
-    cache[enum] = enum_cache
-
-    for func_name, func in pairs(reaper) do
-      local enum_name = func_name:match(('^ImGui_%s_(.+)$'):format(enum))
-      if enum_name then
-        table.insert(enum_cache, { func(), enum_name })
-      end
-    end
-    table.sort(enum_cache, function(a, b) return a[1] < b[1] end)
-  end
-
-  local i = 0
-  return function()
-    i = i + 1
-    if not enum_cache[i] then return end
-    return table.unpack(enum_cache[i])
-  end
-end
-
 -- //-----------------------------------------------------------------------------
 -- // [SECTION] Example App: Debug Console / ShowExampleAppConsole()
 -- //-----------------------------------------------------------------------------
@@ -7153,10 +7147,10 @@ function demo.ShowExampleAppLog()
   if not rv then return open end
 
   if r.ImGui_SmallButton(ctx, '[Debug] Add 5 entries') then
-    local categories = { "info", "warn", "error" }
-    local words = { "Bumfuzzled", "Cattywampus", "Snickersnee",
-                    "Abibliophobia", "Absquatulate", "Nincompoop",
-                    "Pauciloquent" }
+    local categories = { 'info', 'warn', 'error' }
+    local words = { 'Bumfuzzled', 'Cattywampus', 'Snickersnee',
+                    'Abibliophobia', 'Absquatulate', 'Nincompoop',
+                    'Pauciloquent' }
     for n = 0, 5 - 1 do
       local category = categories[(app.log.counter % #categories) + 1]
       local word = words[(app.log.counter % #words) + 1]
@@ -7211,7 +7205,7 @@ function demo.ShowExampleAppLayout()
   -- Right
   r.ImGui_BeginGroup(ctx)
   if r.ImGui_BeginChild(ctx, 'item view', 0, -r.ImGui_GetFrameHeightWithSpacing(ctx)) then -- Leave room for 1 line below us
-    r.ImGui_Text(ctx, ("MyObject: %d"):format(app.layout.selected))
+    r.ImGui_Text(ctx, ('MyObject: %d'):format(app.layout.selected))
     r.ImGui_Separator(ctx)
     if r.ImGui_BeginTabBar(ctx, '##Tabs', r.ImGui_TabBarFlags_None()) then
       if r.ImGui_BeginTabItem(ctx, 'Description') then
@@ -7345,7 +7339,7 @@ function demo.ShowExampleAppLongText()
   if r.ImGui_Button(ctx, 'Add 1000 lines') then
     local newLines = ''
     for i = 0, 1000 - 1 do
-      newLines = newLines .. ("%i The quick brown fox jumps over the lazy dog\n"):format(app.long_text.lines + i)
+      newLines = newLines .. ('%i The quick brown fox jumps over the lazy dog\n'):format(app.long_text.lines + i)
     end
     app.long_text.log = app.long_text.log .. newLines
     app.long_text.lines = app.long_text.lines + 1000
@@ -7404,7 +7398,7 @@ function demo.ShowExampleAppAutoResize()
      output your content because that would create a feedback loop.")
   rv,app.auto_resize.lines = r.ImGui_SliderInt(ctx, 'Number of lines', app.auto_resize.lines, 1, 20)
   for i = 1, app.auto_resize.lines do
-    r.ImGui_Text(ctx, ("%sThis is line %d"):format((' '):rep(i * 4), i)) -- Pad with space to extend size horizontally
+    r.ImGui_Text(ctx, ('%sThis is line %d'):format(('\x20'):rep(i * 4), i)) -- Pad with space to extend size horizontally
   end
   r.ImGui_End(ctx)
   return open
@@ -7451,13 +7445,13 @@ function demo.ShowExampleAppConstrainedResize()
   if r.ImGui_Button(ctx, '800x200') then r.ImGui_SetWindowSize(ctx, 800, 200) end
   r.ImGui_SetNextItemWidth(ctx, 200)
   rv,app.constrained_resize.type = r.ImGui_Combo(ctx, 'Constraint', app.constrained_resize.type,
-    "Resize vertical only\31\z
-      Resize horizontal only\31\z
-      Width > 100, Height > 100\31\z
-      Width 400-500\31\z
-      Height 400-500\31")
-      --Custom: Always Square\31\z
-      --Custom: Fixed Steps (100)\31")
+    'Resize vertical only\31\z
+     Resize horizontal only\31\z
+     Width > 100, Height > 100\31\z
+     Width 400-500\31\z
+     Height 400-500\31')
+     --Custom: Always Square\31\z
+     --Custom: Fixed Steps (100)\31')
   r.ImGui_SetNextItemWidth(ctx, 200)
   rv,app.constrained_resize.display_lines = r.ImGui_DragInt(ctx, 'Lines', app.constrained_resize.display_lines, 0.2, 1, 100)
   rv,app.constrained_resize.auto_resize = r.ImGui_Checkbox(ctx, 'Auto-resize', app.constrained_resize.auto_resize)
@@ -7605,10 +7599,10 @@ function demo.ShowExampleAppWindowTitles()
 
   -- Using "###" to display a changing title but keep a static identifier "AnimatedTitle"
   r.ImGui_SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 300, r.ImGui_Cond_FirstUseEver())
-  spinners = {'|', '/', '-', '\\'}
+  spinners = { '|', '/', '-', '\\' }
   local spinner = math.floor(r.ImGui_GetTime(ctx) / 0.25) & 3
-  if r.ImGui_Begin(ctx, ("Animated title %s %d###AnimatedTitle"):format(spinners[spinner+1], r.ImGui_GetFrameCount(ctx))) then
-    r.ImGui_Text(ctx, "This window has a changing title.")
+  if r.ImGui_Begin(ctx, ('Animated title %s %d###AnimatedTitle'):format(spinners[spinner+1], r.ImGui_GetFrameCount(ctx))) then
+    r.ImGui_Text(ctx, 'This window has a changing title.')
     r.ImGui_End(ctx)
   end
 end
