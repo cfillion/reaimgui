@@ -1018,20 +1018,25 @@ function demo.ShowDemoWindowWidgets()
     end
 
     -- Not supported by the default built-in font TODO
-    -- if r.ImGui_TreeNode(ctx, 'UTF-8 Text') then
-    --   -- UTF-8 test with Japanese characters
-    --   -- (Needs a suitable font? Try "Google Noto" or "Arial Unicode". See docs/FONTS.md for details.)
-    --   -- so you can safely copy & paste garbled characters into another application.
-    --   r.ImGui_TextWrapped(ctx,
-    --     'CJK text will only appears if the font was loaded with the appropriate CJK character ranges. ' ..
-    --     'Call io.Fonts->AddFontFromFileTTF() manually to load extra character ranges. ' ..
-    --     'Read docs/FONTS.md for details.')
-    --   r.ImGui_Text(ctx, 'Hiragana: かきくけこ (kakikukeko)')
-    --   r.ImGui_Text(ctx, 'Kanjis: 日本語 (nihongo)')
-    --   rv,widgets.text.utf8 = r.ImGui_InputText(ctx, 'UTF-8 input', widgets.text.utf8)
-    --
-    --   r.ImGui_TreePop(ctx)
-    -- end
+    if r.ImGui_TreeNode(ctx, 'UTF-8 Text') then
+      -- UTF-8 test with Japanese characters
+      -- (Needs a suitable font? Try "Google Noto" or "Arial Unicode". See docs/FONTS.md for details.)
+      -- so you can safely copy & paste garbled characters into another application.
+      r.ImGui_TextWrapped(ctx,
+        'CJK text cannot be rendered due to current limitations regarding font rasterization. \z
+        It is however safe to copy & paste from/into another application.')
+      demo.Link('https://github.com/cfillion/reaimgui/issues/5')
+      r.ImGui_Spacing(ctx)
+      -- r.ImGui_TextWrapped(ctx,
+      --   'CJK text will only appears if the font was loaded with the appropriate CJK character ranges. \z
+      --    Call io.Fonts->AddFontFromFileTTF() manually to load extra character ranges. \z
+      --    Read docs/FONTS.md for details.')
+      r.ImGui_Text(ctx, 'Hiragana: かきくけこ (kakikukeko)')
+      r.ImGui_Text(ctx, 'Kanjis: 日本語 (nihongo)')
+      rv,widgets.text.utf8 = r.ImGui_InputText(ctx, 'UTF-8 input', widgets.text.utf8)
+
+      r.ImGui_TreePop(ctx)
+    end
 
     r.ImGui_TreePop(ctx)
   end
