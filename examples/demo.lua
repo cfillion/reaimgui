@@ -6301,6 +6301,8 @@ function demo.ShowStyleEditor()
     app.style_editor = {
       style  = demo.GetStyleData(),
       ref    = demo.GetStyleData(),
+      output_dest = 0,
+      output_only_modified = true,
     }
   end
 
@@ -6339,6 +6341,69 @@ function demo.ShowStyleEditor()
   demo.HelpMarker(
     'Save/Revert in local non-persistent storage. Default Colors definition are not affected. \z
      Use "Export" below to save them somewhere.')
+
+  if r.ImGui_Button(ctx, 'Export Vars') then
+    local export, name_maxlen = {}, 0
+    local isValueEqual = function(a, b)
+      if(type(a) == 'table') then
+        return a[1] == b[1] and a[2] == b[2]
+      else
+        return a == b
+      end
+    end
+    for i, name in demo.EachEnum('StyleVar') do
+      local value = app.style_editor.style.vars[i]
+      if not app.style_editor.output_only_modified or not isValueEqual(value, app.style_editor.ref.vars[i]) then
+        table.insert(export, { name, value })
+        name_maxlen = math.max(name_maxlen, name:len())
+      end
+    end
+
+    if app.style_editor.output_dest == 0 then
+      r.ImGui_LogToClipboard(ctx)
+    else
+      r.ImGui_LogToTTY(ctx)
+    end
+    for _, var in ipairs(export) do
+      local pad = string.rep('\x20', name_maxlen - var[1]:len())
+      if type(var[2]) == 'table' then
+        r.ImGui_LogText(ctx, ('reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_%s(),%s %g, %g)\n'):format(var[1], pad, var[2][1], var[2][2]))
+      else
+        r.ImGui_LogText(ctx, ('reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_%s(),%s %g)\n'):format(var[1], pad, var[2]))
+      end
+    end
+    if #export > 0 then
+      r.ImGui_LogText(ctx, ('\nreaper.ImGui_PopStyleVar(ctx, %d)\n'):format(#export))
+    end
+    r.ImGui_LogFinish(ctx)
+  end
+  r.ImGui_SameLine(ctx)
+  if r.ImGui_Button(ctx, 'Export Colors') then
+    local export, name_maxlen = {}, 0
+    for i, name in demo.EachEnum('Col') do
+      local color = app.style_editor.style.colors[i]
+      if not app.style_editor.output_only_modified or color ~= app.style_editor.ref.colors[i] then
+        table.insert(export, { name, color & 0xffffffff })
+        name_maxlen = math.max(name_maxlen, name:len())
+      end
+    end
+
+    if app.style_editor.output_dest == 0 then
+      r.ImGui_LogToClipboard(ctx)
+    else
+      r.ImGui_LogToTTY(ctx)
+    end
+    for _, color in ipairs(export) do
+      r.ImGui_LogText(ctx, ('reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_%s(),%s 0x%08X)\n'):
+        format(color[1], string.rep('\x20', name_maxlen - color[1]:len()), color[2]))
+    end
+    if #export > 0 then
+      r.ImGui_LogText(ctx, ('\nreaper.ImGui_PopStyleColor(ctx, %d)\n'):format(#export))
+    end
+    r.ImGui_LogFinish(ctx)
+  end
+  r.ImGui_SameLine(ctx); r.ImGui_SetNextItemWidth(ctx, 120); rv,app.style_editor.output_dest = r.ImGui_Combo(ctx, '##output_type', app.style_editor.output_dest, 'To Clipboard\31To TTY\31')
+  r.ImGui_SameLine(ctx); rv,app.style_editor.output_only_modified = r.ImGui_Checkbox(ctx, 'Only Modified', app.style_editor.output_only_modified)
 
   r.ImGui_Separator(ctx)
 
@@ -6401,46 +6466,17 @@ function demo.ShowStyleEditor()
     if r.ImGui_BeginTabItem(ctx, 'Colors') then
       if not app.style_editor.colors then
         app.style_editor.colors = {
-          output_dest = 0,
-          output_only_modified = true,
+          filter = { inst=nil, text = '' },
           alpha_flags = r.ImGui_ColorEditFlags_None(),
-          filter_text = '',
         }
       end
       -- the filter object is destroyed once unused for one or more frames
-      if not r.ImGui_ValidatePtr(app.style_editor.colors.filter, 'ImGui_TextFilter*') then
-        app.style_editor.colors.filter = r.ImGui_CreateTextFilter(app.style_editor.colors.filter_text)
+      if not r.ImGui_ValidatePtr(app.style_editor.colors.filter.inst, 'ImGui_TextFilter*') then
+        app.style_editor.colors.filter.inst = r.ImGui_CreateTextFilter(app.style_editor.colors.filter.text)
       end
 
-      if r.ImGui_Button(ctx, 'Export') then
-        local export, name_maxlen = {}, 0
-        for i, name in demo.EachEnum('Col') do
-          local color = app.style_editor.style.colors[i]
-          if not app.style_editor.colors.output_only_modified or color ~= app.style_editor.ref.colors[i] then
-            table.insert(export, { name, color & 0xffffffff })
-            name_maxlen = math.max(name_maxlen, name:len())
-          end
-        end
-
-        if app.style_editor.colors.output_dest == 0 then
-          r.ImGui_LogToClipboard(ctx)
-        else
-          r.ImGui_LogToTTY(ctx)
-        end
-        for _, color in ipairs(export) do
-          r.ImGui_LogText(ctx, ('reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_Col_%s(),%s 0x%08X)\n'):
-            format(color[1], string.rep('\x20', name_maxlen - color[1]:len()), color[2]))
-        end
-        if #export > 0 then
-          r.ImGui_LogText(ctx, ('\nreaper.ImGui_PopStyleVar(ctx, %d)\n'):format(#export))
-        end
-        r.ImGui_LogFinish(ctx)
-      end
-      r.ImGui_SameLine(ctx); r.ImGui_SetNextItemWidth(ctx, 120); rv,app.style_editor.colors.output_dest = r.ImGui_Combo(ctx, '##output_type', app.style_editor.colors.output_dest, 'To Clipboard\31To TTY\31')
-      r.ImGui_SameLine(ctx); rv,app.style_editor.colors.output_only_modified = r.ImGui_Checkbox(ctx, 'Only Modified Colors', app.style_editor.colors.output_only_modified)
-
-      if r.ImGui_TextFilter_Draw(app.style_editor.colors.filter, ctx, 'Filter colors', r.ImGui_GetFontSize(ctx) * 16) then
-        app.style_editor.colors.filter_text = r.ImGui_TextFilter_Get(app.style_editor.colors.filter)
+      if r.ImGui_TextFilter_Draw(app.style_editor.colors.filter.inst, ctx, 'Filter colors', r.ImGui_GetFontSize(ctx) * 16) then
+        app.style_editor.colors.filter.text = r.ImGui_TextFilter_Get(app.style_editor.colors.filter.inst)
       end
 
       if r.ImGui_RadioButton(ctx, 'Opaque', app.style_editor.colors.alpha_flags == r.ImGui_ColorEditFlags_None()) then
@@ -6468,7 +6504,7 @@ function demo.ShowStyleEditor()
         r.ImGui_PushItemWidth(ctx, -160)
         local inner_spacing = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())
         for i, name in demo.EachEnum('Col') do
-          if r.ImGui_TextFilter_PassFilter(app.style_editor.colors.filter, name) then
+          if r.ImGui_TextFilter_PassFilter(app.style_editor.colors.filter.inst, name) then
             r.ImGui_PushID(ctx, i)
             rv, app.style_editor.style.colors[i] = r.ImGui_ColorEdit4(ctx, '##color', app.style_editor.style.colors[i], r.ImGui_ColorEditFlags_AlphaBar() | app.style_editor.colors.alpha_flags)
             if app.style_editor.style.colors[i] ~= app.style_editor.ref.colors[i] then
@@ -6522,8 +6558,7 @@ function demo.ShowStyleEditor()
 --             r.ImGui_EndTabItem();
 --         }
 --
---         if (r.ImGui_BeginTabItem("Rendering"))
---         {
+    if r.ImGui_BeginTabItem(ctx, 'Rendering') then
 --             r.ImGui_Checkbox("Anti-aliased lines", &style.AntiAliasedLines);
 --             r.ImGui_SameLine();
 --             HelpMarker("When disabling anti-aliasing lines, you'll probably want to disable borders in your style as well.");
@@ -6533,7 +6568,7 @@ function demo.ShowStyleEditor()
 --             HelpMarker("Faster lines using texture data. Require backend to render with bilinear filtering (not point/nearest filtering).");
 --
 --             r.ImGui_Checkbox("Anti-aliased fill", &style.AntiAliasedFill);
---             r.ImGui_PushItemWidth(r.ImGui_GetFontSize() * 8);
+      r.ImGui_PushItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 8)
 --             r.ImGui_DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.10f, 10.0f, "%.2f");
 --             if (style.CurveTessellationTol < 0.10f) style.CurveTessellationTol = 0.10f;
 --
@@ -6578,13 +6613,14 @@ function demo.ShowStyleEditor()
 --             }
 --             r.ImGui_SameLine();
 --             HelpMarker("When drawing circle primitives with \"num_segments == 0\" tesselation will be calculated automatically.");
---
---             r.ImGui_DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20f, 1.0f, "%.2f"); // Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
---             r.ImGui_DragFloat("Disabled Alpha", &style.DisabledAlpha, 0.005f, 0.0f, 1.0f, "%.2f"); r.ImGui_SameLine(); HelpMarker("Additional alpha multiplier for disabled items (multiply over current value of Alpha).");
---             r.ImGui_PopItemWidth();
---
---             r.ImGui_EndTabItem();
---         }
+
+      local Alpha, DisabledAlpha = r.ImGui_StyleVar_Alpha(), r.ImGui_StyleVar_DisabledAlpha()
+      rv,app.style_editor.style.vars[Alpha] = r.ImGui_DragDouble(ctx, 'Global Alpha', app.style_editor.style.vars[Alpha], 0.005, 0.20, 1.0, '%.2f') -- Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
+      rv,app.style_editor.style.vars[DisabledAlpha] = r.ImGui_DragDouble(ctx, 'Disabled Alpha', app.style_editor.style.vars[DisabledAlpha], 0.005, 0.0, 1.0, '%.2f'); r.ImGui_SameLine(ctx); demo.HelpMarker('Additional alpha multiplier for disabled items (multiply over current value of Alpha).')
+      r.ImGui_PopItemWidth(ctx)
+
+      r.ImGui_EndTabItem(ctx)
+    end
 
     r.ImGui_EndTabBar(ctx)
   end
