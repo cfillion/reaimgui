@@ -136,6 +136,21 @@ function demo.clamp(v, mn, mx)
   return v
 end
 
+function demo.Link(url)
+  if not r.CF_ShellExecute then
+    r.ImGui_Text(ctx, url)
+    return
+  end
+
+  local color = r.ImGui_GetStyleColor(ctx, r.ImGui_Col_CheckMark())
+  r.ImGui_TextColored(ctx, color, url)
+  if r.ImGui_IsItemClicked(ctx) then
+    r.CF_ShellExecute(url)
+  elseif r.ImGui_IsItemHovered(ctx) then
+    r.ImGui_SetMouseCursor(ctx, r.ImGui_MouseCursor_Hand())
+  end
+end
+
 -- Helper to display basic user controls.
 function demo.ShowUserGuide()
   -- ImGuiIO& io = r.ImGui_GetIO() TODO
@@ -341,14 +356,15 @@ function demo.ShowDemoWindow()
                             'and Metrics/Debugger (general purpose Dear ImGui debugging tool).')
     r.ImGui_Separator(ctx)
 
-    -- r.ImGui_Text(ctx, 'PROGRAMMER GUIDE:')
-    -- r.ImGui_BulletText(ctx, 'See the ShowDemoWindow() code in imgui_demo.cpp. <- you are here!')
+    r.ImGui_Text(ctx, 'PROGRAMMER GUIDE:')
+    r.ImGui_BulletText(ctx, 'See the ShowDemoWindow() code in ReaImGui_Demo.lua. <- you are here!')
     -- r.ImGui_BulletText(ctx, 'See comments in imgui.cpp.')
-    -- r.ImGui_BulletText(ctx, 'See example applications in the examples/ folder.')
-    -- r.ImGui_BulletText(ctx, 'Read the FAQ at http://www.dearimgui.org/faq/')
+    r.ImGui_BulletText(ctx, 'See example scripts in the examples/ folder.')
+    r.ImGui_Indent(ctx); demo.Link('https://github.com/cfillion/reaimgui/tree/master/examples'); r.ImGui_Unindent(ctx)
+    r.ImGui_BulletText(ctx, 'Read the FAQ at '); r.ImGui_SameLine(ctx, 0, 0); demo.Link('https://www.dearimgui.org/faq/')
     -- r.ImGui_BulletText(ctx, "Set 'io.ConfigFlags |= NavEnableKeyboard' for keyboard controls.")
     -- r.ImGui_BulletText(ctx, "Set 'io.ConfigFlags |= NavEnableGamepad' for gamepad controls.")
-    -- r.ImGui_Separator(ctx)
+    r.ImGui_Separator(ctx)
 
     r.ImGui_Text(ctx, 'USER GUIDE:')
     demo.ShowUserGuide()
