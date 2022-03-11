@@ -6342,19 +6342,11 @@ function demo.ShowStyleEditor()
     'Save/Revert in local non-persistent storage. Default Colors definition are not affected. \z
      Use "Export" below to save them somewhere.')
 
-  if r.ImGui_Button(ctx, 'Export Vars') then
-    local export, name_maxlen = {}, 0
-    local isValueEqual = function(a, b)
-      if(type(a) == 'table') then
-        return a[1] == b[1] and a[2] == b[2]
-      else
-        return a == b
-      end
-    end
-    for i, name in demo.EachEnum('StyleVar') do
-      local value = app.style_editor.style.vars[i]
-      if not app.style_editor.output_only_modified or not isValueEqual(value, app.style_editor.ref.vars[i]) then
-        table.insert(export, { name, value })
+  local export = function(enumName, funcSuffix, curTable, refTable, isEqual, formatValue)
+    local lines, name_maxlen = {}, 0
+    for i, name in demo.EachEnum(enumName) do
+      if not app.style_editor.output_only_modified or not isEqual(curTable[i], refTable[i]) then
+        table.insert(lines, { name, curTable[i] })
         name_maxlen = math.max(name_maxlen, name:len())
       end
     end
@@ -6364,43 +6356,26 @@ function demo.ShowStyleEditor()
     else
       r.ImGui_LogToTTY(ctx)
     end
-    for _, var in ipairs(export) do
-      local pad = string.rep('\x20', name_maxlen - var[1]:len())
-      if type(var[2]) == 'table' then
-        r.ImGui_LogText(ctx, ('reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_%s(),%s %g, %g)\n'):format(var[1], pad, var[2][1], var[2][2]))
-      else
-        r.ImGui_LogText(ctx, ('reaper.ImGui_PushStyleVar(ctx, reaper.ImGui_StyleVar_%s(),%s %g)\n'):format(var[1], pad, var[2]))
-      end
+    for _, line in ipairs(lines) do
+      local pad = string.rep('\x20', name_maxlen - line[1]:len())
+      r.ImGui_LogText(ctx, ('reaper.ImGui_Push%s(ctx, reaper.ImGui_%s_%s(),%s %s)\n')
+        :format(funcSuffix, enumName, line[1], pad, formatValue(line[2])))
     end
-    if #export > 0 then
-      r.ImGui_LogText(ctx, ('\nreaper.ImGui_PopStyleVar(ctx, %d)\n'):format(#export))
+    if #lines > 0 then
+      r.ImGui_LogText(ctx, ('\nreaper.ImGui_Pop%s(ctx, %d)\n'):format(funcSuffix, #lines))
     end
     r.ImGui_LogFinish(ctx)
   end
+
+  if r.ImGui_Button(ctx, 'Export Vars') then
+    export('StyleVar', 'StyleVar', app.style_editor.style.vars, app.style_editor.ref.vars,
+      function(a, b) if type(a) == 'table' then return a[1] == b[1] and a[2] == b[2] else return a == b end end,
+      function(val) if type(val) == 'table' then return ('%g, %g'):format(table.unpack(val)) else return ('%g'):format(val) end end)
+  end
   r.ImGui_SameLine(ctx)
   if r.ImGui_Button(ctx, 'Export Colors') then
-    local export, name_maxlen = {}, 0
-    for i, name in demo.EachEnum('Col') do
-      local color = app.style_editor.style.colors[i]
-      if not app.style_editor.output_only_modified or color ~= app.style_editor.ref.colors[i] then
-        table.insert(export, { name, color & 0xffffffff })
-        name_maxlen = math.max(name_maxlen, name:len())
-      end
-    end
-
-    if app.style_editor.output_dest == 0 then
-      r.ImGui_LogToClipboard(ctx)
-    else
-      r.ImGui_LogToTTY(ctx)
-    end
-    for _, color in ipairs(export) do
-      r.ImGui_LogText(ctx, ('reaper.ImGui_PushStyleColor(ctx, reaper.ImGui_Col_%s(),%s 0x%08X)\n'):
-        format(color[1], string.rep('\x20', name_maxlen - color[1]:len()), color[2]))
-    end
-    if #export > 0 then
-      r.ImGui_LogText(ctx, ('\nreaper.ImGui_PopStyleColor(ctx, %d)\n'):format(#export))
-    end
-    r.ImGui_LogFinish(ctx)
+    export('Col', 'StyleColor', app.style_editor.style.colors, app.style_editor.ref.colors,
+      function(a, b) return a == b end, function(val) return ('0x%08X'):format(val & 0xffffffff) end)
   end
   r.ImGui_SameLine(ctx); r.ImGui_SetNextItemWidth(ctx, 120); rv,app.style_editor.output_dest = r.ImGui_Combo(ctx, '##output_type', app.style_editor.output_dest, 'To Clipboard\31To TTY\31')
   r.ImGui_SameLine(ctx); rv,app.style_editor.output_only_modified = r.ImGui_Checkbox(ctx, 'Only Modified', app.style_editor.output_only_modified)
