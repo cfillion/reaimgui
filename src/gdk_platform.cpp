@@ -107,3 +107,20 @@ float Platform::scaleForWindow(HWND hwnd)
 {
   return GDKWindow::globalScaleFactor();
 }
+
+HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
+{
+  struct Cursor {
+    Cursor(const GdkCursorType type)
+      : m_cur { gdk_cursor_new_for_display(gdk_display_get_default(), type) } {}
+    operator HCURSOR() const { return reinterpret_cast<HCURSOR>(m_cur); }
+    GdkCursor *m_cur;
+  };
+
+  static const Cursor cursors[ImGuiMouseCursor_COUNT] {
+    GDK_ARROW, GDK_XTERM, GDK_FLEUR, GDK_TOP_SIDE, GDK_RIGHT_SIDE,
+    GDK_BOTTOM_LEFT_CORNER, GDK_BOTTOM_RIGHT_CORNER, GDK_HAND1, GDK_PIRATE,
+  };
+
+  return cursors[cur];
+}

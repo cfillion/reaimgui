@@ -252,17 +252,6 @@ void Context::updateCursor()
   if(m_imgui->IO.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
     return;
 
-  static HCURSOR nativeCursors[ImGuiMouseCursor_COUNT] {
-    LoadCursor(nullptr, IDC_ARROW),
-    LoadCursor(nullptr, IDC_IBEAM),
-    LoadCursor(nullptr, IDC_SIZEALL),
-    LoadCursor(nullptr, IDC_SIZENS),
-    LoadCursor(nullptr, IDC_SIZEWE),
-    LoadCursor(nullptr, IDC_SIZENESW),
-    LoadCursor(nullptr, IDC_SIZENWSE),
-    LoadCursor(nullptr, IDC_HAND),
-    LoadCursor(nullptr, IDC_NO),
-  };
 
   // TODO
   // io.MouseDrawCursor (ImGui-drawn cursor)
@@ -272,9 +261,9 @@ void Context::updateCursor()
   // (it's reset when a new frame is started)
   const ImGuiMouseCursor imguiCursor { ImGui::GetMouseCursor() };
   const bool hidden { imguiCursor == ImGuiMouseCursor_None };
-  HCURSOR cursor { hidden ? nullptr : nativeCursors[imguiCursor] };
-  if(m_cursor != cursor)
-    SetCursor(m_cursor = cursor);
+  HCURSOR nativeCursor { hidden ? nullptr : Platform::getCursor(imguiCursor) };
+  if(m_cursor != nativeCursor)
+    SetCursor(m_cursor = nativeCursor);
 }
 
 void Context::updateMouseData()

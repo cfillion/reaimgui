@@ -120,3 +120,32 @@ float Platform::scaleForWindow(HWND hwnd)
 {
   return [[(__bridge NSView *)hwnd window] backingScaleFactor];
 }
+
+@interface NSCursor()
++ (NSCursor *)_windowResizeNorthWestSouthEastCursor;
++ (NSCursor *)_windowResizeNorthEastSouthWestCursor;
++ (NSCursor *)_windowResizeNorthSouthCursor;
++ (NSCursor *)_windowResizeEastWestCursor;
+@end
+
+HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
+{
+  if(cur == ImGuiMouseCursor_ResizeAll) {
+    static HCURSOR bm { LoadCursor(nullptr, IDC_SIZEALL) };
+    return bm;
+  }
+
+  static NSCursor * const cursors[ImGuiMouseCursor_COUNT] {
+    [NSCursor arrowCursor],
+    [NSCursor IBeamCursor],
+    nullptr, // ResizeAll
+    [NSCursor _windowResizeNorthSouthCursor],
+    [NSCursor _windowResizeEastWestCursor],
+    [NSCursor _windowResizeNorthEastSouthWestCursor],
+    [NSCursor _windowResizeNorthWestSouthEastCursor],
+    [NSCursor pointingHandCursor],
+    [NSCursor operationNotAllowedCursor],
+  };
+
+  return (__bridge HCURSOR)cursors[cur];
+}

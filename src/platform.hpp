@@ -28,6 +28,7 @@ class DockerHost;
 class Window;
 struct ImGuiViewport;
 struct ImVec2;
+typedef int ImGuiMouseCursor;
 
 namespace Platform {
   void install();
@@ -36,6 +37,7 @@ namespace Platform {
   ImGuiViewport *viewportUnder(ImVec2);
   void scalePosition(ImVec2 *, bool toHiDpi = false);
   float scaleForWindow(HWND);
+  HCURSOR getCursor(ImGuiMouseCursor);
 };
 
 #endif

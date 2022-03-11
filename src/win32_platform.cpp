@@ -144,3 +144,19 @@ float Platform::scaleForWindow(HWND hwnd)
 {
   return Win32Window::scaleForDpi(Win32Window::dpiForWindow(hwnd));
 }
+
+HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
+{
+  struct Cursor {
+    Cursor(const wchar_t *name) : m_cur { LoadCursor(nullptr, name) } {}
+    operator HCURSOR() const { return m_cur; }
+    HCURSOR m_cur;
+  };
+
+  static const Cursor cursors[ImGuiMouseCursor_COUNT] {
+    IDC_ARROW, IDC_IBEAM, IDC_SIZEALL, IDC_SIZENS, IDC_SIZEWE, IDC_SIZENESW,
+    IDC_SIZENWSE, IDC_HAND, IDC_NO,
+  };
+
+  return cursors[cur];
+}
