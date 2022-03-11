@@ -6128,20 +6128,23 @@ function demo.ShowDemoWindowMisc()
     end
 
     if r.ImGui_TreeNode(ctx, 'Mouse cursors') then
-      local mouse_cursors_names = { 'Arrow', 'TextInput', 'ResizeAll', 'ResizeNS', 'ResizeEW', 'ResizeNESW', 'ResizeNWSE', 'Hand', 'NotAllowed' }
-
       local current = r.ImGui_GetMouseCursor(ctx)
-      r.ImGui_Text(ctx, ('Current mouse cursor = %d: %s'):format(current, mouse_cursors_names[current + 1]))
+      for cursor, name in demo.EachEnum('MouseCursor') do
+        if cursor == current then
+          r.ImGui_Text(ctx, ('Current mouse cursor = %d: %s'):format(current, name))
+          break
+        end
+      end
       r.ImGui_Text(ctx, 'Hover to see mouse cursors:')
-      r.ImGui_SameLine(ctx); demo.HelpMarker(
-        'Your application can render a different mouse cursor based on what r.ImGui_GetMouseCursor() returns. \z
-         If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, \z
-         otherwise your backend needs to handle it.')
-      for i,name in ipairs(mouse_cursors_names) do
-        local label = ('Mouse cursor %d: %s'):format(i - 1, name)
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker(
+      --   'Your application can render a different mouse cursor based on what r.ImGui_GetMouseCursor() returns. \z
+      --    If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, \z
+      --    otherwise your backend needs to handle it.')
+      for i, name in demo.EachEnum('MouseCursor') do
+        local label = ('Mouse cursor %d: %s'):format(i, name)
         r.ImGui_Bullet(ctx); r.ImGui_Selectable(ctx, label, false)
         if r.ImGui_IsItemHovered(ctx) then
-          r.ImGui_SetMouseCursor(ctx, i - 1)
+          r.ImGui_SetMouseCursor(ctx, i)
         end
       end
       r.ImGui_TreePop(ctx)
