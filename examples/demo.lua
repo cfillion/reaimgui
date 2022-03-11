@@ -5879,15 +5879,12 @@ function demo.ShowDemoWindowMisc()
   if r.ImGui_CollapsingHeader(ctx, 'Filtering') then
     -- Helper class to easy setup a text filter.
     if not misc.filtering then
-      misc.filtering = {
-        filter = nil,
-        text   = '',
-      }
+      misc.filtering = { inst = nil, text = '' }
     end
 
     -- the filter object is destroyed once unused for one or more frames
-    if not r.ImGui_ValidatePtr(misc.filtering.filter, 'ImGui_TextFilter*') then
-      misc.filtering.filter = r.ImGui_CreateTextFilter(misc.filtering.text)
+    if not r.ImGui_ValidatePtr(misc.filtering.inst, 'ImGui_TextFilter*') then
+      misc.filtering.inst = r.ImGui_CreateTextFilter(misc.filtering.text)
     end
 
     r.ImGui_Text(ctx, [[Filter usage:
@@ -5895,12 +5892,12 @@ function demo.ShowDemoWindowMisc()
   "xxx"      display lines containing "xxx"
   "xxx,yyy"  display lines containing "xxx" or "yyy"
   "-xxx"     hide lines containing "xxx"]])
-    if r.ImGui_TextFilter_Draw(misc.filtering.filter, ctx) then
-      misc.filtering.text = r.ImGui_TextFilter_Get(misc.filtering.filter)
+    if r.ImGui_TextFilter_Draw(misc.filtering.inst, ctx) then
+      misc.filtering.text = r.ImGui_TextFilter_Get(misc.filtering.inst)
     end
     local lines = { 'aaa1.c', 'bbb1.c', 'ccc1.c', 'aaa2.cpp', 'bbb2.cpp', 'ccc2.cpp', 'abc.h', 'hello, world' }
     for i, line in ipairs(lines) do
-      if r.ImGui_TextFilter_PassFilter(misc.filtering.filter, line) then
+      if r.ImGui_TextFilter_PassFilter(misc.filtering.inst, line) then
         r.ImGui_BulletText(ctx, line)
       end
     end
@@ -7033,7 +7030,7 @@ function ExampleAppLog:new(ctx)
   local instance = {
     ctx          = ctx,
     lines        = {},
-    -- filter       = ImGuiTextFilter,
+    filter       = { inst=nil, text='' },
     auto_scroll  = true, -- Keep scrolling if already at the bottom.
   }
   self.__index = self
@@ -7055,6 +7052,10 @@ function ExampleAppLog.draw(self, title, p_open)
   local rv,p_open = r.ImGui_Begin(self.ctx, title, p_open)
   if not rv then return p_open end
 
+  if not r.ImGui_ValidatePtr(self.filter.inst, 'ImGui_TextFilter*') then
+    self.filter.inst = r.ImGui_CreateTextFilter(self.filter.text)
+  end
+
   -- Options menu
   if r.ImGui_BeginPopup(self.ctx, 'Options') then
     rv,self.auto_scroll = r.ImGui_Checkbox(self.ctx, 'Auto-scroll', self.auto_scroll)
@@ -7069,8 +7070,10 @@ function ExampleAppLog.draw(self, title, p_open)
   local clear = r.ImGui_Button(self.ctx, 'Clear')
   r.ImGui_SameLine(self.ctx)
   local copy = r.ImGui_Button(self.ctx, 'Copy')
-  -- r.ImGui_SameLine(self.ctx)
-  -- Filter.Draw(ctx, 'Filter', -100.0)
+  r.ImGui_SameLine(self.ctx)
+  if r.ImGui_TextFilter_Draw(self.filter.inst, ctx, 'Filter', -100.0) then
+    self.filter.text = r.ImGui_TextFilter_Get(self.filter.inst)
+  end
 
   r.ImGui_Separator(self.ctx)
   if r.ImGui_BeginChild(self.ctx, 'scrolling', 0, 0, false, r.ImGui_WindowFlags_HorizontalScrollbar()) then
@@ -7084,22 +7087,17 @@ function ExampleAppLog.draw(self, title, p_open)
     r.ImGui_PushStyleVar(self.ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0)
     -- const char* buf = Buf.begin();
     -- const char* buf_end = Buf.end();
-    -- if (Filter.IsActive())
-    -- {
-    --     // In this example we don't use the clipper when Filter is enabled.
-    --     // This is because we don't have a random access on the result on our filter.
-    --     // A real application processing logs with ten of thousands of entries may want to store the result of
-    --     // search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
-    --     for (int line_no = 0; line_no < LineOffsets.Size; line_no++)
-    --     {
-    --         const char* line_start = buf + LineOffsets[line_no];
-    --         const char* line_end = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
-    --         if (Filter.PassFilter(line_start, line_end))
-    --             r.ImGui_TextUnformatted(line_start, line_end);
-    --     }
-    -- }
-    -- else
-    -- {
+    if r.ImGui_TextFilter_IsActive(self.filter.inst) then
+      -- In this example we don't use the clipper when Filter is enabled.
+      -- This is because we don't have a random access on the result on our filter.
+      -- A real application processing logs with ten of thousands of entries may want to store the result of
+      -- search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
+      for line_no, line in ipairs(self.lines) do
+        if r.ImGui_TextFilter_PassFilter(self.filter.inst, line) then
+          r.ImGui_Text(ctx, line)
+        end
+      end
+    else
       -- The simplest and easy way to display the entire buffer:
       --   r.ImGui_TextUnformatted(buf_begin, buf_end);
       -- And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward
@@ -7122,7 +7120,7 @@ function ExampleAppLog.draw(self, title, p_open)
         end
       end
       r.ImGui_ListClipper_End(clipper)
-    -- }
+    end
     r.ImGui_PopStyleVar(self.ctx)
 
     if self.auto_scroll and r.ImGui_GetScrollY(self.ctx) >= r.ImGui_GetScrollMaxY(self.ctx) then
