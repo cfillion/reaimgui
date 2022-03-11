@@ -721,85 +721,97 @@ function demo.ShowDemoWindowWidgets()
 
     r.ImGui_LabelText(ctx, 'label', 'Value');
 
-    -- Using the _simplified_ one-liner Combo() api here
-    -- See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
-    local items = 'AAAA\31BBBB\31CCCC\31DDDD\31EEEE\31FFFF\31GGGG\31HHHH\31IIIIIII\31JJJJ\31KKKKKKK\31'
-    rv,widgets.basic.curitem = r.ImGui_Combo(ctx, 'combo', widgets.basic.curitem, items)
-    r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'Using the simplified one-liner Combo API here.\n' ..
-      'Refer to the "Combo" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.')
+    do
+      -- Using the _simplified_ one-liner Combo() api here
+      -- See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
+      local items = 'AAAA\31BBBB\31CCCC\31DDDD\31EEEE\31FFFF\31GGGG\31HHHH\31IIIIIII\31JJJJ\31KKKKKKK\31'
+      rv,widgets.basic.curitem = r.ImGui_Combo(ctx, 'combo', widgets.basic.curitem, items)
+      r.ImGui_SameLine(ctx); demo.HelpMarker(
+        'Using the simplified one-liner Combo API here.\n' ..
+        'Refer to the "Combo" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.')
+    end
 
-    rv,widgets.basic.str0 = r.ImGui_InputText(ctx, 'input text', widgets.basic.str0);
-    r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'USER:\n\z
-       Hold SHIFT or use mouse to select text.\n\z
-       CTRL+Left/Right to word jump.\n\z
-       CTRL+A or double-click to select all.\n\z
-       CTRL+X,CTRL+C,CTRL+V clipboard.\n\z
-       CTRL+Z,CTRL+Y undo/redo.\n\z
-       ESCAPE to revert.\n\n')
+    do
+      rv,widgets.basic.str0 = r.ImGui_InputText(ctx, 'input text', widgets.basic.str0);
+      r.ImGui_SameLine(ctx); demo.HelpMarker(
+        'USER:\n\z
+        Hold SHIFT or use mouse to select text.\n\z
+        CTRL+Left/Right to word jump.\n\z
+        CTRL+A or double-click to select all.\n\z
+        CTRL+X,CTRL+C,CTRL+V clipboard.\n\z
+        CTRL+Z,CTRL+Y undo/redo.\n\z
+        ESCAPE to revert.\n\n')
 
-    rv,widgets.basic.str1 = r.ImGui_InputTextWithHint(ctx, 'input text (w/ hint)', 'enter text here', widgets.basic.str1);
+      rv,widgets.basic.str1 = r.ImGui_InputTextWithHint(ctx, 'input text (w/ hint)', 'enter text here', widgets.basic.str1);
 
-    rv,widgets.basic.i0 = r.ImGui_InputInt(ctx, 'input int', widgets.basic.i0)
+      rv,widgets.basic.i0 = r.ImGui_InputInt(ctx, 'input int', widgets.basic.i0)
 
-    rv,widgets.basic.d0 = r.ImGui_InputDouble(ctx, 'input double', widgets.basic.d0, 0.01, 1.0, '%.8f')
-    rv,widgets.basic.d1 = r.ImGui_InputDouble(ctx, 'input scientific', widgets.basic.d1, 0.0, 0.0, '%e')
-    r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'You can input value using the scientific notation,\n\z
-       e.g. "1e+8" becomes "100000000".')
+      rv,widgets.basic.d0 = r.ImGui_InputDouble(ctx, 'input double', widgets.basic.d0, 0.01, 1.0, '%.8f')
+      rv,widgets.basic.d1 = r.ImGui_InputDouble(ctx, 'input scientific', widgets.basic.d1, 0.0, 0.0, '%e')
+      r.ImGui_SameLine(ctx); demo.HelpMarker(
+        'You can input value using the scientific notation,\n\z
+        e.g. "1e+8" becomes "100000000".')
 
-    r.ImGui_InputDoubleN(ctx, 'input reaper.array', widgets.basic.vec4a)
+      r.ImGui_InputDoubleN(ctx, 'input reaper.array', widgets.basic.vec4a)
+    end
 
-    rv,widgets.basic.i1 = r.ImGui_DragInt(ctx, 'drag int', widgets.basic.i1, 1)
-    r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'Click and drag to edit value.\n\z
-       Hold SHIFT/ALT for faster/slower edit.\n\z
-       Double-click or CTRL+click to input value.')
+    do
+      rv,widgets.basic.i1 = r.ImGui_DragInt(ctx, 'drag int', widgets.basic.i1, 1)
+      r.ImGui_SameLine(ctx); demo.HelpMarker(
+        'Click and drag to edit value.\n\z
+        Hold SHIFT/ALT for faster/slower edit.\n\z
+        Double-click or CTRL+click to input value.')
 
-    rv,widgets.basic.i2 = r.ImGui_DragInt(ctx, 'drag int 0..100', widgets.basic.i2, 1, 0, 100, '%d%%', r.ImGui_SliderFlags_AlwaysClamp())
+      rv,widgets.basic.i2 = r.ImGui_DragInt(ctx, 'drag int 0..100', widgets.basic.i2, 1, 0, 100, '%d%%', r.ImGui_SliderFlags_AlwaysClamp())
 
-    rv,widgets.basic.d2 = r.ImGui_DragDouble(ctx, 'drag double', widgets.basic.d2, 0.005)
-    rv,widgets.basic.d3 = r.ImGui_DragDouble(ctx, 'drag small double', widgets.basic.d3, 0.0001, 0.0, 0.0, '%.06f ns')
+      rv,widgets.basic.d2 = r.ImGui_DragDouble(ctx, 'drag double', widgets.basic.d2, 0.005)
+      rv,widgets.basic.d3 = r.ImGui_DragDouble(ctx, 'drag small double', widgets.basic.d3, 0.0001, 0.0, 0.0, '%.06f ns')
+    end
 
-    rv,widgets.basic.i3 = r.ImGui_SliderInt(ctx, "slider int", widgets.basic.i3, -1, 3)
-    r.ImGui_SameLine(ctx); demo.HelpMarker('CTRL+click to input value.')
+    do
+      rv,widgets.basic.i3 = r.ImGui_SliderInt(ctx, 'slider int', widgets.basic.i3, -1, 3)
+      r.ImGui_SameLine(ctx); demo.HelpMarker('CTRL+click to input value.')
 
-    rv,widgets.basic.d4 = r.ImGui_SliderDouble(ctx, 'slider double', widgets.basic.d4, 0.0, 1.0, 'ratio = %.3f')
-    rv,widgets.basic.d5 = r.ImGui_SliderDouble(ctx, 'slider double (log)', widgets.basic.d5, -10.0, 10.0, '%.4f', r.ImGui_SliderFlags_Logarithmic())
+      rv,widgets.basic.d4 = r.ImGui_SliderDouble(ctx, 'slider double', widgets.basic.d4, 0.0, 1.0, 'ratio = %.3f')
+      rv,widgets.basic.d5 = r.ImGui_SliderDouble(ctx, 'slider double (log)', widgets.basic.d5, -10.0, 10.0, '%.4f', r.ImGui_SliderFlags_Logarithmic())
 
-    rv,widgets.basic.angle = r.ImGui_SliderAngle(ctx, 'slider angle', widgets.basic.angle)
+      rv,widgets.basic.angle = r.ImGui_SliderAngle(ctx, 'slider angle', widgets.basic.angle)
 
-    -- Using the format string to display a name instead of an integer.
-    -- Here we completely omit '%d' from the format string, so it'll only display a name.
-    -- This technique can also be used with DragInt().
-    local elements = { 'Fire', 'Earth', 'Air', 'Water' }
-    local current_elem = elements[widgets.basic.elem] or 'Unknown'
-    rv,widgets.basic.elem = r.ImGui_SliderInt(ctx, 'slider enum', widgets.basic.elem, 1, #elements, current_elem)
-    r.ImGui_SameLine(ctx)
-    demo.HelpMarker(
-      'Using the format string parameter to display a name instead \z
-       of the underlying integer.')
+      -- Using the format string to display a name instead of an integer.
+      -- Here we completely omit '%d' from the format string, so it'll only display a name.
+      -- This technique can also be used with DragInt().
+      local elements = { 'Fire', 'Earth', 'Air', 'Water' }
+      local current_elem = elements[widgets.basic.elem] or 'Unknown'
+      rv,widgets.basic.elem = r.ImGui_SliderInt(ctx, 'slider enum', widgets.basic.elem, 1, #elements, current_elem)
+      r.ImGui_SameLine(ctx)
+      demo.HelpMarker(
+        'Using the format string parameter to display a name instead \z
+        of the underlying integer.')
+    end
 
-    foo = widgets.basic.col1
-    rv,widgets.basic.col1 = r.ImGui_ColorEdit3(ctx, 'color 1', widgets.basic.col1)
-    r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'Click on the color square to open a color picker.\n\z
-       Click and hold to use drag and drop.\n\z
-       Right-click on the color square to show options.\n\z
-       CTRL+click on individual component to input value.')
+    do
+      foo = widgets.basic.col1
+      rv,widgets.basic.col1 = r.ImGui_ColorEdit3(ctx, 'color 1', widgets.basic.col1)
+      r.ImGui_SameLine(ctx); demo.HelpMarker(
+        'Click on the color square to open a color picker.\n\z
+        Click and hold to use drag and drop.\n\z
+        Right-click on the color square to show options.\n\z
+        CTRL+click on individual component to input value.')
 
-    rv, widgets.basic.col2 = r.ImGui_ColorEdit4(ctx, 'color 2', widgets.basic.col2)
+      rv, widgets.basic.col2 = r.ImGui_ColorEdit4(ctx, 'color 2', widgets.basic.col2)
+    end
 
-    -- Using the _simplified_ one-liner ListBox() api here
-    -- See "List boxes" section for examples of how to use the more flexible BeginListBox()/EndListBox() api.
-    local items = 'Apple\31Banana\31Cherry\31Kiwi\31Mango\31Orange\31Pineapple\31Strawberry\31Watermelon\31'
-    rv,widgets.basic.listcur = r.ImGui_ListBox(ctx, 'listbox\n(single select)', widgets.basic.listcur, items, 4)
-    r.ImGui_SameLine(ctx)
-    demo.HelpMarker(
-      'Using the simplified one-liner ListBox API here.\n\z
-       Refer to the "List boxes" section below for an explanation of how to use\z
-       the more flexible and general BeginListBox/EndListBox API.')
+    do
+      -- Using the _simplified_ one-liner ListBox() api here
+      -- See "List boxes" section for examples of how to use the more flexible BeginListBox()/EndListBox() api.
+      local items = 'Apple\31Banana\31Cherry\31Kiwi\31Mango\31Orange\31Pineapple\31Strawberry\31Watermelon\31'
+      rv,widgets.basic.listcur = r.ImGui_ListBox(ctx, 'listbox\n(single select)', widgets.basic.listcur, items, 4)
+      r.ImGui_SameLine(ctx)
+      demo.HelpMarker(
+        'Using the simplified one-liner ListBox API here.\n\z
+        Refer to the "List boxes" section below for an explanation of how to use\z
+        the more flexible and general BeginListBox/EndListBox API.')
+    end
 
     r.ImGui_TreePop(ctx)
   end
@@ -1737,14 +1749,16 @@ label:
 
     -- Plots can display overlay texts
     -- (in this example, we will display an average value)
-    local average = 0.0
-    for n = 1, PLOT1_SIZE do
-      average = average + widgets.plots.plot1.data[n]
-    end
-    average = average / PLOT1_SIZE
+    do
+      local average = 0.0
+      for n = 1, PLOT1_SIZE do
+        average = average + widgets.plots.plot1.data[n]
+      end
+      average = average / PLOT1_SIZE
 
-    local overlay = ('avg %f'):format(average)
-    r.ImGui_PlotLines(ctx, 'Lines', widgets.plots.plot1.data, widgets.plots.plot1.offset - 1, overlay, -1.0, 1.0, 0, 80.0)
+      local overlay = ('avg %f'):format(average)
+      r.ImGui_PlotLines(ctx, 'Lines', widgets.plots.plot1.data, widgets.plots.plot1.offset - 1, overlay, -1.0, 1.0, 0, 80.0)
+    end
 
     r.ImGui_Separator(ctx)
     r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 8)
@@ -2709,46 +2723,50 @@ function demo.ShowDemoWindowLayout()
     rv,layout.child.disable_menu = r.ImGui_Checkbox(ctx, 'Disable Menu', layout.child.disable_menu)
 
     -- Child 1: no border, enable horizontal scrollbar
-    local window_flags = r.ImGui_WindowFlags_HorizontalScrollbar()
-    if layout.child.disable_mouse_wheel then
-      window_flags = window_flags | r.ImGui_WindowFlags_NoScrollWithMouse()
-    end
-    if r.ImGui_BeginChild(ctx, 'ChildL', r.ImGui_GetContentRegionAvail(ctx) * 0.5, 260, false, window_flags) then
-      for i = 0, 99 do
-        r.ImGui_Text(ctx, ('%04d: scrollable region'):format(i))
+    do
+      local window_flags = r.ImGui_WindowFlags_HorizontalScrollbar()
+      if layout.child.disable_mouse_wheel then
+        window_flags = window_flags | r.ImGui_WindowFlags_NoScrollWithMouse()
       end
-      r.ImGui_EndChild(ctx)
+      if r.ImGui_BeginChild(ctx, 'ChildL', r.ImGui_GetContentRegionAvail(ctx) * 0.5, 260, false, window_flags) then
+        for i = 0, 99 do
+          r.ImGui_Text(ctx, ('%04d: scrollable region'):format(i))
+        end
+        r.ImGui_EndChild(ctx)
+      end
     end
 
     r.ImGui_SameLine(ctx)
 
     -- Child 2: rounded border
-    window_flags = r.ImGui_WindowFlags_None()
-    if layout.child.disable_mouse_wheel then
-      window_flags = window_flags | r.ImGui_WindowFlags_NoScrollWithMouse()
-    end
-    if not layout.child.disable_menu then
-      window_flags = window_flags | r.ImGui_WindowFlags_MenuBar()
-    end
-    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ChildRounding(), 5.0)
-    local visible = r.ImGui_BeginChild(ctx, 'ChildR', 0, 260, true, window_flags)
-    r.ImGui_PopStyleVar(ctx)
-    if visible then
-      if not layout.child.disable_menu and r.ImGui_BeginMenuBar(ctx) then
-        if r.ImGui_BeginMenu(ctx, 'Menu') then
-          demo.ShowExampleMenuFile()
-          r.ImGui_EndMenu(ctx)
-        end
-        r.ImGui_EndMenuBar(ctx)
+    do
+      local window_flags = r.ImGui_WindowFlags_None()
+      if layout.child.disable_mouse_wheel then
+        window_flags = window_flags | r.ImGui_WindowFlags_NoScrollWithMouse()
       end
-      if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings()) then
-        for i = 0, 99 do
-          r.ImGui_TableNextColumn(ctx)
-          r.ImGui_Button(ctx, ('%03d'):format(i), -FLT_MIN, 0.0)
-        end
-        r.ImGui_EndTable(ctx)
+      if not layout.child.disable_menu then
+        window_flags = window_flags | r.ImGui_WindowFlags_MenuBar()
       end
-      r.ImGui_EndChild(ctx)
+      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ChildRounding(), 5.0)
+      local visible = r.ImGui_BeginChild(ctx, 'ChildR', 0, 260, true, window_flags)
+      if visible then
+        if not layout.child.disable_menu and r.ImGui_BeginMenuBar(ctx) then
+          if r.ImGui_BeginMenu(ctx, 'Menu') then
+            demo.ShowExampleMenuFile()
+            r.ImGui_EndMenu(ctx)
+          end
+          r.ImGui_EndMenuBar(ctx)
+        end
+        if r.ImGui_BeginTable(ctx, 'split', 2, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings()) then
+          for i = 0, 99 do
+            r.ImGui_TableNextColumn(ctx)
+            r.ImGui_Button(ctx, ('%03d'):format(i), -FLT_MIN, 0.0)
+          end
+          r.ImGui_EndTable(ctx)
+        end
+        r.ImGui_EndChild(ctx)
+      end
+      r.ImGui_PopStyleVar(ctx)
     end
 
     r.ImGui_Separator(ctx)
@@ -2760,25 +2778,27 @@ function demo.ShowDemoWindowLayout()
     --   layout from this position.
     -- - Using r.ImGui_GetItemRectMin/Max() to query the "item" state (because the child window is an item from
     --   the POV of the parent window). See 'Demo->Querying Status (Edited/Active/Hovered etc.)' for details.
-    r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 8)
-    rv,layout.child.offset_x = r.ImGui_DragInt(ctx, 'Offset X', layout.child.offset_x, 1.0, -1000, 1000)
+    do
+      r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 8)
+      rv,layout.child.offset_x = r.ImGui_DragInt(ctx, 'Offset X', layout.child.offset_x, 1.0, -1000, 1000)
 
-    r.ImGui_SetCursorPosX(ctx, r.ImGui_GetCursorPosX(ctx) + layout.child.offset_x)
-    r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ChildBg(), 0xFF000064)
-    local visible = r.ImGui_BeginChild(ctx, 'Red', 200, 100, true, r.ImGui_WindowFlags_None())
-    r.ImGui_PopStyleColor(ctx)
-    if visible then
-      for n = 0, 49 do
-        r.ImGui_Text(ctx, ('Some test %d'):format(n))
+      r.ImGui_SetCursorPosX(ctx, r.ImGui_GetCursorPosX(ctx) + layout.child.offset_x)
+      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ChildBg(), 0xFF000064)
+      local visible = r.ImGui_BeginChild(ctx, 'Red', 200, 100, true, r.ImGui_WindowFlags_None())
+      r.ImGui_PopStyleColor(ctx)
+      if visible then
+        for n = 0, 49 do
+          r.ImGui_Text(ctx, ('Some test %d'):format(n))
+        end
+        r.ImGui_EndChild(ctx)
       end
-      r.ImGui_EndChild(ctx)
+      local child_is_hovered = r.ImGui_IsItemHovered(ctx)
+      local child_rect_min_x,child_rect_min_y = r.ImGui_GetItemRectMin(ctx)
+      local child_rect_max_x,child_rect_max_y = r.ImGui_GetItemRectMax(ctx)
+      r.ImGui_Text(ctx, ('Hovered: %s'):format(child_is_hovered))
+      r.ImGui_Text(ctx, ('Rect of child window is: (%.0f,%.0f) (%.0f,%.0f)')
+        :format(child_rect_min_x, child_rect_min_y, child_rect_max_x, child_rect_max_y))
     end
-    local child_is_hovered = r.ImGui_IsItemHovered(ctx)
-    local child_rect_min_x,child_rect_min_y = r.ImGui_GetItemRectMin(ctx)
-    local child_rect_max_x,child_rect_max_y = r.ImGui_GetItemRectMax(ctx)
-    r.ImGui_Text(ctx, ('Hovered: %s'):format(child_is_hovered))
-    r.ImGui_Text(ctx, ('Rect of child window is: (%.0f,%.0f) (%.0f,%.0f)')
-      :format(child_rect_min_x, child_rect_min_y, child_rect_max_x, child_rect_max_y))
 
     r.ImGui_TreePop(ctx)
   end
@@ -3003,112 +3023,118 @@ function demo.ShowDemoWindowLayout()
   end
 
   if r.ImGui_TreeNode(ctx, 'Text Baseline Alignment') then
-    r.ImGui_BulletText(ctx, 'Text baseline:')
-    r.ImGui_SameLine(ctx); demo.HelpMarker(
-      'This is testing the vertical alignment that gets applied on text to keep it aligned with widgets. \z
-       Lines only composed of text or "small" widgets use less vertical space than lines with framed widgets.')
-    r.ImGui_Indent(ctx)
+    do
+      r.ImGui_BulletText(ctx, 'Text baseline:')
+      r.ImGui_SameLine(ctx); demo.HelpMarker(
+        'This is testing the vertical alignment that gets applied on text to keep it aligned with widgets. \z
+        Lines only composed of text or "small" widgets use less vertical space than lines with framed widgets.')
+      r.ImGui_Indent(ctx)
 
-    r.ImGui_Text(ctx, 'KO Blahblah'); r.ImGui_SameLine(ctx)
-    r.ImGui_Button(ctx, 'Some framed item'); r.ImGui_SameLine(ctx)
-    demo.HelpMarker('Baseline of button will look misaligned with text..')
+      r.ImGui_Text(ctx, 'KO Blahblah'); r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, 'Some framed item'); r.ImGui_SameLine(ctx)
+      demo.HelpMarker('Baseline of button will look misaligned with text..')
 
-    -- If your line starts with text, call AlignTextToFramePadding() to align text to upcoming widgets.
-    -- (because we don't know what's coming after the Text() statement, we need to move the text baseline
-    -- down by FramePadding.y ahead of time)
-    r.ImGui_AlignTextToFramePadding(ctx)
-    r.ImGui_Text(ctx, 'OK Blahblah'); r.ImGui_SameLine(ctx)
-    r.ImGui_Button(ctx, 'Some framed item'); r.ImGui_SameLine(ctx)
-    demo.HelpMarker('We call AlignTextToFramePadding() to vertically align the text baseline by +FramePadding.y')
+      -- If your line starts with text, call AlignTextToFramePadding() to align text to upcoming widgets.
+      -- (because we don't know what's coming after the Text() statement, we need to move the text baseline
+      -- down by FramePadding.y ahead of time)
+      r.ImGui_AlignTextToFramePadding(ctx)
+      r.ImGui_Text(ctx, 'OK Blahblah'); r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, 'Some framed item'); r.ImGui_SameLine(ctx)
+      demo.HelpMarker('We call AlignTextToFramePadding() to vertically align the text baseline by +FramePadding.y')
 
-    -- SmallButton() uses the same vertical padding as Text
-    r.ImGui_Button(ctx, 'TEST##1'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'TEST'); r.ImGui_SameLine(ctx)
-    r.ImGui_SmallButton(ctx, 'TEST##2')
+      -- SmallButton() uses the same vertical padding as Text
+      r.ImGui_Button(ctx, 'TEST##1'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'TEST'); r.ImGui_SameLine(ctx)
+      r.ImGui_SmallButton(ctx, 'TEST##2')
 
-    -- If your line starts with text, call AlignTextToFramePadding() to align text to upcoming widgets.
-    r.ImGui_AlignTextToFramePadding(ctx)
-    r.ImGui_Text(ctx, 'Text aligned to framed item'); r.ImGui_SameLine(ctx)
-    r.ImGui_Button(ctx, 'Item##1'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'Item'); r.ImGui_SameLine(ctx)
-    r.ImGui_SmallButton(ctx, 'Item##2'); r.ImGui_SameLine(ctx)
-    r.ImGui_Button(ctx, 'Item##3')
+      -- If your line starts with text, call AlignTextToFramePadding() to align text to upcoming widgets.
+      r.ImGui_AlignTextToFramePadding(ctx)
+      r.ImGui_Text(ctx, 'Text aligned to framed item'); r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, 'Item##1'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'Item'); r.ImGui_SameLine(ctx)
+      r.ImGui_SmallButton(ctx, 'Item##2'); r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, 'Item##3')
 
-    r.ImGui_Unindent(ctx)
+      r.ImGui_Unindent(ctx)
+    end
 
     r.ImGui_Spacing(ctx)
 
-    r.ImGui_BulletText(ctx, 'Multi-line text:')
-    r.ImGui_Indent(ctx)
-    r.ImGui_Text(ctx, 'One\nTwo\nThree'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'Banana')
+    do
+      r.ImGui_BulletText(ctx, 'Multi-line text:')
+      r.ImGui_Indent(ctx)
+      r.ImGui_Text(ctx, 'One\nTwo\nThree'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'Banana')
 
-    r.ImGui_Text(ctx, 'Banana'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'One\nTwo\nThree')
+      r.ImGui_Text(ctx, 'Banana'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'One\nTwo\nThree')
 
-    r.ImGui_Button(ctx, 'HOP##1'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'Banana'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'Banana')
+      r.ImGui_Button(ctx, 'HOP##1'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'Banana'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'Banana')
 
-    r.ImGui_Button(ctx, 'HOP##2'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, 'Banana')
-    r.ImGui_Unindent(ctx)
+      r.ImGui_Button(ctx, 'HOP##2'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'Hello\nWorld'); r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, 'Banana')
+      r.ImGui_Unindent(ctx)
+    end
 
     r.ImGui_Spacing(ctx)
 
-    r.ImGui_BulletText(ctx, 'Misc items:')
-    r.ImGui_Indent(ctx)
+    do
+      r.ImGui_BulletText(ctx, 'Misc items:')
+      r.ImGui_Indent(ctx)
 
-    -- SmallButton() sets FramePadding to zero. Text baseline is aligned to match baseline of previous Button.
-    r.ImGui_Button(ctx, '80x80', 80, 80)
-    r.ImGui_SameLine(ctx)
-    r.ImGui_Button(ctx, '50x50', 50, 50)
-    r.ImGui_SameLine(ctx)
-    r.ImGui_Button(ctx, 'Button()')
-    r.ImGui_SameLine(ctx)
-    r.ImGui_SmallButton(ctx, 'SmallButton()')
+      -- SmallButton() sets FramePadding to zero. Text baseline is aligned to match baseline of previous Button.
+      r.ImGui_Button(ctx, '80x80', 80, 80)
+      r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, '50x50', 50, 50)
+      r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, 'Button()')
+      r.ImGui_SameLine(ctx)
+      r.ImGui_SmallButton(ctx, 'SmallButton()')
 
-    -- Tree
-    local spacing = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1]
-    r.ImGui_Button(ctx, 'Button##1')
-    r.ImGui_SameLine(ctx, 0.0, spacing)
-    if r.ImGui_TreeNode(ctx, 'Node##1') then
-      -- Placeholder tree data
-      for i = 0, 5 do
-        r.ImGui_BulletText(ctx, ('Item %d..'):format(i))
+      -- Tree
+      local spacing = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1]
+      r.ImGui_Button(ctx, 'Button##1')
+      r.ImGui_SameLine(ctx, 0.0, spacing)
+      if r.ImGui_TreeNode(ctx, 'Node##1') then
+        -- Placeholder tree data
+        for i = 0, 5 do
+          r.ImGui_BulletText(ctx, ('Item %d..'):format(i))
+        end
+        r.ImGui_TreePop(ctx)
       end
-      r.ImGui_TreePop(ctx)
-    end
 
-    -- Vertically align text node a bit lower so it'll be vertically centered with upcoming widget.
-    -- Otherwise you can use SmallButton() (smaller fit).
-    r.ImGui_AlignTextToFramePadding(ctx)
+      -- Vertically align text node a bit lower so it'll be vertically centered with upcoming widget.
+      -- Otherwise you can use SmallButton() (smaller fit).
+      r.ImGui_AlignTextToFramePadding(ctx)
 
-    -- Common mistake to avoid: if we want to SameLine after TreeNode we need to do it before we add
-    -- other contents below the node.
-    local node_open = r.ImGui_TreeNode(ctx, 'Node##2')
-    r.ImGui_SameLine(ctx, 0.0, spacing); r.ImGui_Button(ctx, 'Button##2')
-    if node_open then
-      -- Placeholder tree data
-      for i = 0, 5 do
-        r.ImGui_BulletText(ctx, ('Item %d..'):format(i))
+      -- Common mistake to avoid: if we want to SameLine after TreeNode we need to do it before we add
+      -- other contents below the node.
+      local node_open = r.ImGui_TreeNode(ctx, 'Node##2')
+      r.ImGui_SameLine(ctx, 0.0, spacing); r.ImGui_Button(ctx, 'Button##2')
+      if node_open then
+        -- Placeholder tree data
+        for i = 0, 5 do
+          r.ImGui_BulletText(ctx, ('Item %d..'):format(i))
+        end
+        r.ImGui_TreePop(ctx)
       end
-      r.ImGui_TreePop(ctx)
+
+      -- Bullet
+      r.ImGui_Button(ctx, 'Button##3')
+      r.ImGui_SameLine(ctx, 0.0, spacing)
+      r.ImGui_BulletText(ctx, 'Bullet text')
+
+      r.ImGui_AlignTextToFramePadding(ctx)
+      r.ImGui_BulletText(ctx, 'Node')
+      r.ImGui_SameLine(ctx, 0.0, spacing); r.ImGui_Button(ctx, 'Button##4')
+      r.ImGui_Unindent(ctx)
     end
-
-    -- Bullet
-    r.ImGui_Button(ctx, 'Button##3')
-    r.ImGui_SameLine(ctx, 0.0, spacing)
-    r.ImGui_BulletText(ctx, 'Bullet text')
-
-    r.ImGui_AlignTextToFramePadding(ctx)
-    r.ImGui_BulletText(ctx, 'Node')
-    r.ImGui_SameLine(ctx, 0.0, spacing); r.ImGui_Button(ctx, 'Button##4')
-    r.ImGui_Unindent(ctx)
 
     r.ImGui_TreePop(ctx)
   end
@@ -3637,60 +3663,66 @@ function demo.ShowDemoWindowPopups()
     -- Example 1
     -- When used after an item that has an ID (e.g. Button), we can skip providing an ID to BeginPopupContextItem(),
     -- and BeginPopupContextItem() will use the last item ID as the popup ID.
-    local names = { 'Label1', 'Label2', 'Label3', 'Label4', 'Label5' }
-    for _, name in ipairs(names) do
-      r.ImGui_Selectable(ctx, name)
-      if r.ImGui_BeginPopupContextItem(ctx) then -- use last item id as popup id
-        r.ImGui_Text(ctx, ('This a popup for "%s"!'):format(name))
-        if r.ImGui_Button(ctx, 'Close') then
-          r.ImGui_CloseCurrentPopup(ctx)
+    do
+      local names = { 'Label1', 'Label2', 'Label3', 'Label4', 'Label5' }
+      for _, name in ipairs(names) do
+        r.ImGui_Selectable(ctx, name)
+        if r.ImGui_BeginPopupContextItem(ctx) then -- use last item id as popup id
+          r.ImGui_Text(ctx, ('This a popup for "%s"!'):format(name))
+          if r.ImGui_Button(ctx, 'Close') then
+            r.ImGui_CloseCurrentPopup(ctx)
+          end
+          r.ImGui_EndPopup(ctx)
         end
-        r.ImGui_EndPopup(ctx)
-      end
-      if r.ImGui_IsItemHovered(ctx) then
-        r.ImGui_SetTooltip(ctx, 'Right-click to open popup')
+        if r.ImGui_IsItemHovered(ctx) then
+          r.ImGui_SetTooltip(ctx, 'Right-click to open popup')
+        end
       end
     end
 
     -- Example 2
     -- Popup on a Text() element which doesn't have an identifier: we need to provide an identifier to BeginPopupContextItem().
     -- Using an explicit identifier is also convenient if you want to activate the popups from different locations.
-    demo.HelpMarker("Text() elements don't have stable identifiers so we need to provide one.")
-    r.ImGui_Text(ctx, ('Value = %.6f <-- (1) right-click this value'):format(popups.context.value))
-    if r.ImGui_BeginPopupContextItem(ctx, 'my popup') then
-      if r.ImGui_Selectable(ctx, 'Set to zero') then popups.context.value = 0.0      end
-      if r.ImGui_Selectable(ctx, 'Set to PI')   then popups.context.value = 3.141592 end
-      r.ImGui_SetNextItemWidth(ctx, -FLT_MIN)
-      rv,popups.context.value = r.ImGui_DragDouble(ctx, '##Value', popups.context.value, 0.1, 0.0, 0.0)
-      r.ImGui_EndPopup(ctx)
-    end
+    do
+      demo.HelpMarker("Text() elements don't have stable identifiers so we need to provide one.")
+      r.ImGui_Text(ctx, ('Value = %.6f <-- (1) right-click this value'):format(popups.context.value))
+      if r.ImGui_BeginPopupContextItem(ctx, 'my popup') then
+        if r.ImGui_Selectable(ctx, 'Set to zero') then popups.context.value = 0.0      end
+        if r.ImGui_Selectable(ctx, 'Set to PI')   then popups.context.value = 3.141592 end
+        r.ImGui_SetNextItemWidth(ctx, -FLT_MIN)
+        rv,popups.context.value = r.ImGui_DragDouble(ctx, '##Value', popups.context.value, 0.1, 0.0, 0.0)
+        r.ImGui_EndPopup(ctx)
+      end
 
-    -- We can also use OpenPopupOnItemClick() to toggle the visibility of a given popup.
-    -- Here we make it that right-clicking this other text element opens the same popup as above.
-    -- The popup itself will be submitted by the code above.
-    r.ImGui_Text(ctx, '(2) Or right-click this text')
-    r.ImGui_OpenPopupOnItemClick(ctx, 'my popup', r.ImGui_PopupFlags_MouseButtonRight())
+      -- We can also use OpenPopupOnItemClick() to toggle the visibility of a given popup.
+      -- Here we make it that right-clicking this other text element opens the same popup as above.
+      -- The popup itself will be submitted by the code above.
+      r.ImGui_Text(ctx, '(2) Or right-click this text')
+      r.ImGui_OpenPopupOnItemClick(ctx, 'my popup', r.ImGui_PopupFlags_MouseButtonRight())
 
-    -- Back to square one: manually open the same popup.
-    if r.ImGui_Button(ctx, '(3) Or click this button') then
-      r.ImGui_OpenPopup(ctx, 'my popup')
+      -- Back to square one: manually open the same popup.
+      if r.ImGui_Button(ctx, '(3) Or click this button') then
+        r.ImGui_OpenPopup(ctx, 'my popup')
+      end
     end
 
     -- Example 3
     -- When using BeginPopupContextItem() with an implicit identifier (NULL == use last item ID),
     -- we need to make sure your item identifier is stable.
     -- In this example we showcase altering the item label while preserving its identifier, using the ### operator (see FAQ).
-    demo.HelpMarker('Showcase using a popup ID linked to item ID, with the item having a changing label + stable ID using the ### operator.')
-    r.ImGui_Button(ctx, ('Button: %s###Button'):format(popups.context.name)) -- ### operator override ID ignoring the preceding label
-    if r.ImGui_BeginPopupContextItem(ctx) then
-      r.ImGui_Text(ctx, 'Edit name:')
-      rv,popups.context.name = r.ImGui_InputText(ctx, '##edit', popups.context.name)
-      if r.ImGui_Button(ctx, 'Close') then
-        r.ImGui_CloseCurrentPopup(ctx)
+    do
+      demo.HelpMarker('Showcase using a popup ID linked to item ID, with the item having a changing label + stable ID using the ### operator.')
+      r.ImGui_Button(ctx, ('Button: %s###Button'):format(popups.context.name)) -- ### operator override ID ignoring the preceding label
+      if r.ImGui_BeginPopupContextItem(ctx) then
+        r.ImGui_Text(ctx, 'Edit name:')
+        rv,popups.context.name = r.ImGui_InputText(ctx, '##edit', popups.context.name)
+        if r.ImGui_Button(ctx, 'Close') then
+          r.ImGui_CloseCurrentPopup(ctx)
+        end
+        r.ImGui_EndPopup(ctx)
       end
-      r.ImGui_EndPopup(ctx)
+      r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '(<-- right-click here)')
     end
-    r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '(<-- right-click here)')
 
     r.ImGui_TreePop(ctx)
   end
@@ -7227,6 +7259,7 @@ function demo.ShowExampleAppLayout()
   r.ImGui_SameLine(ctx)
   if r.ImGui_Button(ctx, 'Save') then end
   r.ImGui_EndGroup(ctx)
+
   r.ImGui_End(ctx)
   return open
 end
