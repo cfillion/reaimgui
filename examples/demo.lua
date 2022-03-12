@@ -307,7 +307,7 @@ function demo.ShowDemoWindow()
   -- Most "big" widgets share a common width settings by default. See 'Demo->Layout->Widgets Width' for details.
 
   -- e.g. Use 2/3 of the space for widgets and 1/3 for labels (right align)
-  --r.ImGui_PushItemWidth(-r.ImGui_GetWindowWidth() * 0.35f);
+  --r.ImGui_PushItemWidth(ctx, -r.ImGui_GetWindowWidth(ctx) * 0.35)
 
   -- e.g. Leave a fixed amount of width for labels (by passing a negative value), the rest goes to widgets.
   r.ImGui_PushItemWidth(ctx, r.ImGui_GetFontSize(ctx) * -12)
@@ -1793,8 +1793,8 @@ label:
       end
     end
 
-    -- Typically we would use (-1.0f,0.0f) or (-FLT_MIN,0.0f) to use all available width,
-    -- or (width,0.0f) for a specified width. (0.0f,0.0f) uses ItemWidth.
+    -- Typically we would use (-1.0,0.0) or (-FLT_MIN,0.0) to use all available width,
+    -- or (width,0.0) for a specified width. (0.0,0.0) uses ItemWidth.
     r.ImGui_ProgressBar(ctx, widgets.plots.progress, 0.0, 0.0)
     r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1])
     r.ImGui_Text(ctx, 'Progress Bar')
@@ -2814,7 +2814,7 @@ function demo.ShowDemoWindowLayout()
     -- Use SetNextItemWidth() to set the width of a single upcoming item.
     -- Use PushItemWidth()/PopItemWidth() to set the width of a group of items.
     -- In real code use you'll probably want to choose width values that are proportional to your font size
-    -- e.g. Using '20.0f * GetFontSize()' as width instead of '200.0f', etc.
+    -- e.g. Using '20.0 * GetFontSize()' as width instead of '200.0', etc.
 
     rv,layout.width.show_indented_items = r.ImGui_Checkbox(ctx, 'Show indented items', layout.width.show_indented_items)
 
@@ -2840,7 +2840,7 @@ function demo.ShowDemoWindowLayout()
     end
     r.ImGui_PopItemWidth(ctx)
 
-    r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5f)')
+    r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5)')
     r.ImGui_SameLine(ctx); demo.HelpMarker('Half of available width.\n(~ right-cursor_pos)\n(works within a column set)')
     r.ImGui_PushItemWidth(ctx, ({r.ImGui_GetContentRegionAvail(ctx)})[1] * 0.5)
     rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float##3a', layout.width.d)
@@ -2851,7 +2851,7 @@ function demo.ShowDemoWindowLayout()
     end
     r.ImGui_PopItemWidth(ctx)
 
-    r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(-GetContentRegionAvail().x * 0.5f)')
+    r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(-GetContentRegionAvail().x * 0.5)')
     r.ImGui_SameLine(ctx); demo.HelpMarker('Align to right edge minus half')
     r.ImGui_PushItemWidth(ctx, -({r.ImGui_GetContentRegionAvail(ctx)})[1] * 0.5)
     rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float##4a', layout.width.d)
@@ -3211,7 +3211,7 @@ function demo.ShowDemoWindowLayout()
         for item = 0, 99 do
           if layout.scrolling.enable_track and item == layout.scrolling.track_item then
             r.ImGui_TextColored(ctx, 0xFFFF00FF, ('Item %d'):format(item))
-            r.ImGui_SetScrollHereY(ctx, (i - 1) * 0.25) -- 0.0f:top, 0.5f:center, 1.0f:bottom
+            r.ImGui_SetScrollHereY(ctx, (i - 1) * 0.25) -- 0.0:top, 0.5:center, 1.0:bottom
           else
             r.ImGui_Text(ctx, ('Item %d'):format(item))
           end
@@ -3257,7 +3257,7 @@ function demo.ShowDemoWindowLayout()
           end
           if layout.scrolling.enable_track and item == layout.scrolling.track_item then
             r.ImGui_TextColored(ctx, 0xFFFF00FF, ('Item %d'):format(item))
-            r.ImGui_SetScrollHereX(ctx, (i - 1) * 0.25) -- 0.0f:left, 0.5f:center, 1.0f:right
+            r.ImGui_SetScrollHereX(ctx, (i - 1) * 0.25) -- 0.0:left, 0.5:center, 1.0:right
           else
             r.ImGui_Text(ctx, ('Item %d'):format(item))
           end
@@ -4326,7 +4326,7 @@ function demo.ShowDemoWindowTables()
       r.ImGui_EndTable(ctx)
     end
 
-    -- Use outer_size.x == 0.0f instead of default to make the table as tight as possible (only valid when no scrolling and no stretch column)
+    -- Use outer_size.x == 0.0 instead of default to make the table as tight as possible (only valid when no scrolling and no stretch column)
     if r.ImGui_BeginTable(ctx, 'table2', 3, tables.reorder.flags | r.ImGui_TableFlags_SizingFixedFit(), 0.0, 0.0) then
       r.ImGui_TableSetupColumn(ctx, 'One')
       r.ImGui_TableSetupColumn(ctx, 'Two')
@@ -4799,8 +4799,8 @@ function demo.ShowDemoWindowTables()
     demo.PopStyleCompact()
     if r.ImGui_BeginTable(ctx, 'table1', 3, tables.col_widths.flags1) then
       -- We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
-      r.ImGui_TableSetupColumn(ctx, 'one', r.ImGui_TableColumnFlags_WidthFixed(), 100.0) -- Default to 100.0f
-      r.ImGui_TableSetupColumn(ctx, 'two', r.ImGui_TableColumnFlags_WidthFixed(), 200.0) -- Default to 200.0f
+      r.ImGui_TableSetupColumn(ctx, 'one', r.ImGui_TableColumnFlags_WidthFixed(), 100.0) -- Default to 100.0
+      r.ImGui_TableSetupColumn(ctx, 'two', r.ImGui_TableColumnFlags_WidthFixed(), 200.0) -- Default to 200.0
       r.ImGui_TableSetupColumn(ctx, 'three', r.ImGui_TableColumnFlags_WidthFixed());     -- Default to auto
       r.ImGui_TableHeadersRow(ctx)
       for row = 0, 3 do
@@ -4889,7 +4889,7 @@ function demo.ShowDemoWindowTables()
 
   DoOpenAction()
   if r.ImGui_TreeNode(ctx, 'Row height') then
-    demo.HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'style.CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'style.CellPadding.y * 2.0f'.\n\nWe cannot honor a _maximum_ row height as that would requires a unique clipping rectangle per row.");
+    demo.HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'style.CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'style.CellPadding.y * 2.0'.\n\nWe cannot honor a _maximum_ row height as that would requires a unique clipping rectangle per row.");
     if r.ImGui_BeginTable(ctx, 'table_row_height', 1, r.ImGui_TableFlags_BordersOuter() | r.ImGui_TableFlags_BordersInnerV()) then
       for row = 0, 9 do
         local min_row_height = TEXT_BASE_HEIGHT * 0.30 * row
@@ -5520,12 +5520,12 @@ function demo.ShowDemoWindowTables()
         demo.HelpMarker(
           'If scrolling is disabled (ScrollX and ScrollY not set):\n\z
            - The table is output directly in the parent window.\n\z
-           - OuterSize.x < 0.0f will right-align the table.\n\z
-           - OuterSize.x = 0.0f will narrow fit the table unless there are any Stretch column.\n\z
+           - OuterSize.x < 0.0 will right-align the table.\n\z
+           - OuterSize.x = 0.0 will narrow fit the table unless there are any Stretch column.\n\z
            - OuterSize.y then becomes the minimum size for the table, which will extend vertically if there are more rows (unless NoHostExtendY is set).')
 
         -- From a user point of view we will tend to use 'inner_width' differently depending on whether our table is embedding scrolling.
-        -- To facilitate toying with this demo we will actually pass 0.0f to the BeginTable() when ScrollX is disabled.
+        -- To facilitate toying with this demo we will actually pass 0.0 to the BeginTable() when ScrollX is disabled.
         rv,tables.advanced.inner_width_with_scroll = r.ImGui_DragDouble(ctx, 'inner_width (when ScrollX active)', tables.advanced.inner_width_with_scroll, 1.0, 0.0, FLT_MAX)
 
         rv,tables.advanced.row_min_height = r.ImGui_DragDouble(ctx, 'row_min_height', tables.advanced.row_min_height, 1.0, 0.0, FLT_MAX)
@@ -5683,7 +5683,7 @@ function demo.ShowDemoWindowTables()
     -- r.ImGui_Checkbox("Debug details", &show_debug_details);
     -- if (show_debug_details && table_draw_list)
     -- {
-    --     r.ImGui_SameLine(0.0f, 0.0f);
+    --     r.ImGui_SameLine(0.0, 0.0);
     --     const int table_draw_list_draw_cmd_count = table_draw_list->CmdBuffer.Size;
     --     if (table_draw_list == parent_draw_list)
     --         r.ImGui_Text(": DrawCmd: +%d (in same window)",
@@ -6312,7 +6312,7 @@ function demo.ShowStyleEditor()
 --         ref_saved_style = style;
 --     r.ImGui_ShowFontSelector("Fonts##Selector");
 
-  -- Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0f or 1.0f)
+  -- Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0 or 1.0)
   local FrameRounding, GrabRounding = r.ImGui_StyleVar_FrameRounding(),
                                       r.ImGui_StyleVar_GrabRounding()
   rv,app.style_editor.style.vars[FrameRounding] = r.ImGui_SliderDouble(ctx, 'FrameRounding', app.style_editor.style.vars[FrameRounding], 0.0, 12.0, '%.0f')
