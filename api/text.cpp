@@ -52,7 +52,7 @@ DEFINE_API(void, TextDisabled, (ImGui_Context*,ctx)
 
 DEFINE_API(void, TextWrapped, (ImGui_Context*,ctx)
 (const char*,text),
-"Shortcut for ImGui_PushTextWrapPos(0.0); ImGui_Text(fmt, ...); ImGui_PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using ImGui_SetNextWindowSize.",
+"Shortcut for ImGui_PushTextWrapPos(0.0); ImGui_Text(text); ImGui_PopTextWrapPos();. Note that this won't work on an auto-resizing window if there's no other widgets to extend the window width, yoy may need to set a size using ImGui_SetNextWindowSize.",
 {
   FRAME_GUARD;
   ImGui::PushTextWrapPos(0.0f);
