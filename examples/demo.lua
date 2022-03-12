@@ -6361,7 +6361,9 @@ function demo.ShowStyleEditor()
       r.ImGui_LogText(ctx, ('reaper.ImGui_Push%s(ctx, reaper.ImGui_%s_%s(),%s %s)\n')
         :format(funcSuffix, enumName, line[1], pad, formatValue(line[2])))
     end
-    if #lines > 0 then
+    if #lines == 1 then
+      r.ImGui_LogText(ctx, ('\nreaper.ImGui_Pop%s(ctx)\n'):format(funcSuffix))
+    elseif #lines > 1 then
       r.ImGui_LogText(ctx, ('\nreaper.ImGui_Pop%s(ctx, %d)\n'):format(funcSuffix, #lines))
     end
     r.ImGui_LogFinish(ctx)
