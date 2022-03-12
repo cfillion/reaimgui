@@ -156,8 +156,8 @@ function demo.ShowUserGuide()
   -- ImGuiIO& io = r.ImGui_GetIO() TODO
   r.ImGui_BulletText(ctx, 'Double-click on title bar to collapse window.')
   r.ImGui_BulletText(ctx,
-  'Click and drag on lower corner to resize window\n' ..
-  '(double-click to auto fit window to its contents).')
+    'Click and drag on lower corner to resize window\n\z
+     (double-click to auto fit window to its contents).')
   r.ImGui_BulletText(ctx, 'CTRL+Click on a slider or drag box to input value as text.')
   r.ImGui_BulletText(ctx, 'TAB/SHIFT+TAB to cycle through keyboard editable fields.')
   r.ImGui_BulletText(ctx, 'CTRL+Tab to select a window.')
@@ -175,7 +175,7 @@ function demo.ShowUserGuide()
   r.ImGui_Indent(ctx)
   r.ImGui_BulletText(ctx, 'Arrow keys to navigate.')
   r.ImGui_BulletText(ctx, 'Space to activate a widget.')
-  r.ImGui_BulletText(ctx, 'Return to input text into a widget.');
+  r.ImGui_BulletText(ctx, 'Return to input text into a widget.')
   r.ImGui_BulletText(ctx, 'Escape to deactivate a widget, close popup, exit child window.')
   r.ImGui_BulletText(ctx, 'Alt to jump to the menu layer of a window.')
   r.ImGui_Unindent(ctx)
@@ -719,7 +719,7 @@ function demo.ShowDemoWindowWidgets()
 
     r.ImGui_Separator(ctx)
 
-    r.ImGui_LabelText(ctx, 'label', 'Value');
+    r.ImGui_LabelText(ctx, 'label', 'Value')
 
     do
       -- Using the _simplified_ one-liner Combo() api here
@@ -732,7 +732,7 @@ function demo.ShowDemoWindowWidgets()
     end
 
     do
-      rv,widgets.basic.str0 = r.ImGui_InputText(ctx, 'input text', widgets.basic.str0);
+      rv,widgets.basic.str0 = r.ImGui_InputText(ctx, 'input text', widgets.basic.str0)
       r.ImGui_SameLine(ctx); demo.HelpMarker(
         'USER:\n\z
         Hold SHIFT or use mouse to select text.\n\z
@@ -742,7 +742,7 @@ function demo.ShowDemoWindowWidgets()
         CTRL+Z,CTRL+Y undo/redo.\n\z
         ESCAPE to revert.\n\n')
 
-      rv,widgets.basic.str1 = r.ImGui_InputTextWithHint(ctx, 'input text (w/ hint)', 'enter text here', widgets.basic.str1);
+      rv,widgets.basic.str1 = r.ImGui_InputTextWithHint(ctx, 'input text (w/ hint)', 'enter text here', widgets.basic.str1)
 
       rv,widgets.basic.i0 = r.ImGui_InputInt(ctx, 'input int', widgets.basic.i0)
 
@@ -859,9 +859,9 @@ function demo.ShowDemoWindowWidgets()
       rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnArrow',       widgets.trees.base_flags, r.ImGui_TreeNodeFlags_OpenOnArrow())
       rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnDoubleClick', widgets.trees.base_flags, r.ImGui_TreeNodeFlags_OpenOnDoubleClick())
       rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_SpanAvailWidth',    widgets.trees.base_flags, r.ImGui_TreeNodeFlags_SpanAvailWidth()); r.ImGui_SameLine(ctx); demo.HelpMarker('Extend hit area to all available width instead of allowing more items to be laid out after the node.')
-      rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTreeNodeFlags_SpanFullWidth', widgets.trees.base_flags, r.ImGui_TreeNodeFlags_SpanFullWidth());
-      rv,widgets.trees.align_label_with_current_x_position = r.ImGui_Checkbox(ctx, 'Align label with current X position', widgets.trees.align_label_with_current_x_position);
-      rv,widgets.trees.test_drag_and_drop = r.ImGui_Checkbox(ctx, 'Test tree node as drag source', widgets.trees.test_drag_and_drop);
+      rv,widgets.trees.base_flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTreeNodeFlags_SpanFullWidth',      widgets.trees.base_flags, r.ImGui_TreeNodeFlags_SpanFullWidth())
+      rv,widgets.trees.align_label_with_current_x_position = r.ImGui_Checkbox(ctx, 'Align label with current X position', widgets.trees.align_label_with_current_x_position)
+      rv,widgets.trees.test_drag_and_drop = r.ImGui_Checkbox(ctx, 'Test tree node as drag source',      widgets.trees.test_drag_and_drop)
       r.ImGui_Text(ctx, 'Hello!')
       if widgets.trees.align_label_with_current_x_position then
         r.ImGui_Unindent(ctx, r.ImGui_GetTreeNodeToLabelSpacing(ctx))
@@ -986,7 +986,7 @@ function demo.ShowDemoWindowWidgets()
       -- Using shortcut. You can use PushStyleColor()/PopStyleColor() for more flexibility.
       r.ImGui_TextColored(ctx, 0xFF00FFFF, 'Pink')
       r.ImGui_TextColored(ctx, 0xFFFF00FF, 'Yellow')
-      r.ImGui_TextDisabled(ctx, 'Disabled');
+      r.ImGui_TextDisabled(ctx, 'Disabled')
       r.ImGui_SameLine(ctx); demo.HelpMarker('The TextDisabled color is stored in ImGuiStyle.')
       r.ImGui_TreePop(ctx)
     end
@@ -1217,7 +1217,7 @@ function demo.ShowDemoWindowWidgets()
       for n,v in ipairs(items) do
         local is_selected = widgets.lists.current_idx == n
         if r.ImGui_Selectable(ctx, v, is_selected) then
-          widgets.lists.current_idx = n;
+          widgets.lists.current_idx = n
         end
 
         -- Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -1306,7 +1306,7 @@ function demo.ShowDemoWindowWidgets()
       if r.ImGui_BeginTable(ctx, 'split1', 3, r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_NoSavedSettings() | r.ImGui_TableFlags_Borders()) then
         for i,sel in ipairs(widgets.selectables.columns) do
           r.ImGui_TableNextColumn(ctx)
-          rv,widgets.selectables.columns[i] = r.ImGui_Selectable(ctx, ('Item %d'):format(i-1), sel);
+          rv,widgets.selectables.columns[i] = r.ImGui_Selectable(ctx, ('Item %d'):format(i-1), sel)
         end
         r.ImGui_EndTable(ctx)
       end
@@ -1315,11 +1315,11 @@ function demo.ShowDemoWindowWidgets()
         for i,sel in ipairs(widgets.selectables.columns) do
           r.ImGui_TableNextRow(ctx)
           r.ImGui_TableNextColumn(ctx)
-          rv,widgets.selectables.columns[i] = r.ImGui_Selectable(ctx, ('Item %d'):format(i-1), sel, r.ImGui_SelectableFlags_SpanAllColumns());
+          rv,widgets.selectables.columns[i] = r.ImGui_Selectable(ctx, ('Item %d'):format(i-1), sel, r.ImGui_SelectableFlags_SpanAllColumns())
           r.ImGui_TableNextColumn(ctx)
-          r.ImGui_Text(ctx, 'Some other contents');
-          r.ImGui_TableNextColumn(ctx);
-          r.ImGui_Text(ctx, '123456');
+          r.ImGui_Text(ctx, 'Some other contents')
+          r.ImGui_TableNextColumn(ctx)
+          r.ImGui_Text(ctx, '123456')
         end
         r.ImGui_EndTable(ctx)
       end
@@ -1348,7 +1348,7 @@ function demo.ShowDemoWindowWidgets()
           if ci > 1 then
             r.ImGui_SameLine(ctx)
           end
-          r.ImGui_PushID(ctx, ri * #widgets.selectables.grid + ci);
+          r.ImGui_PushID(ctx, ri * #widgets.selectables.grid + ci)
           if r.ImGui_Selectable(ctx, 'Sailor', col, 0, 50, 50) then
             -- Toggle clicked cell + toggle neighbors
             row[ci] = not row[ci]
@@ -1357,7 +1357,7 @@ function demo.ShowDemoWindowWidgets()
             if ri > 1 then widgets.selectables.grid[ri - 1][ci] = not widgets.selectables.grid[ri - 1][ci]; end
             if ri < 4 then widgets.selectables.grid[ri + 1][ci] = not widgets.selectables.grid[ri + 1][ci]; end
           end
-          r.ImGui_PopID(ctx);
+          r.ImGui_PopID(ctx)
         end
       end
 
@@ -1435,19 +1435,19 @@ label:
       --     }
       -- };
 
-      rv,widgets.input.buf[1] = r.ImGui_InputText(ctx, 'default',     widgets.input.buf[1]);
+      rv,widgets.input.buf[1] = r.ImGui_InputText(ctx, 'default',     widgets.input.buf[1])
       rv,widgets.input.buf[2] = r.ImGui_InputText(ctx, 'decimal',     widgets.input.buf[2], r.ImGui_InputTextFlags_CharsDecimal())
       rv,widgets.input.buf[3] = r.ImGui_InputText(ctx, 'hexadecimal', widgets.input.buf[3], r.ImGui_InputTextFlags_CharsHexadecimal() | r.ImGui_InputTextFlags_CharsUppercase())
       rv,widgets.input.buf[4] = r.ImGui_InputText(ctx, 'uppercase',   widgets.input.buf[4], r.ImGui_InputTextFlags_CharsUppercase())
       rv,widgets.input.buf[5] = r.ImGui_InputText(ctx, 'no blank',    widgets.input.buf[5], r.ImGui_InputTextFlags_CharsNoBlank())
-      -- static char buf6[64] = ""; r.ImGui_InputText("\"imgui\" letters", buf6, 64, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters);
+      -- static char buf6[64] = ""; r.ImGui_InputText("\"imgui\" letters", buf6, 64, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters)
       r.ImGui_TreePop(ctx)
     end
 
     if r.ImGui_TreeNode(ctx, 'Password Input') then
       rv,widgets.input.password = r.ImGui_InputText(ctx, 'password', widgets.input.password, r.ImGui_InputTextFlags_Password())
-      r.ImGui_SameLine(ctx); demo.HelpMarker("Display all characters as '*'.\nDisable clipboard cut and copy.\nDisable logging.\n");
-      rv,widgets.input.password = r.ImGui_InputTextWithHint(ctx, 'password (w/ hint)', '<password>', widgets.input.password, r.ImGui_InputTextFlags_Password());
+      r.ImGui_SameLine(ctx); demo.HelpMarker("Display all characters as '*'.\nDisable clipboard cut and copy.\nDisable logging.\n")
+      rv,widgets.input.password = r.ImGui_InputTextWithHint(ctx, 'password (w/ hint)', '<password>', widgets.input.password, r.ImGui_InputTextFlags_Password())
       rv,widgets.input.password = r.ImGui_InputText(ctx, 'password (clear)', widgets.input.password)
       r.ImGui_TreePop(ctx)
     end
@@ -1835,7 +1835,7 @@ label:
     rv,widgets.colors.drag_and_drop      = r.ImGui_Checkbox(ctx, 'With Drag and Drop',      widgets.colors.drag_and_drop)
     rv,widgets.colors.options_menu       = r.ImGui_Checkbox(ctx, 'With Options Menu',       widgets.colors.options_menu)
     r.ImGui_SameLine(ctx); demo.HelpMarker('Right-click on the individual color widget to show options.')
-    -- r.ImGui_Checkbox("With HDR", &hdr); r.ImGui_SameLine(); HelpMarker("Currently all this does is to lift the 0..1 limits on dragging widgets.");
+    -- r.ImGui_Checkbox("With HDR", &hdr); r.ImGui_SameLine(); HelpMarker("Currently all this does is to lift the 0..1 limits on dragging widgets.")
     local misc_flags = --(widgets.colors.hdr and r.ImGui_ColorEditFlags_HDR() or 0) |
     (widgets.colors.drag_and_drop and 0 or r.ImGui_ColorEditFlags_NoDragDrop()) |
     (widgets.colors.alpha_half_preview and r.ImGui_ColorEditFlags_AlphaPreviewHalf()
@@ -1863,7 +1863,7 @@ label:
       'With the ImGuiColorEditFlags_NoInputs flag you can hide all the slider/text inputs.\n\z
        With the ImGuiColorEditFlags_NoLabel flag you can pass a non-empty label which will only \z
        be used for the tooltip and picker popup.')
-    rv,widgets.colors.rgba = r.ImGui_ColorEdit4(ctx, 'MyColor##3', widgets.colors.rgba, r.ImGui_ColorEditFlags_NoInputs() | r.ImGui_ColorEditFlags_NoLabel() | misc_flags);
+    rv,widgets.colors.rgba = r.ImGui_ColorEdit4(ctx, 'MyColor##3', widgets.colors.rgba, r.ImGui_ColorEditFlags_NoInputs() | r.ImGui_ColorEditFlags_NoLabel() | misc_flags)
 
     r.ImGui_Text(ctx, 'Color button with Custom Picker Popup:')
 
@@ -1963,7 +1963,7 @@ label:
        if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().")
     rv,widgets.colors.picker_mode = r.ImGui_Combo(ctx, 'Picker Mode', widgets.colors.picker_mode,
       'Auto/Current\31Hue bar + SV rect\31Hue wheel + SV triangle\31')
-    r.ImGui_SameLine(ctx); demo.HelpMarker('User can right-click the picker to change mode.');
+    r.ImGui_SameLine(ctx); demo.HelpMarker('User can right-click the picker to change mode.')
     local flags = misc_flags
     if not widgets.colors.alpha         then flags = flags | r.ImGui_ColorEditFlags_NoAlpha()        end
     if widgets.colors.alpha_bar         then flags = flags | r.ImGui_ColorEditFlags_AlphaBar()       end
@@ -2377,7 +2377,7 @@ label:
             end
             if widgets.dragdrop.mode == mode_move then
               widgets.dragdrop.names[n] = widgets.dragdrop.names[payload_n]
-              widgets.dragdrop.names[payload_n] = '';
+              widgets.dragdrop.names[payload_n] = ''
             end
             if widgets.dragdrop.mode == mode_swap then
               widgets.dragdrop.names[n] = widgets.dragdrop.names[payload_n]
@@ -2696,7 +2696,7 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
   end
 
   if r.ImGui_TreeNode(ctx, 'Disable block') then
-    rv,widgets.disable_all = r.ImGui_Checkbox(ctx, 'Disable entire section above', widgets.disable_all);
+    rv,widgets.disable_all = r.ImGui_Checkbox(ctx, 'Disable entire section above', widgets.disable_all)
     r.ImGui_SameLine(ctx); demo.HelpMarker('Demonstrate using BeginDisabled()/EndDisabled() across this section.')
     r.ImGui_TreePop(ctx)
   end
@@ -2888,7 +2888,7 @@ function demo.ShowDemoWindowLayout()
       }
     end
 
-    r.ImGui_TextWrapped(ctx, '(Use r.ImGui_SameLine() to keep adding items to the right of the preceding item)');
+    r.ImGui_TextWrapped(ctx, '(Use r.ImGui_SameLine() to keep adding items to the right of the preceding item)')
 
     -- Text
     r.ImGui_Text(ctx, 'Two items: Hello'); r.ImGui_SameLine(ctx)
@@ -3301,7 +3301,7 @@ function demo.ShowDemoWindowLayout()
           else
             label = tostring(n)
           end
-          local hue = n * 0.05;
+          local hue = n * 0.05
           local button_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.6, 0.6, 1.0)
           local hovered_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.7, 0.7, 1.0)
           local active_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.8, 0.8, 1.0)
@@ -3581,7 +3581,7 @@ function demo.ShowDemoWindowPopups()
     end
     if r.ImGui_BeginPopup(ctx, 'my_toggle_popup') then
       for i,fish in ipairs(names) do
-        rv,popups.popups.toggles[i] = r.ImGui_MenuItem(ctx, fish, '', popups.popups.toggles[i]);
+        rv,popups.popups.toggles[i] = r.ImGui_MenuItem(ctx, fish, '', popups.popups.toggles[i])
       end
       if r.ImGui_BeginMenu(ctx, 'Sub-menu') then
         r.ImGui_MenuItem(ctx, 'Click me')
@@ -3602,7 +3602,7 @@ function demo.ShowDemoWindowPopups()
           rv,popups.popups.toggles[i] = r.ImGui_MenuItem(ctx, fish, '', popups.popups.toggles[i])
         end
         if r.ImGui_BeginMenu(ctx, 'Sub-menu') then
-          r.ImGui_MenuItem(ctx, 'Click me');
+          r.ImGui_MenuItem(ctx, 'Click me')
           if r.ImGui_Button(ctx, 'Stacked Popup') then
             r.ImGui_OpenPopup(ctx, 'another popup')
           end
@@ -4011,11 +4011,11 @@ function demo.ShowDemoWindowTables()
 
   local open_action = -1
   if r.ImGui_Button(ctx, 'Open all') then
-    open_action = 1;
+    open_action = 1
   end
   r.ImGui_SameLine(ctx)
   if r.ImGui_Button(ctx, 'Close all') then
-    open_action = 0;
+    open_action = 0
   end
   r.ImGui_SameLine(ctx)
 
@@ -4138,7 +4138,7 @@ function demo.ShowDemoWindowTables()
     r.ImGui_SameLine(ctx); rv,tables.borders_bg.contents_type = r.ImGui_RadioButtonEx(ctx, 'Text', tables.borders_bg.contents_type, 0)
     r.ImGui_SameLine(ctx); rv,tables.borders_bg.contents_type = r.ImGui_RadioButtonEx(ctx, 'FillButton', tables.borders_bg.contents_type, 1)
     rv,tables.borders_bg.display_headers = r.ImGui_Checkbox(ctx, 'Display headers', tables.borders_bg.display_headers)
-    -- rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.borders_bg.flags, r.ImGui_TableFlags_NoBordersInBody()); r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body (borders will always appears in Headers');
+    -- rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.borders_bg.flags, r.ImGui_TableFlags_NoBordersInBody()); r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body (borders will always appears in Headers')
     demo.PopStyleCompact()
 
     if r.ImGui_BeginTable(ctx, 'table1', 3, tables.borders_bg.flags) then
@@ -4375,9 +4375,9 @@ function demo.ShowDemoWindowTables()
 
     demo.PushStyleCompact()
     rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_PadOuterX', tables.padding.flags1, r.ImGui_TableFlags_PadOuterX())
-    r.ImGui_SameLine(ctx); demo.HelpMarker('Enable outer-most padding (default if ImGuiTableFlags_BordersOuterV is set)');
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Enable outer-most padding (default if ImGuiTableFlags_BordersOuterV is set)')
     rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadOuterX', tables.padding.flags1, r.ImGui_TableFlags_NoPadOuterX())
-    r.ImGui_SameLine(ctx); demo.HelpMarker('Disable outer-most padding (default if ImGuiTableFlags_BordersOuterV is not set)');
+    r.ImGui_SameLine(ctx); demo.HelpMarker('Disable outer-most padding (default if ImGuiTableFlags_BordersOuterV is not set)')
     rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadInnerX', tables.padding.flags1, r.ImGui_TableFlags_NoPadInnerX())
     r.ImGui_SameLine(ctx); demo.HelpMarker('Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off)')
     rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.padding.flags1, r.ImGui_TableFlags_BordersOuterV())
@@ -4404,7 +4404,7 @@ function demo.ShowDemoWindowTables()
             r.ImGui_Button(ctx, buf, -FLT_MIN, 0.0)
           end
           --if (r.ImGui_TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered)
-          --  r.ImGui_TableSetBgColor(ImGuiTableBgTarget_CellBg, IM_COL32(0, 100, 0, 255));
+          --  r.ImGui_TableSetBgColor(ImGuiTableBgTarget_CellBg, IM_COL32(0, 100, 0, 255))
         end
       end
       r.ImGui_EndTable(ctx)
@@ -4521,7 +4521,7 @@ function demo.ShowDemoWindowTables()
     rv,tables.sz_policies.contents_type = r.ImGui_Combo(ctx, 'Contents', tables.sz_policies.contents_type, 'Show width\31Short Text\31Long Text\31Button\31Fill Button\31InputText\31')
     if tables.sz_policies.contents_type == 4 then -- fill button
       r.ImGui_SameLine(ctx)
-      demo.HelpMarker('Be mindful that using right-alignment (e.g. size.x = -FLT_MIN) creates a feedback loop where contents width can feed into auto-column width can feed into contents width.');
+      demo.HelpMarker('Be mindful that using right-alignment (e.g. size.x = -FLT_MIN) creates a feedback loop where contents width can feed into auto-column width can feed into contents width.')
     end
     rv,tables.sz_policies.column_count = r.ImGui_DragInt(ctx, 'Columns', tables.sz_policies.column_count, 0.1, 1, 64, '%d', r.ImGui_SliderFlags_AlwaysClamp())
     rv,tables.sz_policies.flags2 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.sz_policies.flags2, r.ImGui_TableFlags_Resizable())
@@ -4578,7 +4578,7 @@ function demo.ShowDemoWindowTables()
       }
     end
 
-    demo.HelpMarker('Here we activate ScrollY, which will create a child window container to allow hosting scrollable contents.\n\nWe also demonstrate using ImGuiListClipper to virtualize the submission of many items.');
+    demo.HelpMarker('Here we activate ScrollY, which will create a child window container to allow hosting scrollable contents.\n\nWe also demonstrate using ImGuiListClipper to virtualize the submission of many items.')
 
     demo.PushStyleCompact()
     rv,tables.vertical.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.vertical.flags, r.ImGui_TableFlags_ScrollY())
@@ -4826,7 +4826,7 @@ function demo.ShowDemoWindowTables()
     demo.PopStyleCompact()
     if r.ImGui_BeginTable(ctx, 'table2', 4, tables.col_widths.flags2) then
       -- We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
-      r.ImGui_TableSetupColumn(ctx, '', r.ImGui_TableColumnFlags_WidthFixed(), 100.0);
+      r.ImGui_TableSetupColumn(ctx, '', r.ImGui_TableColumnFlags_WidthFixed(), 100.0)
       r.ImGui_TableSetupColumn(ctx, '', r.ImGui_TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 15.0)
       r.ImGui_TableSetupColumn(ctx, '', r.ImGui_TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 30.0)
       r.ImGui_TableSetupColumn(ctx, '', r.ImGui_TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 15.0)
@@ -4889,7 +4889,7 @@ function demo.ShowDemoWindowTables()
 
   DoOpenAction()
   if r.ImGui_TreeNode(ctx, 'Row height') then
-    demo.HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'style.CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'style.CellPadding.y * 2.0'.\n\nWe cannot honor a _maximum_ row height as that would requires a unique clipping rectangle per row.");
+    demo.HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'style.CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'style.CellPadding.y * 2.0'.\n\nWe cannot honor a _maximum_ row height as that would requires a unique clipping rectangle per row.")
     if r.ImGui_BeginTable(ctx, 'table_row_height', 1, r.ImGui_TableFlags_BordersOuter() | r.ImGui_TableFlags_BordersInnerV()) then
       for row = 0, 9 do
         local min_row_height = TEXT_BASE_HEIGHT * 0.30 * row
@@ -5467,13 +5467,13 @@ function demo.ShowDemoWindowTables()
 
       if r.ImGui_TreeNode(ctx, 'Sizing:', r.ImGui_TreeNodeFlags_DefaultOpen()) then
         tables.advanced.flags = demo.EditTableSizingFlags(tables.advanced.flags)
-        r.ImGui_SameLine(ctx); demo.HelpMarker('In the Advanced demo we override the policy of each column so those table-wide settings have less effect that typical.');
+        r.ImGui_SameLine(ctx); demo.HelpMarker('In the Advanced demo we override the policy of each column so those table-wide settings have less effect that typical.')
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.advanced.flags, r.ImGui_TableFlags_NoHostExtendX())
-        r.ImGui_SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.');
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.')
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendY', tables.advanced.flags, r.ImGui_TableFlags_NoHostExtendY())
-        r.ImGui_SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.');
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.')
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoKeepColumnsVisible', tables.advanced.flags, r.ImGui_TableFlags_NoKeepColumnsVisible())
-        r.ImGui_SameLine(ctx); demo.HelpMarker('Only available if ScrollX is disabled.');
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Only available if ScrollX is disabled.')
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_PreciseWidths', tables.advanced.flags, r.ImGui_TableFlags_PreciseWidths())
         r.ImGui_SameLine(ctx); demo.HelpMarker('Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.')
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoClip', tables.advanced.flags, r.ImGui_TableFlags_NoClip())
@@ -5514,7 +5514,7 @@ function demo.ShowDemoWindowTables()
 
         rv,tables.advanced.outer_size_value[1],tables.advanced.outer_size_value[2] =
           r.ImGui_DragDouble2(ctx, '##OuterSize', table.unpack(tables.advanced.outer_size_value))
-        r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1]);
+        r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1])
         rv,tables.advanced.outer_size_enabled = r.ImGui_Checkbox(ctx, 'outer_size', tables.advanced.outer_size_enabled)
         r.ImGui_SameLine(ctx)
         demo.HelpMarker(
@@ -5609,7 +5609,7 @@ function demo.ShowDemoWindowTables()
           -- //if (!filter.PassFilter(item->Name))
           -- //    continue;
 
-          r.ImGui_PushID(ctx, item.id);
+          r.ImGui_PushID(ctx, item.id)
           r.ImGui_TableNextRow(ctx, r.ImGui_TableRowFlags_None(), tables.advanced.row_min_height)
 
           -- For the demo purpose we can select among different type of items submitted in the first column
@@ -5937,12 +5937,12 @@ function demo.ShowDemoWindowMisc()
 
   if r.ImGui_CollapsingHeader(ctx, 'Inputs, Navigation & Focus') then
     -- Display ImGuiIO output flags
-    -- r.ImGui_Text("WantCaptureMouse: %d", io.WantCaptureMouse);
-    -- r.ImGui_Text("WantCaptureMouseUnlessPopupClose: %d", io.WantCaptureMouseUnlessPopupClose);
-    -- r.ImGui_Text("WantCaptureKeyboard: %d", io.WantCaptureKeyboard);
-    -- r.ImGui_Text("WantTextInput: %d", io.WantTextInput);
-    -- r.ImGui_Text("WantSetMousePos: %d", io.WantSetMousePos);
-    -- r.ImGui_Text("NavActive: %d, NavVisible: %d", io.NavActive, io.NavVisible);
+    -- r.ImGui_Text("WantCaptureMouse: %d", io.WantCaptureMouse)
+    -- r.ImGui_Text("WantCaptureMouseUnlessPopupClose: %d", io.WantCaptureMouseUnlessPopupClose)
+    -- r.ImGui_Text("WantCaptureKeyboard: %d", io.WantCaptureKeyboard)
+    -- r.ImGui_Text("WantTextInput: %d", io.WantTextInput)
+    -- r.ImGui_Text("WantSetMousePos: %d", io.WantSetMousePos)
+    -- r.ImGui_Text("NavActive: %d, NavVisible: %d", io.NavActive, io.NavVisible)
 
     -- Display Mouse state
     if r.ImGui_TreeNode(ctx, 'Mouse State') then
@@ -6644,9 +6644,9 @@ function demo.ShowExampleMenuFile()
   if r.ImGui_MenuItem(ctx, 'New') then end
   if r.ImGui_MenuItem(ctx, 'Open', 'Ctrl+O') then end
   if r.ImGui_BeginMenu(ctx, 'Open Recent') then
-    r.ImGui_MenuItem(ctx, 'fish_hat.c');
-    r.ImGui_MenuItem(ctx, 'fish_hat.inl');
-    r.ImGui_MenuItem(ctx, 'fish_hat.h');
+    r.ImGui_MenuItem(ctx, 'fish_hat.c')
+    r.ImGui_MenuItem(ctx, 'fish_hat.inl')
+    r.ImGui_MenuItem(ctx, 'fish_hat.h')
     if r.ImGui_BeginMenu(ctx,'More..') then
       r.ImGui_MenuItem(ctx, 'Hello')
       r.ImGui_MenuItem(ctx, 'Sailor')
@@ -6663,7 +6663,7 @@ function demo.ShowExampleMenuFile()
 
   r.ImGui_Separator(ctx)
   if r.ImGui_BeginMenu(ctx, 'Options') then
-    rv,demo.menu.enabled = r.ImGui_MenuItem(ctx, 'Enabled', "", demo.menu.enabled)
+    rv,demo.menu.enabled = r.ImGui_MenuItem(ctx, 'Enabled', '', demo.menu.enabled)
     if r.ImGui_BeginChild(ctx, 'child', 0, 60, true) then
       for i = 0, 9 do
         r.ImGui_Text(ctx, ('Scrolling Text %d'):format(i))
@@ -7130,8 +7130,6 @@ function ExampleAppLog.draw(self, title, p_open)
     end
 
     r.ImGui_PushStyleVar(self.ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0)
-    -- const char* buf = Buf.begin();
-    -- const char* buf_end = Buf.end();
     if r.ImGui_TextFilter_IsActive(self.filter.inst) then
       -- In this example we don't use the clipper when Filter is enabled.
       -- This is because we don't have a random access on the result on our filter.
@@ -7144,8 +7142,8 @@ function ExampleAppLog.draw(self, title, p_open)
       end
     else
       -- The simplest and easy way to display the entire buffer:
-      --   r.ImGui_TextUnformatted(buf_begin, buf_end);
-      -- And it'll just work. TextUnformatted() has specialization for large blob of text and will fast-forward
+      --   r.ImGui_Text(text)
+      -- And it'll just work. Text() has specialization for large blob of text and will fast-forward
       -- to skip non-visible lines. Here we instead demonstrate using the clipper to only process lines that are
       -- within the visible area.
       -- If you have tens of thousands of items and their processing cost is non-negligible, coarse clipping them
@@ -7400,8 +7398,8 @@ function demo.ShowExampleAppLongText()
       r.ImGui_Text(ctx, app.long_text.log)
     elseif app.long_text.test_type == 1 then
       -- Multiple calls to Text(), manually coarsely clipped - demonstrate how to use the ImGui_ListClipper helper.
-      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0);
-      local clipper = r.ImGui_CreateListClipper(ctx);
+      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0)
+      local clipper = r.ImGui_CreateListClipper(ctx)
       r.ImGui_ListClipper_Begin(clipper, app.long_text.lines)
       while r.ImGui_ListClipper_Step(clipper) do
         local display_start, display_end = r.ImGui_ListClipper_GetDisplayRange(clipper)
@@ -7412,7 +7410,7 @@ function demo.ShowExampleAppLongText()
       r.ImGui_PopStyleVar(ctx)
     elseif app.long_text.test_type == 2 then
       -- Multiple calls to Text(), not clipped (slow)
-      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0);
+      r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), 0, 0)
       for i = 0, app.long_text.lines do
         r.ImGui_Text(ctx, ('%i The quick brown fox jumps over the lazy dog'):format(i))
       end
@@ -7600,7 +7598,7 @@ function demo.ShowExampleAppFullscreen()
 
   rv,app.fullscreen.use_work_area = r.ImGui_Checkbox(ctx, 'Use work area instead of main area', app.fullscreen.use_work_area)
   r.ImGui_SameLine(ctx)
-  demo.HelpMarker('Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.');
+  demo.HelpMarker('Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.')
 
   rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoBackground', app.fullscreen.flags, r.ImGui_WindowFlags_NoBackground())
   rv,app.fullscreen.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiWindowFlags_NoDecoration', app.fullscreen.flags, r.ImGui_WindowFlags_NoDecoration())
