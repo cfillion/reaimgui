@@ -2400,8 +2400,9 @@ label:
         r.ImGui_Selectable(ctx, item)
 
         if r.ImGui_IsItemActive(ctx) and not r.ImGui_IsItemHovered(ctx) then
-          local n_next = n + (({r.ImGui_GetMouseDragDelta(ctx, r.ImGui_MouseButton_Left())})[2] < 0 and -1 or 1)
-          if n_next >= 1 and n_next < #widgets.dragdrop.items then
+          local mouse_delta = ({r.ImGui_GetMouseDragDelta(ctx, r.ImGui_MouseButton_Left())})[2]
+          local n_next = n + (mouse_delta < 0 and -1 or 1)
+          if n_next >= 1 and n_next <= #widgets.dragdrop.items then
             widgets.dragdrop.items[n] = widgets.dragdrop.items[n_next]
             widgets.dragdrop.items[n_next] = item
             r.ImGui_ResetMouseDragDelta(ctx, r.ImGui_MouseButton_Left())
