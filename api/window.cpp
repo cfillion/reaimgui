@@ -266,7 +266,7 @@ DEFINE_API(void, SetNextWindowDockID, (ImGui_Context*,ctx)
 (int,dock_id)(int*,API_RO(cond)),
 R"(Set next window dock ID. 0 = undocked, < 0 = REAPER docker index (-1 = first dock, -2 = second dock, etc), > 0 = Dear ImGui dockspace ID.
 
-See ImGui_GetWindowDockID, ImGui_IsWindowDocked.
+See ImGui_GetWindowDockID, ImGui_IsWindowDocked, ImGui_ConfigFlags_DockingEnable.
 
 Default values: cond = ImGui_Cond_Always)",
 {
