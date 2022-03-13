@@ -18,6 +18,7 @@
 #include "gdk_window.hpp"
 
 #include "context.hpp"
+#include "gdk_event_mitm.hpp"
 #include "opengl_renderer.hpp"
 #include "platform.hpp"
 
@@ -39,6 +40,12 @@
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Window { viewport, dockerHost }, m_gl { nullptr }
 {
+  static std::weak_ptr<GdkEventMITM> g_eventMITM;
+
+  if(g_eventMITM.expired())
+    g_eventMITM = m_eventMITM = std::make_shared<GdkEventMITM>();
+  else
+    m_eventMITM = g_eventMITM.lock();
 }
 
 void GDKWindow::create()
@@ -341,6 +348,9 @@ static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)
 std::optional<LRESULT> GDKWindow::handleMessage
   (const unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
+  if(!GdkEventMITM::active())
+    GdkEventMITM::install();
+
   switch(msg) {
   case WM_DROPFILES: {
     HDROP drop { reinterpret_cast<HDROP>(wParam) };
@@ -357,15 +367,10 @@ std::optional<LRESULT> GDKWindow::handleMessage
     }
     break; // continue handling in Window::proc
   case WM_KEYDOWN:
-    // No access to the orignal GDK key event, unfortunately.
-    if(unsigned int c { unmangleSwellChar(wParam, lParam) })
-      m_ctx->charInput(c);
-    [[fallthrough]];
   case WM_SYSKEYDOWN:
   case WM_KEYUP:
   case WM_SYSKEYUP:
-    if(wParam < 256)
-      keyEvent(wParam, msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+    keyEvent(wParam, lParam, msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
     return 0;
   case WM_PAINT:
     if(m_pixels)
@@ -376,9 +381,28 @@ std::optional<LRESULT> GDKWindow::handleMessage
   return std::nullopt;
 }
 
-void GDKWindow::keyEvent(const int vkey, const bool down)
+static ImGuiKey translateGdkKey(const GdkEventKey *event)
 {
-  struct Modifier { int vkey; ImGuiKey modkey, ikey; };
+  switch(event->keyval) {
+  case GDK_KEY_Control_L: return ImGuiKey_LeftCtrl;
+  case GDK_KEY_Control_R: return ImGuiKey_RightCtrl;
+  case GDK_KEY_Shift_L:   return ImGuiKey_LeftShift;
+  case GDK_KEY_Shift_R:   return ImGuiKey_RightShift;
+  case GDK_KEY_Alt_L:     return ImGuiKey_LeftAlt;
+  case GDK_KEY_Alt_R:     return ImGuiKey_RightAlt;
+  case GDK_KEY_Super_L:   return ImGuiKey_LeftSuper;
+  case GDK_KEY_Super_R:   return ImGuiKey_RightSuper;
+  case GDK_KEY_KP_Enter:  return ImGuiKey_KeypadEnter;
+  default:                return ImGuiKey_None;
+  }
+}
+
+void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
+{
+  const GdkEventType expectedType { down ? GDK_KEY_PRESS : GDK_KEY_RELEASE };
+  const auto *gdkEvent { GdkEventMITM::currentEvent<GdkEventKey>(expectedType) };
+
+  struct Modifier { unsigned int vkey; ImGuiKey modkey, ikey; };
   constexpr Modifier modifiers[] {
     { VK_CONTROL, ImGuiKey_ModCtrl,  ImGuiKey_LeftCtrl  },
     { VK_SHIFT,   ImGuiKey_ModShift, ImGuiKey_LeftShift },
@@ -387,15 +411,27 @@ void GDKWindow::keyEvent(const int vkey, const bool down)
   };
 
   for(const auto &modifier : modifiers) {
-    if(vkey != modifier.vkey)
+    if(swellKey != modifier.vkey)
       continue;
     // post key events only when both sides of the modifier have the same state
-    if(!!(GetAsyncKeyState(vkey) & 0x8000) == down) {
+    if(!!(GetAsyncKeyState(swellKey) & 0x8000) == down) {
       m_ctx->keyInput(modifier.modkey, down);
-      m_ctx->keyInput(modifier.ikey, down);
+      if(!gdkEvent)
+        m_ctx->keyInput(modifier.ikey, down);
     }
-    return;
+    break;
   }
 
-  m_ctx->keyInput(vkey, down);
+  if(down)
+    m_ctx->charInput(unmangleSwellChar(swellKey, lParam));
+
+  if(gdkEvent) {
+    if(ImGuiKey namedKey { translateGdkKey(gdkEvent) }) {
+      m_ctx->keyInput(namedKey, down);
+      return;
+    }
+  }
+
+  if(swellKey < 256)
+    m_ctx->keyInput(swellKey, down);
 }

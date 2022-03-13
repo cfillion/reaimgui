@@ -23,6 +23,7 @@
 #include <memory>
 
 class OpenGLRenderer;
+class GdkEventMITM;
 struct _GdkGLContext;
 struct _GDKWindow;
 struct LICE_IBitmap;
@@ -59,7 +60,7 @@ private:
   void teardownGl();
   void initSoftwareBlit();
   void softwareBlit();
-  void keyEvent(int vkey, bool down);
+  void keyEvent(WPARAM, LPARAM, bool down);
 
   GdkGLContext *m_gl;
   unsigned int m_tex, m_fbo;
@@ -70,6 +71,7 @@ private:
   // for docking
   struct LICEDeleter { void operator()(LICE_IBitmap *); };
   std::unique_ptr<LICE_IBitmap, LICEDeleter> m_pixels;
+  std::shared_ptr<GdkEventMITM> m_eventMITM;
   std::shared_ptr<GdkWindow> m_offscreen;
 };
 

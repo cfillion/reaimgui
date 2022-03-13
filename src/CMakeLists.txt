@@ -47,6 +47,7 @@ elseif(APPLE)
 else()
   target_sources(src PRIVATE
     fc_font.cpp
+    gdk_event_mitm.cpp
     gdk_platform.cpp
     gdk_window.cpp
   )
@@ -56,7 +57,7 @@ else()
 
   pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
   pkg_search_module(GDK REQUIRED IMPORTED_TARGET gdk-3.0)
-  target_link_libraries(src PkgConfig::Epoxy PkgConfig::GDK)
+  target_link_libraries(src ${CMAKE_DL_LIBS} PkgConfig::Epoxy PkgConfig::GDK)
 endif()
 
 find_package(Boost REQUIRED)
