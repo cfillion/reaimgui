@@ -17,6 +17,7 @@
 
 #include "resource.hpp"
 
+#include "context.hpp"
 #include "errors.hpp"
 
 #include <cassert>
@@ -37,7 +38,16 @@ static std::unordered_set<Resource *> g_rsx;
 static unsigned int g_reentrant;
 #ifndef __APPLE__
 static WNDPROC g_mainProc;
+static bool g_disabledViewports;
 #endif
+
+static bool isDeferLoopBlocked()
+{
+  // REAPER v6.19+ does not execute deferred script callbacks
+  // when the splash screen is open.
+  static bool pauseDuringLoad { atof(GetAppVersion()) >= 6.19 };
+  return (pauseDuringLoad && Splash_GetWnd()) || g_reentrant > 1;
+}
 
 class Resource::Timer {
 public:
@@ -75,7 +85,19 @@ Resource::Timer::~Timer()
 
 void Resource::Timer::tick()
 {
-  if(isDeferLoopBlocked(true))
+  const bool blocked { isDeferLoopBlocked() };
+
+#ifndef __APPLE__
+  if(blocked != g_disabledViewports) {
+    for(Resource *rs : g_rsx) {
+      if(Context *ctx { dynamic_cast<Context *>(rs) })
+        ctx->enableViewports(!blocked);
+    }
+    g_disabledViewports = blocked;
+  }
+#endif
+
+  if(blocked)
     return;
 
   auto it { g_rsx.begin() };
@@ -147,15 +169,6 @@ template<>
 bool Resource::exists<Resource>(Resource *rs)
 {
   return rs && g_rsx.count(rs) > 0;
-}
-
-bool Resource::isDeferLoopBlocked(const bool fromTimer)
-{
-  // REAPER v6.19+ does not execute deferred script callbacks
-  // when the splash screen is open.
-  static bool pauseDuringLoad { atof(GetAppVersion()) >= 6.19 };
-  const unsigned int expected { static_cast<unsigned int>(fromTimer) };
-  return (pauseDuringLoad && Splash_GetWnd()) || g_reentrant > expected;
 }
 
 void Resource::destroyAll()

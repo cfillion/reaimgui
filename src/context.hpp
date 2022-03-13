@@ -67,6 +67,7 @@ public:
   void beginDrag(HDROP);
   void endDrag(bool drop);
   void updateFocus();
+  void enableViewports(bool enable);
 
   ImGuiIO &IO();
   DockerList &dockers() { return *m_dockers; }

@@ -311,18 +311,12 @@ void Context::updateMouseData()
 
 void Context::mouseInput(const int button, const bool down)
 {
-  if(Resource::isDeferLoopBlocked())
-    return;
-
   TempCurrent cur { this };
   m_imgui->IO.AddMouseButtonEvent(button, down);
 }
 
 void Context::mouseWheel(const bool horizontal, float delta)
 {
-  if(Resource::isDeferLoopBlocked())
-    return;
-
 #ifndef WHEEL_DELTA
   constexpr float WHEEL_DELTA {
 #  ifdef __APPLE__
@@ -344,9 +338,6 @@ void Context::mouseWheel(const bool horizontal, float delta)
 
 void Context::keyInput(ImGuiKey key, const bool down)
 {
-  if(Resource::isDeferLoopBlocked())
-    return;
-
   TempCurrent cur { this };
 
   if(ImGui::IsLegacyKey(key)) {
@@ -360,9 +351,6 @@ void Context::keyInput(ImGuiKey key, const bool down)
 
 void Context::charInput(const ImWchar codepoint)
 {
-  if(Resource::isDeferLoopBlocked())
-    return;
-
   if(codepoint < 32 || (codepoint >= 0x7f && codepoint <= 0x9f) || // control chars
       (codepoint >= 0xf700 && codepoint <= 0xf7ff)) // unicode private range
     return;
@@ -419,9 +407,6 @@ void Context::dragSources()
 
 void Context::beginDrag(std::vector<std::string> &&files)
 {
-  if(Resource::isDeferLoopBlocked())
-    return;
-
   m_draggedFiles = std::move(files);
   m_dragState = DragState_FirstFrame;
 
@@ -452,9 +437,6 @@ void Context::beginDrag(HDROP drop)
 
 void Context::endDrag(const bool drop)
 {
-  if(Resource::isDeferLoopBlocked())
-    return;
-
   TempCurrent cur { this };
   m_imgui->IO.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
   if(drop)
@@ -499,6 +481,16 @@ void Context::clearFocus()
     ImGui::FocusWindow(nullptr); // also calls ClearActiveID
 
   m_imgui->IO.ClearInputKeys();
+}
+
+void Context::enableViewports(const bool enable)
+{
+  const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
+  for(int i { 1 }; i < pio.Viewports.Size; ++i) { // skip the main viewport
+    ImGuiViewport *viewport { pio.Viewports[i] };
+    Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) };
+    EnableWindow(instance->nativeHandle(), enable);
+  }
 }
 
 void Context::updateTheme()

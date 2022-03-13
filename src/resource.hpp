@@ -38,8 +38,6 @@ public:
     return exists(resource) && dynamic_cast<T *>(resource);
   }
 
-  static bool isDeferLoopBlocked(bool fromTimer = false);
-
   static void destroyAll();
 
 protected:
