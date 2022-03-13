@@ -75,10 +75,7 @@ Resource::Timer::~Timer()
 
 void Resource::Timer::tick()
 {
-  // REAPER v6.19+ does not execute deferred script callbacks
-  // when the splash screen is open.
-  static bool pauseDuringLoad { atof(GetAppVersion()) >= 6.19 };
-  if((pauseDuringLoad && Splash_GetWnd()) || g_reentrant > 1)
+  if(isDeferLoopBlocked(true))
     return;
 
   auto it { g_rsx.begin() };
@@ -150,6 +147,15 @@ template<>
 bool Resource::exists<Resource>(Resource *rs)
 {
   return rs && g_rsx.count(rs) > 0;
+}
+
+bool Resource::isDeferLoopBlocked(const bool fromTimer)
+{
+  // REAPER v6.19+ does not execute deferred script callbacks
+  // when the splash screen is open.
+  static bool pauseDuringLoad { atof(GetAppVersion()) >= 6.19 };
+  const unsigned int expected { static_cast<unsigned int>(fromTimer) };
+  return (pauseDuringLoad && Splash_GetWnd()) || g_reentrant > expected;
 }
 
 void Resource::destroyAll()
