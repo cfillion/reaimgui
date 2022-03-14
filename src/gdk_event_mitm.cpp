@@ -19,11 +19,15 @@
 
 #include <array>
 #include <execinfo.h>
+#include <reaper_plugin_functions.h>
 #include <swell/swell.h>
 
 static uintptr_t SWELL_RunEvents;
 static void (*swell_gdkEventHandler)(GdkEvent *, gpointer);
 static GdkEvent *g_curEvent;
+static WNDPROC g_wndProc;
+
+GdkEventMITM GdkEventMITM::g_instance;
 
 // Discover a memory address slightly before the call to
 // swell_gdkEventHandler within SWELL_RunEvents.
@@ -138,19 +142,51 @@ static void *decodeJump(const uintptr_t retAddr)
     return nullptr;
 }
 
-static GdkFilterReturn xEventFilter(GdkXEvent *, GdkEvent *, gpointer)
-{
-  SWELL_RunEvents = findSWELLRunEvents();
-  if(SWELL_RunEvents)
-    gdk_window_remove_filter(nullptr, &xEventFilter, nullptr);
-  return GDK_FILTER_CONTINUE;
-}
-
 static void eventHandler(GdkEvent *event, gpointer data)
 {
   g_curEvent = event;
   swell_gdkEventHandler(event, data);
   g_curEvent = nullptr;
+}
+
+static bool installHandler()
+{
+  if(void *addr { decodeJump(findReturnAddress(SWELL_RunEvents)) }) {
+    printf("reaper_imgui: installed event handler -> %p\n", addr);
+    swell_gdkEventHandler =
+      reinterpret_cast<decltype(swell_gdkEventHandler)>(addr);
+    gdk_event_handler_set(&eventHandler, nullptr, nullptr);
+    return true;
+  }
+
+  return false;
+}
+
+static LRESULT CALLBACK procOverride(HWND hwnd,
+  unsigned int msg, WPARAM wParam, LPARAM lParam)
+{
+  if(!swell_gdkEventHandler) {
+    LONG_PTR expectedProc { reinterpret_cast<LONG_PTR>(&procOverride) },
+             previousProc { reinterpret_cast<LONG_PTR>(g_wndProc) };
+    if(installHandler() && GetWindowLong(hwnd, GWL_WNDPROC) == expectedProc)
+      SetWindowLong(hwnd, GWL_WNDPROC, previousProc);
+  }
+
+  return CallWindowProc(g_wndProc, hwnd, msg, wParam, lParam);
+}
+
+static GdkFilterReturn xEventFilter(GdkXEvent *, GdkEvent *, gpointer)
+{
+  SWELL_RunEvents = findSWELLRunEvents();
+  if(SWELL_RunEvents) {
+    gdk_window_remove_filter(nullptr, &xEventFilter, nullptr);
+
+    // Can't do this in GdkEventMITM() because GetMainHwnd isn't imported yet.
+    LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&procOverride) },
+             oldProc { SetWindowLong(GetMainHwnd(), GWL_WNDPROC, newProc) };
+    g_wndProc = reinterpret_cast<WNDPROC>(oldProc);
+  }
+  return GDK_FILTER_CONTINUE;
 }
 
 GdkEventMITM::GdkEventMITM()
@@ -163,21 +199,6 @@ GdkEventMITM::~GdkEventMITM()
   if(swell_gdkEventHandler)
     gdk_event_handler_set(swell_gdkEventHandler, nullptr, nullptr);
   swell_gdkEventHandler = nullptr;
-}
-
-bool GdkEventMITM::active()
-{
-  return !!swell_gdkEventHandler;
-}
-
-void GdkEventMITM::install()
-{
-  if(void *addr { decodeJump(findReturnAddress(SWELL_RunEvents)) }) {
-    printf("reaper_imgui: installed event handler -> %p\n", addr);
-    swell_gdkEventHandler =
-      reinterpret_cast<decltype(swell_gdkEventHandler)>(addr);
-    gdk_event_handler_set(&eventHandler, nullptr, nullptr);
-  }
 }
 
 GdkEvent *GdkEventMITM::currentEvent()

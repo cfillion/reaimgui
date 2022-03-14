@@ -22,9 +22,6 @@
 
 class GdkEventMITM {
 public:
-  static bool active();
-  static void install();
-
   static GdkEvent *currentEvent();
 
   template<typename T>
@@ -34,6 +31,9 @@ public:
     return event && event->type == expectedType
       ? reinterpret_cast<T *>(event) : nullptr;
   }
+
+private:
+  static GdkEventMITM g_instance;
 
   GdkEventMITM();
   ~GdkEventMITM();

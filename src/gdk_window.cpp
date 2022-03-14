@@ -40,12 +40,6 @@
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Window { viewport, dockerHost }, m_gl { nullptr }
 {
-  static std::weak_ptr<GdkEventMITM> g_eventMITM;
-
-  if(g_eventMITM.expired())
-    g_eventMITM = m_eventMITM = std::make_shared<GdkEventMITM>();
-  else
-    m_eventMITM = g_eventMITM.lock();
 }
 
 void GDKWindow::create()
@@ -348,9 +342,6 @@ static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)
 std::optional<LRESULT> GDKWindow::handleMessage
   (const unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
-  if(!GdkEventMITM::active())
-    GdkEventMITM::install();
-
   switch(msg) {
   case WM_DROPFILES: {
     HDROP drop { reinterpret_cast<HDROP>(wParam) };
