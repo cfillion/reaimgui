@@ -38,7 +38,7 @@ static std::unordered_set<Resource *> g_rsx;
 static unsigned int g_reentrant;
 #ifndef __APPLE__
 static WNDPROC g_mainProc;
-static bool g_disabledViewports;
+static bool g_disabledViewports, g_disableProcOverride;
 #endif
 
 static bool isDeferLoopBlocked()
@@ -62,9 +62,11 @@ private:
 Resource::Timer::Timer()
 {
 #ifndef __APPLE__
-  LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
-           oldProc { SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc) };
-  g_mainProc = reinterpret_cast<WNDPROC>(oldProc);
+  if(!g_disableProcOverride) {
+    LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
+             oldProc { SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc) };
+    g_mainProc = reinterpret_cast<WNDPROC>(oldProc);
+  }
 #endif
 
   plugin_register("timer", reinterpret_cast<void *>(&Timer::tick));
@@ -80,6 +82,8 @@ Resource::Timer::~Timer()
            previousProc { reinterpret_cast<LONG_PTR>(g_mainProc) };
   if(GetWindowLongPtr(mainWnd, GWLP_WNDPROC) == expectedProc)
     SetWindowLongPtr(mainWnd, GWLP_WNDPROC, previousProc);
+  else // prevent mainProcOverride from calling itself next time
+    g_disableProcOverride = true;
 #endif
 }
 
