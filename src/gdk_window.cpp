@@ -339,6 +339,16 @@ static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)
   return wParam;
 }
 
+static ImGuiMouseButton translateButton(const GdkEventButton *event)
+{
+  switch(event->button) {
+  case 1: case 2: case 3: return event->button - 1;
+  // 4/5/6/7 are scroll/thumb wheels, doesn't trigger WM_LBUTTON messages
+  case 8: case 9:         return event->button - 5;
+  default:                return ImGuiMouseButton_Left;
+  }
+}
+
 std::optional<LRESULT> GDKWindow::handleMessage
   (const unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
@@ -357,6 +367,15 @@ std::optional<LRESULT> GDKWindow::handleMessage
       gdk_gl_context_clear_current();
     }
     break; // continue handling in Window::proc
+  case WM_LBUTTONDOWN: // for supporting thumb buttons
+  case WM_LBUTTONUP: //   SWELL treats thumb buttons as Left
+    if(auto *event { GdkEventMITM::currentEvent<GdkEventButton>(GDK_BUTTON_PRESS) })
+      mouseDown(translateButton(event));
+    else if(auto *event { GdkEventMITM::currentEvent<GdkEventButton>(GDK_BUTTON_RELEASE) })
+      mouseUp(translateButton(event));
+    else if(!GdkEventMITM::currentEvent<GdkEventButton>(GDK_2BUTTON_PRESS))
+      break;  // do default SWELL message handling in Window
+    return 0; // eat SWELL message if handled the GDK event
   case WM_KEYDOWN:
   case WM_SYSKEYDOWN:
   case WM_KEYUP:
