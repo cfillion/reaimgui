@@ -26,8 +26,9 @@ class OpenGLRenderer;
 class GdkEventHandler;
 struct LICE_IBitmap;
 
-typedef struct _GdkWindow GdkWindow;
 typedef struct _GdkGLContext GdkGLContext;
+typedef struct _GdkWindow GdkWindow;
+typedef struct _GtkIMContext GtkIMContext;
 
 using ImGuiViewportFlags = int;
 
@@ -54,6 +55,7 @@ public:
 
 private:
   void initGl();
+  void initIME();
   void resizeTextures();
   void teardownGl();
   void initSoftwareBlit();
@@ -65,6 +67,7 @@ private:
   OpenGLRenderer *m_renderer;
   ImGuiViewportFlags m_previousFlags;
   int m_defaultDecorations;
+  GtkIMContext *m_ime;
 
   // for docking
   struct LICEDeleter { void operator()(LICE_IBitmap *); };

@@ -56,8 +56,8 @@ else()
   target_link_libraries(src Fontconfig::Fontconfig)
 
   pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
-  pkg_search_module(GDK REQUIRED IMPORTED_TARGET gdk-3.0)
-  target_link_libraries(src ${CMAKE_DL_LIBS} PkgConfig::Epoxy PkgConfig::GDK)
+  pkg_search_module(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
+  target_link_libraries(src ${CMAKE_DL_LIBS} PkgConfig::Epoxy PkgConfig::GTK)
 endif()
 
 find_package(Boost REQUIRED)

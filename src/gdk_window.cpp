@@ -24,7 +24,7 @@
 
 #include <cassert>
 #include <epoxy/gl.h>
-#include <gdk/gdk.h>
+#include <gtk/gtk.h>
 
 #include <swell/swell.h>
 #include <reaper_plugin_functions.h>
@@ -38,7 +38,7 @@
 #undef Window
 
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }, m_gl { nullptr }
+  : Window { viewport, dockerHost }, m_gl { nullptr }, m_ime { nullptr }
 {
   static std::weak_ptr<GdkEventHandler> g_eventHandler;
 
@@ -65,6 +65,8 @@ GDKWindow::~GDKWindow()
 {
   if(m_gl)
     teardownGl();
+  if(m_ime)
+    g_object_unref(m_ime);
 }
 
 void GDKWindow::LICEDeleter::operator()(LICE_IBitmap *bm)
@@ -177,6 +179,23 @@ void GDKWindow::teardownGl()
   g_object_unref(m_gl);
 }
 
+static void imeCommit(GtkIMContext *, gchar *input, gpointer data)
+{
+  Context *ctx { reinterpret_cast<Context *>(data) };
+  while(*input) {
+    ctx->charInput(g_utf8_get_char(input));
+    input = g_utf8_next_char(input);
+  }
+}
+
+void GDKWindow::initIME()
+{
+  m_ime = gtk_im_multicontext_new();
+  gtk_im_context_set_use_preedit(m_ime, false);
+  gtk_im_context_focus_in(m_ime);
+  g_signal_connect(m_ime, "commit", G_CALLBACK(imeCommit), m_ctx);
+}
+
 void GDKWindow::show()
 {
   Window::show();
@@ -189,6 +208,8 @@ void GDKWindow::show()
   // prevent invalidation (= displaying garbage) when moving another window over
   if(!isDocked())
     gdk_window_freeze_updates(m_hwnd->m_oswindow);
+
+  initIME();
 }
 
 void GDKWindow::setPosition(ImVec2 pos)
@@ -309,8 +330,30 @@ float GDKWindow::globalScaleFactor()
   return scale;
 }
 
-void GDKWindow::setIME(ImGuiPlatformImeData *)
+void GDKWindow::setIME(ImGuiPlatformImeData *data)
 {
+  if(!data->WantVisible)
+    gtk_im_context_reset(m_ime);
+
+  // cannot use m_viewport->Pos when docked
+  // (IME cursor location must be relative to the dock host window)
+  HWND container { m_hwnd.get() };
+  while(!container->m_oswindow)
+    container = GetParent(container);
+  RECT containerPos;
+  if(container)
+    GetWindowRect(container, &containerPos);
+  else {
+    containerPos.left = m_viewport->Pos.x;
+    containerPos.right = m_viewport->Pos.y;
+  }
+
+  GdkRectangle area;
+  area.x = data->InputPos.x - containerPos.left;
+  area.y = data->InputPos.y - containerPos.top;
+  area.width = 0;
+  area.height = data->InputLineHeight;
+  gtk_im_context_set_cursor_location(m_ime, &area);
 }
 
 void GDKWindow::uploadFontTex()
@@ -416,7 +459,7 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
 void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
 {
   const GdkEventType expectedType { down ? GDK_KEY_PRESS : GDK_KEY_RELEASE };
-  const auto *gdkEvent { GdkEventHandler::currentEvent<GdkEventKey>(expectedType) };
+  auto *gdkEvent { GdkEventHandler::currentEvent<GdkEventKey>(expectedType) };
 
   struct Modifier { unsigned int vkey; ImGuiKey modkey, ikey; };
   constexpr Modifier modifiers[] {
@@ -438,15 +481,18 @@ void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
     break;
   }
 
-  if(down)
-    m_ctx->charInput(unmangleSwellChar(swellKey, lParam));
 
   if(gdkEvent) {
+    if(gtk_im_context_filter_keypress(m_ime, gdkEvent))
+      return;
+
     if(ImGuiKey namedKey { translateGdkKey(gdkEvent) }) {
       m_ctx->keyInput(namedKey, down);
       return;
     }
   }
+  else if(down)
+    m_ctx->charInput(unmangleSwellChar(swellKey, lParam));
 
   if(swellKey < 256)
     m_ctx->keyInput(swellKey, down);
