@@ -63,8 +63,8 @@ private:
   void keyEvent(WPARAM, LPARAM, bool down);
 
   GdkGLContext *m_gl;
-  unsigned int m_tex, m_fbo;
   OpenGLRenderer *m_renderer;
+  unsigned int m_tex, m_fbo;
   ImGuiViewportFlags m_previousFlags;
   int m_defaultDecorations;
   GtkIMContext *m_ime;

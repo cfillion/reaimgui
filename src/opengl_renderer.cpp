@@ -31,10 +31,10 @@
 
 // Extracted from ImGui's reference OpenGL3 renderer
 // Simplified and modified to allow use in multiple GL contextes in parallel
-// OpenGL 3.2+ only
+// OpenGL 3.1+ only
 
 constexpr const char *VERTEX_SHADER { R"(
-#version 150
+#version 140
 
 uniform mat4 ProjMtx;
 
@@ -54,7 +54,7 @@ void main()
 )" };
 
 constexpr const char *FRAGMENT_SHADER { R"(
-#version 150
+#version 140
 
 uniform sampler2D Texture;
 
@@ -79,7 +79,6 @@ void OpenGLRenderer::install()
 {
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendRendererName = "reaper_imgui_opengl3";
-  io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset; // glDrawElementsBaseVertex
   io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
 }
 
@@ -108,6 +107,20 @@ OpenGLRenderer::OpenGLRenderer()
   glEnable(GL_BLEND);
   glBlendEquation(GL_FUNC_ADD);
   glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  GLint major {}, minor {};
+  glGetIntegerv(GL_MAJOR_VERSION, &major);
+  glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+  ImGuiIO &io { ImGui::GetIO() };
+  if(major < 3 || minor < 1) {
+    char msg[512];
+    snprintf(msg, sizeof(msg),
+      "OpenGL v3.1 or newer required, got v%d.%d", major, minor);
+    throw backend_error { msg };
+  }
+  else if(major > 3 || minor >= 2) // enable glDrawElementsBaseVertex
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
 }
 
 void OpenGLRenderer::initShaders()
@@ -208,6 +221,8 @@ void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
 
   for(int i = 0; i < drawData->CmdListsCount; ++i) {
     const ImDrawList *cmdList { drawData->CmdLists[i] };
+    const bool useVertexOffset
+      { (cmdList->Flags & ImDrawListFlags_AllowVtxOffset) != 0 };
 
     glBufferData(GL_ARRAY_BUFFER,
       static_cast<GLsizeiptr>(cmdList->VtxBuffer.Size * sizeof(ImDrawVert)),
@@ -239,10 +254,17 @@ void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
 
       // Bind texture, Draw
       glBindTexture(GL_TEXTURE_2D, m_textures[cmd->GetTexID()]);
-      glDrawElementsBaseVertex(GL_TRIANGLES, cmd->ElemCount,
-        sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-        (void*)(intptr_t)(cmd->IdxOffset * sizeof(ImDrawIdx)),
-        cmd->VtxOffset);
+      if(useVertexOffset) {
+        glDrawElementsBaseVertex(GL_TRIANGLES, cmd->ElemCount,
+          sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
+          (void*)(intptr_t)(cmd->IdxOffset * sizeof(ImDrawIdx)),
+          cmd->VtxOffset);
+      }
+      else {
+        glDrawElements(GL_TRIANGLES, cmd->ElemCount,
+          sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
+          (void*)(intptr_t)(cmd->IdxOffset * sizeof(ImDrawIdx)));
+      }
     }
   }
 

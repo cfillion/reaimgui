@@ -38,7 +38,8 @@
 #undef Window
 
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }, m_gl { nullptr }, m_ime { nullptr }
+  : Window { viewport, dockerHost }, m_gl { nullptr }, m_renderer { nullptr },
+    m_ime { nullptr }
 {
   static std::weak_ptr<GdkEventHandler> g_eventHandler;
 
@@ -107,10 +108,7 @@ void GDKWindow::initGl()
     throw ex;
   }
 
-  gdk_gl_context_set_required_version(m_gl,
-    OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR);
-  gdk_gl_context_set_forward_compatible(m_gl, true);
-
+  gdk_gl_context_set_required_version(m_gl, 3, 2);
   gdk_gl_context_realize(m_gl, &error);
   if(error) {
     const backend_error ex { error->message };
@@ -120,19 +118,6 @@ void GDKWindow::initGl()
   }
 
   gdk_gl_context_make_current(m_gl);
-
-  int major, minor;
-  gdk_gl_context_get_version(m_gl, &major, &minor);
-  if(major < OpenGLRenderer::MIN_MAJOR ||
-      (major == OpenGLRenderer::MIN_MAJOR && minor < OpenGLRenderer::MIN_MINOR)) {
-    gdk_gl_context_clear_current();
-    g_clear_object(&m_gl);
-
-    char msg[1024];
-    snprintf(msg, sizeof(msg), "OpenGL v%d.%d or newer required, got v%d.%d",
-      OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR, major, minor);
-    throw backend_error { msg };
-  }
 
   glGenTextures(1, &m_tex);
   resizeTextures(); // binds to the texture and sets its size
@@ -171,7 +156,8 @@ void GDKWindow::teardownGl()
   glDeleteFramebuffers(1, &m_fbo);
   glDeleteTextures(1, &m_tex);
 
-  delete m_renderer;
+  if(m_renderer)
+    delete m_renderer;
 
   // current GL context must be cleared before calling unref to avoid this bug:
   // https://gitlab.gnome.org/GNOME/gtk/-/issues/2562

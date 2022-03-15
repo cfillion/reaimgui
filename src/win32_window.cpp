@@ -106,7 +106,7 @@ Win32Window::Class::~Class()
 }
 
 Win32Window::Win32Window(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }
+  : Window { viewport, dockerHost }, m_gl {}, m_renderer { nullptr }
 {
 }
 
@@ -135,7 +135,6 @@ void Win32Window::create()
   m_dc = GetDC(m_hwnd.get());
   initPixelFormat();
   initGL();
-  m_renderer = new OpenGLRenderer;
   wglMakeCurrent(m_dc, nullptr);
 
   // will be freed upon RevokeDragDrop during destruction
@@ -150,9 +149,13 @@ Win32Window::~Win32Window()
 {
   RevokeDragDrop(m_hwnd.get());
 
-  wglMakeCurrent(m_dc, m_gl);
-  delete m_renderer;
-  wglDeleteContext(m_gl);
+  if(m_gl) {
+    wglMakeCurrent(m_dc, m_gl);
+    if(m_renderer)
+      delete m_renderer;
+    wglDeleteContext(m_gl);
+  }
+
   ReleaseDC(m_hwnd.get(), m_dc);
 }
 
@@ -181,23 +184,27 @@ void Win32Window::initGL()
       (wglGetProcAddress("wglCreateContextAttribsARB")) };
 
   if(wglCreateContextAttribsARB) {
-    constexpr int attrs[] {
-      WGL_CONTEXT_MAJOR_VERSION_ARB, OpenGLRenderer::MIN_MAJOR,
-      WGL_CONTEXT_MINOR_VERSION_ARB, OpenGLRenderer::MIN_MINOR,
-      0
-    };
+    static int minor { 2 };
+    do {
+      // https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
+      const int attrs[] {
+        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
+        WGL_CONTEXT_MINOR_VERSION_ARB, minor,
+        0
+      };
 
-    if(HGLRC coreGl { wglCreateContextAttribsARB(m_dc, nullptr, attrs) }) {
-      wglMakeCurrent(m_dc, m_gl = coreGl);
-      wglDeleteContext(dummyGl);
-    }
+      if(HGLRC coreGl { wglCreateContextAttribsARB(m_dc, nullptr, attrs) }) {
+        wglMakeCurrent(m_dc, m_gl = coreGl);
+        wglDeleteContext(dummyGl);
+        break;
+      }
+    } while(--minor >= 1);
   }
 
-  if(gl3wInit() || !gl3wIsSupported(OpenGLRenderer::MIN_MAJOR, OpenGLRenderer::MIN_MINOR)) {
-    wglDeleteContext(m_gl);
-    ReleaseDC(m_hwnd.get(), m_dc);
-    throw backend_error { "failed to initialize OpenGL 3.2 or newer" };
-  }
+  if(gl3wInit())
+    throw backend_error { "failed to initialize OpenGL context" };
+
+  m_renderer = new OpenGLRenderer;
 }
 
 RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const

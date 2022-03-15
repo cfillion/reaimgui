@@ -26,9 +26,6 @@ struct ImGuiViewport;
 class OpenGLRenderer {
 public:
   // minimum OpenGL version
-  static constexpr int MIN_MAJOR { 3 };
-  static constexpr int MIN_MINOR { 2 };
-
   static void install();
 
   OpenGLRenderer();
