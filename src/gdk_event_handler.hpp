@@ -15,13 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_GDK_EVENT_MITM_HPP
-#define REAIMGUI_GDK_EVENT_MITM_HPP
+#ifndef REAIMGUI_GDK_EVENT_HANDLER_HPP
+#define REAIMGUI_GDK_EVENT_HANDLER_HPP
 
 #include <gdk/gdk.h>
 
-class GdkEventMITM {
+class GdkEventHandler {
 public:
+  GdkEventHandler();
+  ~GdkEventHandler();
+
   static GdkEvent *currentEvent();
 
   template<typename T>
@@ -31,12 +34,6 @@ public:
     return event && event->type == expectedType
       ? reinterpret_cast<T *>(event) : nullptr;
   }
-
-private:
-  static GdkEventMITM g_instance;
-
-  GdkEventMITM();
-  ~GdkEventMITM();
 };
 
 #endif

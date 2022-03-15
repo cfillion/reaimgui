@@ -47,7 +47,7 @@ elseif(APPLE)
 else()
   target_sources(src PRIVATE
     fc_font.cpp
-    gdk_event_mitm.cpp
+    gdk_event_handler.cpp
     gdk_platform.cpp
     gdk_window.cpp
   )

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gdk_event_mitm.hpp"
+#include "gdk_event_handler.hpp"
 
 #include <array>
 #include <execinfo.h>
@@ -25,9 +25,7 @@
 #include <unistd.h>
 
 struct __attribute__((packed)) Jump {
-  static Jump *findBefore(uintptr_t retaddr);
   uintptr_t retaddr() const { return reinterpret_cast<uintptr_t>(this) + sizeof(*this); }
-  bool patchTarget(uintptr_t newTarget);
 
 #if defined(__x86_64__) || defined(__i686__)
   // E8 71 57 FB FF
@@ -70,18 +68,66 @@ return nullptr;
 #endif
 };
 
-static uintptr_t SWELL_RunEvents;
-static Jump *g_swellEventHandlerJump;
-static void (*swell_gdkEventHandler)(GdkEvent *, gpointer);
+class SWELL_RunEvents {
+public:
+  SWELL_RunEvents();
+  bool found() const { return m_addr != 0; }
+  bool find();
+  bool findEventHandlerCall();
+
+  GdkEventFunc eventHandler() const;
+  bool setEventHandler(GdkEventFunc);
+
+private:
+  uintptr_t findSwellEventHandlerReturnAddress();
+  uintptr_t m_addr; // not the entry point, but before the event handler call
+  Jump *m_eventHandlerCall;
+};
+
+static SWELL_RunEvents g_runEvents;
+static GdkEventFunc swell_gdkEventHandler;
 static GdkEvent *g_curEvent;
 static WNDPROC g_wndProc;
 
-GdkEventMITM GdkEventMITM::g_instance;
+static LRESULT CALLBACK findEventHandlerProc(HWND hwnd,
+  unsigned int msg, WPARAM wParam, LPARAM lParam)
+{
+  if(!swell_gdkEventHandler && g_runEvents.findEventHandlerCall()) {
+    swell_gdkEventHandler = g_runEvents.eventHandler();
+    printf("reaper_imgui: found event handler at %p\n", swell_gdkEventHandler);
+
+    LONG_PTR expectedProc { reinterpret_cast<LONG_PTR>(&findEventHandlerProc) },
+             previousProc { reinterpret_cast<LONG_PTR>(g_wndProc) };
+    if(GetWindowLong(hwnd, GWL_WNDPROC) == expectedProc)
+      SetWindowLong(hwnd, GWL_WNDPROC, previousProc);
+  }
+
+  return CallWindowProc(g_wndProc, hwnd, msg, wParam, lParam);
+}
+
+static GdkFilterReturn xEventFilter(GdkXEvent *, GdkEvent *, gpointer)
+{
+  if(!g_runEvents.found() && g_runEvents.find()) {
+    gdk_window_remove_filter(nullptr, &xEventFilter, nullptr);
+
+    LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&findEventHandlerProc) },
+             oldProc { SetWindowLong(GetMainHwnd(), GWL_WNDPROC, newProc) };
+    g_wndProc = reinterpret_cast<WNDPROC>(oldProc);
+  }
+
+  return GDK_FILTER_CONTINUE;
+}
+
+SWELL_RunEvents::SWELL_RunEvents()
+  : m_addr { 0 }, m_eventHandlerCall { nullptr }
+{
+  gdk_window_add_filter(nullptr, &xEventFilter, nullptr);
+}
 
 // Discover a memory address slightly before the call to
 // swell_gdkEventHandler within SWELL_RunEvents.
 // Call stack here is SWELL_RunEvents -> gdk_event_get -> ... > xEventFilter
-static uintptr_t findSWELLRunEvents()
+bool SWELL_RunEvents::find()
 {
   Dl_info gdk;
   dladdr(reinterpret_cast<const void *>(&gdk_window_new), &gdk);
@@ -96,11 +142,13 @@ static uintptr_t findSWELLRunEvents()
 
     if(!foundGdk)
       foundGdk = so.dli_fbase == gdk.dli_fbase;
-    else if(so.dli_fbase != gdk.dli_fbase)
-      return reinterpret_cast<uintptr_t>(bt[i]);
+    else if(so.dli_fbase != gdk.dli_fbase) {
+      m_addr = reinterpret_cast<uintptr_t>(bt[i]);
+      return true;
+    }
   }
 
-  return 0;
+  return false;
 }
 
 // Find the address of the instruction after the call to swell_gdkEventHandler
@@ -111,14 +159,14 @@ static uintptr_t findSWELLRunEvents()
 // SWELL_RunMessageLoop > SWELL_RunEvents > swell_gdkEventHandler > ... > WndProc
 // Path 3
 // _gdk_event_emit -> swell_gdkEventHandler > ... > WndProc
-static uintptr_t findSwellEventHandlerReturnAddress()
+uintptr_t SWELL_RunEvents::findSwellEventHandlerReturnAddress()
 {
   Dl_info swell;
   dladdr(reinterpret_cast<const void *>(SWELL_CreateDialog), &swell);
 
   void *bt[20];
   const int size { backtrace(bt, std::size(bt)) };
-  uintptr_t retAddr { 0 }, lastOffset { UINTPTR_MAX };
+  uintptr_t closestRetAddr { 0 }, lastOffset { UINTPTR_MAX };
 
   for(int i {}; i < size; ++i) {
     Dl_info so;
@@ -130,32 +178,43 @@ static uintptr_t findSwellEventHandlerReturnAddress()
       continue; // skip stack frames outside of SWELL
 
     // path 2
-    const uintptr_t addr   { reinterpret_cast<uintptr_t>(bt[i]) },
-                    offset { addr - SWELL_RunEvents };
-    if(addr >= SWELL_RunEvents && addr < SWELL_RunEvents + 0x20 && offset < lastOffset)
-      retAddr = addr;
+    const uintptr_t retAddr { reinterpret_cast<uintptr_t>(bt[i]) },
+                    offset  { retAddr - m_addr };
+    if(retAddr >= m_addr && retAddr < 0x20 + m_addr && offset < lastOffset)
+      closestRetAddr = retAddr;
 
     lastOffset = offset;
   }
 
-  return retAddr;
+  return closestRetAddr;
 }
 
-Jump *Jump::findBefore(const uintptr_t retAddr)
+bool SWELL_RunEvents::findEventHandlerCall()
 {
+  const auto retAddr { findSwellEventHandlerReturnAddress() };
   Jump *jump { reinterpret_cast<Jump *>(retAddr - sizeof(Jump)) };
-  return retAddr && jump->valid() ? jump : nullptr;
+  if(retAddr && jump->valid())
+    m_eventHandlerCall = jump;
+  return !!m_eventHandlerCall;
 }
 
-bool Jump::patchTarget(const uintptr_t newTarget)
+GdkEventFunc SWELL_RunEvents::eventHandler() const
+{
+  if(m_eventHandlerCall && m_eventHandlerCall->valid())
+    return reinterpret_cast<GdkEventFunc>(m_eventHandlerCall->target());
+  else
+    return nullptr;
+}
+
+bool SWELL_RunEvents::setEventHandler(GdkEventFunc newHandler)
 {
   const auto pageSize { sysconf(_SC_PAGE_SIZE) };
-  const uintptr_t addr { reinterpret_cast<uintptr_t>(this) };
+  const uintptr_t addr { reinterpret_cast<uintptr_t>(m_eventHandlerCall) };
   void *pageStart { reinterpret_cast<void *>(addr - (addr % pageSize)) };
 
   if(mprotect(pageStart, pageSize, PROT_READ | PROT_WRITE))
     return false;
-  setTarget(newTarget);
+  m_eventHandlerCall->setTarget(reinterpret_cast<uintptr_t>(newHandler));
   mprotect(pageStart, pageSize, PROT_READ | PROT_EXEC);
   return true;
 }
@@ -167,68 +226,27 @@ static void eventHandler(GdkEvent *event, gpointer data)
   g_curEvent = nullptr;
 }
 
-static bool installHandler()
+GdkEventHandler::GdkEventHandler()
 {
-  const auto retAddr { findSwellEventHandlerReturnAddress() };
-  g_swellEventHandlerJump = Jump::findBefore(retAddr);
-  if(!g_swellEventHandlerJump)
-    return false;
-
-  const uintptr_t jumpTarget { g_swellEventHandlerJump->target() };
-  swell_gdkEventHandler =
-    reinterpret_cast<decltype(swell_gdkEventHandler)>(jumpTarget);
-
-  gdk_event_handler_set(&eventHandler, nullptr, nullptr);
-  if(!g_swellEventHandlerJump->patchTarget(reinterpret_cast<uintptr_t>(&eventHandler)))
-    printf("reaper_imgui: faild to patch SWELL_RunEvents\n");
-
-  printf("reaper_imgui: installed event handler -> %p\n", swell_gdkEventHandler);
-
-  return true;
-}
-
-static LRESULT CALLBACK procOverride(HWND hwnd,
-  unsigned int msg, WPARAM wParam, LPARAM lParam)
-{
-  if(!swell_gdkEventHandler) {
-    LONG_PTR expectedProc { reinterpret_cast<LONG_PTR>(&procOverride) },
-             previousProc { reinterpret_cast<LONG_PTR>(g_wndProc) };
-    if(installHandler() && GetWindowLong(hwnd, GWL_WNDPROC) == expectedProc)
-      SetWindowLong(hwnd, GWL_WNDPROC, previousProc);
+  if(swell_gdkEventHandler) {
+    gdk_event_handler_set(&eventHandler, nullptr, nullptr);
+    if(!g_runEvents.setEventHandler(&eventHandler))
+      fprintf(stderr, "reaper_imgui: could not patch SWELL_RunEvents\n");
   }
-
-  return CallWindowProc(g_wndProc, hwnd, msg, wParam, lParam);
 }
 
-static GdkFilterReturn xEventFilter(GdkXEvent *, GdkEvent *, gpointer)
-{
-  SWELL_RunEvents = findSWELLRunEvents();
-  if(SWELL_RunEvents) {
-    gdk_window_remove_filter(nullptr, &xEventFilter, nullptr);
-
-    // Can't do this in GdkEventMITM() because GetMainHwnd isn't imported yet.
-    LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&procOverride) },
-             oldProc { SetWindowLong(GetMainHwnd(), GWL_WNDPROC, newProc) };
-    g_wndProc = reinterpret_cast<WNDPROC>(oldProc);
-  }
-  return GDK_FILTER_CONTINUE;
-}
-
-GdkEventMITM::GdkEventMITM()
-{
-  gdk_window_add_filter(nullptr, &xEventFilter, nullptr);
-}
-
-GdkEventMITM::~GdkEventMITM()
+GdkEventHandler::~GdkEventHandler()
 {
   if(swell_gdkEventHandler) {
     gdk_event_handler_set(swell_gdkEventHandler, nullptr, nullptr);
-    g_swellEventHandlerJump->patchTarget(reinterpret_cast<uintptr_t>(swell_gdkEventHandler));
+    if(g_runEvents.eventHandler() == &eventHandler)
+      g_runEvents.setEventHandler(swell_gdkEventHandler);
+    else
+      fprintf(stderr, "reaper_imgui: left altered event handler\n");
   }
-  swell_gdkEventHandler = nullptr;
 }
 
-GdkEvent *GdkEventMITM::currentEvent()
+GdkEvent *GdkEventHandler::currentEvent()
 {
   return g_curEvent;
 }

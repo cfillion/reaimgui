@@ -18,7 +18,7 @@
 #include "gdk_window.hpp"
 
 #include "context.hpp"
-#include "gdk_event_mitm.hpp"
+#include "gdk_event_handler.hpp"
 #include "opengl_renderer.hpp"
 #include "platform.hpp"
 
@@ -40,6 +40,12 @@
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Window { viewport, dockerHost }, m_gl { nullptr }
 {
+  static std::weak_ptr<GdkEventHandler> g_eventHandler;
+
+  if(g_eventHandler.expired())
+    g_eventHandler = m_eventHandler = std::make_shared<GdkEventHandler>();
+  else
+    m_eventHandler = g_eventHandler.lock();
 }
 
 void GDKWindow::create()
@@ -369,11 +375,11 @@ std::optional<LRESULT> GDKWindow::handleMessage
     break; // continue handling in Window::proc
   case WM_LBUTTONDOWN: // for supporting thumb buttons
   case WM_LBUTTONUP: //   SWELL treats thumb buttons as Left
-    if(auto *event { GdkEventMITM::currentEvent<GdkEventButton>(GDK_BUTTON_PRESS) })
+    if(auto *event { GdkEventHandler::currentEvent<GdkEventButton>(GDK_BUTTON_PRESS) })
       mouseDown(translateButton(event));
-    else if(auto *event { GdkEventMITM::currentEvent<GdkEventButton>(GDK_BUTTON_RELEASE) })
+    else if(auto *event { GdkEventHandler::currentEvent<GdkEventButton>(GDK_BUTTON_RELEASE) })
       mouseUp(translateButton(event));
-    else if(!GdkEventMITM::currentEvent<GdkEventButton>(GDK_2BUTTON_PRESS))
+    else if(!GdkEventHandler::currentEvent<GdkEventButton>(GDK_2BUTTON_PRESS))
       break;  // do default SWELL message handling in Window
     return 0; // eat SWELL message if handled the GDK event
   case WM_KEYDOWN:
@@ -410,7 +416,7 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
 void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
 {
   const GdkEventType expectedType { down ? GDK_KEY_PRESS : GDK_KEY_RELEASE };
-  const auto *gdkEvent { GdkEventMITM::currentEvent<GdkEventKey>(expectedType) };
+  const auto *gdkEvent { GdkEventHandler::currentEvent<GdkEventKey>(expectedType) };
 
   struct Modifier { unsigned int vkey; ImGuiKey modkey, ikey; };
   constexpr Modifier modifiers[] {
