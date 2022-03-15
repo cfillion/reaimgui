@@ -160,7 +160,7 @@ void Context::setCurrent()
   ImGui::SetCurrentContext(m_imgui.get());
 }
 
-void Context::beginFrame()
+bool Context::beginFrame() try
 {
   assert(!m_inFrame);
 
@@ -178,14 +178,24 @@ void Context::beginFrame()
 
   dragSources();
   m_dockers->drawAll();
+
+  return true;
+}
+catch(const backend_error &e) {
+  char message[124];
+  snprintf(message, sizeof(message), "ReaImGui error: %s\n", e.what());
+  ShowConsoleMsg(message);
+  return false;
 }
 
-void Context::enterFrame()
+bool Context::enterFrame()
 {
   setCurrent();
 
-  if(!m_inFrame)
-    beginFrame();
+  if(m_inFrame)
+    return true;
+  else
+    return beginFrame();
 }
 
 bool Context::endFrame(const bool render) try

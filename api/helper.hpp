@@ -76,7 +76,7 @@
 #define API_WBIG(var)     var##OutNeedBig
 #define API_WBIG_SZ(var)  var##OutNeedBig_sz
 
-#define FRAME_GUARD assertValid(ctx); ctx->enterFrame()
+#define FRAME_GUARD assertValid(ctx); assertFrame(ctx);
 
 template<typename Output, typename Input>
 inline Output valueOr(const Input *ptr, const Output fallback)
@@ -111,6 +111,14 @@ inline void assertValid(T *ptr)
   snprintf(message, sizeof(message),
     "expected valid %s*, got %p", type.c_str(), ptr);
   throw reascript_error { message };
+}
+
+inline void assertFrame(Context *ctx)
+{
+  if(!ctx->enterFrame()) {
+    delete ctx;
+    throw reascript_error { "frame initialization failed" };
+  }
 }
 
 template <typename PtrType, typename ValType, size_t N>

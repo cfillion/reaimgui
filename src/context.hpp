@@ -57,7 +57,7 @@ public:
 
   void setCurrent();
   bool inFrame() const { return m_inFrame; }
-  void enterFrame();
+  bool enterFrame();
 
   void mouseInput(int button, bool down);
   void mouseWheel(bool horizontal, float delta);
@@ -81,7 +81,7 @@ protected:
   bool heartbeat() override;
 
 private:
-  void beginFrame();
+  bool beginFrame();
   bool endFrame(bool render);
 
   void updateFrameInfo();
