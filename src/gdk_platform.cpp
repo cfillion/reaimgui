@@ -23,11 +23,47 @@
 #include <gdk/gdk.h>
 #include <imgui/imgui.h>
 
+// using RegisterClipboardFormat instead of CF_TEXT for compatibility with REAPER v5
+// (prior to WDL commit 0f77b72adf1cdbe98fd56feb41eb097a8fac5681)
+#undef CF_TEXT
+#define CF_TEXT RegisterClipboardFormat("SWELL__CF_TEXT")
+
+static const char *getClipboardText(void *)
+{
+  static std::string text;
+
+  OpenClipboard(nullptr);
+  if(HANDLE mem { GetClipboardData(CF_TEXT) }) {
+    text = static_cast<const char *>(GlobalLock(mem));
+    GlobalUnlock(mem);
+  }
+  else
+    text.clear();
+  CloseClipboard();
+
+  return text.c_str();
+}
+
+static void setClipboardText(void *, const char *text)
+{
+  const size_t size { strlen(text) + 1 };
+  HANDLE mem { GlobalAlloc(GMEM_MOVEABLE, size) };
+  memcpy(GlobalLock(mem), text, size);
+  GlobalUnlock(mem);
+
+  OpenClipboard(nullptr);
+  EmptyClipboard();
+  SetClipboardData(CF_TEXT, mem);
+  CloseClipboard();
+}
+
 void Platform::install()
 {
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendFlags &= ~ImGuiBackendFlags_HasMouseHoveredViewport;
   io.BackendPlatformName = "reaper_imgui_gdk";
+  io.GetClipboardTextFn = &getClipboardText;
+  io.SetClipboardTextFn = &setClipboardText;
 
   OpenGLRenderer::install();
 }
