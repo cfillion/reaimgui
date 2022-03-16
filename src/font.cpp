@@ -179,7 +179,7 @@ Font *FontList::get(ImFont *instance) const
 ImFont *FontList::instanceOf(Font *font) const
 {
   if(!font)
-    return nullptr; // default font
+    return ImGui::GetDefaultFont(); // not null for DrawList::AddTextEx
 
   const auto it { std::find(m_fonts.begin(), m_fonts.end(), font) };
   if(it == m_fonts.end())
