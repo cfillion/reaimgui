@@ -275,7 +275,7 @@ DEFINE_API(void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
 });
 
 DEFINE_API(void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
-(reaper_array*,points)(int,num_points)(int,col_rgba),
+(reaper_array*,points)(int,col_rgba),
 "Note: Anti-aliased filling requires points to be in clockwise order.",
 {
   const std::vector<ImVec2> vec2points { makePointsArray(points) };

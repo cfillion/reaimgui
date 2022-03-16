@@ -246,7 +246,7 @@ OVERRIDES = {
   'void ImGui::PlotLines(const char*, const float*, int, int, const char*, float, float, ImVec2, int)'     => 'void PlotLines(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
   'void ImGui::PlotHistogram(const char*, const float*, int, int, const char*, float, float, ImVec2, int)' => 'void PlotHistogram(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
   'void ImDrawList::AddPolyline(const ImVec2*, int, ImU32, ImDrawFlags, float)' => 'void DrawList_AddPolyline(reaper_array*, int, int, double)',
-  'void ImDrawList::AddConvexPolyFilled(const ImVec2*, int, ImU32)'      => 'void DrawList_AddConvexPolyFilled(reaper_array*, int, int)',
+  'void ImDrawList::AddConvexPolyFilled(const ImVec2*, int, ImU32)'      => 'void DrawList_AddConvexPolyFilled(reaper_array*, int)',
 
   # no callbacks
   'bool ImGui::InputText(const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)'                         => 'bool InputText(const char*, char*, int, int*)',
