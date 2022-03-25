@@ -77,7 +77,10 @@ float Win32Window::scaleForDpi(const unsigned int dpi)
 
 static void styleFromFlags(ImGuiViewportFlags flags, DWORD *style, DWORD *exStyle)
 {
-  *style = WS_POPUP; // fix AttachWindowTopmostButton when a titlebar is shown
+  // WS_CHILD to have parent/child relationship instead of owner
+  // for correct focus behavior when deleting parent before child.
+  // WS_POPUP fixes AttachWindowTopmostButton when a titlebar is shown
+  *style = WS_CHILD | WS_POPUP;
   *exStyle = WS_EX_ACCEPTFILES;
 
   if(!(flags & ImGuiViewportFlags_NoDecoration))
