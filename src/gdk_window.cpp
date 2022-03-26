@@ -258,6 +258,11 @@ void GDKWindow::render(void *)
 {
   gdk_gl_context_make_current(m_gl);
 
+  if(m_needTexUpload) {
+    m_renderer->uploadFontTex();
+    m_needTexUpload = false;
+  }
+
   const bool softwareBlit { isDocked() };
   m_renderer->render(m_viewport, softwareBlit);
 
@@ -340,13 +345,6 @@ void GDKWindow::setIME(ImGuiPlatformImeData *data)
   area.width = 0;
   area.height = data->InputLineHeight;
   gtk_im_context_set_cursor_location(m_ime, &area);
-}
-
-void GDKWindow::uploadFontTex()
-{
-  gdk_gl_context_make_current(m_gl);
-  m_renderer->uploadFontTex();
-  gdk_gl_context_clear_current();
 }
 
 static unsigned int unmangleSwellChar(WPARAM wParam, LPARAM lParam)

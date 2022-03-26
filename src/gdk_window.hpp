@@ -49,7 +49,6 @@ public:
   float scaleFactor() const override { return globalScaleFactor(); }
   void setIME(ImGuiPlatformImeData *) override;
 
-  void uploadFontTex() override;
   std::optional<LRESULT> handleMessage
     (const unsigned int msg, WPARAM wParam, LPARAM) override;
 

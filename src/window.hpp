@@ -63,12 +63,12 @@ protected:
   void createSwellDialog();
   HWND parentHandle();
 
-  virtual void uploadFontTex() = 0;
   virtual std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM) = 0;
   virtual int handleAccelerator(MSG *);
 
   struct WindowDeleter { void operator()(HWND); };
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
+  bool m_needTexUpload;
 
 private:
   static int hwndInfo(HWND, INT_PTR type);

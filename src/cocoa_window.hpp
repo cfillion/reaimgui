@@ -44,7 +44,6 @@ public:
   float scaleFactor() const override;
   void setIME(ImGuiPlatformImeData *) override;
 
-  void uploadFontTex() override;
   std::optional<LRESULT> handleMessage
     (const unsigned int msg, WPARAM wParam, LPARAM) override;
   int handleAccelerator(MSG *) override;

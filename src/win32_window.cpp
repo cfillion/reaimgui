@@ -311,6 +311,10 @@ void Win32Window::update()
 void Win32Window::render(void *)
 {
   wglMakeCurrent(m_dc, m_gl);
+  if(m_needTexUpload) {
+    m_renderer->uploadFontTex();
+    m_needTexUpload = false;
+  }
   m_renderer->render(m_viewport);
   SwapBuffers(m_dc);
   wglMakeCurrent(nullptr, nullptr);
@@ -343,13 +347,6 @@ void Win32Window::setIME(ImGuiPlatformImeData *data)
 
     ImmReleaseContext(m_hwnd.get(), ime);
   }
-}
-
-void Win32Window::uploadFontTex()
-{
-  wglMakeCurrent(m_dc, m_gl);
-  m_renderer->uploadFontTex();
-  wglMakeCurrent(nullptr, nullptr);
 }
 
 std::optional<LRESULT> Win32Window::handleMessage

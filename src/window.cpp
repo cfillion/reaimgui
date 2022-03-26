@@ -117,8 +117,8 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 }
 
 Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Viewport { viewport }, m_dockerHost { dockerHost },
-    m_accel { &translateAccel, true, this },
+  : Viewport { viewport }, m_needTexUpload { true },
+    m_dockerHost { dockerHost }, m_accel { &translateAccel, true, this },
     m_accelReg { "accelerator", &m_accel }, m_previousScale { 0.f },
     m_fontTexVersion { -1 }, m_mouseDown { 0 }, m_noFocus { false }
 {
@@ -193,7 +193,7 @@ void Window::onChanged()
 
   const int fontTexVersion { m_ctx->fonts().setScale(m_viewport->DpiScale) };
   if(scaleChanged || fontTexVersion != m_fontTexVersion) {
-    uploadFontTex();
+    m_needTexUpload = true;
     m_fontTexVersion = fontTexVersion;
   }
 }

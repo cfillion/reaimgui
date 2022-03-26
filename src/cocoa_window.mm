@@ -176,6 +176,10 @@ void CocoaWindow::render(void *)
     [m_gl setView:m_view];
 
   [m_gl makeCurrentContext];
+  if(m_needTexUpload) {
+    m_renderer->uploadFontTex();
+    m_needTexUpload = false;
+  }
   m_renderer->render(m_viewport);
   [m_gl flushBuffer];
   [NSOpenGLContext clearCurrentContext];
@@ -199,13 +203,6 @@ void CocoaWindow::setIME(ImGuiPlatformImeData *data)
   pos.y -= data->InputLineHeight;
 
   [m_inputView setImePosition:NSMakePoint(pos.x, pos.y)];
-}
-
-void CocoaWindow::uploadFontTex()
-{
-  [m_gl makeCurrentContext];
-  m_renderer->uploadFontTex();
-  [NSOpenGLContext clearCurrentContext];
 }
 
 std::optional<LRESULT> CocoaWindow::handleMessage
