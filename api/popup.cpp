@@ -86,7 +86,7 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 });
 
 DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
-R"(Manually close the popup we have begin-ed into. Use inside the ImGUi_BeginPopup/ImGui_EndPopup scope to close manually.
+R"(Manually close the popup we have begin-ed into. Use inside the ImGui_BeginPopup/ImGui_EndPopup scope to close manually.
 
 CloseCurrentPopup() is called by default by ImGui_Selectable/ImGui_MenuItem when activated.)",
 {
