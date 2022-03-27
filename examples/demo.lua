@@ -27,12 +27,10 @@ Index of this file:
 
 --]]
 
-local r = reaper
+local r, ctx = reaper
 local FLT_MIN, FLT_MAX = r.ImGui_NumericLimits_Float()
 local IMGUI_VERSION, REAIMGUI_VERSION = r.ImGui_GetVersion()
-
--- Global data storage
-demo = {
+local demo = {
   open = true,
 
   menu = {
@@ -56,41 +54,43 @@ demo = {
   unsaved_document  = false,
   no_docking        = false,
 }
+local show_app = {
+  -- Examples Apps (accessible from the "Examples" menu)
+  -- main_menu_bar      = false,
+  -- dockspace          = false,
+  documents          = false,
+  console            = false,
+  log                = false,
+  layout             = false,
+  property_editor    = false,
+  long_text          = false,
+  auto_resize        = false,
+  constrained_resize = false,
+  simple_overlay     = false,
+  fullscreen         = false,
+  window_titles      = false,
+  custom_rendering   = false,
 
-config  = {}
-widgets = {}
-layout  = {}
-popups  = {}
-tables  = {}
-misc    = {}
-app     = {}
-local cache = {}
+  -- Dear ImGui Apps (accessible from the "Tools" menu)
+  metrics      = false,
+  stack_tool   = false,
+  -- style_editor = false
+  about        = false,
+}
 
--- Hajime!
-local ctx = r.ImGui_CreateContext('ReaImGui Demo', r.ImGui_ConfigFlags_DockingEnable())
+local config  = {}
+local widgets = {}
+local layout  = {}
+local popups  = {}
+local tables  = {}
+local misc    = {}
+local app     = {}
+local cache   = {}
 
 function demo.loop()
-  local custom_style = app.style_editor ~= nil
-
-  if custom_style then
-    for i, value in pairs(app.style_editor.style.vars) do
-      if type(value) == 'table' then
-        r.ImGui_PushStyleVar(ctx, i, table.unpack(value))
-      else
-        r.ImGui_PushStyleVar(ctx, i, value)
-      end
-    end
-    for i, value in pairs(app.style_editor.style.colors) do
-      r.ImGui_PushStyleColor(ctx, i, value)
-    end
-  end
-
+  demo.PushStyle()
   demo.open = demo.ShowDemoWindow()
-
-  if custom_style then
-    r.ImGui_PopStyleColor(ctx, #cache['Col'])
-    r.ImGui_PopStyleVar(ctx, #cache['StyleVar'])
-  end
+  demo.PopStyle()
 
   if demo.open then
     r.defer(demo.loop)
@@ -99,7 +99,20 @@ function demo.loop()
   end
 end
 
-reaper.defer(demo.loop)
+if ({reaper.get_action_context()})[2] == debug.getinfo(1, 'S').source:sub(2) then
+  -- show global storage in the IDE for convenience
+  _G.demo    = demo
+  _G.widgets = widgets
+  _G.layout  = layout
+  _G.popups  = popups
+  _G.tables  = tables
+  _G.misc    = misc
+  _G.app     = app
+
+  -- hajime!
+  ctx = r.ImGui_CreateContext('ReaImGui Demo', r.ImGui_ConfigFlags_DockingEnable())
+  reaper.defer(demo.loop)
+end
 
 -------------------------------------------------------------------------------
 -- [SECTION] Forward Declarations, Helpers
@@ -214,30 +227,6 @@ end
 -- - ShowDemoWindowColumns()
 -- - ShowDemoWindowMisc()
 -------------------------------------------------------------------------------
-
-show_app = {
-  -- Examples Apps (accessible from the "Examples" menu)
-  -- main_menu_bar      = false,
-  -- dockspace          = false,
-  documents          = false,
-  console            = false,
-  log                = false,
-  layout             = false,
-  property_editor    = false,
-  long_text          = false,
-  auto_resize        = false,
-  constrained_resize = false,
-  simple_overlay     = false,
-  fullscreen         = false,
-  window_titles      = false,
-  custom_rendering   = false,
-
-  -- Dear ImGui Apps (accessible from the "Tools" menu)
-  metrics      = false,
-  stack_tool   = false,
-  -- style_editor = false
-  about        = false,
-}
 
 -- Demonstrate most Dear ImGui features (this is big function!)
 -- You may execute this function to experiment with the UI and understand what it does.
@@ -6295,6 +6284,30 @@ function demo.CopyStyleData(source, target)
   end
 end
 
+function demo.PushStyle()
+  if app.style_editor then
+    app.style_editor.push_count = app.style_editor.push_count + 1
+    for i, value in pairs(app.style_editor.style.vars) do
+      if type(value) == 'table' then
+        r.ImGui_PushStyleVar(ctx, i, table.unpack(value))
+      else
+        r.ImGui_PushStyleVar(ctx, i, value)
+      end
+    end
+    for i, value in pairs(app.style_editor.style.colors) do
+      r.ImGui_PushStyleColor(ctx, i, value)
+    end
+  end
+end
+
+function demo.PopStyle()
+  if app.style_editor and app.style_editor.push_count > 0 then
+    app.style_editor.push_count = app.style_editor.push_count - 1
+    r.ImGui_PopStyleColor(ctx, #cache['Col'])
+    r.ImGui_PopStyleVar(ctx, #cache['StyleVar'])
+  end
+end
+
 function demo.ShowStyleEditor()
   local rv
 
@@ -6304,6 +6317,7 @@ function demo.ShowStyleEditor()
       ref    = demo.GetStyleData(),
       output_dest = 0,
       output_only_modified = true,
+      push_count = 0,
     }
   end
 
@@ -8389,3 +8403,12 @@ end
 --
 --     r.ImGui_End();
 -- }
+
+local public = {}
+for name, func in pairs(demo) do
+  public[name] = function(user_ctx, ...)
+    ctx = user_ctx
+    func(...)
+  end
+end
+return public
