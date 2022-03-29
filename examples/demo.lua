@@ -598,6 +598,8 @@ function demo.ShowDemoWindow(open)
     end
 
     if docking_disabled then
+      r.ImGui_SameLine(ctx)
+      r.ImGui_Text(ctx, ('Disabled via %s'):format(demo.no_docking and 'WindowFlags' or 'ConfigFlags'))
       r.ImGui_EndDisabled(ctx)
     end
   end
