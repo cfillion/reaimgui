@@ -1,6 +1,24 @@
 -- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.87)
 
 --[[
+This file can be imported in other scripts to help during development:
+
+local demo = dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/ReaImGui_Demo.lua')
+local ctx = reaper.ImGui_CreateContext('My script')
+local function loop()
+  demo.PushStyle(ctx)
+  demo.ShowDemoWindow(ctx)
+  if reaper.ImGui_Begin(ctx, 'Dear ImGui Style Editor') then
+    demo.ShowStyleEditor(ctx)
+    reaper.ImGui_End(ctx)
+  end
+  demo.PopStyle(ctx)
+  reaper.defer(loop)
+end
+loop()
+--]]
+
+--[[
 Index of this file:
 
 // [SECTION] Forward Declarations, Helpers
@@ -24,7 +42,6 @@ Index of this file:
 // [SECTION] Example App: Custom Rendering using ImDrawList API / ShowExampleAppCustomRendering()
 // [SECTION] Example App: Docking, DockSpace / ShowExampleAppDockSpace()
 // [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
-
 --]]
 
 local r, ctx = reaper
@@ -89,7 +106,7 @@ local cache   = {}
 
 function demo.loop()
   demo.PushStyle()
-  demo.open = demo.ShowDemoWindow()
+  demo.open = demo.ShowDemoWindow(true)
   demo.PopStyle()
 
   if demo.open then
@@ -231,8 +248,8 @@ end
 -- Demonstrate most Dear ImGui features (this is big function!)
 -- You may execute this function to experiment with the UI and understand what it does.
 -- You may then search for keywords in the code when you are interested by a specific feature.
-function demo.ShowDemoWindow()
-  local rv, open = nil, true
+function demo.ShowDemoWindow(open)
+  local rv = nil
 
   -- if show_app.main_menu_bar      then                               demo.ShowExampleAppMainMenuBar()       end
   -- if show_app.dockspace          then show_app.dockspace          = demo.ShowExampleAppDockSpace()         end -- Process the Docking app first, as explicit DockSpace() nodes needs to be submitted early (read comments near the DockSpace function)
