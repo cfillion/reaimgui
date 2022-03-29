@@ -8423,11 +8423,13 @@ end
 --     r.ImGui_End();
 -- }
 
-local public = {}
-for name, func in pairs(demo) do
-  public[name] = function(user_ctx, ...)
+local public, public_functions = {}, {
+  'ShowDemoWindow', 'ShowStyleEditor', 'PushStyle', 'PopStyle',
+}
+for _, fn in ipairs(public_functions) do
+  public[fn] = function(user_ctx, ...)
     ctx = user_ctx
-    func(...)
+    demo[fn](...)
   end
 end
 return public
