@@ -33,12 +33,9 @@
 #  include "win32_unicode.hpp"
 #endif
 
-enum DragState {
-  DragState_None,
-  DragState_FirstFrame = 1<<0,
-  DragState_Drop       = 1<<1,
-};
+enum DropState { DropState_None = -2, DropState_Drop = -1 };
 
+constexpr ImGuiMouseButton DND_MouseButton { ImGuiMouseButton_Left };
 constexpr ImGuiConfigFlags PRIVATE_CONFIG_FLAGS
   { ImGuiConfigFlags_ViewportsEnable };
 
@@ -84,8 +81,7 @@ static std::string generateIniFilename(const char *label)
 }
 
 Context::Context(const char *label, const int userConfigFlags)
-  : m_inFrame { false },
-    m_dragState {}, m_cursor {},
+  : m_inFrame { false }, m_dropFrameCount { DropState_None }, m_cursor {},
     m_lastFrame { decltype(m_lastFrame)::clock::now() },
     m_name { label, ImGui::FindRenderedTextEnd(label) },
     m_iniFilename { generateIniFilename(label) },
@@ -380,15 +376,25 @@ void Context::updateSettings()
 
 void Context::updateDragDrop()
 {
-  if(m_dragState & DragState_FirstFrame) {
-    m_dragState &= ~DragState_FirstFrame;
-    return; // don't clear data until next frame
-  }
+  if(m_dropFrameCount == DropState_None)
+    return;
+  else if(m_dropFrameCount == DropState_Drop &&
+      ImGui::IsMouseReleased(DND_MouseButton))
+    m_dropFrameCount = ImGui::GetFrameCount();
 
-  if(m_dragState & DragState_Drop)
+  // Checking payload state is required in case the event queue is clogged
+  // (very next frame after m_drop = true not processing the mouse release event)
+  //
+  // Delivery is true once the mouse release event is processed and the script
+  // accepted the files via AcceptDragDropPayload.
+  // Preview is false if the script isn't interested in the files
+  const bool previewReady
+    { m_dropFrameCount >= 0 && m_dropFrameCount + 1 < ImGui::GetFrameCount() };
+  const ImGuiPayload *payload { ImGui::GetDragDropPayload() };
+  if(payload && (payload->Delivery || (!payload->Preview && previewReady))) {
     m_draggedFiles.clear();
-
-  m_dragState = DragState_None;
+    m_dropFrameCount = DropState_None;
+  }
 }
 
 void Context::dragSources()
@@ -418,11 +424,10 @@ void Context::dragSources()
 void Context::beginDrag(std::vector<std::string> &&files)
 {
   m_draggedFiles = std::move(files);
-  m_dragState = DragState_FirstFrame;
 
   TempCurrent cur { this };
   m_imgui->IO.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
-  m_imgui->IO.AddMouseButtonEvent(ImGuiMouseButton_Left, true);
+  m_imgui->IO.AddMouseButtonEvent(DND_MouseButton, true);
 }
 
 #ifndef __APPLE__
@@ -448,13 +453,13 @@ void Context::beginDrag(HDROP drop)
 void Context::endDrag(const bool drop)
 {
   TempCurrent cur { this };
-  m_imgui->IO.AddMouseButtonEvent(ImGuiMouseButton_Left, false);
   if(drop)
-    m_dragState = DragState_Drop | (m_dragState & DragState_FirstFrame);
+    m_dropFrameCount = DropState_Drop;
   else {
     m_imgui->IO.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
     m_draggedFiles.clear();
   }
+  m_imgui->IO.AddMouseButtonEvent(DND_MouseButton, false);
 }
 
 ImGuiViewport *Context::focusedViewport() const

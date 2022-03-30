@@ -97,7 +97,7 @@ private:
   void clearFocus();
 
   bool m_inFrame;
-  int m_dragState;
+  int m_dropFrameCount;
   HCURSOR m_cursor;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
   std::vector<std::string> m_draggedFiles;
