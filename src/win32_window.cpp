@@ -157,21 +157,26 @@ void Win32Window::create()
 
 Win32Window::~Win32Window()
 {
+}
+
+void Win32Window::destroy()
+{
   // ImGui destroys windows in creation order. Give ownership of our owned
   // windows to our own owner to avoid a broken chain leading to Windows
   // possibly focusing a window from another application.
   EnumThreadWindows(GetCurrentThreadId(), &reparentChildren, reinterpret_cast<LPARAM>(m_hwnd.get()));
 
-  RevokeDragDrop(m_hwnd.get());
-
+  // the window may already have been destroyed at this point
+  // when exiting REAPER or somone called DestroyWindow on us
   if(m_gl) {
     wglMakeCurrent(m_dc, m_gl);
     if(m_renderer)
       delete m_renderer;
     wglDeleteContext(m_gl);
   }
-
   ReleaseDC(m_hwnd.get(), m_dc);
+
+  Window::destroy();
 }
 
 void Win32Window::initPixelFormat()
@@ -425,6 +430,9 @@ std::optional<LRESULT> Win32Window::handleMessage
   case WM_KILLFOCUS:
     m_ctx->updateFocus();
     return 0;
+  case WM_DESTROY:
+    RevokeDragDrop(m_hwnd.get());
+    break;
   }
 
   return std::nullopt;

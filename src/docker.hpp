@@ -70,6 +70,7 @@ public:
   DockerHost(Docker *, ImGuiViewport *);
 
   void create() override;
+  void destroy() override;
   HWND nativeHandle() const override;
   void show() override;
   void setPosition(ImVec2) override;

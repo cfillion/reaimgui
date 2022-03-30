@@ -21,6 +21,7 @@
 #include "font.hpp"
 #include "platform.hpp"
 
+#include <cassert>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
@@ -73,6 +74,12 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self->m_viewport->PlatformRequestResize = true;
     return 0;
   case WM_DESTROY:
+    RemoveProp(handle, CLASS_NAME);
+    // Disable message passing to the derived class (not available at this point)
+    SetWindowLongPtr(handle, GWLP_USERDATA, 0);
+    // Announce to REAPER the window is no longer going to be valid
+    // (DockWindowRemove is safe to call even when not docked)
+    DockWindowRemove(handle); // may send messages
     return 0;
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
@@ -142,17 +149,19 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
 
 Window::~Window()
 {
-  RemoveProp(m_hwnd.get(), CLASS_NAME);
-  // Disable message passing to the derived class (not available at this point)
-  SetWindowLongPtr(m_hwnd.get(), GWLP_USERDATA, 0);
-  // Announce to REAPER the window is no longer going to be valid
-  // (DockWindowRemove is safe to call even when not docked)
-  DockWindowRemove(m_hwnd.get()); // may send messages
+  assert(!m_hwnd && "destroy() not called");
+}
+
+void Window::destroy()
+{
+  m_hwnd.reset();
 }
 
 void Window::WindowDeleter::operator()(HWND window)
 {
-  DestroyWindow(window);
+  // window may have been destroyed before us (eg. quitting REAPER)
+  if(IsWindow(window))
+    DestroyWindow(window);
 }
 
 void Window::show()

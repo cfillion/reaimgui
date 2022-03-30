@@ -41,7 +41,9 @@ public:
   Context *context() const { return m_ctx; }
   ImGuiViewport *viewport() const { return m_viewport; }
 
+  // create/destroy called once virtual methods are available
   virtual void create() = 0;
+  virtual void destroy() = 0;
   virtual HWND nativeHandle() const = 0;
   virtual void show() = 0;
   virtual void setPosition(ImVec2) = 0;

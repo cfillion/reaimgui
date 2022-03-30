@@ -185,6 +185,12 @@ void DockerHost::create()
 {
 }
 
+void DockerHost::destroy()
+{
+  if(m_window)
+    m_window->destroy();
+}
+
 HWND DockerHost::nativeHandle() const
 {
   return m_window ? m_window->nativeHandle() : nullptr;
@@ -258,6 +264,8 @@ void DockerHost::onChanged()
     else if(!ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
             !ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
       m_viewport->PlatformHandle = nullptr;
+      if(m_window)
+        m_window->destroy();
       m_window.reset();
     }
   }

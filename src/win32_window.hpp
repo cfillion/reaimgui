@@ -32,6 +32,7 @@ public:
   ~Win32Window() override;
 
   void create() override;
+  void destroy() override;
   void show() override;
   void setPosition(ImVec2) override;
   void setSize(ImVec2) override;

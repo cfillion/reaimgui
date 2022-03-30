@@ -29,6 +29,7 @@ public:
   MainViewport();
 
   void create() override {}
+  void destroy() override {}
   HWND nativeHandle() const override { return m_hwnd; }
   void show() override {}
   void setPosition(ImVec2) override {}
@@ -66,8 +67,10 @@ static void createViewport(ImGuiViewport *viewport)
 
 static void destroyViewport(ImGuiViewport *viewport)
 {
-  if(Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) })
+  if(Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) }) {
+    instance->destroy();
     delete instance;
+  }
 
   // dear imgui will assert if any of these remain set
   viewport->PlatformUserData = viewport->PlatformHandle = nullptr;

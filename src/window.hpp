@@ -42,6 +42,7 @@ public:
   ~Window() override;
 
   // platform callbacks
+  void destroy() override;
   void show() override;
   HWND nativeHandle() const override { return m_hwnd.get(); }
   void setFocus() override;
