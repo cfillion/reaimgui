@@ -77,10 +77,7 @@ float Win32Window::scaleForDpi(const unsigned int dpi)
 
 static void styleFromFlags(ImGuiViewportFlags flags, DWORD *style, DWORD *exStyle)
 {
-  // WS_CHILD to have parent/child relationship instead of owner
-  // for correct focus behavior when deleting parent before child.
-  // WS_POPUP fixes AttachWindowTopmostButton when a titlebar is shown
-  *style = WS_CHILD | WS_POPUP;
+  *style = WS_POPUP; // fix AttachWindowTopmostButton when a titlebar is shown
   *exStyle = WS_EX_ACCEPTFILES;
 
   if(!(flags & ImGuiViewportFlags_NoDecoration))
@@ -91,6 +88,16 @@ static void styleFromFlags(ImGuiViewportFlags flags, DWORD *style, DWORD *exStyl
 
   if(flags & ImGuiViewportFlags_TopMost)
     *exStyle |= WS_EX_TOPMOST;
+}
+
+static BOOL CALLBACK reparentChildren(HWND hwnd, LPARAM data)
+{
+  HWND owner { reinterpret_cast<HWND>(data) };
+  if(GetWindow(hwnd, GW_OWNER) == owner) {
+    SetWindowLongPtr(hwnd, GWLP_HWNDPARENT,
+      reinterpret_cast<LONG_PTR>(GetWindow(owner, GW_OWNER)));
+  }
+  return TRUE;
 }
 
 Win32Window::Class::Class()
@@ -150,6 +157,11 @@ void Win32Window::create()
 
 Win32Window::~Win32Window()
 {
+  // ImGui destroys windows in creation order. Give ownership of our owned
+  // windows to our own owner to avoid a broken chain leading to Windows
+  // possibly focusing a window from another application.
+  EnumThreadWindows(GetCurrentThreadId(), &reparentChildren, reinterpret_cast<LPARAM>(m_hwnd.get()));
+
   RevokeDragDrop(m_hwnd.get());
 
   if(m_gl) {
