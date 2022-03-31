@@ -15,7 +15,7 @@ local function loop()
   demo.PopStyle(ctx)
   reaper.defer(loop)
 end
-loop()
+reaper.defer(loop)
 --]]
 
 --[[
