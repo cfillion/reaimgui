@@ -66,7 +66,6 @@ void CocoaWindow::create()
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
-    NSOpenGLPFAAccelerated,
     NSOpenGLPFADoubleBuffer,
     kCGLPFASupportsAutomaticGraphicsSwitching,
     0
