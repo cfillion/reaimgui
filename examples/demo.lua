@@ -116,7 +116,7 @@ function demo.loop()
   end
 end
 
-if ({reaper.get_action_context()})[2] == debug.getinfo(1, 'S').source:sub(2) then
+if select(2, reaper.get_action_context()) == debug.getinfo(1, 'S').source:sub(2) then
   -- show global storage in the IDE for convenience
   _G.demo    = demo
   _G.widgets = widgets
@@ -1804,7 +1804,7 @@ label:
     -- Typically we would use (-1.0,0.0) or (-FLT_MIN,0.0) to use all available width,
     -- or (width,0.0) for a specified width. (0.0,0.0) uses ItemWidth.
     r.ImGui_ProgressBar(ctx, widgets.plots.progress, 0.0, 0.0)
-    r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1])
+    r.ImGui_SameLine(ctx, 0.0, (r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())))
     r.ImGui_Text(ctx, 'Progress Bar')
 
     local progress_saturated = demo.clamp(widgets.plots.progress, 0.0, 1.0);
@@ -1885,7 +1885,7 @@ label:
     end
 
     local open_popup = r.ImGui_ColorButton(ctx, 'MyColor##3b', widgets.colors.rgba, misc_flags)
-    r.ImGui_SameLine(ctx, 0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1])
+    r.ImGui_SameLine(ctx, 0, (r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())))
     open_popup = r.ImGui_Button(ctx, 'Palette') or open_popup
     if open_popup then
       r.ImGui_OpenPopup(ctx, 'mypicker')
@@ -1916,7 +1916,7 @@ label:
       for n,c in ipairs(widgets.colors.saved_palette) do
         r.ImGui_PushID(ctx, n)
         if ((n - 1) % 8) ~= 0 then
-          r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[2])
+          r.ImGui_SameLine(ctx, 0.0, select(2, r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())))
         end
 
         if r.ImGui_ColorButton(ctx, '##palette', c, palette_button_flags, 20, 20) then
@@ -2408,7 +2408,7 @@ label:
         r.ImGui_Selectable(ctx, item)
 
         if r.ImGui_IsItemActive(ctx) and not r.ImGui_IsItemHovered(ctx) then
-          local mouse_delta = ({r.ImGui_GetMouseDragDelta(ctx, r.ImGui_MouseButton_Left())})[2]
+          local mouse_delta = select(2, r.ImGui_GetMouseDragDelta(ctx, r.ImGui_MouseButton_Left()))
           local n_next = n + (mouse_delta < 0 and -1 or 1)
           if n_next >= 1 and n_next <= #widgets.dragdrop.items then
             widgets.dragdrop.items[n] = widgets.dragdrop.items[n_next]
@@ -2580,9 +2580,9 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
       r.ImGui_IsItemVisible(ctx),
       r.ImGui_IsItemClicked(ctx),
       r.ImGui_IsItemToggledOpen(ctx),
-      ({r.ImGui_GetItemRectMin(ctx)})[1], ({r.ImGui_GetItemRectMin(ctx)})[2],
-      ({r.ImGui_GetItemRectMax(ctx)})[1], ({r.ImGui_GetItemRectMax(ctx)})[2],
-      ({r.ImGui_GetItemRectSize(ctx)})[1], ({r.ImGui_GetItemRectSize(ctx)})[2]
+      r.ImGui_GetItemRectMin(ctx), select(2, r.ImGui_GetItemRectMin(ctx)),
+      r.ImGui_GetItemRectMax(ctx), select(2, r.ImGui_GetItemRectMax(ctx)),
+      r.ImGui_GetItemRectSize(ctx), select(2, r.ImGui_GetItemRectSize(ctx))
     ))
 
     if widgets.query_item.item_disabled then
@@ -2851,7 +2851,7 @@ function demo.ShowDemoWindowLayout()
 
     r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5)')
     r.ImGui_SameLine(ctx); demo.HelpMarker('Half of available width.\n(~ right-cursor_pos)\n(works within a column set)')
-    r.ImGui_PushItemWidth(ctx, ({r.ImGui_GetContentRegionAvail(ctx)})[1] * 0.5)
+    r.ImGui_PushItemWidth(ctx, r.ImGui_GetContentRegionAvail(ctx) * 0.5)
     rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float##3a', layout.width.d)
     if layout.width.show_indented_items then
       r.ImGui_Indent(ctx)
@@ -2862,7 +2862,7 @@ function demo.ShowDemoWindowLayout()
 
     r.ImGui_Text(ctx, 'SetNextItemWidth/PushItemWidth(-GetContentRegionAvail().x * 0.5)')
     r.ImGui_SameLine(ctx); demo.HelpMarker('Align to right edge minus half')
-    r.ImGui_PushItemWidth(ctx, -({r.ImGui_GetContentRegionAvail(ctx)})[1] * 0.5)
+    r.ImGui_PushItemWidth(ctx, -r.ImGui_GetContentRegionAvail(ctx) * 0.5)
     rv,layout.width.d = r.ImGui_DragDouble(ctx, 'float##4a', layout.width.d)
     if layout.width.show_indented_items then
       r.ImGui_Indent(ctx)
@@ -2962,9 +2962,9 @@ function demo.ShowDemoWindowLayout()
     -- Manually wrapping
     -- (we should eventually provide this as an automatic layout feature, but for now you can do it manually)
     r.ImGui_Text(ctx, 'Manual wrapping:')
-    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[1]
+    local item_spacing_x = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())
     local buttons_count = 20
-    local window_visible_x2 = ({r.ImGui_GetWindowPos(ctx)})[1] + ({r.ImGui_GetWindowContentRegionMax(ctx)})[1]
+    local window_visible_x2 = r.ImGui_GetWindowPos(ctx) + r.ImGui_GetWindowContentRegionMax(ctx)
     for n = 0, buttons_count - 1 do
       r.ImGui_PushID(ctx, n)
       r.ImGui_Button(ctx, 'Box', table.unpack(button_sz))
@@ -3009,7 +3009,7 @@ function demo.ShowDemoWindowLayout()
 
     -- Capture the group size and create widgets using the same size
     local size = {r.ImGui_GetItemRectSize(ctx)}
-    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[1]
+    local item_spacing_x = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())
 
     r.ImGui_PlotHistogram(ctx, '##values', widgets.groups.values, 0, nil, 0.0, 1.0, table.unpack(size))
 
@@ -3107,7 +3107,7 @@ function demo.ShowDemoWindowLayout()
       r.ImGui_SmallButton(ctx, 'SmallButton()')
 
       -- Tree
-      local spacing = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1]
+      local spacing = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())
       r.ImGui_Button(ctx, 'Button##1')
       r.ImGui_SameLine(ctx, 0.0, spacing)
       if r.ImGui_TreeNode(ctx, 'Node##1') then
@@ -3194,8 +3194,8 @@ function demo.ShowDemoWindowLayout()
     end
 
     local names = { 'Top', '25%', 'Center', '75%', 'Bottom' }
-    local item_spacing_x = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())})[1]
-    local child_w = (({r.ImGui_GetContentRegionAvail(ctx)})[1] - 4 * item_spacing_x) / #names
+    local item_spacing_x = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())
+    local child_w = (r.ImGui_GetContentRegionAvail(ctx) - 4 * item_spacing_x) / #names
     local child_flags = layout.scrolling.enable_extra_decorations and r.ImGui_WindowFlags_MenuBar() or r.ImGui_WindowFlags_None()
     if child_w < 1.0 then
       child_w = 1.0
@@ -3215,7 +3215,7 @@ function demo.ShowDemoWindowLayout()
           r.ImGui_SetScrollY(ctx, layout.scrolling.scroll_to_off_px)
         end
         if scroll_to_pos then
-          r.ImGui_SetScrollFromPosY(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[2] + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
+          r.ImGui_SetScrollFromPosY(ctx, select(2, r.ImGui_GetCursorStartPos(ctx)) + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
         end
         for item = 0, 99 do
           if layout.scrolling.enable_track and item == layout.scrolling.track_item then
@@ -3244,8 +3244,8 @@ function demo.ShowDemoWindowLayout()
        left/right, using SetScrollFromPosX(+1) will usually result in clipped text whereas the \z
        equivalent SetScrollFromPosY(+1) wouldn't.")
     r.ImGui_PushID(ctx, '##HorizontalScrolling')
-    local scrollbar_size = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ScrollbarSize())})[1]
-    local window_padding_y = ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_WindowPadding())})[2]
+    local scrollbar_size = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ScrollbarSize())
+    local window_padding_y = select(2, r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_WindowPadding()))
     local child_height = r.ImGui_GetTextLineHeight(ctx) + scrollbar_size + window_padding_y * 2.0
     local child_flags = r.ImGui_WindowFlags_HorizontalScrollbar()
     if layout.scrolling.enable_extra_decorations then
@@ -3258,7 +3258,7 @@ function demo.ShowDemoWindowLayout()
           r.ImGui_SetScrollX(ctx, layout.scrolling.scroll_to_off_px)
         end
         if scroll_to_pos then
-          r.ImGui_SetScrollFromPosX(ctx, ({r.ImGui_GetCursorStartPos(ctx)})[1] + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
+          r.ImGui_SetScrollFromPosX(ctx, r.ImGui_GetCursorStartPos(ctx) + layout.scrolling.scroll_to_pos_px, (i - 1) * 0.25)
         end
         for item = 0, 99 do
           if item > 0 then
@@ -3430,7 +3430,7 @@ function demo.ShowDemoWindowLayout()
           if r.ImGui_BeginTable(ctx, 'table', 4, r.ImGui_TableFlags_Borders()) then
             for n = 0, 3 do
               r.ImGui_TableNextColumn(ctx)
-              r.ImGui_Text(ctx, ('Width %.2f'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+              r.ImGui_Text(ctx, ('Width %.2f'):format(r.ImGui_GetContentRegionAvail(ctx)))
             end
             r.ImGui_EndTable(ctx)
           end
@@ -4407,7 +4407,7 @@ function demo.ShowDemoWindowTables()
         for column = 0, 2 do
           r.ImGui_TableSetColumnIndex(ctx, column)
           if row == 0 then
-            r.ImGui_Text(ctx, ('Avail %.2f'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+            r.ImGui_Text(ctx, ('Avail %.2f'):format(r.ImGui_GetContentRegionAvail(ctx)))
           else
             local buf = ('Hello %d,%d'):format(column, row)
             r.ImGui_Button(ctx, buf, -FLT_MIN, 0.0)
@@ -4557,7 +4557,7 @@ function demo.ShowDemoWindowTables()
         elseif contents_type == 2 then -- long text
           r.ImGui_Text(ctx, ('Some %s text %d,%d\nOver two lines..'):format(column == 0 and 'long' or 'longeeer', column, row))
         elseif contents_type == 0 then -- show width
-          r.ImGui_Text(ctx, ('W: %.1f'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+          r.ImGui_Text(ctx, ('W: %.1f'):format(r.ImGui_GetContentRegionAvail(ctx)))
         elseif contents_type == 3 then -- button
           r.ImGui_Button(ctx, label)
         elseif contents_type == 4 then -- fill button
@@ -4817,7 +4817,7 @@ function demo.ShowDemoWindowTables()
         for column = 0, 2 do
           r.ImGui_TableSetColumnIndex(ctx, column)
           if row == 0 then
-            r.ImGui_Text(ctx, ('(w: %5.1f)'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+            r.ImGui_Text(ctx, ('(w: %5.1f)'):format(r.ImGui_GetContentRegionAvail(ctx)))
           else
             r.ImGui_Text(ctx, ('Hello %d,%d'):format(column, row))
           end
@@ -4844,7 +4844,7 @@ function demo.ShowDemoWindowTables()
         for column = 0, 3 do
           r.ImGui_TableSetColumnIndex(ctx, column)
           if row == 0 then
-            r.ImGui_Text(ctx, ('(w: %5.1f)'):format(({r.ImGui_GetContentRegionAvail(ctx)})[1]))
+            r.ImGui_Text(ctx, ('(w: %5.1f)'):format(r.ImGui_GetContentRegionAvail(ctx)))
           else
             r.ImGui_Text(ctx, ('Hello %d,%d'):format(column, row))
           end
@@ -5117,7 +5117,7 @@ function demo.ShowDemoWindowTables()
           r.ImGui_TableSetColumnIndex(ctx, 0)
           r.ImGui_PushItemWidth(ctx, TEXT_BASE_WIDTH * 3.0) -- Small
           r.ImGui_TableSetColumnIndex(ctx, 1)
-          r.ImGui_PushItemWidth(ctx, 0 - ({r.ImGui_GetContentRegionAvail(ctx)})[1] * 0.5)
+          r.ImGui_PushItemWidth(ctx, 0 - r.ImGui_GetContentRegionAvail(ctx) * 0.5)
           r.ImGui_TableSetColumnIndex(ctx, 2)
           r.ImGui_PushItemWidth(ctx, -FLT_MIN) -- Right-aligned
         end
@@ -5162,7 +5162,7 @@ function demo.ShowDemoWindowTables()
         rv,tables.headers.column_selected[column + 1] =
           r.ImGui_Checkbox(ctx, '##checkall', tables.headers.column_selected[column + 1])
         r.ImGui_PopStyleVar(ctx)
-        r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1])
+        r.ImGui_SameLine(ctx, 0.0, (r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())))
         r.ImGui_TableHeader(ctx, column_name)
         r.ImGui_PopID(ctx)
       end
@@ -5523,7 +5523,7 @@ function demo.ShowDemoWindowTables()
 
         rv,tables.advanced.outer_size_value[1],tables.advanced.outer_size_value[2] =
           r.ImGui_DragDouble2(ctx, '##OuterSize', table.unpack(tables.advanced.outer_size_value))
-        r.ImGui_SameLine(ctx, 0.0, ({r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())})[1])
+        r.ImGui_SameLine(ctx, 0.0, (r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemInnerSpacing())))
         rv,tables.advanced.outer_size_enabled = r.ImGui_Checkbox(ctx, 'outer_size', tables.advanced.outer_size_enabled)
         r.ImGui_SameLine(ctx)
         demo.HelpMarker(
