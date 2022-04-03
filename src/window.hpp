@@ -33,7 +33,15 @@ typedef int ImGuiMouseButton;
 
 class Window : public Viewport {
 public:
-  enum Accel { PassToWindow = -1, NotOurWindow = 0, EatKeystroke = 1 };
+  enum Accel {
+#ifdef _WIN32
+    PassToWindow = -20, // don't drop WM_SYSKEY*/VK_MENU
+#else
+    PassToWindow = -1,
+#endif
+    NotOurWindow = 0,
+    EatKeystroke = 1,
+  };
 
   static HINSTANCE s_instance;
   static void updateMonitors();
