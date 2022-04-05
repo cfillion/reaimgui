@@ -248,13 +248,6 @@ DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
   return ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
 });
 
-DEFINE_API(int, GetKeyMods, (ImGui_Context*,ctx),
-"Ctrl/Shift/Alt/Super. See ImGui_KeyModFlags_*.",
-{
-  FRAME_GUARD;
-  return ctx->IO().KeyMods;
-});
-
 DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
 (int,idx)(int*,API_W(unicode_char)),
 "Read from ImGui's character input queue. Call with increasing idx until false is returned.",
@@ -280,20 +273,13 @@ Default values: want_capture_keyboard_value = true)",
   ImGui::CaptureKeyboardFromApp(value);
 });
 
-// ImGuiKeyModFlags
-DEFINE_ENUM(ImGui, KeyModFlags_None,  "");
-DEFINE_ENUM(ImGui, KeyModFlags_Ctrl,  "");
-DEFINE_ENUM(ImGui, KeyModFlags_Shift, "");
-DEFINE_ENUM(ImGui, KeyModFlags_Alt,   "");
-DEFINE_ENUM(ImGui, KeyModFlags_Super, "");
-
 // ImGuiMouseButton
 DEFINE_ENUM(ImGui, MouseButton_Left,   "");
 DEFINE_ENUM(ImGui, MouseButton_Right,  "");
 DEFINE_ENUM(ImGui, MouseButton_Middle, "");
 
 // ImGuiMouseCursor
-// DEFINE_ENUM(ImGui, MouseCursor_None,       "");
+// DEFINE_ENUM(ImGui, MouseCursor_None,       ""); // not implemented in ReaImGui
 DEFINE_ENUM(ImGui, MouseCursor_Arrow,      "");
 DEFINE_ENUM(ImGui, MouseCursor_TextInput,  "When hovering over ImGui_InputText, etc.");
 DEFINE_ENUM(ImGui, MouseCursor_ResizeAll,  "(Unused by Dear ImGui functions)");

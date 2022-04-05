@@ -179,6 +179,7 @@ NATIVE_ONLY_ENUMS = [
   /\ADataType_/,
   'Key_None',
   /\AKey_(NamedKey|KeysData)/,
+  /\AKeyModFlags_/,
   /\ANavInput_/,
   /\ABackendFlags_/,
   /\AFontAtlasFlags_/,
