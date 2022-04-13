@@ -22,7 +22,7 @@
 
 #include <cassert>
 #include <reaper_plugin_functions.h>
-#include <unordered_set>
+#include <vector>
 #include <WDL/wdltypes.h>
 
 // sizeof(ImGuiContext) = ~30 KB, not including windows and other dynamic allocs
@@ -35,12 +35,17 @@ constexpr size_t MAX_INSTANCES { 1'000 };
 // [p=2450259]
 constexpr unsigned int KEEP_ALIVE_FRAMES { 2 };
 
-static std::unordered_set<Resource *> g_rsx;
+static std::vector<Resource *> g_rsx;
 static unsigned int g_reentrant;
 #ifndef __APPLE__
 static WNDPROC g_mainProc;
 static bool g_disabledViewports, g_disableProcOverride;
 #endif
+
+static auto findLowerBound(Resource *rs)
+{
+  return std::lower_bound(g_rsx.begin(), g_rsx.end(), rs);
+}
 
 static bool isDeferLoopBlocked()
 {
@@ -108,8 +113,10 @@ void Resource::Timer::tick()
   auto it { g_rsx.begin() };
 
   while(it != g_rsx.end()) {
-    Resource *rs { *it++ };
-    if(!rs->heartbeat())
+    Resource *rs { *it };
+    if(rs->heartbeat())
+      ++it;
+    else
       delete rs;
   }
 }
@@ -148,12 +155,12 @@ Resource::Resource()
   else
     m_timer = g_timer.lock();
 
-  g_rsx.emplace(this);
+  g_rsx.insert(findLowerBound(this), this);
 }
 
 Resource::~Resource()
 {
-  g_rsx.erase(this);
+  g_rsx.erase(findLowerBound(this));
 }
 
 void Resource::keepAlive()
@@ -173,11 +180,15 @@ bool Resource::heartbeat()
 template<>
 bool Resource::exists<Resource>(Resource *rs)
 {
-  return rs && g_rsx.count(rs) > 0;
+  if(!rs)
+    return false;
+
+  const auto it { findLowerBound(rs) };
+  return it != g_rsx.end() && *it == rs;
 }
 
 void Resource::destroyAll()
 {
-  for(auto it { g_rsx.begin() }; it != g_rsx.end(); delete *it++);
-  assert(g_rsx.empty());
+  while(!g_rsx.empty())
+    delete g_rsx.back();
 }
