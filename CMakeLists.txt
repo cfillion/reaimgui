@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(reaimgui VERSION 0.6.1 LANGUAGES CXX)
+project(reaimgui LANGUAGES CXX)
 
 include(CheckCompilerFlag)
 include(CheckIncludeFileCXX)
@@ -128,6 +128,30 @@ endif()
 check_include_file_cxx(variant HAS_STD_VARIANT)
 if(HAS_STD_VARIANT)
   target_compile_definitions(common INTERFACE HAS_STD_VARIANT)
+endif()
+
+find_package(Git)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} describe --match v*
+    OUTPUT_VARIABLE PROJECT_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    COMMAND_ERROR_IS_FATAL ANY
+  )
+  string(REGEX REPLACE "^v" "" PROJECT_VERSION "${PROJECT_VERSION}")
+  if(PROJECT_VERSION MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)")
+    set(PROJECT_VERSION_MAJOR "${CMAKE_MATCH_1}")
+    set(PROJECT_VERSION_MINOR "${CMAKE_MATCH_2}")
+    set(PROJECT_VERSION_PATCH "${CMAKE_MATCH_3}")
+  else()
+    message(FATAL_ERROR "version tag must be vMAJOR.MINOR.PATCH (got 'v${PROJECT_VERSION}')")
+  endif()
+else()
+  set(PROJECT_VERSION "0.0.0-nogit")
+  set(PROJECT_VERSION_MAJOR 0)
+  set(PROJECT_VERSION_MINOR 0)
+  set(PROJECT_VERSION_PATCH 0)
+  message(WARNING "git executable not found, setting PROJECT_VERSION to ${PROJECT_VERSION}")
 endif()
 
 add_library(${PROJECT_NAME} SHARED)
