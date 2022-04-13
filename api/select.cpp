@@ -17,25 +17,26 @@
 
 #include "helper.hpp"
 
-// Allowing ReaScripts to input a null-separated string would be unsafe.
-// REAPER's buf, buf_sz mechanism does not handle strings containing null
-// bytes, so the user would have to specify the size manually. This would
-// enable reading from arbitrary memory locations.
-static std::vector<const char *> splitString(char *list)
-{
-  constexpr char ITEM_SEP { '\x1f' }; // ASCII Unit Separator
-  const auto len { strlen(list) };
+#include <reaper_plugin_functions.h>
 
-  if(len < 1 || list[len - 1] != ITEM_SEP || list[len] != '\0')
-    throw reascript_error { "items are not terminated with \\31 (unit separator)" };
+static std::vector<const char *> splitList(const char *list, int len)
+{
+  // REAPER's buf, buf_sz mechanism did not handle strings containing null
+  // bytes (and len was inaccurate) prior to v6.44.
+  static bool binaryUnsafe { atof(GetAppVersion()) < 6.44 };
+  if(binaryUnsafe)
+    throw reascript_error { "requires REAPER v6.44 or newer (use BeginCombo or BeginListBox for wider compatibility)" };
+
+  // len includes the final null terminator
+  if(len < 2 || list[len - 2] != '\0' || list[len - 1] != '\0')
+    throw reascript_error { "items must be null-terminated" };
 
   std::vector<const char *> strings;
 
-  do {
+  for(int i {}; i < len - 1; ++i) {
     strings.push_back(list);
-    while(*list != ITEM_SEP) ++list;
-    *list = '\0';
-  } while(*++list);
+    while(*list++) ++i;
+  }
 
   return strings;
 }
@@ -60,31 +61,32 @@ DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(current_item))(char*,items)
+(const char*,label)(int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(popup_max_height_in_items)),
-R"(Helper over ImGui_BeginCombo/ImGui_EndCombo for convenience purpose. Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
+R"(Helper over ImGui_BeginCombo/ImGui_EndCombo for convenience purpose. Each item must be null-terminated. Requires REAPER v6.44 or newer.
 
 Default values: popup_max_height_in_items = -1)",
 {
   FRAME_GUARD;
 
-  const auto &strings { splitString(items) };
+  const auto &strings { splitList(items, items_sz) };
   return ImGui::Combo(label, API_RW(current_item), strings.data(), strings.size(),
     valueOr(API_RO(popup_max_height_in_items), -1));
 });
 
 // Widgets: List Boxes
 DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
-(int*,API_RW(current_item))(char*,items)(int*,API_RO(height_in_items)),
+(int*,API_RW(current_item))(const char*,items)(int,items_sz)
+(int*,API_RO(height_in_items)),
 R"(This is an helper over ImGui_BeginListBox/ImGui_EndListBox for convenience purpose. This is analoguous to how Combos are created.
 
-Use \31 (ASCII Unit Separator) to separate items within the string and to terminate it.
+Each item must be null-terminated. Requires REAPER v6.44 or newer.
 
 Default values: height_in_items = -1)",
 {
   FRAME_GUARD;
 
-  const auto &strings { splitString(items) };
+  const auto &strings { splitList(items, items_sz) };
   return ImGui::ListBox(label, API_RW(current_item), strings.data(), strings.size(),
     valueOr(API_RO(height_in_items), -1));
 });

@@ -732,7 +732,7 @@ function demo.ShowDemoWindowWidgets()
     do
       -- Using the _simplified_ one-liner Combo() api here
       -- See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
-      local items = 'AAAA\31BBBB\31CCCC\31DDDD\31EEEE\31FFFF\31GGGG\31HHHH\31IIIIIII\31JJJJ\31KKKKKKK\31'
+      local items = 'AAAA\0BBBB\0CCCC\0DDDD\0EEEE\0FFFF\0GGGG\0HHHH\0IIIIIII\0JJJJ\0KKKKKKK\0'
       rv,widgets.basic.curitem = r.ImGui_Combo(ctx, 'combo', widgets.basic.curitem, items)
       r.ImGui_SameLine(ctx); demo.HelpMarker(
         'Using the simplified one-liner Combo API here.\n' ..
@@ -812,7 +812,7 @@ function demo.ShowDemoWindowWidgets()
     do
       -- Using the _simplified_ one-liner ListBox() api here
       -- See "List boxes" section for examples of how to use the more flexible BeginListBox()/EndListBox() api.
-      local items = 'Apple\31Banana\31Cherry\31Kiwi\31Mango\31Orange\31Pineapple\31Strawberry\31Watermelon\31'
+      local items = 'Apple\0Banana\0Cherry\0Kiwi\0Mango\0Orange\0Pineapple\0Strawberry\0Watermelon\0'
       rv,widgets.basic.listcur = r.ImGui_ListBox(ctx, 'listbox\n(single select)', widgets.basic.listcur, items, 4)
       r.ImGui_SameLine(ctx)
       demo.HelpMarker(
@@ -1180,7 +1180,7 @@ function demo.ShowDemoWindowWidgets()
 
     -- Simplified one-liner Combo() API, using values packed in a single constant string
     -- This is a convenience for when the selection set is small and known when writing the script.
-    combo_items = 'aaaa\31bbbb\31cccc\31dddd\31eeee\31'
+    combo_items = 'aaaa\0bbbb\0cccc\0dddd\0eeee\0'
     rv,widgets.combos.current_item2 = r.ImGui_Combo(ctx, 'combo 2 (one-liner)', widgets.combos.current_item2, combo_items)
 
     -- Simplified one-liner Combo() using an array of const char*
@@ -1770,7 +1770,7 @@ label:
 
     r.ImGui_Separator(ctx)
     r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 8)
-    rv,widgets.plots.plot2.func = r.ImGui_Combo(ctx, 'func', widgets.plots.plot2.func, 'Sin\31Saw\31')
+    rv,widgets.plots.plot2.func = r.ImGui_Combo(ctx, 'func', widgets.plots.plot2.func, 'Sin\0Saw\0')
     local funcChanged = rv
     r.ImGui_SameLine(ctx)
     rv,widgets.plots.plot2.size = r.ImGui_SliderInt(ctx, 'Sample count', widgets.plots.plot2.size, 1, 400)
@@ -1964,13 +1964,13 @@ label:
       end
     end
     rv,widgets.colors.display_mode = r.ImGui_Combo(ctx, 'Display Mode', widgets.colors.display_mode,
-      'Auto/Current\31None\31RGB Only\31HSV Only\31Hex Only\31')
+      'Auto/Current\0None\0RGB Only\0HSV Only\0Hex Only\0')
     r.ImGui_SameLine(ctx); demo.HelpMarker(
       "ColorEdit defaults to displaying RGB inputs if you don't specify a display mode, \z
        but the user can change it with a right-click.\n\nColorPicker defaults to displaying RGB+HSV+Hex \z
        if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().")
     rv,widgets.colors.picker_mode = r.ImGui_Combo(ctx, 'Picker Mode', widgets.colors.picker_mode,
-      'Auto/Current\31Hue bar + SV rect\31Hue wheel + SV triangle\31')
+      'Auto/Current\0Hue bar + SV rect\0Hue wheel + SV triangle\0')
     r.ImGui_SameLine(ctx); demo.HelpMarker('User can right-click the picker to change mode.')
     local flags = misc_flags
     if not widgets.colors.alpha         then flags = flags | r.ImGui_ColorEditFlags_NoAlpha()        end
@@ -2471,9 +2471,9 @@ label:
 
     -- Select an item type
     rv,widgets.query_item.item_type = r.ImGui_Combo(ctx, 'Item Type', widgets.query_item.item_type,
-      'Text\31Button\31Button (w/ repeat)\31Checkbox\31SliderDouble\31\z
-       InputText\31InputTextMultiline\31InputDouble\31InputDouble3\31ColorEdit4\31\z
-       Selectable\31MenuItem\31TreeNode\31TreeNode (w/ double-click)\31Combo\31ListBox\31')
+      'Text\0Button\0Button (w/ repeat)\0Checkbox\0SliderDouble\0\z
+       InputText\0InputTextMultiline\0InputDouble\0InputDouble3\0ColorEdit4\0\z
+       Selectable\0MenuItem\0TreeNode\0TreeNode (w/ double-click)\0Combo\0ListBox\0')
 
     r.ImGui_SameLine(ctx)
     demo.HelpMarker(
@@ -2535,10 +2535,10 @@ label:
         r.ImGui_TreeNodeFlags_OpenOnDoubleClick() | r.ImGui_TreeNodeFlags_NoTreePushOnOpen())
     end
     if item_type == 14 then
-      rv,widgets.query_item.current = r.ImGui_Combo(ctx, 'ITEM: Combo', widgets.query_item.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
+      rv,widgets.query_item.current = r.ImGui_Combo(ctx, 'ITEM: Combo', widgets.query_item.current, 'Apple\0Banana\0Cherry\0Kiwi\0')
     end
     if item_type == 15 then
-      rv,widgets.query_item.current = r.ImGui_ListBox(ctx, 'ITEM: ListBox', widgets.query_item.current, 'Apple\31Banana\31Cherry\31Kiwi\31')
+      rv,widgets.query_item.current = r.ImGui_ListBox(ctx, 'ITEM: ListBox', widgets.query_item.current, 'Apple\0Banana\0Cherry\0Kiwi\0')
     end
 
     -- Display the values of IsItemHovered() and other common item state functions.
@@ -2935,7 +2935,7 @@ function demo.ShowDemoWindowLayout()
 
     -- Various
     r.ImGui_PushItemWidth(ctx, 80)
-    local items = 'AAAA\31BBBB\31CCCC\31DDDD\31'
+    local items = 'AAAA\0BBBB\0CCCC\0DDDD\0'
     rv,layout.horizontal.item = r.ImGui_Combo(ctx, 'Combo', layout.horizontal.item, items);   r.ImGui_SameLine(ctx)
     rv,layout.horizontal.d0 = r.ImGui_SliderDouble(ctx, 'X', layout.horizontal.d0, 0.0, 5.0); r.ImGui_SameLine(ctx)
     rv,layout.horizontal.d1 = r.ImGui_SliderDouble(ctx, 'Y', layout.horizontal.d1, 0.0, 5.0); r.ImGui_SameLine(ctx)
@@ -3788,7 +3788,7 @@ function demo.ShowDemoWindowPopups()
       r.ImGui_Text(ctx, 'Hello from Stacked The First\nUsing style.Colors[ImGuiCol_ModalWindowDimBg] behind it.')
 
       -- Testing behavior of widgets stacking their own regular popups over the modal.
-      rv,popups.modal.item  = r.ImGui_Combo(ctx, 'Combo', popups.modal.item, 'aaaa\31bbbb\31cccc\31dddd\31eeee\31')
+      rv,popups.modal.item  = r.ImGui_Combo(ctx, 'Combo', popups.modal.item, 'aaaa\0bbbb\0cccc\0dddd\0eeee\0')
       rv,popups.modal.color = r.ImGui_ColorEdit4(ctx, 'color', popups.modal.color)
 
       if r.ImGui_Button(ctx, 'Add another modal..') then
@@ -4527,7 +4527,7 @@ function demo.ShowDemoWindowTables()
     r.ImGui_PushID(ctx, 'Advanced')
     r.ImGui_PushItemWidth(ctx, TEXT_BASE_WIDTH * 30)
     tables.sz_policies.flags2 = demo.EditTableSizingFlags(tables.sz_policies.flags2)
-    rv,tables.sz_policies.contents_type = r.ImGui_Combo(ctx, 'Contents', tables.sz_policies.contents_type, 'Show width\31Short Text\31Long Text\31Button\31Fill Button\31InputText\31')
+    rv,tables.sz_policies.contents_type = r.ImGui_Combo(ctx, 'Contents', tables.sz_policies.contents_type, 'Show width\0Short Text\0Long Text\0Button\0Fill Button\0InputText\0')
     if tables.sz_policies.contents_type == 4 then -- fill button
       r.ImGui_SameLine(ctx)
       demo.HelpMarker('Be mindful that using right-alignment (e.g. size.x = -FLT_MIN) creates a feedback loop where contents width can feed into auto-column width can feed into contents width.')
@@ -4992,9 +4992,9 @@ function demo.ShowDemoWindowTables()
     rv,tables.bg_col.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.bg_col.flags, r.ImGui_TableFlags_Borders())
     rv,tables.bg_col.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.bg_col.flags, r.ImGui_TableFlags_RowBg())
     r.ImGui_SameLine(ctx); demo.HelpMarker('ImGuiTableFlags_RowBg automatically sets RowBg0 to alternative colors pulled from the Style.')
-    rv,tables.bg_col.row_bg_type = r.ImGui_Combo(ctx, 'row bg type', tables.bg_col.row_bg_type, "None\31Red\31Gradient\31")
-    rv,tables.bg_col.row_bg_target = r.ImGui_Combo(ctx, 'row bg target', tables.bg_col.row_bg_target, "RowBg0\31RowBg1\31"); r.ImGui_SameLine(ctx); demo.HelpMarker('Target RowBg0 to override the alternating odd/even colors,\nTarget RowBg1 to blend with them.')
-    rv,tables.bg_col.cell_bg_type = r.ImGui_Combo(ctx, 'cell bg type', tables.bg_col.cell_bg_type, 'None\31Blue\31'); r.ImGui_SameLine(ctx); demo.HelpMarker('We are colorizing cells to B1->C2 here.')
+    rv,tables.bg_col.row_bg_type = r.ImGui_Combo(ctx, 'row bg type', tables.bg_col.row_bg_type, "None\0Red\0Gradient\0")
+    rv,tables.bg_col.row_bg_target = r.ImGui_Combo(ctx, 'row bg target', tables.bg_col.row_bg_target, "RowBg0\0RowBg1\0"); r.ImGui_SameLine(ctx); demo.HelpMarker('Target RowBg0 to override the alternating odd/even colors,\nTarget RowBg1 to blend with them.')
+    rv,tables.bg_col.cell_bg_type = r.ImGui_Combo(ctx, 'cell bg type', tables.bg_col.cell_bg_type, 'None\0Blue\0'); r.ImGui_SameLine(ctx); demo.HelpMarker('We are colorizing cells to B1->C2 here.')
     demo.PopStyleCompact()
 
     if r.ImGui_BeginTable(ctx, 'table1', 5, tables.bg_col.flags) then
@@ -5542,7 +5542,7 @@ function demo.ShowDemoWindowTables()
 
         rv,tables.advanced.items_count = r.ImGui_DragInt(ctx, 'items_count', tables.advanced.items_count, 0.1, 0, 9999)
         rv,tables.advanced.contents_type = r.ImGui_Combo(ctx, 'items_type (first column)', tables.advanced.contents_type,
-          'Text\31Button\31SmallButton\31FillButton\31Selectable\31Selectable (span row)\31')
+          'Text\0Button\0SmallButton\0FillButton\0Selectable\0Selectable (span row)\0')
         -- //filter.Draw('filter');
         r.ImGui_TreePop(ctx)
       end
@@ -6412,7 +6412,7 @@ function demo.ShowStyleEditor()
     export('Col', 'StyleColor', app.style_editor.style.colors, app.style_editor.ref.colors,
       function(a, b) return a == b end, function(val) return ('0x%08X'):format(val & 0xffffffff) end)
   end
-  r.ImGui_SameLine(ctx); r.ImGui_SetNextItemWidth(ctx, 120); rv,app.style_editor.output_dest = r.ImGui_Combo(ctx, '##output_type', app.style_editor.output_dest, 'To Clipboard\31To TTY\31')
+  r.ImGui_SameLine(ctx); r.ImGui_SetNextItemWidth(ctx, 120); rv,app.style_editor.output_dest = r.ImGui_Combo(ctx, '##output_type', app.style_editor.output_dest, 'To Clipboard\0To TTY\0')
   r.ImGui_SameLine(ctx); rv,app.style_editor.output_only_modified = r.ImGui_Checkbox(ctx, 'Only Modified', app.style_editor.output_only_modified)
 
   r.ImGui_Separator(ctx)
@@ -6705,7 +6705,7 @@ function demo.ShowExampleMenuFile()
     end
     rv,demo.menu.f = r.ImGui_SliderDouble(ctx, 'Value', demo.menu.f, 0.0, 1.0)
     rv,demo.menu.f = r.ImGui_InputDouble(ctx, 'Input', demo.menu.f, 0.1)
-    rv,demo.menu.n = r.ImGui_Combo(ctx, 'Combo', demo.menu.n, 'Yes\31No\31Maybe\31')
+    rv,demo.menu.n = r.ImGui_Combo(ctx, 'Combo', demo.menu.n, 'Yes\0No\0Maybe\0')
     r.ImGui_EndMenu(ctx)
   end
 
@@ -7410,9 +7410,9 @@ function demo.ShowExampleAppLongText()
 
   r.ImGui_Text(ctx, 'Printing unusually long amount of text.')
   rv,app.long_text.test_type = r.ImGui_Combo(ctx, 'Test type', app.long_text.test_type,
-    'Single call to Text()\31\z
-     Multiple calls to Text(), clipped\31\z
-     Multiple calls to Text(), not clipped (slow)\31')
+    'Single call to Text()\0\z
+     Multiple calls to Text(), clipped\0\z
+     Multiple calls to Text(), not clipped (slow)\0')
   r.ImGui_Text(ctx, ('Buffer contents: %d lines, %d bytes'):format(app.long_text.lines, app.long_text.log:len()))
   if r.ImGui_Button(ctx, 'Clear') then app.long_text.log = ''; app.long_text.lines = 0 end
   r.ImGui_SameLine(ctx)
@@ -7525,13 +7525,13 @@ function demo.ShowExampleAppConstrainedResize()
   if r.ImGui_Button(ctx, '800x200') then r.ImGui_SetWindowSize(ctx, 800, 200) end
   r.ImGui_SetNextItemWidth(ctx, 200)
   rv,app.constrained_resize.type = r.ImGui_Combo(ctx, 'Constraint', app.constrained_resize.type,
-    'Resize vertical only\31\z
-     Resize horizontal only\31\z
-     Width > 100, Height > 100\31\z
-     Width 400-500\31\z
-     Height 400-500\31')
-     --Custom: Always Square\31\z
-     --Custom: Fixed Steps (100)\31')
+    'Resize vertical only\0\z
+     Resize horizontal only\0\z
+     Width > 100, Height > 100\0\z
+     Width 400-500\0\z
+     Height 400-500\0')
+     --Custom: Always Square\0\z
+     --Custom: Fixed Steps (100)\0')
   r.ImGui_SetNextItemWidth(ctx, 200)
   rv,app.constrained_resize.display_lines = r.ImGui_DragInt(ctx, 'Lines', app.constrained_resize.display_lines, 0.2, 1, 100)
   rv,app.constrained_resize.auto_resize = r.ImGui_Checkbox(ctx, 'Auto-resize', app.constrained_resize.auto_resize)
