@@ -259,7 +259,7 @@ static std::vector<ImVec2> makePointsArray(const reaper_array *points)
 
   std::vector<ImVec2> out;
   out.reserve(points->size / 2);
-  for(unsigned int i = 0; i < points->size - 1; i += 2)
+  for(unsigned int i {}; i < points->size - 1; i += 2)
     out.push_back(ImVec2(points->data[i], points->data[i+1]));
   return out;
 }
@@ -268,7 +268,7 @@ DEFINE_API(void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
 (reaper_array*,points)(int,col_rgba)(int,flags)(double,thickness),
 "Points is a list of x,y coordinates.",
 {
-  const std::vector<ImVec2> vec2points { makePointsArray(points) };
+  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
   draw_list->get()->AddPolyline(
     vec2points.data(), vec2points.size(), Color::rgba2abgr(col_rgba),
     flags, thickness);
@@ -278,7 +278,7 @@ DEFINE_API(void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
 (reaper_array*,points)(int,col_rgba),
 "Note: Anti-aliased filling requires points to be in clockwise order.",
 {
-  const std::vector<ImVec2> vec2points { makePointsArray(points) };
+  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
   draw_list->get()->AddConvexPolyFilled(
     vec2points.data(), vec2points.size(), Color::rgba2abgr(col_rgba));
 });
