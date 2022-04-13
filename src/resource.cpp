@@ -25,7 +25,8 @@
 #include <unordered_set>
 #include <WDL/wdltypes.h>
 
-constexpr size_t MAX_INSTANCES { 99 };
+// sizeof(ImGuiContext) = ~30 KB, not including windows and other dynamic allocs
+constexpr size_t MAX_INSTANCES { 1'000 };
 
 // Splash_GetWnd may be NULL for a brief moment after _s_splash_thread_running
 // is set internally. The misc timer may fire during this time, skipping
