@@ -22,6 +22,7 @@
 #include "../src/api_vararg.hpp"
 #include "../src/basename.hpp"
 #include "../src/context.hpp"
+#include "../src/profiler.hpp"
 
 #include <array>
 #include <boost/preprocessor/cat.hpp>
@@ -93,6 +94,7 @@ using DefArgVal = std::conditional_t<
     static type invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args));            \
     static type invoke(_FOREACH_ARG(_SIGARG, _, args)) noexcept           \
     try {                                                                 \
+      Profiler::Slice _s { #name, true };                                 \
       return invoke_unsafe(_FOREACH_ARG(_RAWARG, _ARG_NAME, args));       \
     }                                                                     \
     _API_CATCH(name, type, reascript_error)                               \

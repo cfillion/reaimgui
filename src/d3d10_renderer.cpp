@@ -19,6 +19,7 @@
 
 #include "context.hpp"
 #include "import.hpp"
+#include "profiler.hpp"
 #include "texture.hpp"
 #include "window.hpp"
 
@@ -335,6 +336,8 @@ void D3D10Renderer::setSize(const ImVec2 size)
 
 void D3D10Renderer::render(void *)
 {
+  Profiler::Slice slice { "D3D10Renderer::render" };
+
   using namespace std::placeholders;
   m_window->context()->textureManager()->update(&m_shared->m_cookie,
     std::bind(&Shared::textureCommand, m_shared.get(), _1));
@@ -431,5 +434,6 @@ void D3D10Renderer::render(void *)
 
 void D3D10Renderer::swapBuffers(void *)
 {
+  Profiler::Slice slice { "D3D10Renderer::swapBuffers" };
   m_swapChain->Present(0, 0); // present immediately (no vsync)
 }

@@ -19,6 +19,7 @@
 
 #include "context.hpp"
 #include "import.hpp"
+#include "profiler.hpp"
 #include "texture.hpp"
 #include "window.hpp"
 
@@ -259,6 +260,8 @@ void MetalRenderer::setSize(const ImVec2 size)
 
 void MetalRenderer::render(void *)
 {
+  Profiler::Slice { "MetalRenderer::render" };
+
   const ImGuiViewport *viewport { m_window->viewport() };
   const ImDrawData *drawData { viewport->DrawData };
   const ImVec2 position { drawData->DisplayPos },

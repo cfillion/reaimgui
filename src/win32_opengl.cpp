@@ -18,6 +18,7 @@
 #include "opengl_renderer.hpp"
 
 #include "error.hpp"
+#include "profiler.hpp"
 #include "window.hpp"
 
 #define IMGL3W_IMPL
@@ -146,6 +147,8 @@ void Win32OpenGL::createContext()
 
 void Win32OpenGL::render(void *)
 {
+  Profiler::Slice { "Win32OpenGL::render" };
+
   MakeCurrent cur { m_dc, m_gl };
   OpenGLRenderer::updateTextures();
   OpenGLRenderer::render(false);
@@ -153,5 +156,6 @@ void Win32OpenGL::render(void *)
 
 void Win32OpenGL::swapBuffers(void *)
 {
+  Profiler::Slice { "Win32OpenGL::swapBuffers" };
   SwapBuffers(m_dc);
 }

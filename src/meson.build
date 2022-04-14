@@ -13,6 +13,7 @@ src_sources = files([
   'main.cpp',
   'opengl_renderer.cpp',
   'png_image.cpp',
+  'profiler.cpp',
   'renderer.cpp',
   'resource.cpp',
   'settings.cpp',

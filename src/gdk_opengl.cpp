@@ -19,6 +19,7 @@
 
 #include "error.hpp"
 #include "gdk_window.hpp"
+#include "profiler.hpp"
 
 #include <cassert>
 #include <epoxy/gl.h>
@@ -176,6 +177,8 @@ void GDKOpenGL::resizeTextures(const ImVec2 size)
 
 void GDKOpenGL::render(void *userData)
 {
+  Profiler::Slice slice { "GDKOpenGL::render" };
+
   if(userData && m_pixels)
     return softwareBlit();
 
