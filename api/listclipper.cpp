@@ -31,7 +31,7 @@ ListClipper::~ListClipper()
   m_imlc.ItemsCount = -1;
 
   if(m_imlc.TempData && Resource::exists(m_ctx)) {
-    ImGuiContext *ctx { ImGui::GetCurrentContext() };
+    ImGuiContext *ctx { m_ctx->imgui() };
     --ctx->ClipperTempDataStacked;
 
     bool shift { false };
