@@ -59,8 +59,11 @@ struct Argument {
     { return name.find("Out") != std::string_view::npos; }
   bool isOptional() const
     { return name.find("Optional") != std::string_view::npos; }
+  bool isBigBuf() const
+    { return name.find("NeedBig") != std::string_view::npos; }
   bool isBufSize() const
     { return name.find("_sz") == name.size() - 3; }
+  std::string_view bufName() const { return name.substr(0, name.size() - 3); }
 
   std::string_view humanName() const;
 };
@@ -481,7 +484,9 @@ void Function::pythonSignature(std::ostream &stream) const
     const bool listOutputs { hasOptionalArgs() };
     CommaSep cs { stream };
     for(const Argument &arg : args) {
-      if(!arg.isInput()) {
+      if(arg.isBufSize())
+        continue;
+      else if(!arg.isInput()) {
         if(listOutputs)
           cs << hl(Highlight::Constant) << "None" << hl();
         continue;
@@ -746,6 +751,8 @@ static void pythonBinding(std::ostream &stream)
     {
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
+        if(arg.isBufSize())
+          continue;
         cs << arg.name;
         if(arg.isOptional() || !arg.isInput())
           stream << " = None";
@@ -780,9 +787,18 @@ static void pythonBinding(std::ostream &stream)
           cs << pythonCType(arg.type);
 
         if(!packed) {
-          stream << '(' << arg.name;
-          if(!arg.isInput())
-            stream << " if " << arg.name << " != None else 0";
+          stream << '(';
+          if(arg.isBufSize()) {
+            if(arg.isOutput())
+              stream << (arg.isBigBuf() ? "4096" : "1024");
+            else
+              stream << "len(" << arg.bufName() << ")+1";
+          }
+          else {
+            stream << arg.name;
+            if(!arg.isInput())
+              stream << " if " << arg.name << " != None else 0";
+          }
           stream << ')';
         }
         if(arg.isOptional())
