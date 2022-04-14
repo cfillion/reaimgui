@@ -17,28 +17,23 @@
 
 #include "helper.hpp"
 
-#include <reaper_plugin_functions.h>
-
-static std::vector<const char *> splitList(const char *list, int len)
+static std::vector<const char *> splitList(const char *buf, const int size)
 {
   // REAPER's buf, buf_sz mechanism did not handle strings containing null
   // bytes (and len was inaccurate) prior to v6.44.
-  static bool binaryUnsafe { atof(GetAppVersion()) < 6.44 };
-  if(binaryUnsafe)
+  if(size < 1 || buf[size - 1] != '\0')
     throw reascript_error { "requires REAPER v6.44 or newer (use BeginCombo or BeginListBox for wider compatibility)" };
-
-  // len includes the final null terminator
-  if(len < 2 || list[len - 2] != '\0' || list[len - 1] != '\0')
+  else if(size < 2 || buf[size - 2] != '\0')
     throw reascript_error { "items must be null-terminated" };
 
-  std::vector<const char *> strings;
+  std::vector<const char *> items;
 
-  for(int i {}; i < len - 1; ++i) {
-    strings.push_back(list);
-    while(*list++) ++i;
+  for(int i {}; i < size - 1; ++i) {
+    items.push_back(buf);
+    while(*buf++) ++i;
   }
 
-  return strings;
+  return items;
 }
 
 DEFINE_API(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
