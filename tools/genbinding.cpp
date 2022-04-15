@@ -662,13 +662,12 @@ static void humanBinding(std::ostream &stream)
       stream << func->name << "</summary>";
 
       stream << "<table>"
-            << "<tr><th>C++</th><td><code>"; func->cppSignature(stream); stream << "</code></td></tr>"
-            << "<tr><th>EEL</th><td><code>"; func->eelSignature(stream, false); stream << "</code></td></tr>"
-            << "<tr><th>Legacy EEL</th><td><code>";
-                              func->eelSignature(stream, true);  stream << "</code></td></tr>"
-            << "<tr><th>Lua</th><td><code>"; func->luaSignature(stream); stream << "</code></td></tr>"
-            << "<tr><th>Python</th><td><code>"; func->pythonSignature(stream); stream << "</code></td></tr>"
-            << "</table>";
+             << "<tr><th>C++</th><td><code>";        func->cppSignature(stream);        stream << "</code></td></tr>"
+             << "<tr><th>EEL</th><td><code>";        func->eelSignature(stream, false); stream << "</code></td></tr>"
+             << "<tr><th>Legacy EEL</th><td><code>"; func->eelSignature(stream, true);  stream << "</code></td></tr>"
+             << "<tr><th>Lua</th><td><code>";        func->luaSignature(stream);        stream << "</code></td></tr>"
+             << "<tr><th>Python</th><td><code>";     func->pythonSignature(stream);     stream << "</code></td></tr>"
+             << "</table>";
 
       if(!func->doc.empty()) {
         stream << "<pre>";
@@ -716,10 +715,10 @@ static void humanBinding(std::ostream &stream)
 static const char *pythonCType(const Type &type)
 {
   static const std::unordered_map<std::string_view, const char *> ctypes {
-    { "void",   "None"      },
-    { "bool",   "c_bool"    },
-    { "int",    "c_int"     },
-    { "double", "c_double"  },
+    { "void",   "None"     },
+    { "bool",   "c_bool"   },
+    { "int",    "c_int"    },
+    { "double", "c_double" },
   };
 
   if(type.isString())
