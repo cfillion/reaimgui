@@ -259,7 +259,7 @@ static std::vector<ImVec2> makePointsArray(const reaper_array *points)
 
   std::vector<ImVec2> out;
   out.reserve(points->size / 2);
-  for(unsigned int i {}; i < points->size - 1; i += 2)
+  for(unsigned int i {}; i < points->size; i += 2)
     out.push_back(ImVec2(points->data[i], points->data[i+1]));
   return out;
 }
