@@ -58,7 +58,7 @@ DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
 DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(popup_max_height_in_items)),
-R"(Helper over ImGui_BeginCombo/ImGui_EndCombo for convenience purpose. Each item must be null-terminated. Requires REAPER v6.44 or newer.
+R"(Helper over ImGui_BeginCombo/ImGui_EndCombo for convenience purpose. Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lua).
 
 Default values: popup_max_height_in_items = -1)",
 {
@@ -75,7 +75,7 @@ DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RO(height_in_items)),
 R"(This is an helper over ImGui_BeginListBox/ImGui_EndListBox for convenience purpose. This is analoguous to how Combos are created.
 
-Each item must be null-terminated. Requires REAPER v6.44 or newer.
+Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lua).
 
 Default values: height_in_items = -1)",
 {
