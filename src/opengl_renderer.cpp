@@ -189,7 +189,7 @@ void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
     return;
 
   if(!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) {
-    glClearColor(0.f, 0.f, 0.f, 1.f);
+    glClearColor(0.f, 0.f, 0.f, 0.f); // premultiplied alpha
     glClear(GL_COLOR_BUFFER_BIT);
   }
 

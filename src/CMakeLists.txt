@@ -25,7 +25,7 @@ if(WIN32)
     win32_window.cpp
   )
 
-  target_link_libraries(src Imm32)
+  target_link_libraries(src Dwmapi Imm32)
 
   find_package(gl3w CONFIG REQUIRED)
   target_link_libraries(src unofficial::gl3w::gl3w)

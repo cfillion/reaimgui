@@ -52,6 +52,7 @@ GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 void GDKWindow::create()
 {
   createSwellDialog();
+  SetProp(m_hwnd.get(), "SWELLGdkAlphaChannel", reinterpret_cast<HANDLE>(1));
   SetWindowLongPtr(m_hwnd.get(), GWL_EXSTYLE, WS_EX_ACCEPTFILES);
 
   // WS_CHILD does gdk_window_set_override_redirect(true)

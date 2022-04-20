@@ -28,6 +28,9 @@
 #include <GL/wglext.h>
 #include <reaper_plugin_secrets.h>
 #include <ShellScalingApi.h> // GetDpiForMonitor
+#define GetThemeColor Win32_GetThemeColor // solve conflict with REAPER API
+#include <dwmapi.h> // Dwm* functions for compositing
+#undef GetThemeColor
 
 #include "win32_droptarget.ipp"
 
@@ -153,6 +156,15 @@ void Win32Window::create()
 
   // disable IME by default
   ImmAssociateContextEx(m_hwnd.get(), nullptr, 0);
+
+  // enable compositing for transparency
+  HRGN region { CreateRectRgn(0, 0, -1, -1) };
+  DWM_BLURBEHIND bb {};
+  bb.dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION;
+  bb.fEnable = true;
+  bb.hRgnBlur = region; // no actual blur/shadow
+  DwmEnableBlurBehindWindow(m_hwnd.get(), &bb);
+  DeleteObject(region);
 }
 
 Win32Window::~Win32Window()
@@ -186,7 +198,8 @@ void Win32Window::initPixelFormat()
   pfd.nVersion = 1;
   pfd.dwFlags = PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
   pfd.iPixelType = PFD_TYPE_RGBA;
-  pfd.cColorBits = 24;
+  pfd.cAlphaBits = pfd.cBlueBits = pfd.cGreenBits = pfd.cRedBits = 8;
+  pfd.cColorBits = pfd.cRedBits + pfd.cGreenBits + pfd.cBlueBits + pfd.cAlphaBits;
 
   if(!SetPixelFormat(m_dc, ChoosePixelFormat(m_dc, &pfd), &pfd)) {
     ReleaseDC(m_hwnd.get(), m_dc);

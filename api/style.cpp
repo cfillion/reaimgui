@@ -202,7 +202,7 @@ DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
 // ImGuiCol
 DEFINE_ENUM(ImGui, Col_Text,                  "");
 DEFINE_ENUM(ImGui, Col_TextDisabled,          "");
-DEFINE_ENUM(ImGui, Col_WindowBg,              "Background of normal windows.");
+DEFINE_ENUM(ImGui, Col_WindowBg,              "Background of normal windows. The alpha channel is ignored, use ImGui_WindowFlags_NoBackground for transparent windows instead.");
 DEFINE_ENUM(ImGui, Col_ChildBg,               "Background of child windows.");
 DEFINE_ENUM(ImGui, Col_PopupBg,               "Background of popups, menus, tooltips windows.");
 DEFINE_ENUM(ImGui, Col_Border,                "");

@@ -76,6 +76,14 @@ void CocoaWindow::create()
   if(!m_gl)
     throw backend_error { "failed to initialize OpenGL 3.2 core context" };
 
+  // enable transparency
+  if(!isDocked()) {
+    [window setOpaque:NO];
+    [m_view setWantsLayer:YES]; // required to be transparent before resizing
+    GLint value { 0 };
+    [m_gl setValues:&value forParameter:NSOpenGLCPSurfaceOpacity];
+  }
+
   [m_gl makeCurrentContext];
   m_renderer = new OpenGLRenderer;
   [NSOpenGLContext clearCurrentContext];
@@ -165,6 +173,13 @@ void CocoaWindow::update()
     const bool topmost { (m_viewport->Flags & ImGuiViewportFlags_TopMost) != 0 };
     SWELL_SetWindowWantRaiseAmt(m_hwnd.get(), topmost);
   }
+
+  // disable shadows under the window when WindowFlags_NoBackground is set
+  // (shadows wouldn't be updated along with the contents until next resize)
+  if(diff & ImGuiViewportFlags_NoRendererClear) {
+    const bool opaque { (m_viewport->Flags & ImGuiViewportFlags_NoRendererClear) != 0 };
+    [window setHasShadow:opaque];
+  }
 }
 
 void CocoaWindow::render(void *)
@@ -208,11 +223,8 @@ std::optional<LRESULT> CocoaWindow::handleMessage
   (const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
-  case WM_PAINT: // update size if it changed while we were docked & inactive
   case WM_SIZE:
-    [m_gl update];
-    if(m_viewport->DrawData && m_viewport->DrawData->Valid)
-      render(nullptr);
+    [m_gl update]; // update size if it changed while we were docked & inactive
     break; // continue handling WM_SIZE in CocoaWindow::proc
   }
 
