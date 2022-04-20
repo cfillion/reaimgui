@@ -254,14 +254,6 @@ DEFINE_API(void, SetNextWindowFocus, (ImGui_Context*,ctx),
   ImGui::SetNextWindowFocus();
 });
 
-DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
-(double,alpha),
-"Set next window background color alpha. helper to easily override the Alpha component of ImGui_Col_WindowBg/ChildBg/PopupBg. you may also use ImGui_WindowFlags_NoBackground.",
-{
-  FRAME_GUARD;
-  ImGui::SetNextWindowBgAlpha(alpha);
-});
-
 DEFINE_API(void, SetNextWindowDockID, (ImGui_Context*,ctx)
 (int,dock_id)(int*,API_RO(cond)),
 R"(Set next window dock ID. 0 = undocked, < 0 = REAPER docker index (-1 = first dock, -2 = second dock, etc), > 0 = Dear ImGui dockspace ID.
@@ -548,7 +540,7 @@ DEFINE_ENUM(ImGui, WindowFlags_NoScrollbar,               "Disable scrollbars (w
 DEFINE_ENUM(ImGui, WindowFlags_NoScrollWithMouse,         "Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.");
 DEFINE_ENUM(ImGui, WindowFlags_NoCollapse,                "Disable user collapsing window by double-clicking on it. Also referred to as Window Menu Button (e.g. within a docking node).");
 DEFINE_ENUM(ImGui, WindowFlags_AlwaysAutoResize,          "Resize every window to its content every frame.");
-DEFINE_ENUM(ImGui, WindowFlags_NoBackground,              "Disable drawing background color (WindowBg, etc.) and outside border. Similar as using ImGui_SetNextWindowBgAlpha(0.0).");
+DEFINE_ENUM(ImGui, WindowFlags_NoBackground,              "Disable drawing background color (WindowBg, etc.) and outside border.");
 DEFINE_ENUM(ImGui, WindowFlags_NoSavedSettings,           "Never load/save settings in .ini file.");
 DEFINE_ENUM(ImGui, WindowFlags_NoMouseInputs,             "Disable catching mouse, hovering test with pass through.");
 DEFINE_ENUM(ImGui, WindowFlags_MenuBar,                   "Has a menu-bar.");

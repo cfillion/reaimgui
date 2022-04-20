@@ -7578,7 +7578,7 @@ function demo.ShowExampleAppSimpleOverlay()
     window_flags = window_flags | r.ImGui_WindowFlags_NoMove()
   end
 
-  r.ImGui_SetNextWindowBgAlpha(ctx, 0.35) -- Transparent background
+  -- r.ImGui_SetNextWindowBgAlpha(ctx, 0.35) -- Transparent background
 
   local rv,open = r.ImGui_Begin(ctx, 'Example: Simple overlay', true, window_flags)
   if not rv then return open end
