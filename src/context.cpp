@@ -39,6 +39,9 @@ constexpr ImGuiMouseButton DND_MouseButton { ImGuiMouseButton_Left };
 constexpr ImGuiConfigFlags PRIVATE_CONFIG_FLAGS
   { ImGuiConfigFlags_ViewportsEnable };
 
+static ImFontAtlas * const NO_DEFAULT_ATLAS
+  { reinterpret_cast<ImFontAtlas *>(-1) };
+
 class TempCurrent {
 public:
   TempCurrent(Context *ctx)
@@ -48,17 +51,6 @@ public:
 private:
   ImGuiContext *m_old;
 };
-
-Context *Context::current()
-{
-  if(ImGuiContext *imgui { ImGui::GetCurrentContext() })
-    return static_cast<Context *>(imgui->IO.UserData);
-  else
-    return nullptr;
-}
-
-static ImFontAtlas * const NO_DEFAULT_ATLAS
-  { reinterpret_cast<ImFontAtlas *>(-1) };
 
 static std::string generateIniFilename(const char *label)
 {
@@ -78,6 +70,28 @@ static std::string generateIniFilename(const char *label)
     static_cast<int>(sizeof(ImGuiID) * 2), ImHashStr(label));
 
   return filename;
+}
+
+static void reportError(const imgui_error &e)
+{
+  char message[1024];
+  snprintf(message, sizeof(message), "ImGui assertion failed: %s\n", e.what());
+  ShowConsoleMsg(message); // cannot use ReaScriptError unless called by a script
+}
+
+static void reportError(const backend_error &e)
+{
+  char message[1024];
+  snprintf(message, sizeof(message), "ReaImGui error: %s\n", e.what());
+  ShowConsoleMsg(message);
+}
+
+Context *Context::current()
+{
+  if(ImGuiContext *imgui { ImGui::GetCurrentContext() })
+    return static_cast<Context *>(imgui->IO.UserData);
+  else
+    return nullptr;
 }
 
 Context::Context(const char *label, const int userConfigFlags)
@@ -178,9 +192,7 @@ bool Context::beginFrame() try
   return true;
 }
 catch(const backend_error &e) {
-  char message[124];
-  snprintf(message, sizeof(message), "ReaImGui error: %s\n", e.what());
-  ShowConsoleMsg(message);
+  reportError(e);
   return false;
 }
 
@@ -220,17 +232,11 @@ bool Context::endFrame(const bool render) try
   return true;
 }
 catch(const imgui_error &e) {
-  char message[1024];
-  snprintf(message, sizeof(message), "ImGui assertion failed: %s\n", e.what());
-  ShowConsoleMsg(message); // cannot use ReaScriptError unless called by a script
-
+  reportError(e);
   return false;
 }
 catch(const backend_error &e) {
-  char message[1024];
-  snprintf(message, sizeof(message), "ReaImGui error: %s\n", e.what());
-  ShowConsoleMsg(message);
-
+  reportError(e);
   return false;
 }
 
