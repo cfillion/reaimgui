@@ -116,8 +116,10 @@ void Resource::Timer::tick()
     Resource *rs { *it };
     if(rs->heartbeat())
       ++it;
-    else
-      delete rs;
+    else {
+      delete rs; // invalidates the iterator
+      it = findLowerBound(rs);
+    }
   }
 }
 
