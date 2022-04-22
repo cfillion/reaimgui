@@ -371,7 +371,7 @@ DEFINE_API(void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
 "Default values: num_segments = 0",
 {
   draw_list->get()->PathArcTo(ImVec2(center_x, center_y),
-    radius, a_min, a_max, valueOr(API_RO(num_segments), 10));
+    radius, a_min, a_max, valueOr(API_RO(num_segments), 0));
 });
 
 DEFINE_API(void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
