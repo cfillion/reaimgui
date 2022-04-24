@@ -221,7 +221,7 @@ DEFINE_API(void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
 (int,col_rgba)(const char*,text)(double*,API_RO(wrap_width))
 (double*,API_RO(cpu_fine_clip_rect_x))(double*,API_RO(cpu_fine_clip_rect_y))
 (double*,API_RO(cpu_fine_clip_rect_w))(double*,API_RO(cpu_fine_clip_rect_h)),
-R"(The default font is used if font = nil. cpu_fine_clip_rect_* only takes effect if all four are non-nil.
+R"(The last pushed font is used if font is nil. The size of the last pushed font is used if font_size is 0. cpu_fine_clip_rect_* only takes effect if all four are non-nil.
 
 Default values: wrap_width = 0.0, cpu_fine_clip_rect_x = nil, cpu_fine_clip_rect_y = nil, cpu_fine_clip_rect_w = nil, cpu_fine_clip_rect_h = nil)",
 {
