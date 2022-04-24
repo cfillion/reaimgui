@@ -254,6 +254,14 @@ DEFINE_API(void, SetNextWindowFocus, (ImGui_Context*,ctx),
   ImGui::SetNextWindowFocus();
 });
 
+DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
+(double,alpha),
+"Set next window background color alpha. Helper to easily override the Alpha component of ImGui_Col_WindowBg/ChildBg/PopupBg. You may also use ImGui_WindowFlags_NoBackground.",
+{
+  FRAME_GUARD;
+  ImGui::SetNextWindowBgAlpha(alpha);
+});
+
 DEFINE_API(void, SetNextWindowDockID, (ImGui_Context*,ctx)
 (int,dock_id)(int*,API_RO(cond)),
 R"(Set next window dock ID. 0 = undocked, < 0 = REAPER docker index (-1 = first dock, -2 = second dock, etc), > 0 = Dear ImGui dockspace ID.

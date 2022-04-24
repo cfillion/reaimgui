@@ -166,9 +166,6 @@ NATIVE_ONLY = [
   'ImGuiID ImGui::DockSpace(ImGuiID, const ImVec2&, ImGuiDockNodeFlags, const ImGuiWindowClass*)',
   'ImGuiID ImGui::DockSpaceOverViewport(const ImGuiViewport*, ImGuiDockNodeFlags, const ImGuiWindowClass*)',
   'void ImGui::SetNextWindowClass(const ImGuiWindowClass*)',
-
-  # owned viewport transparency (see ocornut/imgui#2766)
-  'void ImGui::SetNextWindowBgAlpha(float)',
 ]
 
 NATIVE_ONLY_CLASSES = %w[
