@@ -54,6 +54,7 @@ public:
   virtual bool hasFocus() const = 0;
   virtual bool isMinimized() const = 0;
   virtual void setTitle(const char *) = 0;
+  virtual void setAlpha(float) = 0;
   virtual void update() = 0;
   virtual void render(void *) = 0;
   virtual float scaleFactor() const = 0;

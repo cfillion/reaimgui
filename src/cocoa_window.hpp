@@ -39,6 +39,7 @@ public:
   void setFocus() override;
   bool hasFocus() const override;
   void setTitle(const char *) override;
+  void setAlpha(float) override;
   void update() override;
   void render(void *) override;
   float scaleFactor() const override;

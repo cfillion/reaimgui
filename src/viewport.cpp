@@ -38,6 +38,7 @@ public:
   bool hasFocus() const override { return false; }
   bool isMinimized() const override;
   void setTitle(const char *) override {}
+  void setAlpha(float) override {}
   void update() override {};
   void render(void *) override {}
   float scaleFactor() const override;
@@ -111,7 +112,7 @@ void Viewport::install()
   pio.Platform_GetWindowFocus     = &instanceProxy<&Viewport::hasFocus>;
   pio.Platform_GetWindowMinimized = &instanceProxy<&Viewport::isMinimized>;
   pio.Platform_SetWindowTitle     = &instanceProxy<&Viewport::setTitle>;
-  // TODO: SetWindowAlpha
+  pio.Platform_SetWindowAlpha     = &instanceProxy<&Viewport::setAlpha>;
   pio.Platform_UpdateWindow       = &instanceProxy<&Viewport::update>;
   pio.Platform_RenderWindow       = &instanceProxy<&Viewport::render>;
   pio.Platform_GetWindowDpiScale  = &instanceProxy<&Viewport::scaleFactor>;

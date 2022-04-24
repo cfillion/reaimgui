@@ -37,6 +37,7 @@ public:
   void setPosition(ImVec2) override;
   void setSize(ImVec2) override;
   void setTitle(const char *) override;
+  void setAlpha(float) override;
   void update() override;
   void render(void *) override;
   float scaleFactor() const override;
@@ -57,6 +58,7 @@ private:
   void keyEvent(unsigned int, WPARAM, LPARAM);
   bool modKeyEvent(WPARAM vk, bool down);
   void unstuckModifiers();
+  void updateStyles();
 
   HDC m_dc;
   HGLRC m_gl;

@@ -81,6 +81,7 @@ public:
   bool hasFocus() const override;
   bool isMinimized() const override;
   void setTitle(const char *) override;
+  void setAlpha(float) override;
   void update() override;
   void render(void *) override;
   float scaleFactor() const override;

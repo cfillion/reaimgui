@@ -218,6 +218,11 @@ void GDKWindow::setTitle(const char *title)
   SetWindowText(m_hwnd.get(), title);
 }
 
+void GDKWindow::setAlpha(const float alpha)
+{
+  gdk_window_set_opacity(m_hwnd->m_oswindow, alpha);
+}
+
 void GDKWindow::update()
 {
   if(GetFocus() == m_hwnd.get())

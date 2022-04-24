@@ -78,19 +78,19 @@ float Win32Window::scaleForDpi(const unsigned int dpi)
   return static_cast<float>(dpi) / USER_DEFAULT_SCREEN_DPI;
 }
 
-static void styleFromFlags(ImGuiViewportFlags flags, DWORD *style, DWORD *exStyle)
+void Win32Window::updateStyles()
 {
-  *style = WS_POPUP; // fix AttachWindowTopmostButton when a titlebar is shown
-  *exStyle = WS_EX_ACCEPTFILES;
+  m_style = WS_POPUP; // fix AttachWindowTopmostButton when a titlebar is shown
+  m_exStyle = WS_EX_ACCEPTFILES;
 
-  if(!(flags & ImGuiViewportFlags_NoDecoration))
-    *style |= WS_OVERLAPPEDWINDOW;
+  if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
+    m_style |= WS_OVERLAPPEDWINDOW;
 
-  if(flags & ImGuiViewportFlags_NoTaskBarIcon)
-    *exStyle |= WS_EX_TOOLWINDOW;
+  if(m_viewport->Flags & ImGuiViewportFlags_NoTaskBarIcon)
+    m_exStyle |= WS_EX_TOOLWINDOW;
 
-  if(flags & ImGuiViewportFlags_TopMost)
-    *exStyle |= WS_EX_TOPMOST;
+  if(m_viewport->Flags & ImGuiViewportFlags_TopMost)
+    m_exStyle |= WS_EX_TOPMOST;
 }
 
 static BOOL CALLBACK reparentChildren(HWND hwnd, LPARAM data)
@@ -127,7 +127,7 @@ void Win32Window::create()
 {
   static Class windowClass;
 
-  styleFromFlags(m_viewport->Flags, &m_style, &m_exStyle);
+  updateStyles();
 
   // Trick remove the default icon during construction, unset in show()
   DWORD exStyle { m_exStyle };
@@ -299,6 +299,20 @@ void Win32Window::setTitle(const char *title)
   SetWindowText(m_hwnd.get(), widen(title).c_str());
 }
 
+void Win32Window::setAlpha(const float alpha)
+{
+  // may conflict with updateStyles()/update(), but viewport flags are
+  // unlikely to change while alpha isn't 1
+
+  if(alpha == 1.0f) {
+    SetWindowLong(m_hwnd.get(), GWL_EXSTYLE, m_exStyle);
+    return;
+  }
+
+  SetWindowLong(m_hwnd.get(), GWL_EXSTYLE, m_exStyle | WS_EX_LAYERED);
+  SetLayeredWindowAttributes(m_hwnd.get(), 0, 255 * alpha, LWA_ALPHA);
+}
+
 void Win32Window::update()
 {
   unstuckModifiers();
@@ -307,7 +321,7 @@ void Win32Window::update()
     return;
 
   const DWORD prevStyle { m_style }, prevExStyle { m_exStyle };
-  styleFromFlags(m_viewport->Flags, &m_style, &m_exStyle);
+  updateStyles();
 
   if(prevStyle != m_style || prevExStyle != m_exStyle) {
     SetWindowLong(m_hwnd.get(), GWL_STYLE, m_style);

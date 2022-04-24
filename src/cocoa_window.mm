@@ -142,6 +142,12 @@ void CocoaWindow::setTitle(const char *title)
   SetWindowText(m_hwnd.get(), title);
 }
 
+void CocoaWindow::setAlpha(const float alpha)
+{
+  NSWindow *window { [m_view window] };
+  [window setAlphaValue:alpha];
+}
+
 void CocoaWindow::update()
 {
   if(isDocked())

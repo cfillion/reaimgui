@@ -427,6 +427,8 @@ function demo.ShowDemoWindow(open)
       end
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', config.flags, r.ImGui_ConfigFlags_NoMouseCursorChange())
       r.ImGui_SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
+      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, r.ImGui_ConfigFlags_NoSavedSettings())
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
 
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_DockingEnable', config.flags, r.ImGui_ConfigFlags_DockingEnable())
       r.ImGui_SameLine(ctx)
@@ -440,11 +442,11 @@ function demo.ShowDemoWindow(open)
         configVarCheckbox('ConfigVar_DockingNoSplit')
         r.ImGui_SameLine(ctx); demo.HelpMarker('Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.')
         configVarCheckbox('ConfigVar_DockingWithShift')
-        -- r.ImGui_Checkbox(ctx, 'io.ConfigDockingAlwaysTabBar', &io.ConfigDockingAlwaysTabBar)
         r.ImGui_SameLine(ctx); demo.HelpMarker('Enable docking when holding Shift only (allow to drop in wider space, reduce visual noise)')
+        -- r.ImGui_Checkbox(ctx, 'io.ConfigDockingAlwaysTabBar', &io.ConfigDockingAlwaysTabBar)
         -- r.ImGui_SameLine(ctx); demo.HelpMarker('Create a docking node and tab-bar on single floating windows.')
-        -- r.ImGui_Checkbox("io.ConfigDockingTransparentPayload", &io.ConfigDockingTransparentPayload)
-        -- r.ImGui_SameLine(ctx); demo.HelpMarker('Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with ConfigViewportsNoAutoMerge.')
+        configVarCheckbox('ConfigVar_DockingTransparentPayload')
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Make window or viewport transparent when docking and only display docking boxes on the target viewport.')
         r.ImGui_Unindent(ctx)
       end
 
@@ -475,11 +477,7 @@ function demo.ShowDemoWindow(open)
       r.ImGui_SameLine(ctx); demo.HelpMarker('Does not apply to windows without a title bar.')
       -- r.ImGui_Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
       -- r.ImGui_SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
-      -- r.ImGui_Text(ctx, "Also see Style->Rendering for rendering options.")
-
-      -- ReaImGui exclusive flags
-      rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, r.ImGui_ConfigFlags_NoSavedSettings())
-      r.ImGui_SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
+      r.ImGui_Text(ctx, "Also see Style->Rendering for rendering options.")
 
       r.ImGui_SetConfigVar(ctx, r.ImGui_ConfigVar_Flags(), config.flags)
       r.ImGui_TreePop(ctx)

@@ -238,6 +238,10 @@ void DockerHost::setTitle(const char *)
 {
 }
 
+void DockerHost::setAlpha(float)
+{
+}
+
 void DockerHost::update()
 {
   if(m_window)

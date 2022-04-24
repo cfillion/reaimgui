@@ -73,7 +73,7 @@ enum ConfigVar {
   ReaImGuiConfigVar_DockingNoSplit,
   ReaImGuiConfigVar_DockingWithShift,
   // ReaImGuiConfigVar_DockingAlwaysTabBar,
-  // ReaImGuiConfigVar_DockingTransparentPayload,
+  ReaImGuiConfigVar_DockingTransparentPayload,
 
   // ReaImGuiConfigVar_ViewportsNoAutoMerge,
   // ReaImGuiConfigVar_ViewportsNoTaskBarIcon,
@@ -98,6 +98,7 @@ DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
   switch(static_cast<ConfigVar>(var_idx)) {
   case ReaImGuiConfigVar_Flags:
     return ctx->userConfigFlags();
+
   case ReaImGuiConfigVar_MouseDoubleClickTime:
     return io.MouseDoubleClickTime;
   case ReaImGuiConfigVar_MouseDoubleClickMaxDist:
@@ -105,11 +106,16 @@ DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
   case ReaImGuiConfigVar_MouseDragThreshold:
     return io.MouseDragThreshold;
   case ReaImGuiConfigVar_DockingNoSplit:
+
     return io.ConfigDockingNoSplit;
   case ReaImGuiConfigVar_DockingWithShift:
     return io.ConfigDockingWithShift;
+  case ReaImGuiConfigVar_DockingTransparentPayload:
+    return io.ConfigDockingTransparentPayload;
+
   case ReaImGuiConfigVar_ViewportsNoDecoration:
     return io.ConfigViewportsNoDecoration;
+
   case ReaImGuiConfigVar_MacOSXBehaviors:
     return io.ConfigMacOSXBehaviors;
   case ReaImGuiConfigVar_InputTrickleEventQueue:
@@ -137,18 +143,24 @@ DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
   switch(static_cast<ConfigVar>(var_idx)) {
   case ReaImGuiConfigVar_Flags:
     ctx->setUserConfigFlags(value);               return;
+
   case ReaImGuiConfigVar_MouseDoubleClickTime:
     io.MouseDoubleClickTime              = value; return;
   case ReaImGuiConfigVar_MouseDoubleClickMaxDist:
     io.MouseDoubleClickMaxDist           = value; return;
   case ReaImGuiConfigVar_MouseDragThreshold:
     io.MouseDragThreshold                = value; return;
+
   case ReaImGuiConfigVar_DockingNoSplit:
     io.ConfigDockingNoSplit              = value; return;
   case ReaImGuiConfigVar_DockingWithShift:
     io.ConfigDockingWithShift            = value; return;
+  case ReaImGuiConfigVar_DockingTransparentPayload:
+    io.ConfigDockingTransparentPayload   = value; return;
+
   case ReaImGuiConfigVar_ViewportsNoDecoration:
     io.ConfigViewportsNoDecoration       = value; return;
+
   case ReaImGuiConfigVar_MacOSXBehaviors:
     io.ConfigMacOSXBehaviors             = value; return;
   case ReaImGuiConfigVar_InputTrickleEventQueue:
@@ -172,6 +184,7 @@ DEFINE_ENUM(ReaImGui, ConfigVar_MouseDoubleClickMaxDist,     "Distance threshold
 DEFINE_ENUM(ReaImGui, ConfigVar_MouseDragThreshold,          "Distance threshold before considering we are dragging.");
 DEFINE_ENUM(ReaImGui, ConfigVar_DockingNoSplit,              "Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.");
 DEFINE_ENUM(ReaImGui, ConfigVar_DockingWithShift,            "Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)");
+DEFINE_ENUM(ReaImGui, ConfigVar_DockingTransparentPayload,   "Make window or viewport transparent when docking and only display docking boxes on the target viewport.");
 DEFINE_ENUM(ReaImGui, ConfigVar_ViewportsNoDecoration,       "Disable default OS window decoration. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).");
 DEFINE_ENUM(ReaImGui, ConfigVar_MacOSXBehaviors,             "OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.");
 DEFINE_ENUM(ReaImGui, ConfigVar_InputTrickleEventQueue,      "Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.");
