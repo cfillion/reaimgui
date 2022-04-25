@@ -24,6 +24,7 @@ template<typename T>
 class Flags {
 public:
   operator T() const { return m_flags; }
+  T *operator *() { return &m_flags; }
   T operator |=(T op) { return m_flags |= op; }
   T operator &=(T op) { return m_flags &= op; }
   T operator &(T op) const { return m_flags & op; }

@@ -21,6 +21,27 @@
 #include "version.hpp"
 #include <imgui/imgui.h>
 
+class DecorationBehavior {
+public:
+  DecorationBehavior(Context *ctx, ImGuiWindowFlags *flags)
+    : m_enabled { !ctx->IO().ConfigViewportsNoDecoration }
+  {
+    if(m_enabled) {
+      ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
+      *flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize;
+    }
+  }
+
+  ~DecorationBehavior()
+  {
+    if(m_enabled)
+      ImGui::PopStyleVar();
+  }
+
+private:
+  bool m_enabled;
+};
+
 DEFINE_API(bool, Begin, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
 R"(Push window to the stack and start appending to it. See ImGui_End.
@@ -35,17 +56,9 @@ Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
   FRAME_GUARD;
 
   WindowFlags flags { API_RO(flags) };
-
-  if(!ctx->IO().ConfigViewportsNoDecoration) {
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
-    flags |= ImGuiWindowFlags_NoTitleBar |
-             ImGuiWindowFlags_NoResize   ;
-  }
+  DecorationBehavior dec { ctx, *flags };
 
   const bool rv { ImGui::Begin(name, openPtrBehavior(API_RWO(p_open)), flags) };
-
-  if(!ctx->IO().ConfigViewportsNoDecoration)
-    ImGui::PopStyleVar();
 
   if(!rv)
     ImGui::End();
@@ -494,7 +507,8 @@ Default values: p_open = nil)",
 {
   FRAME_GUARD;
 
-  constexpr ImGuiWindowFlags flags { ImGuiWindowFlags_AlwaysAutoResize };
+  ImGuiWindowFlags flags { ImGuiWindowFlags_AlwaysAutoResize };
+  DecorationBehavior dec { ctx, &flags };
   if(ImGui::Begin("About Dear ImGui", openPtrBehavior(API_RWO(p_open)), flags)) {
     ImGui::Separator();
     ImGui::Text("reaper_imgui %s", REAIMGUI_VERSION);
@@ -516,7 +530,15 @@ R"(Create Metrics/Debugger window. Display Dear ImGui internals: windows, draw c
 Default values: p_open = nil)",
 {
   FRAME_GUARD;
-  ImGui::ShowMetricsWindow(openPtrBehavior(API_RWO(p_open)));
+
+  ImGuiWindowFlags flags {};
+  DecorationBehavior dec { ctx, &flags };
+  ImGui::Begin("Dear ImGui Metrics/Debugger",
+    openPtrBehavior(API_RWO(p_open)), flags);
+  ImGui::GetCurrentWindow()->BeginCount = 0;
+  ImGui::End();
+
+  ImGui::ShowMetricsWindow();
 });
 
 DEFINE_API(void, ShowStackToolWindow, (ImGui_Context*,ctx)
@@ -526,7 +548,14 @@ R"(Create Stack Tool window. Hover items with mouse to query information about t
 Default values: p_open = nil)",
 {
   FRAME_GUARD;
-  ImGui::ShowStackToolWindow(openPtrBehavior(API_RWO(p_open)));
+
+  ImGuiWindowFlags flags {};
+  DecorationBehavior dec { ctx, &flags };
+  ImGui::Begin("Dear ImGui Stack Tool", openPtrBehavior(API_RWO(p_open)), flags);
+  ImGui::GetCurrentWindow()->BeginCount = 0;
+  ImGui::End();
+
+  ImGui::ShowStackToolWindow();
 });
 
 // ImGuiFocusedFlags
