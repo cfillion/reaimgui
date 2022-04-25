@@ -401,7 +401,12 @@ function demo.ShowDemoWindow(open)
 
   if r.ImGui_CollapsingHeader(ctx, 'Configuration') then
     if r.ImGui_TreeNode(ctx, 'Configuration##2') then
-      config.flags = r.ImGui_GetConfigFlags(ctx)
+      local function configVarCheckbox(name)
+        local var = assert(reaper[('ImGui_%s'):format(name)], 'unknown var')()
+        local rv,val = r.ImGui_Checkbox(ctx, name, r.ImGui_GetConfigVar(ctx, var))
+        if rv then r.ImGui_SetConfigVar(ctx, var, val and 1 or 0) end
+      end
+      config.flags = r.ImGui_GetConfigVar(ctx, r.ImGui_ConfigVar_Flags())
 
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NavEnableKeyboard', config.flags, r.ImGui_ConfigFlags_NavEnableKeyboard())
       r.ImGui_SameLine(ctx); demo.HelpMarker('Enable keyboard controls.')
@@ -425,22 +430,22 @@ function demo.ShowDemoWindow(open)
 
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_DockingEnable', config.flags, r.ImGui_ConfigFlags_DockingEnable())
       r.ImGui_SameLine(ctx)
-      -- if io.ConfigDockingWithShift then
-      --   demo.HelpMarker('Drag from window title bar or their tab to dock/undock. Hold SHIFT to enable docking.\n\nDrag from window menu button (upper-left button) to undock an entire node (all windows).')
-      -- else
+      if r.ImGui_GetConfigVar(ctx, r.ImGui_ConfigVar_DockingWithShift()) then
+        demo.HelpMarker('Drag from window title bar or their tab to dock/undock. Hold SHIFT to enable docking.\n\nDrag from window menu button (upper-left button) to undock an entire node (all windows).')
+      else
           demo.HelpMarker('Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking.\n\nDrag from window menu button (upper-left button) to undock an entire node (all windows).')
-      -- end
+      end
       if config.flags & r.ImGui_ConfigFlags_DockingEnable() ~= 0 then
-        -- r.ImGui_Indent(ctx)
-        -- r.ImGui_Checkbox(ctx, 'io.ConfigDockingNoSplit', &io.ConfigDockingNoSplit)
-        -- r.ImGui_SameLine(ctx); demo.HelpMarker('Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.')
+        r.ImGui_Indent(ctx)
+        configVarCheckbox('ConfigVar_DockingNoSplit')
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.')
+        configVarCheckbox('ConfigVar_DockingWithShift')
         -- r.ImGui_Checkbox(ctx, 'io.ConfigDockingAlwaysTabBar', &io.ConfigDockingAlwaysTabBar)
-        -- r.ImGui_Checkbox(ctx, 'io.ConfigDockingWithShift', &io.ConfigDockingWithShift)
-        -- r.ImGui_SameLine(ctx); demo.HelpMarker('Enable docking when holding Shift only (allow to drop in wider space, reduce visual noise)')
+        r.ImGui_SameLine(ctx); demo.HelpMarker('Enable docking when holding Shift only (allow to drop in wider space, reduce visual noise)')
         -- r.ImGui_SameLine(ctx); demo.HelpMarker('Create a docking node and tab-bar on single floating windows.')
         -- r.ImGui_Checkbox("io.ConfigDockingTransparentPayload", &io.ConfigDockingTransparentPayload)
         -- r.ImGui_SameLine(ctx); demo.HelpMarker('Make window or viewport transparent when docking and only display docking boxes on the target viewport. Useful if rendering of multiple viewport cannot be synced. Best used with ConfigViewportsNoAutoMerge.')
-        -- ImGui::Unindent(ctx)
+        r.ImGui_Unindent(ctx)
       end
 
       -- ImGui::CheckboxFlags("io.ConfigFlags: ViewportsEnable", &io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
@@ -452,22 +457,22 @@ function demo.ShowDemoWindow(open)
       --     ImGui::SameLine(); HelpMarker("Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it.");
       --     ImGui::Checkbox("io.ConfigViewportsNoTaskBarIcon", &io.ConfigViewportsNoTaskBarIcon);
       --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the task bar icon state right away).");
-      --     ImGui::Checkbox("io.ConfigViewportsNoDecoration", &io.ConfigViewportsNoDecoration);
-      --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the decoration right away).");
+      configVarCheckbox('ConfigVar_ViewportsNoDecoration')
       --     ImGui::Checkbox("io.ConfigViewportsNoDefaultParent", &io.ConfigViewportsNoDefaultParent);
       --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the parenting right away).");
       --     ImGui::Unindent();
       -- }
 
-      -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTrickleEventQueue', &io.ConfigInputTrickleEventQueue)
-      -- r.ImGui_SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
-      -- r.ImGui_Checkbox(ctx, 'io.ConfigInputTextCursorBlink', &io.ConfigInputTextCursorBlink)
-      -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable blinking cursor (optional as some users consider it to be distracting).")
-      -- r.ImGui_Checkbox(ctx, 'io.ConfigDragClickToInputText', &io.ConfigDragClickToInputText)
-      -- r.ImGui_SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
-      -- r.ImGui_Checkbox("io.ConfigWindowsResizeFromEdges", &io.ConfigWindowsResizeFromEdges)
-      -- r.ImGui_SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.\nThis requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback.')
-      -- r.ImGui_Checkbox(ctx, 'io.ConfigWindowsMoveFromTitleBarOnly', &io.ConfigWindowsMoveFromTitleBarOnly)
+      configVarCheckbox('ConfigVar_InputTrickleEventQueue')
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
+      configVarCheckbox('ConfigVar_InputTextCursorBlink')
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Enable blinking cursor (optional as some users consider it to be distracting).')
+      configVarCheckbox('ConfigVar_DragClickToInputText')
+      r.ImGui_SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
+      configVarCheckbox('ConfigVar_WindowsResizeFromEdges')
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.')
+      configVarCheckbox('ConfigVar_WindowsMoveFromTitleBarOnly')
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Does not apply to windows without a title bar.')
       -- r.ImGui_Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
       -- r.ImGui_SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
       -- r.ImGui_Text(ctx, "Also see Style->Rendering for rendering options.")
@@ -476,7 +481,7 @@ function demo.ShowDemoWindow(open)
       rv,config.flags = r.ImGui_CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, r.ImGui_ConfigFlags_NoSavedSettings())
       r.ImGui_SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
 
-      r.ImGui_SetConfigFlags(ctx, config.flags)
+      r.ImGui_SetConfigVar(ctx, r.ImGui_ConfigVar_Flags(), config.flags)
       r.ImGui_TreePop(ctx)
       r.ImGui_Separator(ctx)
     end
@@ -564,8 +569,8 @@ function demo.ShowDemoWindow(open)
       r.ImGui_EndTable(ctx)
     end
 
-    local docking_disabled = demo.no_docking or
-      (r.ImGui_GetConfigFlags(ctx) & r.ImGui_ConfigFlags_DockingEnable()) == 0
+    local flags = r.ImGui_GetConfigVar(ctx, r.ImGui_ConfigVar_Flags())
+    local docking_disabled = demo.no_docking or (flags & r.ImGui_ConfigFlags_DockingEnable()) == 0
 
     r.ImGui_Spacing(ctx)
     if docking_disabled then
