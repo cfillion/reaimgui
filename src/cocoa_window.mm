@@ -79,6 +79,7 @@ void CocoaWindow::create()
   // enable transparency
   if(!isDocked()) {
     [window setOpaque:NO];
+    [window setBackgroundColor:[NSColor clearColor]]; // required when decorations are enabled
     [m_view setWantsLayer:YES]; // required to be transparent before resizing
     GLint value { 0 };
     [m_gl setValues:&value forParameter:NSOpenGLCPSurfaceOpacity];
