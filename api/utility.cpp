@@ -95,7 +95,7 @@ Default values: alpha = nil)",
 
 DEFINE_API(int, ColorConvertNative,
 (int,rgb),
-"Convert native colors coming from REAPER. This swaps the red and blue channels of the specified 0xRRGGBB color on Windows.",
+"Convert a native color coming from REAPER or 0xRRGGBB to native. This swaps the red and blue channels on Windows.",
 {
   return Color::convertNative(rgb);
 });
