@@ -225,7 +225,7 @@ RENAMES = {
 }
 
 ARG_RENAMES = {
-  # 'FuncName' => { 'imgui_name' => 'reaimgui_name' },
+  'ListBox' => { 'items_count' => 'items_sz' },
 }
 
 # these functions were not ported 1:1 (same name, otherwise add to RENAMES above too!)
@@ -255,11 +255,8 @@ OVERRIDES = {
   'bool ImGui::InputTextWithHint(const char*, const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)'    => 'bool InputTextWithHint(const char*, const char*, char*, int, int*)',
   'void ImGui::SetNextWindowSizeConstraints(const ImVec2&, const ImVec2&, ImGuiSizeCallback, void*)' => 'void SetNextWindowSizeConstraints(double, double, double, double)',
 
-  # const char* (null-terminated) -> char* (\31-terminated)
-  'bool ImGui::Combo(const char*, int*, const char*, int)' => 'bool Combo(const char*, int*, char*, int*)',
-
-  # const char*[] + int size -> char* (\31-terminated)
-  'bool ImGui::ListBox(const char*, int*, const char* const, int, int)' => 'bool ListBox(const char*, int*, char*, int*)',
+  # additional string buffer size argument
+  'bool ImGui::Combo(const char*, int*, const char*, int)' => 'bool Combo(const char*, int*, const char*, int, int*)',
 
   # no text_end argument
   'ImVec2 ImGui::CalcTextSize(const char*, const char*, bool, float)'        => 'void CalcTextSize(const char*, double*, double*, bool*, double*)',
