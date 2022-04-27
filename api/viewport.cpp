@@ -21,7 +21,8 @@
 
 struct ImGui_Viewport {
   enum Key {
-    Main = 0x4d4e5650, // MNVP
+    Main   = 0x4d4e5650, // MNVP
+    Window = 0x474e5650, // WNVP
   };
 
   ImGuiViewport *get()
@@ -33,23 +34,27 @@ struct ImGui_Viewport {
     case Main:
       ctx->setCurrent();
       return ImGui::GetMainViewport();
-    default:
-      throw reascript_error { "expected a valid ImGui_Viewport*" };
+    case Window:
+      ctx->setCurrent();
+      return ImGui::GetWindowViewport();
     }
+
+    throw reascript_error { "expected a valid ImGui_Viewport*" };
   }
 };
 
-ResourceProxy Viewport { ImGui_Viewport::Main };
+ResourceProxy Viewport { ImGui_Viewport::Main, ImGui_Viewport::Window };
 
 DEFINE_API(ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
-R"(Currently represents REAPER's main window (arrange view). This may change in the future.",
-
-- Main Area = entire viewport.
-- Work Area = entire viewport minus sections used by main menu bars (for platform windows), or by task bar (for platform monitor).
-
-Windows are generally trying to stay within the Work Area of their host viewport.)",
+"Currently represents REAPER's main window (arrange view). This may change in the future.",
 {
   return ResourceProxy::encode<ImGui_Viewport>(ctx, ImGui_Viewport::Main);
+});
+
+DEFINE_API(ImGui_Viewport*, GetWindowViewport, (ImGui_Context*,ctx),
+"Get viewport currently associated to the current window.",
+{
+  return ResourceProxy::encode<ImGui_Viewport>(ctx, ImGui_Viewport::Window);
 });
 
 DEFINE_API(void, Viewport_GetPos, (ImGui_Viewport*,viewport)

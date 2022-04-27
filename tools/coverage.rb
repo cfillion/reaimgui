@@ -476,7 +476,7 @@ end
 Argument = Struct.new :type, :name, :default, :size
 
 # load ImGui definitions
-IMGUI_FUNC_R  = /IMGUI_API \s+ (?:(?<type>[\w\*\&\s]+?) \s+)? (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
+IMGUI_FUNC_R  = /IMGUI_API \s+ (?:(?<type>[\w\*\&\s]+?) \s*)? (?<=\b) (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
 IMGUI_ARG_R   = /\A(?<type>[\w\*&\s\<\>]+) \s+ (?<name>\w+) (?:\[ (?<size>\d*) \])? (?:\s*=\s*(?<default>.+))?\z/x
 IMGUI_ENUM_R  = /(?:\A|,) \s* Im(?:Gui)?(?<name>[\w_]+) \s* (?=,|=)/x
 IMGUI_CLASS_R = /(?:namespace|struct) (?<name>\w+)/

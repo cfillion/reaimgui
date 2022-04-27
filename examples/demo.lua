@@ -3755,7 +3755,7 @@ function demo.ShowDemoWindowPopups()
     end
 
     -- Always center this window when appearing
-    local center = {r.ImGui_Viewport_GetCenter(r.ImGui_GetMainViewport(ctx))}
+    local center = {r.ImGui_Viewport_GetCenter(r.ImGui_GetWindowViewport(ctx))}
     r.ImGui_SetNextWindowPos(ctx, center[1], center[2], r.ImGui_Cond_Appearing(), 0.5, 0.5)
 
     if r.ImGui_BeginPopupModal(ctx, 'Delete?', nil, r.ImGui_WindowFlags_AlwaysAutoResize()) then
