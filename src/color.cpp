@@ -20,8 +20,10 @@
 #include <cmath>
 #include <imgui/imgui.h>
 
-uint32_t Color::rgba2abgr(const uint32_t rgba)
+uint32_t Color::fromBigEndian(const uint32_t rgba)
 {
+  // assumes a little-endian host platform
+  // https://twitter.com/cfillion30/status/1519411808213348353
   return
     (rgba >> 24 & 0x000000FF) | // red
     (rgba >> 8  & 0x0000FF00) | // green

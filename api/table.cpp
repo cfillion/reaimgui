@@ -233,7 +233,7 @@ Default values: column_n = -1)",
 {
   FRAME_GUARD;
   ImGui::TableSetBgColor(target,
-    Color::rgba2abgr(color_rgba), valueOr(API_RO(column_n), -1));
+    Color::fromBigEndian(color_rgba), valueOr(API_RO(column_n), -1));
 });
 
 // ImGuiSortDirection

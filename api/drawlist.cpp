@@ -86,7 +86,7 @@ DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddLine(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
-    Color::rgba2abgr(col_rgba), valueOr(API_RO(thickness), 1.0));
+    Color::fromBigEndian(col_rgba), valueOr(API_RO(thickness), 1.0));
 });
 
 DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
@@ -97,7 +97,7 @@ DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddRect(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
-    Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.f),
+    Color::fromBigEndian(col_rgba), valueOr(API_RO(rounding), 0.f),
     valueOr(API_RO(flags), ImDrawFlags_None),
     valueOr(API_RO(thickness), 1.0));
 });
@@ -109,7 +109,7 @@ DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddRectFilled(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
-    Color::rgba2abgr(col_rgba), valueOr(API_RO(rounding), 0.f),
+    Color::fromBigEndian(col_rgba), valueOr(API_RO(rounding), 0.f),
     valueOr(API_RO(flags), ImDrawFlags_None));
 });
 
@@ -120,8 +120,8 @@ DEFINE_API(void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddRectFilledMultiColor(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
-    Color::rgba2abgr(col_upr_left),  Color::rgba2abgr(col_upr_right),
-    Color::rgba2abgr(col_bot_right), Color::rgba2abgr(col_bot_left));
+    Color::fromBigEndian(col_upr_left),  Color::fromBigEndian(col_upr_right),
+    Color::fromBigEndian(col_bot_right), Color::fromBigEndian(col_bot_left));
 });
 
 DEFINE_API(void, DrawList_AddQuad, (ImGui_DrawList*,draw_list)
@@ -132,7 +132,7 @@ DEFINE_API(void, DrawList_AddQuad, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddQuad(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
-    ImVec2(p4_x, p4_y), Color::rgba2abgr(col_rgba),
+    ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba),
     valueOr(API_RO(thickness), 1.0));
 });
 
@@ -144,7 +144,7 @@ DEFINE_API(void, DrawList_AddQuadFilled, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddQuadFilled(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
-    ImVec2(p4_x, p4_y), Color::rgba2abgr(col_rgba));
+    ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba));
 });
 
 DEFINE_API(void, DrawList_AddTriangle, (ImGui_DrawList*,draw_list)
@@ -154,7 +154,7 @@ DEFINE_API(void, DrawList_AddTriangle, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddTriangle(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
-    Color::rgba2abgr(col_rgba), valueOr(API_RO(thickness), 1.0));
+    Color::fromBigEndian(col_rgba), valueOr(API_RO(thickness), 1.0));
 });
 
 DEFINE_API(void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_list)
@@ -164,7 +164,7 @@ DEFINE_API(void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->AddTriangleFilled(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
-    Color::rgba2abgr(col_rgba));
+    Color::fromBigEndian(col_rgba));
 });
 
 DEFINE_API(void, DrawList_AddCircle, (ImGui_DrawList*,draw_list)
@@ -175,7 +175,7 @@ R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).
 Default values: num_segments = 0, thickness = 1.0)",
 {
   draw_list->get()->AddCircle(ImVec2(center_x, center_y),
-    radius, Color::rgba2abgr(col_rgba), valueOr(API_RO(num_segments), 0),
+    radius, Color::fromBigEndian(col_rgba), valueOr(API_RO(num_segments), 0),
     valueOr(API_RO(thickness), 1.0));
 });
 
@@ -187,7 +187,7 @@ R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).
 Default values: num_segments = 0)",
 {
   draw_list->get()->AddCircleFilled(ImVec2(center_x, center_y),
-    radius, Color::rgba2abgr(col_rgba), valueOr(API_RO(num_segments), 0));
+    radius, Color::fromBigEndian(col_rgba), valueOr(API_RO(num_segments), 0));
 });
 
 DEFINE_API(void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
@@ -196,7 +196,7 @@ DEFINE_API(void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
 "Default values: thickness = 1.0",
 {
   draw_list->get()->AddNgon(ImVec2(center_x, center_y),
-    radius, Color::rgba2abgr(col_rgba), num_segments,
+    radius, Color::fromBigEndian(col_rgba), num_segments,
     valueOr(API_RO(thickness), 1.0));
 });
 
@@ -206,14 +206,14 @@ DEFINE_API(void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
 "",
 {
   draw_list->get()->AddNgonFilled(ImVec2(center_x, center_y),
-    radius, Color::rgba2abgr(col_rgba), num_segments);
+    radius, Color::fromBigEndian(col_rgba), num_segments);
 });
 
 DEFINE_API(void, DrawList_AddText, (ImGui_DrawList*,draw_list)
 (double,x)(double,y)(int,col_rgba)(const char*,text),
 "",
 {
-  draw_list->get()->AddText(ImVec2(x, y), Color::rgba2abgr(col_rgba), text);
+  draw_list->get()->AddText(ImVec2(x, y), Color::fromBigEndian(col_rgba), text);
 });
 
 DEFINE_API(void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
@@ -225,7 +225,7 @@ R"(The last pushed font is used if font is nil. The size of the last pushed font
 
 Default values: wrap_width = 0.0, cpu_fine_clip_rect_x = nil, cpu_fine_clip_rect_y = nil, cpu_fine_clip_rect_w = nil, cpu_fine_clip_rect_h = nil)",
 {
-  col_rgba = Color::rgba2abgr(col_rgba);
+  col_rgba = Color::fromBigEndian(col_rgba);
 
   ImVec2 pos;
   pos.x = pos_x;
@@ -270,7 +270,7 @@ DEFINE_API(void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
 {
   const std::vector<ImVec2> &vec2points { makePointsArray(points) };
   draw_list->get()->AddPolyline(
-    vec2points.data(), vec2points.size(), Color::rgba2abgr(col_rgba),
+    vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba),
     flags, thickness);
 });
 
@@ -280,7 +280,7 @@ DEFINE_API(void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
 {
   const std::vector<ImVec2> &vec2points { makePointsArray(points) };
   draw_list->get()->AddConvexPolyFilled(
-    vec2points.data(), vec2points.size(), Color::rgba2abgr(col_rgba));
+    vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
 });
 
 DEFINE_API(void, DrawList_AddBezierCubic, (ImGui_DrawList*,draw_list)
@@ -293,7 +293,7 @@ Default values: num_segments = 0)",
 {
   draw_list->get()->AddBezierCubic(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
-    ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y), Color::rgba2abgr(col_rgba),
+    ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba),
     thickness, valueOr(API_RO(num_segments), 0));
 });
 
@@ -306,7 +306,7 @@ Default values: num_segments = 0)",
 {
   draw_list->get()->AddBezierQuadratic(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
-    ImVec2(p3_x, p3_y), Color::rgba2abgr(col_rgba),
+    ImVec2(p3_x, p3_y), Color::fromBigEndian(col_rgba),
     thickness, valueOr(API_RO(num_segments), 0));
 });
 
@@ -353,7 +353,7 @@ DEFINE_API(void, DrawList_PathFillConvex, (ImGui_DrawList*,draw_list)
 (int,col_rgba),
 "Note: Anti-aliased filling requires points to be in clockwise order.",
 {
-  draw_list->get()->PathFillConvex(Color::rgba2abgr(col_rgba));
+  draw_list->get()->PathFillConvex(Color::fromBigEndian(col_rgba));
 });
 
 DEFINE_API(void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
@@ -361,7 +361,7 @@ DEFINE_API(void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
 "Default values: flags = ImGui_DrawFlags_None, thickness = 1.0",
 {
   draw_list->get()->PathStroke(
-    Color::rgba2abgr(col_rgba), valueOr(API_RO(flags), ImDrawFlags_None),
+    Color::fromBigEndian(col_rgba), valueOr(API_RO(flags), ImDrawFlags_None),
     valueOr(API_RO(thickness), 1.0));
 });
 

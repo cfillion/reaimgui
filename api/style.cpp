@@ -161,7 +161,7 @@ Default values: alpha_mul = 1.0)",
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
-  return Color::abgr2rgba(ImGui::GetColorU32(idx, valueOr(API_RO(alpha_mul), 1.0)));
+  return Color::toBigEndian(ImGui::GetColorU32(idx, valueOr(API_RO(alpha_mul), 1.0)));
 });
 
 DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
@@ -169,7 +169,7 @@ DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
 "Retrieve given color with style alpha applied, packed as a 32-bit value (RGBA).",
 {
   FRAME_GUARD;
-  return Color::abgr2rgba(ImGui::GetColorU32(Color::rgba2abgr(col_rgba)));
+  return Color::toBigEndian(ImGui::GetColorU32(Color::fromBigEndian(col_rgba)));
 });
 
 DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
@@ -179,7 +179,7 @@ DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
   const ImVec4 &col { ImGui::GetStyleColorVec4(idx) };
-  return Color{col}.pack();
+  return Color { col }.pack();
 });
 
 DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
