@@ -23,6 +23,8 @@
 #include <AppKit/AppKit.h>
 #include <imgui/imgui.h>
 
+static HWND g_fakeCapture;
+
 void Platform::install()
 {
   // Temprarily enable repeat character input
@@ -148,4 +150,26 @@ HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
   };
 
   return (__bridge HCURSOR)cursors[cur];
+}
+
+// Not using SWELL capture to fix keyboard input when the REAPER setting
+// "Allow keyboard commands when mouse-editing" is disabled in
+// Preferences > General > Advanced UI tweaks. Otherwise REAPER would skip
+// invoking accelerator callbacks (and not send WM_KEY* either).
+//
+// Real capturing is not necessary to get mouse release events outside of the
+// window on macOS anyway.
+HWND Platform::getCapture()
+{
+  return g_fakeCapture;
+}
+
+void Platform::setCapture(HWND hwnd)
+{
+  g_fakeCapture = hwnd;
+}
+
+void Platform::releaseCapture()
+{
+  g_fakeCapture = nullptr;
 }
