@@ -160,3 +160,18 @@ HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
 
   return cursors[cur];
 }
+
+HWND Platform::getCapture()
+{
+  return GetCapture();
+}
+
+void Platform::setCapture(HWND hwnd)
+{
+  SetCapture(hwnd);
+}
+
+void Platform::releaseCapture()
+{
+  ReleaseCapture();
+}

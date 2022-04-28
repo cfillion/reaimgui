@@ -38,6 +38,9 @@ namespace Platform {
   void scalePosition(ImVec2 *, bool toHiDpi = false);
   float scaleForWindow(HWND);
   HCURSOR getCursor(ImGuiMouseCursor);
+  HWND getCapture();
+  void setCapture(HWND);
+  void releaseCapture();
 };
 
 #endif

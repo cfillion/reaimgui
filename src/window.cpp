@@ -211,8 +211,8 @@ void Window::mouseDown(const ImGuiMouseButton btn)
 {
   // Not needed on macOS for receiving mouse up messages outside of the
   // windows's boundaries. It is instead used by Context::updateMouseData.
-  if(GetCapture() == nullptr)
-    SetCapture(m_hwnd.get());
+  if(Platform::getCapture() == nullptr)
+    Platform::setCapture(m_hwnd.get());
 
   // give keyboard focus when docked (+ focus on right/middle click on macOS)
   setFocus();
@@ -227,8 +227,8 @@ void Window::mouseUp(const ImGuiMouseButton btn)
   m_ctx->mouseInput(btn, false);
   m_mouseDown &= ~(1 << btn);
 
-  if(GetCapture() == m_hwnd.get() && m_mouseDown == 0)
-    ReleaseCapture();
+  if(Platform::getCapture() == m_hwnd.get() && m_mouseDown == 0)
+    Platform::releaseCapture();
 }
 
 void Window::updateModifiers()

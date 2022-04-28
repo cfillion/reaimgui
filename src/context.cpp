@@ -298,7 +298,7 @@ void Context::updateMouseData()
     if(!(viewportForInput->Flags & ImGuiViewportFlags_NoInputs))
       hoveredViewport = viewportForInput->ID;
   }
-  else if(HWND capture { GetCapture() })
+  else if(HWND capture { Platform::getCapture() })
     viewportForPos = ImGui::FindViewportByPlatformHandle(capture);
   else
     viewportForPos = nullptr;
