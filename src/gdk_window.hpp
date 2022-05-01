@@ -53,6 +53,9 @@ public:
     (const unsigned int msg, WPARAM wParam, LPARAM) override;
 
 private:
+  static void imePreeditStart(GtkIMContext *, void *);
+  static void imePreeditEnd(GtkIMContext *, void *);
+
   void initGl();
   void initIME();
   void resizeTextures();
@@ -67,6 +70,7 @@ private:
   ImGuiViewportFlags m_previousFlags;
   int m_defaultDecorations;
   GtkIMContext *m_ime;
+  bool m_imeOpen;
 
   // for docking
   struct LICEDeleter { void operator()(LICE_IBitmap *); };

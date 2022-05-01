@@ -39,7 +39,7 @@
 
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Window { viewport, dockerHost }, m_gl { nullptr }, m_renderer { nullptr },
-    m_ime { nullptr }
+    m_ime { nullptr }, m_imeOpen { false }
 {
   static std::weak_ptr<GdkEventHandler> g_eventHandler;
 
@@ -174,12 +174,24 @@ static void imeCommit(GtkIMContext *, gchar *input, gpointer data)
   }
 }
 
+void GDKWindow::imePreeditStart(GtkIMContext *, gpointer data)
+{
+  reinterpret_cast<GDKWindow *>(data)->m_imeOpen = true;
+}
+
+void GDKWindow::imePreeditEnd(GtkIMContext *, gpointer data)
+{
+  reinterpret_cast<GDKWindow *>(data)->m_imeOpen = false;
+}
+
 void GDKWindow::initIME()
 {
   m_ime = gtk_im_multicontext_new();
-  gtk_im_context_set_use_preedit(m_ime, false);
+  gtk_im_context_set_use_preedit(m_ime, true);
   gtk_im_context_focus_in(m_ime);
   g_signal_connect(m_ime, "commit", G_CALLBACK(imeCommit), m_ctx);
+  g_signal_connect(m_ime, "preedit-start", G_CALLBACK(imePreeditStart), this);
+  g_signal_connect(m_ime, "preedit-end",   G_CALLBACK(imePreeditEnd),   this);
 }
 
 void GDKWindow::show()
@@ -467,7 +479,13 @@ void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
 
 
   if(gdkEvent) {
-    if(gtk_im_context_filter_keypress(m_ime, gdkEvent))
+    gtk_im_context_filter_keypress(m_ime, gdkEvent);
+
+    // filter_keypress seems to always returns true, so we can't accurately
+    // tell when a key event was used by the IME and should be eaten.
+    // This workaround works for all events except for the initial keydown
+    // (preedit begins at the keyup).
+    if(m_imeOpen && down)
       return;
 
     if(ImGuiKey namedKey { translateGdkKey(gdkEvent) }) {
