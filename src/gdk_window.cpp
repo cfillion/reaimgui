@@ -18,7 +18,6 @@
 #include "gdk_window.hpp"
 
 #include "context.hpp"
-#include "gdk_event_handler.hpp"
 #include "opengl_renderer.hpp"
 #include "platform.hpp"
 
@@ -26,27 +25,34 @@
 #include <epoxy/gl.h>
 #include <gtk/gtk.h>
 
-#include <swell/swell.h>
 #include <reaper_plugin_functions.h>
+#include <swell/swell.h>
+#include <WDL/wdltypes.h>
 
-#define _LICE_H // prevent swell-internal.h from including lice.h
-#define SWELL_LICE_GDI
-#define SWELL_TARGET_GDK
-#define Font Xorg_Font
-#define Window Xorg_Window
-#include <swell/swell-internal.h> // access to hwnd->m_oswindow
-#undef Window
+static GdkWindow *getOSWindow(HWND hwnd)
+{
+  static bool hasOSWindow { atof(GetAppVersion()) >= 6.57 };
+
+  return static_cast<GdkWindow *>(
+    hasOSWindow ? SWELL_GetOSWindow(hwnd, "GdkWindow")
+                : *(reinterpret_cast<char **>(hwnd) + 1)
+  );
+}
+
+template<typename T>
+static T *currentEvent(const int expectedType)
+{
+  void *event { SWELL_GetOSEvent("GdkEvent") };
+  if(event && static_cast<GdkEvent *>(event)->type == expectedType)
+    return static_cast<T *>(event);
+  else
+    return nullptr;
+}
 
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Window { viewport, dockerHost }, m_gl { nullptr }, m_renderer { nullptr },
     m_ime { nullptr }, m_imeOpen { false }
 {
-  static std::weak_ptr<GdkEventHandler> g_eventHandler;
-
-  if(g_eventHandler.expired())
-    g_eventHandler = m_eventHandler = std::make_shared<GdkEventHandler>();
-  else
-    m_eventHandler = g_eventHandler.lock();
 }
 
 void GDKWindow::create()
@@ -95,9 +101,9 @@ void GDKWindow::initSoftwareBlit()
 
 void GDKWindow::initGl()
 {
-  GdkWindow *window { m_offscreen ? m_offscreen.get() : m_hwnd->m_oswindow };
+  GdkWindow *window { m_offscreen ? m_offscreen.get() : getOSWindow(m_hwnd.get()) };
 
-  if(static_cast<void *>(window) == m_hwnd.get())
+  if(!window || static_cast<void *>(window) == m_hwnd.get())
     throw backend_error { "headless SWELL is not supported" };
 
   GError *error {};
@@ -206,7 +212,7 @@ void GDKWindow::show()
 
   // prevent invalidation (= displaying garbage) when moving another window over
   if(!isDocked())
-    gdk_window_freeze_updates(m_hwnd->m_oswindow);
+    gdk_window_freeze_updates(getOSWindow(m_hwnd.get()));
 
   initIME();
 }
@@ -232,7 +238,7 @@ void GDKWindow::setTitle(const char *title)
 
 void GDKWindow::setAlpha(const float alpha)
 {
-  gdk_window_set_opacity(m_hwnd->m_oswindow, alpha);
+  gdk_window_set_opacity(getOSWindow(m_hwnd.get()), alpha);
 }
 
 void GDKWindow::update()
@@ -258,7 +264,7 @@ void GDKWindow::update()
 
     // SetWindowLongPtr hides the window
     // it sets an internal "need show" flag that's used by SetWindowPos
-    if(m_hwnd->m_oswindow) {
+    if(getOSWindow(m_hwnd.get())) {
       setPosition(m_viewport->Pos);
       setSize(m_viewport->Size);
     }
@@ -297,7 +303,7 @@ void GDKWindow::render(void *)
 
   ImDrawData *drawData { m_viewport->DrawData };
 
-  GdkWindow *window { m_hwnd->m_oswindow };
+  GdkWindow *window { getOSWindow(m_hwnd.get()) };
   const cairo_region_t *region { gdk_window_get_clip_region(window) };
   GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(window, region) };
   cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
@@ -316,9 +322,6 @@ void GDKWindow::render(void *)
 
 void GDKWindow::softwareBlit()
 {
-  constexpr int LICE_BLIT_MODE_COPY      { 0x00000 },
-                LICE_BLIT_IGNORE_SCALING { 0x20000 };
-
   PAINTSTRUCT ps;
   if(!BeginPaint(m_hwnd.get(), &ps))
     return;
@@ -326,9 +329,8 @@ void GDKWindow::softwareBlit()
   const int width  { LICE__GetWidth(m_pixels.get())  },
             height { LICE__GetHeight(m_pixels.get()) };
 
-  LICE_Blit(ps.hdc->surface, m_pixels.get(),
-    ps.hdc->surface_offs.x, ps.hdc->surface_offs.y,
-    0, 0, width, height, 1.0f, LICE_BLIT_MODE_COPY | LICE_BLIT_IGNORE_SCALING);
+  StretchBltFromMem(ps.hdc, 0, 0, width, height, LICE__GetBits(m_pixels.get()),
+    width, height, LICE__GetRowSpan(m_pixels.get()));
 
   EndPaint(m_hwnd.get(), &ps);
 }
@@ -347,7 +349,7 @@ void GDKWindow::setIME(ImGuiPlatformImeData *data)
   // cannot use m_viewport->Pos when docked
   // (IME cursor location must be relative to the dock host window)
   HWND container { m_hwnd.get() };
-  while(!container->m_oswindow)
+  while(!getOSWindow(container))
     container = GetParent(container);
   RECT containerPos;
   if(container)
@@ -420,11 +422,11 @@ std::optional<LRESULT> GDKWindow::handleMessage
     break; // continue handling in Window::proc
   case WM_LBUTTONDOWN: // for supporting thumb buttons
   case WM_LBUTTONUP: //   SWELL treats thumb buttons as Left
-    if(auto *event { GdkEventHandler::currentEvent<GdkEventButton>(GDK_BUTTON_PRESS) })
+    if(auto *event { currentEvent<GdkEventButton>(GDK_BUTTON_PRESS) })
       mouseDown(translateButton(event));
-    else if(auto *event { GdkEventHandler::currentEvent<GdkEventButton>(GDK_BUTTON_RELEASE) })
+    else if(auto *event { currentEvent<GdkEventButton>(GDK_BUTTON_RELEASE) })
       mouseUp(translateButton(event));
-    else if(!GdkEventHandler::currentEvent<GdkEventButton>(GDK_2BUTTON_PRESS))
+    else if(!currentEvent<GdkEventButton>(GDK_2BUTTON_PRESS))
       break;  // do default SWELL message handling in Window
     return 0; // eat SWELL message if handled the GDK event
   case WM_KEYDOWN:
@@ -461,7 +463,7 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
 void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
 {
   const GdkEventType expectedType { down ? GDK_KEY_PRESS : GDK_KEY_RELEASE };
-  auto *gdkEvent { GdkEventHandler::currentEvent<GdkEventKey>(expectedType) };
+  auto *gdkEvent { currentEvent<GdkEventKey>(expectedType) };
 
   struct Modifier { unsigned int vkey; ImGuiKey modkey, ikey; };
   constexpr Modifier modifiers[] {

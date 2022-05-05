@@ -23,7 +23,6 @@
 #include <memory>
 
 class OpenGLRenderer;
-class GdkEventHandler;
 struct LICE_IBitmap;
 
 typedef struct _GdkGLContext GdkGLContext;
@@ -76,7 +75,6 @@ private:
   // for docking
   struct LICEDeleter { void operator()(LICE_IBitmap *); };
   std::unique_ptr<LICE_IBitmap, LICEDeleter> m_pixels;
-  std::shared_ptr<GdkEventHandler> m_eventHandler;
   std::shared_ptr<GdkWindow> m_offscreen;
 };
 
