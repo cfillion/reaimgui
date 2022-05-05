@@ -421,7 +421,8 @@ std::optional<LRESULT> Win32Window::handleMessage
     keyEvent(msg, wParam, lParam);
     return 0;
   case WM_CHAR:
-    m_ctx->charInput(wParam);
+    if(wParam >= 0 && wParam < 0x10000)
+      m_ctx->charInputUTF16(wParam);
     return 0;
   case WM_NCHITTEST:
     if(m_viewport->Flags & ImGuiViewportFlags_NoInputs)
