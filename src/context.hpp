@@ -62,7 +62,8 @@ public:
   void mouseInput(int button, bool down);
   void mouseWheel(bool horizontal, float delta);
   void keyInput(ImGuiKey key, bool down);
-  void charInput(ImWchar);
+  void charInput(unsigned int);
+  void charInputUTF16(ImWchar16);
   void beginDrag(std::vector<std::string> &&);
   void beginDrag(HDROP);
   void endDrag(bool drop);

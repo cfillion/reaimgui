@@ -361,7 +361,7 @@ void Context::keyInput(ImGuiKey key, const bool down)
   m_imgui->IO.AddKeyEvent(key, down);
 }
 
-void Context::charInput(const ImWchar codepoint)
+void Context::charInput(const unsigned int codepoint)
 {
   if(codepoint < 32 || (codepoint >= 0x7f && codepoint <= 0x9f) || // control chars
       (codepoint >= 0xf700 && codepoint <= 0xf7ff)) // unicode private range
@@ -369,6 +369,12 @@ void Context::charInput(const ImWchar codepoint)
 
   TempCurrent cur { this };
   m_imgui->IO.AddInputCharacter(codepoint);
+}
+
+void Context::charInputUTF16(const ImWchar16 unit)
+{
+  TempCurrent cur { this };
+  m_imgui->IO.AddInputCharacterUTF16(unit);
 }
 
 void Context::updateSettings()
