@@ -103,21 +103,13 @@ add_library(common INTERFACE)
 target_include_directories(common INTERFACE
   ${CMAKE_SOURCE_DIR}/vendor ${CMAKE_SOURCE_DIR}/vendor/reaper-sdk/sdk)
 if(WIN32)
-  target_compile_options(common INTERFACE
-    /W3 /WX /wd4244 /wd4267 /wd4312 /wd4996 /wd5208)
+  target_compile_options(common INTERFACE /W3 /WX /wd4244 /wd4267 /wd4312 /wd4996)
   target_compile_definitions(common INTERFACE NOMINMAX UNICODE)
 else()
   target_compile_options(common INTERFACE
     -Wall -Wextra -Werror
-    -Wno-unused-parameter -Wno-missing-field-initializers
-    -Wno-unused-function -Wno-missing-braces
+    -Wno-unused-parameter -Wno-missing-field-initializers -Wno-missing-braces
   )
-
-  # Clang 11
-  check_compiler_flag(CXX -Wnon-c-typedef-for-linkage HAVE_NON_C_TYPEDEF_FOR_LINKAGE)
-  if(HAVE_NON_C_TYPEDEF_FOR_LINKAGE)
-    target_compile_options(common INTERFACE -Wno-non-c-typedef-for-linkage)
-  endif()
 endif()
 
 check_include_file_cxx(optional HAS_STD_OPTIONAL)
