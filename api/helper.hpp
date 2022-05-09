@@ -79,20 +79,22 @@
 #define FRAME_GUARD assertValid(ctx); assertFrame(ctx);
 
 template<typename Output, typename Input>
-inline Output valueOr(const Input *ptr, const Output fallback)
+Output valueOr(const Input *ptr, const Output fallback)
 {
   return ptr ? static_cast<Output>(*ptr) : fallback;
 }
 
-// const char *foobarInOptional from REAPER is never null no matter what
-inline void nullIfEmpty(const char *&string)
+// const char *foobarInOptional from REAPER are never null before 6.58
+inline void nullIfEmpty(const char *string)
 {
-  if(string && !strlen(string))
+  extern const char *(*GetAppVersion)();
+  static bool hasNullableStrings { atof(GetAppVersion()) >= 6.58 };
+  if(!hasNullableStrings && string && !strlen(string))
     string = nullptr;
 }
 
 template<typename T>
-inline void assertValid(T *ptr)
+void assertValid(T *ptr)
 {
   if constexpr (std::is_base_of_v<Resource, T>) {
     if(Resource::exists(ptr))
