@@ -691,6 +691,7 @@ end
 
 # check argument names and default values
 reaimgui_funcs.each do |func|
+  found_optional = false
   func.args.each_with_index do |rea_arg, i|
     unless rea_arg.name =~ REAIMGUI_ARGN_R
       warn "#{func.name}: invalid argument ##{i+1} '#{rea_arg.name}'"
@@ -702,6 +703,12 @@ reaimgui_funcs.each do |func|
     unless raw_name =~ /\A[a-z0-9_]+\z/
       warn "#{func.name}: invalid argument ##{i+1} name '#{raw_name}' (not snake case?)"
       next
+    end
+
+    if decoration == 'API_RO'
+      found_optional = true
+    elsif found_optional && (decoration == 'API_W' || decoration == 'API_W_SZ')
+      warn "#{func.name}: output argument '#{raw_name}' after input values"
     end
 
     unless func.match
