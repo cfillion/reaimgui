@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 project(reaimgui LANGUAGES CXX)
 
 include(CheckCompilerFlag)
+include(CheckCXXSourceCompiles)
 include(CheckIncludeFileCXX)
 include(CheckLinkerFlag)
 

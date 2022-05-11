@@ -14,7 +14,6 @@ function(add_binding lang output)
     COMMAND $<TARGET_FILE:genbinding> ${lang} > ${output}
     WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>
     DEPENDS $<TARGET_FILE:genbinding>
-    COMMAND_EXPAND_LISTS
   )
 
   add_custom_target(${lang}_binding DEPENDS ${output})
@@ -22,13 +21,51 @@ function(add_binding lang output)
   add_dependencies(bindings ${lang}_binding)
 endfunction()
 
+add_executable(genshim EXCLUDE_FROM_ALL genshim.cpp)
+target_link_libraries(genshim common)
+target_include_directories(genshim PRIVATE ${CMAKE_BINARY_DIR}/src)
+find_package(Boost REQUIRED)
+target_link_libraries(genshim Boost::headers)
+# checking for header's presence is not enough
+# it exists on Xcode 11 but is only available on macOS 10.15+
+check_cxx_source_compiles("#include <filesystem>
+int main() { std::filesystem::path p; }" HAS_STD_FILESYSTEM)
+if(HAS_STD_FILESYSTEM)
+  target_compile_definitions(genshim PRIVATE HAS_STD_FILESYSTEM)
+else()
+  find_package(Boost REQUIRED COMPONENTS filesystem)
+  target_link_libraries(genshim Boost::filesystem)
+endif()
+
+function(add_shim lang output)
+  file(GLOB shims CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/shims/${lang}/*")
+  add_custom_command(
+    OUTPUT ${output}
+    COMMAND $<TARGET_FILE:genshim> ${lang} "shims/${lang}" > ${output}
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    DEPENDS $<TARGET_FILE:genshim> ${shims}
+  )
+
+  add_custom_target(${lang}_shim DEPENDS ${output})
+  add_dependencies(${lang}_shim genshim)
+  add_dependencies(bindings ${lang}_shim)
+endfunction()
+
 add_custom_target(bindings ALL)
 add_binding(cpp    "${CMAKE_CURRENT_BINARY_DIR}/reaper_imgui_functions.h")
 add_binding(human  "${CMAKE_CURRENT_BINARY_DIR}/reaper_imgui_doc.html")
 add_binding(python "${CMAKE_CURRENT_BINARY_DIR}/imgui_python.py")
+add_shim   (lua    "${CMAKE_CURRENT_BINARY_DIR}/imgui.lua")
+
+set(SCRIPT_FOLDER "Scripts/ReaTeam Extensions/API")
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/imgui_python.py"
-  DESTINATION "Scripts/ReaTeam Extensions/API"
+  DESTINATION  "${SCRIPT_FOLDER}"
+  OPTIONAL
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/imgui.lua"
+  DESTINATION  "${SCRIPT_FOLDER}"
   OPTIONAL
 )
 

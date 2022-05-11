@@ -900,7 +900,8 @@ int main(int argc, const char *argv[])
   else if(lang == "python")
     pythonBinding(std::cout);
   else {
-    fprintf(stderr, "don't know how to generate a binding for '%s'\n", lang.data());
+    std::cerr << "don't know how to generate a binding for '"
+              << lang << "'" << std::endl;
     return 1;
   }
 

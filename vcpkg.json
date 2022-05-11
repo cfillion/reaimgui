@@ -5,6 +5,7 @@
     "boost-preprocessor",
     "boost-type-index",
     { "name": "boost-variant", "platform": "osx" },
+    { "name": "boost-filesystem", "platform": "osx" },
     { "name": "freetype", "default-features": false },
     { "name": "gl3w", "platform": "windows" }
   ]
