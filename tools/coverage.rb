@@ -64,9 +64,6 @@ NATIVE_ONLY = [
   'void ImGui::SaveIniSettingsToDisk(const char*)',
   'const char* ImGui::SaveIniSettingsToMemory(size_t*)',
 
-  'ImVec4 ImGui::ColorConvertU32ToFloat4(ImU32)',
-  'ImU32 ImGui::ColorConvertFloat4ToU32(const ImVec4&)',
-
   # equivalent overload implemented as GetColorEx
   'ImU32 ImGui::GetColorU32(const ImVec4&)',
 
@@ -226,18 +223,18 @@ RENAMES = {
 
 ARG_RENAMES = {
   'ListBox' => { 'items_count' => 'items_sz' },
+  'ColorConvertDouble4ToU32' => { 'in_x' => 'r', 'in_y' => 'g', 'in_w' => 'b', 'in_h' => 'a' },
 }
 
 # these functions were not ported 1:1 (same name, otherwise add to RENAMES above too!)
 OVERRIDES = {
   'const char* ImGui::GetVersion()' => 'void GetVersion(char*, int, char*, int)',
-  'void ImGui::ColorConvertHSVtoRGB(float, float, float, float&, float&, float&)' => 'int ColorConvertHSVtoRGB(double, double, double, double*, double*, double*, double*)',
-  'void ImGui::ColorConvertRGBtoHSV(float, float, float, float&, float&, float&)' => 'int ColorConvertRGBtoHSV(double, double, double, double*, double*, double*, double*)',
   'void ImGui::PushStyleVar(ImGuiStyleVar, const ImVec2&)'                        => 'void PushStyleVar(int, double, double*)',
   'bool ImGui::SetDragDropPayload(const char*, const void*, size_t, ImGuiCond)'   => 'bool SetDragDropPayload(const char*, const char*, int*)',
   'const ImGuiPayload* ImGui::GetDragDropPayload()'                               => 'bool GetDragDropPayload(char*, int, char*, int, bool*, bool*)',
   'bool ImGui::TreeNodeEx(const char*, ImGuiTreeNodeFlags, const char*, ...)'     => 'bool TreeNodeEx(const char*, const char*, int*)',
   'ImGuiTableSortSpecs* ImGui::TableGetSortSpecs()'                               => 'bool TableGetColumnSortSpecs(int, int*, int*, int*, int*)',
+  'ImVec4 ImGui::ColorConvertU32ToFloat4(ImU32)'                                  => 'void ColorConvertU32ToDouble4(int, double*, double*, double*, double*)',
 
   # color array -> packed int
   'bool ImGui::ColorPicker4(const char*, float[4], ImGuiColorEditFlags, const float*)' => 'bool ColorPicker4(const char*, int*, int*, int*)',
@@ -358,8 +355,8 @@ class Function < Struct.new :type, :name, :args, :namespace, :match
 private
   def cpp_type_to_reascript_type(type)
     case type
-    when /float(\*)?/
-      "double#{$~[1]}"
+    when /float([&\*])?/
+      "double#{$~[1] && '*'}"
     when /unsigned int(\*)?/, /size_t(\*)?/
       "int#{$~[1]}"
     when /\AIm(?:Gui|Draw)[^\*]+(?:Flags\*)?\z/, 'ImU32'
@@ -395,8 +392,8 @@ private
     end
 
     arg.name += '_rgba' if arg.type == 'ImU32' && %[col color].include?(arg.name)
-
     arg.type = cpp_type_to_reascript_type arg.type
+    arg.name = arg.name[4..-1] if arg.name =~ /\Aout_.+/ && arg.type.end_with?('*')
 
     if arg.type.include? 'ImVec2'
       arg.type = 'double'
@@ -720,8 +717,9 @@ reaimgui_funcs.each do |func|
 
     imgui_arg = func.match.normalized.args[i]
 
-    unless raw_name == imgui_arg.name || raw_name == ARG_RENAMES[func.name]&.[](imgui_arg.name)
-      warn "#{func.name}: argument ##{i+1} of type '#{rea_arg.type}' (#{decoration}) is named '#{raw_name}', expected '#{imgui_arg.name}'"
+    rename = ARG_RENAMES[func.name]&.[](imgui_arg.name)
+    unless raw_name == imgui_arg.name || raw_name == rename
+      warn "#{func.name}: argument ##{i+1} of type '#{rea_arg.type}' (#{decoration}) is named '#{raw_name}', expected '#{rename || imgui_arg.name}'"
     end
 
     unless rea_arg.default == imgui_arg.default

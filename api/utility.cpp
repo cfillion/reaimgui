@@ -57,40 +57,48 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
     return false;
 });
 
-DEFINE_API(int, ColorConvertHSVtoRGB,
-(double,h)(double,s)(double,v)(double*,API_RO(alpha))
-(double*,API_W(r))(double*,API_W(g))(double*,API_W(b)),
-R"(Return 0x00RRGGBB or, if alpha is provided, 0xRRGGBBAA.
-
-Default values: alpha = nil)",
+DEFINE_API(void, ColorConvertU32ToDouble4,
+(int,rgba)
+(double*,API_W(r))(double*,API_W(g))(double*,API_W(b))(double*,API_W(a)),
+"Unpack a 32-bit integer (0xRRGGBBAA) into separate RGBA values (0..1).",
 {
-  const bool alpha { API_RO(alpha) != nullptr };
-  ImVec4 color;
-  if(alpha)
-    color.w = *API_RO(alpha);
-  ImGui::ColorConvertHSVtoRGB(h, s, v, color.x, color.y, color.z);
-  if(API_W(r)) *API_W(r) = color.x;
-  if(API_W(g)) *API_W(g) = color.y;
-  if(API_W(b)) *API_W(b) = color.z;
-  return Color{color}.pack(alpha);
+  float color[4];
+  Color { static_cast<uint32_t>(rgba) }.unpack(color);
+  if(API_W(r)) *API_W(r) = color[0];
+  if(API_W(g)) *API_W(g) = color[1];
+  if(API_W(b)) *API_W(b) = color[2];
+  if(API_W(a)) *API_W(a) = color[3];
 });
 
-DEFINE_API(int, ColorConvertRGBtoHSV,
-(double,r)(double,g)(double,b)(double*,API_RO(alpha))
-(double*,API_W(h))(double*,API_W(s))(double*,API_W(v)),
-R"(Return 0x00HHSSVV or, if alpha is provided, 0xHHSSVVAA.
-
-Default values: alpha = nil)",
+DEFINE_API(int, ColorConvertDouble4ToU32,
+(double,r)(double,g)(double,b)(double,a),
+"Pack 0..1 RGBA values into a 32-bit integer (0xRRGGBBAA).",
 {
-  const bool alpha { API_RO(alpha) != nullptr };
-  ImVec4 color;
-  if(alpha)
-    color.w = *API_RO(alpha);
-  ImGui::ColorConvertRGBtoHSV(r, g, b, color.x, color.y, color.z);
-  if(API_W(h)) *API_W(h) = color.x;
-  if(API_W(s)) *API_W(s) = color.y;
-  if(API_W(v)) *API_W(v) = color.z;
-  return Color{color}.pack(alpha);
+  return Color { ImVec4(r, g, b, a) }.pack(true);
+});
+
+DEFINE_API(void, ColorConvertHSVtoRGB,
+(double,h)(double,s)(double,v)
+(double*,API_W(r))(double*,API_W(g))(double*,API_W(b)),
+"Convert HSV values (0..1) into RGB (0..1).",
+{
+  float rgb[3];
+  ImGui::ColorConvertHSVtoRGB(h, s, v, rgb[0], rgb[1], rgb[2]);
+  if(API_W(r)) *API_W(r) = rgb[0];
+  if(API_W(g)) *API_W(g) = rgb[1];
+  if(API_W(b)) *API_W(b) = rgb[2];
+});
+
+DEFINE_API(void, ColorConvertRGBtoHSV,
+(double,r)(double,g)(double,b)
+(double*,API_W(h))(double*,API_W(s))(double*,API_W(v)),
+"Convert RGB values (0..1) into HSV (0..1).",
+{
+  float hsv[3];
+  ImGui::ColorConvertRGBtoHSV(r, g, b, hsv[0], hsv[1], hsv[2]);
+  if(API_W(h)) *API_W(h) = hsv[0];
+  if(API_W(s)) *API_W(s) = hsv[1];
+  if(API_W(v)) *API_W(v) = hsv[2];
 });
 
 DEFINE_API(int, ColorConvertNative,

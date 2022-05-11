@@ -181,6 +181,11 @@ function demo.Link(url)
   end
 end
 
+function demo.HSV(h, s, v, a)
+  local r, g, b = reaper.ImGui_ColorConvertHSVtoRGB(h, s, v)
+  return reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, a or 1.0)
+end
+
 -- Helper to display basic user controls.
 function demo.ShowUserGuide()
   -- ImGuiIO& io = r.ImGui_GetIO() TODO
@@ -682,12 +687,9 @@ function demo.ShowDemoWindowWidgets()
       r.ImGui_SameLine(ctx)
      end
      r.ImGui_PushID(ctx, i)
-     local buttonColor  = reaper.ImGui_ColorConvertHSVtoRGB(i / 7.0, 0.6, 0.6, 1.0)
-     local hoveredColor = reaper.ImGui_ColorConvertHSVtoRGB(i / 7.0, 0.7, 0.7, 1.0)
-     local activeColor  = reaper.ImGui_ColorConvertHSVtoRGB(i / 7.0, 0.8, 0.8, 1.0)
-     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_Button(),        buttonColor)
-     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonHovered(), hoveredColor)
-     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonActive(),  activeColor)
+     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_Button(),        demo.HSV(i / 7.0, 0.6, 0.6, 1.0))
+     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonHovered(), demo.HSV(i / 7.0, 0.7, 0.7, 1.0))
+     r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonActive(),  demo.HSV(i / 7.0, 0.8, 0.8, 1.0))
      r.ImGui_Button(ctx, 'Click')
      r.ImGui_PopStyleColor(ctx, 3)
      r.ImGui_PopID(ctx)
@@ -2271,14 +2273,10 @@ label:
     for i,v in ipairs(widgets.vsliders.values) do
       if i > 1 then r.ImGui_SameLine(ctx) end
       r.ImGui_PushID(ctx, i)
-      local frameBg        = reaper.ImGui_ColorConvertHSVtoRGB((i-1) / 7.0, 0.5, 0.5, 1.0)
-      local frameBgHovered = reaper.ImGui_ColorConvertHSVtoRGB((i-1) / 7.0, 0.6, 0.5, 1.0)
-      local frameBgActive  = reaper.ImGui_ColorConvertHSVtoRGB((i-1) / 7.0, 0.7, 0.5, 1.0)
-      local sliderGrab     = reaper.ImGui_ColorConvertHSVtoRGB((i-1) / 7.0, 0.9, 0.9, 1.0)
-      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBg(), frameBg)
-      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBgHovered(), frameBgHovered)
-      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBgActive(), frameBgActive)
-      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_SliderGrab(), sliderGrab)
+      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBg(),        demo.HSV((i-1) / 7.0, 0.5, 0.5, 1.0))
+      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBgHovered(), demo.HSV((i-1) / 7.0, 0.6, 0.5, 1.0))
+      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_FrameBgActive(),  demo.HSV((i-1) / 7.0, 0.7, 0.5, 1.0))
+      r.ImGui_PushStyleColor(ctx, r.ImGui_Col_SliderGrab(),     demo.HSV((i-1) / 7.0, 0.9, 0.9, 1.0))
       rv,widgets.vsliders.values[i] = r.ImGui_VSliderDouble(ctx, '##v', 18, 160, v, 0.0, 1.0, ' ')
       if r.ImGui_IsItemActive(ctx) or r.ImGui_IsItemHovered(ctx) then
         r.ImGui_SetTooltip(ctx, ('%.3f'):format(v))
