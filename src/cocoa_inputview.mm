@@ -260,19 +260,19 @@ static int translateKeyCode(NSEvent *event)
 
   constexpr Modifier modifiers[] {
     { ImGuiKey_ModCtrl,  NSEventModifierFlagControl, {
-      { kVK_Control,      ImGuiKey_LeftCtrl, 0x0001 },
+      { kVK_Control,      ImGuiKey_LeftCtrl,  0x0001 },
       { kVK_RightControl, ImGuiKey_RightCtrl, 0x2000 }
     }},
     { ImGuiKey_ModShift, NSEventModifierFlagShift, {
-      { kVK_Shift,      ImGuiKey_LeftShift, 0x0002 },
+      { kVK_Shift,      ImGuiKey_LeftShift,  0x0002 },
       { kVK_RightShift, ImGuiKey_RightShift, 0x0004 }
     }},
     { ImGuiKey_ModSuper, NSEventModifierFlagCommand, {
-      { kVK_Command,      ImGuiKey_LeftSuper, 0x0008 },
+      { kVK_Command,      ImGuiKey_LeftSuper,  0x0008 },
       { kVK_RightCommand, ImGuiKey_RightSuper, 0x0010 },
     }},
     { ImGuiKey_ModAlt,   NSEventModifierFlagOption, {
-      { kVK_Option,      ImGuiKey_LeftAlt, 0x0020 },
+      { kVK_Option,      ImGuiKey_LeftAlt,  0x0020 },
       { kVK_RightOption, ImGuiKey_RightAlt, 0x0040 },
     }},
   };
@@ -348,12 +348,12 @@ static int translateKeyCode(NSEvent *event)
   while(range.length) {
     ImWchar codepoint {};
     if([characters getBytes:&codepoint
-                   maxLength:sizeof(codepoint)
-                  usedLength:nullptr
-                    encoding:NSUTF32StringEncoding
-                     options:0
-                       range:range
-              remainingRange:&range])
+                  maxLength:sizeof(codepoint)
+                 usedLength:nullptr
+                   encoding:NSUTF32StringEncoding
+                    options:0
+                      range:range
+             remainingRange:&range])
     m_window->context()->charInput(codepoint);
   }
 }
