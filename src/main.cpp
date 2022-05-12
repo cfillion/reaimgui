@@ -65,7 +65,6 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(ShowConsoleMsg),
 
     IMPORT(LICE_CreateBitmap),
-    IMPORT(LICE_Blit),
     IMPORT(LICE__Destroy),
     IMPORT(LICE__GetBits),
     IMPORT(LICE__GetHeight),
