@@ -85,7 +85,7 @@ Output valueOr(const Input *ptr, const Output fallback)
 }
 
 // const char *foobarInOptional from REAPER are never null before 6.58
-inline void nullIfEmpty(const char *string)
+inline void nullIfEmpty(const char *&string)
 {
   extern const char *(*GetAppVersion)();
   static bool hasNullableStrings { atof(GetAppVersion()) >= 6.58 };
