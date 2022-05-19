@@ -149,7 +149,7 @@ DEFINE_API(void, GetMouseWheel, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsMouseDragging, (ImGui_Context*,ctx)
 (int,button)(double*,API_RO(lock_threshold)),
-R"(Is mouse dragging? (if lock_threshold < -1.0, uses io.MouseDraggingThreshold)
+R"(Is mouse dragging? (if lock_threshold < -1.0, uses ImGui_ConfigVar_MouseDragThreshold)
 
 Default values: lock_threshold = -1.0)",
 {
@@ -169,7 +169,7 @@ DEFINE_API(void, GetMouseDelta, (ImGui_Context*,ctx)
 DEFINE_API(void, GetMouseDragDelta, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y))
 (int*,API_RO(button))(double*,API_RO(lock_threshold)),
-R"(Return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses io.MouseDraggingThreshold).
+R"(Return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses ImGui_ConfigVar_MouseDragThreshold).
 
 Default values: button = ImGui_MouseButton_Left, lock_threshold = -1.0)",
 {
