@@ -93,7 +93,7 @@ DEFINE_API(bool, RadioButtonEx, (ImGui_Context*,ctx)
 
 DEFINE_API(void, PushButtonRepeat, (ImGui_Context*,ctx)
 (bool,repeat),
-"In 'repeat' mode, Button*() functions return repeated true in a typematic manner (using io.KeyRepeatDelay/io.KeyRepeatRate setting). Note that you can call ImGui_IsItemActive after any ImGui_Button to tell if the button is held in the current frame.",
+"In 'repeat' mode, Button*() functions return repeated true in a typematic manner (using ImGui_ConfigVar_KeyRepeatDelay/ImGui_ConfigVar_KeyRepeatRate settings). Note that you can call ImGui_IsItemActive after any ImGui_Button to tell if the button is held in the current frame.",
 {
   FRAME_GUARD;
   ImGui::PushButtonRepeat(repeat);

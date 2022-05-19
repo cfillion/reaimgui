@@ -64,8 +64,8 @@ enum ConfigVar {
   ReaImGuiConfigVar_MouseDoubleClickTime,
   ReaImGuiConfigVar_MouseDoubleClickMaxDist,
   ReaImGuiConfigVar_MouseDragThreshold,
-  // ReaImGuiConfigVar_KeyRepeatDelay,
-  // ReaImGuiConfigVar_KeyRepeatRate,
+  ReaImGuiConfigVar_KeyRepeatDelay,
+  ReaImGuiConfigVar_KeyRepeatRate,
 
   // ReaImGuiConfigVar_FontGlobalScale,
   // ReaImGuiConfigVar_FontAllowUserScaling,
@@ -105,8 +105,12 @@ DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
     return io.MouseDoubleClickMaxDist;
   case ReaImGuiConfigVar_MouseDragThreshold:
     return io.MouseDragThreshold;
-  case ReaImGuiConfigVar_DockingNoSplit:
+  case ReaImGuiConfigVar_KeyRepeatDelay:
+    return io.KeyRepeatDelay;
+  case ReaImGuiConfigVar_KeyRepeatRate:
+    return io.KeyRepeatRate;
 
+  case ReaImGuiConfigVar_DockingNoSplit:
     return io.ConfigDockingNoSplit;
   case ReaImGuiConfigVar_DockingWithShift:
     return io.ConfigDockingWithShift;
@@ -150,6 +154,10 @@ DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
     io.MouseDoubleClickMaxDist           = value; return;
   case ReaImGuiConfigVar_MouseDragThreshold:
     io.MouseDragThreshold                = value; return;
+  case ReaImGuiConfigVar_KeyRepeatDelay:
+    io.KeyRepeatDelay                    = value; return;
+  case ReaImGuiConfigVar_KeyRepeatRate:
+    io.KeyRepeatRate                     = value; return;
 
   case ReaImGuiConfigVar_DockingNoSplit:
     io.ConfigDockingNoSplit              = value; return;
@@ -182,6 +190,8 @@ DEFINE_ENUM(ReaImGui, ConfigVar_Flags,                       "ImGui_ConfigFlags_
 DEFINE_ENUM(ReaImGui, ConfigVar_MouseDoubleClickTime,        "Time for a double-click, in seconds.");
 DEFINE_ENUM(ReaImGui, ConfigVar_MouseDoubleClickMaxDist,     "Distance threshold to stay in to validate a double-click, in pixels.");
 DEFINE_ENUM(ReaImGui, ConfigVar_MouseDragThreshold,          "Distance threshold before considering we are dragging.");
+DEFINE_ENUM(ReaImGui, ConfigVar_KeyRepeatDelay,              "When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).");
+DEFINE_ENUM(ReaImGui, ConfigVar_KeyRepeatRate,               "When holding a key/button, rate at which it repeats, in seconds.");
 DEFINE_ENUM(ReaImGui, ConfigVar_DockingNoSplit,              "Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.");
 DEFINE_ENUM(ReaImGui, ConfigVar_DockingWithShift,            "Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)");
 DEFINE_ENUM(ReaImGui, ConfigVar_DockingTransparentPayload,   "Make window or viewport transparent when docking and only display docking boxes on the target viewport.");

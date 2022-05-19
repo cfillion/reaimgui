@@ -224,7 +224,7 @@ DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsKeyPressed, (ImGui_Context*,ctx)
 (int,key)(bool*,API_RO(repeat)),
-R"(Was key pressed (went from !Down to Down)? if repeat=true, uses io.KeyRepeatDelay / KeyRepeatRate
+R"(Was key pressed (went from !Down to Down)? If repeat=true, uses ImGui_ConfigVar_KeyRepeatDelay / ImGui_ConfigVar_KeyRepeatRate.
 
 Default values: repeat = true)",
 {
@@ -242,7 +242,7 @@ DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
 
 DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
 (int,key)(double,repeat_delay)(double,rate),
-"Uses provided repeat rate/delay. return a count, most often 0 or 1 but might be >1 if RepeatRate is small enough that DeltaTime > RepeatRate",
+"Uses provided repeat rate/delay. Return a count, most often 0 or 1 but might be >1 if ImGui_ConfigVar_RepeatRate is small enough that ImGui_GetDeltaTime > RepeatRate.",
 {
   FRAME_GUARD;
   return ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
