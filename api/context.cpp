@@ -88,6 +88,31 @@ enum ConfigVar {
   ReaImGuiConfigVar_WindowsMoveFromTitleBarOnly,
 };
 
+#define IOCONFIGVAR_CASES                       \
+  CASE_IOVAR(MouseDoubleClickTime)              \
+  CASE_IOVAR(MouseDoubleClickMaxDist)           \
+  CASE_IOVAR(MouseDragThreshold)                \
+  CASE_IOVAR(KeyRepeatDelay)                    \
+  CASE_IOVAR(KeyRepeatRate)                     \
+                                                \
+  CASE_IOCONFIGVAR(DockingNoSplit)              \
+  CASE_IOCONFIGVAR(DockingWithShift)            \
+  CASE_IOCONFIGVAR(DockingTransparentPayload)   \
+                                                \
+  CASE_IOCONFIGVAR(ViewportsNoDecoration)       \
+                                                \
+  CASE_IOCONFIGVAR(MacOSXBehaviors)             \
+  CASE_IOCONFIGVAR(InputTrickleEventQueue)      \
+  CASE_IOCONFIGVAR(InputTextCursorBlink)        \
+  CASE_IOCONFIGVAR(DragClickToInputText)        \
+  CASE_IOCONFIGVAR(WindowsResizeFromEdges)      \
+  CASE_IOCONFIGVAR(WindowsMoveFromTitleBarOnly) \
+
+#define CASE_IOVAR(var) \
+  case ReaImGuiConfigVar_##var: return io.var;
+#define CASE_IOCONFIGVAR(var) \
+  case ReaImGuiConfigVar_##var: return io.Config##var;
+
 DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx),
 "See ImGui_SetConfigVar, ImGui_ConfigVar_*.",
@@ -96,46 +121,21 @@ DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
   const ImGuiIO &io { ctx->IO() };
 
   switch(static_cast<ConfigVar>(var_idx)) {
+  IOCONFIGVAR_CASES
   case ReaImGuiConfigVar_Flags:
     return ctx->userConfigFlags();
-
-  case ReaImGuiConfigVar_MouseDoubleClickTime:
-    return io.MouseDoubleClickTime;
-  case ReaImGuiConfigVar_MouseDoubleClickMaxDist:
-    return io.MouseDoubleClickMaxDist;
-  case ReaImGuiConfigVar_MouseDragThreshold:
-    return io.MouseDragThreshold;
-  case ReaImGuiConfigVar_KeyRepeatDelay:
-    return io.KeyRepeatDelay;
-  case ReaImGuiConfigVar_KeyRepeatRate:
-    return io.KeyRepeatRate;
-
-  case ReaImGuiConfigVar_DockingNoSplit:
-    return io.ConfigDockingNoSplit;
-  case ReaImGuiConfigVar_DockingWithShift:
-    return io.ConfigDockingWithShift;
-  case ReaImGuiConfigVar_DockingTransparentPayload:
-    return io.ConfigDockingTransparentPayload;
-
-  case ReaImGuiConfigVar_ViewportsNoDecoration:
-    return io.ConfigViewportsNoDecoration;
-
-  case ReaImGuiConfigVar_MacOSXBehaviors:
-    return io.ConfigMacOSXBehaviors;
-  case ReaImGuiConfigVar_InputTrickleEventQueue:
-    return io.ConfigInputTrickleEventQueue;
-  case ReaImGuiConfigVar_InputTextCursorBlink:
-    return io.ConfigInputTextCursorBlink;
-  case ReaImGuiConfigVar_DragClickToInputText:
-    return io.ConfigDragClickToInputText;
-  case ReaImGuiConfigVar_WindowsResizeFromEdges:
-    return io.ConfigWindowsResizeFromEdges;
-  case ReaImGuiConfigVar_WindowsMoveFromTitleBarOnly:
-    return io.ConfigWindowsMoveFromTitleBarOnly;
   }
 
   throw reascript_error { "unknown config variable" };
 });
+
+#undef CASE_IOVAR
+#undef CASE_IOCONFIGVAR
+
+#define CASE_IOVAR(var) \
+  case ReaImGuiConfigVar_##var: io.var = value; return;
+#define CASE_IOCONFIGVAR(var) \
+  case ReaImGuiConfigVar_##var: io.Config##var = value; return;
 
 DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,value),
@@ -145,46 +145,17 @@ DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
   ImGuiIO &io { ctx->IO() };
 
   switch(static_cast<ConfigVar>(var_idx)) {
+  IOCONFIGVAR_CASES
   case ReaImGuiConfigVar_Flags:
-    ctx->setUserConfigFlags(value);               return;
-
-  case ReaImGuiConfigVar_MouseDoubleClickTime:
-    io.MouseDoubleClickTime              = value; return;
-  case ReaImGuiConfigVar_MouseDoubleClickMaxDist:
-    io.MouseDoubleClickMaxDist           = value; return;
-  case ReaImGuiConfigVar_MouseDragThreshold:
-    io.MouseDragThreshold                = value; return;
-  case ReaImGuiConfigVar_KeyRepeatDelay:
-    io.KeyRepeatDelay                    = value; return;
-  case ReaImGuiConfigVar_KeyRepeatRate:
-    io.KeyRepeatRate                     = value; return;
-
-  case ReaImGuiConfigVar_DockingNoSplit:
-    io.ConfigDockingNoSplit              = value; return;
-  case ReaImGuiConfigVar_DockingWithShift:
-    io.ConfigDockingWithShift            = value; return;
-  case ReaImGuiConfigVar_DockingTransparentPayload:
-    io.ConfigDockingTransparentPayload   = value; return;
-
-  case ReaImGuiConfigVar_ViewportsNoDecoration:
-    io.ConfigViewportsNoDecoration       = value; return;
-
-  case ReaImGuiConfigVar_MacOSXBehaviors:
-    io.ConfigMacOSXBehaviors             = value; return;
-  case ReaImGuiConfigVar_InputTrickleEventQueue:
-    io.ConfigInputTrickleEventQueue      = value; return;
-  case ReaImGuiConfigVar_InputTextCursorBlink:
-    io.ConfigInputTextCursorBlink        = value; return;
-  case ReaImGuiConfigVar_DragClickToInputText:
-    io.ConfigDragClickToInputText        = value; return;
-  case ReaImGuiConfigVar_WindowsResizeFromEdges:
-    io.ConfigWindowsResizeFromEdges      = value; return;
-  case ReaImGuiConfigVar_WindowsMoveFromTitleBarOnly:
-    io.ConfigWindowsMoveFromTitleBarOnly = value; return;
+    ctx->setUserConfigFlags(value);
+    return;
   }
 
   throw reascript_error { "unknown config variable" };
 });
+
+#undef CASE_IOVAR
+#undef CASE_IOCONFIGVAR
 
 DEFINE_ENUM(ReaImGui, ConfigVar_Flags,                       "ImGui_ConfigFlags_*");
 DEFINE_ENUM(ReaImGui, ConfigVar_MouseDoubleClickTime,        "Time for a double-click, in seconds.");
