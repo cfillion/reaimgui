@@ -80,6 +80,8 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     // Announce to REAPER the window is no longer going to be valid
     // (DockWindowRemove is safe to call even when not docked)
     DockWindowRemove(handle); // may send messages
+    if(Platform::getCapture() == handle)
+      Platform::releaseCapture();
     return 0;
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
