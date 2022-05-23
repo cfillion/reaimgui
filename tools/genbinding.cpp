@@ -481,16 +481,10 @@ void Function::pythonSignature(std::ostream &stream) const
 
   stream << name << '(';
   {
-    const bool listOutputs { hasOptionalArgs() };
     CommaSep cs { stream };
     for(const Argument &arg : args) {
-      if(arg.isBufSize())
+      if(arg.isBufSize() || !arg.isInput())
         continue;
-      else if(!arg.isInput()) {
-        if(listOutputs)
-          cs << hl(Highlight::Constant) << "None" << hl();
-        continue;
-      }
       cs << hl(Highlight::Type) << pythonType(arg.type)
          << hl() << ' ' << arg.name;
       if(arg.isOptional())
@@ -750,10 +744,10 @@ static void pythonBinding(std::ostream &stream)
     {
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
-        if(arg.isBufSize())
+        if(arg.isBufSize() || !arg.isInput())
           continue;
         cs << arg.name;
-        if(arg.isOptional() || !arg.isInput())
+        if(arg.isOptional())
           stream << " = None";
       }
     }
@@ -793,11 +787,10 @@ static void pythonBinding(std::ostream &stream)
             else
               stream << "len(" << arg.bufName() << ")+1";
           }
-          else {
+          else if(arg.isInput())
             stream << arg.name;
-            if(!arg.isInput())
-              stream << " if " << arg.name << " != None else 0";
-          }
+          else
+            stream << '0';
           stream << ')';
         }
         if(arg.isOptional())
