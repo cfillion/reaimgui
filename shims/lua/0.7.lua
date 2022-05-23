@@ -1,24 +1,3 @@
--- old non-vanilla modifier key API
-function reaper.ImGui_KeyModFlags_Ctrl()  return 1 << 0 end
-function reaper.ImGui_KeyModFlags_Shift() return 1 << 1 end
-function reaper.ImGui_KeyModFlags_Alt()   return 1 << 2 end
-function reaper.ImGui_KeyModFlags_Super() return 1 << 3 end
-function reaper.ImGui_GetKeyMods(ctx)
-  local keys = {
-    [reaper.ImGui_Key_ModCtrl() ] = reaper.ImGui_KeyModFlags_Ctrl(),
-    [reaper.ImGui_Key_ModShift()] = reaper.ImGui_KeyModFlags_Shift(),
-    [reaper.ImGui_Key_ModAlt()  ] = reaper.ImGui_KeyModFlags_Alt(),
-    [reaper.ImGui_Key_ModSuper()] = reaper.ImGui_KeyModFlags_Super(),
-  }
-  local mods = 0
-  for key, mod in pairs(keys) do
-    if reaper.ImGui_IsKeyDown(ctx, key) then
-      mods = mods | mod
-    end
-  end
-  return mods
-end
-
 -- non-vanilla HSVtoRGB/RGBtoHSV packing and optional alpha parameter
 local function shimColConv(convFunc)
   return function(x, y, z, a)
