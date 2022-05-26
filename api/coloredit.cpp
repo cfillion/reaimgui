@@ -109,7 +109,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
 DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)
 (const char*,desc_id)(int,col_rgba)(int*,API_RO(flags))
 (double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Display a color square/button, hover for details, return true when pressed.
+R"(Display a color square/button, hover for details, return true when pressed. Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xRRGGBB.
 
 Default values: flags = ImGui_ColorEditFlags_None, size_w = 0.0, size_h = 0.0)",
 {
