@@ -56,6 +56,9 @@ if(WIN32)
   )
     # Embed debug information in the object files
     string(REGEX REPLACE "/Z[iI]" "/Z7" ${arg} "${${arg}}")
+
+    # Allow expansion of function not explicitly marked for no inlining
+    string(REGEX REPLACE "/Ob1" "/Ob2" ${arg} "${${arg}}")
   endforeach()
 
   add_compile_options(
