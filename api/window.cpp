@@ -42,6 +42,18 @@ private:
   bool m_enabled;
 };
 
+static bool nativeWindowBehavior(const char *name, bool *p_open)
+{
+  ImGuiWindowFlags flags {};
+  DecorationBehavior dec { Context::current(), &flags };
+  ImGui::Begin(name, openPtrBehavior(p_open), flags);
+  auto &beginCount { ImGui::GetCurrentWindow()->BeginCount };
+  ImGui::End();
+
+  --beginCount;
+  return beginCount == 0;
+}
+
 DEFINE_API(bool, Begin, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
 R"(Push window to the stack and start appending to it. See ImGui_End.
@@ -531,14 +543,8 @@ Default values: p_open = nil)",
 {
   FRAME_GUARD;
 
-  ImGuiWindowFlags flags {};
-  DecorationBehavior dec { ctx, &flags };
-  ImGui::Begin("Dear ImGui Metrics/Debugger",
-    openPtrBehavior(API_RWO(p_open)), flags);
-  ImGui::GetCurrentWindow()->BeginCount = 0;
-  ImGui::End();
-
-  ImGui::ShowMetricsWindow();
+  if(nativeWindowBehavior("Dear ImGui Metrics/Debugger", API_RWO(p_open)))
+    ImGui::ShowMetricsWindow();
 });
 
 DEFINE_API(void, ShowDebugLogWindow, (ImGui_Context*,ctx)
@@ -549,13 +555,8 @@ Default values: p_open = nil)",
 {
   FRAME_GUARD;
 
-  ImGuiWindowFlags flags {};
-  DecorationBehavior dec { ctx, &flags };
-  ImGui::Begin("Dear ImGui Debug Log", openPtrBehavior(API_RWO(p_open)), flags);
-  ImGui::GetCurrentWindow()->BeginCount = 0;
-  ImGui::End();
-
-  ImGui::ShowDebugLogWindow();
+  if(nativeWindowBehavior("Dear ImGui Debug Log", API_RWO(p_open)))
+    ImGui::ShowDebugLogWindow();
 });
 
 DEFINE_API(void, ShowStackToolWindow, (ImGui_Context*,ctx)
@@ -566,13 +567,8 @@ Default values: p_open = nil)",
 {
   FRAME_GUARD;
 
-  ImGuiWindowFlags flags {};
-  DecorationBehavior dec { ctx, &flags };
-  ImGui::Begin("Dear ImGui Stack Tool", openPtrBehavior(API_RWO(p_open)), flags);
-  ImGui::GetCurrentWindow()->BeginCount = 0;
-  ImGui::End();
-
-  ImGui::ShowStackToolWindow();
+  if(nativeWindowBehavior("Dear ImGui Stack Tool", API_RWO(p_open)))
+    ImGui::ShowStackToolWindow();
 });
 
 // ImGuiFocusedFlags
