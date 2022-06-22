@@ -240,5 +240,6 @@ DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenBlockedByPopup,      "Return true even 
 DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenBlockedByActiveItem, "Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.");
 DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenOverlapped,          "ImGui_IsItemHovered only: Return true even if the position is obstructed or overlapped by another window.");
 DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenDisabled,            "ImGui_IsItemHovered only: Return true even if the item is disabled.");
+DEFINE_ENUM(ImGui, HoveredFlags_NoNavOverride,                "Disable using gamepad/keyboard navigation state when active, always query mouse.");
 DEFINE_ENUM(ImGui, HoveredFlags_RectOnly,                     "ImGui_HoveredFlags_AllowWhenBlockedByPopup | ImGui_HoveredFlags_AllowWhenBlockedByActiveItem | ImGui_HoveredFlags_AllowWhenOverlapped");
 DEFINE_ENUM(ImGui, HoveredFlags_RootAndChildWindows,          "ImGui_HoveredFlags_RootWindow | ImGui_HoveredFlags_ChildWindows");

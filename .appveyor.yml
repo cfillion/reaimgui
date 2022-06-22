@@ -4,8 +4,6 @@ stack: ruby 2.7
 
 before_build:
   - git submodule update --init --depth 1
-  # backport 'fix texture-based anti-aliasing with RGBA textures' from v1.88
-  - ps: (Invoke-WebRequest 'https://github.com/cfillion/imgui/commit/00f43be4f393ebbfb775d2ab5c0f5f5aea8c889e.patch').Content | git -C vendor/imgui apply
 build_script:
   - cmake -B build -DCMAKE_BUILD_TYPE=Release
     -DVCPKG_TARGET_TRIPLET=$TRIPLET -DCMAKE_TOOLCHAIN_FILE=$TOOLCHAIN

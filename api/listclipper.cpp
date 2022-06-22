@@ -28,8 +28,6 @@ ListClipper::~ListClipper()
 {
   // do ~ImGuiListClipper's work to allow out-of-order destruction
 
-  m_imlc.ItemsCount = -1;
-
   if(m_imlc.TempData && Resource::exists(m_ctx)) {
     ImGuiContext *ctx { m_ctx->imgui() };
     --ctx->ClipperTempDataStacked;

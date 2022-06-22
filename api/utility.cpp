@@ -27,11 +27,14 @@
 
 DEFINE_API(void, GetVersion,
 (char*,API_W(imgui_version))(int,API_W_SZ(imgui_version))
+(int*,API_W(imgui_version_num))
 (char*,API_W(reaimgui_version))(int,API_W_SZ(reaimgui_version)),
 "",
 {
   if(API_W(imgui_version))
     snprintf(API_W(imgui_version), API_W_SZ(imgui_version), "%s", IMGUI_VERSION);
+  if(API_W(imgui_version_num))
+    *API_W(imgui_version_num) = IMGUI_VERSION_NUM;
   if(API_W(reaimgui_version))
     snprintf(API_W(reaimgui_version), API_W_SZ(reaimgui_version), "%s", REAIMGUI_VERSION);
 });

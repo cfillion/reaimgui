@@ -136,3 +136,11 @@ DEFINE_API(void, CalcTextSize, (ImGui_Context*,ctx)
   if(API_W(w)) *API_W(w) = size.x;
   if(API_W(h)) *API_W(h) = size.y;
 });
+
+DEFINE_API(void, DebugTextEncoding, (ImGui_Context*,ctx)
+(const char*,text),
+"Helper tool to diagnose between text encoding issues and font loading issues. Pass your UTF-8 string and verify that there are correct.",
+{
+  FRAME_GUARD;
+  ImGui::DebugTextEncoding(text);
+});

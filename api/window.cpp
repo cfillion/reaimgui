@@ -541,6 +541,23 @@ Default values: p_open = nil)",
   ImGui::ShowMetricsWindow();
 });
 
+DEFINE_API(void, ShowDebugLogWindow, (ImGui_Context*,ctx)
+(bool*,API_RWO(p_open)),
+R"(Create Debug Log window. display a simplified log of important dear imgui events.
+
+Default values: p_open = nil)",
+{
+  FRAME_GUARD;
+
+  ImGuiWindowFlags flags {};
+  DecorationBehavior dec { ctx, &flags };
+  ImGui::Begin("Dear ImGui Debug Log", openPtrBehavior(API_RWO(p_open)), flags);
+  ImGui::GetCurrentWindow()->BeginCount = 0;
+  ImGui::End();
+
+  ImGui::ShowDebugLogWindow();
+});
+
 DEFINE_API(void, ShowStackToolWindow, (ImGui_Context*,ctx)
 (bool*,API_RWO(p_open)),
 R"(Create Stack Tool window. Hover items with mouse to query information about the source of their unique ID.

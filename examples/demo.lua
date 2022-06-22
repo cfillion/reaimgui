@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.87)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.88)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -46,7 +46,7 @@ Index of this file:
 
 local r, ctx = reaper
 local FLT_MIN, FLT_MAX = r.ImGui_NumericLimits_Float()
-local IMGUI_VERSION, REAIMGUI_VERSION = r.ImGui_GetVersion()
+local IMGUI_VERSION, IMGUI_VERSION_NUM, REAIMGUI_VERSION = r.ImGui_GetVersion()
 local demo = {
   open = true,
 
@@ -90,8 +90,9 @@ local show_app = {
 
   -- Dear ImGui Apps (accessible from the "Tools" menu)
   metrics      = false,
+  debug_log    = false,
   stack_tool   = false,
-  -- style_editor = false
+  style_editor = false,
   about        = false,
 }
 
@@ -272,6 +273,7 @@ function demo.ShowDemoWindow(open)
   if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
 
   if show_app.metrics    then show_app.metrics    = r.ImGui_ShowMetricsWindow(ctx,   show_app.metrics)    end
+  if show_app.debug_log  then show_app.debug_log  = r.ImGui_ShowDebugLogWindow(ctx,  show_app.debug_log)  end
   if show_app.stack_tool then show_app.stack_tool = r.ImGui_ShowStackToolWindow(ctx, show_app.stack_tool) end
   if show_app.about      then show_app.about      = r.ImGui_ShowAboutWindow(ctx,     show_app.about)      end
   if show_app.style_editor then
@@ -362,14 +364,11 @@ function demo.ShowDemoWindow(open)
     end
     -- if r.ImGui_MenuItem(ctx, 'MenuItem') then end -- You can also use MenuItem() inside a menu bar!
     if r.ImGui_BeginMenu(ctx, 'Tools') then
-      rv,show_app.metrics =
-        r.ImGui_MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
-      rv,show_app.stack_tool =
-        r.ImGui_MenuItem(ctx, 'Stack Tool', nil, show_app.stack_tool)
-      rv,show_app.style_editor =
-        r.ImGui_MenuItem(ctx, 'Style Editor', nil, show_app.style_editor)
-      rv,show_app.about =
-        r.ImGui_MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
+      rv,show_app.metrics      = r.ImGui_MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
+      rv,show_app.debug_log    = r.ImGui_MenuItem(ctx, 'Debug Log',        nil, show_app.debug_log)
+      rv,show_app.stack_tool   = r.ImGui_MenuItem(ctx, 'Stack Tool',       nil, show_app.stack_tool)
+      rv,show_app.style_editor = r.ImGui_MenuItem(ctx, 'Style Editor',     nil, show_app.style_editor)
+      rv,show_app.about        = r.ImGui_MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
       r.ImGui_EndMenu(ctx)
     end
     if r.ImGui_SmallButton(ctx, 'Documentation') then
@@ -379,7 +378,7 @@ function demo.ShowDemoWindow(open)
     r.ImGui_EndMenuBar(ctx)
   end
 
-  r.ImGui_Text(ctx, ('dear imgui says hello. (%s / %s)'):format(IMGUI_VERSION, REAIMGUI_VERSION))
+  r.ImGui_Text(ctx, ('dear imgui says hello. (%s) (%d) (ReaImGui %s)'):format(IMGUI_VERSION, IMGUI_VERSION_NUM, REAIMGUI_VERSION))
   r.ImGui_Spacing(ctx)
 
   if r.ImGui_CollapsingHeader(ctx, 'Help') then
@@ -1972,11 +1971,11 @@ label:
       'Auto/Current\0None\0RGB Only\0HSV Only\0Hex Only\0')
     r.ImGui_SameLine(ctx); demo.HelpMarker(
       "ColorEdit defaults to displaying RGB inputs if you don't specify a display mode, \z
-       but the user can change it with a right-click.\n\nColorPicker defaults to displaying RGB+HSV+Hex \z
+       but the user can change it with a right-click on those inputs.\n\nColorPicker defaults to displaying RGB+HSV+Hex \z
        if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().")
     rv,widgets.colors.picker_mode = r.ImGui_Combo(ctx, 'Picker Mode', widgets.colors.picker_mode,
       'Auto/Current\0Hue bar + SV rect\0Hue wheel + SV triangle\0')
-    r.ImGui_SameLine(ctx); demo.HelpMarker('User can right-click the picker to change mode.')
+    r.ImGui_SameLine(ctx); demo.HelpMarker('When not specified explicitly (Auto/Current mode), user can right-click the picker to change mode.')
     local flags = misc_flags
     if not widgets.colors.alpha         then flags = flags | r.ImGui_ColorEditFlags_NoAlpha()        end
     if widgets.colors.alpha_bar         then flags = flags | r.ImGui_ColorEditFlags_AlphaBar()       end
@@ -2008,6 +2007,18 @@ label:
     if r.ImGui_Button(ctx, 'Default: Float + Hue Wheel') then -- (NOTE: removed HDR for ReaImGui as we use uint32 for color i/o)
       r.ImGui_SetColorEditOptions(ctx, r.ImGui_ColorEditFlags_Float() | r.ImGui_ColorEditFlags_PickerHueWheel())
     end
+
+    -- Always both a small version of both types of pickers (to make it more visible in the demo to people who are skimming quickly through it)
+    local color = demo.RgbaToArgb(widgets.colors.rgba)
+    r.ImGui_Text(ctx, 'Both types:')
+    local w = (r.ImGui_GetContentRegionAvail(ctx) - select(2, r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing()))) * 0.40
+    r.ImGui_SetNextItemWidth(ctx, w)
+    rv,color = r.ImGui_ColorPicker3(ctx, '##MyColor##5', color, r.ImGui_ColorEditFlags_PickerHueBar() | r.ImGui_ColorEditFlags_NoSidePreview() | r.ImGui_ColorEditFlags_NoInputs() | r.ImGui_ColorEditFlags_NoAlpha())
+    if rv then widgets.colors.rgba = demo.ArgbToRgba(color) end
+    r.ImGui_SameLine(ctx)
+    r.ImGui_SetNextItemWidth(ctx, w)
+    rv,color = r.ImGui_ColorPicker3(ctx, '##MyColor##6', color, r.ImGui_ColorEditFlags_PickerHueWheel() | r.ImGui_ColorEditFlags_NoSidePreview() | r.ImGui_ColorEditFlags_NoInputs() | r.ImGui_ColorEditFlags_NoAlpha())
+    if rv then widgets.colors.rgba = demo.ArgbToRgba(color) end
 
     -- HSV encoded support (to avoid RGB<>HSV round trips and singularities when S==0 or V==0)
     r.ImGui_Spacing(ctx)
@@ -2152,6 +2163,7 @@ label:
 --         r.ImGui_DragScalar("drag s16",       ImGuiDataType_S16,    &s16_v, drag_speed, drag_clamp ? &s16_zero : NULL, drag_clamp ? &s16_fifty : NULL);
 --         r.ImGui_DragScalar("drag u16",       ImGuiDataType_U16,    &u16_v, drag_speed, drag_clamp ? &u16_zero : NULL, drag_clamp ? &u16_fifty : NULL, "%u ms");
 --         r.ImGui_DragScalar("drag s32",       ImGuiDataType_S32,    &s32_v, drag_speed, drag_clamp ? &s32_zero : NULL, drag_clamp ? &s32_fifty : NULL);
+--         r.ImGui_DragScalar("drag s32 hex",   ImGuiDataType_S32,    &s32_v, drag_speed, drag_clamp ? &s32_zero : NULL, drag_clamp ? &s32_fifty : NULL, "0x%08X");
 --         r.ImGui_DragScalar("drag u32",       ImGuiDataType_U32,    &u32_v, drag_speed, drag_clamp ? &u32_zero : NULL, drag_clamp ? &u32_fifty : NULL, "%u ms");
 --         r.ImGui_DragScalar("drag s64",       ImGuiDataType_S64,    &s64_v, drag_speed, drag_clamp ? &s64_zero : NULL, drag_clamp ? &s64_fifty : NULL);
 --         r.ImGui_DragScalar("drag u64",       ImGuiDataType_U64,    &u64_v, drag_speed, drag_clamp ? &u64_zero : NULL, drag_clamp ? &u64_fifty : NULL);
@@ -2168,6 +2180,7 @@ label:
 --         r.ImGui_SliderScalar("slider s32 low",       ImGuiDataType_S32,    &s32_v, &s32_zero, &s32_fifty,"%d");
 --         r.ImGui_SliderScalar("slider s32 high",      ImGuiDataType_S32,    &s32_v, &s32_hi_a, &s32_hi_b, "%d");
 --         r.ImGui_SliderScalar("slider s32 full",      ImGuiDataType_S32,    &s32_v, &s32_min,  &s32_max,  "%d");
+--         r.ImGui_SliderScalar("slider s32 hex",       ImGuiDataType_S32,    &s32_v, &s32_zero, &s32_fifty, "0x%04X");
 --         r.ImGui_SliderScalar("slider u32 low",       ImGuiDataType_U32,    &u32_v, &u32_zero, &u32_fifty,"%u");
 --         r.ImGui_SliderScalar("slider u32 high",      ImGuiDataType_U32,    &u32_v, &u32_hi_a, &u32_hi_b, "%u");
 --         r.ImGui_SliderScalar("slider u32 full",      ImGuiDataType_U32,    &u32_v, &u32_min,  &u32_max,  "%u");
@@ -2200,9 +2213,9 @@ label:
 --         r.ImGui_InputScalar("input s16",     ImGuiDataType_S16,    &s16_v, inputs_step ? &s16_one : NULL, NULL, "%d");
 --         r.ImGui_InputScalar("input u16",     ImGuiDataType_U16,    &u16_v, inputs_step ? &u16_one : NULL, NULL, "%u");
 --         r.ImGui_InputScalar("input s32",     ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%d");
---         r.ImGui_InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+--         r.ImGui_InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%04X");
 --         r.ImGui_InputScalar("input u32",     ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%u");
---         r.ImGui_InputScalar("input u32 hex", ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%08X", ImGuiInputTextFlags_CharsHexadecimal);
+--         r.ImGui_InputScalar("input u32 hex", ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%08X");
 --         r.ImGui_InputScalar("input s64",     ImGuiDataType_S64,    &s64_v, inputs_step ? &s64_one : NULL);
 --         r.ImGui_InputScalar("input u64",     ImGuiDataType_U64,    &u64_v, inputs_step ? &u64_one : NULL);
 --         r.ImGui_InputScalar("input float",   ImGuiDataType_Float,  &f32_v, inputs_step ? &f32_one : NULL);
@@ -3475,53 +3488,53 @@ function demo.ShowDemoWindowLayout()
       0.5, 1.0, 200.0, "%.0f")
     r.ImGui_TextWrapped(ctx, '(Click and drag to scroll)')
 
+    demo.HelpMarker(
+      '(Left) Using ImGui_PushClipRect():\n\z
+       Will alter ImGui hit-testing logic + DrawList rendering.\n\z
+       (use this if you want your clipping rectangle to affect interactions)\n\n\z
+       (Center) Using ImGui_DrawList_PushClipRect():\n\z
+       Will alter DrawList rendering only.\n\z
+       (use this as a shortcut if you are only using DrawList calls)\n\n\z
+       (Right) Using ImGui_DrawList_AddText() with a fine ClipRect:\n\z
+       Will alter only this specific ImGui_DrawList_AddText() rendering.\n\z
+       This is often used internally to avoid altering the clipping rectangle and minimize draw calls.')
+
     for n = 0, 2 do
       if n > 0 then r.ImGui_SameLine(ctx) end
-      r.ImGui_PushID(ctx, n)
-      r.ImGui_BeginGroup(ctx) -- Lock X position
 
-      r.ImGui_InvisibleButton(ctx, '##empty', table.unpack(layout.clipping.size))
+      r.ImGui_PushID(ctx, n)
+      r.ImGui_InvisibleButton(ctx, '##canvas', table.unpack(layout.clipping.size))
       if r.ImGui_IsItemActive(ctx) and r.ImGui_IsMouseDragging(ctx, r.ImGui_MouseButton_Left()) then
         local mouse_delta = {r.ImGui_GetMouseDelta(ctx)}
         layout.clipping.offset[1] = layout.clipping.offset[1] + mouse_delta[1]
         layout.clipping.offset[2] = layout.clipping.offset[2] + mouse_delta[2]
       end
-      local p0 = {r.ImGui_GetItemRectMin(ctx)}
-      local p1 = {r.ImGui_GetItemRectMax(ctx)}
-      local text_str = 'Line 1 hello\nLine 2 clip me!'
-      local text_pos = { p0[1] + layout.clipping.offset[1], p0[2] + layout.clipping.offset[2] }
-
-      local draw_list = r.ImGui_GetWindowDrawList(ctx)
-      if n == 0 then
-        demo.HelpMarker(
-          'Using PushClipRect():\n\z
-           Will alter ImGui hit-testing logic + ImDrawList rendering.\n\z
-           (use this if you want your clipping rectangle to affect interactions)')
-        r.ImGui_PushClipRect(ctx, p0[1], p0[2], p1[1], p1[2], true)
-        r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
-        r.ImGui_DrawList_AddText(draw_list, text_pos[1], text_pos[2], 0xffffffff, text_str)
-        r.ImGui_PopClipRect(ctx)
-      elseif n == 1 then
-        demo.HelpMarker(
-          'Using DrawList_PushClipRect():\n\z
-           Will alter ImDrawList rendering only.\n\z
-           (use this as a shortcut if you are only using ImDrawList calls)')
-        r.ImGui_DrawList_PushClipRect(draw_list, p0[1], p0[2], p1[1], p1[2], true)
-        r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
-        r.ImGui_DrawList_AddText(draw_list, text_pos[1], text_pos[2], 0xffffffff, text_str)
-        r.ImGui_DrawList_PopClipRect(draw_list)
-      elseif n == 2 then
-        demo.HelpMarker(
-          'Using DrawList_AddText() with a fine ClipRect:\n\z
-           Will alter only this specific DrawList_AddText() rendering.\n\z
-           (this is often used internally to avoid altering the clipping rectangle and minimize draw calls)')
-        local clip_rect = { p0[1], p0[2], p1[1], p1[2] }
-        r.ImGui_DrawList_AddRectFilled(draw_list, p0[1], p0[2], p1[1], p1[2], 0x5a5a78ff)
-        r.ImGui_DrawList_AddTextEx(draw_list, r.ImGui_GetFont(ctx), r.ImGui_GetFontSize(ctx),
-          text_pos[1], text_pos[2], 0xffffffff, text_str, 0.0, table.unpack(clip_rect))
-      end
-      r.ImGui_EndGroup(ctx)
       r.ImGui_PopID(ctx)
+
+      if r.ImGui_IsItemVisible(ctx) then -- Skip rendering as DrawList elements are not clipped.
+        local p0_x, p0_y = r.ImGui_GetItemRectMin(ctx)
+        local p1_x, p1_y = r.ImGui_GetItemRectMax(ctx)
+        local text_str = 'Line 1 hello\nLine 2 clip me!'
+        local text_pos = { p0_x + layout.clipping.offset[1], p0_y + layout.clipping.offset[2] }
+
+        local draw_list = r.ImGui_GetWindowDrawList(ctx)
+        if n == 0 then
+          r.ImGui_PushClipRect(ctx, p0_x, p0_y, p1_x, p1_y, true)
+          r.ImGui_DrawList_AddRectFilled(draw_list, p0_x, p0_y, p1_x, p1_y, 0x5a5a78ff)
+          r.ImGui_DrawList_AddText(draw_list, text_pos[1], text_pos[2], 0xffffffff, text_str)
+          r.ImGui_PopClipRect(ctx)
+        elseif n == 1 then
+          r.ImGui_DrawList_PushClipRect(draw_list, p0_x, p0_y, p1_x, p1_y, true)
+          r.ImGui_DrawList_AddRectFilled(draw_list, p0_x, p0_y, p1_x, p1_y, 0x5a5a78ff)
+          r.ImGui_DrawList_AddText(draw_list, text_pos[1], text_pos[2], 0xffffffff, text_str)
+          r.ImGui_DrawList_PopClipRect(draw_list)
+        elseif n == 2 then
+          local clip_rect = { p0_x, p0_y, p1_x, p1_y }
+          r.ImGui_DrawList_AddRectFilled(draw_list, p0_x, p0_y, p1_x, p1_y, 0x5a5a78ff)
+          r.ImGui_DrawList_AddTextEx(draw_list, r.ImGui_GetFont(ctx), r.ImGui_GetFontSize(ctx),
+            text_pos[1], text_pos[2], 0xffffffff, text_str, 0.0, table.unpack(clip_rect))
+        end
+      end
     end
 
     r.ImGui_TreePop(ctx)
@@ -3695,7 +3708,7 @@ function demo.ShowDemoWindowPopups()
     -- Using an explicit identifier is also convenient if you want to activate the popups from different locations.
     do
       demo.HelpMarker("Text() elements don't have stable identifiers so we need to provide one.")
-      r.ImGui_Text(ctx, ('Value = %.6f <-- (1) right-click this value'):format(popups.context.value))
+      r.ImGui_Text(ctx, ('Value = %.6f <-- (1) right-click this text'):format(popups.context.value))
       if r.ImGui_BeginPopupContextItem(ctx, 'my popup') then
         if r.ImGui_Selectable(ctx, 'Set to zero') then popups.context.value = 0.0      end
         if r.ImGui_Selectable(ctx, 'Set to PI')   then popups.context.value = 3.141592 end
@@ -3820,18 +3833,11 @@ function demo.ShowDemoWindowPopups()
     r.ImGui_TextWrapped(ctx, "Below we are testing adding menu items to a regular window. It's rather unusual but should work!")
     r.ImGui_Separator(ctx)
 
-    -- Note: As a quirk in this very specific example, we want to differentiate the parent of this menu from the
-    -- parent of the various popup menus above. To do so we are encloding the items in a PushID()/PopID() block
-    -- to make them two different menusets. If we don't, opening any popup above and hovering our menu here would
-    -- open it. This is because once a menu is active, we allow to switch to a sibling menu by just hovering on it,
-    -- which is the desired behavior for regular menus.
-    r.ImGui_PushID(ctx, 'foo')
     r.ImGui_MenuItem(ctx, 'Menu item', 'CTRL+M')
     if r.ImGui_BeginMenu(ctx, 'Menu inside a regular window') then
       demo.ShowExampleMenuFile()
       r.ImGui_EndMenu(ctx)
     end
-    r.ImGui_PopID(ctx)
     r.ImGui_Separator(ctx)
     r.ImGui_TreePop(ctx)
   end
@@ -4168,7 +4174,7 @@ function demo.ShowDemoWindowTables()
           local buf = ('Hello %d,%d'):format(column, row)
           if tables.borders_bg.contents_type == 0 then
             r.ImGui_Text(ctx, buf)
-          else
+          elseif tables.borders_bg.contents_type == 1 then
             r.ImGui_Button(ctx, buf, -FLT_MIN, 0.0)
           end
         end
@@ -4740,14 +4746,16 @@ function demo.ShowDemoWindowTables()
       for i,column in ipairs(tables.col_flags.columns) do
         r.ImGui_TableNextColumn(ctx)
         r.ImGui_PushID(ctx, i)
-        r.ImGui_AlignTextToFramePadding(ctx) -- FIXME-TABLE: Workaround for wrong text baseline propagation
+        r.ImGui_AlignTextToFramePadding(ctx) -- FIXME-TABLE: Workaround for wrong text baseline propagation across columns
         r.ImGui_Text(ctx, ("'%s'"):format(column.name))
         r.ImGui_Spacing(ctx)
         r.ImGui_Text(ctx, 'Input flags:')
         column.flags = demo.EditTableColumnsFlags(column.flags)
         r.ImGui_Spacing(ctx)
         r.ImGui_Text(ctx, 'Output flags:')
+        r.ImGui_BeginDisabled(ctx)
         demo.ShowTableColumnsStatusFlags(column.flags_out)
+        r.ImGui_EndDisabled(ctx)
         r.ImGui_PopID(ctx)
       end
       demo.PopStyleCompact()
@@ -5130,7 +5138,7 @@ function demo.ShowDemoWindowTables()
         r.ImGui_TableSetColumnIndex(ctx, 1)
         rv,tables.item_width.dummy_d = r.ImGui_SliderDouble(ctx, 'double1', tables.item_width.dummy_d, 0.0, 1.0)
         r.ImGui_TableSetColumnIndex(ctx, 2)
-        rv,tables.item_width.dummy_d = r.ImGui_SliderDouble(ctx, 'double2', tables.item_width.dummy_d, 0.0, 1.0)
+        rv,tables.item_width.dummy_d = r.ImGui_SliderDouble(ctx, '##double2', tables.item_width.dummy_d, 0.0, 1.0) -- No visible label since right-aligned
         r.ImGui_PopID(ctx)
       end
       r.ImGui_EndTable(ctx)
@@ -5947,12 +5955,16 @@ function demo.ShowDemoWindowMisc()
 
   if r.ImGui_CollapsingHeader(ctx, 'Inputs, Navigation & Focus') then
     -- Display ImGuiIO output flags
-    -- r.ImGui_Text("WantCaptureMouse: %d", io.WantCaptureMouse)
-    -- r.ImGui_Text("WantCaptureMouseUnlessPopupClose: %d", io.WantCaptureMouseUnlessPopupClose)
-    -- r.ImGui_Text("WantCaptureKeyboard: %d", io.WantCaptureKeyboard)
-    -- r.ImGui_Text("WantTextInput: %d", io.WantTextInput)
-    -- r.ImGui_Text("WantSetMousePos: %d", io.WantSetMousePos)
-    -- r.ImGui_Text("NavActive: %d, NavVisible: %d", io.NavActive, io.NavVisible)
+    -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once())
+    -- if r.ImGui_TreeNode(ctx, 'Output') then
+    --   r.ImGui_Text('io.WantCaptureMouse: %d', io.WantCaptureMouse);
+    --   r.ImGui_Text('io.WantCaptureMouseUnlessPopupClose: %d', io.WantCaptureMouseUnlessPopupClose);
+    --   r.ImGui_Text('io.WantCaptureKeyboard: %d', io.WantCaptureKeyboard);
+    --   r.ImGui_Text('io.WantTextInput: %d', io.WantTextInput);
+    --   r.ImGui_Text('io.WantSetMousePos: %d', io.WantSetMousePos);
+    --   r.ImGui_Text('io.NavActive: %d, io.NavVisible: %d', io.NavActive, io.NavVisible);
+    --   r.ImGui_TreePop(ctx)
+    -- end
 
     -- Display Mouse state
     if r.ImGui_TreeNode(ctx, 'Mouse State') then
@@ -6052,40 +6064,70 @@ function demo.ShowDemoWindowMisc()
           { 2, 0, '', r.ImGui_Key_LeftShift() },{ 2, 1, 'Z', r.ImGui_Key_Z() }, { 2, 2, 'X', r.ImGui_Key_X() }, { 2, 3, 'C', r.ImGui_Key_C() }, { 2, 4, 'V', r.ImGui_Key_V() }
         }
 
-        local draw_list = r.ImGui_GetWindowDrawList(ctx)
-        r.ImGui_DrawList_PushClipRect(draw_list, board_min[1], board_min[2], board_max.x, board_max.y, true)
-        for n, key_data in ipairs(keys_to_display) do
-          local key_min = { x=start_pos.x + key_data[2] * key_step.x + key_data[1] * key_row_offset, y=start_pos.y + key_data[1] * key_step.y }
-          local key_max = { x=key_min.x + key_size.x, y=key_min.y + key_size.y }
-          r.ImGui_DrawList_AddRectFilled(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0xCCCCCCFF, key_rounding)
-          r.ImGui_DrawList_AddRect(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0x181818FF, key_rounding)
-          local face_min = { x=key_min.x + key_face_pos.x, y=key_min.y + key_face_pos.y }
-          local face_max = { x=face_min.x + key_face_size.x, y=face_min.y + key_face_size.y }
-          r.ImGui_DrawList_AddRect(draw_list, face_min.x, face_min.y, face_max.x, face_max.y, 0xC1C1C1FF, key_face_rounding, r.ImGui_DrawFlags_None(), 2.0)
-          r.ImGui_DrawList_AddRectFilled(draw_list, face_min.x, face_min.y, face_max.x, face_max.y, 0xFFFFFFFF, key_face_rounding)
-          local label_min = { x=key_min.x + key_label_pos.x, y=key_min.y + key_label_pos.y }
-          r.ImGui_DrawList_AddText(draw_list, label_min.x, label_min.y, 0x404040FF, key_data[3])
-          if r.ImGui_IsKeyDown(ctx, key_data[4]) then
-            r.ImGui_DrawList_AddRectFilled(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0xFF000080, key_rounding)
-          end
-        end
-        r.ImGui_DrawList_PopClipRect(draw_list)
+        -- Elements rendered manually via ImDrawList API are not clipped automatically.
+        -- While not strictly necessary, here IsItemVisible() is used to avoid rendering these shapes when they are out of view.
         r.ImGui_Dummy(ctx, board_max.x - board_min[1], board_max.y - board_min[2])
+        if r.ImGui_IsItemVisible(ctx) then
+          local draw_list = r.ImGui_GetWindowDrawList(ctx)
+          r.ImGui_DrawList_PushClipRect(draw_list, board_min[1], board_min[2], board_max.x, board_max.y, true)
+          for n, key_data in ipairs(keys_to_display) do
+            local key_min = { x=start_pos.x + key_data[2] * key_step.x + key_data[1] * key_row_offset, y=start_pos.y + key_data[1] * key_step.y }
+            local key_max = { x=key_min.x + key_size.x, y=key_min.y + key_size.y }
+            r.ImGui_DrawList_AddRectFilled(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0xCCCCCCFF, key_rounding)
+            r.ImGui_DrawList_AddRect(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0x181818FF, key_rounding)
+            local face_min = { x=key_min.x + key_face_pos.x, y=key_min.y + key_face_pos.y }
+            local face_max = { x=face_min.x + key_face_size.x, y=face_min.y + key_face_size.y }
+            r.ImGui_DrawList_AddRect(draw_list, face_min.x, face_min.y, face_max.x, face_max.y, 0xC1C1C1FF, key_face_rounding, r.ImGui_DrawFlags_None(), 2.0)
+            r.ImGui_DrawList_AddRectFilled(draw_list, face_min.x, face_min.y, face_max.x, face_max.y, 0xFFFFFFFF, key_face_rounding)
+            local label_min = { x=key_min.x + key_label_pos.x, y=key_min.y + key_label_pos.y }
+            r.ImGui_DrawList_AddText(draw_list, label_min.x, label_min.y, 0x404040FF, key_data[3])
+            if r.ImGui_IsKeyDown(ctx, key_data[4]) then
+              r.ImGui_DrawList_AddRectFilled(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0xFF000080, key_rounding)
+            end
+          end
+          r.ImGui_DrawList_PopClipRect(draw_list)
+        end
       end
 
       r.ImGui_TreePop(ctx)
     end
 
     if r.ImGui_TreeNode(ctx, 'Capture override') then
-      r.ImGui_Button(ctx, 'Hovering me sets the\nkeyboard capture flag')
-      if r.ImGui_IsItemHovered(ctx) then
-        r.ImGui_CaptureKeyboardFromApp(ctx, true)
+      if not misc.capture_override then
+        misc.capture_override = { mouse = -1, keyboard = -1 }
       end
-      r.ImGui_SameLine(ctx)
-      r.ImGui_Button(ctx, 'Holding me clears the\nthe keyboard capture flag')
-      if r.ImGui_IsItemActive(ctx) then
-        r.ImGui_CaptureKeyboardFromApp(ctx, false)
+
+      -- demo.HelpMarker(
+      --   'The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui \z
+      --    to instruct your application of how to route inputs. Typically, when a value is true, it means \z
+      --    Dear ImGui wants the corresponding inputs and we expect the underlying application to ignore them.\n\n\z
+      --    The most typical case is: when hovering a window, Dear ImGui set io.WantCaptureMouse to true, \z
+      --    and underlying application should ignore mouse inputs (in practice there are many and more subtle \z
+      --    rules leading to how those flags are set).')
+      --
+      -- r.ImGui_Text('io.WantCaptureMouse: %d', io.WantCaptureMouse)
+      -- r.ImGui_Text('io.WantCaptureMouseUnlessPopupClose: %d', io.WantCaptureMouseUnlessPopupClose)
+      -- r.ImGui_Text('io.WantCaptureKeyboard: %d', io.WantCaptureKeyboard)
+
+      demo.HelpMarker(
+        "SetNextFrameWantCaptureXXX instructs ReaImGui how to route inputs.\n\n\z
+         Capturing the keyboard allows receiving input from REAPER's global scope.\n\n\z
+         Hovering the colored canvas will call SetNextFrameWantCaptureXXX.")
+
+      local capture_override_desc = { 'None', 'Set to false', 'Set to true' }
+      -- r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 15)
+      -- rv,misc.capture_override.mouse = r.ImGui_SliderInt(ctx, 'SetNextFrameWantCaptureMouse()', misc.capture_override.mouse, -1, 1, capture_override_desc[misc.capture_override.mouse + 2], r.ImGui_SliderFlags_AlwaysClamp())
+      r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 15)
+      rv,misc.capture_override.keyboard = r.ImGui_SliderInt(ctx, 'SetNextFrameWantCaptureKeyboard()', misc.capture_override.keyboard, -1, 1, capture_override_desc[misc.capture_override.keyboard + 2], r.ImGui_SliderFlags_AlwaysClamp())
+
+      r.ImGui_ColorButton(ctx, '##panel', 0xb219b2ff, r.ImGui_ColorEditFlags_NoTooltip() | r.ImGui_ColorEditFlags_NoDragDrop(), 256.0, 192.0) -- Dummy item
+      -- if r.ImGui_IsItemHovered(ctx) and misc.capture_override.mouse ~= -1 then
+      --   r.ImGui_SetNextFrameWantCaptureMouse(ctx, misc.capture_override.mouse == 1)
+      -- end
+      if r.ImGui_IsItemHovered(ctx) and misc.capture_override.keyboard ~= -1 then
+        r.ImGui_SetNextFrameWantCaptureKeyboard(ctx, misc.capture_override.keyboard == 1)
       end
+
       r.ImGui_TreePop(ctx)
     end
 
@@ -7614,8 +7656,9 @@ function demo.ShowExampleAppFullscreen()
   if not app.fullscreen then
     app.fullscreen = {
       use_work_area = true,
-      flags = r.ImGui_WindowFlags_NoDecoration() | r.ImGui_WindowFlags_NoMove() |
-              r.ImGui_WindowFlags_NoResize() | r.ImGui_WindowFlags_NoSavedSettings(),
+      flags = r.ImGui_WindowFlags_NoDecoration() |
+              r.ImGui_WindowFlags_NoMove()       |
+              r.ImGui_WindowFlags_NoSavedSettings(),
     }
   end
 

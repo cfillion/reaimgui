@@ -249,7 +249,7 @@ DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(int, GetKeyMods, (ImGui_Context*,ctx),
-"Ctrl/Shift/Alt/Super. See ImGui_KeyModFlags_*.",
+"Ctrl/Shift/Alt/Super. See ImGui_ModFlags_*.",
 {
   FRAME_GUARD;
   return ctx->IO().KeyMods;
@@ -269,23 +269,20 @@ DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
   return false;
 });
 
-DEFINE_API(void, CaptureKeyboardFromApp, (ImGui_Context*,ctx)
-(bool*,API_RO(want_capture_keyboard_value)),
-R"(Manually enable or disable capture of keyboard shortcuts in the global scope for the next frame.
-
-Default values: want_capture_keyboard_value = true)",
+DEFINE_API(void, SetNextFrameWantCaptureKeyboard, (ImGui_Context*,ctx)
+(bool,want_capture_keyboard),
+R"(Request capture of keyboard shortcuts in REAPER's global scope for the next frame.)",
 {
   FRAME_GUARD;
-  const bool value { valueOr(API_RO(want_capture_keyboard_value), true) };
-  ImGui::CaptureKeyboardFromApp(value);
+  ImGui::SetNextFrameWantCaptureKeyboard(want_capture_keyboard);
 });
 
-// ImGuiKeyModFlags
-DEFINE_ENUM(ImGui, KeyModFlags_None,  "");
-DEFINE_ENUM(ImGui, KeyModFlags_Ctrl,  "");
-DEFINE_ENUM(ImGui, KeyModFlags_Shift, "");
-DEFINE_ENUM(ImGui, KeyModFlags_Alt,   "");
-DEFINE_ENUM(ImGui, KeyModFlags_Super, "");
+// ImGuiModFlags
+DEFINE_ENUM(ImGui, ModFlags_None,  "");
+DEFINE_ENUM(ImGui, ModFlags_Ctrl,  "");
+DEFINE_ENUM(ImGui, ModFlags_Shift, "");
+DEFINE_ENUM(ImGui, ModFlags_Alt,   "Menu");
+DEFINE_ENUM(ImGui, ModFlags_Super, "Cmd/Super/Windows key");
 
 // ImGuiMouseButton
 DEFINE_ENUM(ImGui, MouseButton_Left,   "");

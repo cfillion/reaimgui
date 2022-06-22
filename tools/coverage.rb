@@ -28,7 +28,7 @@ NATIVE_ONLY = [
   'ImGuiViewport* ImGui::FindViewportByID(ImGuiID)',
   'ImGuiViewport* ImGui::FindViewportByPlatformHandle(void*)',
 
-  'void ImGui::CaptureMouseFromApp(bool)',
+  'void ImGui::SetNextFrameWantCaptureMouse(bool)',
 
   'const char* ImGui::GetKeyName(ImGuiKey)',
   'const char* ImGui::GetStyleColorName(ImGuiCol)',
@@ -227,7 +227,7 @@ ARG_RENAMES = {
 
 # these functions were not ported 1:1 (same name, otherwise add to RENAMES above too!)
 OVERRIDES = {
-  'const char* ImGui::GetVersion()' => 'void GetVersion(char*, int, char*, int)',
+  'const char* ImGui::GetVersion()' => 'void GetVersion(char*, int, int*, char*, int)',
   'void ImGui::PushStyleVar(ImGuiStyleVar, const ImVec2&)'                        => 'void PushStyleVar(int, double, double*)',
   'bool ImGui::SetDragDropPayload(const char*, const void*, size_t, ImGuiCond)'   => 'bool SetDragDropPayload(const char*, const char*, int*)',
   'const ImGuiPayload* ImGui::GetDragDropPayload()'                               => 'bool GetDragDropPayload(char*, int, char*, int, bool*, bool*)',
