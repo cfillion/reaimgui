@@ -14,6 +14,7 @@ function frame() (
   ) : (
     color = 0;
     #notes = "";
+    ImGui_BeginDisabled(ctx);
   );
 
   ImGui_TextWrapped(ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ultrices turpis lectus, in semper ligula blandit in. Duis non ipsum varius, pretium magna eu, mattis sapien. Maecenas augue mi, luctus sed leo et, ullamcorper convallis ligula. Nunc vitae porttitor quam. Integer a lorem fermentum, dapibus tortor ut, gravida erat. Quisque ut justo ante. Quisque fringilla a lectus a porta.");
@@ -28,7 +29,7 @@ function frame() (
   ImGui_InputTextMultiline(ctx, "track notes", #notes, 0, -FLT_MIN) ?
     GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 1);
 
-  track ? ImGui_PopID(ctx);
+  track ? ImGui_PopID(ctx) : ImGui_EndDisabled(ctx);
 );
 
 function loop() (

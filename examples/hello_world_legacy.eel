@@ -15,6 +15,7 @@ function frame() (
   ) : (
     color = 0;
     #notes = "";
+    extension_api("ImGui_BeginDisabled", ctx);
   );
 
   extension_api("ImGui_TextWrapped", ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ultrices turpis lectus, in semper ligula blandit in. Duis non ipsum varius, pretium magna eu, mattis sapien. Maecenas augue mi, luctus sed leo et, ullamcorper convallis ligula. Nunc vitae porttitor quam. Integer a lorem fermentum, dapibus tortor ut, gravida erat. Quisque ut justo ante. Quisque fringilla a lectus a porta.");
@@ -29,7 +30,9 @@ function frame() (
   extension_api("ImGui_InputTextMultiline", ctx, "track notes", #notes, 0, -FLT_MIN) ?
     GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 1);
 
-  track ? extension_api("ImGui_PopID", ctx);
+  track
+    ? extension_api("ImGui_PopID", ctx)
+    : extension_api("ImGui_EndDisabled", ctx);
 );
 
 function loop() (
