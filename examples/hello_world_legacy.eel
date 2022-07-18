@@ -9,7 +9,10 @@ color = 0;
 function frame() (
   track = GetSelectedTrack(0, 0);
 
-  !track ? (
+  track ? (
+    GetTrackGUID(#guid, track);
+    extension_api("ImGui_PushID", ctx, #guid);
+  ) : (
     color = 0;
     #notes = "";
   );
@@ -25,6 +28,8 @@ function frame() (
   GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 0);
   extension_api("ImGui_InputTextMultiline", ctx, "track notes", #notes, 0, -FLT_MIN) ?
     GetSetMediaTrackInfo_String(track, "P_EXT:imhw_notes", #notes, 1);
+
+  track ? extension_api("ImGui_PopID", ctx);
 );
 
 function loop() (
