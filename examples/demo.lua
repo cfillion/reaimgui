@@ -1883,8 +1883,7 @@ label:
     if not widgets.colors.saved_palette then
       widgets.colors.saved_palette = {}
       for n = 0, 31 do
-        local color = r.ImGui_ColorConvertHSVtoRGB(n / 31.0, 0.8, 0.8)
-        table.insert(widgets.colors.saved_palette, color)
+        table.insert(widgets.colors.saved_palette, demo.HSV(n / 31.0, 0.8, 0.8))
       end
     end
 
@@ -3325,12 +3324,9 @@ function demo.ShowDemoWindowLayout()
             label = tostring(n)
           end
           local hue = n * 0.05
-          local button_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.6, 0.6, 1.0)
-          local hovered_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.7, 0.7, 1.0)
-          local active_color = r.ImGui_ColorConvertHSVtoRGB(hue, 0.8, 0.8, 1.0)
-          r.ImGui_PushStyleColor(ctx, r.ImGui_Col_Button(), button_color)
-          r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonHovered(), hovered_color)
-          r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonActive(), active_color)
+          r.ImGui_PushStyleColor(ctx, r.ImGui_Col_Button(), demo.HSV(hue, 0.6, 0.6))
+          r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonHovered(), demo.HSV(hue, 0.7, 0.7))
+          r.ImGui_PushStyleColor(ctx, r.ImGui_Col_ButtonActive(), demo.HSV(hue, 0.8, 0.8))
           r.ImGui_Button(ctx, label, 40.0 + math.sin(line + n) * 20.0, 0.0)
           r.ImGui_PopStyleColor(ctx, 3)
           r.ImGui_PopID(ctx)
