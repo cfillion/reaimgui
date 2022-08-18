@@ -47,27 +47,19 @@ API::~API()
   knownFuncs().remove(this);
 }
 
-void API::RegInfo::announce() const
+void API::RegInfo::announce(const bool add) const
 {
+  // the original key string must remain valid even when unregistering
+  // in REAPER < 6.67 (see reapack#56)
   if(value)
-    plugin_register(key.c_str(), value);
+    plugin_register(add ? key.c_str() : ("-" + key).c_str(), value);
 }
 
-void API::registerAll()
+void API::announceAll(const bool add)
 {
   for(const API *func : knownFuncs()) {
     for(const RegInfo &reg : func->m_regs)
-      reg.announce();
-  }
-}
-
-void API::unregisterAll()
-{
-  for(const API *func : knownFuncs()) {
-    for(RegInfo reg : func->m_regs) {
-      reg.key.insert(reg.key.begin(), '-');
-      reg.announce();
-    }
+      reg.announce(add);
   }
 }
 

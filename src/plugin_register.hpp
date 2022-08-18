@@ -28,8 +28,8 @@ public:
 
   ~PluginRegister()
   {
-    m_key.insert(m_key.begin(), '-');
-    plugin_register(m_key.c_str(), m_value);
+    // the original m_key passed when registering must remain valid in REAPER < 6.67
+    plugin_register(("-" + m_key).c_str(), m_value);
   }
 
 private:

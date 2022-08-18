@@ -24,8 +24,7 @@
 
 class API {
 public:
-  static void registerAll();
-  static void unregisterAll();
+  static void announceAll(bool add);
   static void handleError(const char *fnName, const reascript_error &);
   static void handleError(const char *fnName, const imgui_error &);
 
@@ -36,7 +35,7 @@ private:
   struct RegInfo {
     std::string key;
     void *value;
-    void announce() const;
+    void announce(bool add) const;
   } m_regs[3];
 };
 
