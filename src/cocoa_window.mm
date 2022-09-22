@@ -198,6 +198,10 @@ void CocoaWindow::render(void *)
 
   [m_gl makeCurrentContext];
   if(m_needTexUpload) {
+    // resize macOS's GL objects when DPI changes (eg. moving to another screen)
+    // NSViewFrameDidChangeNotification or WM_SIZE aren't sent
+    [m_gl update];
+
     m_renderer->uploadFontTex();
     m_needTexUpload = false;
   }
