@@ -283,7 +283,7 @@ void GDKWindow::render(void *)
   gdk_gl_context_make_current(m_gl);
 
   if(m_needTexUpload) {
-    m_renderer->uploadFontTex();
+    m_renderer->uploadFontTex(m_fontAtlas);
     m_needTexUpload = false;
   }
 

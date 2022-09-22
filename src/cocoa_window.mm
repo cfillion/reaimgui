@@ -202,7 +202,7 @@ void CocoaWindow::render(void *)
     // NSViewFrameDidChangeNotification or WM_SIZE aren't sent
     [m_gl update];
 
-    m_renderer->uploadFontTex();
+    m_renderer->uploadFontTex(m_fontAtlas);
     m_needTexUpload = false;
   }
   m_renderer->render(m_viewport);

@@ -145,6 +145,8 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
   if(ImGuiWindow *userWindow { viewportPrivate->Window })
     m_noFocus = userWindow->Flags & ImGuiWindowFlags_NoFocusOnAppearing;
 
+  m_fontAtlas = ImGui::GetIO().Fonts;
+
   // Cannot initialize m_hwnd during construction due to handleMessage being
   // virtual. This task is delayed to created() called once fully constructed.
 }
@@ -202,7 +204,8 @@ void Window::onChanged()
   const bool scaleChanged { m_previousScale != m_viewport->DpiScale };
   m_previousScale = m_viewport->DpiScale;
 
-  const int fontTexVersion { m_ctx->fonts().setScale(m_viewport->DpiScale) };
+  m_fontAtlas = m_ctx->fonts().setScale(m_viewport->DpiScale);
+  const int fontTexVersion { m_ctx->fonts().texVersion() };
   if(scaleChanged || fontTexVersion != m_fontTexVersion) {
     m_needTexUpload = true;
     m_fontTexVersion = fontTexVersion;

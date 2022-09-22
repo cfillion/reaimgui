@@ -21,6 +21,7 @@
 #include <array>
 
 struct ImDrawData;
+struct ImFontAtlas;
 struct ImGuiViewport;
 
 class OpenGLRenderer {
@@ -31,7 +32,7 @@ public:
   OpenGLRenderer();
   ~OpenGLRenderer();
 
-  void uploadFontTex();
+  void uploadFontTex(ImFontAtlas *);
   void render(ImGuiViewport *, bool flip = false);
 
 private:

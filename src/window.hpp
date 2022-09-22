@@ -29,6 +29,7 @@
 #endif
 
 class DockerHost;
+struct ImFontAtlas;
 typedef int ImGuiMouseButton;
 
 class Window : public Viewport {
@@ -78,6 +79,7 @@ protected:
   struct WindowDeleter { void operator()(HWND); };
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
   bool m_needTexUpload;
+  ImFontAtlas *m_fontAtlas;
 
 private:
   static int hwndInfo(HWND, INT_PTR type);

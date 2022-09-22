@@ -71,7 +71,7 @@ public:
   void keepAliveAll();
   void update();
   int texVersion() const { return m_version; }
-  int setScale(float scale); // returns the current texture version
+  ImFontAtlas *setScale(float scale);
   Font *get(ImFont *) const;
   ImFont *instanceOf(Font *) const;
 

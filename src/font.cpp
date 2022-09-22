@@ -116,7 +116,7 @@ void FontList::update()
   }
 }
 
-int FontList::setScale(const float scale)
+ImFontAtlas *FontList::setScale(const float scale)
 {
   ImGuiIO &io { ImGui::GetIO() };
 
@@ -133,7 +133,7 @@ int FontList::setScale(const float scale)
   if(atlasChanged)
     migrateActiveFonts();
 
-  return m_version;
+  return atlas.get();
 }
 
 void FontList::build(const float scale)

@@ -356,7 +356,7 @@ void Win32Window::render(void *)
 {
   wglMakeCurrent(m_dc, m_gl);
   if(m_needTexUpload) {
-    m_renderer->uploadFontTex();
+    m_renderer->uploadFontTex(m_fontAtlas);
     m_needTexUpload = false;
   }
   m_renderer->render(m_viewport);
