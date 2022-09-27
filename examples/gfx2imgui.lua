@@ -93,6 +93,8 @@ local gfx, global_state, state = {}, {
   log        = { ptr=0, size=0, max_size=64 },
   log_lines  = {},
   imgdim     = {},
+  pos        = { x=0, y=0 },
+  dock       = 0,
 }
 
 -- default variables
@@ -273,13 +275,25 @@ local function gfxdo(callback)
 end
 
 local function setDock(v)
-  state.dock = v -- keep original value for scripts that check it
+  global_state.dock = v -- keep original value for scripts that check it
   state.want_dock = (v & 1) == 1 and ~(v >> 1 & 0x1f) or 0
 end
 
+local function toInt(v)
+  return math.floor(v or 0)
+end
+
 -- translation functions
-function gfx.arc()
-  warn('not implemented')
+function gfx.arc(x, y, r, ang1, ang2, antialias)
+  if antialias then warn('ignoring parameter antialias') end
+  local c, quarter = color(), math.pi / 2
+  x, y = toInt(x), toInt(y)
+  ang1, ang2 = ang1 - quarter, ang2 - quarter
+  drawCall(function(draw_list, screen_x, screen_y)
+    local x, y = screen_x + x, screen_y + y
+    reaper.ImGui_DrawList_PathArcTo(draw_list, x, y, r, ang1, ang2)
+    reaper.ImGui_DrawList_PathStroke(draw_list, c)
+  end)
 end
 
 function gfx.blit(source, scale, rotation, srcx, srcy, srcw, srch, destx, desty, destw, desth, rotxoffs, rotyoffs)
@@ -299,8 +313,8 @@ function gfx.blit(source, scale, rotation, srcx, srcy, srcw, srch, destx, desty,
   if not desth then desth = srch * scale end
 
   srcx, srcy, srcw, srch, destx, desty, destw, desth =
-    math.floor(srcx), math.floor(srcy), math.floor(srcw), math.floor(srch),
-    math.floor(destx), math.floor(desty), math.floor(destw), math.floor(desth)
+    toInt(srcx), toInt(srcy), toInt(srcw), toInt(srch),
+    toInt(destx), toInt(desty), toInt(destw), toInt(desth)
 
   if scale    ~= 1 then warn('ignoring parameter scale')    end
   if rotation ~= 0 then warn('ignoring parameter rotation') end
@@ -336,7 +350,7 @@ end
 function gfx.circle(x, y, r, fill, antialias)
   if antialias then warn('ignoring parameter antialias') end
   local c = color()
-  x, y = math.floor(x), math.floor(y)
+  x, y = toInt(x), toInt(y)
   local AddCircle = tobool(fill, true) and
     reaper.ImGui_DrawList_AddCircleFilled or reaper.ImGui_DrawList_AddCircle
   drawCall(function(draw_list, screen_x, screen_y)
@@ -346,7 +360,7 @@ end
 
 function gfx.clienttoscreen(x, y)
   if not state then return x, y end
-  return state.pos.x + x, state.pos.y + y
+  return global_state.pos.x + x, global_state.pos.y + y
 end
 
 function gfx.deltablit()
@@ -354,15 +368,13 @@ function gfx.deltablit()
 end
 
 function gfx.dock(...)
-  if not state then return 0, 0, 0, 0, 0 end
-
   local args = {...}
   args[1] = tonumber(args[1])
   if args[1] < 0 then
     local n_args = select('#', ...)
-    args[1] = state.dock
-    if args[2] then args[2] = state.pos.x end
-    if args[3] then args[3] = state.pos.y end
+    args[1] = global_state.dock
+    if args[2] then args[2] = global_state.pos.x end
+    if args[3] then args[3] = global_state.pos.y end
     if args[4] then args[4] = gfx.w end
     if args[5] then args[5] = gfx.h end
     return table.unpack(args)
@@ -382,10 +394,10 @@ end
 function gfx.drawstr(str, flags, right, bottom)
   if not state then return end
 
-  local x, y, c, f = math.floor(gfx.x), math.floor(gfx.y), color(), state.font
+  local x, y, c, f = toInt(gfx.x), toInt(gfx.y), color(), state.font
   local w, h = gfx.measurestr(str)
-  if right  then right  = math.floor(right) end
-  if bottom then bottom = math.floor(bottom) end
+  if right  then right  = toInt(right) end
+  if bottom then bottom = toInt(bottom) end
 
   if flags then
     if (flags & 1) ~= 0 and right then -- center horizontally
@@ -462,7 +474,7 @@ function gfx.getpixel()
 end
 
 function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy, dbdy, dady)
-  x, y, w, h = math.floor(x), math.floor(y), math.floor(w), math.floor(h)
+  x, y, w, h = toInt(x), toInt(y), toInt(w), toInt(h)
   local c = color(r, g, b, a)
   warn('FIXME: gradient parameters not computed')
   drawCall(function(draw_list, screen_x, screen_y)
@@ -474,7 +486,7 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
 end
 
 function gfx.imgui(callback)
-  local x, y = math.floor(gfx.x), math.floor(gfx.y)
+  local x, y = toInt(gfx.x), toInt(gfx.y)
   drawCall(function(draw_list, screen_x, screen_y)
     reaper.ImGui_SetCursorScreenPos(state.ctx, screen_x + x, screen_y + y)
     callback(state.ctx, draw_list, screen_x, screen_y)
@@ -482,7 +494,7 @@ function gfx.imgui(callback)
 end
 
 function gfx.init(name, width, height, dockstate, xpos, ypos)
-  if state then return warn('ignoring repeated call') end
+  if state then return warn('ignoring repeated call to init') end
   if name:len() < 1 then name = 'gfx2imgui' end
 
   state = {
@@ -491,8 +503,6 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     wnd_flags  = 1,
     want_close = false,
     font       = nil,--global_state.fonts[global_state.last_font_idx],
-    pos        = { x=0, y=0 },
-    dock       = 0,
     in_frame   = false,
     charqueue  = { ptr=0, rptr=0, size=0, max_size=16 },
   }
@@ -525,7 +535,7 @@ end
 function gfx.line(x1, y1, x2, y2, aa)
   if aa then warn('ignoring parameter aa') end
   local c = color()
-  x1, y1, x2, y2 = math.floor(x1), math.floor(y1), math.floor(x2), math.floor(y2)
+  x1, y1, x2, y2 = toInt(x1), toInt(y1), toInt(x2), toInt(y2)
   drawCall(function(draw_list, screen_x, screen_y)
     local x1, y1 = screen_x + x1, screen_y + y1
     local x2, y2 = screen_x + x2, screen_y + y2
@@ -595,7 +605,7 @@ function gfx.rect(x, y, w, h, filled)
   local c = color()
   local AddRect = tobool(filled, true) and
     reaper.ImGui_DrawList_AddRectFilled or reaper.ImGui_DrawList_AddRect
-  x, y, w, h = math.floor(x), math.floor(y), math.floor(w), math.floor(h)
+  x, y, w, h = toInt(x), toInt(y), toInt(w), toInt(h)
   drawCall(function(draw_list, screen_x, screen_y)
     local x1, y1 = screen_x + x, screen_y + y
     local x2, y2 = x1 + w, y1 + h
@@ -611,7 +621,7 @@ end
 function gfx.roundrect(x, y, w, h, radius, antialias)
   if antialias then warn('ignoring parameter antialias') end
   local c = color()
-  x, y, w, h = math.floor(x), math.floor(y), math.floor(w), math.floor(h)
+  x, y, w, h = toInt(x), toInt(y), toInt(w), toInt(h)
   drawCall(function(draw_list, screen_x, screen_y)
     local x1, y1 = screen_x + x, screen_y + y
     local x2, y2 = x1 + w, y1 + h
@@ -622,7 +632,7 @@ end
 
 function gfx.screentoclient(x, y)
   if not state then return x, y end
-  return x - state.pos.x, y - state.pos.y
+  return x - global_state.pos.x, y - global_state.pos.y
 end
 
 function gfx.set(r, ...) -- g, b, a, mode, dest, a2
@@ -651,11 +661,22 @@ function gfx.setfont(idx, fontface, sz, flag)
   if not flag then flag = 0 end
   idx = tonumber(idx) -- Default_6.0_theme_adjuster.lua gives a string sometimes
 
-  if idx > 0 and fontface and not global_state.fonts[idx] then
-    sz  = math.floor(sz)
-    -- if global_state.fonts[idx] then
-    --   reaper.ImGui_DetachFont(state.ctx, global_state.fonts[idx])
-    -- end
+  if idx > 0 and fontface then
+    sz = toInt(sz)
+
+    if sz < 1 then
+      warn('requested font size is smaller than 1px, falling back to 13px')
+      sz = 13
+    end
+
+    if global_state.fonts[idx] then
+      if state.in_frame then
+        return warn('cannot replace font: frame already started')
+      else
+        reaper.ImGui_DetachFont(state.ctx, global_state.fonts[idx].instance)
+      end
+    end
+
     if type(flag) == 'string' then flag = string.byte(flag) end
     local flags = FONT_FLAGS[flag]
     if not flags then warn("unknown font flag '%s'", flag) end
@@ -685,7 +706,7 @@ function gfx.setfont(idx, fontface, sz, flag)
 end
 
 function gfx.setimgdim(image, w, h)
-  global_state.imgdim[image] = { w=math.floor(w), h=math.floor(h) }
+  global_state.imgdim[image] = { w=toInt(w), h=toInt(h) }
 end
 
 function gfx.setpixel(r, g, b)
@@ -790,17 +811,17 @@ function gfx.update()
   updateKeyboard()
 
   state.want_close = state.want_close or not open
-  state.pos.x, state.pos.y = reaper.ImGui_GetWindowPos(state.ctx)
-  if MACOS then state.pos.y = state.pos.y + gfx.h end
-  state.pos.x, state.pos.y = reaper.ImGui_PointConvertNative(state.ctx,
-    state.pos.x, state.pos.y, true)
+  global_state.pos.x, global_state.pos.y = reaper.ImGui_GetWindowPos(state.ctx)
+  if MACOS then global_state.pos.y = global_state.pos.y + gfx.h end
+  global_state.pos.x, global_state.pos.y = reaper.ImGui_PointConvertNative(state.ctx,
+    global_state.pos.x, global_state.pos.y, true)
 
   if reaper.ImGui_IsWindowDocked(state.ctx) then
     -- keep extra bits set, for scripts that check it
-    state.dock = 1 | (state.dock & ~0x3e) |
+    global_state.dock = 1 | (global_state.dock & ~0x3e) |
       (~reaper.ImGui_GetWindowDockID(state.ctx) << 1)
   else
-    state.dock = state.dock & ~1 -- preserve previous docker ID
+    global_state.dock = global_state.dock & ~1 -- preserve previous docker ID
   end
 
   reaper.ImGui_End(state.ctx)
