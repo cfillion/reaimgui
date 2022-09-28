@@ -29,6 +29,7 @@ local CTX_FLAGS = reaper.ImGui_ConfigFlags_NoSavedSettings() |
 local WND_FLAGS = reaper.ImGui_WindowFlags_NoScrollbar() |
                   reaper.ImGui_WindowFlags_NoScrollWithMouse() |
                   reaper.ImGui_WindowFlags_NoMove()
+local LOG_WND_FLAGS = reaper.ImGui_WindowFlags_NoDocking()
 local WINDOW_PADDING, WINDOW_BG =
   reaper.ImGui_StyleVar_WindowPadding(), reaper.ImGui_Col_WindowBg()
 local MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE =
@@ -156,9 +157,11 @@ end
 
 local function updateMouse()
   gfx.mouse_cap = 0
-  if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_LEFT)   then gfx.mouse_cap = gfx.mouse_cap | 1  end
-  if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_RIGHT)  then gfx.mouse_cap = gfx.mouse_cap | 2  end
-  if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_MIDDLE) then gfx.mouse_cap = gfx.mouse_cap | 64 end
+  if reaper.ImGui_IsWindowHovered(state.ctx) then -- not over Log window
+    if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_LEFT)   then gfx.mouse_cap = gfx.mouse_cap | 1  end
+    if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_RIGHT)  then gfx.mouse_cap = gfx.mouse_cap | 2  end
+    if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_MIDDLE) then gfx.mouse_cap = gfx.mouse_cap | 64 end
+  end
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_CTRL)  then gfx.mouse_cap = gfx.mouse_cap | 4  end
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_SHIFT) then gfx.mouse_cap = gfx.mouse_cap | 8  end
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_ALT)   then gfx.mouse_cap = gfx.mouse_cap | 16 end
@@ -237,7 +240,7 @@ end
 local function showLog()
   reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 1)
   reaper.ImGui_SetNextWindowSize(state.ctx, 800, 300, reaper.ImGui_Cond_Once())
-  local visible, open = reaper.ImGui_Begin(state.ctx, 'gfx2imgui [Log]', true)
+  local visible, open = reaper.ImGui_Begin(state.ctx, 'gfx2imgui [Log]', true, LOG_WND_FLAGS)
   reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 0)
   if not visible then return end
   local scroll_bottom = reaper.ImGui_GetScrollY(state.ctx) == reaper.ImGui_GetScrollMaxY(state.ctx)
@@ -283,12 +286,47 @@ local function toInt(v)
   return math.floor(v or 0)
 end
 
+local function beginFrame()
+  if state.in_frame then return end
+
+  state.in_frame = true
+
+  for _, font in ipairs(state.fontqueue.detach) do
+    reaper.ImGui_DetachFont(state.ctx, font)
+  end
+
+  for _, font in ipairs(state.fontqueue.attach) do
+    reaper.ImGui_AttachFont(state.ctx, font)
+  end
+
+  state.fontqueue.detach, state.fontqueue.attach = {}, {}
+end
+
+local function isFontQueuedForAttachment(font)
+  for i, instance in ipairs(state.fontqueue.attach) do
+    if instance == font.instance then
+      return true
+    end
+  end
+
+  return false
+end
+
+local function getAttachedFontInstance(font)
+  if not font then return end
+
+  if not state.in_frame or not isFontQueuedForAttachment(font) then
+    return font.instance
+  end
+
+  -- TODO: fallback with a font of the same family/style but different size
+end
+
 -- translation functions
 function gfx.arc(x, y, r, ang1, ang2, antialias)
   if antialias then warn('ignoring parameter antialias') end
   local c, quarter = color(), math.pi / 2
-  x, y = toInt(x), toInt(y)
-  ang1, ang2 = ang1 - quarter, ang2 - quarter
+  x, y, ang1, ang2 = toInt(x), toInt(y), ang1 - quarter, ang2 - quarter
   drawCall(function(draw_list, screen_x, screen_y)
     local x, y = screen_x + x, screen_y + y
     reaper.ImGui_DrawList_PathArcTo(draw_list, x, y, r, ang1, ang2)
@@ -396,6 +434,7 @@ function gfx.drawstr(str, flags, right, bottom)
 
   local x, y, c, f = toInt(gfx.x), toInt(gfx.y), color(), state.font
   local w, h = gfx.measurestr(str)
+  local font_instance, font_size = getAttachedFontInstance(f), f and f.size or 0
   if right  then right  = toInt(right) end
   if bottom then bottom = toInt(bottom) end
 
@@ -423,7 +462,7 @@ function gfx.drawstr(str, flags, right, bottom)
 
   gfx.x = gfx.x + w
   drawCall(function(draw_list, screen_x, screen_y)
-    reaper.ImGui_DrawList_AddTextEx(draw_list, f and f.instance, f and f.size or 0,
+    reaper.ImGui_DrawList_AddTextEx(draw_list, font_instance, font_size,
       screen_x + x, screen_y + y, c, str, 0, 0,
       right and right - x or nil, bottom and bottom - y or nil)
   end)
@@ -450,7 +489,7 @@ function gfx.getchar(char)
     char = string.byte(char)
   end
 
-  state.in_frame = true
+  beginFrame()
   return reaper.ImGui_IsKeyDown(state.ctx, char)
 end
 
@@ -505,6 +544,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     font       = nil,--global_state.fonts[global_state.last_font_idx],
     in_frame   = false,
     charqueue  = { ptr=0, rptr=0, size=0, max_size=16 },
+    fontqueue  = { attach={}, detach={} },
   }
 
   reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 0)
@@ -577,8 +617,12 @@ end
 
 function gfx.measurestr(str)
   if not state then return 13 * utf8.len(str), 13 end
-  state.in_frame = true
-  reaper.ImGui_PushFont(state.ctx, state.font and state.font.instance)
+  local font = getAttachedFontInstance(state.font)
+  if state.in_frame and state.font and not font then
+    warn('font could not be attached in time, frame was already started')
+  end
+  beginFrame()
+  reaper.ImGui_PushFont(state.ctx, font)
   local w, h = reaper.ImGui_CalcTextSize(state.ctx, str)
   reaper.ImGui_PopFont(state.ctx)
   return w, h
@@ -665,44 +709,45 @@ function gfx.setfont(idx, fontface, sz, flag)
     sz = toInt(sz)
 
     if sz < 1 then
-      warn('requested font size is smaller than 1px, falling back to 13px')
-      sz = 13
-    end
-
-    if global_state.fonts[idx] then
-      if state.in_frame then
-        return warn('cannot replace font: frame already started')
-      else
-        reaper.ImGui_DetachFont(state.ctx, global_state.fonts[idx].instance)
-      end
+      warn('requested font size is smaller than 1px, clamping')
+      sz = 1
     end
 
     if type(flag) == 'string' then flag = string.byte(flag) end
     local flags = FONT_FLAGS[flag]
     if not flags then warn("unknown font flag '%s'", flag) end
+
+    local prev = global_state.fonts[idx]
+
+    if prev then
+      if prev.family == fontface and prev.size == sz and
+         prev.flags == flags then
+        return
+      elseif prev.instance and not isFontQueuedForAttachment(prev) then
+        state.fontqueue.detach[#state.fontqueue.detach + 1] = prev.instance
+      end
+    end
+
     local font = {
       instance = reaper.ImGui_CreateFont(fontface, sz, flags),
+      family   = fontface,
       size     = sz,
+      flags    = flags,
     }
 
-    global_state.fonts[idx] = font
-
-    -- if state then
-      if state.in_frame then
-        font.instance = nil -- fallback to default bitmap font
-        warn('cannot attach font: frame already started')
-      else
-        reaper.ImGui_AttachFont(state.ctx, font.instance)
-      end
-      state.font = font
+    -- if state.in_frame then
+      state.fontqueue.attach[#state.fontqueue.attach + 1] = font.instance
+    -- else
+    --   reaper.ImGui_AttachFont(state.ctx, font.instance)
     -- end
-  -- elseif state then
+
+    global_state.fonts[idx] = font
+    state.font = font
   else
     state.font = global_state.fonts[idx]
   end
 
   gfx.texth = idx ~= 0 and ((state and state.font and state.font.size) or sz) or 13
-  -- global_state.last_font_idx = idx
 end
 
 function gfx.setimgdim(image, w, h)
@@ -755,7 +800,8 @@ end
 function gfx.update()
   if not state then return end
 
-  state.in_frame = true
+  beginFrame()
+  state.in_frame = false
 
   if global_state.log.size > 0 then showLog() end
 
