@@ -214,18 +214,22 @@ local function warn(message, ...)
   if GFX2IMGUI_NO_LOG then return end
 
   local funcInfo = debug.getinfo(2, 'nSl')
+  local warnLine = funcInfo.currentline
 
   -- don't print duplicate messages
   for _, line in ipairs(global_state.log_lines) do
-    if line == funcInfo.currentline then return end
+    if line == warnLine then return end
   end
-  global_state.log_lines[#global_state.log_lines + 1] = funcInfo.currentline
+  global_state.log_lines[#global_state.log_lines + 1] = warnLine
 
   local depth, callerInfo = 3, nil
   repeat
     callerInfo = debug.getinfo(depth, 'nSl')
     depth = depth + 1
   until not callerInfo or callerInfo.source ~= funcInfo.source
+
+  -- get the gfx call in case the warning comes from deeper in gfx2imgui
+  funcInfo = debug.getinfo(depth - 2, 'nSl')
 
   if not callerInfo or not funcInfo.short_src:match('gfx2imgui.lua$') then
     -- tail calls
@@ -234,7 +238,7 @@ local function warn(message, ...)
   end
 
   message = ('gfx.%s[%d]: %s [%s@%s:%d]')
-    :format(funcInfo.name, funcInfo.currentline, message:format(...),
+    :format(funcInfo.name, warnLine, message:format(...),
             callerInfo.name, callerInfo.short_src, callerInfo.currentline)
   ringInsert(global_state.log, message)
   print(message)
@@ -269,8 +273,8 @@ local function gfxdo(callback)
   if reaper.JS_Window_SetStyle then
     local window = reaper.JS_Window_GetFocus()
     local winx, winy = reaper.JS_Window_ClientToScreen(window, 0, 0)
-    gfx.x = gfx.x - (winx - curx)
-    gfx.y = gfx.y - (winy - cury)
+    ogfx.x = gfx.x - (winx - curx)
+    ogfx.y = gfx.y - (winy - cury)
     reaper.JS_Window_SetStyle(window, 'POPUP')
     reaper.JS_Window_SetOpacity(window, 'ALPHA', 0)
   end
@@ -350,6 +354,7 @@ local function getFontInstance(font)
   local match, score = sizes[font.size], 0
   if not match then
     match, score = nearest(sizes, font.size)
+    warn("cannot load font '%s'@%d[%x] in the middle of a frame, falling back to nearest match until next frame", font.family, font.size, font.flags)
   end
 
   if match then
@@ -393,11 +398,29 @@ local function beginFrame()
   state.fontqueue = {}
 end
 
+local function sortClockwise(points)
+  local center_x, center_y, n_points = 0, 0, #points / 2
+  for i = 1, #points, 2 do
+    center_x, center_y = center_x + points[i], center_y + points[i + 1]
+  end
+  center_x, center_y = center_x / n_points, center_y / n_points
+
+  for i = 1, #points, 2 do
+    local x, y, j = points[i], points[i + 1], i - 2
+    while j >= 2 and math.atan(points[j + 1] - center_y, points[j + 0] - center_x) >
+                     math.atan(y             - center_y, x             - center_x) do
+      points[j + 2], points[j + 3] = points[j + 0], points[j + 1]
+      j = j - 2
+    end
+    points[j + 2], points[j + 3] = x, y
+  end
+end
+
 -- translation functions
 function gfx.arc(x, y, r, ang1, ang2, antialias)
   if antialias then warn('ignoring parameter antialias') end
   local c, quarter = color(), math.pi / 2
-  x, y, ang1, ang2 = toInt(x), toInt(y), ang1 - quarter, ang2 - quarter
+  x, y, ang1, ang2 = toInt(x) + 1, toInt(y), ang1 - quarter, ang2 - quarter
   drawCall(function(draw_list, screen_x, screen_y)
     local x, y = screen_x + x, screen_y + y
     reaper.ImGui_DrawList_PathArcTo(draw_list, x, y, r, ang1, ang2)
@@ -459,7 +482,7 @@ end
 function gfx.circle(x, y, r, fill, antialias)
   if antialias then warn('ignoring parameter antialias') end
   local c = color()
-  x, y = toInt(x), toInt(y)
+  x, y, r = toInt(x) + 0.5, toInt(y), toInt(r) + 1
   local AddCircle = tobool(fill, true) and
     reaper.ImGui_DrawList_AddCircleFilled or reaper.ImGui_DrawList_AddCircle
   drawCall(function(draw_list, screen_x, screen_y)
@@ -785,7 +808,7 @@ function gfx.setfont(idx, fontface, sz, flag)
 
   idx = tonumber(idx) -- Default_6.0_theme_adjuster.lua gives a string sometimes
 
-  if idx > 0 and fontface then
+  if idx > 0 and (fontface or sz) then
     sz = toInt(sz)
 
     if sz < 1 then
@@ -802,11 +825,20 @@ function gfx.setfont(idx, fontface, sz, flag)
     local font, is_new = global_state.fonts[idx], true
 
     if font then
+      if not fontface then
+        -- gfx doesn't do this (defaults to blank fontface)
+        -- this prevents using the default bitmap font if we don't match what
+        -- the script may be using elsewhere
+        fontface = font.family
+      end
+
       is_new = font.family ~= fontface or font.size ~= sz or font.flags ~= flags
       if is_new then
         local attached = dig(state.fontmap, font.family, font.flags, font.size)
         if attached then attached.keep_alive = false end
       end
+    elseif not fontface then
+      fontface = 'sans-serif'
     end
 
     if is_new then
@@ -849,6 +881,7 @@ function gfx.triangle(...)
   local points = {...}
   local n_points = #points
   local c = color()
+  sortClockwise(points)
 
   if n_points > 6 then -- convex polygon
     drawCall(function(draw_list, screen_x, screen_y)
