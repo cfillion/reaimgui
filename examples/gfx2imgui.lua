@@ -18,7 +18,7 @@
 --   end
 --   gfx.update()
 -- end
--- loop()
+-- reaper.defer(loop)
 
 local reaper, ogfx, print = reaper, gfx, print
 local string, table, utf8 = string, table, utf8
@@ -26,6 +26,7 @@ local string, table, utf8 = string, table, utf8
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local CTX_FLAGS = reaper.ImGui_ConfigFlags_NoSavedSettings() |
                   reaper.ImGui_ConfigFlags_DockingEnable()
+local CANARY_FLAGS = reaper.ImGui_ConfigFlags_NoSavedSettings()
 local WND_FLAGS = reaper.ImGui_WindowFlags_NoScrollbar() |
                   reaper.ImGui_WindowFlags_NoScrollWithMouse() |
                   reaper.ImGui_WindowFlags_NoMove()
@@ -210,6 +211,8 @@ local function updateKeyboard()
 end
 
 local function warn(message, ...)
+  if GFX2IMGUI_NO_LOG then return end
+
   local funcInfo = debug.getinfo(2, 'nSl')
 
   -- don't print duplicate messages
@@ -286,25 +289,9 @@ local function toInt(v)
   return math.floor(v or 0)
 end
 
-local function beginFrame()
-  if state.in_frame then return end
-
-  state.in_frame = true
-
-  for _, font in ipairs(state.fontqueue.detach) do
-    reaper.ImGui_DetachFont(state.ctx, font)
-  end
-
-  for _, font in ipairs(state.fontqueue.attach) do
-    reaper.ImGui_AttachFont(state.ctx, font)
-  end
-
-  state.fontqueue.detach, state.fontqueue.attach = {}, {}
-end
-
-local function isFontQueuedForAttachment(font)
-  for i, instance in ipairs(state.fontqueue.attach) do
-    if instance == font.instance then
+local function hasValue(array, needle)
+  for _, v in pairs(array) do
+    if v == needle then
       return true
     end
   end
@@ -312,14 +299,98 @@ local function isFontQueuedForAttachment(font)
   return false
 end
 
-local function getAttachedFontInstance(font)
-  if not font then return end
-
-  if not state.in_frame or not isFontQueuedForAttachment(font) then
-    return font.instance
+local function dig(array, ...)
+  for i = 1, select('#', ...) do
+    if type(array) ~= 'table' then return end
+    array = array[select(i, ...)]
   end
 
-  -- TODO: fallback with a font of the same family/style but different size
+  return array
+end
+
+local function put(array, ...)
+  local n = select('#', ...)
+
+  for i = 1, n - 2 do
+    local k = select(i, ...)
+    local v = array[k]
+
+    if type(v) ~= 'table' then
+      assert(not v)
+      v = {}
+      array[k] = v
+    end
+
+    array = v
+  end
+
+  array[select(n - 1, ...)] = select(n, ...)
+
+  return array
+end
+
+local function nearest(array, target_key)
+  local best_value, best_score
+
+  for key, value in pairs(array) do
+    local score = key - target_key
+    if best_score and score > best_score then break end
+    best_value, best_score = value, score
+  end
+
+  return best_value, best_score or 0
+end
+
+local function getFontInstance(font)
+  if not font then return nil, 0 end
+
+  local sizes = dig(state.fontmap, font.family, font.flags)
+  if not sizes then return nil, 0 end
+
+  local match, score = sizes[font.size], 0
+  if not match then
+    match, score = nearest(sizes, font.size)
+  end
+
+  if match then
+    match.used = true
+    return match.instance, score
+  end
+
+  return nil, 0
+end
+
+local function beginFrame()
+  -- protect against scripts calling gfx.update more than once per defer cycle
+  -- or before the first defer timer tick
+  local this_frame = reaper.ImGui_GetFrameCount(state.canary)
+  if state.last_frame == this_frame then return end
+  state.last_frame = this_frame
+
+  for family, styles in pairs(state.fontmap) do
+    for style, sizes in pairs(styles) do
+      for size, font in pairs(sizes) do
+        if font.used then
+          font.used = false
+        elseif not font.keep_alive then
+          reaper.ImGui_DetachFont(state.ctx, font.instance)
+          put(state.fontmap, family, style, size, nil)
+        end
+      end
+    end
+  end
+
+  for _, font in ipairs(state.fontqueue) do
+    if not dig(state.fontmap, font.family, font.flags, font.size) then
+      local instance = reaper.ImGui_CreateFont(font.family, font.size, font.flags)
+      local keep_alive = hasValue(global_state.fonts, font)
+      reaper.ImGui_AttachFont(state.ctx, instance)
+      put(state.fontmap, font.family, font.flags, font.size,
+        { used = true, keep_alive = keep_alive, instance = instance })
+    end
+  end
+
+  state.fontqueue = {}
 end
 
 -- translation functions
@@ -433,8 +504,7 @@ function gfx.drawstr(str, flags, right, bottom)
   if not state then return end
 
   local x, y, c, f = toInt(gfx.x), toInt(gfx.y), color(), state.font
-  local w, h = gfx.measurestr(str)
-  local font_instance, font_size = getAttachedFontInstance(f), f and f.size or 0
+  local w, h = gfx.measurestr(str) -- calls beginFrame()
   if right  then right  = toInt(right) end
   if bottom then bottom = toInt(bottom) end
 
@@ -462,6 +532,7 @@ function gfx.drawstr(str, flags, right, bottom)
 
   gfx.x = gfx.x + w
   drawCall(function(draw_list, screen_x, screen_y)
+    local font_instance, font_size = getFontInstance(f), f and f.size or 0
     reaper.ImGui_DrawList_AddTextEx(draw_list, font_instance, font_size,
       screen_x + x, screen_y + y, c, str, 0, 0,
       right and right - x or nil, bottom and bottom - y or nil)
@@ -533,18 +604,30 @@ function gfx.imgui(callback)
 end
 
 function gfx.init(name, width, height, dockstate, xpos, ypos)
-  if state then return warn('ignoring repeated call to init') end
-  if name:len() < 1 then name = 'gfx2imgui' end
+  if state then
+    if name ~= state.name and
+        not width and not height and not dockstate and not xpos and not ypos then
+      state.name = name
+    else
+      warn('ignoring repeated call to init')
+    end
+    return
+  end
+
+  local ctx_name = name
+  if ctx_name:len() < 1 then ctx_name = 'gfx2imgui' end
 
   state = {
     name       = name,
-    ctx        = reaper.ImGui_CreateContext(name, CTX_FLAGS),
+    ctx        = reaper.ImGui_CreateContext(ctx_name, CTX_FLAGS),
+    canary     = reaper.ImGui_CreateContext(ctx_name, CANARY_FLAGS),
     wnd_flags  = 1,
     want_close = false,
-    font       = nil,--global_state.fonts[global_state.last_font_idx],
-    in_frame   = false,
+    font       = nil,
+    fontmap    = {},
+    fontqueue  = {},
+    last_frame = -1,
     charqueue  = { ptr=0, rptr=0, size=0, max_size=16 },
-    fontqueue  = { attach={}, detach={} },
   }
 
   reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 0)
@@ -553,8 +636,8 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     global_state.commands[0].want_clear = true
   end
 
-  for _, font in pairs(global_state.fonts) do
-    reaper.ImGui_AttachFont(state.ctx, font.instance)
+  for _, font in ipairs(global_state.fonts) do
+    state.fontqueue[#state.fontqueue + 1] = font
   end
 
   if width and height then
@@ -617,15 +700,13 @@ end
 
 function gfx.measurestr(str)
   if not state then return 13 * utf8.len(str), 13 end
-  local font = getAttachedFontInstance(state.font)
-  if state.in_frame and state.font and not font then
-    warn('font could not be attached in time, frame was already started')
-  end
+  local font, size_error = getFontInstance(state.font)
+  local correction_factor = gfx.texth / (gfx.texth + size_error)
   beginFrame()
   reaper.ImGui_PushFont(state.ctx, font)
   local w, h = reaper.ImGui_CalcTextSize(state.ctx, str)
   reaper.ImGui_PopFont(state.ctx)
-  return w, h
+  return w * correction_factor, h * correction_factor
 end
 
 function gfx.muladdrect()
@@ -702,7 +783,6 @@ end
 function gfx.setfont(idx, fontface, sz, flag)
   if not state then return warn('ignored setfont before init') end
 
-  if not flag then flag = 0 end
   idx = tonumber(idx) -- Default_6.0_theme_adjuster.lua gives a string sometimes
 
   if idx > 0 and fontface then
@@ -713,35 +793,28 @@ function gfx.setfont(idx, fontface, sz, flag)
       sz = 1
     end
 
-    if type(flag) == 'string' then flag = string.byte(flag) end
-    local flags = FONT_FLAGS[flag]
-    if not flags then warn("unknown font flag '%s'", flag) end
+    local flags = FONT_FLAGS[flag or 0]
+    if not flags then
+      flags = 0
+      warn("unknown font flag '%s'", flag)
+    end
 
-    local prev = global_state.fonts[idx]
+    local font, is_new = global_state.fonts[idx], true
 
-    if prev then
-      if prev.family == fontface and prev.size == sz and
-         prev.flags == flags then
-        return
-      elseif prev.instance and not isFontQueuedForAttachment(prev) then
-        state.fontqueue.detach[#state.fontqueue.detach + 1] = prev.instance
+    if font then
+      is_new = font.family ~= fontface or font.size ~= sz or font.flags ~= flags
+      if is_new then
+        local attached = dig(state.fontmap, font.family, font.flags, font.size)
+        if attached then attached.keep_alive = false end
       end
     end
 
-    local font = {
-      instance = reaper.ImGui_CreateFont(fontface, sz, flags),
-      family   = fontface,
-      size     = sz,
-      flags    = flags,
-    }
+    if is_new then
+      font = { family = fontface, size = sz, flags = flags }
+      state.fontqueue[#state.fontqueue + 1] = font
+      global_state.fonts[idx] = font
+    end
 
-    -- if state.in_frame then
-      state.fontqueue.attach[#state.fontqueue.attach + 1] = font.instance
-    -- else
-    --   reaper.ImGui_AttachFont(state.ctx, font.instance)
-    -- end
-
-    global_state.fonts[idx] = font
     state.font = font
   else
     state.font = global_state.fonts[idx]
@@ -801,7 +874,6 @@ function gfx.update()
   if not state then return end
 
   beginFrame()
-  state.in_frame = false
 
   if global_state.log.size > 0 then showLog() end
 
@@ -832,7 +904,8 @@ function gfx.update()
              (col_clear << 24 & 0xff000000) |
              0xff
   reaper.ImGui_PushStyleColor(state.ctx, WINDOW_BG, bg)
-  local visible, open = reaper.ImGui_Begin(state.ctx, state.name, true, WND_FLAGS)
+  local wnd_label = ('%s###gfx2imgui'):format(state.name)
+  local visible, open = reaper.ImGui_Begin(state.ctx, wnd_label, true, WND_FLAGS)
   reaper.ImGui_PopStyleColor(state.ctx)
   reaper.ImGui_PopStyleVar(state.ctx)
 
