@@ -723,9 +723,9 @@ end
 
 function gfx.measurestr(str)
   if not state then return 13 * utf8.len(str), 13 end
+  beginFrame()
   local font, size_error = getFontInstance(state.font)
   local correction_factor = gfx.texth / (gfx.texth + size_error)
-  beginFrame()
   reaper.ImGui_PushFont(state.ctx, font)
   local w, h = reaper.ImGui_CalcTextSize(state.ctx, str)
   reaper.ImGui_PopFont(state.ctx)
@@ -843,8 +843,11 @@ function gfx.setfont(idx, fontface, sz, flag)
 
     if is_new then
       font = { family = fontface, size = sz, flags = flags }
-      state.fontqueue[#state.fontqueue + 1] = font
       global_state.fonts[idx] = font
+    end
+
+    if not dig(state.fontmap, font.family, font.flags, font.size) then
+      state.fontqueue[#state.fontqueue + 1] = font
     end
 
     state.font = font
