@@ -88,6 +88,9 @@ local FONT_FLAGS = {
   [string.byte('b')] = reaper.ImGui_FontFlags_Bold(),
   [string.byte('i')] = reaper.ImGui_FontFlags_Italic(),
 }
+local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
+local KEEP_LATEST_UNUSED_FONTS_IN_CACHE = 8
+local THROTTLE_FONT_LOADING_FRAMES = 16
 
 local gfx, global_state, state = {}, {
   commands   = {},
@@ -102,7 +105,7 @@ local gfx, global_state, state = {}, {
 -- default variables
 gfx.r, gfx.g, gfx.b, gfx.a, gfx.a2   = 1, 1, 1, 1, 1
 gfx.w, gfx.h, gfx.x, gfx.y, gfx.mode = 0, 0, 0, 0, 0
-gfx.ext_retina, gfx.dest, gfx.texth  = 0, -1, 13 -- gfx default texth is 8
+gfx.ext_retina, gfx.dest, gfx.texth  = 0, -1, DEFAULT_FONT_SIZE
 gfx.mouse_x, gfx.mouse_y, gfx.clear  = 0, 0, 0
 gfx.mouse_wheel, gfx.mouse_hwheel    = 0, 0
 gfx.mouse_cap                        = 0
@@ -162,7 +165,11 @@ local function updateMouse()
     if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_LEFT)   then gfx.mouse_cap = gfx.mouse_cap | 1  end
     if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_RIGHT)  then gfx.mouse_cap = gfx.mouse_cap | 2  end
     if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_MIDDLE) then gfx.mouse_cap = gfx.mouse_cap | 64 end
+
+    gfx.mouse_wheel, gfx.mouse_hwheel = reaper.ImGui_GetMouseWheel(state.ctx)
+    gfx.mouse_wheel, gfx.mouse_hwheel = gfx.mouse_wheel * MW_TICK, gfx.mouse_hwheel * MW_TICK
   end
+
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_CTRL)  then gfx.mouse_cap = gfx.mouse_cap | 4  end
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_SHIFT) then gfx.mouse_cap = gfx.mouse_cap | 8  end
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_ALT)   then gfx.mouse_cap = gfx.mouse_cap | 16 end
@@ -176,9 +183,6 @@ local function updateMouse()
     gfx.mouse_x, gfx.mouse_y = reaper.ImGui_GetMousePos(state.ctx)
     gfx.mouse_x, gfx.mouse_y = gfx.mouse_x - state.screen_x, gfx.mouse_y - state.screen_y
   end
-
-  gfx.mouse_wheel, gfx.mouse_hwheel = reaper.ImGui_GetMouseWheel(state.ctx)
-  gfx.mouse_wheel, gfx.mouse_hwheel = gfx.mouse_wheel * MW_TICK, gfx.mouse_hwheel * MW_TICK
 end
 
 local function updateKeyboard()
@@ -267,16 +271,17 @@ end
 local function gfxdo(callback)
   if not WINDOWS then return callback() end
 
-  local curx, cury = reaper.GetMousePosition()
-  ogfx.init('', 0, 0, 0, curx, cury)
+  -- Using hidden gfx window menu code by amagalma
+  -- https://forum.cockos.com/showthread.php?t=239556
+  local title = reaper.genGuid()
+  ogfx.init(title, 0, 0, 0, 0, 0)
+  ogfx.x, ogfx.y = ogfx.mouse_x, ogfx.mouse_y
 
-  if reaper.JS_Window_SetStyle then
-    local window = reaper.JS_Window_GetFocus()
-    local winx, winy = reaper.JS_Window_ClientToScreen(window, 0, 0)
-    ogfx.x = gfx.x - (winx - curx)
-    ogfx.y = gfx.y - (winy - cury)
-    reaper.JS_Window_SetStyle(window, 'POPUP')
-    reaper.JS_Window_SetOpacity(window, 'ALPHA', 0)
+  if reaper.JS_Window_Show then
+    local hwnd = reaper.JS_Window_Find(title, true)
+    if hwnd then
+      reaper.JS_Window_Show(hwnd, 'HIDE')
+    end
   end
 
   local value = callback()
@@ -345,11 +350,15 @@ local function nearest(array, target_key)
   return best_value, best_score or 0
 end
 
+local function getCachedFont(font)
+  return dig(state.fontmap, font.family, font.flags, font.size)
+end
+
 local function getFontInstance(font)
   if not font then return nil, 0 end
 
   local sizes = dig(state.fontmap, font.family, font.flags)
-  if not sizes then return nil, 0 end
+  if not sizes then return nil, DEFAULT_FONT_SIZE - font.size end
 
   local match, score = sizes[font.size], 0
   if not match then
@@ -358,44 +367,84 @@ local function getFontInstance(font)
   end
 
   if match then
-    match.used = true
+    match.last_use = state.frame_count
     return match.instance, score
   end
 
-  return nil, 0
+  return nil, DEFAULT_FONT_SIZE - font.size
+end
+
+local function unloadUnusedFonts()
+  local garbage = {}
+
+  for family, styles in pairs(state.fontmap) do
+    for style, sizes in pairs(styles) do
+      for size, cache in pairs(sizes) do
+        if not cache.keep_alive and cache.last_use + 1 < state.frame_count then
+          garbage[#garbage + 1] = {
+            last_use  = cache.last_use,
+            instance  = cache.instance,
+            cache     = sizes,
+            cache_key = size,
+          }
+        end
+      end
+    end
+  end
+
+  table.sort(garbage, function(a, b)
+    return a.last_use > b.last_use
+  end)
+
+  for i = KEEP_LATEST_UNUSED_FONTS_IN_CACHE, #garbage do
+    local old_font = garbage[i]
+    -- reaper.ShowConsoleMsg(('DetachFont() size=%d\n'):format(old_font.cache_key))
+    reaper.ImGui_DetachFont(state.ctx, old_font.instance)
+    old_font.cache[old_font.cache_key] = nil
+  end
+end
+
+local function loadRequestedFonts()
+  local throttled = false
+
+  for _, font in ipairs(state.fontqueue) do
+    if not getCachedFont(font) then
+      if not throttled then
+        if state.font_frame and
+           state.frame_count - state.font_frame < THROTTLE_FONT_LOADING_FRAMES then
+          return
+        else
+          state.font_frame = state.frame_count
+        end
+        throttled = true
+      end
+
+      -- reaper.ShowConsoleMsg(('AttachFont() %s@%d[%d]\n'):format(font.family, font.size, font.flags))
+      local instance = reaper.ImGui_CreateFont(font.family, font.size, font.flags)
+      local keep_alive = hasValue(global_state.fonts, font)
+      reaper.ImGui_AttachFont(state.ctx, instance)
+      put(state.fontmap, font.family, font.flags, font.size, {
+        last_use   = state.frame_count,
+        keep_alive = keep_alive,
+        instance   = instance
+      })
+    end
+  end
+
+  state.fontqueue = {}
 end
 
 local function beginFrame()
   -- protect against scripts calling gfx.update more than once per defer cycle
   -- or before the first defer timer tick
   local this_frame = reaper.ImGui_GetFrameCount(state.canary)
-  if state.last_frame == this_frame then return end
-  state.last_frame = this_frame
+  if state.frame_count == this_frame then return end
+  state.frame_count = this_frame
 
-  for family, styles in pairs(state.fontmap) do
-    for style, sizes in pairs(styles) do
-      for size, font in pairs(sizes) do
-        if font.used then
-          font.used = false
-        elseif not font.keep_alive then
-          reaper.ImGui_DetachFont(state.ctx, font.instance)
-          put(state.fontmap, family, style, size, nil)
-        end
-      end
-    end
-  end
+  unloadUnusedFonts()
+  loadRequestedFonts()
 
-  for _, font in ipairs(state.fontqueue) do
-    if not dig(state.fontmap, font.family, font.flags, font.size) then
-      local instance = reaper.ImGui_CreateFont(font.family, font.size, font.flags)
-      local keep_alive = hasValue(global_state.fonts, font)
-      reaper.ImGui_AttachFont(state.ctx, instance)
-      put(state.fontmap, font.family, font.flags, font.size,
-        { used = true, keep_alive = keep_alive, instance = instance })
-    end
-  end
-
-  state.fontqueue = {}
+  -- reaper.ImGui_ShowMetricsWindow(state.ctx)
 end
 
 local function sortClockwise(points)
@@ -641,16 +690,16 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
   if ctx_name:len() < 1 then ctx_name = 'gfx2imgui' end
 
   state = {
-    name       = name,
-    ctx        = reaper.ImGui_CreateContext(ctx_name, CTX_FLAGS),
-    canary     = reaper.ImGui_CreateContext(ctx_name, CANARY_FLAGS),
-    wnd_flags  = 1,
-    want_close = false,
-    font       = nil,
-    fontmap    = {},
-    fontqueue  = {},
-    last_frame = -1,
-    charqueue  = { ptr=0, rptr=0, size=0, max_size=16 },
+    name        = name,
+    ctx         = reaper.ImGui_CreateContext(ctx_name, CTX_FLAGS),
+    canary      = reaper.ImGui_CreateContext(ctx_name, CANARY_FLAGS),
+    wnd_flags   = 1,
+    want_close  = false,
+    font        = nil,
+    fontmap     = {},
+    fontqueue   = {},
+    frame_count = -1,
+    charqueue   = { ptr=0, rptr=0, size=0, max_size=16 },
   }
 
   reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 0)
@@ -717,12 +766,12 @@ function gfx.loadimg(image, filename)
 end
 
 function gfx.measurechar(char)
-  if not state then return 13, 13 end
+  if not state then return DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE end
   return gfx.measurestr(char)
 end
 
 function gfx.measurestr(str)
-  if not state then return 13 * utf8.len(str), 13 end
+  if not state then return DEFAULT_FONT_SIZE * utf8.len(str), DEFAULT_FONT_SIZE end
   beginFrame()
   local font, size_error = getFontInstance(state.font)
   local correction_factor = gfx.texth / (gfx.texth + size_error)
@@ -834,8 +883,8 @@ function gfx.setfont(idx, fontface, sz, flag)
 
       is_new = font.family ~= fontface or font.size ~= sz or font.flags ~= flags
       if is_new then
-        local attached = dig(state.fontmap, font.family, font.flags, font.size)
-        if attached then attached.keep_alive = false end
+        local cache = getCachedFont(font)
+        if cache then cache.keep_alive = false end
       end
     elseif not fontface then
       fontface = 'sans-serif'
@@ -846,7 +895,7 @@ function gfx.setfont(idx, fontface, sz, flag)
       global_state.fonts[idx] = font
     end
 
-    if not dig(state.fontmap, font.family, font.flags, font.size) then
+    if not getCachedFont(font) then
       state.fontqueue[#state.fontqueue + 1] = font
     end
 
@@ -855,7 +904,8 @@ function gfx.setfont(idx, fontface, sz, flag)
     state.font = global_state.fonts[idx]
   end
 
-  gfx.texth = idx ~= 0 and ((state and state.font and state.font.size) or sz) or 13
+  gfx.texth = idx ~= 0 and ((state and state.font and state.font.size) or sz)
+    or DEFAULT_FONT_SIZE
 end
 
 function gfx.setimgdim(image, w, h)
