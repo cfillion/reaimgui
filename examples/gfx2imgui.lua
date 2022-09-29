@@ -21,7 +21,7 @@
 -- reaper.defer(loop)
 
 local reaper, ogfx, print = reaper, gfx, print
-local string, table, utf8 = string, table, utf8
+local debug, math, string, table, utf8 = debug, math, string, table, utf8
 
 local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
 local CTX_FLAGS = reaper.ImGui_ConfigFlags_NoSavedSettings() |
@@ -31,6 +31,7 @@ local WND_FLAGS = reaper.ImGui_WindowFlags_NoScrollbar() |
                   reaper.ImGui_WindowFlags_NoScrollWithMouse() |
                   reaper.ImGui_WindowFlags_NoMove()
 local LOG_WND_FLAGS = reaper.ImGui_WindowFlags_NoDocking()
+local HOVERED_FLAGS = reaper.ImGui_HoveredFlags_ChildWindows()
 local WINDOW_PADDING, WINDOW_BG =
   reaper.ImGui_StyleVar_WindowPadding(), reaper.ImGui_Col_WindowBg()
 local MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE =
@@ -83,13 +84,14 @@ local KEYS = {
   [reaper.ImGui_Key_Tab()]         = 0x00000009,
   [reaper.ImGui_Key_UpArrow()]     = 0x00007570,
 }
+local KEY_A, KEY_Z = reaper.ImGui_Key_A(), reaper.ImGui_Key_Z()
 local FONT_FLAGS = {
   [0]                = reaper.ImGui_FontFlags_None(),
   [string.byte('b')] = reaper.ImGui_FontFlags_Bold(),
   [string.byte('i')] = reaper.ImGui_FontFlags_Italic(),
 }
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
-local KEEP_LATEST_UNUSED_FONTS_IN_CACHE = 8
+local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 local THROTTLE_FONT_LOADING_FRAMES = 16
 
 local gfx, global_state, state = {}, {
@@ -111,6 +113,16 @@ gfx.mouse_wheel, gfx.mouse_hwheel    = 0, 0
 gfx.mouse_cap                        = 0
 
 -- internal functions
+local function tobool(v, default)
+  if default ~= nil and v == nil then return default end
+  return v ~= false and v ~= 0 and v ~= nil
+end
+
+local function toint(v)
+  if not v or v ~= v or math.abs(v) == math.huge then return 0 end
+  return math.floor(v)
+end
+
 local function ringInsert(buffer, value)
   buffer[buffer.ptr] = value
   buffer.ptr = (buffer.ptr + 1) % buffer.max_size
@@ -153,31 +165,32 @@ local function render(commands, draw_list, screen_x, screen_y)
 end
 
 local function color(r, g, b, a)
-  return math.floor((a or gfx.a) * 0xFF)       |
-         math.floor((b or gfx.b) * 0xFF) << 8  |
-         math.floor((g or gfx.g) * 0xFF) << 16 |
-         math.floor((r or gfx.r) * 0xFF) << 24
+  return toint((a or gfx.a or 0) * 0xFF)       |
+         toint((b or gfx.b or 0) * 0xFF) << 8  |
+         toint((g or gfx.g or 0) * 0xFF) << 16 |
+         toint((r or gfx.r or 0) * 0xFF) << 24
 end
 
 local function updateMouse()
   gfx.mouse_cap = 0
-  if reaper.ImGui_IsWindowHovered(state.ctx) then -- not over Log window
+
+  if reaper.ImGui_IsWindowHovered(state.ctx, HOVERED_FLAGS) then -- not over Log window
     if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_LEFT)   then gfx.mouse_cap = gfx.mouse_cap | 1  end
     if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_RIGHT)  then gfx.mouse_cap = gfx.mouse_cap | 2  end
     if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_MIDDLE) then gfx.mouse_cap = gfx.mouse_cap | 64 end
 
     gfx.mouse_wheel, gfx.mouse_hwheel = reaper.ImGui_GetMouseWheel(state.ctx)
     gfx.mouse_wheel, gfx.mouse_hwheel = gfx.mouse_wheel * MW_TICK, gfx.mouse_hwheel * MW_TICK
+
+    if state.want_cursor then
+      reaper.ImGui_SetMouseCursor(state.ctx, state.want_cursor)
+    end
   end
 
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_CTRL)  then gfx.mouse_cap = gfx.mouse_cap | 4  end
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_SHIFT) then gfx.mouse_cap = gfx.mouse_cap | 8  end
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_ALT)   then gfx.mouse_cap = gfx.mouse_cap | 16 end
   if reaper.ImGui_IsKeyDown(state.ctx, MOD_SUPER) then gfx.mouse_cap = gfx.mouse_cap | 32 end
-
-  if state.want_cursor and reaper.ImGui_IsWindowHovered(state.ctx) then
-    reaper.ImGui_SetMouseCursor(state.ctx, state.want_cursor)
-  end
 
   if reaper.ImGui_IsMousePosValid(state.ctx) then
     gfx.mouse_x, gfx.mouse_y = reaper.ImGui_GetMousePos(state.ctx)
@@ -204,13 +217,51 @@ local function updateKeyboard()
     end
   end
 
-  -- TODO ctrl/alt altering the character values
+  local mod_base
+  if     (gfx.mouse_cap &  4) ==  4 then mod_base = 0x001 -- ctrl
+  elseif (gfx.mouse_cap & 20) == 20 then mod_base = 0x101 -- ctrl+alt
+  elseif (gfx.mouse_cap & 16) == 16 then mod_base = 0x141 -- alt
+  end
+
+  if mod_base then
+    local bypass_input_queue = false
+
+    for k = KEY_A, KEY_Z do
+      if reaper.ImGui_IsKeyPressed(state.ctx, k) then
+        bypass_input_queue = true
+        ringInsert(state.charqueue, mod_base + (k - KEY_A))
+      end
+    end
+
+    if bypass_input_queue then
+      return
+    end
+  end
+
   local i = 0
   while true do
     local rv, char = reaper.ImGui_GetInputQueueCharacter(state.ctx, i)
     if not rv then break end
     ringInsert(state.charqueue, char)
     i = i + 1
+  end
+end
+
+local function updateDropFiles()
+  state.drop_files = {}
+  if reaper.ImGui_BeginChild(state.ctx, 'drop_target', -FLT_MIN, -FLT_MIN) then
+    reaper.ImGui_EndChild(state.ctx)
+    if reaper.ImGui_BeginDragDropTarget(state.ctx) then
+      local rv, count = reaper.ImGui_AcceptDragDropPayloadFiles(state.ctx)
+      if rv then
+        for i = 0, count - 1 do
+          local filename
+          rv, filename = reaper.ImGui_GetDragDropPayloadFile(state.ctx, i)
+          state.drop_files[i] = filename
+        end
+      end
+      reaper.ImGui_EndDragDropTarget(state.ctx)
+    end
   end
 end
 
@@ -263,11 +314,6 @@ local function showLog()
   reaper.ImGui_End(state.ctx)
 end
 
-local function tobool(v, default)
-  if default ~= nil and v == nil then return default end
-  return v ~= false and v ~= 0 and v ~= nil
-end
-
 local function gfxdo(callback)
   if not WINDOWS then return callback() end
 
@@ -290,12 +336,8 @@ local function gfxdo(callback)
 end
 
 local function setDock(v)
-  global_state.dock = v -- keep original value for scripts that check it
-  state.want_dock = (v & 1) == 1 and ~(v >> 1 & 0x1f) or 0
-end
-
-local function toInt(v)
-  return math.floor(v or 0)
+  global_state.dock = v & 0xf01
+  state.want_dock = (v & 1) == 1 and ~(v >> 8 & 0xf) or 0
 end
 
 local function hasValue(array, needle)
@@ -319,20 +361,16 @@ end
 
 local function put(array, ...)
   local n = select('#', ...)
-
   for i = 1, n - 2 do
     local k = select(i, ...)
     local v = array[k]
-
     if type(v) ~= 'table' then
       assert(not v)
       v = {}
       array[k] = v
     end
-
     array = v
   end
-
   array[select(n - 1, ...)] = select(n, ...)
 
   return array
@@ -362,8 +400,8 @@ local function getFontInstance(font)
 
   local match, score = sizes[font.size], 0
   if not match then
-    match, score = nearest(sizes, font.size)
     warn("cannot load font '%s'@%d[%x] in the middle of a frame, falling back to nearest match until next frame", font.family, font.size, font.flags)
+    match, score = nearest(sizes, font.size)
   end
 
   if match then
@@ -396,9 +434,9 @@ local function unloadUnusedFonts()
     return a.last_use > b.last_use
   end)
 
-  for i = KEEP_LATEST_UNUSED_FONTS_IN_CACHE, #garbage do
+  for i = UNUSED_FONTS_CACHE_SIZE + 1, #garbage do
     local old_font = garbage[i]
-    -- reaper.ShowConsoleMsg(('DetachFont() size=%d\n'):format(old_font.cache_key))
+    -- print(('DetachFont() size=%d'):format(old_font.cache_key))
     reaper.ImGui_DetachFont(state.ctx, old_font.instance)
     old_font.cache[old_font.cache_key] = nil
   end
@@ -410,7 +448,7 @@ local function loadRequestedFonts()
   for _, font in ipairs(state.fontqueue) do
     if not getCachedFont(font) then
       if not throttled then
-        if state.font_frame and
+        if state.font_frame and state.frame_count > 4 and
            state.frame_count - state.font_frame < THROTTLE_FONT_LOADING_FRAMES then
           return
         else
@@ -419,7 +457,7 @@ local function loadRequestedFonts()
         throttled = true
       end
 
-      -- reaper.ShowConsoleMsg(('AttachFont() %s@%d[%d]\n'):format(font.family, font.size, font.flags))
+      -- print(('AttachFont() %s@%d[%d]'):format(font.family, font.size, font.flags))
       local instance = reaper.ImGui_CreateFont(font.family, font.size, font.flags)
       local keep_alive = hasValue(global_state.fonts, font)
       reaper.ImGui_AttachFont(state.ctx, instance)
@@ -431,7 +469,9 @@ local function loadRequestedFonts()
     end
   end
 
-  state.fontqueue = {}
+  if #state.fontqueue > 0 then
+    state.fontqueue = {}
+  end
 end
 
 local function beginFrame()
@@ -447,17 +487,20 @@ local function beginFrame()
   -- reaper.ImGui_ShowMetricsWindow(state.ctx)
 end
 
-local function sortClockwise(points)
-  local center_x, center_y, n_points = 0, 0, #points / 2
-  for i = 1, #points, 2 do
+local function sort2D(points)
+  local n_coords = #points
+  local center_x, center_y, n_points = 0, 0, n_coords / 2
+  for i = 1, n_coords, 2 do
+    points[i], points[i + 1] = toint(points[i]), toint(points[i + 1])
     center_x, center_y = center_x + points[i], center_y + points[i + 1]
   end
   center_x, center_y = center_x / n_points, center_y / n_points
 
-  for i = 1, #points, 2 do
+  for i = 1, n_coords, 2 do
     local x, y, j = points[i], points[i + 1], i - 2
-    while j >= 2 and math.atan(points[j + 1] - center_y, points[j + 0] - center_x) >
-                     math.atan(y             - center_y, x             - center_x) do
+    local angle = math.atan(y - center_y, x - center_x)
+    while j >= 1 and
+        math.atan(points[j + 1] - center_y, points[j + 0] - center_x) > angle do
       points[j + 2], points[j + 3] = points[j + 0], points[j + 1]
       j = j - 2
     end
@@ -465,11 +508,24 @@ local function sortClockwise(points)
   end
 end
 
+local function uniq2D(points)
+  local j, n_points = 3, #points
+  for i = j, n_points, 2 do
+    local x, y = points[i], points[i + 1]
+    if x ~= points[j - 2] or y ~= points[j - 1] then
+      points[j], points[j + 1] = x, y
+      j = j + 2
+    end
+  end
+  for i = j, n_points do points[i] = nil end
+  return j - 1
+end
+
 -- translation functions
 function gfx.arc(x, y, r, ang1, ang2, antialias)
-  if antialias then warn('ignoring parameter antialias') end
+  -- if antialias then warn('ignoring parameter antialias') end
   local c, quarter = color(), math.pi / 2
-  x, y, ang1, ang2 = toInt(x) + 1, toInt(y), ang1 - quarter, ang2 - quarter
+  x, y, ang1, ang2 = toint(x) + 1, toint(y), ang1 - quarter, ang2 - quarter
   drawCall(function(draw_list, screen_x, screen_y)
     local x, y = screen_x + x, screen_y + y
     reaper.ImGui_DrawList_PathArcTo(draw_list, x, y, r, ang1, ang2)
@@ -494,8 +550,8 @@ function gfx.blit(source, scale, rotation, srcx, srcy, srcw, srch, destx, desty,
   if not desth then desth = srch * scale end
 
   srcx, srcy, srcw, srch, destx, desty, destw, desth =
-    toInt(srcx), toInt(srcy), toInt(srcw), toInt(srch),
-    toInt(destx), toInt(desty), toInt(destw), toInt(desth)
+    toint(srcx),  toint(srcy),  toint(srcw),  toint(srch),
+    toint(destx), toint(desty), toint(destw), toint(desth)
 
   if scale    ~= 1 then warn('ignoring parameter scale')    end
   if rotation ~= 0 then warn('ignoring parameter rotation') end
@@ -525,13 +581,13 @@ function gfx.blitext()
 end
 
 function gfx.blurto()
-  warn('not implemented')
+  warn('not supported')
 end
 
 function gfx.circle(x, y, r, fill, antialias)
-  if antialias then warn('ignoring parameter antialias') end
+  -- if antialias then warn('ignoring parameter antialias') end
   local c = color()
-  x, y, r = toInt(x) + 0.5, toInt(y), toInt(r) + 1
+  x, y, r = toint(x), toint(y), toint(r)
   local AddCircle = tobool(fill, true) and
     reaper.ImGui_DrawList_AddCircleFilled or reaper.ImGui_DrawList_AddCircle
   drawCall(function(draw_list, screen_x, screen_y)
@@ -548,37 +604,41 @@ function gfx.deltablit()
   warn('not implemented')
 end
 
-function gfx.dock(...)
-  local args = {...}
-  args[1] = tonumber(args[1])
-  if args[1] < 0 then
-    local n_args = select('#', ...)
-    args[1] = global_state.dock
-    if args[2] then args[2] = global_state.pos.x end
-    if args[3] then args[3] = global_state.pos.y end
-    if args[4] then args[4] = gfx.w end
-    if args[5] then args[5] = gfx.h end
-    return table.unpack(args)
-  else
-    setDock(args[1])
+function gfx.dock(v, ...) -- v[,wx,wy,ww,wh]
+  v = tonumber(v)
+
+  if v >= 0 then
+    setDock(v)
+    return global_state.dock
   end
+
+  local n, rv = select('#', ...), {}
+  if n >= 1 then rv[1] = global_state.pos.x end
+  if n >= 2 then rv[2] = global_state.pos.y end
+  if n >= 3 then rv[3] = gfx.w              end
+  if n >= 4 then rv[4] = gfx.h              end
+
+  return global_state.dock, table.unpack(rv)
 end
 
 function gfx.drawchar(char)
-  gfx.drawstr(char)
+  gfx.drawstr(char or '')
 end
 
-function gfx.drawnumber()
-  warn('not implemented')
+function gfx.drawnumber(n, ndigits)
+  ndigits = math.floor((tonumber(ndigits) or 0) + 0.5)
+  gfx.drawstr(('%%.%df'):format(ndigits):format(n))
 end
 
 function gfx.drawstr(str, flags, right, bottom)
   if not state then return end
+  str = str or '<bad string>'
 
-  local x, y, c, f = toInt(gfx.x), toInt(gfx.y), color(), state.font
+  local x, y, c = toint(gfx.x), toint(gfx.y), color()
   local w, h = gfx.measurestr(str) -- calls beginFrame()
-  if right  then right  = toInt(right) end
-  if bottom then bottom = toInt(bottom) end
+  local f = global_state.fonts[state.font]
+  if right  then right  = toint(right) end
+  if bottom then bottom = toint(bottom) end
 
   if flags then
     if (flags & 1) ~= 0 and right then -- center horizontally
@@ -604,8 +664,8 @@ function gfx.drawstr(str, flags, right, bottom)
 
   gfx.x = gfx.x + w
   drawCall(function(draw_list, screen_x, screen_y)
-    local font_instance, font_size = getFontInstance(f), f and f.size or 0
-    reaper.ImGui_DrawList_AddTextEx(draw_list, font_instance, font_size,
+    local f_inst, f_sz = getFontInstance(f), f and f.size or 0
+    reaper.ImGui_DrawList_AddTextEx(draw_list, f_inst, f_sz,
       screen_x + x, screen_y + y, c, str, 0, 0,
       right and right - x or nil, bottom and bottom - y or nil)
   end)
@@ -636,13 +696,20 @@ function gfx.getchar(char)
   return reaper.ImGui_IsKeyDown(state.ctx, char)
 end
 
-function gfx.getdropfile()
+function gfx.getdropfile(idx)
   if not state then return end
-  warn('FIXME: not implemented')
+  if idx < 0 then
+    state.drop_files = {}
+    return
+  end
+  local file = state.drop_files[idx]
+  return file ~= nil and 1 or 0, file
 end
 
 function gfx.getfont()
-  warn('not implemented')
+  if not state then return -1 end
+  local font = global_state.fonts[state.font]
+  return state.font - 1, font and font.family
 end
 
 function gfx.getimgdim(image)
@@ -652,23 +719,32 @@ function gfx.getimgdim(image)
 end
 
 function gfx.getpixel()
-  warn('not implemented')
+  warn('not supported')
+  return 0.0
 end
 
 function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy, dbdy, dady)
-  x, y, w, h = toInt(x), toInt(y), toInt(w), toInt(h)
-  local c = color(r, g, b, a)
-  warn('FIXME: gradient parameters not computed')
+  -- FIXME: support colors growing to > 1 or < 0 before the end of the rect
+  x, y, w, h = toint(x), toint(y), toint(w), toint(h)
+  drdx, dgdx, dbdx, dadx = w * (drdx or 0), w * (dgdx or 0),
+                           w * (dbdx or 0), w * (dadx or 0)
+  drdy, dgdy, dbdy, dady = h * (drdy or 0), h * (dgdy or 0),
+                           h * (dbdy or 0), h * (dady or 0)
+  local ctl = color(r, g, b, a)
+  local ctr = color(r + drdx, g + dgdx, b + dbdx, a + dadx)
+  local cbl = color(r + drdy, g + dgdy, b + dbdy, a + dady)
+  local cbr = color(r + drdx + drdy, g + dgdx + dgdy,
+                    b + dbdx + dbdy, a + dadx + dady)
   drawCall(function(draw_list, screen_x, screen_y)
     local x1, y1 = screen_x + x, screen_y + y
     local x2, y2 = x1 + w, y1 + h
     reaper.ImGui_DrawList_AddRectFilledMultiColor(draw_list,
-      x1, y1, x2, y2, c, c, c, c)
+      x1, y1, x2, y2, ctl, ctr, cbr, cbl)
   end)
 end
 
 function gfx.imgui(callback)
-  local x, y = toInt(gfx.x), toInt(gfx.y)
+  local x, y = toint(gfx.x), toint(gfx.y)
   drawCall(function(draw_list, screen_x, screen_y)
     reaper.ImGui_SetCursorScreenPos(state.ctx, screen_x + x, screen_y + y)
     callback(state.ctx, draw_list, screen_x, screen_y)
@@ -695,11 +771,12 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     canary      = reaper.ImGui_CreateContext(ctx_name, CANARY_FLAGS),
     wnd_flags   = 1,
     want_close  = false,
-    font        = nil,
+    font        = 0,
     fontmap     = {},
     fontqueue   = {},
     frame_count = -1,
     charqueue   = { ptr=0, rptr=0, size=0, max_size=16 },
+    drop_files  = {},
   }
 
   reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 0)
@@ -728,9 +805,9 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
 end
 
 function gfx.line(x1, y1, x2, y2, aa)
-  if aa then warn('ignoring parameter aa') end
+  -- if aa then warn('ignoring parameter aa') end
   local c = color()
-  x1, y1, x2, y2 = toInt(x1), toInt(y1), toInt(x2), toInt(y2)
+  x1, y1, x2, y2 = toint(x1), toint(y1), toint(x2), toint(y2)
   drawCall(function(draw_list, screen_x, screen_y)
     local x1, y1 = screen_x + x1, screen_y + y1
     local x2, y2 = screen_x + x2, screen_y + y2
@@ -773,7 +850,7 @@ end
 function gfx.measurestr(str)
   if not state then return DEFAULT_FONT_SIZE * utf8.len(str), DEFAULT_FONT_SIZE end
   beginFrame()
-  local font, size_error = getFontInstance(state.font)
+  local font, size_error = getFontInstance(global_state.fonts[state.font])
   local correction_factor = gfx.texth / (gfx.texth + size_error)
   reaper.ImGui_PushFont(state.ctx, font)
   local w, h = reaper.ImGui_CalcTextSize(state.ctx, str)
@@ -802,7 +879,7 @@ function gfx.rect(x, y, w, h, filled)
   local c = color()
   local AddRect = tobool(filled, true) and
     reaper.ImGui_DrawList_AddRectFilled or reaper.ImGui_DrawList_AddRect
-  x, y, w, h = toInt(x), toInt(y), toInt(w), toInt(h)
+  x, y, w, h = toint(x), toint(y), toint(w), toint(h)
   drawCall(function(draw_list, screen_x, screen_y)
     local x1, y1 = screen_x + x, screen_y + y
     local x2, y2 = x1 + w, y1 + h
@@ -816,9 +893,9 @@ function gfx.rectto(x, y)
 end
 
 function gfx.roundrect(x, y, w, h, radius, antialias)
-  if antialias then warn('ignoring parameter antialias') end
+  -- if antialias then warn('ignoring parameter antialias') end
   local c = color()
-  x, y, w, h = toInt(x), toInt(y), toInt(w), toInt(h)
+  x, y, w, h = toint(x), toint(y), toint(w), toint(h)
   drawCall(function(draw_list, screen_x, screen_y)
     local x1, y1 = screen_x + x, screen_y + y
     local x2, y2 = x1 + w, y1 + h
@@ -832,17 +909,17 @@ function gfx.screentoclient(x, y)
   return x - global_state.pos.x, y - global_state.pos.y
 end
 
-function gfx.set(r, ...) -- g, b, a, mode, dest, a2
-  gfx.r = r
-  local args = {...}
-  if args[1] then gfx.g = args[1] end
-  if args[2] then gfx.b = args[2] end
-  if args[3] then gfx.a = args[3] end
-  if args[4] then gfx.mode = args[4] end
-  if args[6] then
-    gfx.a2 = args[6]
-    if args[5] then args.dest = args[5] end
-  elseif args[5] then args.a2 = args[5] end
+function gfx.set(...)
+  local n = select('#', ...)
+  local r, g, b, a, mode, dest, a2 = ...
+  if n < 2 then g = r end
+  if n < 3 then b = r end
+
+  gfx.r, gfx.g, gfx.b = r, g, b
+  if n >= 4 then gfx.a    = a    end
+  if n >= 5 then gfx.mode = mode end
+  if n >= 6 then gfx.dest = dest end
+  if n >= 7 then gfx.a2   = a2   end
 end
 
 function gfx.setcursor(resource_id, custom_cursor_name)
@@ -853,16 +930,18 @@ function gfx.setcursor(resource_id, custom_cursor_name)
 end
 
 function gfx.setfont(idx, fontface, sz, flag)
-  if not state then return warn('ignored setfont before init') end
-
   idx = tonumber(idx) -- Default_6.0_theme_adjuster.lua gives a string sometimes
 
-  if idx > 0 and (fontface or sz) then
-    sz = toInt(sz)
+  local font = global_state.fonts[idx]
 
-    if sz < 1 then
-      warn('requested font size is smaller than 1px, clamping')
-      sz = 1
+  if idx > 0 and (fontface or sz) then
+    -- gfx does this
+    if not fontface or fontface:len() == 0 then
+      fontface = 'Arial'
+    end
+    sz = toint(sz)
+    if sz < 2 then
+      sz = 10
     end
 
     local flags = FONT_FLAGS[flag or 0]
@@ -871,23 +950,16 @@ function gfx.setfont(idx, fontface, sz, flag)
       warn("unknown font flag '%s'", flag)
     end
 
-    local font, is_new = global_state.fonts[idx], true
+    local is_new
 
     if font then
-      if not fontface then
-        -- gfx doesn't do this (defaults to blank fontface)
-        -- this prevents using the default bitmap font if we don't match what
-        -- the script may be using elsewhere
-        fontface = font.family
-      end
-
       is_new = font.family ~= fontface or font.size ~= sz or font.flags ~= flags
-      if is_new then
+      if is_new and state then
         local cache = getCachedFont(font)
         if cache then cache.keep_alive = false end
       end
-    elseif not fontface then
-      fontface = 'sans-serif'
+    else
+      is_new = true
     end
 
     if is_new then
@@ -895,21 +967,20 @@ function gfx.setfont(idx, fontface, sz, flag)
       global_state.fonts[idx] = font
     end
 
-    if not getCachedFont(font) then
+    if state and not getCachedFont(font) then
       state.fontqueue[#state.fontqueue + 1] = font
     end
-
-    state.font = font
-  else
-    state.font = global_state.fonts[idx]
   end
 
-  gfx.texth = idx ~= 0 and ((state and state.font and state.font.size) or sz)
-    or DEFAULT_FONT_SIZE
+  if state then
+    state.font = font and idx or 0
+  end
+
+  gfx.texth = idx ~= 0 and ((font and font.size) or sz) or DEFAULT_FONT_SIZE
 end
 
 function gfx.setimgdim(image, w, h)
-  global_state.imgdim[image] = { w=toInt(w), h=toInt(h) }
+  global_state.imgdim[image] = { w=toint(w), h=toint(h) }
 end
 
 function gfx.setpixel(r, g, b)
@@ -931,29 +1002,39 @@ function gfx.transformblit()
 end
 
 function gfx.triangle(...)
-  local points = {...}
+  local c, points = color(), {...}
   local n_points = #points
-  local c = color()
-  sortClockwise(points)
 
-  if n_points > 6 then -- convex polygon
-    drawCall(function(draw_list, screen_x, screen_y)
-      local points = reaper.new_array(points)
-      for i = 1, n_points, 2 do
-        points[i] = screen_x + math.floor(points[i])
-        points[i + 1] = screen_y + math.floor(points[i + 1])
-      end
-      reaper.ImGui_DrawList_AddConvexPolyFilled(draw_list, points, c)
-    end)
-    return
+  assert(n_points >= 6, 'gfx.triangle requires 6 or more parameters')
+
+  if (n_points & 1) ~= 0 then
+    points[n_points + 1] = points[2]
+    n_points = n_points + 1
   end
 
-  drawCall(function(draw_list, screen_x, screen_y)
-    reaper.ImGui_DrawList_AddTriangleFilled(draw_list,
-      screen_x + math.floor(points[1]), screen_y + math.floor(points[2]),
-      screen_x + math.floor(points[3]), screen_y + math.floor(points[4]),
-      screen_x + math.floor(points[5]), screen_y + math.floor(points[6]), c)
-  end)
+  sort2D(points) -- sort clockwise & truncate to integer
+  n_points = uniq2D(points)
+
+  if n_points == 4 then
+    -- gfx.triangle(0,33, 0,0, 0,33, 0,33)
+    gfx.line(table.unpack(points))
+  elseif n_points == 6 then
+    drawCall(function(draw_list, screen_x, screen_y)
+      reaper.ImGui_DrawList_AddTriangleFilled(draw_list,
+        screen_x + points[1], screen_y + points[2],
+        screen_x + points[3], screen_y + points[4],
+        screen_x + points[5], screen_y + points[6], c)
+    end)
+  else
+    local screen_points = reaper.new_array(n_points)
+    drawCall(function(draw_list, screen_x, screen_y)
+      for i = 1, n_points, 2 do
+        screen_points[i]     = screen_x + points[i]
+        screen_points[i + 1] = screen_y + points[i + 1]
+      end
+      reaper.ImGui_DrawList_AddConvexPolyFilled(draw_list, screen_points, c)
+    end)
+  end
 end
 
 function gfx.update()
@@ -965,11 +1046,11 @@ function gfx.update()
 
   if state.want_dock then
     reaper.ImGui_SetNextWindowDockID(state.ctx, state.want_dock)
-    state.want_dock = nil
-    if reaper.ImGui_GetFrameCount(state.ctx) > 1 then
-      -- keep position and size when using gfx.init with dock=0
+    -- keep position and size when using gfx.init with dock=0
+    if state.want_dock ~= 0 then
       state.want_pos, state.want_size = nil, nil
     end
+    state.want_dock = nil
   end
   if state.want_pos then
     local x, y = reaper.ImGui_PointConvertNative(state.ctx, state.want_pos.x, state.want_pos.y)
@@ -1007,13 +1088,17 @@ function gfx.update()
   local commands = global_state.commands[-1]
   if commands then
     local draw_list = reaper.ImGui_GetWindowDrawList(state.ctx)
+    -- removes the 1px border when docked
+    reaper.ImGui_DrawList_PushClipRectFullScreen(draw_list)
     render(commands, draw_list, state.screen_x, state.screen_y)
+    reaper.ImGui_DrawList_PopClipRect(draw_list)
   end
 
   -- update variables
   gfx.w, gfx.h = reaper.ImGui_GetWindowSize(state.ctx)
   updateMouse()
   updateKeyboard()
+  updateDropFiles()
 
   state.want_close = state.want_close or not open
   global_state.pos.x, global_state.pos.y = reaper.ImGui_GetWindowPos(state.ctx)
@@ -1022,9 +1107,7 @@ function gfx.update()
     global_state.pos.x, global_state.pos.y, true)
 
   if reaper.ImGui_IsWindowDocked(state.ctx) then
-    -- keep extra bits set, for scripts that check it
-    global_state.dock = 1 | (global_state.dock & ~0x3e) |
-      (~reaper.ImGui_GetWindowDockID(state.ctx) << 1)
+    global_state.dock = 1 | (~reaper.ImGui_GetWindowDockID(state.ctx) << 8)
   else
     global_state.dock = global_state.dock & ~1 -- preserve previous docker ID
   end
