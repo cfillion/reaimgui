@@ -491,7 +491,6 @@ local function sort2D(points)
   local n_coords = #points
   local center_x, center_y, n_points = 0, 0, n_coords / 2
   for i = 1, n_coords, 2 do
-    points[i], points[i + 1] = toint(points[i]), toint(points[i + 1])
     center_x, center_y = center_x + points[i], center_y + points[i + 1]
   end
   center_x, center_y = center_x / n_points, center_y / n_points
@@ -517,7 +516,7 @@ local function uniq2D(points)
       j = j + 2
     end
   end
-  for i = j, n_points do points[i] = nil end
+  points.resize(j - 1)
   return j - 1
 end
 
@@ -533,26 +532,28 @@ function gfx.arc(x, y, r, ang1, ang2, antialias)
   end)
 end
 
-function gfx.blit(source, scale, rotation, srcx, srcy, srcw, srch, destx, desty, destw, desth, rotxoffs, rotyoffs)
-  local dim = global_state.imgdim[source]
+function gfx.blit(source, ...)
+  local n_args = select('#', ...)
+  local scale, rotation, srcx, srcy, srcw, srch,
+        destx, desty, destw, desth, rotxoffs, rotyoffs = ...
 
-  if not scale or not destw or not desth then scale = 1 end
-  if not rotation then rotation = 0 end
-  if not srcx  then srcx = 0 end
-  if not srcy  then srcy = 0 end
-  if not srcw  then srcw = dim and dim.w or 0
-  else warn('ignoring parameter srcw') end
-  if not srch  then srch = dim and dim.h or 0
-  else warn('ignoring parameter srch') end
-  if not destx then destx = gfx.x end
-  if not desty then desty = gfx.y end
-  if not destw then destw = srcw * scale end
-  if not desth then desth = srch * scale end
-
+  source = toint(source)
   srcx, srcy, srcw, srch, destx, desty, destw, desth =
     toint(srcx),  toint(srcy),  toint(srcw),  toint(srch),
     toint(destx), toint(desty), toint(destw), toint(desth)
 
+  local dim = global_state.imgdim[source]
+
+  if n_args <  1 then scale = 1            end
+  if n_args <  5 and dim then srcw = dim.w end
+  if n_args <  6 and dim then srch = dim.h end
+  if n_args <  7 then destx = gfx.x        end
+  if n_args <  8 then desty = gfx.y        end
+  if n_args <  9 then destw = srcw * scale end
+  if n_args < 10 then desth = srch * scale end
+
+  if dim and srcw ~= dim.w then warn('ignoring parameter srcw') end
+  if dim and srch ~= dim.h then warn('ignoring parameter srch') end
   if scale    ~= 1 then warn('ignoring parameter scale')    end
   if rotation ~= 0 then warn('ignoring parameter rotation') end
   if rotxoffs      then warn('ignoring parameter rotxoffs') end
@@ -713,6 +714,7 @@ function gfx.getfont()
 end
 
 function gfx.getimgdim(image)
+  image = toint(image)
   local dim = global_state.imgdim[image]
   if not dim then return 0, 0 end
   return dim.w, dim.h
@@ -781,10 +783,6 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
 
   reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 0)
 
-  if global_state.commands[0] then
-    global_state.commands[0].want_clear = true
-  end
-
   for _, font in ipairs(global_state.fonts) do
     state.fontqueue[#state.fontqueue + 1] = font
   end
@@ -808,6 +806,10 @@ function gfx.line(x1, y1, x2, y2, aa)
   -- if aa then warn('ignoring parameter aa') end
   local c = color()
   x1, y1, x2, y2 = toint(x1), toint(y1), toint(x2), toint(y2)
+
+  -- gfx.line(10, 30, 10, 30)
+  if x1 == x2 and y1 == y2 then x2, y2 = x2 + 1, y2 + 1 end
+
   drawCall(function(draw_list, screen_x, screen_y)
     local x1, y1 = screen_x + x1, screen_y + y1
     local x2, y2 = screen_x + x2, screen_y + y2
@@ -911,6 +913,8 @@ end
 
 function gfx.set(...)
   local n = select('#', ...)
+  if n < 1 then return end
+
   local r, g, b, a, mode, dest, a2 = ...
   if n < 2 then g = r end
   if n < 3 then b = r end
@@ -980,7 +984,14 @@ function gfx.setfont(idx, fontface, sz, flag)
 end
 
 function gfx.setimgdim(image, w, h)
-  global_state.imgdim[image] = { w=toint(w), h=toint(h) }
+  image = toint(image)
+  local dim = { w=math.max(0, toint(w)), h=math.max(0, toint(h)) }
+  global_state.imgdim[image] = dim
+
+  local commands = global_state.commands[image]
+  if commands and dim.w == 0 and dim.h == 0 then
+    commands.want_clear = true
+  end
 end
 
 function gfx.setpixel(r, g, b)
@@ -1002,23 +1013,33 @@ function gfx.transformblit()
 end
 
 function gfx.triangle(...)
-  local c, points = color(), {...}
-  local n_points = #points
+  local c, n_coords = color(), select('#', ...)
+  assert(n_coords >= 6, 'gfx.triangle requires 6 or more parameters')
 
-  assert(n_points >= 6, 'gfx.triangle requires 6 or more parameters')
-
-  if (n_points & 1) ~= 0 then
-    points[n_points + 1] = points[2]
-    n_points = n_points + 1
+  -- rounding up to nearest even point count
+  local has_even = (n_coords & 1) == 0
+  local points = reaper.new_array(has_even and n_coords or n_coords + 1)
+  for i = 1, n_coords, 2 do
+    points[i], points[i + 1] = toint(select(i, ...)), toint(select(i + 1, ...))
+  end
+  if not has_even then
+    n_coords = n_coords + 1
+    points[n_coords] = points[2]
   end
 
-  sort2D(points) -- sort clockwise & truncate to integer
-  n_points = uniq2D(points)
+  sort2D(points) -- sort clockwise
+  n_coords = uniq2D(points)
 
-  if n_points == 4 then
+  if n_coords == 2 then
+    -- gfx.triangle(0,33, 0,33, 0,33, 0,33)
+    drawCall(function(draw_list, screen_x, screen_y)
+      local x, y = screen_x + points[1], screen_y + points[2]
+      reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + 1, y + 1, c)
+    end)
+  elseif n_coords == 4 then
     -- gfx.triangle(0,33, 0,0, 0,33, 0,33)
     gfx.line(table.unpack(points))
-  elseif n_points == 6 then
+  elseif n_coords == 6 then
     drawCall(function(draw_list, screen_x, screen_y)
       reaper.ImGui_DrawList_AddTriangleFilled(draw_list,
         screen_x + points[1], screen_y + points[2],
@@ -1026,9 +1047,9 @@ function gfx.triangle(...)
         screen_x + points[5], screen_y + points[6], c)
     end)
   else
-    local screen_points = reaper.new_array(n_points)
+    local screen_points = reaper.new_array(n_coords)
     drawCall(function(draw_list, screen_x, screen_y)
-      for i = 1, n_points, 2 do
+      for i = 1, n_coords, 2 do
         screen_points[i]     = screen_x + points[i]
         screen_points[i + 1] = screen_y + points[i + 1]
       end
