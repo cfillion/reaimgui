@@ -100,8 +100,8 @@ local gfx, global_state, state = {}, {
   log        = { ptr=0, size=0, max_size=64 },
   log_lines  = {},
   imgdim     = {},
-  pos        = { x=0, y=0 },
   dock       = 0,
+  pos_x = 0, pos_y = 0,
 }
 
 -- default variables
@@ -120,13 +120,14 @@ end
 
 local function toint(v)
   if not v or v ~= v or math.abs(v) == math.huge then return 0 end
-  return math.floor(v)
+  return v // 1 -- faster than floor
 end
 
 local function ringInsert(buffer, value)
   buffer[buffer.ptr] = value
   buffer.ptr = (buffer.ptr + 1) % buffer.max_size
-  buffer.size = math.min(buffer.size + 1, buffer.max_size)
+  buffer.size = buffer.size + 1
+  if buffer.size > buffer.max_size then buffer.size = buffer.max_size end
 end
 
 local function ringEnum(buffer)
@@ -173,21 +174,26 @@ end
 
 local function transformColor(c, blit_opts)
   if not blit_opts.mode then
-    return (c & ~0xff) | math.floor((c & 0xff) * blit_opts.alpha)
+    return (c & ~0xff) | ((c & 0xff) * blit_opts.alpha // 1)
   end
 
   -- premultiply alpha when rendering from an offscreen buffer
-  local r, g, b, a, a_blend = reaper.ImGui_ColorConvertU32ToDouble4(c)
+  local a = (c & 0xFF) / 0xFF
   if blit_opts.mode == 2 then
-    a, a_blend = blit_opts.alpha, blit_opts.alpha
+    a, a_blend = a * blit_opts.alpha, blit_opts.alpha
   else
     a_blend = a * blit_opts.alpha
   end
-  return reaper.ImGui_ColorConvertDouble4ToU32(r * a, g * a, b * a, a_blend)
+
+  local mask_r, mask_g, mask_b = 0xFF000000, 0x00FF0000, 0x0000FF00
+  return ((c & mask_r) * a // 1 & mask_r) |
+         ((c & mask_g) * a // 1 & mask_g) |
+         ((c & mask_b) * a // 1 & mask_b) |
+         (a_blend * 0xFF)  // 1
 end
 
 local function transformPoint(x, y, blit_opts)
-  return x * blit_opts.scale_x, y * blit_opts.scale_y
+  return x * blit_opts.scale_x // 1, y * blit_opts.scale_y // 1
 end
 
 local function mergeBlitOpts(src, dst)
@@ -420,11 +426,11 @@ local function getCachedFont(font)
   return dig(state.fontmap, font.family, font.flags, font.size)
 end
 
-local function getFontInstance(font)
-  if not font then return nil, 0 end
+local function getNearestCachedFont(font)
+  if not font then return nil, nil, 0 end
 
   local sizes = dig(state.fontmap, font.family, font.flags)
-  if not sizes then return nil, DEFAULT_FONT_SIZE - font.size end
+  if not sizes then return nil, nil, DEFAULT_FONT_SIZE - font.size end
 
   local match, score = sizes[font.size], 0
   if not match then
@@ -434,10 +440,10 @@ local function getFontInstance(font)
 
   if match then
     match.last_use = state.frame_count
-    return match.instance, score
+    return match, match.instance, score
   end
 
-  return nil, DEFAULT_FONT_SIZE - font.size
+  return nil, nil, DEFAULT_FONT_SIZE - font.size
 end
 
 local function unloadUnusedFonts()
@@ -447,25 +453,22 @@ local function unloadUnusedFonts()
     for style, sizes in pairs(styles) do
       for size, cache in pairs(sizes) do
         if not cache.keep_alive and cache.last_use + 1 < state.frame_count then
-          garbage[#garbage + 1] = {
-            last_use  = cache.last_use,
-            instance  = cache.instance,
-            cache     = sizes,
-            cache_key = size,
-          }
+          garbage[#garbage + 1] =
+            { cache = sizes, cache_key = size, cache_val = cache }
         end
       end
     end
   end
 
   table.sort(garbage, function(a, b)
-    return a.last_use > b.last_use
+    return a.cache_val.last_use > b.cache_val.last_use
   end)
 
   for i = UNUSED_FONTS_CACHE_SIZE + 1, #garbage do
     local old_font = garbage[i]
     -- print(('DetachFont() size=%d'):format(old_font.cache_key))
-    reaper.ImGui_DetachFont(state.ctx, old_font.instance)
+    reaper.ImGui_DetachFont(state.ctx, old_font.cache_val.instance)
+    old_font.cache_val.attached = false
     old_font.cache[old_font.cache_key] = nil
   end
 end
@@ -490,9 +493,10 @@ local function loadRequestedFonts()
       local keep_alive = hasValue(global_state.fonts, font)
       reaper.ImGui_AttachFont(state.ctx, instance)
       put(state.fontmap, font.family, font.flags, font.size, {
+        attached   = true,
         last_use   = state.frame_count,
         keep_alive = keep_alive,
-        instance   = instance
+        instance   = instance,
       })
     end
   end
@@ -523,11 +527,12 @@ local function sort2D(points)
   end
   center_x, center_y = center_x / n_points, center_y / n_points
 
+  local atan2 = math.atan
   for i = 1, n_coords, 2 do
     local x, y, j = points[i], points[i + 1], i - 2
-    local angle = math.atan(y - center_y, x - center_x)
+    local angle = atan2(y - center_y, x - center_x)
     while j >= 1 and
-        math.atan(points[j + 1] - center_y, points[j + 0] - center_x) > angle do
+      atan2(points[j + 1] - center_y, points[j + 0] - center_x) > angle do
       points[j + 2], points[j + 3] = points[j + 0], points[j + 1]
       j = j - 2
     end
@@ -549,12 +554,25 @@ local function uniq2D(points)
 end
 
 local function drawPixel(x, y, c)
+  local AddRectFilled = reaper.ImGui_DrawList_AddRectFilled
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
     local x, y = transformPoint(x, y, blit_opts)
     x, y = screen_x + x, screen_y + y
     local w, h = transformPoint(1, 1, blit_opts)
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + w, y + h, c)
+    AddRectFilled(draw_list, x, y, x + w, y + h, c)
+  end)
+end
+
+local function drawLine(x1, y1, x2, y2, c)
+  local AddLine = reaper.ImGui_DrawList_AddLine
+  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
+    local c = transformColor(c, blit_opts)
+    local x1, y1 = transformPoint(x1, y1, blit_opts)
+    local x2, y2 = transformPoint(x2, y2, blit_opts)
+    -- FIXME: scale thickness
+    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
+    AddLine(draw_list, x1, y1, x2, y2, c)
   end)
 end
 
@@ -563,13 +581,14 @@ function gfx.arc(x, y, r, ang1, ang2, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   local c, quarter = color(), math.pi / 2
   x, y, ang1, ang2 = toint(x) + 1, toint(y), ang1 - quarter, ang2 - quarter
+  local PathArcTo  = reaper.ImGui_DrawList_PathArcTo
+  local PathStroke = reaper.ImGui_DrawList_PathStroke
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
     local r = r * blit_opts.scale_y -- FIXME: scale_x
     local x, y = transformPoint(x, y, blit_opts)
-    x, y = screen_x + x, screen_y + y
-    reaper.ImGui_DrawList_PathArcTo(draw_list, x, y, r, ang1, ang2)
-    reaper.ImGui_DrawList_PathStroke(draw_list, c)
+    PathArcTo(draw_list, screen_x + x, screen_y + y, r, ang1, ang2)
+    PathStroke(draw_list, c)
   end)
 end
 
@@ -621,6 +640,7 @@ function gfx.blit(source, ...)
     local destw, desth = transformPoint(destw, desth, dst_blit)
     local merged_blit  = mergeBlitOpts(src_blit, dst_blit)
     local x, y = screen_x + destx, screen_y + desty
+
     reaper.ImGui_DrawList_PushClipRect(draw_list, x, y, x + destw, y + desth, true)
     render(commands, draw_list, x - srcx, y - srcy, merged_blit)
     reaper.ImGui_DrawList_PopClipRect(draw_list)
@@ -653,7 +673,7 @@ end
 
 function gfx.clienttoscreen(x, y)
   if not state then return x, y end
-  return global_state.pos.x + x, global_state.pos.y + y
+  return global_state.pos_x + x, global_state.pos_y + y
 end
 
 function gfx.deltablit()
@@ -669,8 +689,8 @@ function gfx.dock(v, ...) -- v[,wx,wy,ww,wh]
   end
 
   local n, rv = select('#', ...), {}
-  if n >= 1 then rv[1] = global_state.pos.x end
-  if n >= 2 then rv[2] = global_state.pos.y end
+  if n >= 1 then rv[1] = global_state.pos_x end
+  if n >= 2 then rv[2] = global_state.pos_y end
   if n >= 3 then rv[3] = gfx.w              end
   if n >= 4 then rv[4] = gfx.h              end
 
@@ -693,6 +713,8 @@ function gfx.drawstr(str, flags, right, bottom)
   local x, y, c = toint(gfx.x), toint(gfx.y), color()
   local w, h = gfx.measurestr(str) -- calls beginFrame()
   local f = global_state.fonts[state.font]
+  local f_sz = f and f.size or DEFAULT_FONT_SIZE
+  local f_cache, f_inst = getNearestCachedFont(f)
   if right  then right  = toint(right) end
   if bottom then bottom = toint(bottom) end
 
@@ -718,13 +740,20 @@ function gfx.drawstr(str, flags, right, bottom)
     if (flags & 256) ~= 0 then right, bottom = nil, nil end -- disable clipping
   end
 
+  local AddTextEx = reaper.ImGui_DrawList_AddTextEx
   gfx.x = gfx.x + w
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
+    -- search for a new font as the draw call may have been stored for a
+    -- long time in an offscreen buffer while the font instance got detached
+    -- or the script may have re-created the context with gfx.quit+gfx.init
+    if f_cache and not f_cache.attached then
+      f_cache, f_inst = getNearestCachedFont(f)
+    end
+
     local c = transformColor(c, blit_opts)
     local x, y = transformPoint(x, y, blit_opts)
-    local f_inst, f_sz = getFontInstance(f), f and f.size or DEFAULT_FONT_SIZE
-    f_sz = f_sz * blit_opts.scale_y -- height only, cannot stretch width
-    reaper.ImGui_DrawList_AddTextEx(draw_list, f_inst, f_sz,
+    local f_sz = f_sz * blit_opts.scale_y -- height only, cannot stretch width
+    AddTextEx(draw_list, f_inst, f_sz,
       screen_x + x, screen_y + y, c, str, 0, 0,
       right and right - x or nil, bottom and bottom - y or nil)
   end)
@@ -795,6 +824,7 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
   local cbl = color(r + drdy, g + dgdy, b + dbdy, a + dady)
   local cbr = color(r + drdx + drdy, g + dgdx + dgdy,
                     b + dbdx + dbdy, a + dadx + dady)
+  local AddRectFilledMultiColor = reaper.ImGui_DrawList_AddRectFilledMultiColor
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local ctl, ctr, cbr, cbl = transformColor(ctl, blit_opts),
                                transformColor(ctr, blit_opts),
@@ -803,8 +833,7 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
     local x1, y1 = transformPoint(x,     y,     blit_opts)
     local x2, y2 = transformPoint(x + w, y + h, blit_opts)
     x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-    reaper.ImGui_DrawList_AddRectFilledMultiColor(draw_list,
-      x1, y1, x2, y2, ctl, ctr, cbr, cbl)
+    AddRectFilledMultiColor(draw_list, x1, y1, x2, y2, ctl, ctr, cbr, cbl)
   end)
 end
 
@@ -867,20 +896,15 @@ end
 
 function gfx.line(x1, y1, x2, y2, aa)
   -- if aa then warn('ignoring parameter aa') end
-  local c = color()
   x1, y1, x2, y2 = toint(x1), toint(y1), toint(x2), toint(y2)
 
   -- gfx.line(10, 30, 10, 30)
-  if x1 == x2 and y1 == y2 then x2, y2 = x2 + 1, y2 + 1 end
+  if x1 == x2 and y1 == y2 then
+    drawPixel(x1, y1, color()) -- faster than 1px lines according to dear imgui
+    return
+  end
 
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local c = transformColor(c, blit_opts)
-    local x1, y1 = transformPoint(x1, y1, blit_opts)
-    local x2, y2 = transformPoint(x2, y2, blit_opts)
-    -- FIXME: scale thickness
-    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-    reaper.ImGui_DrawList_AddLine(draw_list, x1, y1, x2, y2, c)
-  end)
+  drawLine(x1, y1, x2, y2, color())
 end
 
 function gfx.lineto(x, y, aa)
@@ -900,11 +924,11 @@ function gfx.loadimg(image, filename)
 
   warn('placeholder pattern')
 
+  local AddRectFilled = reaper.ImGui_DrawList_AddRectFilled
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(0xFF00FFFF, blit_opts)
     local w, h = transformPoint(w, h, blit_opts)
-    reaper.ImGui_DrawList_AddRectFilled(draw_list,
-      screen_x, screen_y, screen_x + w, screen_y + h, c)
+    AddRectFilled(draw_list, screen_x, screen_y, screen_x + w, screen_y + h, c)
   end)
 
   gfx.dest = dest_backup
@@ -920,9 +944,10 @@ end
 function gfx.measurestr(str)
   if not state then return DEFAULT_FONT_SIZE * utf8.len(str), DEFAULT_FONT_SIZE end
   beginFrame()
-  local font, size_error = getFontInstance(global_state.fonts[state.font])
+  local _, font_inst, size_error =
+    getNearestCachedFont(global_state.fonts[state.font])
   local correction_factor = gfx.texth / (gfx.texth + size_error)
-  reaper.ImGui_PushFont(state.ctx, font)
+  reaper.ImGui_PushFont(state.ctx, font_inst)
   local w, h = reaper.ImGui_CalcTextSize(state.ctx, str)
   reaper.ImGui_PopFont(state.ctx)
   return w * correction_factor, h * correction_factor
@@ -941,6 +966,13 @@ function gfx.quit()
   if not state then return end
   if reaper.ImGui_ValidatePtr(state.ctx, 'ImGui_Context*') then
     reaper.ImGui_DestroyContext(state.ctx)
+  end
+  for family, styles in pairs(state.fontmap) do
+    for style, sizes in pairs(styles) do
+      for size, cache in pairs(sizes) do
+        cache.attached = false
+      end
+    end
   end
   state = nil
 end
@@ -969,6 +1001,7 @@ function gfx.roundrect(x, y, w, h, radius, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   local c = color()
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
+  local AddRect = reaper.ImGui_DrawList_AddRect
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
     local radius = radius * blit_opts.scale_y -- FIXME: scale_x
@@ -976,14 +1009,13 @@ function gfx.roundrect(x, y, w, h, radius, antialias)
     local x2, y2 = transformPoint(x + w, y + h, blit_opts)
     -- FIXME: scale thickness
     x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-    reaper.ImGui_DrawList_AddRect(draw_list, x1, y1, x2, y2, c,
-      radius, ROUND_CORNERS)
+    AddRect(draw_list, x1, y1, x2, y2, c, radius, ROUND_CORNERS)
   end)
 end
 
 function gfx.screentoclient(x, y)
   if not state then return x, y end
-  return x - global_state.pos.x, y - global_state.pos.y
+  return x - global_state.pos_x, y - global_state.pos_y
 end
 
 function gfx.set(...)
@@ -1097,7 +1129,7 @@ function gfx.triangle(...)
     points[n_coords] = points[2]
   end
 
-  sort2D(points) -- sort clockwise
+  sort2D(points) -- sort clockwise for antialiasing
   n_coords = uniq2D(points)
 
   if n_coords == 2 then
@@ -1105,19 +1137,21 @@ function gfx.triangle(...)
     drawPixel(points[1], points[2], c)
   elseif n_coords == 4 then
     -- gfx.triangle(0,33, 0,0, 0,33, 0,33)
-    gfx.line(table.unpack(points))
+    drawLine(points[1], points[2], points[3], points[4], c)
   elseif n_coords == 6 then
+    local AddTriangleFilled = reaper.ImGui_DrawList_AddTriangleFilled
     drawCall(function(draw_list, screen_x, screen_y, blit_opts)
       local c = transformColor(c, blit_opts)
       local x1, y1 = transformPoint(points[1], points[2], blit_opts)
       local x2, y2 = transformPoint(points[3], points[4], blit_opts)
       local x3, y3 = transformPoint(points[5], points[6], blit_opts)
-      reaper.ImGui_DrawList_AddTriangleFilled(draw_list,
+      AddTriangleFilled(draw_list,
         screen_x + x1, screen_y + y1,
         screen_x + x2, screen_y + y2,
         screen_x + x3, screen_y + y3, c)
     end)
   else
+    local AddConvexPolyFilled = reaper.ImGui_DrawList_AddConvexPolyFilled
     local screen_points = reaper.new_array(n_coords)
     drawCall(function(draw_list, screen_x, screen_y, blit_opts)
       local c = transformColor(c, blit_opts)
@@ -1127,7 +1161,7 @@ function gfx.triangle(...)
         screen_points[i], screen_points[i + 1] =
           screen_x + screen_points[i], screen_y + screen_points[i + 1]
       end
-      reaper.ImGui_DrawList_AddConvexPolyFilled(draw_list, screen_points, c)
+      AddConvexPolyFilled(draw_list, screen_points, c)
     end)
   end
 end
@@ -1178,8 +1212,26 @@ function gfx.update()
     return
   end
 
+  -- update variables
+  gfx.w, gfx.h = reaper.ImGui_GetWindowSize(state.ctx)
+  updateMouse()
+  updateKeyboard()
+  updateDropFiles()
+
+  state.want_close = state.want_close or not open
+  state.screen_x, state.screen_y = reaper.ImGui_GetWindowPos(state.ctx)
+  global_state.pos_x, global_state.pos_y = state.screen_x, state.screen_y
+  if MACOS then global_state.pos_y = global_state.pos_y + gfx.h end
+  global_state.pos_x, global_state.pos_y = reaper.ImGui_PointConvertNative(state.ctx,
+    global_state.pos_x, global_state.pos_y, true)
+
+  if reaper.ImGui_IsWindowDocked(state.ctx) then
+    global_state.dock = 1 | (~reaper.ImGui_GetWindowDockID(state.ctx) << 8)
+  else
+    global_state.dock = global_state.dock & ~1 -- preserve previous docker ID
+  end
+
   -- draw contents
-  state.screen_x, state.screen_y = reaper.ImGui_GetCursorScreenPos(state.ctx)
   local commands = global_state.commands[-1]
   if commands then
     local draw_list = reaper.ImGui_GetWindowDrawList(state.ctx)
@@ -1189,24 +1241,6 @@ function gfx.update()
     reaper.ImGui_DrawList_PushClipRectFullScreen(draw_list)
     render(commands, draw_list, state.screen_x, state.screen_y, blit_opts)
     reaper.ImGui_DrawList_PopClipRect(draw_list)
-  end
-
-  -- update variables
-  gfx.w, gfx.h = reaper.ImGui_GetWindowSize(state.ctx)
-  updateMouse()
-  updateKeyboard()
-  updateDropFiles()
-
-  state.want_close = state.want_close or not open
-  global_state.pos.x, global_state.pos.y = reaper.ImGui_GetWindowPos(state.ctx)
-  if MACOS then global_state.pos.y = global_state.pos.y + gfx.h end
-  global_state.pos.x, global_state.pos.y = reaper.ImGui_PointConvertNative(state.ctx,
-    global_state.pos.x, global_state.pos.y, true)
-
-  if reaper.ImGui_IsWindowDocked(state.ctx) then
-    global_state.dock = 1 | (~reaper.ImGui_GetWindowDockID(state.ctx) << 8)
-  else
-    global_state.dock = global_state.dock & ~1 -- preserve previous docker ID
   end
 
   reaper.ImGui_End(state.ctx)
