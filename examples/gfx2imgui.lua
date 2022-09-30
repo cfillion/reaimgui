@@ -146,7 +146,7 @@ end
 local function drawCall(command)
   local list = global_state.commands[gfx.dest]
   if not list then
-    list = { ptr=0, size=0, max_size=4096 }
+    list = { ptr=0, size=0, max_size=1<<12 }
     global_state.commands[gfx.dest] = list
   elseif list.want_clear then
     list.size = 0
@@ -186,8 +186,17 @@ local function transformColor(c, blit_opts)
   return reaper.ImGui_ColorConvertDouble4ToU32(r * a, g * a, b * a, a_blend)
 end
 
+local function transformPoint(x, y, blit_opts)
+  return x * blit_opts.scale_x, y * blit_opts.scale_y
+end
+
 local function mergeBlitOpts(src, dst)
-  return { alpha=src.alpha * dst.alpha, mode=src.mode }
+  return {
+    alpha   = src.alpha * dst.alpha,
+    mode    = src.mode,
+    scale_x = src.scale_x * dst.scale_x,
+    scale_y = src.scale_y * dst.scale_y,
+  }
 end
 
 local function updateMouse()
@@ -539,14 +548,26 @@ local function uniq2D(points)
   return j - 1
 end
 
+local function drawPixel(x, y, c)
+  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
+    local c = transformColor(c, blit_opts)
+    local x, y = transformPoint(x, y, blit_opts)
+    x, y = screen_x + x, screen_y + y
+    local w, h = transformPoint(1, 1, blit_opts)
+    reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + w, y + h, c)
+  end)
+end
+
 -- translation functions
 function gfx.arc(x, y, r, ang1, ang2, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   local c, quarter = color(), math.pi / 2
   x, y, ang1, ang2 = toint(x) + 1, toint(y), ang1 - quarter, ang2 - quarter
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local x, y = screen_x + x, screen_y + y
     local c = transformColor(c, blit_opts)
+    local r = r * blit_opts.scale_y -- FIXME: scale_x
+    local x, y = transformPoint(x, y, blit_opts)
+    x, y = screen_x + x, screen_y + y
     reaper.ImGui_DrawList_PathArcTo(draw_list, x, y, r, ang1, ang2)
     reaper.ImGui_DrawList_PathStroke(draw_list, c)
   end)
@@ -554,6 +575,8 @@ end
 
 function gfx.blit(source, ...)
   local n_args = select('#', ...)
+  if n_args < 2 then return end
+
   local scale, rotation, srcx, srcy, srcw, srch,
         destx, desty, destw, desth, rotxoffs, rotyoffs = ...
 
@@ -561,6 +584,7 @@ function gfx.blit(source, ...)
   srcx, srcy, srcw, srch, destx, desty, destw, desth =
     toint(srcx),  toint(srcy),  toint(srcw),  toint(srch),
     toint(destx), toint(desty), toint(destw), toint(desth)
+  rotxoffs, rotyoffs = rotxoffs or 0.0, rotyoffs or 0.0
 
   local dim = global_state.imgdim[source]
 
@@ -572,12 +596,9 @@ function gfx.blit(source, ...)
   if n_args <  9 then destw = srcw * scale end
   if n_args < 10 then desth = srch * scale end
 
-  if dim and srcw ~= dim.w then warn('ignoring parameter srcw') end
-  if dim and srch ~= dim.h then warn('ignoring parameter srch') end
-  if scale    ~= 1 then warn('ignoring parameter scale')    end
   if rotation ~= 0 then warn('ignoring parameter rotation') end
-  if rotxoffs      then warn('ignoring parameter rotxoffs') end
-  if rotyoffs      then warn('ignoring parameter rotyoffs') end
+  if rotxoffs ~= 0 then warn('ignoring parameter rotxoffs') end
+  if rotyoffs ~= 0 then warn('ignoring parameter rotyoffs') end
 
   local sourceCommands = global_state.commands[source]
   if not sourceCommands then return warn('source buffer is empty, nothing to blit') end
@@ -587,11 +608,19 @@ function gfx.blit(source, ...)
     ringInsert(commands, c)
   end
 
-  local src_blit = { alpha=gfx.a, mode=gfx.mode }
+  local src_blit = {
+    alpha   = gfx.a,
+    mode    = gfx.mode,
+    scale_x = destw / srcw,
+    scale_y = desth / srch,
+  }
 
   drawCall(function(draw_list, screen_x, screen_y, dst_blit)
+    local srcx,  srcy  = transformPoint(srcx,  srcy,  src_blit)
+    local destx, desty = transformPoint(destx, desty, dst_blit)
+    local destw, desth = transformPoint(destw, desth, dst_blit)
+    local merged_blit  = mergeBlitOpts(src_blit, dst_blit)
     local x, y = screen_x + destx, screen_y + desty
-    local merged_blit = mergeBlitOpts(src_blit, dst_blit)
     reaper.ImGui_DrawList_PushClipRect(draw_list, x, y, x + destw, y + desth, true)
     render(commands, draw_list, x - srcx, y - srcy, merged_blit)
     reaper.ImGui_DrawList_PopClipRect(draw_list)
@@ -612,10 +641,12 @@ function gfx.circle(x, y, r, fill, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   local c = color()
   x, y, r = toint(x), toint(y), toint(r)
-  local AddCircle = tobool(fill, true) and
+  local AddCircle = tobool(fill, false) and
     reaper.ImGui_DrawList_AddCircleFilled or reaper.ImGui_DrawList_AddCircle
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
+    local x, y = transformPoint(x, y, blit_opts)
+    local r = r * blit_opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
     AddCircle(draw_list, screen_x + x, screen_y + y, r, c)
   end)
 end
@@ -690,7 +721,9 @@ function gfx.drawstr(str, flags, right, bottom)
   gfx.x = gfx.x + w
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
-    local f_inst, f_sz = getFontInstance(f), f and f.size or 0
+    local x, y = transformPoint(x, y, blit_opts)
+    local f_inst, f_sz = getFontInstance(f), f and f.size or DEFAULT_FONT_SIZE
+    f_sz = f_sz * blit_opts.scale_y -- height only, cannot stretch width
     reaper.ImGui_DrawList_AddTextEx(draw_list, f_inst, f_sz,
       screen_x + x, screen_y + y, c, str, 0, 0,
       right and right - x or nil, bottom and bottom - y or nil)
@@ -763,12 +796,13 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
   local cbr = color(r + drdx + drdy, g + dgdx + dgdy,
                     b + dbdx + dbdy, a + dadx + dady)
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local x1, y1 = screen_x + x, screen_y + y
-    local x2, y2 = x1 + w, y1 + h
     local ctl, ctr, cbr, cbl = transformColor(ctl, blit_opts),
                                transformColor(ctr, blit_opts),
                                transformColor(cbr, blit_opts),
                                transformColor(cbl, blit_opts)
+    local x1, y1 = transformPoint(x,     y,     blit_opts)
+    local x2, y2 = transformPoint(x + w, y + h, blit_opts)
+    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
     reaper.ImGui_DrawList_AddRectFilledMultiColor(draw_list,
       x1, y1, x2, y2, ctl, ctr, cbr, cbl)
   end)
@@ -841,8 +875,10 @@ function gfx.line(x1, y1, x2, y2, aa)
 
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
-    local x1, y1 = screen_x + x1, screen_y + y1
-    local x2, y2 = screen_x + x2, screen_y + y2
+    local x1, y1 = transformPoint(x1, y1, blit_opts)
+    local x2, y2 = transformPoint(x2, y2, blit_opts)
+    -- FIXME: scale thickness
+    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
     reaper.ImGui_DrawList_AddLine(draw_list, x1, y1, x2, y2, c)
   end)
 end
@@ -866,6 +902,7 @@ function gfx.loadimg(image, filename)
 
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(0xFF00FFFF, blit_opts)
+    local w, h = transformPoint(w, h, blit_opts)
     reaper.ImGui_DrawList_AddRectFilled(draw_list,
       screen_x, screen_y, screen_x + w, screen_y + h, c)
   end)
@@ -915,8 +952,10 @@ function gfx.rect(x, y, w, h, filled)
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
-    local x1, y1 = screen_x + x, screen_y + y
-    local x2, y2 = x1 + w, y1 + h
+    local x1, y1 = transformPoint(x,     y,     blit_opts)
+    local x2, y2 = transformPoint(x + w, y + h, blit_opts)
+    -- FIXME: scale thickness
+    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
     AddRect(draw_list, x1, y1, x2, y2, c)
   end)
 end
@@ -932,9 +971,12 @@ function gfx.roundrect(x, y, w, h, radius, antialias)
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
-    local x1, y1 = screen_x + x, screen_y + y
-    local x2, y2 = x1 + w, y1 + h
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, x1, y1, x2, y2, c,
+    local radius = radius * blit_opts.scale_y -- FIXME: scale_x
+    local x1, y1 = transformPoint(x,     y,     blit_opts)
+    local x2, y2 = transformPoint(x + w, y + h, blit_opts)
+    -- FIXME: scale thickness
+    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
+    reaper.ImGui_DrawList_AddRect(draw_list, x1, y1, x2, y2, c,
       radius, ROUND_CORNERS)
   end)
 end
@@ -1028,13 +1070,7 @@ function gfx.setimgdim(image, w, h)
 end
 
 function gfx.setpixel(r, g, b)
-  local c = color(r, g, b, 1)
-  local x, y = gfx.x, gfx.y
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local c = transformColor(c, blit_opts)
-    local x, y = screen_x + x, screen_y + y
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + 1, y + 1, c)
-  end)
+  drawPixel(gfx.x, gfx.y, color(r, g, b, 1))
 end
 
 function gfx.showmenu(str)
@@ -1066,29 +1102,30 @@ function gfx.triangle(...)
 
   if n_coords == 2 then
     -- gfx.triangle(0,33, 0,33, 0,33, 0,33)
-    drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-      local c = transformColor(c, blit_opts)
-      local x, y = screen_x + points[1], screen_y + points[2]
-      reaper.ImGui_DrawList_AddRectFilled(draw_list, x, y, x + 1, y + 1, c)
-    end)
+    drawPixel(points[1], points[2], c)
   elseif n_coords == 4 then
     -- gfx.triangle(0,33, 0,0, 0,33, 0,33)
     gfx.line(table.unpack(points))
   elseif n_coords == 6 then
     drawCall(function(draw_list, screen_x, screen_y, blit_opts)
       local c = transformColor(c, blit_opts)
+      local x1, y1 = transformPoint(points[1], points[2], blit_opts)
+      local x2, y2 = transformPoint(points[3], points[4], blit_opts)
+      local x3, y3 = transformPoint(points[5], points[6], blit_opts)
       reaper.ImGui_DrawList_AddTriangleFilled(draw_list,
-        screen_x + points[1], screen_y + points[2],
-        screen_x + points[3], screen_y + points[4],
-        screen_x + points[5], screen_y + points[6], c)
+        screen_x + x1, screen_y + y1,
+        screen_x + x2, screen_y + y2,
+        screen_x + x3, screen_y + y3, c)
     end)
   else
     local screen_points = reaper.new_array(n_coords)
     drawCall(function(draw_list, screen_x, screen_y, blit_opts)
       local c = transformColor(c, blit_opts)
       for i = 1, n_coords, 2 do
-        screen_points[i]     = screen_x + points[i]
-        screen_points[i + 1] = screen_y + points[i + 1]
+        screen_points[i], screen_points[i + 1] =
+          transformPoint(points[i], points[i + 1], blit_opts)
+        screen_points[i], screen_points[i + 1] =
+          screen_x + screen_points[i], screen_y + screen_points[i + 1]
       end
       reaper.ImGui_DrawList_AddConvexPolyFilled(draw_list, screen_points, c)
     end)
@@ -1147,7 +1184,7 @@ function gfx.update()
   if commands then
     local draw_list = reaper.ImGui_GetWindowDrawList(state.ctx)
     -- mode=nil tells transformColor it's not outputting to an offscreen buffer
-    local blit_opts = { alpha=1, mode=nil }
+    local blit_opts = { alpha=1, mode=nil, scale_x=1, scale_y=1 }
     -- removes the 1px border when docked
     reaper.ImGui_DrawList_PushClipRectFullScreen(draw_list)
     render(commands, draw_list, state.screen_x, state.screen_y, blit_opts)
