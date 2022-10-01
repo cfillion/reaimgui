@@ -94,6 +94,9 @@ local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
 local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 local THROTTLE_FONT_LOADING_FRAMES = 16
 
+-- gfx.mode bits
+local BLIT_NO_SOURCE_ALPHA = 2
+
 local gfx, global_state, state = {}, {
   commands   = {},
   fonts      = {},
@@ -150,9 +153,7 @@ local function drawCall(command)
     list = { ptr=0, size=0, max_size=1<<12 }
     global_state.commands[gfx.dest] = list
   elseif list.want_clear then
-    list.size = 0
-    list.ptr = 0
-    list.want_clear = false
+    list.size, list.ptr, list.want_clear = 0, 0, false
   end
 
   ringInsert(list, command)
@@ -166,20 +167,20 @@ local function render(commands, draw_list, screen_x, screen_y, blit_opts)
 end
 
 local function color(r, g, b, a)
-  return toint((a or gfx.a or 0) * 0xFF)       |
-         toint((b or gfx.b or 0) * 0xFF) << 8  |
-         toint((g or gfx.g or 0) * 0xFF) << 16 |
-         toint((r or gfx.r or 0) * 0xFF) << 24
+  return (toint((a or gfx.a or 0) * 0xFF) & 0xFF)       |
+         (toint((b or gfx.b or 0) * 0xFF) & 0xFF) << 8  |
+         (toint((g or gfx.g or 0) * 0xFF) & 0xFF) << 16 |
+         (toint((r or gfx.r or 0) * 0xFF) & 0xFF) << 24
 end
 
 local function transformColor(c, blit_opts)
   if not blit_opts.mode then
-    return (c & ~0xff) | ((c & 0xff) * blit_opts.alpha // 1)
+    return (c & ~0xff) | ((c & 0xff) * blit_opts.alpha // 1 & 0xFF)
   end
 
   -- premultiply alpha when rendering from an offscreen buffer
   local a = (c & 0xFF) / 0xFF
-  if blit_opts.mode == 2 then
+  if (blit_opts.mode & BLIT_NO_SOURCE_ALPHA) ~= 0 then
     a, a_blend = a * blit_opts.alpha, blit_opts.alpha
   else
     a_blend = a * blit_opts.alpha
@@ -189,7 +190,7 @@ local function transformColor(c, blit_opts)
   return ((c & mask_r) * a // 1 & mask_r) |
          ((c & mask_g) * a // 1 & mask_g) |
          ((c & mask_b) * a // 1 & mask_b) |
-         (a_blend * 0xFF)  // 1
+         ((a_blend * 0xFF) // 1 & 0xFF)
 end
 
 local function transformPoint(x, y, blit_opts)
@@ -406,8 +407,6 @@ local function put(array, ...)
     array = v
   end
   array[select(n - 1, ...)] = select(n, ...)
-
-  return array
 end
 
 local function nearest(array, target_key)
@@ -532,7 +531,7 @@ local function sort2D(points)
     local x, y, j = points[i], points[i + 1], i - 2
     local angle = atan2(y - center_y, x - center_x)
     while j >= 1 and
-      atan2(points[j + 1] - center_y, points[j + 0] - center_x) > angle do
+        atan2(points[j + 1] - center_y, points[j + 0] - center_x) > angle do
       points[j + 2], points[j + 3] = points[j + 0], points[j + 1]
       j = j - 2
     end
@@ -618,6 +617,10 @@ function gfx.blit(source, ...)
   if rotation ~= 0 then warn('ignoring parameter rotation') end
   if rotxoffs ~= 0 then warn('ignoring parameter rotxoffs') end
   if rotyoffs ~= 0 then warn('ignoring parameter rotyoffs') end
+
+  if gfx.mode ~= 0 and (gfx.mode & ~BLIT_NO_SOURCE_ALPHA) ~= 0 then
+    warn('mode %d not implemented', gfx.mode)
+  end
 
   local sourceCommands = global_state.commands[source]
   if not sourceCommands then return warn('source buffer is empty, nothing to blit') end
@@ -740,8 +743,9 @@ function gfx.drawstr(str, flags, right, bottom)
     if (flags & 256) ~= 0 then right, bottom = nil, nil end -- disable clipping
   end
 
-  local AddTextEx = reaper.ImGui_DrawList_AddTextEx
   gfx.x = gfx.x + w
+
+  local AddTextEx = reaper.ImGui_DrawList_AddTextEx
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     -- search for a new font as the draw call may have been stored for a
     -- long time in an offscreen buffer while the font instance got detached
@@ -938,7 +942,7 @@ end
 
 function gfx.measurechar(char)
   if not state then return DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE end
-  return gfx.measurestr(char)
+  return gfx.measurestr(utf8.char(char))
 end
 
 function gfx.measurestr(str)
