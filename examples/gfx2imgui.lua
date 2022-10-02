@@ -372,27 +372,6 @@ local function showLog()
   reaper.ImGui_End(state.ctx)
 end
 
-local function gfxdo(callback)
-  if not WINDOWS then return callback() end
-
-  -- Using hidden gfx window menu code by amagalma
-  -- https://forum.cockos.com/showthread.php?t=239556
-  local title = reaper.genGuid()
-  ogfx.init(title, 0, 0, 0, 0, 0)
-  ogfx.x, ogfx.y = ogfx.mouse_x, ogfx.mouse_y
-
-  if reaper.JS_Window_Show then
-    local hwnd = reaper.JS_Window_Find(title, true)
-    if hwnd then
-      reaper.JS_Window_Show(hwnd, 'HIDE')
-    end
-  end
-
-  local value = callback()
-  ogfx.quit()
-  return value
-end
-
 local function setDock(v)
   global_state.dock = v & 0xf01
   state.want_dock = (v & 1) == 1 and ~(v >> 8 & 0xf) or 0
@@ -959,13 +938,24 @@ function gfx.loadimg(image, filename)
   local dest_backup = gfx.dest
   gfx.dest = image
 
-  warn('bitmap images not implemented, using a placeholder pattern instead')
+  warn('bitmap images not implemented (placeholder pattern)')
 
-  local AddRectFilled = reaper.ImGui_DrawList_AddRectFilled
+  local AddRect, AddLine = reaper.ImGui_DrawList_AddRect,
+                           reaper.ImGui_DrawList_AddLine
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(0xFF00FFFF, blit_opts)
     local w, h = transformPoint(w, h, blit_opts)
-    AddRectFilled(draw_list, screen_x, screen_y, screen_x + w, screen_y + h, c)
+    local x, y = screen_x + blit_opts.x1, screen_y + blit_opts.y1
+    local max_w, max_h = blit_opts.x2 - blit_opts.x1,
+                         blit_opts.y2 - blit_opts.y1
+    if w > max_w then w = max_w end if h > max_h then h = max_h end
+
+    AddRect(draw_list, x, y, x + w, y + h, c)
+    local pitch = 10 * blit_opts.scale_x
+    for i = pitch, w * 2, pitch do
+      AddLine(draw_list, x + i, y, (x + i) - w, y + h, c)
+      AddLine(draw_list, (x + i) - w, y, x + i, y + h, c)
+    end
   end)
 
   gfx.dest = dest_backup
@@ -1144,7 +1134,24 @@ end
 
 function gfx.showmenu(str)
   -- cannot use a ImGui menu because the host script expect gfx.showmenu to be blocking
-  return gfxdo(function() return ogfx.showmenu(str) end)
+  if not WINDOWS then return ogfx.showmenu(str) end
+
+  -- Using hidden gfx window menu code by amagalma
+  -- https://forum.cockos.com/showthread.php?t=239556
+  local title = reaper.genGuid()
+  ogfx.init(title, 0, 0, 0, 0, 0)
+  ogfx.x, ogfx.y = ogfx.mouse_x, ogfx.mouse_y
+
+  if reaper.JS_Window_Show then
+    local hwnd = reaper.JS_Window_Find(title, true)
+    if hwnd then
+      reaper.JS_Window_Show(hwnd, 'HIDE')
+    end
+  end
+
+  local value = ogfx.showmenu(str)
+  ogfx.quit()
+  return value
 end
 
 function gfx.transformblit()
