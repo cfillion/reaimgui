@@ -213,6 +213,11 @@ local function transformPoint(x, y, blit_opts)
   return x * blit_opts.scale_x // 1, y * blit_opts.scale_y // 1
 end
 
+local function clip(x1, y1, x2, y2, blit_opts)
+  return x1 > blit_opts.x2 or y1 > blit_opts.y2 or
+         x2 < blit_opts.x1 or y2 < blit_opts.y1
+end
+
 local function mergeBlitOpts(src, dst)
   return {
     alpha   = src.alpha * dst.alpha,
@@ -451,7 +456,7 @@ local function getNearestCachedFont(font)
 
   local match, score = sizes[font.size], 0
   if not match then
-    warn("cannot load font '%s'@%d[%x] in the middle of a frame, falling back to nearest match for up to %d frames",
+    warn("font '%s'@%d[%x] temporarily unavailable: frame already started (falling back to nearest match for up to %d frames)",
       font.family, font.size, font.flags, THROTTLE_FONT_LOADING_FRAMES)
     match, score = nearest(sizes, font.size)
   end
@@ -642,7 +647,10 @@ function gfx.blit(source, ...)
   end
 
   local sourceCommands = global_state.commands[source]
-  if not sourceCommands then return warn('source buffer is empty, nothing to blit') end
+  if not sourceCommands then
+    warn('source buffer is empty, nothing to blit')
+    return
+  end
 
   local commands = { ptr=0, size=0, max_size=sourceCommands.size }
   for c in ringEnum(sourceCommands) do
@@ -657,15 +665,20 @@ function gfx.blit(source, ...)
   }
 
   drawCall(function(draw_list, screen_x, screen_y, dst_blit)
-    local srcx,  srcy  = transformPoint(srcx,  srcy,  src_blit)
     local destx, desty = transformPoint(destx, desty, dst_blit)
     local destw, desth = transformPoint(destw, desth, dst_blit)
-    local merged_blit  = mergeBlitOpts(src_blit, dst_blit)
-    local x, y = screen_x + destx, screen_y + desty
 
-    reaper.ImGui_DrawList_PushClipRect(draw_list, x, y, x + destw, y + desth, true)
-    render(commands, draw_list, x - srcx, y - srcy, merged_blit)
-    reaper.ImGui_DrawList_PopClipRect(draw_list)
+    if not clip(destx, desty, destx + destw, desty + desth, dst_blit) then
+      local merged_blit = mergeBlitOpts(src_blit, dst_blit)
+      local srcx, srcy  = transformPoint(srcx,  srcy,  src_blit)
+      merged_blit.x1, merged_blit.y1 = srcx, srcy
+      merged_blit.x2, merged_blit.y2 = srcx + destw, srcy + desth
+
+      local x, y = screen_x + destx, screen_y + desty
+      reaper.ImGui_DrawList_PushClipRect(draw_list, x, y, x + destw, y + desth, true)
+      render(commands, draw_list, x - srcx, y - srcy, merged_blit)
+      reaper.ImGui_DrawList_PopClipRect(draw_list)
+    end
 
     sourceCommands.want_clear = true
   end)
@@ -946,7 +959,7 @@ function gfx.loadimg(image, filename)
   local dest_backup = gfx.dest
   gfx.dest = image
 
-  warn('placeholder pattern')
+  warn('bitmap images not implemented, using a placeholder pattern instead')
 
   local AddRectFilled = reaper.ImGui_DrawList_AddRectFilled
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
@@ -1260,7 +1273,10 @@ function gfx.update()
   if commands then
     local draw_list = reaper.ImGui_GetWindowDrawList(state.ctx)
     -- mode=nil tells transformColor it's not outputting to an offscreen buffer
-    local blit_opts = { alpha=1, mode=nil, scale_x=1, scale_y=1 }
+    local blit_opts = {
+      alpha=1, mode=nil, scale_x=1, scale_y=1,
+      x1=0, y1=0, x2=gfx.w, y2=gfx.h,
+    }
     -- removes the 1px border when docked
     reaper.ImGui_DrawList_PushClipRectFullScreen(draw_list)
     render(commands, draw_list, state.screen_x, state.screen_y, blit_opts)
