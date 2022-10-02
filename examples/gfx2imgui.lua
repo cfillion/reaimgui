@@ -509,6 +509,9 @@ local function loadRequestedFonts()
 end
 
 local function beginFrame()
+  assert(reaper.ImGui_ValidatePtr(state.ctx, 'ImGui_Context*'),
+    'reaimgui context got garbage-collected: was gfx.update called every defer cycle?')
+
   -- protect against scripts calling gfx.update more than once per defer cycle
   -- or before the first defer timer tick
   local this_frame = reaper.ImGui_GetFrameCount(state.canary)
@@ -639,8 +642,8 @@ function gfx.blit(source, ...)
   local src_blit = {
     alpha   = gfx.a,
     mode    = gfx.mode,
-    scale_x = destw / srcw,
-    scale_y = desth / srch,
+    scale_x = srcw ~= 0 and destw / srcw or 1,
+    scale_y = srch ~= 0 and desth / srch or 1,
   }
 
   drawCall(function(draw_list, screen_x, screen_y, dst_blit)
@@ -681,7 +684,7 @@ function gfx.circle(x, y, r, fill, antialias)
     local c = transformColor(c, blit_opts)
     local x, y = transformPoint(x, y, blit_opts)
     local r = r * blit_opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
-    AddCircle(draw_list, screen_x + x, screen_y + y, r, c)
+    AddCircle(draw_list, screen_x + x + .5, screen_y + y + .5, r + .5, c)
   end)
 end
 
@@ -991,9 +994,7 @@ end
 
 function gfx.quit()
   if not state then return end
-  if reaper.ImGui_ValidatePtr(state.ctx, 'ImGui_Context*') then
-    reaper.ImGui_DestroyContext(state.ctx)
-  end
+  reaper.ImGui_DestroyContext(state.ctx)
   for family, styles in pairs(state.fontmap) do
     for style, sizes in pairs(styles) do
       for size, cache in pairs(sizes) do
