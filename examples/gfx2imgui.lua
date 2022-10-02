@@ -32,18 +32,12 @@ local WND_FLAGS = reaper.ImGui_WindowFlags_NoScrollbar() |
                   reaper.ImGui_WindowFlags_NoMove()
 local LOG_WND_FLAGS = reaper.ImGui_WindowFlags_NoDocking()
 local HOVERED_FLAGS = reaper.ImGui_HoveredFlags_ChildWindows()
+local FOCUSED_FLAGS = reaper.ImGui_FocusedFlags_RootAndChildWindows()
 local WINDOW_PADDING, WINDOW_BG =
   reaper.ImGui_StyleVar_WindowPadding(), reaper.ImGui_Col_WindowBg()
-local MOUSE_LEFT, MOUSE_RIGHT, MOUSE_MIDDLE =
-  reaper.ImGui_MouseButton_Left(), reaper.ImGui_MouseButton_Right(),
-  reaper.ImGui_MouseButton_Middle()
-local MOD_CTRL, MOD_SHIFT, MOD_ALT, MOD_SUPER =
-  reaper.ImGui_Key_ModCtrl(), reaper.ImGui_Key_ModShift(),
-  reaper.ImGui_Key_ModAlt(),  reaper.ImGui_Key_ModSuper()
 local ROUND_CORNERS = reaper.ImGui_DrawFlags_RoundCornersAll()
 local MACOS, WINDOWS = reaper.GetOS():find('OSX') ~= nil,
                        reaper.GetOS():find('Win') == 1
-local MW_TICK = 6 -- gfx.mouse_[h]wheel increments per wheel tick
 local CURSORS = {
   [32512] = reaper.ImGui_MouseCursor_Arrow(),
   [32649] = reaper.ImGui_MouseCursor_Hand(),
@@ -55,6 +49,28 @@ local CURSORS = {
   [32642] = reaper.ImGui_MouseCursor_ResizeNWSE(),
   [32513] = reaper.ImGui_MouseCursor_TextInput(),
 }
+local MOUSE_BTNS = {
+  [reaper.ImGui_MouseButton_Left()  ] = 1<<0,
+  [reaper.ImGui_MouseButton_Right() ] = 1<<1,
+  [reaper.ImGui_MouseButton_Middle()] = 1<<6,
+}
+local KEY_MODS = {
+  [reaper.ImGui_Key_ModCtrl() ] = 1<<2,
+  [reaper.ImGui_Key_ModShift()] = 1<<3,
+  [reaper.ImGui_Key_ModAlt()  ] = 1<<4,
+  [reaper.ImGui_Key_ModSuper()] = 1<<5,
+}
+local CHAR_MOD_MASK = reaper.ImGui_ModFlags_Ctrl() |
+                      reaper.ImGui_ModFlags_Alt()
+local CHAR_MOD_BASE = {
+  [reaper.ImGui_ModFlags_Ctrl()] = 0x001,
+  [CHAR_MOD_MASK               ] = 0x101,
+  [reaper.ImGui_ModFlags_Alt() ] = 0x141,
+}
+local MW_TICK = 6 -- gfx.mouse_[h]wheel increments per wheel tick
+local MOD_CTRL, MOD_SHIFT, MOD_ALT, MOD_SUPER =
+  reaper.ImGui_Key_ModCtrl(), reaper.ImGui_Key_ModShift(),
+  reaper.ImGui_Key_ModAlt(),  reaper.ImGui_Key_ModSuper()
 local KEYS = {
   [reaper.ImGui_Key_Backspace()]   = 0x00000008,
   [reaper.ImGui_Key_Delete()]      = 0x0064656c,
@@ -207,29 +223,40 @@ local function mergeBlitOpts(src, dst)
 end
 
 local function updateMouse()
-  gfx.mouse_cap = 0
-
   if reaper.ImGui_IsWindowHovered(state.ctx, HOVERED_FLAGS) then -- not over Log window
-    if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_LEFT)   then gfx.mouse_cap = gfx.mouse_cap | 1  end
-    if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_RIGHT)  then gfx.mouse_cap = gfx.mouse_cap | 2  end
-    if reaper.ImGui_IsMouseDown(state.ctx, MOUSE_MIDDLE) then gfx.mouse_cap = gfx.mouse_cap | 64 end
+    for button, flag in pairs(MOUSE_BTNS) do
+      if reaper.ImGui_IsMouseClicked(state.ctx, button) then
+        state.mouse_cap = state.mouse_cap | flag
+      end
+    end
 
     gfx.mouse_wheel, gfx.mouse_hwheel = reaper.ImGui_GetMouseWheel(state.ctx)
-    gfx.mouse_wheel, gfx.mouse_hwheel = gfx.mouse_wheel * MW_TICK, gfx.mouse_hwheel * MW_TICK
+    gfx.mouse_wheel, gfx.mouse_hwheel = gfx.mouse_wheel  * MW_TICK,
+                                        gfx.mouse_hwheel * MW_TICK
 
     if state.want_cursor then
       reaper.ImGui_SetMouseCursor(state.ctx, state.want_cursor)
     end
   end
 
-  if reaper.ImGui_IsKeyDown(state.ctx, MOD_CTRL)  then gfx.mouse_cap = gfx.mouse_cap | 4  end
-  if reaper.ImGui_IsKeyDown(state.ctx, MOD_SHIFT) then gfx.mouse_cap = gfx.mouse_cap | 8  end
-  if reaper.ImGui_IsKeyDown(state.ctx, MOD_ALT)   then gfx.mouse_cap = gfx.mouse_cap | 16 end
-  if reaper.ImGui_IsKeyDown(state.ctx, MOD_SUPER) then gfx.mouse_cap = gfx.mouse_cap | 32 end
+  for button, flag in pairs(MOUSE_BTNS) do
+    if reaper.ImGui_IsMouseReleased(state.ctx, button) then
+      state.mouse_cap = state.mouse_cap & ~flag
+    end
+  end
+
+  gfx.mouse_cap = state.mouse_cap
+
+  for mod, flag in pairs(KEY_MODS) do
+    if reaper.ImGui_IsKeyDown(state.ctx, mod) then
+      gfx.mouse_cap = gfx.mouse_cap | flag
+    end
+  end
 
   if reaper.ImGui_IsMousePosValid(state.ctx) then
     gfx.mouse_x, gfx.mouse_y = reaper.ImGui_GetMousePos(state.ctx)
-    gfx.mouse_x, gfx.mouse_y = gfx.mouse_x - state.screen_x, gfx.mouse_y - state.screen_y
+    gfx.mouse_x, gfx.mouse_y = gfx.mouse_x - state.screen_x,
+                               gfx.mouse_y - state.screen_y
   end
 end
 
@@ -239,7 +266,7 @@ local function updateKeyboard()
 
   -- flags for gfx.getchar(65536)
   state.wnd_flags = 1
-  if reaper.ImGui_IsWindowFocused(state.ctx) then
+  if reaper.ImGui_IsWindowFocused(state.ctx, FOCUSED_FLAGS) then
     state.wnd_flags = state.wnd_flags | 2
   end
   if not reaper.ImGui_IsWindowCollapsed(state.ctx) then
@@ -252,24 +279,15 @@ local function updateKeyboard()
     end
   end
 
-  local mod_base
-  if     (gfx.mouse_cap &  4) ==  4 then mod_base = 0x001 -- ctrl
-  elseif (gfx.mouse_cap & 20) == 20 then mod_base = 0x101 -- ctrl+alt
-  elseif (gfx.mouse_cap & 16) == 16 then mod_base = 0x141 -- alt
-  end
-
-  if mod_base then
-    local bypass_input_queue = false
-
-    for k = KEY_A, KEY_Z do
-      if reaper.ImGui_IsKeyPressed(state.ctx, k) then
-        bypass_input_queue = true
-        ringInsert(state.charqueue, mod_base + (k - KEY_A))
+  local mods = reaper.ImGui_GetKeyMods(state.ctx) & CHAR_MOD_MASK
+  for flags, mod_base in pairs(CHAR_MOD_BASE) do
+    if flags == mods then
+      for k = KEY_A, KEY_Z do
+        if reaper.ImGui_IsKeyPressed(state.ctx, k) then
+          ringInsert(state.charqueue, mod_base + (k - KEY_A))
+        end
       end
-    end
-
-    if bypass_input_queue then
-      return
+      return -- break + bypass the character input queue
     end
   end
 
@@ -433,7 +451,8 @@ local function getNearestCachedFont(font)
 
   local match, score = sizes[font.size], 0
   if not match then
-    warn("cannot load font '%s'@%d[%x] in the middle of a frame, falling back to nearest match until next frame", font.family, font.size, font.flags)
+    warn("cannot load font '%s'@%d[%x] in the middle of a frame, falling back to nearest match for up to %d frames",
+      font.family, font.size, font.flags, THROTTLE_FONT_LOADING_FRAMES)
     match, score = nearest(sizes, font.size)
   end
 
@@ -875,6 +894,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     frame_count = -1,
     charqueue   = { ptr=0, rptr=0, size=0, max_size=16 },
     drop_files  = {},
+    mouse_cap   = 0,
   }
 
   reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 0)
