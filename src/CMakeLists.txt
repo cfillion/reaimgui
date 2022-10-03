@@ -31,6 +31,7 @@ if(WIN32)
   target_link_libraries(src unofficial::gl3w::gl3w)
 elseif(APPLE)
   target_sources(src PRIVATE
+    cocoa_events.mm
     cocoa_font.mm
     cocoa_inject.mm
     cocoa_inputview.mm

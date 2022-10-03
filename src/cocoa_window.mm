@@ -17,6 +17,7 @@
 
 #include "cocoa_window.hpp"
 
+#include "cocoa_events.hpp"
 #include "cocoa_inject.hpp"
 #include "cocoa_inputview.hpp"
 #include "context.hpp"
@@ -58,11 +59,8 @@ void CocoaWindow::create()
 
   NSWindow *window { [m_view window] };
   m_defaultStyleMask = [window styleMask];
-  m_defaultLevel = [window level];
   m_previousFlags = ~m_viewport->Flags; // mark all as modified
   // imgui calls update() before show(), it will apply the flags
-
-  CocoaInject::inject([SWELLWindowOverride class], window);
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
@@ -76,8 +74,10 @@ void CocoaWindow::create()
   if(!m_gl)
     throw backend_error { "failed to initialize OpenGL 3.2 core context" };
 
-  // enable transparency
   if(!isDocked()) {
+    CocoaInject::inject([SWELLWindowOverride class], window);
+
+    // enable transparency
     [window setOpaque:NO];
     [window setBackgroundColor:[NSColor clearColor]]; // required when decorations are enabled
     [m_view setWantsLayer:YES]; // required to be transparent before resizing
@@ -88,6 +88,12 @@ void CocoaWindow::create()
   [m_gl makeCurrentContext];
   m_renderer = new OpenGLRenderer;
   [NSOpenGLContext clearCurrentContext];
+
+  static __weak EventHandler *g_handler;
+  if(g_handler)
+    m_eventHandler = g_handler;
+  else
+    g_handler = m_eventHandler = [[EventHandler alloc] init];
 }
 
 CocoaWindow::~CocoaWindow()
@@ -101,6 +107,7 @@ void CocoaWindow::show()
 {
   Window::show();
   [m_gl setView:m_view];
+  [m_eventHandler watchView:m_view];
 
   if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing))
     [[m_view window] makeFirstResponder:m_inputView];

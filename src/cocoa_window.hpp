@@ -20,6 +20,7 @@
 
 #include "window.hpp"
 
+@class EventHandler;
 @class InputView;
 @class NSOpenGLContext;
 @class NSView;
@@ -52,9 +53,10 @@ public:
 private:
   NSView *m_view;
   InputView *m_inputView;
+  EventHandler *m_eventHandler;
   NSOpenGLContext *m_gl;
   OpenGLRenderer *m_renderer;
-  unsigned int m_defaultStyleMask, m_defaultLevel;
+  unsigned int m_defaultStyleMask;
   ImGuiViewportFlags m_previousFlags;
 };
 
