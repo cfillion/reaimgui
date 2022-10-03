@@ -188,7 +188,13 @@ static int translateKeyCode(NSEvent *event)
 
 - (BOOL)resignFirstResponder
 {
-  // called if docked when losing focus to another control
+  // Invoked when losing focus to another control in the same OS window
+  // Calling updateFocus later because at this time focus has yet to be transferred
+  dispatch_async(dispatch_get_main_queue(), ^{
+    if([self superview]) // the viewport may have been destroyed in the meantime
+      m_window->context()->updateFocus();
+  });
+
   return YES;
 }
 

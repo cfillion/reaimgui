@@ -128,6 +128,9 @@ Context::~Context()
 
   if(m_inFrame)
     endFrame(false);
+
+  // destroy windows while this and m_imgui are still valid
+  ImGui::DestroyPlatformWindows();
 }
 
 void Context::ContextDeleter::operator()(ImGuiContext *imgui)
@@ -221,8 +224,8 @@ bool Context::endFrame(const bool render) try
     ImGui::EndFrame();
 
   ImGui::UpdatePlatformWindows();
-#ifndef _WIN32
-  // WM_KILLFOCUS is incomplete/missing on macOS/Linux with SWELL
+#if !defined(_WIN32) && !defined(__APPLE__)
+  // WM_KILLFOCUS/WM_ACTIVATE+WA_INACTIVE are incomplete or missing in SWELL
   updateFocus();
 #endif
 
@@ -263,7 +266,6 @@ void Context::updateCursor()
 
   if(m_imgui->IO.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
     return;
-
 
   // TODO
   // io.MouseDrawCursor (ImGui-drawn cursor)

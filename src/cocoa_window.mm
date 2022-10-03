@@ -108,9 +108,6 @@ void CocoaWindow::show()
   Window::show();
   [m_gl setView:m_view];
   [m_eventHandler watchView:m_view];
-
-  if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing))
-    [[m_view window] makeFirstResponder:m_inputView];
 }
 
 void CocoaWindow::setPosition(ImVec2 pos)
@@ -157,6 +154,10 @@ void CocoaWindow::setAlpha(const float alpha)
 
 void CocoaWindow::update()
 {
+  static bool no_wm_setfocus { atof(GetAppVersion()) < 6.53 };
+  if(no_wm_setfocus && GetFocus() == m_hwnd.get())
+    setFocus();
+
   if(isDocked())
     return;
 
@@ -244,6 +245,17 @@ std::optional<LRESULT> CocoaWindow::handleMessage
   case WM_SIZE:
     [m_gl update]; // update size if it changed while we were docked & inactive
     break; // continue handling WM_SIZE in CocoaWindow::proc
+  case WM_SETFOCUS: // REAPER v6.53+
+    // Redirect focus to the input view after m_view gets it.
+    // WM_SETFOCUS is sent from becomeFirstResponder,
+    // m_view will gain focus right after this returns.
+    //
+    // Both makeFirstResponder and making the window key are required
+    // for receiving key events right away without a click
+    if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing) ||
+        IsWindowVisible(m_hwnd.get()))
+      dispatch_async(dispatch_get_main_queue(), ^{ setFocus(); });
+    break;
   }
 
   return std::nullopt;
