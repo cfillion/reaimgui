@@ -183,10 +183,14 @@ local function render(commands, draw_list, screen_x, screen_y, blit_opts)
 end
 
 local function color(r, g, b, a)
-  return (toint((a or gfx.a or 0) * 0xFF) & 0xFF)       |
-         (toint((b or gfx.b or 0) * 0xFF) & 0xFF) << 8  |
-         (toint((g or gfx.g or 0) * 0xFF) & 0xFF) << 16 |
-         (toint((r or gfx.r or 0) * 0xFF) & 0xFF) << 24
+  r, g, b, a = r or gfx.r or 0, g or gfx.g or 0,
+               b or gfx.b or 0, a or gfx.a or 0
+  if r > 1 then r = 1 elseif r < 0 then r = 0 end
+  if g > 1 then g = 1 elseif g < 0 then g = 0 end
+  if b > 1 then b = 1 elseif b < 0 then b = 0 end
+  if a > 1 then a = 1 elseif a < 0 then a = 0 end
+  return toint(a * 0xFF)       | toint(b * 0xFF) << 8  |
+         toint(g * 0xFF) << 16 | toint(r * 0xFF) << 24
 end
 
 local function transformColor(c, blit_opts)
@@ -996,7 +1000,10 @@ end
 
 function gfx.quit()
   if not state then return end
-  reaper.ImGui_DestroyContext(state.ctx)
+  -- context will already have been destroyed when calling quit() from atexit()
+  if reaper.ImGui_ValidatePtr(state.ctx, 'ImGui_Context*') then
+    reaper.ImGui_DestroyContext(state.ctx)
+  end
   for family, styles in pairs(state.fontmap) do
     for style, sizes in pairs(styles) do
       for size, cache in pairs(sizes) do
