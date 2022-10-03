@@ -524,16 +524,18 @@ local function beginFrame()
   -- reaper.ImGui_ShowMetricsWindow(state.ctx)
 end
 
-local function sort2D(points)
+local function center2D(points)
   local n_coords = #points
   local center_x, center_y, n_points = 0, 0, n_coords / 2
   for i = 1, n_coords, 2 do
     center_x, center_y = center_x + points[i], center_y + points[i + 1]
   end
-  center_x, center_y = center_x / n_points, center_y / n_points
+  return center_x / n_points, center_y / n_points
+end
 
+local function sort2D(points, center_x, center_y)
   local atan2 = math.atan
-  for i = 1, n_coords, 2 do
+  for i = 1, #points, 2 do
     local x, y, j = points[i], points[i + 1], i - 2
     local angle = atan2(y - center_y, x - center_x)
     while j >= 1 and
@@ -1174,7 +1176,8 @@ function gfx.triangle(...)
     points[n_coords] = points[2]
   end
 
-  sort2D(points) -- sort clockwise for antialiasing
+  local center_x, center_y = center2D(points)
+  sort2D(points, center_x, center_y) -- sort clockwise for antialiasing
   n_coords = uniq2D(points)
 
   if n_coords == 2 then
@@ -1190,6 +1193,12 @@ function gfx.triangle(...)
       local x1, y1 = transformPoint(points[1], points[2], blit_opts)
       local x2, y2 = transformPoint(points[3], points[4], blit_opts)
       local x3, y3 = transformPoint(points[5], points[6], blit_opts)
+      if points[1] > center_x then x1 = x1 + 1 end
+      if points[2] > center_y then y1 = y1 + 1 end
+      if points[3] > center_x then x2 = x2 + 1 end
+      if points[4] > center_y then y2 = y2 + 1 end
+      if points[5] > center_x then x3 = x3 + 1 end
+      if points[6] > center_y then y3 = y3 + 1 end
       AddTriangleFilled(draw_list,
         screen_x + x1, screen_y + y1,
         screen_x + x2, screen_y + y2,
@@ -1205,6 +1214,8 @@ function gfx.triangle(...)
           transformPoint(points[i], points[i + 1], blit_opts)
         screen_points[i], screen_points[i + 1] =
           screen_x + screen_points[i], screen_y + screen_points[i + 1]
+        if points[i]     > center_x then screen_points[i]     = screen_points[i]     + 1 end
+        if points[i + 1] > center_y then screen_points[i + 1] = screen_points[i + 1] + 1 end
       end
       AddConvexPolyFilled(draw_list, screen_points, c)
     end)
