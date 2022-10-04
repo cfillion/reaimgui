@@ -30,6 +30,7 @@ local CANARY_FLAGS = reaper.ImGui_ConfigFlags_NoSavedSettings()
 local WND_FLAGS = reaper.ImGui_WindowFlags_NoScrollbar() |
                   reaper.ImGui_WindowFlags_NoScrollWithMouse() |
                   reaper.ImGui_WindowFlags_NoMove()
+local CHILD_FLAGS = reaper.ImGui_WindowFlags_NoMouseInputs()
 local LOG_WND_FLAGS = reaper.ImGui_WindowFlags_NoDocking()
 local HOVERED_FLAGS = reaper.ImGui_HoveredFlags_ChildWindows()
 local FOCUSED_FLAGS = reaper.ImGui_FocusedFlags_RootAndChildWindows()
@@ -311,7 +312,7 @@ end
 
 local function updateDropFiles()
   state.drop_files = {}
-  if reaper.ImGui_BeginChild(state.ctx, 'drop_target', -FLT_MIN, -FLT_MIN) then
+  if reaper.ImGui_BeginChild(state.ctx, 'drop_target', -FLT_MIN, -FLT_MIN, 0, CHILD_FLAGS) then
     reaper.ImGui_EndChild(state.ctx)
     if reaper.ImGui_BeginDragDropTarget(state.ctx) then
       local rv, count = reaper.ImGui_AcceptDragDropPayloadFiles(state.ctx)
