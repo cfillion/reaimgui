@@ -111,4 +111,4 @@ DEFINE_ENUM(ImGui, TreeNodeFlags_FramePadding,         "Use FramePadding (even f
 DEFINE_ENUM(ImGui, TreeNodeFlags_SpanAvailWidth,       "Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line. In the future we may refactor the hit system to be front-to-back, allowing natural overlaps and then this can become the default.");
 DEFINE_ENUM(ImGui, TreeNodeFlags_SpanFullWidth,        "Extend hit box to the left-most and right-most edges (bypass the indented area).");
 // DEFINE_ENUM(ImGui, TreeNodeFlags_NavLeftJumpsBackHere, "(WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop).");
-DEFINE_ENUM(ImGui, TreeNodeFlags_CollapsingHeader,     "");
+DEFINE_ENUM(ImGui, TreeNodeFlags_CollapsingHeader,     "ImGui_TreeNodeFlags_Framed | ImGui_TreeNodeFlags_NoTreePushOnOpen | ImGui_TreeNodeFlags_NoAutoOpenOnLog");
