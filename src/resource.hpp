@@ -29,19 +29,20 @@ public:
   void keepAlive();
 
   template<typename T>
-  static bool exists(T *userData)
+  static bool isValid(T *userData)
   {
     static_assert(!std::is_same_v<Resource, T>);
 
     // static_cast needed for dynamic_cast to check whether it's really a T
     Resource *resource { static_cast<Resource *>(userData) };
-    return exists(resource) && dynamic_cast<T *>(resource);
+    return isValid(resource) && dynamic_cast<T *>(resource) && resource->isValid();
   }
 
   static void destroyAll();
 
 protected:
   virtual bool heartbeat();
+  virtual bool isValid() const;
 
 private:
   class Timer;
@@ -50,6 +51,6 @@ private:
 };
 
 template<>
-bool Resource::exists<Resource>(Resource *);
+bool Resource::isValid<Resource>(Resource *);
 
 #endif

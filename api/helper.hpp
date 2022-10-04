@@ -97,7 +97,7 @@ template<typename T>
 void assertValid(T *ptr)
 {
   if constexpr (std::is_base_of_v<Resource, T>) {
-    if(Resource::exists(ptr))
+    if(Resource::isValid(ptr))
       return;
   }
   else if(ptr)

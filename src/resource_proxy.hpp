@@ -44,7 +44,7 @@ public:
     ResT *res;
 
     for(const Key possibleKey : m_keys) {
-      if(Resource::exists(res = encode<ResT>(ptr, possibleKey))) {
+      if(Resource::isValid(res = encode<ResT>(ptr, possibleKey))) {
         *key = possibleKey;
         return res;
       }

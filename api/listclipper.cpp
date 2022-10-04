@@ -28,7 +28,7 @@ ListClipper::~ListClipper()
 {
   // do ~ImGuiListClipper's work to allow out-of-order destruction
 
-  if(m_imlc.TempData && Resource::exists(m_ctx)) {
+  if(m_imlc.TempData && Resource::isValid(m_ctx)) {
     ImGuiContext *ctx { m_ctx->imgui() };
     --ctx->ClipperTempDataStacked;
 
@@ -49,23 +49,17 @@ ListClipper::~ListClipper()
   m_imlc.TempData = nullptr;
 }
 
-bool ListClipper::validate(ListClipper *lc)
+bool ListClipper::isValid() const
 {
-  return Resource::exists(lc) && Resource::exists(lc->m_ctx);
+  return Resource::isValid(m_ctx);
 }
 
-ImGuiListClipper *ListClipper::use(ListClipper *lc)
+ImGuiListClipper *ListClipper::operator->()
 {
-  if(!validate(lc)) {
-    char message[255];
-    snprintf(message, sizeof(message),
-      "expected a valid ImGui_ListClipper*, got %p", lc);
-    throw reascript_error { message };
-  }
-
-  lc->keepAlive();
-  lc->m_ctx->enterFrame();
-  return &lc->m_imlc;
+  assertValid(this);
+  assertFrame(m_ctx);
+  keepAlive();
+  return &m_imlc;
 }
 
 DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
@@ -104,27 +98,26 @@ items_height: Use -1.0 to be calculated automatically on first step. Otherwise p
 
 Default values: items_height = -1.0)",
 {
-  ListClipper::use(clipper)
-    ->Begin(items_count, valueOr(API_RO(items_height), -1.0));
+  (*clipper)->Begin(items_count, valueOr(API_RO(items_height), -1.0));
 });
 
 DEFINE_API(bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
 "Call until it returns false. The display_start/display_end fields from ImGui_ListClipper_GetDisplayRange will be set and you can process/draw those items.",
 {
-  return ListClipper::use(clipper)->Step();
+  return (*clipper)->Step();
 });
 
 DEFINE_API(void, ListClipper_End, (ImGui_ListClipper*,clipper),
 "Automatically called on the last call of ImGui_ListClipper_Step that returns false.",
 {
-  ListClipper::use(clipper)->End();
+  (*clipper)->End();
 });
 
 DEFINE_API(void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
 (int*,API_W(display_start))(int*,API_W(display_end)),
 "",
 {
-  ImGuiListClipper *imclipper { ListClipper::use(clipper) };
+  ImGuiListClipper *imclipper { (*clipper).operator->() };
   if(API_W(display_start)) *API_W(display_start) = imclipper->DisplayStart;
   if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
 });
@@ -135,5 +128,5 @@ R"(Call ImGui_ListClipper_ForceDisplayRangeByIndices before first call to ImGui_
 
 item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due to alignment/padding of certain items it is likely that an extra item may be included on either end of the display range.)",
 {
-  ListClipper::use(clipper)->ForceDisplayRangeByIndices(item_min, item_max);
+  (*clipper)->ForceDisplayRangeByIndices(item_min, item_max);
 });

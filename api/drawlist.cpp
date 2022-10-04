@@ -42,13 +42,13 @@ struct ImGui_DrawList {
 
     switch(drawList) {
     case Window:
-      ctx->enterFrame();
+      assertFrame(ctx);
       return ImGui::GetWindowDrawList();
     case Background:
-      ctx->enterFrame();
+      assertFrame(ctx);
       return ImGui::GetBackgroundDrawList();
     case Foreground:
-      ctx->enterFrame();
+      assertFrame(ctx);
       return ImGui::GetForegroundDrawList();
     default:
       throw reascript_error { "expected a valid ImGui_DrawList*" };
@@ -436,8 +436,15 @@ DrawListSplitter::DrawListSplitter(ImGui_DrawList *draw_list)
 {
 }
 
+bool DrawListSplitter::isValid() const
+{
+  ResourceProxy::Key proxyKey;
+  return !!DrawList.decode<Context>(m_drawlist, &proxyKey);
+}
+
 ImDrawListSplitter *DrawListSplitter::operator->()
 {
+  assertValid(this);
   keepAlive();
   return &m_splitter;
 }
@@ -459,7 +466,6 @@ Use to minimize draw calls (e.g. if going back-and-forth between multiple clippi
 DEFINE_API(void, DrawListSplitter_Clear, (ImGui_DrawListSplitter*,splitter),
 "",
 {
-  assertValid(splitter);
   (*splitter)->Clear();
 });
 
@@ -467,14 +473,12 @@ DEFINE_API(void, DrawListSplitter_Split, (ImGui_DrawListSplitter*,splitter)
 (int,count),
 "",
 {
-  assertValid(splitter);
   (*splitter)->Split(splitter->drawList(), count);
 });
 
 DEFINE_API(void, DrawListSplitter_Merge, (ImGui_DrawListSplitter*,splitter),
 "",
 {
-  assertValid(splitter);
   (*splitter)->Merge(splitter->drawList());
 });
 
@@ -482,6 +486,5 @@ DEFINE_API(void, DrawListSplitter_SetCurrentChannel,
 (ImGui_DrawListSplitter*,splitter)(int,channel_idx),
 "",
 {
-  assertValid(splitter);
   (*splitter)->SetCurrentChannel(splitter->drawList(), channel_idx);
 });

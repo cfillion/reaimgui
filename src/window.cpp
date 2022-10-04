@@ -323,7 +323,7 @@ int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
   } while(false);
 #endif
 
-  if(infoType == IsInTextField && Resource::exists(ctx)) {
+  if(infoType == IsInTextField && Resource::isValid(ctx)) {
     // Called for handling global shortcuts (v6.29+)
     // getSwellClass emulates this in older versions (but only on macOS & Linux)
     return ctx->IO().WantCaptureKeyboard ? InTextField : NotInTextField;

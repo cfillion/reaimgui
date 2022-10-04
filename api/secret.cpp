@@ -53,7 +53,7 @@ DEFINE_SECRET_API(void, GetAllocatorFunctions,
 DEFINE_SECRET_API(ImGuiContext*, GetInternalContext, (ImGui_Context*,ctx)
 (bool,enterFrame),
 {
-  if(!Resource::exists(ctx))
+  if(!Resource::isValid(ctx))
     return nullptr;
 
   if(enterFrame)

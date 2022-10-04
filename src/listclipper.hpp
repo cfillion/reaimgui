@@ -22,11 +22,14 @@
 
 class ListClipper : public Resource {
 public:
-  static ImGuiListClipper *use(ListClipper *);
-  static bool validate(ListClipper *);
+  static constexpr const char *api_type_name { "ImGui_ListClipper" };
 
   ListClipper(Context *ctx);
   ~ListClipper();
+  ImGuiListClipper *operator->();
+
+protected:
+  bool isValid() const override;
 
 private:
   Context *m_ctx;

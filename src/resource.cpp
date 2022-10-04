@@ -179,8 +179,13 @@ bool Resource::heartbeat()
   return true;
 }
 
+bool Resource::isValid() const
+{
+  return true;
+}
+
 template<>
-bool Resource::exists<Resource>(Resource *rs)
+bool Resource::isValid<Resource>(Resource *rs)
 {
   if(!rs)
     return false;

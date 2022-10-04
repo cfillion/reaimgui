@@ -13,6 +13,9 @@ public:
   ImDrawList *drawList() const;
   ImDrawListSplitter *operator->();
 
+protected:
+  bool isValid() const override;
+
 private:
   ImGui_DrawList *m_drawlist;
   ImDrawListSplitter m_splitter;
