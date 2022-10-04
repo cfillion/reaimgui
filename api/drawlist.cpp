@@ -458,7 +458,18 @@ DEFINE_API(ImGui_DrawListSplitter*, CreateDrawListSplitter,
 (ImGui_DrawList*,draw_list),
 R"(Split/Merge functions are used to split the draw list into different layers which can be drawn into out of order (e.g. submit FG primitives before BG primitives).
 
-Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end).)",
+Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end).
+
+Usage:
+  local splitter = reaper.ImGui_CreateDrawListSplitter(draw_list)
+  reaper.ImGui_DrawListSplitter_Split(splitter, 2)
+  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
+  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
+  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 1)
+  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- foreground
+  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
+  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
+  reaper.ImGui_DrawListSplitter_Merge(splitter))",
 {
   return new DrawListSplitter { draw_list };
 });
