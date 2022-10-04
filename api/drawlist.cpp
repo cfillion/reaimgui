@@ -18,6 +18,7 @@
 #include "helper.hpp"
 
 #include "color.hpp"
+#include "drawlist.hpp"
 #include "font.hpp"
 #include "resource_proxy.hpp"
 
@@ -429,3 +430,58 @@ DEFINE_ENUM(Im, DrawFlags_RoundCornersBottom          , "");
 DEFINE_ENUM(Im, DrawFlags_RoundCornersLeft            , "");
 DEFINE_ENUM(Im, DrawFlags_RoundCornersRight           , "");
 DEFINE_ENUM(Im, DrawFlags_RoundCornersAll             , "");
+
+DrawListSplitter::DrawListSplitter(ImGui_DrawList *draw_list)
+  : m_drawlist { draw_list }
+{
+}
+
+ImDrawListSplitter *DrawListSplitter::operator->()
+{
+  keepAlive();
+  return &m_splitter;
+}
+
+ImDrawList *DrawListSplitter::drawList() const
+{
+  return m_drawlist->get();
+}
+
+DEFINE_API(ImGui_DrawListSplitter*, CreateDrawListSplitter,
+(ImGui_DrawList*,draw_list),
+R"(Split/Merge functions are used to split the draw list into different layers which can be drawn into out of order (e.g. submit FG primitives before BG primitives).
+
+Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end).)",
+{
+  return new DrawListSplitter { draw_list };
+});
+
+DEFINE_API(void, DrawListSplitter_Clear, (ImGui_DrawListSplitter*,splitter),
+"",
+{
+  assertValid(splitter);
+  (*splitter)->Clear();
+});
+
+DEFINE_API(void, DrawListSplitter_Split, (ImGui_DrawListSplitter*,splitter)
+(int,count),
+"",
+{
+  assertValid(splitter);
+  (*splitter)->Split(splitter->drawList(), count);
+});
+
+DEFINE_API(void, DrawListSplitter_Merge, (ImGui_DrawListSplitter*,splitter),
+"",
+{
+  assertValid(splitter);
+  (*splitter)->Merge(splitter->drawList());
+});
+
+DEFINE_API(void, DrawListSplitter_SetCurrentChannel,
+(ImGui_DrawListSplitter*,splitter)(int,channel_idx),
+"",
+{
+  assertValid(splitter);
+  (*splitter)->SetCurrentChannel(splitter->drawList(), channel_idx);
+});

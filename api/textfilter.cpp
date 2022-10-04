@@ -30,6 +30,7 @@ void TextFilter::set(const char *filter)
   m_filter = filter;
   m_filter.Build();
 }
+
 ImGuiTextFilter *TextFilter::operator->()
 {
   keepAlive();

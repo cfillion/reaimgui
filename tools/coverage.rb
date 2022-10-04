@@ -57,6 +57,8 @@ NATIVE_ONLY = [
   'void ImDrawList::AddCallback(ImDrawCallback, void*)',
   'void ImDrawList::AddDrawCmd()',
 
+  'void ImDrawListSplitter::ClearFreeMemory()',
+
   'void ImGui::SetStateStorage(ImGuiStorage*)',
   'ImGuiStorage* ImGui::GetStateStorage()',
   'void ImGui::LoadIniSettingsFromDisk(const char*)',
@@ -166,7 +168,7 @@ NATIVE_ONLY = [
 ]
 
 NATIVE_ONLY_CLASSES = %w[
-  ImGuiIO ImFontAtlas ImFont ImDrawData ImDrawListSplitter ImGuiStoragePair
+  ImGuiIO ImFontAtlas ImFont ImDrawData ImGuiStoragePair
   ImGuiStyle ImGuiInputTextCallbackData ImFontGlyphRangesBuilder
   ImGuiTextBuffer ImFontConfig
 ]
@@ -270,16 +272,23 @@ OVERRIDES = {
   'bool ImGui::BeginChildFrame(ImGuiID, const ImVec2&, ImGuiWindowFlags)' => 'bool BeginChildFrame(const char*, double, double, int*)',
 
   'bool ImGuiTextFilter::Draw(const char*, float)' => 'bool TextFilter_Draw(ImGui_Context*, const char*, double*)',
+
+  # previnting crashes when calling ImDrawListSplitter::Merge on a blank,
+  # unused DrawList different from the one given to Split/SetCurrentChannel
+  'void ImDrawListSplitter::Split(ImDrawList*, int)' => 'void DrawListSplitter_Split(int)',
+  'void ImDrawListSplitter::Merge(ImDrawList*)'      => 'void DrawListSplitter_Merge()',
+  'void ImDrawListSplitter::SetCurrentChannel(ImDrawList*, int)' => 'void DrawListSplitter_SetCurrentChannel(int)',
 }
 
 # argument position & name are checked
 RESOURCES = {
-  'ImGui_Context*'     => 'ctx',
-  'ImGui_DrawList*'    => 'draw_list',
-  'ImGui_Font*'        => 'font',
-  'ImGui_ListClipper*' => 'clipper',
-  'ImGui_TextFilter*'  => 'filter',
-  'ImGui_Viewport*'    => 'viewport',
+  'ImGui_Context*'          => 'ctx',
+  'ImGui_DrawList*'         => 'draw_list',
+  'ImGui_DrawListSplitter*' => 'splitter',
+  'ImGui_Font*'             => 'font',
+  'ImGui_ListClipper*'      => 'clipper',
+  'ImGui_TextFilter*'       => 'filter',
+  'ImGui_Viewport*'         => 'viewport',
 }
 
 # types REAPER's parser knows about
@@ -525,6 +534,7 @@ REAIMGUI_DEF_R  = /\A(?<name>[\w_]+) = (?<value>.+)/
 REAIMGUI_ARGN_R =  /\A(?:(?<raw_name>[^\(\)]+)|(?<decoration>[^\(]+)\((?<raw_name>[^\)]+)\))\z/
 
 def split_reaimgui_args(args)
+  return [] if args == 'NO_ARGS'
   args = args.split ')('
   return args if args.size < 1
 
@@ -618,7 +628,7 @@ reaimgui_funcs.each do |func|
   end
 
   # ignore leading resource type for easier matching
-  func.args.shift if RESOURCES.has_key? func.args.first.type
+  func.args.shift if !func.args.empty? && RESOURCES.has_key?(func.args.first.type)
 end
 
 NATIVE_ONLY.each do |sig|

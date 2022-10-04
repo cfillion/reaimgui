@@ -18,6 +18,7 @@
 #include "helper.hpp"
 
 #include "color.hpp"
+#include "drawlist.hpp"
 #include "font.hpp"
 #include "listclipper.hpp"
 #include "platform.hpp"
@@ -40,7 +41,7 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_Font*, ImGui_ListClipper*, ImGui_TextFilter* and ImGui_Viewport*.)",
+R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_DrawListSplitter*, ImGui_Font*, ImGui_ListClipper*, ImGui_TextFilter* and ImGui_Viewport*.)",
 {
   ResourceProxy::Key proxyKey;
 
@@ -48,6 +49,8 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
     return Resource::exists(static_cast<Context *>(pointer));
   else if(!strcmp(type, "ImGui_DrawList*"))
     return DrawList.decode<Context>(pointer, &proxyKey);
+  else if(!strcmp(type, "ImGui_DrawListSplitter*"))
+    return Resource::exists(static_cast<DrawListSplitter *>(pointer));
   else if(!strcmp(type, "ImGui_Font*"))
     return Resource::exists(static_cast<Font *>(pointer));
   else if(!strcmp(type, "ImGui_ListClipper*"))

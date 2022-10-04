@@ -111,7 +111,7 @@ void assertValid(T *ptr)
 
   char message[255];
   snprintf(message, sizeof(message),
-    "expected valid %s*, got %p", type.c_str(), ptr);
+    "expected a valid %s*, got %p", type.c_str(), ptr);
   throw reascript_error { message };
 }
 
