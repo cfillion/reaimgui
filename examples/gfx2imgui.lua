@@ -1071,7 +1071,7 @@ function gfx.roundrect(x, y, w, h, radius, antialias)
     local x2, y2 = transformPoint(x + w, y + h, blit_opts)
     -- FIXME: scale thickness
     x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-    AddRect(draw_list, x1, y1, x2, y2, c, radius, ROUND_CORNERS)
+    AddRect(draw_list, x1, y1, x2 + 1, y2 + 1, c, radius, ROUND_CORNERS)
   end)
   return 0
 end
