@@ -994,12 +994,12 @@ function gfx.loadimg(image, filename)
 end
 
 function gfx.measurechar(char)
-  if not state then return DEFAULT_FONT_SIZE, DEFAULT_FONT_SIZE end
+  if not state then return gfx.texth, gfx.texth end
   return gfx.measurestr(utf8.char(char))
 end
 
 function gfx.measurestr(str)
-  if not state then return DEFAULT_FONT_SIZE * utf8.len(str), DEFAULT_FONT_SIZE end
+  if not state then return gfx.texth * utf8.len(str), gfx.texth end
   beginFrame()
   local _, font_inst, size_error =
     getNearestCachedFont(global_state.fonts[state.font])
