@@ -193,9 +193,11 @@ local function color(r, g, b, a)
   if r > 1 then r = 1 elseif r < 0 then r = 0 end
   if g > 1 then g = 1 elseif g < 0 then g = 0 end
   if b > 1 then b = 1 elseif b < 0 then b = 0 end
-  if a > 1 then a = 1 elseif a < 0 then a = 0 end
-  return toint(a * 0xFF)       | toint(b * 0xFF) << 8  |
-         toint(g * 0xFF) << 16 | toint(r * 0xFF) << 24
+  -- gfx does not clamp alpha (it wraps around)
+  return toint(r * 0xFF) << 24 |
+         toint(g * 0xFF) << 16 |
+         toint(b * 0xFF) << 8  |
+        (toint(a * 0xFF) & 0xFF)
 end
 
 local function transformColor(c, blit_opts)
@@ -215,7 +217,7 @@ local function transformColor(c, blit_opts)
   return ((c & mask_r) * a // 1 & mask_r) |
          ((c & mask_g) * a // 1 & mask_g) |
          ((c & mask_b) * a // 1 & mask_b) |
-         ((a_blend * 0xFF) // 1 & 0xFF)
+         ((0xFF * a_blend) // 1 & 0xFF)
 end
 
 local function transformPoint(x, y, blit_opts)
@@ -665,9 +667,10 @@ function gfx.blit(source, ...)
       merged_blit.x1, merged_blit.y1 = srcx, srcy
       merged_blit.x2, merged_blit.y2 = srcx + destw, srcy + desth
 
-      local x, y = screen_x + destx, screen_y + desty
-      reaper.ImGui_DrawList_PushClipRect(draw_list, x, y, x + destw, y + desth, true)
-      render(commands, draw_list, x - srcx, y - srcy, merged_blit)
+      local x1, y1 = screen_x + destx, screen_y + desty
+      local x2, y2 = x1 + destw, y1 + desth
+      reaper.ImGui_DrawList_PushClipRect(draw_list, x1, y1, x2, y2, true)
+      render(commands, draw_list, x1 - srcx, y1 - srcy, merged_blit)
       reaper.ImGui_DrawList_PopClipRect(draw_list)
     end
 
