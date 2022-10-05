@@ -206,7 +206,7 @@ local function transformColor(c, blit_opts)
   end
 
   -- premultiply alpha when rendering from an offscreen buffer
-  local a = (c & 0xFF) / 0xFF
+  local a, a_blend = (c & 0xFF) / 0xFF
   if (blit_opts.mode & BLIT_NO_SOURCE_ALPHA) ~= 0 then
     a, a_blend = a * blit_opts.alpha, blit_opts.alpha
   else
@@ -606,11 +606,12 @@ function gfx.arc(x, y, r, ang1, ang2, antialias)
     PathArcTo(draw_list, screen_x + x, screen_y + y, r, ang1, ang2)
     PathStroke(draw_list, c)
   end)
+  return 0
 end
 
 function gfx.blit(source, ...)
   local n_args = select('#', ...)
-  if n_args < 2 then return end
+  if n_args < 2 then return 0 end
 
   local scale, rotation, srcx, srcy, srcw, srch,
         destx, desty, destw, desth, rotxoffs, rotyoffs = ...
@@ -642,7 +643,7 @@ function gfx.blit(source, ...)
   local sourceCommands = global_state.commands[source]
   if not sourceCommands then
     warn('source buffer is empty, nothing to blit')
-    return
+    return 0
   end
 
   local commands = { ptr=0, size=0, max_size=sourceCommands.size }
@@ -676,14 +677,18 @@ function gfx.blit(source, ...)
 
     sourceCommands.want_clear = true
   end)
+
+  return source
 end
 
 function gfx.blitext()
   warn('not implemented')
+  -- return img
 end
 
 function gfx.blurto()
   warn('not supported')
+  -- return x
 end
 
 function gfx.circle(x, y, r, fill, antialias)
@@ -698,6 +703,7 @@ function gfx.circle(x, y, r, fill, antialias)
     local r = r * blit_opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
     AddCircle(draw_list, screen_x + x + .5, screen_y + y + .5, r + .5, c)
   end)
+  return 0
 end
 
 function gfx.clienttoscreen(x, y)
@@ -707,6 +713,7 @@ end
 
 function gfx.deltablit()
   warn('not implemented')
+  return 0
 end
 
 function gfx.dock(v, ...) -- v[,wx,wy,ww,wh]
@@ -728,11 +735,13 @@ end
 
 function gfx.drawchar(char)
   gfx.drawstr(char or '')
+  return char
 end
 
 function gfx.drawnumber(n, ndigits)
   ndigits = math.floor((tonumber(ndigits) or 0) + 0.5)
   gfx.drawstr(('%%.%df'):format(ndigits):format(n))
+  return n
 end
 
 function gfx.drawstr(str, flags, right, bottom)
@@ -787,6 +796,7 @@ function gfx.drawstr(str, flags, right, bottom)
       screen_x + x, screen_y + y, c, str, 0, 0,
       right and right - x or nil, bottom and bottom - y or nil)
   end)
+  return 0
 end
 
 function gfx.getchar(char)
@@ -839,7 +849,7 @@ end
 
 function gfx.getpixel()
   warn('not supported')
-  return 0.0
+  return 0
 end
 
 function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy, dbdy, dady)
@@ -865,6 +875,7 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
     x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
     AddRectFilledMultiColor(draw_list, x1, y1, x2, y2, ctl, ctr, cbr, cbl)
   end)
+  return 0
 end
 
 function gfx.imgui(callback)
@@ -883,7 +894,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     else
       warn('ignoring repeated call to init')
     end
-    return
+    return 0
   end
 
   local ctx_name = name
@@ -923,6 +934,8 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
   end
 
   gfx.ext_retina = 1 -- ReaImGui scales automatically
+
+  return 1
 end
 
 function gfx.line(x1, y1, x2, y2, aa)
@@ -932,15 +945,17 @@ function gfx.line(x1, y1, x2, y2, aa)
   -- gfx.line(10, 30, 10, 30)
   if x1 == x2 and y1 == y2 then
     drawPixel(x1, y1, color()) -- faster than 1px lines according to dear imgui
-    return
+  else
+    drawLine(x1, y1, x2, y2, color())
   end
 
-  drawLine(x1, y1, x2, y2, color())
+  return 0
 end
 
 function gfx.lineto(x, y, aa)
   gfx.line(gfx.x, gfx.y, x, y, aa)
   gfx.x, gfx.y = x, y
+  return x
 end
 
 function gfx.loadimg(image, filename)
@@ -997,11 +1012,12 @@ end
 
 function gfx.muladdrect()
   warn('not implemented')
+  return 0
 end
 
 function gfx.printf(format, ...)
   if not state then return end
-  gfx.drawstr(format:format(...))
+  return gfx.drawstr(format:format(...))
 end
 
 function gfx.quit()
@@ -1018,6 +1034,7 @@ function gfx.quit()
     end
   end
   state = nil
+  return 0
 end
 
 function gfx.rect(x, y, w, h, filled)
@@ -1033,11 +1050,13 @@ function gfx.rect(x, y, w, h, filled)
     x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
     AddRect(draw_list, x1, y1, x2, y2, c)
   end)
+  return 0
 end
 
 function gfx.rectto(x, y)
   gfx.rect(gfx.x, gfx.y, x - gfx.x, y - gfx.y)
   gfx.x, gfx.y = x, y
+  return x
 end
 
 function gfx.roundrect(x, y, w, h, radius, antialias)
@@ -1054,6 +1073,7 @@ function gfx.roundrect(x, y, w, h, radius, antialias)
     x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
     AddRect(draw_list, x1, y1, x2, y2, c, radius, ROUND_CORNERS)
   end)
+  return 0
 end
 
 function gfx.screentoclient(x, y)
@@ -1074,6 +1094,8 @@ function gfx.set(...)
   if n >= 5 then gfx.mode = mode end
   if n >= 6 then gfx.dest = dest end
   if n >= 7 then gfx.a2   = a2   end
+
+  return 0
 end
 
 function gfx.setcursor(resource_id, custom_cursor_name)
@@ -1081,6 +1103,7 @@ function gfx.setcursor(resource_id, custom_cursor_name)
   if custom_cursor_name then warn('ignoring parameter custom_cursor_name') end
   state.want_cursor = CURSORS[resource_id]
   if not state.want_cursor then warn("unknown cursor '%s'", resource_id) end
+  return 0
 end
 
 function gfx.setfont(idx, fontface, sz, flag)
@@ -1131,6 +1154,8 @@ function gfx.setfont(idx, fontface, sz, flag)
   end
 
   gfx.texth = idx ~= 0 and ((font and font.size) or sz) or DEFAULT_FONT_SIZE
+
+  return 1
 end
 
 function gfx.setimgdim(image, w, h)
@@ -1142,10 +1167,13 @@ function gfx.setimgdim(image, w, h)
   if commands and dim.w == 0 and dim.h == 0 then
     commands.want_clear = true
   end
+
+  return 1
 end
 
 function gfx.setpixel(r, g, b)
   drawPixel(gfx.x, gfx.y, color(r, g, b, 1))
+  return r
 end
 
 function gfx.showmenu(str)
@@ -1172,6 +1200,7 @@ end
 
 function gfx.transformblit()
   warn('not implemented')
+  return 0
 end
 
 function gfx.triangle(...)
@@ -1233,6 +1262,8 @@ function gfx.triangle(...)
       AddConvexPolyFilled(draw_list, screen_points, c)
     end)
   end
+
+  return 0
 end
 
 function gfx.update()
@@ -1279,7 +1310,7 @@ function gfx.update()
     for _, commands in pairs(global_state.commands) do
       commands.want_clear = true
     end
-    return
+    return 0
   end
 
   -- update variables
@@ -1314,6 +1345,7 @@ function gfx.update()
   end
 
   reaper.ImGui_End(state.ctx)
+  return 0
 end
 
 return gfx
