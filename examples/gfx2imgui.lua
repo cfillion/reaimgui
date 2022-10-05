@@ -267,11 +267,9 @@ local function updateMouse()
     end
   end
 
-  if reaper.ImGui_IsMousePosValid(state.ctx) then
-    gfx.mouse_x, gfx.mouse_y = reaper.ImGui_GetMousePos(state.ctx)
-    gfx.mouse_x, gfx.mouse_y = gfx.mouse_x - state.screen_x,
-                               gfx.mouse_y - state.screen_y
-  end
+  gfx.mouse_x, gfx.mouse_y = reaper.ImGui_GetMousePos(state.ctx)
+  gfx.mouse_x, gfx.mouse_y = gfx.mouse_x - state.screen_x,
+                             gfx.mouse_y - state.screen_y
 end
 
 local function updateKeyboard()
@@ -1283,10 +1281,6 @@ function gfx.update()
 
   -- update variables
   gfx.w, gfx.h = reaper.ImGui_GetWindowSize(state.ctx)
-  updateMouse()
-  updateKeyboard()
-  updateDropFiles()
-
   state.want_close = state.want_close or not open
   state.screen_x, state.screen_y = reaper.ImGui_GetWindowPos(state.ctx)
   global_state.pos_x, global_state.pos_y = state.screen_x, state.screen_y
@@ -1299,6 +1293,10 @@ function gfx.update()
   else
     global_state.dock = global_state.dock & ~1 -- preserve previous docker ID
   end
+
+  updateMouse()
+  updateKeyboard()
+  updateDropFiles()
 
   -- draw contents
   local commands = global_state.commands[-1]
