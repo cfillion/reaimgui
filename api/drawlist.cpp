@@ -461,7 +461,9 @@ R"(Split/Merge functions are used to split the draw list into different layers w
 Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end).
 
 Usage:
-  local splitter = reaper.ImGui_CreateDrawListSplitter(draw_list)
+  if not reaper.ImGui_ValidatePtr(splitter, 'ImGui_DrawListSplitter*') then
+    splitter = reaper.ImGui_CreateDrawListSplitter(draw_list)
+  end
   reaper.ImGui_DrawListSplitter_Split(splitter, 2)
   reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
   reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
