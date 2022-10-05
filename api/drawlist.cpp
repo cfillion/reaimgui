@@ -432,7 +432,7 @@ DEFINE_ENUM(Im, DrawFlags_RoundCornersRight           , "");
 DEFINE_ENUM(Im, DrawFlags_RoundCornersAll             , "");
 
 DrawListSplitter::DrawListSplitter(ImGui_DrawList *draw_list)
-  : m_drawlist { draw_list }
+  : m_drawlist { draw_list }, m_lastList { draw_list->get() }
 {
 }
 
@@ -451,7 +451,14 @@ ImDrawListSplitter *DrawListSplitter::operator->()
 
 ImDrawList *DrawListSplitter::drawList() const
 {
-  return m_drawlist->get();
+  // Prevent crashes when calling Merge on a different window and its drawlist
+  // (eg. Foreground) is still unused and blank.
+  //
+  // Merge only copies indices and commands, NOT vertices.
+  if(m_drawlist->get() == m_lastList)
+    return m_lastList;
+  else
+    throw reascript_error { "cannot use ImGui_DrawListSplitter over multiple windows" };
 }
 
 DEFINE_API(ImGui_DrawListSplitter*, CreateDrawListSplitter,

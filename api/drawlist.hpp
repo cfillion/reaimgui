@@ -18,6 +18,7 @@ protected:
 
 private:
   ImGui_DrawList *m_drawlist;
+  ImDrawList *m_lastList;
   ImDrawListSplitter m_splitter;
 };
 
