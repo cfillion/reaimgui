@@ -14,9 +14,11 @@
 --     reaper.ImGui_Button(ctx, 'Lazy dog')
 --   end)
 --   if gfx.getchar() >= 0 then
+--     gfx.update()
 --     reaper.defer(loop)
+--   else
+--     gfx.quit()
 --   end
---   gfx.update()
 -- end
 -- reaper.defer(loop)
 
@@ -34,21 +36,23 @@ local CHILD_FLAGS = reaper.ImGui_WindowFlags_NoMouseInputs()
 local LOG_WND_FLAGS = reaper.ImGui_WindowFlags_NoDocking()
 local HOVERED_FLAGS = reaper.ImGui_HoveredFlags_ChildWindows()
 local FOCUSED_FLAGS = reaper.ImGui_FocusedFlags_RootAndChildWindows()
-local WINDOW_PADDING, WINDOW_BG =
-  reaper.ImGui_StyleVar_WindowPadding(), reaper.ImGui_Col_WindowBg()
+local WINDOW_PADDING, WINDOW_BG, CHILD_BORDER_SIZE =
+  reaper.ImGui_StyleVar_WindowPadding(), reaper.ImGui_Col_WindowBg(),
+  reaper.ImGui_StyleVar_ChildBorderSize()
 local ROUND_CORNERS = reaper.ImGui_DrawFlags_RoundCornersAll()
+local NO_DECORATION = reaper.ImGui_ConfigVar_ViewportsNoDecoration()
 local MACOS, WINDOWS = reaper.GetOS():find('OSX') ~= nil,
                        reaper.GetOS():find('Win') == 1
 local CURSORS = {
-  [32512] = reaper.ImGui_MouseCursor_Arrow(),
-  [32649] = reaper.ImGui_MouseCursor_Hand(),
-  [32648] = reaper.ImGui_MouseCursor_NotAllowed(),
-  [32646] = reaper.ImGui_MouseCursor_ResizeAll(),
-  [32644] = reaper.ImGui_MouseCursor_ResizeEW(),
-  [32643] = reaper.ImGui_MouseCursor_ResizeNESW(),
-  [32645] = reaper.ImGui_MouseCursor_ResizeNS(),
-  [32642] = reaper.ImGui_MouseCursor_ResizeNWSE(),
-  [32513] = reaper.ImGui_MouseCursor_TextInput(),
+  [0x7f00] = reaper.ImGui_MouseCursor_Arrow(),
+  [0x7f01] = reaper.ImGui_MouseCursor_TextInput(),
+  [0x7f82] = reaper.ImGui_MouseCursor_ResizeNWSE(),
+  [0x7f83] = reaper.ImGui_MouseCursor_ResizeNESW(),
+  [0x7f84] = reaper.ImGui_MouseCursor_ResizeEW(),
+  [0x7f85] = reaper.ImGui_MouseCursor_ResizeNS(),
+  [0x7f86] = reaper.ImGui_MouseCursor_ResizeAll(),
+  [0x7f88] = reaper.ImGui_MouseCursor_NotAllowed(),
+  [0x7f89] = reaper.ImGui_MouseCursor_Hand(),
 }
 local MOUSE_BTNS = {
   [reaper.ImGui_MouseButton_Left()  ] = 1<<0,
@@ -363,10 +367,10 @@ local function warn(message, ...)
 end
 
 local function showLog()
-  reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 1)
+  reaper.ImGui_SetConfigVar(state.ctx, NO_DECORATION, 1)
   reaper.ImGui_SetNextWindowSize(state.ctx, 800, 300, reaper.ImGui_Cond_Once())
   local visible, open = reaper.ImGui_Begin(state.ctx, 'gfx2imgui [Log]', true, LOG_WND_FLAGS)
-  reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 0)
+  reaper.ImGui_SetConfigVar(state.ctx, NO_DECORATION, 0)
   if not visible then return end
   local scroll_bottom = reaper.ImGui_GetScrollY(state.ctx) == reaper.ImGui_GetScrollMaxY(state.ctx)
   for line in ringEnum(global_state.log) do
@@ -899,7 +903,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     mouse_cap   = 0,
   }
 
-  reaper.ImGui_SetConfigVar(state.ctx, reaper.ImGui_ConfigVar_ViewportsNoDecoration(), 0)
+  reaper.ImGui_SetConfigVar(state.ctx, NO_DECORATION, 0)
 
   for _, font in ipairs(global_state.fonts) do
     state.fontqueue[#state.fontqueue + 1] = font
@@ -1257,17 +1261,18 @@ function gfx.update()
   end
 
   -- start window
-  reaper.ImGui_PushStyleVar(state.ctx, WINDOW_PADDING, 0, 0)
   local col_clear = math.max(0, gfx.clear)
   local bg = (col_clear >> 8  & 0x0000ff00) |
              (col_clear << 8  & 0x00ff0000) |
              (col_clear << 24 & 0xff000000) |
              0xff
   reaper.ImGui_PushStyleColor(state.ctx, WINDOW_BG, bg)
+  reaper.ImGui_PushStyleVar(state.ctx, WINDOW_PADDING, 0, 0)
+  reaper.ImGui_PushStyleVar(state.ctx, CHILD_BORDER_SIZE, 0) -- no border when docked
   local wnd_label = ('%s###gfx2imgui'):format(state.name)
   local visible, open = reaper.ImGui_Begin(state.ctx, wnd_label, true, WND_FLAGS)
+  reaper.ImGui_PopStyleVar(state.ctx, 2)
   reaper.ImGui_PopStyleColor(state.ctx)
-  reaper.ImGui_PopStyleVar(state.ctx)
 
   if not visible then
     for _, commands in pairs(global_state.commands) do
@@ -1304,10 +1309,7 @@ function gfx.update()
       alpha=1, mode=nil, scale_x=1, scale_y=1,
       x1=0, y1=0, x2=gfx.w, y2=gfx.h,
     }
-    -- removes the 1px border when docked
-    reaper.ImGui_DrawList_PushClipRectFullScreen(draw_list)
     render(commands, draw_list, state.screen_x, state.screen_y, blit_opts)
-    reaper.ImGui_DrawList_PopClipRect(draw_list)
   end
 
   reaper.ImGui_End(state.ctx)
