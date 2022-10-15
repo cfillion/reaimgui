@@ -3882,9 +3882,9 @@ end
 -- Make the UI compact because there are so many fields
 function demo.PushStyleCompact()
   local frame_padding_x, frame_padding_y = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_FramePadding())
-  local item_spacing_x, item_spacing_y = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_FramePadding())
+  local item_spacing_x,  item_spacing_y  = r.ImGui_GetStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing())
   r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), frame_padding_x, math.floor(frame_padding_y * 0.60))
-  r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(), item_spacing_x, math.floor(item_spacing_y * 0.60))
+  r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_ItemSpacing(),  item_spacing_x,  math.floor(item_spacing_y  * 0.60))
 end
 
 function demo.PopStyleCompact()
