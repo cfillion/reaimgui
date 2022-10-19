@@ -37,9 +37,10 @@ constexpr unsigned int KEEP_ALIVE_FRAMES { 2 };
 
 static std::vector<Resource *> g_rsx;
 static unsigned int g_reentrant;
-#ifndef __APPLE__
 static WNDPROC g_mainProc;
-static bool g_disabledViewports, g_disableProcOverride;
+static bool g_disableProcOverride;
+#ifndef __APPLE__
+static bool g_disabledViewports;
 #endif
 
 static auto findLowerBound(Resource *rs)
@@ -67,13 +68,11 @@ private:
 
 Resource::Timer::Timer()
 {
-#ifndef __APPLE__
   if(!g_disableProcOverride) {
     LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
              oldProc { SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc) };
     g_mainProc = reinterpret_cast<WNDPROC>(oldProc);
   }
-#endif
 
   plugin_register("timer", reinterpret_cast<void *>(&Timer::tick));
 }
@@ -82,7 +81,6 @@ Resource::Timer::~Timer()
 {
   plugin_register("-timer", reinterpret_cast<void *>(&Timer::tick));
 
-#ifndef __APPLE__
   HWND mainWnd { GetMainHwnd() };
   LONG_PTR expectedProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
            previousProc { reinterpret_cast<LONG_PTR>(g_mainProc) };
@@ -90,7 +88,6 @@ Resource::Timer::~Timer()
     SetWindowLongPtr(mainWnd, GWLP_WNDPROC, previousProc);
   else // prevent mainProcOverride from calling itself next time
     g_disableProcOverride = true;
-#endif
 }
 
 void Resource::Timer::tick()
@@ -123,7 +120,6 @@ void Resource::Timer::tick()
   }
 }
 
-#ifndef __APPLE__
 LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
   unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
@@ -142,7 +138,6 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
 
   return CallWindowProc(g_mainProc, hwnd, msg, wParam, lParam);
 }
-#endif
 
 Resource::Resource()
   : m_keepAlive { KEEP_ALIVE_FRAMES }
