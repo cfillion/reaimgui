@@ -66,7 +66,6 @@ static void loop()
 
   if(!open || !ImGui_ValidatePtr(g_ctx, "ImGui_Context*")) {
     plugin_register("-timer", reinterpret_cast<void *>(&loop));
-    ImGui_DestroyContext(g_ctx);
     g_ctx = nullptr;
   }
 }

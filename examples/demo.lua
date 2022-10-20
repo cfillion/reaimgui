@@ -112,8 +112,6 @@ function demo.loop()
 
   if demo.open then
     r.defer(demo.loop)
-  else
-    r.ImGui_DestroyContext(ctx)
   end
 end
 

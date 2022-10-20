@@ -30,7 +30,7 @@ Default values: config_flags = ImGui_ConfigFlags_None)",
 });
 
 DEFINE_API(void, DestroyContext, (ImGui_Context*,ctx),
-R"(Close and free the resources used by a context.)",
+R"(Free the resources used by a context. Calling this function is usually not required as all ReaImGui objects are automatically garbage-collected when unused.)",
 {
   assertValid(ctx);
   delete ctx;

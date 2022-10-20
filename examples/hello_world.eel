@@ -36,7 +36,7 @@ function loop() (
   open = 1; // enable the close button
   ImGUi_SetNextWindowSize(ctx, 500, 420, ImGui_Cond_FirstUseEver());
   ImGui_Begin(ctx, "Hello World!", open) ? ( frame(); ImGui_End(ctx); );
-  open ? defer("loop()") : ImGui_DestroyContext(ctx)
+  open ? defer("loop()")
 );
 
 function init() (

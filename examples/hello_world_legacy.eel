@@ -42,7 +42,7 @@ function loop() (
     frame();
     extension_api("ImGui_End", ctx);
   );
-  open ? defer("loop()") : extension_api("ImGui_DestroyContext", ctx);
+  open ? defer("loop()");
 );
 
 function init() (

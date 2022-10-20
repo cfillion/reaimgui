@@ -129,7 +129,5 @@ def loop():
 
   if open:
     RPR_defer("loop()")
-  else:
-    ImGui_DestroyContext(ctx)
 
 RPR_defer("init()")
