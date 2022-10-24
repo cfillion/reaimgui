@@ -62,28 +62,17 @@ if(WIN32)
   endforeach()
 
   add_compile_options(
-    # Exception handling model
-    /EHsc
-
-    # Enhance optimized debugging
-    $<$<NOT:$<CONFIG:Debug>>:/Zo>
-
-    # Eliminate duplicate strings
-    $<$<NOT:$<CONFIG:Debug>>:/GF>
-
-    # Enable function-level linking
-    $<$<NOT:$<CONFIG:Debug>>:/Gy>
-
-    # Remove unreferenced COMDAT
-    $<$<NOT:$<CONFIG:Debug>>:/Zc:inline>
+    /utf-8
+    /EHsc                                # Exception handling model
+    $<$<NOT:$<CONFIG:Debug>>:/Zo>        # Enhance optimized debugging
+    $<$<NOT:$<CONFIG:Debug>>:/GF>        # Eliminate duplicate strings
+    $<$<NOT:$<CONFIG:Debug>>:/Gy>        # Enable function-level linking
+    $<$<NOT:$<CONFIG:Debug>>:/Zc:inline> # Remove unreferenced COMDAT
   )
 
   add_link_options(
-    # Remove unreferenced code
-    $<$<NOT:$<CONFIG:Debug>>:/OPT:REF>
-
-    # Remove duplicate sections
-    $<$<NOT:$<CONFIG:Debug>>:/OPT:ICF>
+    $<$<NOT:$<CONFIG:Debug>>:/OPT:REF> # Remove unreferenced code
+    $<$<NOT:$<CONFIG:Debug>>:/OPT:ICF> # Remove duplicate sections
 
     # Use relative path to the PDB file to avoid exposing the full path
     /PDBALTPATH:%_PDB%
