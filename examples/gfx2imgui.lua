@@ -518,19 +518,25 @@ local function loadRequestedFonts()
 end
 
 local function beginFrame()
+  -- disable everything if called from an reaper.atexit callback while REAPER
+  -- is exiting (reaimgui has unloaded at that point)
+  if not reaper.EnumProjects(0) then return false end
+
   assert(reaper.ImGui_ValidatePtr(state.ctx, 'ImGui_Context*'),
     'reaimgui context got garbage-collected: was gfx.update called every defer cycle?')
 
   -- protect against scripts calling gfx.update more than once per defer cycle
   -- or before the first defer timer tick
   local this_frame = reaper.ImGui_GetFrameCount(state.canary)
-  if state.frame_count == this_frame then return end
+  if state.frame_count == this_frame then return true end
   state.frame_count = this_frame
 
   unloadUnusedFonts()
   loadRequestedFonts()
 
   -- reaper.ImGui_ShowMetricsWindow(state.ctx)
+
+  return true
 end
 
 local function center2D(points)
@@ -820,7 +826,7 @@ function gfx.getchar(char)
     char = string.byte(char)
   end
 
-  beginFrame()
+  if not beginFrame() then return -1 end
   return reaper.ImGui_IsKeyDown(state.ctx, char)
 end
 
@@ -999,8 +1005,9 @@ function gfx.measurechar(char)
 end
 
 function gfx.measurestr(str)
-  if not state then return gfx.texth * utf8.len(str), gfx.texth end
-  beginFrame()
+  if not state or not beginFrame() then
+    return gfx.texth * utf8.len(str), gfx.texth
+  end
   local _, font_inst, size_error =
     getNearestCachedFont(global_state.fonts[state.font])
   local correction_factor = gfx.texth / (gfx.texth + size_error)
@@ -1267,9 +1274,7 @@ function gfx.triangle(...)
 end
 
 function gfx.update()
-  if not state then return end
-
-  beginFrame()
+  if not state or not beginFrame() then return end
 
   if global_state.log.size > 0 then showLog() end
 
