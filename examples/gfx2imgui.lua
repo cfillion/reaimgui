@@ -246,9 +246,9 @@ local function updateMouse()
       end
     end
 
-    gfx.mouse_wheel, gfx.mouse_hwheel = reaper.ImGui_GetMouseWheel(state.ctx)
-    gfx.mouse_wheel, gfx.mouse_hwheel = gfx.mouse_wheel  * MW_TICK,
-                                        gfx.mouse_hwheel * MW_TICK
+    local wheel_v, wheel_h = reaper.ImGui_GetMouseWheel(state.ctx)
+    gfx.mouse_wheel  = gfx.mouse_wheel  + (wheel_v * MW_TICK)
+    gfx.mouse_hwheel = gfx.mouse_hwheel + (wheel_h * MW_TICK)
 
     if state.want_cursor then
       reaper.ImGui_SetMouseCursor(state.ctx, state.want_cursor)
