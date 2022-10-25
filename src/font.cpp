@@ -109,8 +109,11 @@ void FontList::update()
     setScale(ImGui::GetPlatformIO().Monitors[0].DpiScale);
 
   if(m_rebuild) {
-    for(const auto &pair : m_atlases)
+    for(const auto &pair : m_atlases) {
+      // EndFrame unlocks only the current atlas in io.Fonts
+      pair.second->Locked = false;
       build(pair.first);
+    }
     m_rebuild = false;
     ++m_version; // invalidate the font textures
   }
