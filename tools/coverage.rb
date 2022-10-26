@@ -713,7 +713,7 @@ reaimgui_funcs.each do |func|
 
     if decoration == 'API_RO'
       found_optional = true
-    elsif found_optional && (decoration == 'API_W' || decoration == 'API_W_SZ')
+    elsif found_optional && decoration.start_with?('API_W')
       warn "#{func.name}: output argument '#{raw_name}' after input values"
     end
 
