@@ -20,7 +20,7 @@
 
 #include "window.hpp"
 
-class OpenGLRenderer;
+class Renderer;
 
 class Win32Window : public Window {
 public:
@@ -52,7 +52,6 @@ private:
     ~Class();
   };
 
-  void initPixelFormat();
   void initGL();
   RECT scaledWindowRect(ImVec2 pos, ImVec2 size) const;
   void keyEvent(unsigned int, WPARAM, LPARAM);
@@ -60,11 +59,9 @@ private:
   void unstuckModifiers();
   void updateStyles();
 
-  HDC m_dc;
-  HGLRC m_gl;
   unsigned int m_dpi;
-  OpenGLRenderer *m_renderer;
   DWORD m_style, m_exStyle;
+  std::unique_ptr<Renderer> m_renderer;
 };
 
 #endif

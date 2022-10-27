@@ -22,10 +22,9 @@
 
 @class EventHandler;
 @class InputView;
-@class NSOpenGLContext;
 @class NSView;
 
-class OpenGLRenderer;
+class Renderer;
 using ImGuiViewportFlags = int;
 
 class CocoaWindow : public Window {
@@ -54,8 +53,7 @@ private:
   NSView *m_view;
   InputView *m_inputView;
   EventHandler *m_eventHandler;
-  NSOpenGLContext *m_gl;
-  OpenGLRenderer *m_renderer;
+  std::unique_ptr<Renderer> m_renderer;
   unsigned int m_defaultStyleMask;
   ImGuiViewportFlags m_previousFlags;
 };

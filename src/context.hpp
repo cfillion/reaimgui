@@ -34,6 +34,7 @@
 
 class DockerList;
 class FontList;
+class RendererFactory;
 class Window;
 struct ImGuiContext;
 struct ImGuiViewport;
@@ -75,6 +76,7 @@ public:
   FontList &fonts() { return *m_fonts; }
   HCURSOR cursor() const { return m_cursor; }
   ImGuiContext *imgui() const { return m_imgui.get(); }
+  RendererFactory *rendererFactory() const { return m_renderer.get(); }
   const char *name() const { return m_name.c_str(); }
   const auto &draggedFiles() const { return m_draggedFiles; }
 
@@ -108,6 +110,7 @@ private:
   std::unique_ptr<ImGuiContext, ContextDeleter> m_imgui;
   std::unique_ptr<DockerList> m_dockers;
   std::unique_ptr<FontList> m_fonts;
+  std::unique_ptr<RendererFactory> m_renderer;
 };
 
 using ImGui_Context = Context; // user-facing alias

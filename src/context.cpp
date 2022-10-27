@@ -20,6 +20,7 @@
 #include "docker.hpp"
 #include "font.hpp"
 #include "keymap.hpp"
+#include "opengl_renderer.hpp"
 #include "platform.hpp"
 #include "viewport.hpp"
 
@@ -96,12 +97,13 @@ Context *Context::current()
 
 Context::Context(const char *label, const int userConfigFlags)
   : m_inFrame { false }, m_dropFrameCount { DropState_None }, m_cursor {},
-    m_lastFrame { decltype(m_lastFrame)::clock::now() },
-    m_name { label, ImGui::FindRenderedTextEnd(label) },
-    m_iniFilename { generateIniFilename(label) },
-    m_imgui { ImGui::CreateContext(NO_DEFAULT_ATLAS) },
-    m_dockers { std::make_unique<DockerList>() },
-    m_fonts { std::make_unique<FontList>() }
+    m_lastFrame   { decltype(m_lastFrame)::clock::now()      },
+    m_name        { label, ImGui::FindRenderedTextEnd(label) },
+    m_iniFilename { generateIniFilename(label)               },
+    m_imgui       { ImGui::CreateContext(NO_DEFAULT_ATLAS)   },
+    m_dockers     { std::make_unique<DockerList>()           },
+    m_fonts       { std::make_unique<FontList>()             },
+    m_renderer    { std::make_unique<RendererFactory>()      }
 {
   static const std::string logFn
     { std::string { GetResourcePath() } + WDL_DIRCHAR_STR "imgui_log.txt" };
@@ -109,10 +111,12 @@ Context::Context(const char *label, const int userConfigFlags)
   setCurrent();
 
   ImGuiIO &io { m_imgui->IO };
+  io.BackendRendererName = m_renderer->name();
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
   io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
+  io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 

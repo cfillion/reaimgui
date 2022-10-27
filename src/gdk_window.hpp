@@ -22,10 +22,8 @@
 
 #include <memory>
 
-class OpenGLRenderer;
-struct LICE_IBitmap;
+class Renderer;
 
-typedef struct _GdkGLContext GdkGLContext;
 typedef struct _GdkWindow GdkWindow;
 typedef struct _GtkIMContext GtkIMContext;
 
@@ -48,34 +46,24 @@ public:
   void render(void *) override;
   float scaleFactor() const override { return globalScaleFactor(); }
   void setIME(ImGuiPlatformImeData *) override;
-
   std::optional<LRESULT> handleMessage
     (const unsigned int msg, WPARAM wParam, LPARAM) override;
+
+  GdkWindow *getOSWindow() const;
 
 private:
   static void imePreeditStart(GtkIMContext *, void *);
   static void imePreeditEnd(GtkIMContext *, void *);
 
-  void initGl();
   void initIME();
-  void resizeTextures();
-  void teardownGl();
-  void initSoftwareBlit();
   void softwareBlit();
   void keyEvent(WPARAM, LPARAM, bool down);
 
-  GdkGLContext *m_gl;
-  OpenGLRenderer *m_renderer;
-  unsigned int m_tex, m_fbo;
+  std::unique_ptr<Renderer> m_renderer;
   ImGuiViewportFlags m_previousFlags;
   int m_defaultDecorations;
   GtkIMContext *m_ime;
   bool m_imeOpen;
-
-  // for docking
-  struct LICEDeleter { void operator()(LICE_IBitmap *); };
-  std::unique_ptr<LICE_IBitmap, LICEDeleter> m_pixels;
-  std::shared_ptr<GdkWindow> m_offscreen;
 };
 
 #endif

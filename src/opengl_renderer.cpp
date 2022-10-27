@@ -17,8 +17,6 @@
 
 #include "opengl_renderer.hpp"
 
-#include "color.hpp"
-
 #ifdef __APPLE__
 #  include <OpenGL/gl3.h>
 #elif _WIN32
@@ -28,10 +26,6 @@
 #endif
 
 #include <imgui/imgui.h>
-
-// Extracted from ImGui's reference OpenGL3 renderer
-// Simplified and modified to allow use in multiple GL contextes in parallel
-// OpenGL 3.1+ only
 
 constexpr const char *VERTEX_SHADER { R"(
 #version 140
@@ -75,56 +69,10 @@ enum Textures  { FontTex };
 enum Locations { ProjMtxUniLoc, TexUniLoc,
                  VtxColorAttrLoc, VtxPosAttrLoc, VtxUVAttrLoc };
 
-void OpenGLRenderer::install()
+void OpenGLRenderer::Shared::setup()
 {
-  ImGuiIO &io { ImGui::GetIO() };
-  io.BackendRendererName = "reaper_imgui_opengl3";
-  io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
-}
-
-OpenGLRenderer::OpenGLRenderer()
-{
-  glGenBuffers(m_buffers.size(), m_buffers.data());
   glGenTextures(m_textures.size(), m_textures.data());
 
-  initShaders();
-
-  glGenVertexArrays(1, &m_vbo);
-  glBindVertexArray(m_vbo);
-
-  glBindBuffer(GL_ARRAY_BUFFER, m_buffers[VertexBuf]);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers[IndexBuf]);
-  glEnableVertexAttribArray(m_locations[VtxPosAttrLoc]);
-  glVertexAttribPointer(m_locations[VtxPosAttrLoc],   2, GL_FLOAT,
-    GL_FALSE, sizeof(ImDrawVert), (void *)IM_OFFSETOF(ImDrawVert, pos));
-  glEnableVertexAttribArray(m_locations[VtxUVAttrLoc]);
-  glVertexAttribPointer(m_locations[VtxUVAttrLoc],    2, GL_FLOAT,
-    GL_FALSE, sizeof(ImDrawVert), (void *)IM_OFFSETOF(ImDrawVert, uv));
-  glEnableVertexAttribArray(m_locations[VtxColorAttrLoc]);
-  glVertexAttribPointer(m_locations[VtxColorAttrLoc], 4, GL_UNSIGNED_BYTE,
-    GL_TRUE, sizeof(ImDrawVert), (void *)IM_OFFSETOF(ImDrawVert, col));
-
-  glEnable(GL_BLEND);
-  glBlendEquation(GL_FUNC_ADD);
-  glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-  GLint major {}, minor {};
-  glGetIntegerv(GL_MAJOR_VERSION, &major);
-  glGetIntegerv(GL_MINOR_VERSION, &minor);
-
-  ImGuiIO &io { ImGui::GetIO() };
-  if(major < 3 || minor < 1) {
-    char msg[512];
-    snprintf(msg, sizeof(msg),
-      "OpenGL v3.1 or newer required, got v%d.%d", major, minor);
-    throw backend_error { msg };
-  }
-  else if(major > 3 || minor >= 2) // enable glDrawElementsBaseVertex
-    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-}
-
-void OpenGLRenderer::initShaders()
-{
   unsigned int vertShader { glCreateShader(GL_VERTEX_SHADER) };
   glShaderSource(vertShader, 1, &VERTEX_SHADER, nullptr);
   glCompileShader(vertShader);
@@ -148,8 +96,76 @@ void OpenGLRenderer::initShaders()
   m_locations[VtxColorAttrLoc] = glGetAttribLocation(m_program,  "Color");
   m_locations[VtxPosAttrLoc]   = glGetAttribLocation(m_program,  "Position");
   m_locations[VtxUVAttrLoc]    = glGetAttribLocation(m_program,  "UV");
+}
 
-  glUseProgram(m_program);
+void OpenGLRenderer::Shared::teardown()
+{
+  glDeleteProgram(m_program);
+  glDeleteTextures(m_textures.size(), m_textures.data());
+}
+
+OpenGLRenderer::OpenGLRenderer(RendererFactory *factory, const bool share)
+{
+  m_shared = factory->getSharedData<Shared>();
+  if(!m_shared || !share) {
+    m_shared = std::make_shared<Shared>();
+    factory->setSharedData(m_shared);
+  }
+}
+
+void OpenGLRenderer::setup()
+{
+  if(m_shared.use_count() == 1)
+    m_shared->setup();
+
+  glUseProgram(m_shared->m_program);
+
+  glGenVertexArrays(1, &m_vbo);
+  glBindVertexArray(m_vbo);
+
+  glGenBuffers(m_buffers.size(), m_buffers.data());
+  glBindBuffer(GL_ARRAY_BUFFER, m_buffers[VertexBuf]);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers[IndexBuf]);
+  glEnableVertexAttribArray(m_shared->m_locations[VtxPosAttrLoc]);
+  glVertexAttribPointer(m_shared->m_locations[VtxPosAttrLoc],
+    2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
+    reinterpret_cast<void *>(IM_OFFSETOF(ImDrawVert, pos)));
+  glEnableVertexAttribArray(m_shared->m_locations[VtxUVAttrLoc]);
+  glVertexAttribPointer(m_shared->m_locations[VtxUVAttrLoc],
+    2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
+    reinterpret_cast<void *>(IM_OFFSETOF(ImDrawVert, uv)));
+  glEnableVertexAttribArray(m_shared->m_locations[VtxColorAttrLoc]);
+  glVertexAttribPointer(m_shared->m_locations[VtxColorAttrLoc],
+    4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
+    reinterpret_cast<void *>(IM_OFFSETOF(ImDrawVert, col)));
+
+  glEnable(GL_BLEND);
+  glBlendEquation(GL_FUNC_ADD);
+  glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
+  GLint major {}, minor {};
+  glGetIntegerv(GL_MAJOR_VERSION, &major);
+  glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+  ImGuiIO &io { ImGui::GetIO() };
+  if(major < 3 || minor < 1) {
+    // this is the only version check on Linux
+    char msg[512];
+    snprintf(msg, sizeof(msg),
+      "OpenGL v3.1 or newer required, got v%d.%d", major, minor);
+    throw backend_error { msg };
+  }
+  else if(major > 3 || minor >= 2) // enable glDrawElementsBaseVertex
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+}
+
+void OpenGLRenderer::teardown()
+{
+  if(m_shared.use_count() == 1)
+    m_shared->teardown();
+
+  glDeleteBuffers(m_buffers.size(), m_buffers.data());
+  glDeleteVertexArrays(1, &m_vbo);
 }
 
 void OpenGLRenderer::uploadFontTex(ImFontAtlas *atlas)
@@ -158,20 +174,12 @@ void OpenGLRenderer::uploadFontTex(ImFontAtlas *atlas)
   int width, height;
   atlas->GetTexDataAsRGBA32(&pixels, &width, &height);
 
-  glBindTexture(GL_TEXTURE_2D, m_textures[FontTex]);
+  glBindTexture(GL_TEXTURE_2D, m_shared->m_textures[FontTex]);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
   atlas->SetTexID(FontTex);
-}
-
-OpenGLRenderer::~OpenGLRenderer()
-{
-  glDeleteProgram(m_program);
-  glDeleteBuffers(m_buffers.size(), m_buffers.data());
-  glDeleteTextures(m_textures.size(), m_textures.data());
-  glDeleteVertexArrays(1, &m_vbo);
 }
 
 void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
@@ -196,6 +204,11 @@ void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
 
   glViewport(0, 0, fbWidth, fbHeight);
 
+  // re-bind non-shared objets (we're reusing the same GL context on Windows)
+  glBindVertexArray(m_vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, m_buffers[VertexBuf]);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers[IndexBuf]);
+
   float L { drawData->DisplayPos.x },
         R { drawData->DisplayPos.x + drawData->DisplaySize.x },
         T { drawData->DisplayPos.y },
@@ -205,15 +218,17 @@ void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
     std::swap(T, B);
 
   const float orthoProjection[4][4] {
-    { 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
-    { 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
-    { 0.0f,         0.0f,        -1.0f,   0.0f },
-    { (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
+    { 2.f/(R-L),   0.f,         0.f, 0.f },
+    { 0.f,         2.f/(T-B),   0.f, 0.f },
+    { 0.f,         0.f,        -1.f, 0.f },
+    { (R+L)/(L-R), (T+B)/(B-T), 0.f, 1.f },
   };
 
   // update shader variables
-  glUniform1i(m_locations[TexUniLoc], 0); // glActiveTexture(GL_TEXTURE0);
-  glUniformMatrix4fv(m_locations[ProjMtxUniLoc], 1, GL_FALSE, &orthoProjection[0][0]);
+  glUniform1i(m_shared->m_locations[TexUniLoc], 0);
+  // glActiveTexture(GL_TEXTURE0);
+  glUniformMatrix4fv(m_shared->m_locations[ProjMtxUniLoc],
+    1, GL_FALSE, &orthoProjection[0][0]);
 
   const ImVec2 &clipOffset { drawData->DisplayPos },
                &clipScale  { drawData->FramebufferScale };
@@ -252,7 +267,7 @@ void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
         clipRect.z - clipRect.x, clipRect.w - clipRect.y);
 
       // Bind texture, Draw
-      glBindTexture(GL_TEXTURE_2D, m_textures[cmd->GetTexID()]);
+      glBindTexture(GL_TEXTURE_2D, m_shared->m_textures[cmd->GetTexID()]);
       if(useVertexOffset) {
         glDrawElementsBaseVertex(GL_TRIANGLES, cmd->ElemCount,
           sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,

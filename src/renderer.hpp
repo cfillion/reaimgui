@@ -15,41 +15,38 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_OPENGL_RENDERER_HPP
-#define REAIMGUI_OPENGL_RENDERER_HPP
+#ifndef REAIMGUI_RENDERER_HPP
+#define REAIMGUI_RENDERER_HPP
 
-#include "renderer.hpp"
+#include <memory>
 
-#include <array>
+class Renderer;
+class Window;
+struct ImFontAtlas;
+struct ImGuiViewport;
 
-class OpenGLRenderer : public Renderer {
+class RendererFactory {
 public:
-  OpenGLRenderer(RendererFactory *, bool share = true);
+  // hard-coded to opengl for now
+  const char *name() const { return "reaper_imgui_opengl3"; }
+  std::unique_ptr<Renderer> create(Window *);
 
-  using Renderer::render;
-  void uploadFontTex(ImFontAtlas *) override;
+  template<typename T>
+  auto getSharedData() const { return std::static_pointer_cast<T>(m_shared.lock()); }
+
+  template<typename T>
+  void setSharedData(T d) { m_shared = d; }
 
 protected:
-  void render(ImGuiViewport *, bool flip);
+  std::weak_ptr<void> m_shared;
+};
 
-  struct Shared {
-    void setup();
-    void teardown();
-
-    unsigned int m_program;
-    std::array<unsigned int, 1> m_textures; // make this a vector for image support?
-    std::array<unsigned int, 5> m_locations;
-    std::shared_ptr<void> m_platform;
-  };
-
-  void setup();
-  void teardown();
-
-  std::shared_ptr<Shared> m_shared;
-
-private:
-  unsigned int m_vbo;
-  std::array<unsigned int, 2> m_buffers;
+class Renderer {
+public:
+  virtual ~Renderer() {};
+  virtual void uploadFontTex(ImFontAtlas *) = 0;
+  virtual void render(ImGuiViewport *) = 0;
+  virtual void peekMessage(const unsigned int msg) {}
 };
 
 #endif

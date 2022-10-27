@@ -19,13 +19,11 @@
 
 #include "context.hpp"
 #include "dllimport.hpp"
-#include "opengl_renderer.hpp"
 #include "platform.hpp"
+#include "renderer.hpp"
 #include "win32_unicode.hpp"
 
 #include <cassert>
-#include <GL/gl3w.h>
-#include <GL/wglext.h>
 #include <reaper_plugin_secrets.h>
 #include <ShellScalingApi.h> // GetDpiForMonitor
 #define GetThemeColor Win32_GetThemeColor // solve conflict with REAPER API
@@ -119,7 +117,11 @@ Win32Window::Class::~Class()
 }
 
 Win32Window::Win32Window(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }, m_gl {}, m_renderer { nullptr }
+  : Window { viewport, dockerHost }
+{
+}
+
+Win32Window::~Win32Window()
 {
 }
 
@@ -145,10 +147,7 @@ void Win32Window::create()
   SetWindowPos(m_hwnd.get(), nullptr,  rect.left, rect.top,
     rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER);
 
-  m_dc = GetDC(m_hwnd.get());
-  initPixelFormat();
-  initGL();
-  wglMakeCurrent(m_dc, nullptr);
+  m_renderer = m_ctx->rendererFactory()->create(this);
 
   // will be freed upon RevokeDragDrop during destruction
   DropTarget *dropTarget = new DropTarget { m_ctx };
@@ -167,10 +166,6 @@ void Win32Window::create()
   DeleteObject(region);
 }
 
-Win32Window::~Win32Window()
-{
-}
-
 void Win32Window::destroy()
 {
   // ImGui destroys windows in creation order. Give ownership of our owned
@@ -178,66 +173,7 @@ void Win32Window::destroy()
   // possibly focusing a window from another application.
   EnumThreadWindows(GetCurrentThreadId(), &reparentChildren, reinterpret_cast<LPARAM>(m_hwnd.get()));
 
-  // the window may already have been destroyed at this point
-  // when exiting REAPER or somone called DestroyWindow on us
-  if(m_gl) {
-    wglMakeCurrent(m_dc, m_gl);
-    if(m_renderer)
-      delete m_renderer;
-    wglDeleteContext(m_gl);
-  }
-  ReleaseDC(m_hwnd.get(), m_dc);
-
   Window::destroy();
-}
-
-void Win32Window::initPixelFormat()
-{
-  PIXELFORMATDESCRIPTOR pfd {};
-  pfd.nSize = sizeof(pfd);
-  pfd.nVersion = 1;
-  pfd.dwFlags = PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-  pfd.iPixelType = PFD_TYPE_RGBA;
-  pfd.cAlphaBits = pfd.cBlueBits = pfd.cGreenBits = pfd.cRedBits = 8;
-  pfd.cColorBits = pfd.cRedBits + pfd.cGreenBits + pfd.cBlueBits + pfd.cAlphaBits;
-
-  if(!SetPixelFormat(m_dc, ChoosePixelFormat(m_dc, &pfd), &pfd)) {
-    ReleaseDC(m_hwnd.get(), m_dc);
-    throw backend_error { "failed to set a suitable pixel format" };
-  }
-}
-
-void Win32Window::initGL()
-{
-  HGLRC dummyGl { wglCreateContext(m_dc) }; // creates a legacy (< 2.1) context
-  wglMakeCurrent(m_dc, m_gl = dummyGl);
-
-  PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB
-    { reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>
-      (wglGetProcAddress("wglCreateContextAttribsARB")) };
-
-  if(wglCreateContextAttribsARB) {
-    static int minor { 2 };
-    do {
-      // https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
-      const int attrs[] {
-        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-        WGL_CONTEXT_MINOR_VERSION_ARB, minor,
-        0
-      };
-
-      if(HGLRC coreGl { wglCreateContextAttribsARB(m_dc, nullptr, attrs) }) {
-        wglMakeCurrent(m_dc, m_gl = coreGl);
-        wglDeleteContext(dummyGl);
-        break;
-      }
-    } while(--minor >= 1);
-  }
-
-  if(gl3wInit())
-    throw backend_error { "failed to initialize OpenGL context" };
-
-  m_renderer = new OpenGLRenderer;
 }
 
 RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
@@ -354,14 +290,11 @@ void Win32Window::update()
 
 void Win32Window::render(void *)
 {
-  wglMakeCurrent(m_dc, m_gl);
   if(m_needTexUpload) {
     m_renderer->uploadFontTex(m_fontAtlas);
     m_needTexUpload = false;
   }
   m_renderer->render(m_viewport);
-  SwapBuffers(m_dc);
-  wglMakeCurrent(nullptr, nullptr);
 }
 
 float Win32Window::scaleFactor() const
