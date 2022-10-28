@@ -71,8 +71,6 @@ enum Locations { ProjMtxUniLoc, TexUniLoc,
 
 void OpenGLRenderer::Shared::setup()
 {
-  glGenTextures(m_textures.size(), m_textures.data());
-
   unsigned int vertShader { glCreateShader(GL_VERTEX_SHADER) };
   glShaderSource(vertShader, 1, &VERTEX_SHADER, nullptr);
   glCompileShader(vertShader);
@@ -102,6 +100,31 @@ void OpenGLRenderer::Shared::teardown()
 {
   glDeleteProgram(m_program);
   glDeleteTextures(m_textures.size(), m_textures.data());
+}
+
+void OpenGLRenderer::Shared::textureCommand(const TextureCmd &cmd)
+{
+  switch(cmd.type) {
+  case TextureCmd::Insert:
+    m_textures.insert(m_textures.begin() + cmd.offset, cmd.size, 0);
+    glGenTextures(cmd.size, m_textures.data() + cmd.offset);
+    [[fallthrough]];
+  case TextureCmd::Update:
+    for(size_t i {}; i < cmd.size; ++i) {
+      int width, height;
+      unsigned char *pixels { cmd.manager->getPixels(cmd.offset + i, &width, &height) };
+      glBindTexture(GL_TEXTURE_2D, m_textures[cmd.offset + i]);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    }
+    break;
+  case TextureCmd::Remove:
+    glDeleteTextures(cmd.size, m_textures.data() + cmd.offset);
+    m_textures.erase(m_textures.begin() + cmd.offset,
+                     m_textures.begin() + cmd.offset + cmd.size);
+    break;
+  }
 }
 
 OpenGLRenderer::OpenGLRenderer(RendererFactory *factory, const bool share)
@@ -168,18 +191,11 @@ void OpenGLRenderer::teardown()
   glDeleteVertexArrays(1, &m_vbo);
 }
 
-void OpenGLRenderer::uploadFontTex(ImFontAtlas *atlas)
+void OpenGLRenderer::updateTextures(const TextureManager *manager)
 {
-  unsigned char *pixels;
-  int width, height;
-  atlas->GetTexDataAsRGBA32(&pixels, &width, &height);
-
-  glBindTexture(GL_TEXTURE_2D, m_shared->m_textures[FontTex]);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-  atlas->SetTexID(FontTex);
+  using namespace std::placeholders;
+  manager->update(&m_shared->m_cookie,
+    std::bind(&Shared::textureCommand, m_shared.get(), _1));
 }
 
 void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)

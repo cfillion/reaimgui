@@ -62,6 +62,7 @@ void CocoaWindow::create()
 
   NSWindow *window { [m_view window] };
   m_defaultStyleMask = [window styleMask];
+  m_previousScale = m_viewport->DpiScale;
   m_previousFlags = ~m_viewport->Flags; // mark all as modified
   // imgui calls update() before show(), it will apply the flags
 
@@ -142,6 +143,13 @@ void CocoaWindow::update()
   if(no_wm_setfocus && GetFocus() == m_hwnd.get())
     setFocus();
 
+  if(m_previousScale != m_viewport->DpiScale) {
+    // resize macOS's GL objects when DPI changes (eg. moving to another screen)
+    // NSViewFrameDidChangeNotification or WM_SIZE aren't sent
+    m_renderer->peekMessage(WM_SIZE);
+    m_previousScale = m_viewport->DpiScale;
+  }
+
   if(isDocked())
     return;
 
@@ -183,15 +191,7 @@ void CocoaWindow::update()
 
 void CocoaWindow::render(void *)
 {
-  if(m_needTexUpload) {
-    // resize macOS's GL objects when DPI changes (eg. moving to another screen)
-    // NSViewFrameDidChangeNotification or WM_SIZE aren't sent
-    m_renderer->peekMessage(WM_SIZE);
-
-    m_renderer->uploadFontTex(m_fontAtlas);
-    m_needTexUpload = false;
-  }
-  m_renderer->render(m_viewport);
+  m_renderer->render(m_viewport, m_ctx->textureManager());
 }
 
 float CocoaWindow::scaleFactor() const

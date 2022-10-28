@@ -26,6 +26,8 @@
 #include "resource.hpp"
 #include "variant.hpp"
 
+class TextureManager;
+
 enum FontFlags {
   ReaImGuiFontFlags_None      = 0,
   ReaImGuiFontFlags_IndexMask = 0xFF, // font index when loading from a collection file
@@ -63,15 +65,15 @@ using ImGui_Font = Font; // user-facing alias
 
 class FontList {
 public:
-  FontList();
+  FontList(TextureManager *);
   ~FontList();
 
   void add(Font *);
   void remove(Font *);
   void keepAliveAll();
   void update();
-  int texVersion() const { return m_version; }
-  ImFontAtlas *setScale(float scale);
+  void setScale(float scale);
+  ImFontAtlas *getAtlas(float scale);
   Font *get(ImFont *) const;
   ImFont *instanceOf(Font *) const;
 
@@ -81,10 +83,10 @@ private:
   void migrateActiveFonts();
   ImFont *toCurrentAtlas(ImFont *) const;
 
+  TextureManager *m_textureManager;
   std::vector<Font *> m_fonts;
   std::unordered_map<float, std::unique_ptr<ImFontAtlas>> m_atlases;
   bool m_rebuild;
-  int m_version;
 };
 
 #endif

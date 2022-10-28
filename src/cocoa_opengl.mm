@@ -31,12 +31,12 @@ public:
   CocoaOpenGL(RendererFactory *, HWND);
   ~CocoaOpenGL();
 
-  void uploadFontTex(ImFontAtlas *) override;
-  void render(ImGuiViewport *) override;
+  void render(ImGuiViewport *, const TextureManager *) override;
   void peekMessage(unsigned int msg) override;
-  GLPool *contextPool() const;
 
 private:
+  GLPool *contextPool() const;
+
   NSOpenGLContext *m_gl;
   NSView *m_view;
 };
@@ -106,13 +106,7 @@ GLPool *CocoaOpenGL::contextPool() const
   return std::static_pointer_cast<GLPool>(m_shared->m_platform).get();
 }
 
-void CocoaOpenGL::uploadFontTex(ImFontAtlas *atlas)
-{
-  MakeCurrent cur { m_gl };
-  OpenGLRenderer::uploadFontTex(atlas);
-}
-
-void CocoaOpenGL::render(ImGuiViewport *viewport)
+void CocoaOpenGL::render(ImGuiViewport *viewport, const TextureManager *manager)
 {
   // the intial setView in show() may fail if the view doesn't have a "device"
   // (eg. when docked not activated = hidden NSView)
@@ -120,6 +114,7 @@ void CocoaOpenGL::render(ImGuiViewport *viewport)
     [m_gl setView:m_view];
 
   MakeCurrent cur { m_gl };
+  OpenGLRenderer::updateTextures(manager);
   OpenGLRenderer::render(viewport, false);
   [m_gl flushBuffer];
 }

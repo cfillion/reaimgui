@@ -5,6 +5,7 @@ include(CheckCompilerFlag)
 include(CheckCXXSourceCompiles)
 include(CheckIncludeFileCXX)
 include(CheckLinkerFlag)
+include(CTest)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -153,5 +154,8 @@ install(TARGETS ${PROJECT_NAME}
 )
 add_subdirectory(api)
 add_subdirectory(src)
+if(BUILD_TESTING)
+  add_subdirectory(test)
+endif()
 add_subdirectory(tools)
 target_link_libraries(${PROJECT_NAME} PRIVATE api src)

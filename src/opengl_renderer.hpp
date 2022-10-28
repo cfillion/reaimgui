@@ -19,6 +19,7 @@
 #define REAIMGUI_OPENGL_RENDERER_HPP
 
 #include "renderer.hpp"
+#include "texture.hpp"
 
 #include <array>
 
@@ -27,17 +28,19 @@ public:
   OpenGLRenderer(RendererFactory *, bool share = true);
 
   using Renderer::render;
-  void uploadFontTex(ImFontAtlas *) override;
 
 protected:
+  void updateTextures(const TextureManager *);
   void render(ImGuiViewport *, bool flip);
 
   struct Shared {
     void setup();
     void teardown();
+    void textureCommand(const TextureCmd &);
 
     unsigned int m_program;
-    std::array<unsigned int, 1> m_textures; // make this a vector for image support?
+    TextureCookie m_cookie;
+    std::vector<unsigned int> m_textures;
     std::array<unsigned int, 5> m_locations;
     std::shared_ptr<void> m_platform;
   };

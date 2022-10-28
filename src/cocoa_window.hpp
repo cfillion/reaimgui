@@ -55,6 +55,7 @@ private:
   EventHandler *m_eventHandler;
   std::unique_ptr<Renderer> m_renderer;
   unsigned int m_defaultStyleMask;
+  float m_previousScale;
   ImGuiViewportFlags m_previousFlags;
 };
 

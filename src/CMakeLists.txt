@@ -10,6 +10,7 @@ add_library(src OBJECT
   main.cpp
   opengl_renderer.cpp
   resource.cpp
+  texture.cpp
   viewport.cpp
   window.cpp
 )

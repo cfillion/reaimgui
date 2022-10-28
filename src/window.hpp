@@ -29,7 +29,6 @@
 #endif
 
 class DockerHost;
-struct ImFontAtlas;
 typedef int ImGuiMouseButton;
 
 class Window : public Viewport {
@@ -62,7 +61,6 @@ public:
   void mouseDown(ImGuiMouseButton);
   void mouseUp(ImGuiMouseButton);
   bool isDocked() const { return !!m_dockerHost; }
-  void invalidateTextures();
 
   const char *getSwellClass() const;
 
@@ -78,8 +76,6 @@ protected:
 
   struct WindowDeleter { void operator()(HWND); };
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
-  bool m_needTexUpload;
-  ImFontAtlas *m_fontAtlas;
 
 private:
   static int hwndInfo(HWND, INT_PTR type);
@@ -92,8 +88,7 @@ private:
   PluginRegister m_accelReg;
   std::shared_ptr<PluginRegister> m_hwndInfo;
 
-  float m_previousScale;
-  int m_fontTexVersion, m_mouseDown;
+  int m_mouseDown;
   bool m_noFocus;
 };
 

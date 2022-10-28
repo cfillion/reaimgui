@@ -290,11 +290,7 @@ void Win32Window::update()
 
 void Win32Window::render(void *)
 {
-  if(m_needTexUpload) {
-    m_renderer->uploadFontTex(m_fontAtlas);
-    m_needTexUpload = false;
-  }
-  m_renderer->render(m_viewport);
+  m_renderer->render(m_viewport, m_ctx->textureManager());
 }
 
 float Win32Window::scaleFactor() const

@@ -21,6 +21,7 @@
 #include <memory>
 
 class Renderer;
+class TextureManager;
 class Window;
 struct ImFontAtlas;
 struct ImGuiViewport;
@@ -44,9 +45,8 @@ protected:
 class Renderer {
 public:
   virtual ~Renderer() {};
-  virtual void uploadFontTex(ImFontAtlas *) = 0;
-  virtual void render(ImGuiViewport *) = 0;
-  virtual void peekMessage(const unsigned int msg) {}
+  virtual void render(ImGuiViewport *, const TextureManager *) = 0;
+  virtual void peekMessage(unsigned int msg) {}
 };
 
 #endif

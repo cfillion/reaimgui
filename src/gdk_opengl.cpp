@@ -25,6 +25,32 @@
 #include <gtk/gtk.h>
 #include <imgui/imgui.h>
 
+struct LICEDeleter {
+  void operator()(LICE_IBitmap *bm) { LICE__Destroy(bm); }
+};
+
+class GDKOpenGL : public OpenGLRenderer {
+public:
+  GDKOpenGL(RendererFactory *, GDKWindow *);
+  ~GDKOpenGL();
+
+  void render(ImGuiViewport *, const TextureManager *) override;
+  void peekMessage(const unsigned int msg) override;
+
+private:
+  void initSoftwareBlit();
+  void resizeTextures();
+  void softwareBlit();
+
+  GDKWindow *m_viewport;
+  GdkGLContext *m_gl;
+  unsigned int m_tex, m_fbo;
+
+  // for docking
+  std::unique_ptr<LICE_IBitmap, LICEDeleter> m_pixels;
+  std::shared_ptr<GdkWindow> m_offscreen;
+};
+
 class MakeCurrent {
 public:
   MakeCurrent(GdkGLContext *gl)
@@ -40,33 +66,6 @@ public:
 
 private:
   GdkGLContext *m_gl;
-};
-
-struct LICEDeleter {
-  void operator()(LICE_IBitmap *bm) { LICE__Destroy(bm); }
-};
-
-class GDKOpenGL : public OpenGLRenderer {
-public:
-  GDKOpenGL(RendererFactory *, GDKWindow *);
-  ~GDKOpenGL();
-
-  void uploadFontTex(ImFontAtlas *) override;
-  void render(ImGuiViewport *) override;
-  void peekMessage(const unsigned int msg) override;
-
-private:
-  void initSoftwareBlit();
-  void resizeTextures();
-  void softwareBlit();
-
-  GDKWindow *m_viewport;
-  GdkGLContext *m_gl;
-  unsigned int m_tex, m_fbo;
-
-  // for docking
-  std::unique_ptr<LICE_IBitmap, LICEDeleter> m_pixels;
-  std::shared_ptr<GdkWindow> m_offscreen;
 };
 
 std::unique_ptr<Renderer> RendererFactory::create(Window *window)
@@ -128,16 +127,17 @@ GDKOpenGL::GDKOpenGL(RendererFactory *factory, GDKWindow *viewport)
 
 GDKOpenGL::~GDKOpenGL()
 {
-  gdk_gl_context_make_current(m_gl);
+  {
+    MakeCurrent cur { m_gl };
 
-  glDeleteFramebuffers(1, &m_fbo);
-  glDeleteTextures(1, &m_tex);
+    glDeleteFramebuffers(1, &m_fbo);
+    glDeleteTextures(1, &m_tex);
 
-  teardown();
+    teardown();
+  }
 
   // current GL context must be cleared before calling unref to avoid this bug:
   // https://gitlab.gnome.org/GNOME/gtk/-/issues/2562
-  gdk_gl_context_clear_current();
   g_object_unref(m_gl);
 }
 
@@ -175,17 +175,15 @@ void GDKOpenGL::resizeTextures()
   }
 }
 
-void GDKOpenGL::uploadFontTex(ImFontAtlas *atlas)
-{
-  MakeCurrent cur { m_gl };
-  OpenGLRenderer::uploadFontTex(atlas);
-}
-
-void GDKOpenGL::render(ImGuiViewport *viewport)
+void GDKOpenGL::render(ImGuiViewport *viewport, const TextureManager *manager)
 {
   MakeCurrent cur { m_gl };
 
+  // FIXME: Currently we use SWELL's DPI scale which is fixed & app-wide.
+  // If this changes, we'll want to only upload textures for our own DPI
+  // since we're not sharing them with other windows.
   const bool useSoftwareBlit { m_viewport->isDocked() };
+  OpenGLRenderer::updateTextures(manager);
   OpenGLRenderer::render(viewport, useSoftwareBlit);
 
   if(useSoftwareBlit) {

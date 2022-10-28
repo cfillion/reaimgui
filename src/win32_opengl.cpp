@@ -28,8 +28,7 @@ public:
   Win32OpenGL(RendererFactory *, HWND);
   ~Win32OpenGL();
 
-  void uploadFontTex(ImFontAtlas *) override;
-  void render(ImGuiViewport *) override;
+  void render(ImGuiViewport *, const TextureManager *) override;
 
 private:
   void setPixelFormat();
@@ -142,15 +141,10 @@ void Win32OpenGL::createContext()
   }
 }
 
-void Win32OpenGL::uploadFontTex(ImFontAtlas *atlas)
+void Win32OpenGL::render(ImGuiViewport *viewport, const TextureManager *manager)
 {
   MakeCurrent cur { m_dc, m_gl };
-  OpenGLRenderer::uploadFontTex(atlas);
-}
-
-void Win32OpenGL::render(ImGuiViewport *viewport)
-{
-  MakeCurrent cur { m_dc, m_gl };
+  OpenGLRenderer::updateTextures(manager);
   OpenGLRenderer::render(viewport, false);
   SwapBuffers(m_dc);
 }

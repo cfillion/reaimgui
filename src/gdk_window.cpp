@@ -176,12 +176,7 @@ void GDKWindow::update()
 
 void GDKWindow::render(void *)
 {
-  if(m_needTexUpload) {
-    m_renderer->uploadFontTex(m_fontAtlas);
-    m_needTexUpload = false;
-  }
-
-  m_renderer->render(m_viewport);
+  m_renderer->render(m_viewport, m_ctx->textureManager());
 }
 
 float GDKWindow::globalScaleFactor()
