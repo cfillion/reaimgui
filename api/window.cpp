@@ -219,6 +219,13 @@ DEFINE_API(int, GetWindowDockID, (ImGui_Context*,ctx),
   return ImGui::GetWindowDockID();
 });
 
+DEFINE_API(double, GetWindowDpiScale, (ImGui_Context*,ctx),
+"Get DPI scale currently associated to the current window's viewport (1.0 = 96 DPI)",
+{
+  FRAME_GUARD;
+  return ImGui::GetWindowDpiScale();
+});
+
 DEFINE_API(void, SetNextWindowPos, (ImGui_Context*,ctx)
 (double,pos_x)(double,pos_y)(int*,API_RO(cond))
 (double*,API_RO(pivot_x))(double*,API_RO(pivot_y)),
