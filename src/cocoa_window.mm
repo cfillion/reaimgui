@@ -242,8 +242,9 @@ std::optional<LRESULT> CocoaWindow::handleMessage
   (const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
+  case WM_PAINT: // update size if it changed while we were docked & inactive
   case WM_SIZE:
-    [m_gl update]; // update size if it changed while we were docked & inactive
+    [m_gl update];
     break; // continue handling WM_SIZE in CocoaWindow::proc
   case WM_SETFOCUS: // REAPER v6.53+
     // Redirect focus to the input view after m_view gets it.
