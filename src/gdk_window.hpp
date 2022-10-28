@@ -22,8 +22,6 @@
 
 #include <memory>
 
-class Renderer;
-
 typedef struct _GdkWindow GdkWindow;
 typedef struct _GtkIMContext GtkIMContext;
 
@@ -43,7 +41,6 @@ public:
   void setTitle(const char *) override;
   void setAlpha(float) override;
   void update() override;
-  void render(void *) override;
   float scaleFactor() const override { return globalScaleFactor(); }
   void setIME(ImGuiPlatformImeData *) override;
   std::optional<LRESULT> handleMessage
@@ -59,7 +56,6 @@ private:
   void softwareBlit();
   void keyEvent(WPARAM, LPARAM, bool down);
 
-  std::unique_ptr<Renderer> m_renderer;
   ImGuiViewportFlags m_previousFlags;
   int m_defaultDecorations;
   GtkIMContext *m_ime;

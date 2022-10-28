@@ -248,12 +248,6 @@ void DockerHost::update()
     m_window->update();
 }
 
-void DockerHost::render(void *payload)
-{
-  if(m_window)
-    m_window->render(payload);
-}
-
 float DockerHost::scaleFactor() const
 {
   return m_window ? m_window->scaleFactor() : 1.f;
@@ -277,8 +271,9 @@ void DockerHost::onChanged()
   ImGuiViewportP *viewport { static_cast<ImGuiViewportP *>(m_viewport) };
   if(ImGuiWindow *userWindow { viewport->Window }) {
     userWindow->Pos = viewport->Pos = viewport->LastPlatformPos = getPosition();
-    userWindow->Size = userWindow->SizeFull = viewport->LastRendererSize =
+    userWindow->Size = userWindow->SizeFull =
       viewport->Size = viewport->LastPlatformSize = getSize();
+    // not touching LastRendererSize let Renderer::setSize update textures
   }
 
   if(m_window) {

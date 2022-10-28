@@ -146,7 +146,7 @@ void CocoaWindow::update()
   if(m_previousScale != m_viewport->DpiScale) {
     // resize macOS's GL objects when DPI changes (eg. moving to another screen)
     // NSViewFrameDidChangeNotification or WM_SIZE aren't sent
-    m_renderer->peekMessage(WM_SIZE);
+    m_renderer->setSize(m_viewport->Size);
     m_previousScale = m_viewport->DpiScale;
   }
 
@@ -189,11 +189,6 @@ void CocoaWindow::update()
   }
 }
 
-void CocoaWindow::render(void *)
-{
-  m_renderer->render(m_viewport, m_ctx->textureManager());
-}
-
 float CocoaWindow::scaleFactor() const
 {
   return [[m_view window] backingScaleFactor];
@@ -218,10 +213,6 @@ std::optional<LRESULT> CocoaWindow::handleMessage
   (const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
-  case WM_PAINT: // update size if it changed while we were docked & inactive
-  case WM_SIZE:
-    m_renderer->peekMessage(WM_SIZE);
-    break; // continue handling WM_SIZE in CocoaWindow::proc
   case WM_SETFOCUS: // REAPER v6.53+
     // Redirect focus to the input view after m_view gets it.
     // WM_SETFOCUS is sent from becomeFirstResponder,

@@ -9,6 +9,7 @@ add_library(src OBJECT
   keymap.cpp
   main.cpp
   opengl_renderer.cpp
+  renderer.cpp
   resource.cpp
   texture.cpp
   viewport.cpp

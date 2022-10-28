@@ -20,8 +20,6 @@
 
 #include "window.hpp"
 
-class Renderer;
-
 class Win32Window : public Window {
 public:
   static float scaleForDpi(unsigned int);
@@ -39,7 +37,6 @@ public:
   void setTitle(const char *) override;
   void setAlpha(float) override;
   void update() override;
-  void render(void *) override;
   float scaleFactor() const override;
   void setIME(ImGuiPlatformImeData *) override;
 
@@ -61,7 +58,6 @@ private:
 
   unsigned int m_dpi;
   DWORD m_style, m_exStyle;
-  std::unique_ptr<Renderer> m_renderer;
 };
 
 #endif

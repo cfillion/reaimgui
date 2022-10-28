@@ -20,6 +20,7 @@
 #include "context.hpp"
 #include "font.hpp"
 #include "platform.hpp"
+#include "renderer.hpp"
 
 #include <cassert>
 #include <imgui/imgui.h>

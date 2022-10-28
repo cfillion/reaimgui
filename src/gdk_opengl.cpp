@@ -31,18 +31,18 @@ struct LICEDeleter {
 
 class GDKOpenGL : public OpenGLRenderer {
 public:
-  GDKOpenGL(RendererFactory *, GDKWindow *);
+  GDKOpenGL(RendererFactory *, Window *);
   ~GDKOpenGL();
 
-  void render(ImGuiViewport *, const TextureManager *) override;
-  void peekMessage(const unsigned int msg) override;
+  void setSize(ImVec2) override;
+  void render(void *) override;
+  void swapBuffers(void *) override;
 
 private:
   void initSoftwareBlit();
-  void resizeTextures();
+  void resizeTextures(ImVec2);
   void softwareBlit();
 
-  GDKWindow *m_viewport;
   GdkGLContext *m_gl;
   unsigned int m_tex, m_fbo;
 
@@ -70,28 +70,28 @@ private:
 
 std::unique_ptr<Renderer> RendererFactory::create(Window *window)
 {
-  return std::make_unique<GDKOpenGL>(this, static_cast<GDKWindow *>(window));
+  return std::make_unique<GDKOpenGL>(this, window);
 }
 
 // GdkGLContext cannot share ressources: they're already shared with the
 // window's paint context (which itself isn't shared with anything).
-GDKOpenGL::GDKOpenGL(RendererFactory *factory, GDKWindow *viewport)
-  : OpenGLRenderer(factory, false), m_viewport { viewport }
+GDKOpenGL::GDKOpenGL(RendererFactory *factory, Window *window)
+  : OpenGLRenderer(factory, window, false)
 {
-  GdkWindow *window;
+  GdkWindow *osWindow;
 
-  if(viewport->isDocked()) {
+  if(m_window->isDocked()) {
     initSoftwareBlit();
-    window = m_offscreen.get();
+    osWindow = m_offscreen.get();
   }
   else
-    window = viewport->getOSWindow();
+    osWindow = static_cast<GDKWindow *>(m_window)->getOSWindow();
 
-  if(!window || static_cast<void *>(window) == viewport->nativeHandle())
+  if(!osWindow || static_cast<void *>(osWindow) == m_window->nativeHandle())
     throw backend_error { "headless SWELL is not supported" };
 
   GError *error {};
-  m_gl = gdk_window_create_gl_context(window, &error);
+  m_gl = gdk_window_create_gl_context(osWindow, &error);
   if(error) {
     const backend_error ex { error->message };
     g_clear_error(&error);
@@ -111,7 +111,7 @@ GDKOpenGL::GDKOpenGL(RendererFactory *factory, GDKWindow *viewport)
   MakeCurrent cur { m_gl };
 
   glGenTextures(1, &m_tex);
-  resizeTextures(); // binds to the texture and sets its size
+  resizeTextures(m_window->viewport()->Size); // binds to the texture and sets its size
 
   glGenFramebuffers(1, &m_fbo);
   glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
@@ -121,8 +121,8 @@ GDKOpenGL::GDKOpenGL(RendererFactory *factory, GDKWindow *viewport)
   setup();
 
   // prevent invalidation (= displaying garbage) when moving another window over
-  if(!viewport->isDocked())
-    gdk_window_freeze_updates(window);
+  if(!m_window->isDocked())
+    gdk_window_freeze_updates(osWindow);
 }
 
 GDKOpenGL::~GDKOpenGL()
@@ -158,33 +158,44 @@ void GDKOpenGL::initSoftwareBlit()
     m_offscreen = g_offscreen.lock();
 }
 
-void GDKOpenGL::resizeTextures()
+void GDKOpenGL::setSize(const ImVec2 size)
 {
-  RECT rect;
-  GetClientRect(m_viewport->nativeHandle(), &rect);
-  const int width  { rect.right - rect.left },
-            height { rect.bottom - rect.top };
+  MakeCurrent cur { m_gl };
+  resizeTextures(size);
+}
+
+void GDKOpenGL::resizeTextures(const ImVec2 size)
+{
+  // RECT rect;
+  // GetClientRect(m_window->nativeHandle(), &rect);
+  // const int width  { rect.right - rect.left },
+  //           height { rect.bottom - rect.top };
+  printf("%dx%d\n", (int)size.x, (int)size.y);
+  // printf("%dx%d\n", width, height);
 
   glBindTexture(GL_TEXTURE_2D, m_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y,
     0, GL_BGRA, GL_UNSIGNED_BYTE, nullptr);
 
   if(m_pixels) {
-    LICE__resize(m_pixels.get(), width, height);
+    LICE__resize(m_pixels.get(), size.x, size.y);
     glPixelStorei(GL_PACK_ROW_LENGTH, LICE__GetRowSpan(m_pixels.get()));
   }
 }
 
-void GDKOpenGL::render(ImGuiViewport *viewport, const TextureManager *manager)
+void GDKOpenGL::render(void *userData)
 {
+  if(userData && m_pixels)
+    return softwareBlit();
+
   MakeCurrent cur { m_gl };
 
   // FIXME: Currently we use SWELL's DPI scale which is fixed & app-wide.
   // If this changes, we'll want to only upload textures for our own DPI
   // since we're not sharing them with other windows.
-  const bool useSoftwareBlit { m_viewport->isDocked() };
-  OpenGLRenderer::updateTextures(manager);
-  OpenGLRenderer::render(viewport, useSoftwareBlit);
+  const bool useSoftwareBlit { m_window->isDocked() };
+  OpenGLRenderer::updateTextures();
+  OpenGLRenderer::render(useSoftwareBlit);
 
   if(useSoftwareBlit) {
     // REAPER is also drawing to the same GdkWindow so we must share it.
@@ -192,12 +203,12 @@ void GDKOpenGL::render(ImGuiViewport *viewport, const TextureManager *manager)
     glReadPixels(0, 0,
       LICE__GetWidth(m_pixels.get()), LICE__GetHeight(m_pixels.get()),
       GL_BGRA, GL_UNSIGNED_BYTE, LICE__GetBits(m_pixels.get()));
-    InvalidateRect(m_viewport->nativeHandle(), nullptr, false);
+    InvalidateRect(m_window->nativeHandle(), nullptr, false); // post a WM_PAINT
     return;
   }
 
-  GdkWindow *window { m_viewport->getOSWindow() };
-  const ImDrawData *drawData { m_viewport->viewport()->DrawData };
+  GdkWindow *window { static_cast<GDKWindow *>(m_window)->getOSWindow() };
+  const ImDrawData *drawData { m_window->viewport()->DrawData };
   const cairo_region_t *region { gdk_window_get_clip_region(window) };
   GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(window, region) };
   cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
@@ -212,25 +223,14 @@ void GDKOpenGL::render(ImGuiViewport *viewport, const TextureManager *manager)
   gdk_window_freeze_updates(window);
 }
 
-void GDKOpenGL::peekMessage(const unsigned int msg)
+void GDKOpenGL::swapBuffers(void *)
 {
-  switch(msg) {
-  case WM_SIZE: {
-    MakeCurrent cur { m_gl };
-    resizeTextures();
-    break;
-  }
-  case WM_PAINT:
-    if(m_pixels)
-      softwareBlit();
-    break;
-  }
 }
 
 void GDKOpenGL::softwareBlit()
 {
   PAINTSTRUCT ps;
-  if(!BeginPaint(m_viewport->nativeHandle(), &ps))
+  if(!BeginPaint(m_window->nativeHandle(), &ps))
     return;
 
   const int width  { LICE__GetWidth(m_pixels.get())  },
@@ -239,5 +239,5 @@ void GDKOpenGL::softwareBlit()
   StretchBltFromMem(ps.hdc, 0, 0, width, height, LICE__GetBits(m_pixels.get()),
     width, height, LICE__GetRowSpan(m_pixels.get()));
 
-  EndPaint(m_viewport->nativeHandle(), &ps);
+  EndPaint(m_window->nativeHandle(), &ps);
 }

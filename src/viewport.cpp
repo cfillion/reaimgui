@@ -40,7 +40,6 @@ public:
   void setTitle(const char *) override {}
   void setAlpha(float) override {}
   void update() override {};
-  void render(void *) override {}
   float scaleFactor() const override;
   void onChanged() override {}
   void setIME(ImGuiPlatformImeData *) override {}
@@ -114,7 +113,6 @@ void Viewport::install()
   pio.Platform_SetWindowTitle     = &instanceProxy<&Viewport::setTitle>;
   pio.Platform_SetWindowAlpha     = &instanceProxy<&Viewport::setAlpha>;
   pio.Platform_UpdateWindow       = &instanceProxy<&Viewport::update>;
-  pio.Platform_RenderWindow       = &instanceProxy<&Viewport::render>;
   pio.Platform_GetWindowDpiScale  = &instanceProxy<&Viewport::scaleFactor>;
   pio.Platform_OnChangedViewport  = &instanceProxy<&Viewport::onChanged>;
 

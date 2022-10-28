@@ -22,23 +22,23 @@
 #include "window.hpp"
 
 #include <AppKit/AppKit.h>
+#include <imgui/imgui.h>
 #include <swell/swell-types.h>
 
 using GLPool = FastSet<NSOpenGLContext *>;
 
 class CocoaOpenGL : public OpenGLRenderer {
 public:
-  CocoaOpenGL(RendererFactory *, HWND);
+  CocoaOpenGL(RendererFactory *, Window *);
   ~CocoaOpenGL();
 
-  void render(ImGuiViewport *, const TextureManager *) override;
-  void peekMessage(unsigned int msg) override;
+  void setSize(ImVec2) override;
+  void render(void *) override;
+  void swapBuffers(void *) override;
 
 private:
   GLPool *contextPool() const;
-
   NSOpenGLContext *m_gl;
-  NSView *m_view;
 };
 
 class MakeCurrent {
@@ -60,13 +60,14 @@ private:
 
 std::unique_ptr<Renderer> RendererFactory::create(Window *viewport)
 {
-  return std::make_unique<CocoaOpenGL>(this, viewport->nativeHandle());
+  return std::make_unique<CocoaOpenGL>(this, viewport);
 }
 
-CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, HWND hwnd)
-  : OpenGLRenderer { factory }, m_view { (__bridge NSView *)hwnd }
+CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
+  : OpenGLRenderer { factory, window }
 {
-  [m_view setWantsBestResolutionOpenGLSurface:YES]; // retina
+  NSView *view { (__bridge NSView *)window->nativeHandle() };
+  [view setWantsBestResolutionOpenGLSurface:YES]; // retina
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
@@ -106,24 +107,24 @@ GLPool *CocoaOpenGL::contextPool() const
   return std::static_pointer_cast<GLPool>(m_shared->m_platform).get();
 }
 
-void CocoaOpenGL::render(ImGuiViewport *viewport, const TextureManager *manager)
+void CocoaOpenGL::setSize(ImVec2)
+{
+  [m_gl update];
+}
+
+void CocoaOpenGL::render(void *)
 {
   // the intial setView in show() may fail if the view doesn't have a "device"
   // (eg. when docked not activated = hidden NSView)
   if(![m_gl view])
-    [m_gl setView:m_view];
+    [m_gl setView:(__bridge NSView *)m_window->nativeHandle()];
 
   MakeCurrent cur { m_gl };
-  OpenGLRenderer::updateTextures(manager);
-  OpenGLRenderer::render(viewport, false);
-  [m_gl flushBuffer];
+  OpenGLRenderer::updateTextures();
+  OpenGLRenderer::render(false);
 }
 
-void CocoaOpenGL::peekMessage(unsigned int msg)
+void CocoaOpenGL::swapBuffers(void *)
 {
-  switch(msg) {
-  case WM_SIZE:
-    [m_gl update];
-    break;
-  }
+  [m_gl flushBuffer];
 }

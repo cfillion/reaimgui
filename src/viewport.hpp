@@ -56,7 +56,6 @@ public:
   virtual void setTitle(const char *) = 0;
   virtual void setAlpha(float) = 0;
   virtual void update() = 0;
-  virtual void render(void *) = 0;
   virtual float scaleFactor() const = 0;
   virtual void onChanged() = 0;
   virtual void setIME(ImGuiPlatformImeData *) = 0;

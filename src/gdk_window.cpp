@@ -174,11 +174,6 @@ void GDKWindow::update()
   }
 }
 
-void GDKWindow::render(void *)
-{
-  m_renderer->render(m_viewport, m_ctx->textureManager());
-}
-
 float GDKWindow::globalScaleFactor()
 {
   static float scale { SWELL_GetScaling256() / 256.f };
@@ -272,11 +267,10 @@ std::optional<LRESULT> GDKWindow::handleMessage
   case WM_SYSKEYUP:
     keyEvent(wParam, lParam, msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
     return 0;
-  case WM_SIZE:
   case WM_PAINT:
-    if(m_renderer)
-      m_renderer->peekMessage(msg);
-    break; // continue handling WM_SIZE in Window::proc
+    if(m_renderer) // do software blit
+      m_renderer->render(reinterpret_cast<void *>(1));
+    break;
   }
 
   return std::nullopt;

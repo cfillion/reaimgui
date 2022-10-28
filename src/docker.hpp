@@ -83,7 +83,6 @@ public:
   void setTitle(const char *) override;
   void setAlpha(float) override;
   void update() override;
-  void render(void *) override;
   float scaleFactor() const override;
   void onChanged() override;
   void setIME(ImGuiPlatformImeData *) override;

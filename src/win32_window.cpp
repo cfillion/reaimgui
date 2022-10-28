@@ -288,11 +288,6 @@ void Win32Window::update()
   }
 }
 
-void Win32Window::render(void *)
-{
-  m_renderer->render(m_viewport, m_ctx->textureManager());
-}
-
 float Win32Window::scaleFactor() const
 {
   return m_viewport->DpiScale;

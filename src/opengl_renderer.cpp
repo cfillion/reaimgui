@@ -17,6 +17,9 @@
 
 #include "opengl_renderer.hpp"
 
+#include "context.hpp"
+#include "window.hpp"
+
 #ifdef __APPLE__
 #  include <OpenGL/gl3.h>
 #elif _WIN32
@@ -127,7 +130,9 @@ void OpenGLRenderer::Shared::textureCommand(const TextureCmd &cmd)
   }
 }
 
-OpenGLRenderer::OpenGLRenderer(RendererFactory *factory, const bool share)
+OpenGLRenderer::OpenGLRenderer
+  (RendererFactory *factory, Window *window, const bool share)
+  : Renderer { window }
 {
   m_shared = factory->getSharedData<Shared>();
   if(!m_shared || !share) {
@@ -191,15 +196,16 @@ void OpenGLRenderer::teardown()
   glDeleteVertexArrays(1, &m_vbo);
 }
 
-void OpenGLRenderer::updateTextures(const TextureManager *manager)
+void OpenGLRenderer::updateTextures()
 {
   using namespace std::placeholders;
-  manager->update(&m_shared->m_cookie,
+  m_window->context()->textureManager()->update(&m_shared->m_cookie,
     std::bind(&Shared::textureCommand, m_shared.get(), _1));
 }
 
-void OpenGLRenderer::render(ImGuiViewport *viewport, const bool flip)
+void OpenGLRenderer::render(const bool flip)
 {
+  ImGuiViewport *viewport { m_window->viewport() };
   ImDrawData *drawData { viewport->DrawData };
 
   // this is not done by Dear ImGui at this moment, but might be in the future

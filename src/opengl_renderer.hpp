@@ -25,13 +25,13 @@
 
 class OpenGLRenderer : public Renderer {
 public:
-  OpenGLRenderer(RendererFactory *, bool share = true);
+  OpenGLRenderer(RendererFactory *, Window *, bool share = true);
 
   using Renderer::render;
 
 protected:
-  void updateTextures(const TextureManager *);
-  void render(ImGuiViewport *, bool flip);
+  void updateTextures();
+  void render(bool flip);
 
   struct Shared {
     void setup();

@@ -125,6 +125,7 @@ Context::Context(const char *label, const int userConfigFlags)
   setUserConfigFlags(userConfigFlags);
 
   Platform::install();
+  Renderer::install();
   Viewport::install();
 }
 

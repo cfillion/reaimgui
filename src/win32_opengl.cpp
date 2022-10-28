@@ -22,19 +22,21 @@
 
 #include <GL/gl3w.h>
 #include <GL/wglext.h>
+#include <imgui/imgui.h>
 
 class Win32OpenGL : public OpenGLRenderer {
 public:
-  Win32OpenGL(RendererFactory *, HWND);
+  Win32OpenGL(RendererFactory *, Window *);
   ~Win32OpenGL();
 
-  void render(ImGuiViewport *, const TextureManager *) override;
+  void setSize(ImVec2) override {}
+  void render(void *) override;
+  void swapBuffers(void *) override;
 
 private:
   void setPixelFormat();
   void createContext();
 
-  HWND m_hwnd;
   HDC m_dc;
   HGLRC m_gl;
 };
@@ -62,11 +64,11 @@ struct GLDeleter {
 
 std::unique_ptr<Renderer> RendererFactory::create(Window *viewport)
 {
-  return std::make_unique<Win32OpenGL>(this, viewport->nativeHandle());
+  return std::make_unique<Win32OpenGL>(this, viewport);
 }
 
-Win32OpenGL::Win32OpenGL(RendererFactory *factory, HWND hwnd)
-  : OpenGLRenderer(factory), m_hwnd { hwnd }, m_dc { GetDC(hwnd) }
+Win32OpenGL::Win32OpenGL(RendererFactory *factory, Window *window)
+  : OpenGLRenderer(factory, window), m_dc { GetDC(window->nativeHandle()) }
 {
   setPixelFormat();
 
@@ -88,7 +90,7 @@ Win32OpenGL::~Win32OpenGL()
   MakeCurrent cur { m_dc, m_gl };
   teardown();
 
-  ReleaseDC(m_hwnd, m_dc);
+  ReleaseDC(m_window->nativeHandle(), m_dc);
 }
 
 void Win32OpenGL::setPixelFormat()
@@ -102,7 +104,7 @@ void Win32OpenGL::setPixelFormat()
   pfd.cColorBits = pfd.cRedBits + pfd.cGreenBits + pfd.cBlueBits + pfd.cAlphaBits;
 
   if(!SetPixelFormat(m_dc, ChoosePixelFormat(m_dc, &pfd), &pfd)) {
-    ReleaseDC(m_hwnd, m_dc);
+    ReleaseDC(m_window->nativeHandle(), m_dc);
     throw backend_error { "failed to set a suitable pixel format" };
   }
 }
@@ -136,15 +138,19 @@ void Win32OpenGL::createContext()
 
   if(gl3wInit()) {
     wglDeleteContext(m_gl);
-    ReleaseDC(m_hwnd, m_dc);
+    ReleaseDC(m_window->nativeHandle(), m_dc);
     throw backend_error { "failed to initialize OpenGL 3.1+ context" };
   }
 }
 
-void Win32OpenGL::render(ImGuiViewport *viewport, const TextureManager *manager)
+void Win32OpenGL::render(void *)
 {
   MakeCurrent cur { m_dc, m_gl };
-  OpenGLRenderer::updateTextures(manager);
-  OpenGLRenderer::render(viewport, false);
+  OpenGLRenderer::updateTextures();
+  OpenGLRenderer::render(false);
+}
+
+void Win32OpenGL::swapBuffers(void *)
+{
   SwapBuffers(m_dc);
 }

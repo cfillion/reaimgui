@@ -21,10 +21,8 @@
 #include <memory>
 
 class Renderer;
-class TextureManager;
 class Window;
-struct ImFontAtlas;
-struct ImGuiViewport;
+struct ImVec2;
 
 class RendererFactory {
 public:
@@ -44,9 +42,17 @@ protected:
 
 class Renderer {
 public:
-  virtual ~Renderer() {};
-  virtual void render(ImGuiViewport *, const TextureManager *) = 0;
-  virtual void peekMessage(unsigned int msg) {}
+  static void install();
+
+  Renderer(Window *);
+  virtual ~Renderer();
+
+  virtual void setSize(ImVec2) = 0;
+  virtual void render(void *) = 0;
+  virtual void swapBuffers(void *) = 0;
+
+protected:
+  Window *m_window;
 };
 
 #endif

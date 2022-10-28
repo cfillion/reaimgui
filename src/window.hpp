@@ -29,6 +29,7 @@
 #endif
 
 class DockerHost;
+class Renderer;
 typedef int ImGuiMouseButton;
 
 class Window : public Viewport {
@@ -76,6 +77,8 @@ protected:
 
   struct WindowDeleter { void operator()(HWND); };
   std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
+
+  std::unique_ptr<Renderer> m_renderer;
 
 private:
   static int hwndInfo(HWND, INT_PTR type);
