@@ -138,7 +138,12 @@ void CocoaWindow::setFocus()
 
 bool CocoaWindow::hasFocus() const
 {
-  return GetFocus() == (__bridge HWND)m_inputView;
+  // m_hwnd temporarily has focus between ShowWindow and WM_SETFOCUS
+  // returning true here in this case is important, otherwise
+  // Context::updateFocus would misdetect no active windows when it's called
+  // from EventHandler::windowDidResignKey
+  HWND focus { GetFocus() };
+  return focus == (__bridge HWND)m_inputView || focus == m_hwnd.get();
 }
 
 void CocoaWindow::setTitle(const char *title)
@@ -154,6 +159,7 @@ void CocoaWindow::setAlpha(const float alpha)
 
 void CocoaWindow::update()
 {
+  // restore keyboard focus to the input view when switching to our docker tab
   static bool no_wm_setfocus { atof(GetAppVersion()) < 6.53 };
   if(no_wm_setfocus && GetFocus() == m_hwnd.get())
     setFocus();
