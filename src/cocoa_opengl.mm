@@ -89,7 +89,7 @@ CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
   pool->insert(m_gl);
 
   GLint value { 0 }; // enable transparency
-  [m_gl setValues:&value forParameter:NSOpenGLCPSurfaceOpacity];
+  [m_gl setValues:&value forParameter:NSOpenGLContextParameterSurfaceOpacity];
 
   MakeCurrent cur { m_gl };
   setup();
