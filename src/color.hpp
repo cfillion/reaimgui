@@ -37,7 +37,7 @@ public:
 
   operator ImVec4() const;
   void unpack(float rgba[4]) const;
-  uint32_t pack(bool alpha = true, uint32_t extra = 0) const;
+  uint32_t pack(bool alpha, uint32_t extra = 0) const;
 
   template <class F>
   constexpr decltype(auto) apply(F&& f) const

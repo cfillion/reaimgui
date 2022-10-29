@@ -178,8 +178,7 @@ DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
-  const ImVec4 &col { ImGui::GetStyleColorVec4(idx) };
-  return Color { col }.pack();
+  return Color { ImGui::GetStyleColorVec4(idx) }.pack(true);
 });
 
 DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
@@ -188,7 +187,7 @@ DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
-  ImGui::PushStyleColor(idx, ImVec4{Color(col_rgba)});
+  ImGui::PushStyleColor(idx, Color(col_rgba));
 });
 
 DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
