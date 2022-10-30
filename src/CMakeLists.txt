@@ -24,6 +24,7 @@ target_link_libraries(src common)
 if(WIN32)
   target_sources(src PRIVATE
     version.rc
+    d3d10_renderer.cpp
     win32_droptarget.cpp
     win32_font.cpp
     win32_opengl.cpp
@@ -35,6 +36,25 @@ if(WIN32)
 
   find_package(gl3w CONFIG REQUIRED)
   target_link_libraries(src unofficial::gl3w::gl3w)
+
+  set(D3D_SHADERS
+    "d3d10_pixel.hlsl\;ps_4_0"
+    "d3d10_vertex.hlsl\;vs_4_0"
+  )
+
+  foreach(shader ${D3D_SHADERS})
+    list(GET shader 0 file)
+    list(GET shader 1 profile)
+    target_sources(src PRIVATE ${file}.ipp)
+
+    add_custom_command(
+      OUTPUT ${file}.ipp
+      COMMAND $<TARGET_FILE:gend3dshader> ${profile} ${file} > ${CMAKE_CURRENT_BINARY_DIR}/${file}.ipp
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      MAIN_DEPENDENCY ${file}
+      DEPENDS $<TARGET_FILE:gend3dshader>
+    )
+  endforeach()
 elseif(APPLE)
   target_sources(src PRIVATE
     cocoa_events.mm

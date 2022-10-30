@@ -160,10 +160,10 @@ install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION "${REAPER_USER_PLUGINS}" # Windows .dll
   LIBRARY DESTINATION "${REAPER_USER_PLUGINS}" # Linux .so/macOS .dylib
 )
+add_subdirectory(tools)
 add_subdirectory(api)
 add_subdirectory(src)
 if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
-add_subdirectory(tools)
 target_link_libraries(${PROJECT_NAME} PRIVATE api src)

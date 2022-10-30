@@ -73,3 +73,9 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/reaper_imgui_doc.html"
   DESTINATION "Data"
   OPTIONAL
 )
+
+if(WIN32)
+  add_executable(gend3dshader EXCLUDE_FROM_ALL gend3dshader.cpp)
+  target_link_libraries(gend3dshader common)
+  target_link_libraries(gend3dshader D3DCompiler)
+endif()
