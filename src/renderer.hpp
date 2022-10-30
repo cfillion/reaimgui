@@ -15,44 +15,44 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_OPENGL_RENDERER_HPP
-#define REAIMGUI_OPENGL_RENDERER_HPP
+#ifndef REAIMGUI_RENDERER_HPP
+#define REAIMGUI_RENDERER_HPP
 
-#include "renderer.hpp"
-#include "texture.hpp"
+#include <memory>
 
-#include <array>
+class Renderer;
+class Window;
+struct ImVec2;
 
-class OpenGLRenderer : public Renderer {
+class RendererFactory {
 public:
-  OpenGLRenderer(RendererFactory *, Window *, bool share = true);
+  // hard-coded to opengl for now
+  const char *name() const { return "reaper_imgui_opengl3"; }
+  std::unique_ptr<Renderer> create(Window *);
 
-  using Renderer::render;
+  template<typename T>
+  auto getSharedData() const { return std::static_pointer_cast<T>(m_shared.lock()); }
+
+  template<typename T>
+  void setSharedData(T d) { m_shared = d; }
 
 protected:
-  void updateTextures();
-  void render(bool flip);
+  std::weak_ptr<void> m_shared;
+};
 
-  struct Shared {
-    void setup();
-    void teardown();
-    void textureCommand(const TextureCmd &);
+class Renderer {
+public:
+  static void install();
 
-    unsigned int m_program;
-    TextureCookie m_cookie;
-    std::vector<unsigned int> m_textures;
-    std::array<unsigned int, 5> m_locations;
-    std::shared_ptr<void> m_platform;
-  };
+  Renderer(Window *);
+  virtual ~Renderer();
 
-  void setup();
-  void teardown();
+  virtual void setSize(ImVec2) = 0;
+  virtual void render(void *) = 0;
+  virtual void swapBuffers(void *) = 0;
 
-  std::shared_ptr<Shared> m_shared;
-
-private:
-  unsigned int m_vbo;
-  std::array<unsigned int, 2> m_buffers;
+protected:
+  Window *m_window;
 };
 
 #endif

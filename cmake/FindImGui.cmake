@@ -36,7 +36,9 @@ target_compile_definitions(imgui PUBLIC
 target_include_directories(imgui PUBLIC ${ImGui_INCLUDE_DIR})
 
 if(VCPKG_TOOLCHAIN)
-  find_package(freetype CONFIG REQUIRED)
+  find_package(freetype CONFIG)
+endif()
+if(freetype_FOUND)
   target_link_libraries(imgui PRIVATE freetype)
 else()
   find_package(Freetype REQUIRED)

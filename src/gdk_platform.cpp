@@ -18,7 +18,6 @@
 #include "platform.hpp"
 
 #include "gdk_window.hpp"
-#include "opengl_renderer.hpp"
 
 #include <gdk/gdk.h>
 #include <imgui/imgui.h>
@@ -64,8 +63,6 @@ void Platform::install()
   io.BackendPlatformName = "reaper_imgui_gdk";
   io.GetClipboardTextFn = &getClipboardText;
   io.SetClipboardTextFn = &setClipboardText;
-
-  OpenGLRenderer::install();
 }
 
 Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)

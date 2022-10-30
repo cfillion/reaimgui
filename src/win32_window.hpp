@@ -20,8 +20,6 @@
 
 #include "window.hpp"
 
-class OpenGLRenderer;
-
 class Win32Window : public Window {
 public:
   static float scaleForDpi(unsigned int);
@@ -39,7 +37,6 @@ public:
   void setTitle(const char *) override;
   void setAlpha(float) override;
   void update() override;
-  void render(void *) override;
   float scaleFactor() const override;
   void setIME(ImGuiPlatformImeData *) override;
 
@@ -52,7 +49,6 @@ private:
     ~Class();
   };
 
-  void initPixelFormat();
   void initGL();
   RECT scaledWindowRect(ImVec2 pos, ImVec2 size) const;
   void keyEvent(unsigned int, WPARAM, LPARAM);
@@ -60,10 +56,7 @@ private:
   void unstuckModifiers();
   void updateStyles();
 
-  HDC m_dc;
-  HGLRC m_gl;
   unsigned int m_dpi;
-  OpenGLRenderer *m_renderer;
   DWORD m_style, m_exStyle;
 };
 

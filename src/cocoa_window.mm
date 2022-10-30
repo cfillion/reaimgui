@@ -21,8 +21,8 @@
 #include "cocoa_inject.hpp"
 #include "cocoa_inputview.hpp"
 #include "context.hpp"
-#include "opengl_renderer.hpp"
 #include "platform.hpp"
+#include "renderer.hpp"
 
 #include <imgui/imgui_internal.h>
 #include <reaper_plugin_secrets.h>
@@ -50,29 +50,23 @@ CocoaWindow::CocoaWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 {
 }
 
+CocoaWindow::~CocoaWindow()
+{
+}
+
 void CocoaWindow::create()
 {
   createSwellDialog();
   m_view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
-  [m_view setWantsBestResolutionOpenGLSurface:YES]; // retina
   m_inputView = [[InputView alloc] initWithWindow:this];
 
   NSWindow *window { [m_view window] };
   m_defaultStyleMask = [window styleMask];
+  m_previousScale = m_viewport->DpiScale;
   m_previousFlags = ~m_viewport->Flags; // mark all as modified
   // imgui calls update() before show(), it will apply the flags
 
-  constexpr NSOpenGLPixelFormatAttribute attrs[] {
-    NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
-    NSOpenGLPFADoubleBuffer,
-    kCGLPFASupportsAutomaticGraphicsSwitching,
-    0
-  };
-
-  NSOpenGLPixelFormat *fmt { [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] };
-  m_gl = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:nil];
-  if(!m_gl)
-    throw backend_error { "failed to initialize OpenGL 3.2 core context" };
+  m_renderer = m_ctx->rendererFactory()->create(this);
 
   if(!isDocked()) {
     CocoaInject::inject([SWELLWindowOverride class], window);
@@ -81,13 +75,7 @@ void CocoaWindow::create()
     [window setOpaque:NO];
     [window setBackgroundColor:[NSColor clearColor]]; // required when decorations are enabled
     [m_view setWantsLayer:YES]; // required to be transparent before resizing
-    GLint value { 0 };
-    [m_gl setValues:&value forParameter:NSOpenGLCPSurfaceOpacity];
   }
-
-  [m_gl makeCurrentContext];
-  m_renderer = new OpenGLRenderer;
-  [NSOpenGLContext clearCurrentContext];
 
   static __weak EventHandler *g_handler;
   if(g_handler)
@@ -96,17 +84,9 @@ void CocoaWindow::create()
     g_handler = m_eventHandler = [[EventHandler alloc] init];
 }
 
-CocoaWindow::~CocoaWindow()
-{
-  [m_gl makeCurrentContext];
-  delete m_renderer;
-  [NSOpenGLContext clearCurrentContext];
-}
-
 void CocoaWindow::show()
 {
   Window::show();
-  [m_gl setView:m_view];
   [m_eventHandler watchView:m_view];
 }
 
@@ -126,7 +106,6 @@ void CocoaWindow::setSize(const ImVec2 size)
   NSWindow *window { [m_view window] };
   [window setContentSize:NSMakeSize(size.x, size.y)];
   setPosition(m_viewport->Pos); // preserve y position from the top
-  [m_gl update];
 }
 
 void CocoaWindow::setFocus()
@@ -163,6 +142,13 @@ void CocoaWindow::update()
   static bool no_wm_setfocus { atof(GetAppVersion()) < 6.53 };
   if(no_wm_setfocus && GetFocus() == m_hwnd.get())
     setFocus();
+
+  if(m_previousScale != m_viewport->DpiScale) {
+    // resize macOS's GL objects when DPI changes (eg. moving to another screen)
+    // NSViewFrameDidChangeNotification or WM_SIZE aren't sent
+    m_renderer->setSize(m_viewport->Size);
+    m_previousScale = m_viewport->DpiScale;
+  }
 
   if(isDocked())
     return;
@@ -203,27 +189,6 @@ void CocoaWindow::update()
   }
 }
 
-void CocoaWindow::render(void *)
-{
-  // the intial setView in show() may fail if the view doesn't have a "device"
-  // (eg. when docked not activated = hidden NSView)
-  if(![m_gl view])
-    [m_gl setView:m_view];
-
-  [m_gl makeCurrentContext];
-  if(m_needTexUpload) {
-    // resize macOS's GL objects when DPI changes (eg. moving to another screen)
-    // NSViewFrameDidChangeNotification or WM_SIZE aren't sent
-    [m_gl update];
-
-    m_renderer->uploadFontTex(m_fontAtlas);
-    m_needTexUpload = false;
-  }
-  m_renderer->render(m_viewport);
-  [m_gl flushBuffer];
-  [NSOpenGLContext clearCurrentContext];
-}
-
 float CocoaWindow::scaleFactor() const
 {
   return [[m_view window] backingScaleFactor];
@@ -248,10 +213,6 @@ std::optional<LRESULT> CocoaWindow::handleMessage
   (const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
-  case WM_PAINT: // update size if it changed while we were docked & inactive
-  case WM_SIZE:
-    [m_gl update];
-    break; // continue handling WM_SIZE in CocoaWindow::proc
   case WM_SETFOCUS: // REAPER v6.53+
     // Redirect focus to the input view after m_view gets it.
     // WM_SETFOCUS is sent from becomeFirstResponder,

@@ -9,7 +9,9 @@ add_library(src OBJECT
   keymap.cpp
   main.cpp
   opengl_renderer.cpp
+  renderer.cpp
   resource.cpp
+  texture.cpp
   viewport.cpp
   window.cpp
 )
@@ -21,6 +23,7 @@ if(WIN32)
   target_sources(src PRIVATE
     version.rc
     win32_font.cpp
+    win32_opengl.cpp
     win32_platform.cpp
     win32_window.cpp
   )
@@ -35,6 +38,7 @@ elseif(APPLE)
     cocoa_font.mm
     cocoa_inject.mm
     cocoa_inputview.mm
+    cocoa_opengl.mm
     cocoa_platform.mm
     cocoa_window.mm
   )
@@ -48,6 +52,7 @@ elseif(APPLE)
 else()
   target_sources(src PRIVATE
     fc_font.cpp
+    gdk_opengl.cpp
     gdk_platform.cpp
     gdk_window.cpp
   )

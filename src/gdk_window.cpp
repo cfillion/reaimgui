@@ -21,8 +21,6 @@
 #include "opengl_renderer.hpp"
 #include "platform.hpp"
 
-#include <cassert>
-#include <epoxy/gl.h>
 #include <gtk/gtk.h>
 
 #include <reaper_plugin_functions.h>
@@ -50,8 +48,7 @@ static T *currentEvent(const int expectedType)
 }
 
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }, m_gl { nullptr }, m_renderer { nullptr },
-    m_ime { nullptr }, m_imeOpen { false }
+  : Window { viewport, dockerHost }, m_ime { nullptr }, m_imeOpen { false }
 {
 }
 
@@ -71,105 +68,13 @@ void GDKWindow::create()
 
 GDKWindow::~GDKWindow()
 {
-  if(m_gl)
-    teardownGl();
   if(m_ime)
     g_object_unref(m_ime);
 }
 
-void GDKWindow::LICEDeleter::operator()(LICE_IBitmap *bm)
+GdkWindow *GDKWindow::getOSWindow() const
 {
-  LICE__Destroy(bm);
-}
-
-void GDKWindow::initSoftwareBlit()
-{
-  m_pixels.reset(LICE_CreateBitmap(0, 0, 0));
-
-  static std::weak_ptr<GdkWindow> g_offscreen;
-
-  if(g_offscreen.expired()) {
-    GdkWindowAttr attr {};
-    attr.window_type = GDK_WINDOW_TOPLEVEL;
-    GdkWindow *window { gdk_window_new(nullptr, &attr, 0) };
-    std::shared_ptr<GdkWindow> offscreen { window, g_object_unref };
-    g_offscreen = m_offscreen = offscreen;
-  }
-  else
-    m_offscreen = g_offscreen.lock();
-}
-
-void GDKWindow::initGl()
-{
-  GdkWindow *window { m_offscreen ? m_offscreen.get() : getOSWindow(m_hwnd.get()) };
-
-  if(!window || static_cast<void *>(window) == m_hwnd.get())
-    throw backend_error { "headless SWELL is not supported" };
-
-  GError *error {};
-  m_gl = gdk_window_create_gl_context(window, &error);
-  if(error) {
-    const backend_error ex { error->message };
-    g_clear_error(&error);
-    assert(!m_gl);
-    throw ex;
-  }
-
-  gdk_gl_context_set_required_version(m_gl, 3, 2);
-  gdk_gl_context_realize(m_gl, &error);
-  if(error) {
-    const backend_error ex { error->message };
-    g_clear_error(&error);
-    g_clear_object(&m_gl);
-    throw ex;
-  }
-
-  gdk_gl_context_make_current(m_gl);
-
-  glGenTextures(1, &m_tex);
-  resizeTextures(); // binds to the texture and sets its size
-
-  glGenFramebuffers(1, &m_fbo);
-  glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
-  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_tex, 0);
-  assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-
-  m_renderer = new OpenGLRenderer;
-
-  gdk_gl_context_clear_current();
-}
-
-void GDKWindow::resizeTextures()
-{
-  RECT rect;
-  GetClientRect(m_hwnd.get(), &rect);
-  const int width  { rect.right - rect.left },
-            height { rect.bottom - rect.top };
-
-  glBindTexture(GL_TEXTURE_2D, m_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height,
-    0, GL_BGRA, GL_UNSIGNED_BYTE, nullptr);
-
-  if(m_pixels) {
-    LICE__resize(m_pixels.get(), width, height);
-    glPixelStorei(GL_PACK_ROW_LENGTH, LICE__GetRowSpan(m_pixels.get()));
-  }
-}
-
-void GDKWindow::teardownGl()
-{
-  gdk_gl_context_make_current(m_gl);
-
-  glDeleteFramebuffers(1, &m_fbo);
-  glDeleteTextures(1, &m_tex);
-
-  if(m_renderer)
-    delete m_renderer;
-
-  // current GL context must be cleared before calling unref to avoid this bug:
-  // https://gitlab.gnome.org/GNOME/gtk/-/issues/2562
-  gdk_gl_context_clear_current();
-  g_object_unref(m_gl);
+  return ::getOSWindow(m_hwnd.get());
 }
 
 static void imeCommit(GtkIMContext *, gchar *input, gpointer data)
@@ -204,17 +109,8 @@ void GDKWindow::initIME()
 void GDKWindow::show()
 {
   Window::show();
-
-  if(isDocked())
-    initSoftwareBlit();
-
-  initGl();
-
-  // prevent invalidation (= displaying garbage) when moving another window over
-  if(!isDocked())
-    gdk_window_freeze_updates(getOSWindow(m_hwnd.get()));
-
   initIME();
+  m_renderer = m_ctx->rendererFactory()->create(this);
 }
 
 void GDKWindow::setPosition(ImVec2 pos)
@@ -238,7 +134,7 @@ void GDKWindow::setTitle(const char *title)
 
 void GDKWindow::setAlpha(const float alpha)
 {
-  gdk_window_set_opacity(getOSWindow(m_hwnd.get()), alpha);
+  gdk_window_set_opacity(getOSWindow(), alpha);
 }
 
 void GDKWindow::update()
@@ -264,7 +160,7 @@ void GDKWindow::update()
 
     // SetWindowLongPtr hides the window
     // it sets an internal "need show" flag that's used by SetWindowPos
-    if(getOSWindow(m_hwnd.get())) {
+    if(getOSWindow()) {
       setPosition(m_viewport->Pos);
       setSize(m_viewport->Size);
     }
@@ -276,63 +172,6 @@ void GDKWindow::update()
     else
       SWELL_SetWindowLevel(m_hwnd.get(), 0);
   }
-}
-
-void GDKWindow::render(void *)
-{
-  gdk_gl_context_make_current(m_gl);
-
-  if(m_needTexUpload) {
-    m_renderer->uploadFontTex(m_fontAtlas);
-    m_needTexUpload = false;
-  }
-
-  const bool softwareBlit { isDocked() };
-  m_renderer->render(m_viewport, softwareBlit);
-
-  if(softwareBlit) {
-    // REAPER is also drawing to the same GdkWindow so we must share it.
-    // Switch to slower render path, copying pixels into a LICE bitmap.
-    glReadPixels(0, 0,
-      LICE__GetWidth(m_pixels.get()), LICE__GetHeight(m_pixels.get()),
-      GL_BGRA, GL_UNSIGNED_BYTE, LICE__GetBits(m_pixels.get()));
-    InvalidateRect(m_hwnd.get(), nullptr, false);
-    gdk_gl_context_clear_current();
-    return;
-  }
-
-  ImDrawData *drawData { m_viewport->DrawData };
-
-  GdkWindow *window { getOSWindow(m_hwnd.get()) };
-  const cairo_region_t *region { gdk_window_get_clip_region(window) };
-  GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(window, region) };
-  cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
-  gdk_cairo_draw_from_gl(cairoContext, window,
-    m_tex, GL_TEXTURE, 1, 0, 0,
-    drawData->DisplaySize.x * drawData->FramebufferScale.x,
-    drawData->DisplaySize.y * drawData->FramebufferScale.y);
-  gdk_window_end_draw_frame(window, drawContext);
-
-  // required for making the window visible on GNOME
-  gdk_window_thaw_updates(window); // schedules an update
-  gdk_window_freeze_updates(window);
-
-  gdk_gl_context_clear_current();
-}
-
-void GDKWindow::softwareBlit()
-{
-  PAINTSTRUCT ps;
-  if(!BeginPaint(m_hwnd.get(), &ps))
-    return;
-
-  const int width  { LICE__GetWidth(m_pixels.get())  },
-            height { LICE__GetHeight(m_pixels.get()) };
-
-  StretchBltFromMem(ps.hdc, 0, 0, width, height, LICE__GetBits(m_pixels.get()),
-    width, height, LICE__GetRowSpan(m_pixels.get()));
-
-  EndPaint(m_hwnd.get(), &ps);
 }
 
 float GDKWindow::globalScaleFactor()
@@ -349,7 +188,7 @@ void GDKWindow::setIME(ImGuiPlatformImeData *data)
   // cannot use m_viewport->Pos when docked
   // (IME cursor location must be relative to the dock host window)
   HWND container { m_hwnd.get() };
-  while(!getOSWindow(container))
+  while(!::getOSWindow(container))
     container = GetParent(container);
   RECT containerPos;
   if(container)
@@ -413,13 +252,6 @@ std::optional<LRESULT> GDKWindow::handleMessage
     m_ctx->endDrag(true);
     return 0;
   }
-  case WM_SIZE:
-    if(m_gl) {
-      gdk_gl_context_make_current(m_gl);
-      resizeTextures();
-      gdk_gl_context_clear_current();
-    }
-    break; // continue handling in Window::proc
   case WM_LBUTTONDOWN: // for supporting thumb buttons
   case WM_LBUTTONUP: //   SWELL treats thumb buttons as Left
     if(auto *event { currentEvent<GdkEventButton>(GDK_BUTTON_PRESS) })
@@ -436,9 +268,9 @@ std::optional<LRESULT> GDKWindow::handleMessage
     keyEvent(wParam, lParam, msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
     return 0;
   case WM_PAINT:
-    if(m_pixels)
-      softwareBlit();
-    return 0;
+    if(m_renderer) // do software blit
+      m_renderer->render(reinterpret_cast<void *>(1));
+    break;
   }
 
   return std::nullopt;

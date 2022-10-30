@@ -20,6 +20,7 @@
 #include "context.hpp"
 #include "font.hpp"
 #include "platform.hpp"
+#include "renderer.hpp"
 
 #include <cassert>
 #include <imgui/imgui.h>
@@ -126,10 +127,10 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 }
 
 Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Viewport { viewport }, m_needTexUpload { true },
-    m_dockerHost { dockerHost }, m_accel { &translateAccel, true, this },
-    m_accelReg { "accelerator", &m_accel }, m_previousScale { 0.f },
-    m_fontTexVersion { -1 }, m_mouseDown { 0 }, m_noFocus { false }
+  : Viewport { viewport }, m_dockerHost { dockerHost },
+    m_accel { &translateAccel, true, this },
+    m_accelReg { "accelerator", &m_accel },
+    m_mouseDown { 0 }, m_noFocus { false }
 {
   static std::weak_ptr<PluginRegister> g_hwndInfo; // v6.29+
 
@@ -144,8 +145,6 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
   ImGuiViewportP *viewportPrivate { static_cast<ImGuiViewportP *>(viewport) };
   if(ImGuiWindow *userWindow { viewportPrivate->Window })
     m_noFocus = userWindow->Flags & ImGuiWindowFlags_NoFocusOnAppearing;
-
-  m_fontAtlas = ImGui::GetIO().Fonts;
 
   // Cannot initialize m_hwnd during construction due to handleMessage being
   // virtual. This task is delayed to created() called once fully constructed.
@@ -201,15 +200,7 @@ bool Window::isMinimized() const
 
 void Window::onChanged()
 {
-  const bool scaleChanged { m_previousScale != m_viewport->DpiScale };
-  m_previousScale = m_viewport->DpiScale;
-
-  m_fontAtlas = m_ctx->fonts().setScale(m_viewport->DpiScale);
-  const int fontTexVersion { m_ctx->fonts().texVersion() };
-  if(scaleChanged || fontTexVersion != m_fontTexVersion) {
-    m_needTexUpload = true;
-    m_fontTexVersion = fontTexVersion;
-  }
+  m_ctx->fonts().setScale(m_viewport->DpiScale);
 }
 
 void Window::mouseDown(const ImGuiMouseButton btn)
@@ -255,12 +246,6 @@ void Window::updateModifiers()
     if(GetAsyncKeyState(modifier.vkey) & 0x8000)
       m_ctx->keyInput(modifier.key, true);
   }
-}
-
-void Window::invalidateTextures()
-{
-  // uploadFontTex will be called on the next onChanged()
-  m_fontTexVersion = -1;
 }
 
 #ifndef _WIN32

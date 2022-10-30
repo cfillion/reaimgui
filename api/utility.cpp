@@ -68,12 +68,11 @@ DEFINE_API(void, ColorConvertU32ToDouble4,
 (double*,API_W(r))(double*,API_W(g))(double*,API_W(b))(double*,API_W(a)),
 "Unpack a 32-bit integer (0xRRGGBBAA) into separate RGBA values (0..1).",
 {
-  float color[4];
-  Color { static_cast<uint32_t>(rgba) }.unpack(color);
-  if(API_W(r)) *API_W(r) = color[0];
-  if(API_W(g)) *API_W(g) = color[1];
-  if(API_W(b)) *API_W(b) = color[2];
-  if(API_W(a)) *API_W(a) = color[3];
+  ImVec4 color { Color { static_cast<uint32_t>(rgba) } };
+  if(API_W(r)) *API_W(r) = color.x;
+  if(API_W(g)) *API_W(g) = color.y;
+  if(API_W(b)) *API_W(b) = color.z;
+  if(API_W(a)) *API_W(a) = color.w;
 });
 
 DEFINE_API(int, ColorConvertDouble4ToU32,

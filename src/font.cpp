@@ -17,11 +17,22 @@
 
 #include "font.hpp"
 
+#include "texture.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
+
+static unsigned char *getAtlasPixels(void *object, const float scale, int *width, int *height)
+{
+  FontList *list { static_cast<FontList *>(object) };
+  ImFontAtlas *atlas { list->getAtlas(scale) };
+  unsigned char *pixels;
+  atlas->GetTexDataAsRGBA32(&pixels, width, height);
+  return pixels;
+}
 
 Font::Font(const char *family, const int size, const int flags)
   : m_size { size }
@@ -62,8 +73,8 @@ ImFont *Font::load(ImFontAtlas *atlas, const float scale)
   return font;
 }
 
-FontList::FontList()
-  : m_rebuild { false }, m_version { 0 }
+FontList::FontList(TextureManager *manager)
+  : m_textureManager { manager }, m_rebuild { false }
 {
 }
 
@@ -114,12 +125,12 @@ void FontList::update()
       pair.second->Locked = false;
       build(pair.first);
     }
+    m_textureManager->invalidate(this);
     m_rebuild = false;
-    ++m_version; // invalidate the font textures
   }
 }
 
-ImFontAtlas *FontList::setScale(const float scale)
+void FontList::setScale(const float scale)
 {
   ImGuiIO &io { ImGui::GetIO() };
 
@@ -136,7 +147,15 @@ ImFontAtlas *FontList::setScale(const float scale)
   if(atlasChanged)
     migrateActiveFonts();
 
-  return atlas.get();
+  // after build() because it clears the texture ID!
+  // (via ImFontAtlasBuildWithFreeTypeEx)
+  atlas->SetTexID(m_textureManager->touch(this, scale, &getAtlasPixels));
+}
+
+ImFontAtlas *FontList::getAtlas(const float scale)
+{
+  const auto it { m_atlases.find(scale) };
+  return it != m_atlases.end() ? it->second.get() : nullptr;
 }
 
 void FontList::build(const float scale)

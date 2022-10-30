@@ -19,10 +19,10 @@
 
 #include "context.hpp"
 #include "errors.hpp"
+#include "fast_set.hpp"
 
 #include <cassert>
 #include <reaper_plugin_functions.h>
-#include <vector>
 #include <WDL/wdltypes.h>
 
 // sizeof(ImGuiContext) = ~30 KB, not including windows and other dynamic allocs
@@ -35,18 +35,13 @@ constexpr size_t MAX_INSTANCES { 1'000 };
 // [p=2450259]
 constexpr unsigned int KEEP_ALIVE_FRAMES { 2 };
 
-static std::vector<Resource *> g_rsx;
+static FastSet<Resource *> g_rsx;
 static unsigned int g_reentrant;
 static WNDPROC g_mainProc;
 static bool g_disableProcOverride;
 #ifndef __APPLE__
 static bool g_disabledViewports;
 #endif
-
-static auto findLowerBound(Resource *rs)
-{
-  return std::lower_bound(g_rsx.begin(), g_rsx.end(), rs);
-}
 
 static bool isDeferLoopBlocked()
 {
@@ -115,7 +110,7 @@ void Resource::Timer::tick()
       ++it;
     else {
       delete rs; // invalidates the iterator
-      it = findLowerBound(rs);
+      it = g_rsx.lowerBound(rs);
     }
   }
 }
@@ -152,12 +147,12 @@ Resource::Resource()
   else
     m_timer = g_timer.lock();
 
-  g_rsx.insert(findLowerBound(this), this);
+  g_rsx.insert(this);
 }
 
 Resource::~Resource()
 {
-  g_rsx.erase(findLowerBound(this));
+  g_rsx.erase(this);
 }
 
 void Resource::keepAlive()
@@ -182,11 +177,7 @@ bool Resource::isValid() const
 template<>
 bool Resource::isValid<Resource>(Resource *rs)
 {
-  if(!rs)
-    return false;
-
-  const auto it { findLowerBound(rs) };
-  return it != g_rsx.end() && *it == rs;
+  return rs && g_rsx.contains(rs);
 }
 
 void Resource::destroyAll()

@@ -18,7 +18,6 @@
 #include "platform.hpp"
 
 #include "cocoa_window.hpp"
-#include "opengl_renderer.hpp"
 
 #include <AppKit/AppKit.h>
 #include <imgui/imgui.h>
@@ -34,8 +33,6 @@ void Platform::install()
 
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendPlatformName = "reaper_imgui_cocoa";
-
-  OpenGLRenderer::install();
 }
 
 Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)

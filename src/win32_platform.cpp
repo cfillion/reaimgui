@@ -18,7 +18,6 @@
 #include "platform.hpp"
 
 #include "dllimport.hpp"
-#include "opengl_renderer.hpp"
 #include "win32_window.hpp"
 
 #include <imgui/imgui.h>
@@ -50,8 +49,6 @@ void Platform::install()
 {
   ImGuiIO &io { ImGui::GetIO() };
   io.BackendPlatformName = "reaper_imgui_win32";
-
-  OpenGLRenderer::install();
 }
 
 Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)

@@ -22,10 +22,8 @@
 
 @class EventHandler;
 @class InputView;
-@class NSOpenGLContext;
 @class NSView;
 
-class OpenGLRenderer;
 using ImGuiViewportFlags = int;
 
 class CocoaWindow : public Window {
@@ -42,7 +40,6 @@ public:
   void setTitle(const char *) override;
   void setAlpha(float) override;
   void update() override;
-  void render(void *) override;
   float scaleFactor() const override;
   void setIME(ImGuiPlatformImeData *) override;
 
@@ -54,9 +51,8 @@ private:
   NSView *m_view;
   InputView *m_inputView;
   EventHandler *m_eventHandler;
-  NSOpenGLContext *m_gl;
-  OpenGLRenderer *m_renderer;
   unsigned int m_defaultStyleMask;
+  float m_previousScale;
   ImGuiViewportFlags m_previousFlags;
 };
 
