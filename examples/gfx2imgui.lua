@@ -436,16 +436,23 @@ local function getCachedFont(font)
   return dig(state.fontmap, font.family, font.flags, font.size)
 end
 
+local function warnUnavailableFont(font)
+  warn("font '%s'@%d[%x] temporarily unavailable: frame already started (falling back to nearest match for up to %d frames)",
+    font.family, font.size, font.flags, THROTTLE_FONT_LOADING_FRAMES)
+end
+
 local function getNearestCachedFont(font)
   if not font then return nil, nil, 0 end
 
   local sizes = dig(state.fontmap, font.family, font.flags)
-  if not sizes then return nil, nil, DEFAULT_FONT_SIZE - font.size end
+  if not sizes then
+    warnUnavailableFont(font)
+    return nil, nil, DEFAULT_FONT_SIZE - font.size
+  end
 
   local match, score = sizes[font.size], 0
   if not match then
-    warn("font '%s'@%d[%x] temporarily unavailable: frame already started (falling back to nearest match for up to %d frames)",
-      font.family, font.size, font.flags, THROTTLE_FONT_LOADING_FRAMES)
+    warnUnavailableFont(font)
     match, score = nearest(sizes, font.size)
   end
 
