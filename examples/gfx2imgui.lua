@@ -795,6 +795,11 @@ function gfx.drawstr(str, flags, right, bottom)
       f_cache, f_inst = getNearestCachedFont(f)
     end
 
+    -- keep the font alive while the draw call is still in use (eg. from a blit)
+    if f_cache then
+      f_cache.last_use = state.frame_count
+    end
+
     local c = transformColor(c, blit_opts)
     local x, y = transformPoint(x, y, blit_opts)
     local f_sz = f_sz * blit_opts.scale_y -- height only, cannot stretch width
