@@ -424,7 +424,7 @@ local function nearest(array, target_key)
   local best_value, best_score
 
   for key, value in pairs(array) do
-    local score = key - target_key
+    local score = math.abs(key - target_key)
     if best_score and score > best_score then break end
     best_value, best_score = value, score
   end
