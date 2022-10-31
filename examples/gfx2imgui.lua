@@ -21,6 +21,11 @@
 --   end
 -- end
 -- reaper.defer(loop)
+--
+-- Configuration variables (set before including gfx2imgui)
+-- GFX2IMGUI_NO_LOG = false
+-- GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE = 8
+-- GFX2IMGUI_NO_BLIT_PREMULTIPLY = false
 
 local reaper, ogfx, print = reaper, gfx, print
 local debug, math, string, table, utf8 = debug, math, string, table, utf8
@@ -114,6 +119,7 @@ local FONT_FLAGS = {
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
 local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 local THROTTLE_FONT_LOADING_FRAMES = 16
+local BLIT_NO_PREMULTIPLY = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
 
 -- gfx.mode bits
 local BLIT_NO_SOURCE_ALPHA = 2
@@ -201,7 +207,7 @@ local function color(r, g, b, a)
 end
 
 local function transformColor(c, blit_opts)
-  if not blit_opts.mode then
+  if not blit_opts.mode or BLIT_NO_PREMULTIPLY then
     return (c & ~0xff) | ((c & 0xff) * blit_opts.alpha // 1 & 0xFF)
   end
 
