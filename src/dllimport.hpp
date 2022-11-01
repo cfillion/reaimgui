@@ -22,6 +22,7 @@
 #  error This file is only meant to be included on Windows.
 #endif
 
+#include <utility>
 #include <windows.h>
 
 template<typename Proc, typename = std::enable_if_t<std::is_function_v<Proc>>>

@@ -21,6 +21,7 @@
 #include "dllimport.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
+#include "win32_droptarget.hpp"
 #include "win32_unicode.hpp"
 
 #include <cassert>
@@ -29,8 +30,6 @@
 #define GetThemeColor Win32_GetThemeColor // solve conflict with REAPER API
 #include <dwmapi.h> // Dwm* functions for compositing
 #undef GetThemeColor
-
-#include "win32_droptarget.ipp"
 
 static unsigned int xpScreenDpi()
 {
@@ -44,8 +43,7 @@ unsigned int Win32Window::dpiForMonitor(HMONITOR monitor)
 {
   // Windows 8.1+
   static DllImport<decltype(GetDpiForMonitor)>
-    _GetDpiForMonitor
-    { L"SHCore.dll", "GetDpiForMonitor" };
+    _GetDpiForMonitor { L"SHCore.dll", "GetDpiForMonitor" };
 
   if(_GetDpiForMonitor && monitor) {
     unsigned int dpiX, dpiY;
@@ -60,8 +58,7 @@ unsigned int Win32Window::dpiForWindow(HWND window)
 {
   // Windows 10 Anniversary Update (1607) and newer
   static DllImport<decltype(GetDpiForWindow)>
-    _GetDpiForWindow
-    { L"User32.dll", "GetDpiForWindow" };
+    _GetDpiForWindow { L"User32.dll", "GetDpiForWindow" };
 
   if(_GetDpiForWindow)
     return _GetDpiForWindow(window);
@@ -103,11 +100,12 @@ static BOOL CALLBACK reparentChildren(HWND hwnd, LPARAM data)
 
 Win32Window::Class::Class()
 {
-  WNDCLASS wc {};
-  wc.style = CS_OWNDC;
-  wc.lpfnWndProc = Window::proc;
-  wc.hInstance = Win32Window::s_instance;
-  wc.lpszClassName = CLASS_NAME;
+  const WNDCLASS wc {
+    .style         = CS_OWNDC,
+    .lpfnWndProc   = &Window::proc,
+    .hInstance     = Win32Window::s_instance,
+    .lpszClassName = CLASS_NAME,
+  };
   RegisterClass(&wc);
 }
 
@@ -158,10 +156,11 @@ void Win32Window::create()
 
   // enable compositing for transparency
   HRGN region { CreateRectRgn(0, 0, -1, -1) };
-  DWM_BLURBEHIND bb {};
-  bb.dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION;
-  bb.fEnable = true;
-  bb.hRgnBlur = region; // no actual blur/shadow
+  const DWM_BLURBEHIND bb {
+    .dwFlags  = DWM_BB_ENABLE | DWM_BB_BLURREGION,
+    .fEnable  = true,
+    .hRgnBlur = region, // no actual blur/shadow
+  };
   DwmEnableBlurBehindWindow(m_hwnd.get(), &bb);
   DeleteObject(region);
 }
@@ -324,8 +323,7 @@ std::optional<LRESULT> Win32Window::handleMessage
   case WM_NCCREATE: {
     // Windows 10 Anniversary Update (1607) and newer
     static DllImport<decltype(EnableNonClientDpiScaling)>
-      _EnableNonClientDpiScaling
-      { L"User32.dll", "EnableNonClientDpiScaling" };
+      _EnableNonClientDpiScaling { L"User32.dll", "EnableNonClientDpiScaling" };
     if(_EnableNonClientDpiScaling)
       _EnableNonClientDpiScaling(m_hwnd.get());
     break;

@@ -22,6 +22,7 @@ target_link_libraries(src common)
 if(WIN32)
   target_sources(src PRIVATE
     version.rc
+    win32_droptarget.cpp
     win32_font.cpp
     win32_opengl.cpp
     win32_platform.cpp

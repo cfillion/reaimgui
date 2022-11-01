@@ -24,7 +24,11 @@
 template<auto fn, typename... Args>
 static auto instanceProxy(ImGuiViewport *viewport, Args... args)
 {
+#ifdef HAS_CPP_20
+  using R = std::invoke_result_t<decltype(fn), Renderer *, Args...>;
+#else
   using R = std::result_of_t<decltype(fn)(Renderer *, Args...)>;
+#endif
 
   if(Renderer *instance { static_cast<Renderer *>(viewport->RendererUserData) })
     return (instance->*fn)(args...);
@@ -54,4 +58,36 @@ Renderer::Renderer(Window *window)
 Renderer::~Renderer()
 {
   m_window->viewport()->RendererUserData = nullptr;
+}
+
+Renderer::ProjMtx::ProjMtx(const ImVec2 &pos, const ImVec2 &size, const bool flip)
+{
+  float L { pos.x },
+        R { pos.x + size.x },
+        T { pos.y },
+        B { pos.y + size.y };
+
+  if(flip)
+    std::swap(T, B);
+
+  m_data = {{
+    { 2.f/(R-L),   0.f,         0.f, 0.f },
+    { 0.f,         2.f/(T-B),   0.f, 0.f },
+    { 0.f,         0.f,        -1.f, 0.f },
+    { (R+L)/(L-R), (T+B)/(B-T), 0.f, 1.f },
+  }};
+}
+
+Renderer::ClipRect::ClipRect
+    (const ImVec4 &rect, const ImVec2 &offset, const ImVec2 &scale)
+  : left   { static_cast<long>((rect.x - offset.x) * scale.x) },
+    top    { static_cast<long>((rect.y - offset.y) * scale.y) },
+    right  { static_cast<long>((rect.z - offset.x) * scale.x) },
+    bottom { static_cast<long>((rect.w - offset.y) * scale.y) }
+{
+}
+
+Renderer::ClipRect::operator bool() const
+{
+  return right > left && bottom > top;
 }

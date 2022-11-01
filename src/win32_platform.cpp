@@ -58,8 +58,7 @@ Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 
 static int CALLBACK enumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM)
 {
-  MONITORINFO info {};
-  info.cbSize = sizeof(MONITORINFO);
+  MONITORINFO info { .cbSize = sizeof(MONITORINFO) };
 
   { // scope for disabled DPI awareness (to still get a correct DpiScale below)
     DisableDpiAwareness raii;
@@ -119,8 +118,7 @@ void Platform::scalePosition(ImVec2 *pos, bool toHiDpi)
   if(!toHiDpi)
     scale = 1.f / scale;
 
-  MONITORINFO info {};
-  info.cbSize = sizeof(MONITORINFO);
+  MONITORINFO info { .cbSize = sizeof(MONITORINFO) };
   if(!GetMonitorInfo(monitor, &info))
     return;
 

@@ -19,8 +19,10 @@
 #define REAIMGUI_WIN32_UNICODE_HPP
 
 #include <string>
+#include <windows.h>
 
-inline std::string narrow(const std::wstring_view &input, const UINT codepage = CP_UTF8)
+inline std::string narrow(const std::wstring_view &input,
+  const unsigned int codepage = CP_UTF8)
 {
   const int size { WideCharToMultiByte(codepage, 0,
     input.data(), input.size(), nullptr, 0, nullptr, nullptr) };
@@ -32,7 +34,8 @@ inline std::string narrow(const std::wstring_view &input, const UINT codepage = 
   return output;
 }
 
-inline std::wstring widen(const std::string_view &input, const UINT codepage = CP_UTF8)
+inline std::wstring widen(const std::string_view &input,
+  const unsigned int codepage = CP_UTF8)
 {
   const int size {
     MultiByteToWideChar(codepage, 0, input.data(), input.size(), nullptr, 0)

@@ -18,11 +18,13 @@
 #ifndef REAIMGUI_RENDERER_HPP
 #define REAIMGUI_RENDERER_HPP
 
+#include <array>
 #include <memory>
 
 class Renderer;
 class Window;
 struct ImVec2;
+struct ImVec4;
 
 class RendererFactory {
 public:
@@ -52,6 +54,22 @@ public:
   virtual void swapBuffers(void *) = 0;
 
 protected:
+  class ProjMtx {
+  public:
+    ProjMtx(const ImVec2 &pos, const ImVec2 &size, bool flip = false);
+    const float *operator&() const { return &m_data[0][0]; }
+
+  private:
+    std::array<std::array<float, 4>, 4> m_data;
+  };
+  static_assert(sizeof(ProjMtx) == sizeof(float[4][4]));
+
+  struct ClipRect {
+    ClipRect(const ImVec4 &rect, const ImVec2 &offset, const ImVec2 &scale);
+    operator bool() const;
+    long left, top, right, bottom;
+  };
+
   Window *m_window;
 };
 

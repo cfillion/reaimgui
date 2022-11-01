@@ -75,10 +75,11 @@ static int CALLBACK enumStyles(const LOGFONT *desc,
 
 bool Font::resolve(const char *family, const int style)
 {
-  LOGFONT desc {};
-  desc.lfOutPrecision = OUT_TT_ONLY_PRECIS;
-  desc.lfWeight = style & ReaImGuiFontFlags_Bold ? FW_BOLD : FW_NORMAL;
-  desc.lfItalic = !!(style & ReaImGuiFontFlags_Italic);
+  LOGFONT desc {
+    .lfWeight       = style & ReaImGuiFontFlags_Bold ? FW_BOLD : FW_NORMAL,
+    .lfItalic       = !!(style & ReaImGuiFontFlags_Italic),
+    .lfOutPrecision = OUT_TT_ONLY_PRECIS,
+  };
   if(!addGenericAttrs(family, &desc))
     MultiByteToWideChar(CP_UTF8, 0, family, -1, desc.lfFaceName, LF_FACESIZE - 1);
 

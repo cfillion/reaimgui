@@ -15,10 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_WIN32_DROPTARGET_IPP
-#define REAIMGUI_WIN32_DROPTARGET_IPP
+#ifndef REAIMGUI_WIN32_DROPTARGET_HPP
+#define REAIMGUI_WIN32_DROPTARGET_HPP
 
 #include <oleidl.h>
+
+class Context;
 
 class DropTarget : public IDropTarget {
 public:
@@ -37,63 +39,5 @@ private:
   Context *m_ctx;
   LONG m_refCount;
 };
-
-DropTarget::DropTarget(Context *ctx)
-  : m_ctx { ctx }, m_refCount { 0 }
-{
-}
-
-HRESULT DropTarget::QueryInterface(REFIID riid, void **object)
-{
-  if(riid == IID_IUnknown || riid == IID_IDropTarget) {
-    *object = this;
-    AddRef();
-    return S_OK;
-  }
-
-  *object = nullptr;
-  return E_NOINTERFACE;
-}
-
-ULONG DropTarget::AddRef()
-{
-  return InterlockedIncrement(&m_refCount);
-}
-
-ULONG DropTarget::Release()
-{
-  const LONG refCount { InterlockedDecrement(&m_refCount) };
-  if(refCount == 0)
-    delete this;
-  return refCount;
-}
-
-HRESULT DropTarget::DragEnter(IDataObject *dataObj, DWORD, POINTL, DWORD *effect)
-{
-  FORMATETC format { CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
-  STGMEDIUM medium;
-
-  if(SUCCEEDED(dataObj->GetData(&format, &medium))) {
-    m_ctx->beginDrag(reinterpret_cast<HDROP>(medium.hGlobal));
-    ReleaseStgMedium(&medium);
-    *effect = DROPEFFECT_COPY;
-  }
-  else
-    *effect = DROPEFFECT_NONE;
-
-  return S_OK;
-}
-
-HRESULT DropTarget::DragLeave()
-{
-  m_ctx->endDrag(false);
-  return S_OK;
-}
-
-HRESULT DropTarget::Drop(IDataObject *, DWORD, POINTL, DWORD *)
-{
-  m_ctx->endDrag(true);
-  return S_OK;
-}
 
 #endif

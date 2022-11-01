@@ -79,7 +79,11 @@ static void destroyViewport(ImGuiViewport *viewport)
 template<auto fn, typename... Args>
 static auto instanceProxy(ImGuiViewport *viewport, Args... args)
 {
+#ifdef HAS_CPP_20
+  using R = std::invoke_result_t<decltype(fn), Viewport *, Args...>;
+#else
   using R = std::result_of_t<decltype(fn)(Viewport *, Args...)>;
+#endif
 
   if(Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) })
     return (instance->*fn)(args...);

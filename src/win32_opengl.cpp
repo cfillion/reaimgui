@@ -95,13 +95,14 @@ Win32OpenGL::~Win32OpenGL()
 
 void Win32OpenGL::setPixelFormat()
 {
-  PIXELFORMATDESCRIPTOR pfd {};
-  pfd.nSize = sizeof(pfd);
-  pfd.nVersion = 1;
-  pfd.dwFlags = PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL;
-  pfd.iPixelType = PFD_TYPE_RGBA;
-  pfd.cAlphaBits = pfd.cBlueBits = pfd.cGreenBits = pfd.cRedBits = 8;
-  pfd.cColorBits = pfd.cRedBits + pfd.cGreenBits + pfd.cBlueBits + pfd.cAlphaBits;
+  constexpr PIXELFORMATDESCRIPTOR pfd {
+    .nSize      = sizeof(pfd),
+    .nVersion   = 1,
+    .dwFlags    = PFD_DOUBLEBUFFER | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL,
+    .iPixelType = PFD_TYPE_RGBA,
+    .cColorBits = 32,
+    .cRedBits   = 8, .cGreenBits = 8, .cBlueBits = 8, .cAlphaBits = 8,
+  };
 
   if(!SetPixelFormat(m_dc, ChoosePixelFormat(m_dc, &pfd), &pfd)) {
     ReleaseDC(m_window->nativeHandle(), m_dc);

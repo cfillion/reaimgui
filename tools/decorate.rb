@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-SOURCE_FILES = File.join __dir__, '..', '{api,src}', '**/*.{cpp,hpp,ipp,mm}'
+SOURCE_FILES = File.join __dir__, '..', '{api,src,tools}', '**/*.{cpp,hpp,ipp,mm}'
 
 REGEX = /\A\/\*.+?\*\/\n/m.freeze
 PREAMBLE = DATA.read.freeze

@@ -97,6 +97,9 @@ void OpenGLRenderer::Shared::setup()
   m_locations[VtxColorAttrLoc] = glGetAttribLocation(m_program,  "Color");
   m_locations[VtxPosAttrLoc]   = glGetAttribLocation(m_program,  "Position");
   m_locations[VtxUVAttrLoc]    = glGetAttribLocation(m_program,  "UV");
+
+  glActiveTexture(GL_TEXTURE0);
+  glUniform1i(m_locations[TexUniLoc], 0);
 }
 
 void OpenGLRenderer::Shared::teardown()
@@ -115,7 +118,7 @@ void OpenGLRenderer::Shared::textureCommand(const TextureCmd &cmd)
   case TextureCmd::Update:
     for(size_t i {}; i < cmd.size; ++i) {
       int width, height;
-      unsigned char *pixels { cmd.manager->getPixels(cmd.offset + i, &width, &height) };
+      const unsigned char *pixels { cmd.manager->getPixels(cmd.offset + i, &width, &height) };
       glBindTexture(GL_TEXTURE_2D, m_textures[cmd.offset + i]);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -205,17 +208,8 @@ void OpenGLRenderer::updateTextures()
 
 void OpenGLRenderer::render(const bool flip)
 {
-  ImGuiViewport *viewport { m_window->viewport() };
-  ImDrawData *drawData { viewport->DrawData };
-
-  // this is not done by Dear ImGui at this moment, but might be in the future
-  drawData->FramebufferScale = { viewport->DpiScale, viewport->DpiScale };
-
-  const int fbWidth  { static_cast<int>(drawData->DisplaySize.x * drawData->FramebufferScale.x) },
-            fbHeight { static_cast<int>(drawData->DisplaySize.y * drawData->FramebufferScale.y) };
-
-  if(fbWidth <= 0 || fbHeight <= 0)
-    return;
+  const ImGuiViewport *viewport { m_window->viewport() };
+  const ImDrawData *drawData { viewport->DrawData };
 
   if(!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) {
     glClearColor(0.f, 0.f, 0.f, 0.f); // premultiplied alpha
@@ -224,69 +218,42 @@ void OpenGLRenderer::render(const bool flip)
 
   glEnable(GL_SCISSOR_TEST);
 
-  glViewport(0, 0, fbWidth, fbHeight);
+  const float height { drawData->DisplaySize.y * viewport->DpiScale };
+  glViewport(0, 0, drawData->DisplaySize.x * viewport->DpiScale, height);
 
   // re-bind non-shared objets (we're reusing the same GL context on Windows)
   glBindVertexArray(m_vbo);
   glBindBuffer(GL_ARRAY_BUFFER, m_buffers[VertexBuf]);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers[IndexBuf]);
 
-  float L { drawData->DisplayPos.x },
-        R { drawData->DisplayPos.x + drawData->DisplaySize.x },
-        T { drawData->DisplayPos.y },
-        B { drawData->DisplayPos.y + drawData->DisplaySize.y };
-
-  if(flip)
-    std::swap(T, B);
-
-  const float orthoProjection[4][4] {
-    { 2.f/(R-L),   0.f,         0.f, 0.f },
-    { 0.f,         2.f/(T-B),   0.f, 0.f },
-    { 0.f,         0.f,        -1.f, 0.f },
-    { (R+L)/(L-R), (T+B)/(B-T), 0.f, 1.f },
-  };
-
   // update shader variables
-  glUniform1i(m_shared->m_locations[TexUniLoc], 0);
-  // glActiveTexture(GL_TEXTURE0);
-  glUniformMatrix4fv(m_shared->m_locations[ProjMtxUniLoc],
-    1, GL_FALSE, &orthoProjection[0][0]);
+  const ProjMtx projMtx { drawData->DisplayPos, drawData->DisplaySize, flip };
+  glUniformMatrix4fv(m_shared->m_locations[ProjMtxUniLoc], 1, GL_FALSE, &projMtx);
 
   const ImVec2 &clipOffset { drawData->DisplayPos },
-               &clipScale  { drawData->FramebufferScale };
-
-  for(int i = 0; i < drawData->CmdListsCount; ++i) {
+               &clipScale  { viewport->DpiScale, viewport->DpiScale };
+  for(int i { 0 }; i < drawData->CmdListsCount; ++i) {
     const ImDrawList *cmdList { drawData->CmdLists[i] };
     const bool useVertexOffset
       { (cmdList->Flags & ImDrawListFlags_AllowVtxOffset) != 0 };
 
     glBufferData(GL_ARRAY_BUFFER,
       static_cast<GLsizeiptr>(cmdList->VtxBuffer.Size * sizeof(ImDrawVert)),
-      static_cast<const GLvoid *>(cmdList->VtxBuffer.Data), GL_STREAM_DRAW);
+      static_cast<const void *>(cmdList->VtxBuffer.Data), GL_STREAM_DRAW);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
       static_cast<GLsizeiptr>(cmdList->IdxBuffer.Size * sizeof(ImDrawIdx)),
-      static_cast<const GLvoid *>(cmdList->IdxBuffer.Data), GL_STREAM_DRAW);
+      static_cast<const void *>(cmdList->IdxBuffer.Data), GL_STREAM_DRAW);
 
-    for(int j = 0; j < cmdList->CmdBuffer.Size; ++j) {
+    for(int j { 0 }; j < cmdList->CmdBuffer.Size; ++j) {
       const ImDrawCmd *cmd { &cmdList->CmdBuffer[j] };
       if(cmd->UserCallback)
         continue; // no need to call the callback, not using them
 
-      // Project scissor/clipping rectangles into framebuffer space
-      const ImVec4 clipRect {
-        (cmd->ClipRect.x - clipOffset.x) * clipScale.x,
-        (cmd->ClipRect.y - clipOffset.y) * clipScale.y,
-        (cmd->ClipRect.z - clipOffset.x) * clipScale.x,
-        (cmd->ClipRect.w - clipOffset.y) * clipScale.y,
-      };
-
-      if(clipRect.x >= fbWidth || clipRect.y >= fbHeight ||
-          clipRect.z < 0.0f || clipRect.w < 0.0f)
+      const ClipRect clipRect { cmd->ClipRect, clipOffset, clipScale };
+      if(!clipRect)
         continue;
-
-      // Apply scissor/clipping rectangle
-      glScissor(clipRect.x, flip ? clipRect.y : fbHeight - clipRect.w,
-        clipRect.z - clipRect.x, clipRect.w - clipRect.y);
+      glScissor(clipRect.left, flip ? clipRect.top : height - clipRect.bottom,
+        clipRect.right - clipRect.left, clipRect.bottom - clipRect.top);
 
       // Bind texture, Draw
       glBindTexture(GL_TEXTURE_2D, m_shared->m_textures[cmd->GetTexID()]);
