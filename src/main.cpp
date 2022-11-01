@@ -21,6 +21,7 @@
 
 #include "api.hpp"
 #include "resource.hpp"
+#include "settings.hpp"
 #include "version.hpp"
 #include "window.hpp"
 
@@ -53,6 +54,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(DockWindowActivate),
     IMPORT(DockWindowAddEx),
     IMPORT(DockWindowRemove),
+    IMPORT(get_ini_file),
     IMPORT(GetAppVersion),
     IMPORT(GetColorThemeStruct),
     IMPORT(GetMainHwnd),
@@ -107,6 +109,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
   if(!rec) {
     API::announceAll(false);
     Resource::destroyAll(); // save context settings
+    Settings::teardown();
     return 0;
   }
   else if(rec->caller_version != REAPER_PLUGIN_VERSION
@@ -117,6 +120,8 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
 
   Window::s_instance = instance;
   API::announceAll(true);
+  if(instance) // don't load settings when loaded from genbindings
+    Settings::setup();
 
   return 1;
 }

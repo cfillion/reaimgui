@@ -889,8 +889,15 @@ static int fakeFunc()
 
 static void *getFunc(const char *name)
 {
-  if(!strcmp(name, "plugin_register"))
-    return reinterpret_cast<void *>(&plugin_register);
+  struct FakeAPI { const char *name; void *func; };
+  const FakeAPI fakeAPI[] {
+    { "plugin_register", reinterpret_cast<void *>(&plugin_register) },
+  };
+
+  for(const FakeAPI &api : fakeAPI) {
+    if(!strcmp(name, api.name))
+      return api.func;
+  }
 
   return reinterpret_cast<void *>(&fakeFunc);
 }

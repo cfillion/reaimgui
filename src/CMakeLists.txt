@@ -11,6 +11,8 @@ add_library(src OBJECT
   opengl_renderer.cpp
   renderer.cpp
   resource.cpp
+  settings.cpp
+  settings.rc
   texture.cpp
   viewport.cpp
   window.cpp
@@ -78,6 +80,17 @@ target_link_libraries(src WDL::WDL)
 if(NOT WIN32)
   find_package(SWELL REQUIRED)
   target_link_libraries(src SWELL::swell)
+
+  # Transpile the Win32 resource file
+  find_package(PHP REQUIRED)
+  add_custom_command(
+    OUTPUT  settings.rc_mac_dlg settings.rc_mac_menu
+    COMMAND ${CMAKE_COMMAND} -E copy
+      ${CMAKE_CURRENT_SOURCE_DIR}/settings.rc ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${PHP_EXECUTABLE} ${SWELL_RESGEN} --quiet settings.rc
+    MAIN_DEPENDENCY settings.rc
+    DEPENDS ${SWELL_RESGEN}
+  )
 endif()
 
 get_target_property(REAIMGUI_BASENAME ${PROJECT_NAME} OUTPUT_NAME)

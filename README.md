@@ -20,6 +20,7 @@ Software requirements:
 
 - [CMake](https://cmake.org/) 3.19 or newer
 - C++17 compiler (MSVC on Windows)
+- PHP (Linux and macOS only)
 
 #### Linux
 

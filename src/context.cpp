@@ -22,6 +22,7 @@
 #include "keymap.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
+#include "settings.hpp"
 #include "texture.hpp"
 #include "viewport.hpp"
 
@@ -127,6 +128,11 @@ Context::Context(const char *label, const int userConfigFlags)
   Platform::install();
   Renderer::install();
   Viewport::install();
+
+  // prevent imgui from loading settings but not from saving them
+  // (so that the saved state is reset to defaults)
+  if(Settings::NoSavedSettings)
+    m_imgui->SettingsLoaded = true;
 }
 
 Context::~Context()
