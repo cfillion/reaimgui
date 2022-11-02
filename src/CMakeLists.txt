@@ -41,7 +41,6 @@ if(WIN32)
     "d3d10_pixel.hlsl\;ps_4_0"
     "d3d10_vertex.hlsl\;vs_4_0"
   )
-
   foreach(shader ${D3D_SHADERS})
     list(GET shader 0 file)
     list(GET shader 1 profile)
@@ -64,14 +63,31 @@ elseif(APPLE)
     cocoa_opengl.mm
     cocoa_platform.mm
     cocoa_window.mm
+    metal_renderer.mm
+    metal_shader.metal.ipp
   )
+
+  set(METAL_LIBRARIES metal_shader.metal)
+  foreach(library ${METAL_LIBRARIES})
+    target_sources(src PRIVATE ${library}.ipp)
+    add_custom_command(
+      OUTPUT ${library}.ipp
+      COMMAND set -o pipefail &&
+              xcrun -sdk macosx metal -c ${library} -o - |
+              xcrun -sdk macosx metallib - -o - |
+              xxd -i > ${CMAKE_CURRENT_BINARY_DIR}/${library}.ipp
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      MAIN_DEPENDENCY ${library}
+    )
+  endforeach()
 
   target_compile_definitions(src PRIVATE GL_SILENCE_DEPRECATION)
   target_compile_options(src PRIVATE -fobjc-arc -Wno-error=deprecated-declarations)
 
   find_library(CARBON_LIB Carbon)
+  find_library(QUARTZCORE_LIB QuartzCore)
   find_package(OpenGL REQUIRED)
-  target_link_libraries(src ${CARBON_LIB} OpenGL::GL)
+  target_link_libraries(src ${CARBON_LIB} ${QUARTZCORE_LIB} OpenGL::GL)
 else()
   target_sources(src PRIVATE
     fc_font.cpp
