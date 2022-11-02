@@ -17,9 +17,56 @@
 
 #include "renderer.hpp"
 
+#include "settings.hpp"
 #include "window.hpp"
 
+#include <cassert>
 #include <imgui/imgui.h>
+
+static auto &knownRendererTypes()
+{
+  static std::vector<const RendererType *> types;
+  return types;
+}
+
+const std::vector<const RendererType *> &RendererType::knownTypes()
+{
+  return knownRendererTypes(); // const public view
+}
+
+static bool operator<(const RendererType *a, const RendererType &b)
+{
+  return a->priority < b.priority || strcmp(a->id, b.id) < 0;
+}
+
+const RendererType *RendererType::bestMatch(const char *id)
+{
+  const RendererType *result {};
+  for(auto it { knownTypes().rbegin() }; it < knownTypes().rend(); ++it) {
+    result = *it;
+    if(!strcmp(id, (*it)->id))
+      break;
+  }
+  return result;
+}
+
+RendererType::Register::Register(const RendererType *type)
+{
+  auto &types { knownRendererTypes() };
+  const auto it { std::lower_bound(types.begin(), types.end(), *type) };
+  types.insert(it, type);
+}
+
+RendererFactory::RendererFactory()
+  : m_type { Settings::Renderer }
+{
+  assert(m_type);
+}
+
+std::unique_ptr<Renderer> RendererFactory::create(Window *window)
+{
+  return m_type->creator(this, window);
+}
 
 template<auto fn, typename... Args>
 static auto instanceProxy(ImGuiViewport *viewport, Args... args)

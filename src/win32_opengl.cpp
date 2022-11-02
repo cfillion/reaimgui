@@ -62,10 +62,8 @@ struct GLDeleter {
   void operator()(HGLRC gl) { wglDeleteContext(gl); }
 };
 
-std::unique_ptr<Renderer> RendererFactory::create(Window *viewport)
-{
-  return std::make_unique<Win32OpenGL>(this, viewport);
-}
+decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
+  { &Renderer::create<Win32OpenGL> };
 
 Win32OpenGL::Win32OpenGL(RendererFactory *factory, Window *window)
   : OpenGLRenderer(factory, window), m_dc { GetDC(window->nativeHandle()) }

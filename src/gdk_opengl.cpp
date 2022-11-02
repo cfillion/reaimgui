@@ -68,10 +68,8 @@ private:
   GdkGLContext *m_gl;
 };
 
-std::unique_ptr<Renderer> RendererFactory::create(Window *window)
-{
-  return std::make_unique<GDKOpenGL>(this, window);
-}
+decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
+  { &Renderer::create<GDKOpenGL> };
 
 // GdkGLContext cannot share ressources: they're already shared with the
 // window's paint context (which itself isn't shared with anything).

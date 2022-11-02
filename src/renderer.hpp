@@ -20,16 +20,32 @@
 
 #include <array>
 #include <memory>
+#include <vector>
 
 class Renderer;
+class RendererFactory;
 class Window;
 struct ImVec2;
 struct ImVec4;
 
+struct RendererType {
+  struct Register {
+    Register(const RendererType *);
+  };
+
+  static const RendererType *bestMatch(const char *id);
+  static const std::vector<const RendererType *> &knownTypes();
+
+  char priority;
+  const char *id, *name, *displayName;
+  std::unique_ptr<Renderer>(*creator)(RendererFactory *, Window *);
+};
+
 class RendererFactory {
 public:
-  // hard-coded to opengl for now
-  const char *name() const { return "reaper_imgui_opengl3"; }
+  RendererFactory();
+
+  const char *name() const { return m_type->name; }
   std::unique_ptr<Renderer> create(Window *);
 
   template<typename T>
@@ -39,12 +55,19 @@ public:
   void setSharedData(T d) { m_shared = d; }
 
 protected:
+  const RendererType *m_type;
   std::weak_ptr<void> m_shared;
 };
 
 class Renderer {
 public:
   static void install();
+
+  template<typename T>
+  static std::unique_ptr<Renderer> create(RendererFactory *factory, Window *window)
+  {
+    return std::make_unique<T>(factory, window);
+  }
 
   Renderer(Window *);
   virtual ~Renderer();
@@ -72,5 +95,10 @@ protected:
 
   Window *m_window;
 };
+
+#define REGISTER_RENDERER(priority, id, name, creator)     \
+  static RendererType rendererType_##id                    \
+    { priority, #id, "reaper_imgui_" #id, name, creator }; \
+  RendererType::Register regRenderer_##id { &rendererType_##id };
 
 #endif

@@ -58,10 +58,8 @@ private:
   NSOpenGLContext *m_gl;
 };
 
-std::unique_ptr<Renderer> RendererFactory::create(Window *viewport)
-{
-  return std::make_unique<CocoaOpenGL>(this, viewport);
-}
+decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
+  { &Renderer::create<CocoaOpenGL> };
 
 CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
   : OpenGLRenderer { factory, window }

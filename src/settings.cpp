@@ -17,6 +17,7 @@
 
 #include "settings.hpp"
 
+#include "renderer.hpp"
 #include "settings.rc.hpp"
 #include "version.hpp"
 #include "window.hpp"
@@ -27,53 +28,113 @@
 
 #ifdef _WIN32
 #  include "win32_unicode.hpp"
+#  define WIDEN(str)  widen(str).c_str()
+#  define NARROW(str) narrow(str).c_str()
 #else
-#  define TEXT(str) str
 #  define TCHAR char
+#  define TEXT(str) str
+#  define WIDEN(str) str
+#  define NARROW(str) str
 #endif
 
 bool Settings::NoSavedSettings { false };
+const RendererType *Settings::Renderer;
 
+// constant values from REAPER
 constexpr int WM_PREFS_APPLY  { WM_USER * 2 },
               IDC_PREFS_APPLY { 0x478 }, IDC_PREFS_HELP  { 0x4eb };
 
 static void CALLBACK updateHelp(HWND hwnd, UINT, UINT_PTR, DWORD)
 {
-  if(!IsWindowVisible(hwnd))
+  static const TCHAR *shownText;
+
+  if(!IsWindowVisible(hwnd)) {
+    shownText = nullptr;
     return; // another preference page is active
+  }
+
+  constexpr const TCHAR *PREVIOUS_TEXT {};
 
   struct HelpText { int control; const TCHAR *text; };
   constexpr HelpText helpMap[] {
-    { IDC_SAVEDSETTINGS,
-      TEXT("Disable to force ReaImGui scripts to start with their default first-use state (safe mode).") },
+    { IDC_SAVEDSETTINGS, TEXT("Disable to force ReaImGui scripts to start with "
+                              "their default first-use state (safe mode).") },
+    { IDC_RENDERER,      TEXT("Select a different renderer if you encounter "
+                              "compatibility problems.") },
+    { IDC_RENDERERTXT,   PREVIOUS_TEXT },
   };
 
   POINT point;
   GetCursorPos(&point);
 
+  const TCHAR *helpText;
   for(const HelpText &help : helpMap) {
     RECT rect;
     GetWindowRect(GetDlgItem(hwnd, help.control), &rect);
+    if(help.text != PREVIOUS_TEXT)
+      helpText = help.text;
     if(PtInRect(&rect, point)) {
-      SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, help.text);
+      // repeatedly setting the same text flickers on Windows
+      if(shownText != helpText) {
+        SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, helpText);
+        shownText = helpText;
+      }
       return;
     }
   }
 
   SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, TEXT(""));
+  shownText = nullptr;
+}
+
+static void fillRenderers(HWND combo)
+{
+  for(const RendererType *type : RendererType::knownTypes()) {
+    const auto index {
+      SendMessage(combo, CB_ADDSTRING, 0,
+                  reinterpret_cast<LPARAM>(WIDEN(type->displayName)))
+    };
+    SendMessage(combo, CB_SETITEMDATA, index, reinterpret_cast<LPARAM>(type));
+    if(type == Settings::Renderer)
+      SendMessage(combo, CB_SETCURSEL, index, 0);
+  }
+}
+
+static const RendererType *selectedRenderer(HWND combo)
+{
+  const auto index { SendMessage(combo, CB_GETCURSEL, 0, 0) };
+  return reinterpret_cast<const RendererType *>
+    (SendMessage(combo, CB_GETITEMDATA, index, 0));
+}
+
+static bool isChangeEvent(const short control, const short notification)
+{
+  switch(control) {
+  case IDC_SAVEDSETTINGS:
+    return true;
+  case IDC_RENDERER:
+    return notification == CBN_SELCHANGE;
+  default:
+    return false;
+  }
 }
 
 static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
   const WPARAM wParam, const LPARAM lParam)
 {
   switch(message) {
-  case WM_INITDIALOG:
+  case WM_INITDIALOG: {
     SetTimer(hwnd, 1, 200, &updateHelp); // same speed as REAPER
+
     CheckDlgButton(hwnd, IDC_SAVEDSETTINGS, !Settings::NoSavedSettings);
+    fillRenderers(GetDlgItem(hwnd, IDC_RENDERER));
+
     return 1;
-  case WM_COMMAND:
-    // enable the Apply button
-    EnableWindow(GetDlgItem(GetParent(hwnd), IDC_PREFS_APPLY), true);
+  }
+  case WM_PREFS_APPLY:
+    Settings::NoSavedSettings = !IsDlgButtonChecked(hwnd, IDC_SAVEDSETTINGS);
+    Settings::Renderer = selectedRenderer(GetDlgItem(hwnd, IDC_RENDERER));
+    Settings::save();
     return 0;
   case WM_SIZE: {
     RECT pageRect;
@@ -85,9 +146,9 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
       SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
     return 0;
   }
-  case WM_PREFS_APPLY:
-    Settings::NoSavedSettings = !IsDlgButtonChecked(hwnd, IDC_SAVEDSETTINGS);
-    Settings::save();
+  case WM_COMMAND:
+    if(isChangeEvent(LOWORD(wParam), HIWORD(wParam)))
+      EnableWindow(GetDlgItem(GetParent(hwnd), IDC_PREFS_APPLY), true);
     return 0;
   }
 
@@ -107,7 +168,16 @@ static prefs_page_register_t g_page {
 };
 
 constexpr const TCHAR *APP { TEXT("reaimgui") },
-                      *KEY_NOSAVEDSETTINGS { TEXT("nosavedsettings") };
+                      *KEY_NOSAVEDSETTINGS { TEXT("nosavedsettings") },
+                      *KEY_RENDERER        { TEXT("renderer_")
+#if defined(_WIN32)
+                                             L"win32"
+#elif defined(__APPLE__)
+                                             "cocoa"
+#else
+                                             "gdk"
+#endif
+                                           };
 
 void Settings::setup()
 {
@@ -120,8 +190,16 @@ void Settings::setup()
   const char *file { get_ini_file() };
 #endif
 
+  TCHAR buffer[4096];
+  const DWORD bufSize { static_cast<DWORD>(std::size(buffer)) };
+
   NoSavedSettings = GetPrivateProfileInt
     (APP, KEY_NOSAVEDSETTINGS, NoSavedSettings, file);
+  GetPrivateProfileString(APP, KEY_RENDERER, TEXT(""), buffer, bufSize, file);
+  Renderer = RendererType::bestMatch(NARROW(buffer));
+
+  // store default settings without waiting for the user to apply
+  save();
 }
 
 void Settings::save()
@@ -134,8 +212,8 @@ void Settings::save()
 #endif
 
   constexpr const TCHAR *bools[] { TEXT("0"), TEXT("1") };
-  WritePrivateProfileString(APP, KEY_NOSAVEDSETTINGS,
-    bools[Settings::NoSavedSettings], file);
+  WritePrivateProfileString(APP, KEY_NOSAVEDSETTINGS, bools[NoSavedSettings], file);
+  WritePrivateProfileString(APP, KEY_RENDERER, WIDEN(Renderer->id), file);
 }
 
 void Settings::teardown()

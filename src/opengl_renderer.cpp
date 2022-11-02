@@ -30,6 +30,8 @@
 
 #include <imgui/imgui.h>
 
+REGISTER_RENDERER(90, opengl3, "OpenGL 3.1/3.2", OpenGLRenderer::creator);
+
 constexpr const char *VERTEX_SHADER { R"(
 #version 140
 

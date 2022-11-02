@@ -18,12 +18,15 @@
 #ifndef REAIMGUI_SETTINGS_HPP
 #define REAIMGUI_SETTINGS_HPP
 
+struct RendererType;
+
 namespace Settings {
   void setup();
   void save();
   void teardown();
 
   extern bool NoSavedSettings;
+  extern const RendererType *Renderer;
 }
 
 #endif

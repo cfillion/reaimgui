@@ -19,3 +19,5 @@
 
 #define IDC_GROUPBOX      200
 #define IDC_SAVEDSETTINGS 201
+#define IDC_RENDERERTXT   202
+#define IDC_RENDERER      203

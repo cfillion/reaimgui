@@ -25,6 +25,8 @@
 
 class OpenGLRenderer : public Renderer {
 public:
+  static std::unique_ptr<Renderer>(*creator)(RendererFactory *, Window *);
+
   OpenGLRenderer(RendererFactory *, Window *, bool share = true);
 
   using Renderer::render;
