@@ -17,8 +17,8 @@
 
 #include "settings.hpp"
 
+#include "dialog.hpp"
 #include "renderer.hpp"
-#include "settings.rc.hpp"
 #include "version.hpp"
 #include "window.hpp"
 
@@ -220,10 +220,3 @@ void Settings::teardown()
 {
   plugin_register("-prefpage", reinterpret_cast<void *>(&g_page));
 }
-
-#ifndef _WIN32
-#  include <swell/swell-dlggen.h>
-#  include "settings.rc_mac_dlg"
-#  include <swell/swell-menugen.h>
-#  include "settings.rc_mac_menu"
-#endif

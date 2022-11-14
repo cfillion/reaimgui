@@ -15,9 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef REAIMGUI_DIALOG_HPP
+#define REAIMGUI_DIALOG_HPP
+
+#define DIALOG_FONT 8, "MS Shell Dlg"
+
 #define IDD_SETTINGS      100
 
 #define IDC_GROUPBOX      200
 #define IDC_SAVEDSETTINGS 201
 #define IDC_RENDERERTXT   202
 #define IDC_RENDERER      203
+
+#endif

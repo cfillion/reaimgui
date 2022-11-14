@@ -4,6 +4,7 @@ add_library(src OBJECT
   api.cpp
   color.cpp
   context.cpp
+  dialog.rc
   docker.cpp
   font.cpp
   keymap.cpp
@@ -12,7 +13,6 @@ add_library(src OBJECT
   renderer.cpp
   resource.cpp
   settings.cpp
-  settings.rc
   texture.cpp
   viewport.cpp
   window.cpp
@@ -120,11 +120,11 @@ if(NOT WIN32)
   # Transpile the Win32 resource file
   find_package(PHP REQUIRED)
   add_custom_command(
-    OUTPUT  settings.rc_mac_dlg settings.rc_mac_menu
+    OUTPUT  dialog.rc_mac_dlg dialog.rc_mac_menu
     COMMAND ${CMAKE_COMMAND} -E copy
-      ${CMAKE_CURRENT_SOURCE_DIR}/settings.rc ${CMAKE_CURRENT_BINARY_DIR}
-    COMMAND ${PHP_EXECUTABLE} ${SWELL_RESGEN} --quiet settings.rc
-    MAIN_DEPENDENCY settings.rc
+      ${CMAKE_CURRENT_SOURCE_DIR}/dialog.rc ${CMAKE_CURRENT_BINARY_DIR}
+    COMMAND ${PHP_EXECUTABLE} ${SWELL_RESGEN} --quiet dialog.rc
+    MAIN_DEPENDENCY dialog.rc
     DEPENDS ${SWELL_RESGEN}
   )
 endif()

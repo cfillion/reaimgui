@@ -1,13 +1,13 @@
-#include "settings.rc.hpp"
+#include "dialogs.hpp"
 
 #ifdef _WIN32
 #  include <winres.h>
 #endif
 
 IDD_SETTINGS DIALOGEX 0, 0, 100, 100
-STYLE DS_CONTROL | WS_CHILD
+STYLE   DS_CONTROL | WS_CHILD
 EXSTYLE WS_EX_CONTROLPARENT
-FONT 8, "MS Shell Dlg"
+FONT    DIALOG_FONT
 BEGIN
   GROUPBOX "ReaImGui settings", IDC_GROUPBOX, 0, 0, 100, 100
   CHECKBOX "&Restore window position, size, dock state and table settings",
