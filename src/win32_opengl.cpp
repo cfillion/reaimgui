@@ -17,7 +17,7 @@
 
 #include "opengl_renderer.hpp"
 
-#include "errors.hpp"
+#include "error.hpp"
 #include "window.hpp"
 
 #include <GL/gl3w.h>

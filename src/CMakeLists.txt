@@ -6,6 +6,7 @@ add_library(src OBJECT
   context.cpp
   dialog.rc
   docker.cpp
+  error.cpp
   font.cpp
   keymap.cpp
   main.cpp

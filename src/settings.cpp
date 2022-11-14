@@ -20,22 +20,12 @@
 #include "dialog.hpp"
 #include "renderer.hpp"
 #include "version.hpp"
+#include "win32_unicode.hpp"
 #include "window.hpp"
 
 #include <reaper_plugin.h>
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h> // WDL_DLGRET
-
-#ifdef _WIN32
-#  include "win32_unicode.hpp"
-#  define WIDEN(str)  widen(str).c_str()
-#  define NARROW(str) narrow(str).c_str()
-#else
-#  define TCHAR char
-#  define TEXT(str) str
-#  define WIDEN(str) str
-#  define NARROW(str) str
-#endif
 
 bool Settings::NoSavedSettings { false };
 const RendererType *Settings::Renderer;
@@ -178,6 +168,11 @@ constexpr const TCHAR *APP { TEXT("reaimgui") },
                                              "gdk"
 #endif
                                            };
+
+void Settings::open()
+{
+  ViewPrefs(0, g_page.idstr);
+}
 
 void Settings::setup()
 {

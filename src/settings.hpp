@@ -21,6 +21,7 @@
 struct RendererType;
 
 namespace Settings {
+  void open();
   void setup();
   void save();
   void teardown();

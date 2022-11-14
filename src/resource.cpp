@@ -18,7 +18,7 @@
 #include "resource.hpp"
 
 #include "context.hpp"
-#include "errors.hpp"
+#include "error.hpp"
 #include "fast_set.hpp"
 
 #include <cassert>

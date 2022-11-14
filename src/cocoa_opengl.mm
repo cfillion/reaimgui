@@ -17,7 +17,7 @@
 
 #include "opengl_renderer.hpp"
 
-#include "errors.hpp"
+#include "error.hpp"
 #include "fast_set.hpp"
 #include "window.hpp"
 

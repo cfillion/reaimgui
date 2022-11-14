@@ -102,14 +102,14 @@ D3D10Renderer::Shared::Shared()
   static FuncImport<decltype(D3D10CreateDevice)>
     _D3D10CreateDevice { L"D3D10", "D3D10CreateDevice" };
   if(!_D3D10CreateDevice)
-    throw backend_error { "DirectX 10 is not installed on this system" };
+    throw backend_error { "Direct3D 10 is not installed on this system" };
   for(const D3D10_DRIVER_TYPE driver : drivers) {
     if(SUCCEEDED(_D3D10CreateDevice(nullptr, driver, nullptr, 0,
                                     D3D10_SDK_VERSION, &m_device)))
       break;
   }
   if(!m_device)
-    throw backend_error { "failed to create DirectX 10 device" };
+    throw backend_error { "failed to create Direct3D 10 device" };
   (*m_device).AddRef();
 
   {

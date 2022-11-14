@@ -18,7 +18,7 @@
 #ifndef REAIMGUI_API_HPP
 #define REAIMGUI_API_HPP
 
-#include "errors.hpp"
+#include "error.hpp"
 
 #include <string>
 

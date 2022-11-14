@@ -75,20 +75,6 @@ static std::string generateIniFilename(const char *label)
   return filename;
 }
 
-static void reportError(const imgui_error &e)
-{
-  char message[1024];
-  snprintf(message, sizeof(message), "ImGui assertion failed: %s\n", e.what());
-  ShowConsoleMsg(message); // cannot use ReaScriptError unless called by a script
-}
-
-static void reportError(const backend_error &e)
-{
-  char message[1024];
-  snprintf(message, sizeof(message), "ReaImGui error: %s\n", e.what());
-  ShowConsoleMsg(message);
-}
-
 Context *Context::current()
 {
   if(ImGuiContext *imgui { ImGui::GetCurrentContext() })
@@ -208,7 +194,7 @@ bool Context::beginFrame() try
   return true;
 }
 catch(const backend_error &e) {
-  reportError(e);
+  Error::report(this, e);
   return false;
 }
 
@@ -248,11 +234,11 @@ bool Context::endFrame(const bool render) try
   return true;
 }
 catch(const imgui_error &e) {
-  reportError(e);
+  Error::report(this, e);
   return false;
 }
 catch(const backend_error &e) {
-  reportError(e);
+  Error::report(this, e);
   return false;
 }
 

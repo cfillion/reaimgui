@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_ERRORS_HPP
-#define REAIMGUI_ERRORS_HPP
+#ifndef REAIMGUI_ERROR_HPP
+#define REAIMGUI_ERROR_HPP
 
 #include <stdexcept>
 
@@ -31,5 +31,12 @@ DEFINE_EXCEPT(imgui_error);
 DEFINE_EXCEPT(reascript_error);
 
 #undef DEFINE_EXCEPT
+
+class Context;
+
+namespace Error {
+  void report(Context *, const imgui_error &);
+  void report(Context *, const backend_error &);
+};
 
 #endif
