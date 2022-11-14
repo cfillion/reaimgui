@@ -18,7 +18,7 @@
 #include "win32_window.hpp"
 
 #include "context.hpp"
-#include "dllimport.hpp"
+#include "import.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
 #include "win32_droptarget.hpp"
@@ -42,7 +42,7 @@ static unsigned int xpScreenDpi()
 unsigned int Win32Window::dpiForMonitor(HMONITOR monitor)
 {
   // Windows 8.1+
-  static DllImport<decltype(GetDpiForMonitor)>
+  static FuncImport<decltype(GetDpiForMonitor)>
     _GetDpiForMonitor { L"SHCore.dll", "GetDpiForMonitor" };
 
   if(_GetDpiForMonitor && monitor) {
@@ -57,7 +57,7 @@ unsigned int Win32Window::dpiForMonitor(HMONITOR monitor)
 unsigned int Win32Window::dpiForWindow(HWND window)
 {
   // Windows 10 Anniversary Update (1607) and newer
-  static DllImport<decltype(GetDpiForWindow)>
+  static FuncImport<decltype(GetDpiForWindow)>
     _GetDpiForWindow { L"User32.dll", "GetDpiForWindow" };
 
   if(_GetDpiForWindow)
@@ -187,7 +187,7 @@ RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
   rect.bottom = rect.top  + (size.y * scale);
 
   // Windows 10 Anniversary Update (1607) and newer
-  static DllImport<decltype(AdjustWindowRectExForDpi)>
+  static FuncImport<decltype(AdjustWindowRectExForDpi)>
     _AdjustWindowRectExForDpi
     { L"User32.dll", "AdjustWindowRectExForDpi" };
 
@@ -322,7 +322,7 @@ std::optional<LRESULT> Win32Window::handleMessage
   switch(msg) {
   case WM_NCCREATE: {
     // Windows 10 Anniversary Update (1607) and newer
-    static DllImport<decltype(EnableNonClientDpiScaling)>
+    static FuncImport<decltype(EnableNonClientDpiScaling)>
       _EnableNonClientDpiScaling { L"User32.dll", "EnableNonClientDpiScaling" };
     if(_EnableNonClientDpiScaling)
       _EnableNonClientDpiScaling(m_hwnd.get());

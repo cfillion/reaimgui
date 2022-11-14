@@ -17,13 +17,13 @@
 
 #include "platform.hpp"
 
-#include "dllimport.hpp"
+#include "import.hpp"
 #include "win32_window.hpp"
 
 #include <imgui/imgui.h>
 
 // Windows 10 Anniversary Update (1607) and newer
-static DllImport<decltype(SetThreadDpiAwarenessContext)>
+static FuncImport<decltype(SetThreadDpiAwarenessContext)>
   _SetThreadDpiAwarenessContext
   { L"User32.dll", "SetThreadDpiAwarenessContext" };
 

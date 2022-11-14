@@ -74,7 +74,6 @@ void CocoaWindow::create()
     // enable transparency
     [window setOpaque:NO];
     [window setBackgroundColor:[NSColor clearColor]]; // required when decorations are enabled
-    [m_view setWantsLayer:YES]; // required to be transparent before resizing
   }
 
   static __weak EventHandler *g_handler;

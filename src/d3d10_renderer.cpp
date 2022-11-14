@@ -18,7 +18,7 @@
 #include "renderer.hpp"
 
 #include "context.hpp"
-#include "dllimport.hpp"
+#include "import.hpp"
 #include "texture.hpp"
 #include "window.hpp"
 
@@ -99,7 +99,7 @@ D3D10Renderer::Shared::Shared()
     D3D10_DRIVER_TYPE_WARP, // software rasterizer
   };
 
-  static DllImport<decltype(D3D10CreateDevice)>
+  static FuncImport<decltype(D3D10CreateDevice)>
     _D3D10CreateDevice { L"D3D10", "D3D10CreateDevice" };
   if(!_D3D10CreateDevice)
     throw backend_error { "DirectX 10 is not installed on this system" };
@@ -224,7 +224,7 @@ void D3D10Renderer::Shared::textureCommand(const TextureCmd &cmd)
     return;
   }
 
-  for(size_t i { 0 }; i < cmd.size; ++i) {
+  for(size_t i {}; i < cmd.size; ++i) {
     int width, height;
     const unsigned char *pixels
       { cmd.manager->getPixels(cmd.offset + i, &width, &height) };
@@ -365,12 +365,12 @@ void D3D10Renderer::render(void *)
   m_shared->m_device->RSSetViewports(1, &viewportDesc);
 
   if(!setupBuffer(m_buffers[VertexBuf],
-                   drawData->TotalVtxCount, 5000, sizeof(ImDrawVert),
-                   D3D10_BIND_VERTEX_BUFFER))
+                  drawData->TotalVtxCount, 5000, sizeof(ImDrawVert),
+                  D3D10_BIND_VERTEX_BUFFER))
     return;
   if(!setupBuffer(m_buffers[IndexBuf],
-                   drawData->TotalIdxCount, 10000, sizeof(ImDrawIdx),
-                   D3D10_BIND_INDEX_BUFFER))
+                  drawData->TotalIdxCount, 10000, sizeof(ImDrawIdx),
+                  D3D10_BIND_INDEX_BUFFER))
     return;
 
   // copy data to the vertex/index buffers
@@ -382,7 +382,7 @@ void D3D10Renderer::render(void *)
   if(FAILED(m_buffers[IndexBuf]->Map(
       D3D10_MAP_WRITE_DISCARD, 0, reinterpret_cast<void **>(&indexData))))
     return;
-  for(int i { 0 }; i < drawData->CmdListsCount; ++i) {
+  for(int i {}; i < drawData->CmdListsCount; ++i) {
     const ImDrawList *cmdList { drawData->CmdLists[i] };
     memcpy(vertexData, cmdList->VtxBuffer.Data,
            cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
@@ -396,13 +396,12 @@ void D3D10Renderer::render(void *)
 
   const ProjMtx projMatrix { drawData->DisplayPos, drawData->DisplaySize };
   void *constData;
-  if(FAILED(m_buffers[ConstantBuf]->Map(
-      D3D10_MAP_WRITE_DISCARD, 0, &constData)))
+  if(FAILED(m_buffers[ConstantBuf]->Map(D3D10_MAP_WRITE_DISCARD, 0, &constData)))
     return;
   memcpy(constData, &projMatrix, sizeof(ProjMtx));
   m_buffers[ConstantBuf]->Unmap();
 
-  const unsigned int stride { sizeof(ImDrawVert) }, offset { 0 };
+  const unsigned int stride { sizeof(ImDrawVert) }, offset {};
   device->VSSetConstantBuffers(0, 1, &m_buffers[ConstantBuf].ptr.p);
   device->IASetVertexBuffers(0, 1, &m_buffers[VertexBuf].ptr.p, &stride, &offset);
   device->IASetIndexBuffer(m_buffers[IndexBuf],
@@ -411,9 +410,9 @@ void D3D10Renderer::render(void *)
   const ImVec2 &clipOffset { drawData->DisplayPos },
                &clipScale  { viewport->DpiScale, viewport->DpiScale };
   int globalVtxOffset {}, globalIdxOffset {};
-  for(int i { 0 }; i < drawData->CmdListsCount; ++i) {
+  for(int i {}; i < drawData->CmdListsCount; ++i) {
     const ImDrawList *cmdList { drawData->CmdLists[i] };
-    for(int j { 0 }; j < cmdList->CmdBuffer.Size; ++j) {
+    for(int j {}; j < cmdList->CmdBuffer.Size; ++j) {
       const ImDrawCmd *cmd { &cmdList->CmdBuffer[j] };
       if(cmd->UserCallback)
         continue; // no need to call the callback, not using them

@@ -66,6 +66,7 @@ CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
 {
   NSView *view { (__bridge NSView *)window->nativeHandle() };
   [view setWantsBestResolutionOpenGLSurface:YES]; // retina
+  [view setWantsLayer:YES]; // required to be transparent before resizing
 
   constexpr NSOpenGLPixelFormatAttribute attrs[] {
     NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,

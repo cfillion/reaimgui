@@ -120,7 +120,7 @@ Renderer::ProjMtx::ProjMtx(const ImVec2 &pos, const ImVec2 &size, const bool fli
   m_data = {{
     { 2.f/(R-L),   0.f,         0.f, 0.f },
     { 0.f,         2.f/(T-B),   0.f, 0.f },
-    { 0.f,         0.f,        -1.f, 0.f },
+    { 0.f,         0.f,         1.f, 0.f },
     { (R+L)/(L-R), (T+B)/(B-T), 0.f, 1.f },
   }};
 }
