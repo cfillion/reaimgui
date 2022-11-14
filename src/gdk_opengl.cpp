@@ -164,13 +164,6 @@ void GDKOpenGL::setSize(const ImVec2 size)
 
 void GDKOpenGL::resizeTextures(const ImVec2 size)
 {
-  // RECT rect;
-  // GetClientRect(m_window->nativeHandle(), &rect);
-  // const int width  { rect.right - rect.left },
-  //           height { rect.bottom - rect.top };
-  printf("%dx%d\n", (int)size.x, (int)size.y);
-  // printf("%dx%d\n", width, height);
-
   glBindTexture(GL_TEXTURE_2D, m_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y,
     0, GL_BGRA, GL_UNSIGNED_BYTE, nullptr);
