@@ -1,16 +1,16 @@
 #include "../src/color.hpp"
 
-#include <catch2/catch_test_macros.hpp>
-#include <catch2/generators/catch_generators.hpp>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include <imgui/imgui.h>
 
+class ColorTest : public testing::TestWithParam<bool> {};
+INSTANTIATE_TEST_SUITE_P(Alpha, ColorTest, testing::Values(false, true));
+
 static bool operator==(const ImVec4 &a, const ImVec4 &b)
 {
-  return a.x == b.x &&
-         a.y == b.y &&
-         a.z == b.z &&
-         a.w == b.w;
+  return a.x == b.x && a.y == b.y && a.z == b.z && a.w == b.w;
 }
 
 static std::ostream &operator<<(std::ostream &stream, const ImVec4 &color)
@@ -21,85 +21,77 @@ static std::ostream &operator<<(std::ostream &stream, const ImVec4 &color)
   return stream;
 }
 
-TEST_CASE("endianness conversion") {
-  SECTION("big to little") {
-    REQUIRE(Color::fromBigEndian(0x1a2b3c4d) == 0x4d3c2b1a);
-  }
-
-  SECTION("little to big") {
-    REQUIRE(Color::toBigEndian(0x4d3c2b1a) == 0x1a2b3c4d);
-  }
+TEST(ColorTest, FromBigEndian) {
+  EXPECT_EQ(Color::fromBigEndian(0x1a2b3c4d), 0x4d3c2b1a);
 }
 
-TEST_CASE("native RGB byte order") {
+TEST(ColorTest, ToBigEndian) {
+  EXPECT_EQ(Color::toBigEndian(0x4d3c2b1a), 0x1a2b3c4d);
+}
+
+TEST(ColorTest, ConvertNative) {
 #ifdef _WIN32
-  REQUIRE(Color::convertNative(0xdd112233) == 0xdd332211);
+  EXPECT_EQ(Color::convertNative(0xdd112233), 0xdd332211);
 #else
-  REQUIRE(Color::convertNative(0xdd112233) == 0xdd112233);
+  EXPECT_EQ(Color::convertNative(0xdd112233), 0xdd112233);
 #endif
 }
 
-TEST_CASE("Color to ImVec4") {
-  const bool withAlpha { GENERATE(true, false) };
-  CAPTURE(withAlpha);
-
-  SECTION("from ImVec4") {
-    const Color color { ImVec4 { 0.2f, 0.4f, 0.6f, 0.8f }, withAlpha };
-    REQUIRE(color == ImVec4 { 0.2f, 0.4f, 0.6f, withAlpha ? 0.8f : 1.0f });
-  }
-
-  SECTION("from float[]") {
-    float arr[] { 0.2f, 0.4f, 0.6f, 0.8f };
-    const Color color { arr, withAlpha };
-    REQUIRE(color == ImVec4{ 0.2f, 0.4f, 0.6f, withAlpha ? 0.8f : 1.0f });
-  }
-
-  SECTION("from uint32_t") {
-    const uint32_t packed { withAlpha ? 0x336699ccu : 0x336699u };
-    const Color color { packed, withAlpha };
-    REQUIRE(color == ImVec4 { 0.2f, 0.4f, 0.6f, withAlpha ? 0.8f : 1.0f });
-  }
+TEST_P(ColorTest, FromImVec4) {
+  const bool alpha { GetParam() };
+  const Color color { ImVec4 { 0.2f, 0.4f, 0.6f, 0.8f }, alpha };
+  const ImVec4 expected { 0.2f, 0.4f, 0.6f, alpha ? 0.8f : 1.0f };
+  EXPECT_EQ(color, expected);
 }
 
-TEST_CASE("Color to float[]") {
-  const ImVec4 expected { 0.256f, 0.512f, 0.1024f, 0.4096f };
-  const Color color { expected };
+TEST_P(ColorTest, FromFloatArray) {
+  const bool alpha { GetParam() };
+  float arr[] { 0.2f, 0.4f, 0.6f, 0.8f };
+  const Color color { arr, alpha };
+  const ImVec4 expected { 0.2f, 0.4f, 0.6f, alpha ? 0.8f : 1.0f };
+  EXPECT_EQ(color, expected);
+}
+
+TEST_P(ColorTest, FromInteger) {
+  const bool alpha { GetParam() };
+  const uint32_t packed { alpha ? 0x336699ccu : 0x336699u };
+  const Color color { packed, alpha };
+  const ImVec4 expected { 0.2f, 0.4f, 0.6f, alpha ? 0.8f : 1.0f };
+  EXPECT_EQ(color, expected);
+}
+
+TEST(ColorTest, ToFloatArray) {
+  const Color color { ImVec4 { 0.256f, 0.512f, 0.1024f, 0.4096f } };
   float actual[4];
   color.unpack(actual);
-  REQUIRE(expected == ImVec4 { actual[0], actual[1], actual[2], actual[3] });
+  EXPECT_THAT(actual, testing::ElementsAre(0.256f, 0.512f, 0.1024f, 0.4096f));
 }
 
-TEST_CASE("Color to uint32_t") {
-  const bool withAlpha { GENERATE(true, false) };
-  CAPTURE(withAlpha);
-
+TEST_P(ColorTest, ToInteger) {
   const Color color { 0x11223344 };
-
-  SECTION("preserve MSB") {
-    if(withAlpha)
-      REQUIRE(color.pack(true, 0xaabbccdd) == 0x11223344);
-    else
-      REQUIRE(color.pack(false, 0xaabbccdd) == 0xaa112233);
-  }
-
-  SECTION("without extra data") {
-    if(withAlpha)
-      REQUIRE(color.pack(true) == 0x11223344);
-    else
-      REQUIRE(color.pack(false) == 0x00112233);
-  }
+  if(GetParam()) // with alpha
+    EXPECT_EQ(color.pack(true), 0x11223344);
+  else
+    EXPECT_EQ(color.pack(false), 0x00112233);
 }
 
-TEST_CASE("apply color to function") {
-  ImVec4 expected { 0.1f, 0.2f, 0.3f, 0.4f };
-  const Color color { expected };
-  ImVec4 actual {};
-  const auto retval {
-    color.apply([&] (float r, float g, float b, float a) {
-      actual = { r, g, b, a };
-      return 42;
-    })
-  };
-  REQUIRE(retval == 42);
-  REQUIRE(actual == expected);
+TEST_P(ColorTest, ToIntegerWithMSB) {
+  const Color color { 0x11223344 };
+  if(GetParam()) // with alpha
+    EXPECT_EQ(color.pack(true, 0xaabbccdd), 0x11223344);
+  else
+    EXPECT_EQ(color.pack(false, 0xaabbccdd), 0xaa112233);
+}
+
+TEST(ColorTest, ApplyToFunction) {
+  using namespace std::placeholders;
+  using testing::Return;
+
+  struct Mock {
+    MOCK_METHOD(int, func, (float r, float g, float b, float a));
+  } mock;
+
+  const Color color { ImVec4 { 0.1f, 0.2f, 0.3f, 0.4f } };
+  EXPECT_CALL(mock, func(0.1f, 0.2f, 0.3f, 0.4f)).WillOnce(Return(42));
+  EXPECT_EQ(color.apply(std::bind(&Mock::func, &mock, _1, _2, _3, _4)), 42);
 }

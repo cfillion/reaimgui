@@ -1,9 +1,9 @@
-find_package(Catch2 3 REQUIRED)
+find_package(GTest REQUIRED)
 add_executable(tests
   color_test.cpp
   texture_test.cpp
 )
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain src)
+target_link_libraries(tests PRIVATE GTest::gmock_main src)
 
-include(Catch)
-catch_discover_tests(tests)
+include(GoogleTest)
+gtest_discover_tests(tests)

@@ -31,11 +31,12 @@ them separately):
 - [Fontconfig](https://www.fontconfig.org)
 - [FreeType](https://www.freetype.org/)
 - [GDK3](https://developer.gnome.org/gdk3/stable/) (3.22 or newer)
+- [GoogleTest](https://github.com/google/googletest)
 - [libepoxy](https://github.com/anholt/libepoxy)
 
 #### macOS
 
-Install Boost and FreeType using [Homebrew](https://brew.sh) (recommended).
+Install Boost, FreeType and GoogleTest using [Homebrew](https://brew.sh) (recommended).
 The build tools can be installed using `xcode-select --install` or the Xcode IDE.
 
 #### Windows

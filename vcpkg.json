@@ -2,12 +2,12 @@
   "name": "reaimgui",
   "version-string": "current",
   "dependencies": [
+    { "name": "boost-filesystem", "platform": "osx" },
     { "name": "boost-preprocessor", "platform": "!linux" },
     { "name": "boost-type-index", "platform": "!linux" },
     { "name": "boost-variant", "platform": "osx" },
-    { "name": "boost-filesystem", "platform": "osx" },
-    "catch2",
     { "name": "freetype", "default-features": false, "platform": "!linux" },
-    { "name": "gl3w", "platform": "windows" }
+    { "name": "gl3w", "platform": "windows" },
+    "gtest"
   ]
 }
