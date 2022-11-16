@@ -35,7 +35,7 @@ namespace Platform {
   Window *createWindow(ImGuiViewport *, DockerHost * = nullptr);
   void updateMonitors();
   ImGuiViewport *viewportUnder(ImVec2);
-  void scalePosition(ImVec2 *, bool toHiDpi = false);
+  void scalePosition(ImVec2 *, bool toHiDpi = false, float scale = 0.f);
   float scaleForWindow(HWND);
   HCURSOR getCursor(ImGuiMouseCursor);
   HWND getCapture();
