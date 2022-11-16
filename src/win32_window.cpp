@@ -243,7 +243,7 @@ void Win32Window::initGL()
 RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
 {
   const float scale { scaleForDpi(m_dpi) };
-  Platform::scalePosition(&pos, true);
+  Platform::scalePosition(&pos, true, scale);
 
   RECT rect;
   rect.left = pos.x;
@@ -422,6 +422,7 @@ std::optional<LRESULT> Win32Window::handleMessage
       SWP_NOACTIVATE | SWP_NOZORDER);
 
     // PlatformRequestResize doesn't work here to tell ImGui to fetch the new size
+    m_viewport->Pos  = getPosition();
     m_viewport->Size = getSize();
     return 0;
   }

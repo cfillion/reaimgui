@@ -132,7 +132,7 @@ ImVec2 Viewport::getPosition() const
   ImVec2 pos;
   pos.x = point.x;
   pos.y = point.y;
-  Platform::scalePosition(&pos);
+  Platform::scalePosition(&pos, false, scaleFactor());
 
   return pos;
 }
