@@ -136,7 +136,7 @@ void Win32Window::create()
   if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
     exStyle |= WS_EX_DLGMODALFRAME;
 
-  // give a sensible window position guess (accurate if no decorations)
+  // Give a sensible window position guess (accurate if no decorations)
   // so that m_dpi gets initialized to the correct value
   // (would be the primary monitor's DPI otherwise, causing scalePosition to be
   // given an incorrect scale and possibly moving the window out of view)
@@ -179,14 +179,15 @@ void Win32Window::destroy()
   // ImGui destroys windows in creation order. Give ownership of our owned
   // windows to our own owner to avoid a broken chain leading to Windows
   // possibly focusing a window from another application.
-  EnumThreadWindows(GetCurrentThreadId(), &reparentChildren, reinterpret_cast<LPARAM>(m_hwnd.get()));
+  EnumThreadWindows(GetCurrentThreadId(),
+    &reparentChildren, reinterpret_cast<LPARAM>(m_hwnd.get()));
 
   Window::destroy();
 }
 
 RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
 {
-  const float scale { scaleForDpi(m_dpi) };
+  const float scale { m_viewport->DpiScale };
   Platform::scalePosition(&pos, true, scale);
 
   RECT rect;

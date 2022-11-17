@@ -45,7 +45,6 @@ public:
   };
 
   static HINSTANCE s_instance;
-  static void updateMonitors();
 
   Window(ImGuiViewport *, DockerHost * = nullptr);
   ~Window() override;
