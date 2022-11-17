@@ -17,9 +17,51 @@
 
 #include "platform.hpp"
 
+#include "import.hpp"
 #include "win32_window.hpp"
 
 #include <imgui/imgui.h>
+
+// Windows 10 Anniversary Update (1607) and newer
+static FuncImport<decltype(SetThreadDpiAwarenessContext)>
+  _SetThreadDpiAwarenessContext
+  { L"User32.dll", "SetThreadDpiAwarenessContext" };
+
+class SetDpiAwareness {
+public:
+  SetDpiAwareness(const DPI_AWARENESS_CONTEXT awareness)
+  {
+    if(_SetThreadDpiAwarenessContext)
+      m_prev = _SetThreadDpiAwarenessContext(awareness);
+  }
+
+  ~SetDpiAwareness()
+  {
+    if(_SetThreadDpiAwarenessContext)
+      _SetThreadDpiAwarenessContext(m_prev);
+  }
+
+private:
+  DPI_AWARENESS_CONTEXT m_prev;
+};
+
+static bool isPerMonitorDpiAware()
+{
+  // Windows 10 Anniversary Update (1607) and newer
+  static FuncImport<decltype(GetThreadDpiAwarenessContext)>
+    _GetThreadDpiAwarenessContext
+    { L"User32.dll", "GetThreadDpiAwarenessContext" };
+  static FuncImport<decltype(GetAwarenessFromDpiAwarenessContext)>
+    _GetAwarenessFromDpiAwarenessContext
+    { L"User32.dll", "GetAwarenessFromDpiAwarenessContext" };
+
+  if(!_GetThreadDpiAwarenessContext || !_GetAwarenessFromDpiAwarenessContext)
+    return false;
+
+  const DPI_AWARENESS_CONTEXT context { _GetThreadDpiAwarenessContext() };
+  const DPI_AWARENESS awareness { _GetAwarenessFromDpiAwarenessContext(context) };
+  return awareness == DPI_AWARENESS_PER_MONITOR_AWARE;
+}
 
 void Platform::install()
 {
@@ -34,27 +76,32 @@ Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 
 static int CALLBACK enumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM)
 {
-  MONITORINFO info { .cbSize = sizeof(MONITORINFO) };
-  if(!GetMonitorInfo(monitor, &info))
-    return true;
-
   ImGuiPlatformMonitor imguiMonitor;
+  MONITORINFO info { .cbSize = sizeof(MONITORINFO) };
+
+  {
+    // get full monitor size for imgui's FindPlatformMonitorFor{Pos,Rect}
+    // required for ClampWindowRect to use the correct monitor's work area
+    SetDpiAwareness raii { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
+    if(!GetMonitorInfo(monitor, &info))
+      return true;
+  }
+
   imguiMonitor.MainPos.x  = info.rcMonitor.left;
   imguiMonitor.MainPos.y  = info.rcMonitor.top;
   imguiMonitor.MainSize.x = info.rcMonitor.right - info.rcMonitor.left;
   imguiMonitor.MainSize.y = info.rcMonitor.bottom - info.rcMonitor.top;
+  imguiMonitor.DpiScale   = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
+
+  if(isPerMonitorDpiAware()) {
+    // unscale the work area (used by imgui for clamping)
+    SetDpiAwareness raii { DPI_AWARENESS_CONTEXT_UNAWARE };
+    GetMonitorInfo(monitor, &info);
+  }
   imguiMonitor.WorkPos.x  = info.rcWork.left;
   imguiMonitor.WorkPos.y  = info.rcWork.top;
   imguiMonitor.WorkSize.x = info.rcWork.right - info.rcWork.left;
   imguiMonitor.WorkSize.y = info.rcWork.bottom - info.rcWork.top;
-  imguiMonitor.DpiScale   = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
-
-  const ImVec2 workOffs { imguiMonitor.WorkPos.x  - imguiMonitor.MainPos.x,
-                          imguiMonitor.WorkPos.x  - imguiMonitor.MainPos.x };
-  imguiMonitor.WorkPos.x = imguiMonitor.MainPos.x + (workOffs.x / imguiMonitor.DpiScale);
-  imguiMonitor.WorkPos.y = imguiMonitor.MainPos.y + (workOffs.y / imguiMonitor.DpiScale);
-  imguiMonitor.WorkSize.x /= imguiMonitor.DpiScale;
-  imguiMonitor.WorkSize.y /= imguiMonitor.DpiScale;
 
   ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
   if(info.dwFlags & MONITORINFOF_PRIMARY)
@@ -84,6 +131,9 @@ ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
 
 void Platform::scalePosition(ImVec2 *pos, const bool toHiDpi, float scale)
 {
+  if(!isPerMonitorDpiAware())
+    return;
+
   HMONITOR monitor { MonitorFromPoint(POINT(pos->x, pos->y), MONITOR_DEFAULTTONEAREST) };
 
   if(!scale)
