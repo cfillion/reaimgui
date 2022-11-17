@@ -346,6 +346,10 @@ std::optional<LRESULT> Win32Window::handleMessage
     // PlatformRequestResize doesn't work here to tell ImGui to fetch the new size
     m_viewport->Pos  = getPosition();
     m_viewport->Size = getSize();
+
+    // imgui won't call this if unscaled size didn't change
+    if(m_renderer)
+      m_renderer->setSize(m_viewport->Size);
     return 0;
   }
   case WM_DPICHANGED_BEFOREPARENT:
