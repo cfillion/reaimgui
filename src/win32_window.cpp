@@ -77,9 +77,12 @@ void Win32Window::updateStyles()
   m_style = WS_POPUP; // fix AttachWindowTopmostButton when a titlebar is shown
   m_exStyle = WS_EX_ACCEPTFILES;
 
-  if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
-    m_style |= WS_OVERLAPPEDWINDOW;
+  if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration)) {
+    m_style |= WS_OVERLAPPEDWINDOW & ~WS_MINIMIZEBOX;
+    m_exStyle |= WS_EX_TOOLWINDOW;
+  }
 
+  // tooltips & other short-lived windows
   if(m_viewport->Flags & ImGuiViewportFlags_NoTaskBarIcon)
     m_exStyle |= WS_EX_TOOLWINDOW;
 
