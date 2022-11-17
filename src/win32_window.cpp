@@ -24,7 +24,6 @@
 #include "win32_droptarget.hpp"
 #include "win32_unicode.hpp"
 
-#include <cassert>
 #include <reaper_plugin_secrets.h>
 #include <ShellScalingApi.h> // GetDpiForMonitor
 #define GetThemeColor Win32_GetThemeColor // solve conflict with REAPER API
@@ -134,10 +133,17 @@ void Win32Window::create()
   if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
     exStyle |= WS_EX_DLGMODALFRAME;
 
+  // give a sensible window position guess (accurate if no decorations)
+  // so that m_dpi gets initialized to the correct value
+  // (would be the primary monitor's DPI otherwise, causing scalePosition to be
+  // given an incorrect scale and possibly moving the window out of view)
+  ImVec2 initialPos { m_viewport->Pos };
+  Platform::scalePosition(&initialPos, true);
   CreateWindowEx(exStyle, CLASS_NAME, L"", m_style,
-    CW_USEDEFAULT, CW_USEDEFAULT, 0, 0,
+    initialPos.x, initialPos.y, 0, 0,
     parentHandle(), nullptr, s_instance, this);
-  assert(m_hwnd && "CreateWindow failed");
+  if(!m_hwnd)
+    throw backend_error { "failed to create native window" };
 
   m_dpi = dpiForWindow(m_hwnd.get());
   m_viewport->DpiScale = scaleForDpi(m_dpi);
