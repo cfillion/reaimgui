@@ -36,6 +36,16 @@ static std::ostream &operator<<(std::ostream &os, const TextureCmd &cmd)
   return os;
 }
 
+TEST(TextureTest, OutOfOrderInsertion) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+
+  TextureManager manager;
+  manager.touch((void *)0x10, 1.75f, nullptr);
+  EXPECT_EQ(manager.touch((void *)0x10, 1.f,   nullptr), 0);
+  EXPECT_EQ(manager.touch((void *)0x10, 1.75f, nullptr), 1);
+}
+
 TEST(TextureTest, UpdateCommands) {
   std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
     { ImGui::CreateContext(), &ImGui::DestroyContext };

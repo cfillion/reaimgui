@@ -34,7 +34,7 @@ size_t TextureManager::touch(void *object, const float scale, const PixelGetter 
 
   const auto now { static_cast<float>(ImGui::GetTime()) };
 
-  if(it == end) {
+  if(it == end || it->user != object || it->scale != scale) {
     it = m_textures.insert(it, { object, scale, 0, now, getPixels });
     ++m_version;
   }
