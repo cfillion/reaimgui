@@ -188,7 +188,7 @@ void Win32Window::destroy()
 RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
 {
   const float scale { m_viewport->DpiScale };
-  Platform::scalePosition(&pos, true, scale);
+  Platform::scalePosition(&pos, true, m_hwnd.get());
 
   RECT rect;
   rect.left = pos.x;

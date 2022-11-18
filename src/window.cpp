@@ -293,20 +293,27 @@ int Window::handleAccelerator(MSG *)
   return Accel::PassToWindow; // default implementation
 }
 
+Context *Window::contextFromHwnd(HWND hwnd)
+{
+  do {
+    if(Context *ctx { static_cast<Context *>(GetProp(hwnd, CLASS_NAME)) })
+      return ctx;
+#ifdef __APPLE__
+  // hwnd is the InputView when it has focus
+  } while((hwnd = GetParent(hwnd)));
+#else
+  } while(false);
+#endif
+
+  return nullptr;
+}
+
 int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
 {
   enum InfoType { IsInTextField };
   enum RetVal { Unknown = 0, InTextField = 1, NotInTextField = -1 };
 
-  Context *ctx;
-  do {
-    ctx = static_cast<Context *>(GetProp(hwnd, CLASS_NAME));
-#ifdef __APPLE__
-  // hwnd is the InputView when it has focus
-  } while(!ctx && (hwnd = GetParent(hwnd)));
-#else
-  } while(false);
-#endif
+  Context *ctx { contextFromHwnd(hwnd) };
 
   if(infoType == IsInTextField && Resource::isValid(ctx)) {
     // Called for handling global shortcuts (v6.29+)

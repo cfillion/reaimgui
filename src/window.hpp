@@ -45,6 +45,7 @@ public:
   };
 
   static HINSTANCE s_instance;
+  static Context *contextFromHwnd(HWND);
 
   Window(ImGuiViewport *, DockerHost * = nullptr);
   ~Window() override;

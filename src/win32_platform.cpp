@@ -17,6 +17,7 @@
 
 #include "platform.hpp"
 
+#include "context.hpp"
 #include "import.hpp"
 #include "win32_window.hpp"
 
@@ -129,23 +130,46 @@ ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
   return nullptr;
 }
 
-void Platform::scalePosition(ImVec2 *pos, const bool toHiDpi, float scale)
+void Platform::scalePosition(ImVec2 *pos, const bool toNative, HWND window)
 {
   if(!isPerMonitorDpiAware())
     return;
 
-  HMONITOR monitor { MonitorFromPoint(POINT(pos->x, pos->y), MONITOR_DEFAULTTONEAREST) };
+  const POINT point(pos->x, pos->y);
+  HMONITOR monitor;
+  unsigned int dpi;
 
-  if(!scale)
-    scale = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
-  if(scale == 1.f)
-    return;
-  if(!toHiDpi)
-    scale = 1.f / scale;
+  // Make {Monitor,Window}FromPoint use the same coordinate space as the input
+  SetDpiAwareness raii { toNative ? DPI_AWARENESS_CONTEXT_UNAWARE : DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
+
+  if(!window) {
+    window = WindowFromPoint(point);
+    if(window && Window::contextFromHwnd(window) != Context::current())
+      window = nullptr;
+  }
+
+  // Use the monitor and scale of the window under the point so that windows
+  // straddling multiple monitors will get correct coordinates everywhere
+  if(window) {
+    monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
+
+    SetDpiAwareness aware { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
+    dpi = Win32Window::dpiForWindow(window);
+  }
+  else {
+    monitor = MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST);
+
+    SetDpiAwareness aware { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
+    dpi = Win32Window::dpiForMonitor(monitor);
+  }
 
   MONITORINFO info { .cbSize = sizeof(MONITORINFO) };
   if(!GetMonitorInfo(monitor, &info))
     return;
+
+  float scale { Win32Window::scaleForDpi(dpi) };
+  if(!toNative)
+    scale = 1.f / scale;
 
   const ImVec2 diff { pos->x - info.rcMonitor.left, pos->y - info.rcMonitor.top };
   pos->x = info.rcMonitor.left + (diff.x * scale);
