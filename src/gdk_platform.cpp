@@ -126,7 +126,7 @@ ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
   return nullptr;
 }
 
-void Platform::scalePosition(ImVec2 *pos, const bool toHiDpi, HWND)
+void Platform::scalePosition(ImVec2 *pos, const bool toHiDpi, const ImGuiViewport *)
 {
   float scale { GDKWindow::globalScaleFactor() };
   if(!toHiDpi)

@@ -311,7 +311,7 @@ void Context::updateMouseData()
     viewportForPos = nullptr;
 
   if(viewportForPos && ImGui::GetMainViewport() != viewportForPos) {
-    Platform::scalePosition(&pos);
+    Platform::scalePosition(&pos, false, viewportForPos);
     io.AddMousePosEvent(pos.x, pos.y);
   }
   else

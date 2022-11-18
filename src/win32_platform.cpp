@@ -130,19 +130,22 @@ ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
   return nullptr;
 }
 
-void Platform::scalePosition(ImVec2 *pos, const bool toNative, HWND window)
+void Platform::scalePosition(ImVec2 *pos, const bool toNative, const ImGuiViewport *viewport)
 {
   if(!isPerMonitorDpiAware())
     return;
 
   const POINT point(pos->x, pos->y);
   HMONITOR monitor;
-  unsigned int dpi;
+  HWND window;
+  float scale;
 
   // Make {Monitor,Window}FromPoint use the same coordinate space as the input
   SetDpiAwareness raii { toNative ? DPI_AWARENESS_CONTEXT_UNAWARE : DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
 
-  if(!window) {
+  if(viewport)
+    window = static_cast<HWND>(viewport->PlatformHandle);
+  else {
     window = WindowFromPoint(point);
     if(window && Window::contextFromHwnd(window) != Context::current())
       window = nullptr;
@@ -153,21 +156,24 @@ void Platform::scalePosition(ImVec2 *pos, const bool toNative, HWND window)
   if(window) {
     monitor = MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST);
 
-    SetDpiAwareness aware { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
-    dpi = Win32Window::dpiForWindow(window);
+    if(viewport)
+      scale = viewport->DpiScale;
+    else {
+      SetDpiAwareness aware { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
+      scale = Win32Window::scaleForDpi(Win32Window::dpiForWindow(window));
+    }
   }
   else {
     monitor = MonitorFromPoint(point, MONITOR_DEFAULTTONEAREST);
 
     SetDpiAwareness aware { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
-    dpi = Win32Window::dpiForMonitor(monitor);
+    scale = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
   }
 
   MONITORINFO info { .cbSize = sizeof(MONITORINFO) };
   if(!GetMonitorInfo(monitor, &info))
     return;
 
-  float scale { Win32Window::scaleForDpi(dpi) };
   if(!toNative)
     scale = 1.f / scale;
 
