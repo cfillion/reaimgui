@@ -57,6 +57,13 @@ DEFINE_API(int, GetFrameCount, (ImGui_Context*,ctx),
   return ImGui::GetFrameCount();
 });
 
+DEFINE_API(double, GetFramerate, (ImGui_Context*,ctx),
+"Estimate of application framerate (rolling average over 60 frames, based on ImGui_GetDeltaTime), in frame per second. Solely for convenience.",
+{
+  FRAME_GUARD;
+  return ctx->IO().Framerate;
+});
+
 // expose most settings from ImGuiIO
 enum ConfigVar {
   ReaImGuiConfigVar_Flags,
