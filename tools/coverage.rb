@@ -186,7 +186,7 @@ NATIVE_ONLY_ENUMS = [
   'MouseCursor_None',   # not implemented under SWELL
   'TreeNodeFlags_NavLeftJumpsBackHere', # marked as WIP
   /\ATableFlags_NoBordersInBody/,       # marked as alpha, to be moved to style
-  /\AConfigFlags_(NavEnableGamepad|NavNoCaptureKeyboard)\z/, # not implemented
+  /\AConfigFlags_(NavEnableGamepad)\z/, # not implemented
   /\AConfigFlags_(IsSRGB|IsTouchScreen|ViewportsEnable|DpiEnableScale(Viewports|Fonts))\z/, # backend internal flags
   'WindowFlags_NoBringToFrontOnFocus', # not supported with per-window viewports
 
