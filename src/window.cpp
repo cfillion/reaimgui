@@ -232,14 +232,14 @@ void Window::updateModifiers()
   struct Modifiers { int vkey; ImGuiKey key; };
   constexpr Modifiers modifiers[] {
 #ifdef __APPLE__ // SWELL swaps those two
-    { VK_CONTROL, ImGuiKey_ModSuper },
-    { VK_LWIN,    ImGuiKey_ModCtrl  },
+    { VK_CONTROL, ImGuiMod_Super },
+    { VK_LWIN,    ImGuiMod_Ctrl  },
 #else
-    { VK_CONTROL, ImGuiKey_ModCtrl  },
-    { VK_LWIN,    ImGuiKey_ModSuper },
+    { VK_CONTROL, ImGuiMod_Ctrl  },
+    { VK_LWIN,    ImGuiMod_Super },
 #endif
-    { VK_SHIFT,   ImGuiKey_ModShift },
-    { VK_MENU,    ImGuiKey_ModAlt   },
+    { VK_SHIFT,   ImGuiMod_Shift },
+    { VK_MENU,    ImGuiMod_Alt   },
   };
 
   for(const auto &modifier : modifiers) {

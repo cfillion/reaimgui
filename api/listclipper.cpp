@@ -64,7 +64,7 @@ ImGuiListClipper *ListClipper::operator->()
 
 DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
 R"(Helper: Manually clip large list of items.
-If you have lots evenly spaced items and you have a random access to the list, you can perform coarse clipping based on visibility to only submit items that are in view.
+If you have lots evenly spaced items and you have random access to the list, you can perform coarse clipping based on visibility to only submit items that are in view.
 The clipper calculates the range of visible items and advance the cursor to compensate for the non-visible items we have skipped.
 (Dear ImGui already clip items based on their bounds but: it needs to first layout the item to do so, and generally fetching/submitting your own data incurs additional cost. Coarse clipping using ImGui_ListClipper allows you to easily scale using lists with tens of thousands of items without a problem)
 

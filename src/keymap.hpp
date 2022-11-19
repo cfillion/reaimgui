@@ -18,7 +18,7 @@
 #ifndef REAIMGUI_KEYMAP_HPP
 #define REAIMGUI_KEYMAP_HPP
 
-typedef int ImGuiKey;
+enum ImGuiKey : int;
 
 #ifndef _WIN32
 constexpr int

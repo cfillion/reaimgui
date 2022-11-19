@@ -466,7 +466,7 @@ DEFINE_API(bool, VSliderDouble, (ImGui_Context*,ctx)
 });
 
 // ImGuiSliderFlags
-DEFINE_ENUM(ImGui, SliderFlags_None,            "For ImGui_DragDouble, ImGui_DragInt, ImGui_SliderDouble, ImGui_SliderInt etc.");
+DEFINE_ENUM(ImGui, SliderFlags_None,            "For ImGui_DragDouble, ImGui_DragInt, ImGui_SliderDouble, ImGui_SliderInt etc. (Those are per-item flags. There are shared flags in ImGui_SetConfigVar: ImGui_ConfigVar_DragClickToInputText)");
 DEFINE_ENUM(ImGui, SliderFlags_AlwaysClamp,     "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
 DEFINE_ENUM(ImGui, SliderFlags_Logarithmic,     "Make the widget logarithmic (linear otherwise). Consider using ImGui_SliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.");
 DEFINE_ENUM(ImGui, SliderFlags_NoRoundToFormat, "Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits).");

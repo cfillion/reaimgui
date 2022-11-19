@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.88)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -21,13 +21,17 @@ reaper.defer(loop)
 --[[
 Index of this file:
 
-// [SECTION] Forward Declarations, Helpers
+// [SECTION] Helpers
 // [SECTION] Demo Window / ShowDemoWindow()
+// - ShowDemoWindow()
 // - sub section: ShowDemoWindowWidgets()
 // - sub section: ShowDemoWindowLayout()
 // - sub section: ShowDemoWindowPopups()
 // - sub section: ShowDemoWindowTables()
-// - sub section: ShowDemoWindowMisc()
+// - sub section: ShowDemoWindowInputs()
+-- [SECTION] Style Editor / ShowStyleE
+-- [SECTION] User Guide / ShowUserGuide()
+tor()
 // [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
 // [SECTION] Example App: Debug Console / ShowExampleAppConsole()
 // [SECTION] Example App: Debug Log / ShowExampleAppLog()
@@ -88,7 +92,7 @@ local show_app = {
   window_titles      = false,
   custom_rendering   = false,
 
-  -- Dear ImGui Apps (accessible from the "Tools" menu)
+  -- Dear ImGui Tools/Apps (accessible from the "Tools" menu)
   metrics      = false,
   debug_log    = false,
   stack_tool   = false,
@@ -131,14 +135,14 @@ if select(2, reaper.get_action_context()) == debug.getinfo(1, 'S').source:sub(2)
 end
 
 -------------------------------------------------------------------------------
--- [SECTION] Forward Declarations, Helpers
+-- [SECTION] Helpers
 -------------------------------------------------------------------------------
 
 -- Helper to display a little (?) mark which shows a tooltip when hovered.
 -- In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
 function demo.HelpMarker(desc)
   r.ImGui_TextDisabled(ctx, '(?)')
-  if r.ImGui_IsItemHovered(ctx) then
+  if r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_DelayShort()) then
     r.ImGui_BeginTooltip(ctx)
     r.ImGui_PushTextWrapPos(ctx, r.ImGui_GetFontSize(ctx) * 35.0)
     r.ImGui_Text(ctx, desc)
@@ -185,36 +189,6 @@ function demo.HSV(h, s, v, a)
   return reaper.ImGui_ColorConvertDouble4ToU32(r, g, b, a or 1.0)
 end
 
--- Helper to display basic user controls.
-function demo.ShowUserGuide()
-  -- ImGuiIO& io = r.ImGui_GetIO() TODO
-  r.ImGui_BulletText(ctx, 'Double-click on title bar to collapse window.')
-  r.ImGui_BulletText(ctx,
-    'Click and drag on lower corner to resize window\n\z
-     (double-click to auto fit window to its contents).')
-  r.ImGui_BulletText(ctx, 'CTRL+Click on a slider or drag box to input value as text.')
-  r.ImGui_BulletText(ctx, 'TAB/SHIFT+TAB to cycle through keyboard editable fields.')
-  r.ImGui_BulletText(ctx, 'CTRL+Tab to select a window.')
-  -- if (io.FontAllowUserScaling)
-  --     r.ImGui_BulletText(ctx, 'CTRL+Mouse Wheel to zoom window contents.')
-  r.ImGui_BulletText(ctx, 'While inputing text:\n')
-  r.ImGui_Indent(ctx)
-  r.ImGui_BulletText(ctx, 'CTRL+Left/Right to word jump.')
-  r.ImGui_BulletText(ctx, 'CTRL+A or double-click to select all.')
-  r.ImGui_BulletText(ctx, 'CTRL+X/C/V to use clipboard cut/copy/paste.')
-  r.ImGui_BulletText(ctx, 'CTRL+Z,CTRL+Y to undo/redo.')
-  r.ImGui_BulletText(ctx, 'ESCAPE to revert.')
-  r.ImGui_Unindent(ctx)
-  r.ImGui_BulletText(ctx, 'With keyboard navigation enabled:')
-  r.ImGui_Indent(ctx)
-  r.ImGui_BulletText(ctx, 'Arrow keys to navigate.')
-  r.ImGui_BulletText(ctx, 'Space to activate a widget.')
-  r.ImGui_BulletText(ctx, 'Return to input text into a widget.')
-  r.ImGui_BulletText(ctx, 'Escape to deactivate a widget, close popup, exit child window.')
-  r.ImGui_BulletText(ctx, 'Alt to jump to the menu layer of a window.')
-  r.ImGui_Unindent(ctx)
-end
-
 function demo.EachEnum(enum)
   local enum_cache = cache[enum]
   if not enum_cache then
@@ -246,7 +220,7 @@ end
 -- - ShowDemoWindowPopups()
 -- - ShowDemoWindowTables()
 -- - ShowDemoWindowColumns()
--- - ShowDemoWindowMisc()
+-- - ShowDemoWindowInputs()
 -------------------------------------------------------------------------------
 
 -- Demonstrate most Dear ImGui features (this is big function!)
@@ -471,6 +445,8 @@ function demo.ShowDemoWindow(open)
       r.ImGui_SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
       configVarCheckbox('ConfigVar_InputTextCursorBlink')
       r.ImGui_SameLine(ctx); demo.HelpMarker('Enable blinking cursor (optional as some users consider it to be distracting).')
+      configVarCheckbox('ConfigVar_InputTextEnterKeepActive')
+      r.ImGui_SameLine(ctx); demo.HelpMarker('Pressing Enter will keep item active and select contents (single-line only).')
       configVarCheckbox('ConfigVar_DragClickToInputText')
       r.ImGui_SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
       configVarCheckbox('ConfigVar_WindowsResizeFromEdges')
@@ -614,7 +590,7 @@ function demo.ShowDemoWindow(open)
   demo.ShowDemoWindowLayout()
   demo.ShowDemoWindowPopups()
   demo.ShowDemoWindowTables()
-  demo.ShowDemoWindowMisc()
+  demo.ShowDemoWindowInputs()
 
   -- End of ShowDemoWindow()
   r.ImGui_PopItemWidth(ctx)
@@ -713,22 +689,7 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_SameLine(ctx)
     r.ImGui_Text(ctx, ('%d'):format(widgets.basic.counter))
 
-    r.ImGui_Text(ctx, 'Hover over me')
-    if r.ImGui_IsItemHovered(ctx) then
-      r.ImGui_SetTooltip(ctx, 'I am a tooltip')
-    end
-
-    r.ImGui_SameLine(ctx)
-    r.ImGui_Text(ctx, '- or me')
-    if r.ImGui_IsItemHovered(ctx) then
-      r.ImGui_BeginTooltip(ctx)
-      r.ImGui_Text(ctx, 'I am a fancy tooltip')
-      r.ImGui_PlotLines(ctx, 'Curve', widgets.basic.tooltip, 0)
-      r.ImGui_EndTooltip(ctx)
-    end
-
     r.ImGui_Separator(ctx)
-
     r.ImGui_LabelText(ctx, 'label', 'Value')
 
     do
@@ -821,6 +782,37 @@ function demo.ShowDemoWindowWidgets()
         'Using the simplified one-liner ListBox API here.\n\z
         Refer to the "List boxes" section below for an explanation of how to use\z
         the more flexible and general BeginListBox/EndListBox API.')
+    end
+
+    do
+      -- Tooltips
+      r.ImGui_AlignTextToFramePadding(ctx)
+      r.ImGui_Text(ctx, 'Tooltips:')
+
+      r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, 'Button')
+      if r.ImGui_IsItemHovered(ctx) then
+        r.ImGui_SetTooltip(ctx, 'I am a tooltip')
+      end
+
+      r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, 'Fancy')
+      if r.ImGui_IsItemHovered(ctx) then
+        r.ImGui_BeginTooltip(ctx)
+        r.ImGui_Text(ctx, 'I am a fancy tooltip')
+        r.ImGui_PlotLines(ctx, 'Curve', widgets.basic.tooltip)
+        r.ImGui_Text(ctx, ('Sin(time) = %f'):format(math.sin(r.ImGui_GetTime(ctx))))
+        r.ImGui_EndTooltip(ctx)
+      end
+
+      r.ImGui_SameLine(ctx)
+      r.ImGui_Button(ctx, 'Delayed')
+      if r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_DelayNormal()) then -- Delay best used on items that highlight on hover, so this not a great example!
+        r.ImGui_SetTooltip(ctx, 'I am a tooltip with a delay.')
+      end
+
+      r.ImGui_SameLine(ctx)
+      demo.HelpMarker('Tooltip are created by using the IsItemHovered() function over any kind of item.')
     end
 
     r.ImGui_TreePop(ctx)
@@ -926,7 +918,7 @@ function demo.ShowDemoWindowWidgets()
       if node_clicked ~= -1 then
         -- Update selection state
         -- (process outside of tree loop to avoid visual inconsistencies during the clicking frame)
-        if r.ImGui_IsKeyDown(ctx, r.ImGui_Key_ModCtrl()) then -- CTRL+click to toggle
+        if r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Ctrl()) then -- CTRL+click to toggle
           widgets.trees.selection_mask = widgets.trees.selection_mask ~ (1 << node_clicked)
         elseif widgets.trees.selection_mask & (1 << node_clicked) == 0 then -- Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
           widgets.trees.selection_mask = (1 << node_clicked)                -- Click to single-select
@@ -1050,7 +1042,7 @@ function demo.ShowDemoWindowWidgets()
       demo.Link('https://github.com/cfillion/reaimgui/issues/5')
       r.ImGui_Spacing(ctx)
       -- r.ImGui_TextWrapped(ctx,
-      --   'CJK text will only appears if the font was loaded with the appropriate CJK character ranges. \z
+      --   'CJK text will only appear if the font was loaded with the appropriate CJK character ranges. \z
       --    Call io.Fonts->AddFontFromFileTTF() manually to load extra character ranges. \z
       --    Read docs/FONTS.md for details.')
       r.ImGui_Text(ctx, 'Hiragana: かきくけこ (kakikukeko)')
@@ -1120,15 +1112,21 @@ function demo.ShowDemoWindowWidgets()
 --         static int pressed_count = 0;
 --         for (int i = 0; i < 8; i++)
 --         {
+--             // UV coordinates are often (0.0f, 0.0f) and (1.0f, 1.0f) to display an entire textures.
+--             // Here are trying to display only a 32x32 pixels area of the texture, hence the UV computation.
+--             // Read about UV coordinates here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
 --             r.ImGui_PushID(i);
---             int frame_padding = -1 + i;                             // -1 == uses default padding (style.FramePadding)
---             ImVec2 size = ImVec2(32.0f, 32.0f);                     // Size of the image we want to make visible
---             ImVec2 uv0 = ImVec2(0.0f, 0.0f);                        // UV coordinates for lower-left
---             ImVec2 uv1 = ImVec2(32.0f / my_tex_w, 32.0f / my_tex_h);// UV coordinates for (32,32) in our texture
---             ImVec4 bg_col = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);         // Black background
---             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);       // No tint
---             if (r.ImGui_ImageButton(my_tex_id, size, uv0, uv1, frame_padding, bg_col, tint_col))
+--             if (i > 0)
+--                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(i - 1.0f, i - 1.0f));
+--             ImVec2 size = ImVec2(32.0f, 32.0f);                         // Size of the image we want to make visible
+--             ImVec2 uv0 = ImVec2(0.0f, 0.0f);                            // UV coordinates for lower-left
+--             ImVec2 uv1 = ImVec2(32.0f / my_tex_w, 32.0f / my_tex_h);    // UV coordinates for (32,32) in our texture
+--             ImVec4 bg_col = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);             // Black background
+--             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);           // No tint
+--             if (ImGui::ImageButton("", my_tex_id, size, uv0, uv1, bg_col, tint_col))
 --                 pressed_count += 1;
+--             if (i > 0)
+--                 ImGui::PopStyleVar();
 --             r.ImGui_PopID();
 --             r.ImGui_SameLine();
 --         }
@@ -1147,6 +1145,8 @@ function demo.ShowDemoWindowWidgets()
       }
     end
 
+    -- Combo Boxes are also called "Dropdown" in other systems
+    -- Expose flags as checkbox for the demo
     rv,widgets.combos.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiComboFlags_PopupAlignLeft', widgets.combos.flags, r.ImGui_ComboFlags_PopupAlignLeft())
     r.ImGui_SameLine(ctx); demo.HelpMarker('Only makes a difference if the popup is larger than the combo')
 
@@ -1295,7 +1295,7 @@ function demo.ShowDemoWindowWidgets()
       demo.HelpMarker('Hold CTRL and click to select multiple items.')
       for i,sel in ipairs(widgets.selectables.multiple) do
         if r.ImGui_Selectable(ctx, ('Object %d'):format(i-1), sel) then
-          if not r.ImGui_IsKeyDown(ctx, r.ImGui_Key_ModCtrl()) then -- Clear selection when CTRL is not held
+          if not r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Ctrl()) then -- Clear selection when CTRL is not held
             for j = 1, #widgets.selectables.multiple do
               widgets.selectables.multiple[j] = false
             end
@@ -1513,7 +1513,7 @@ label:
 --             static char buf3[64];
 --             static int edit_count = 0;
 --             r.ImGui_InputText("Edit", buf3, 64, ImGuiInputTextFlags_CallbackEdit, Funcs::MyCallback, (void*)&edit_count);
---             r.ImGui_SameLine(); HelpMarker("Here we toggle the casing of the first character on every edits + count edits.");
+--             r.ImGui_SameLine(); HelpMarker("Here we toggle the casing of the first character on every edit + count edits.");
 --             r.ImGui_SameLine(); r.ImGui_Text("(%d)", edit_count);
 --
 --             r.ImGui_TreePop();
@@ -2109,7 +2109,7 @@ label:
 --         // - integer/float/double
 --         // To avoid polluting the public API with all possible combinations, we use the ImGuiDataType enum
 --         // to pass the type, and passing all arguments by pointer.
---         // This is the reason the test code below creates local variables to hold "zero" "one" etc. for each types.
+--         // This is the reason the test code below creates local variables to hold "zero" "one" etc. for each type.
 --         // In practice, if you frequently use a given type that is not covered by the normal API entry points,
 --         // you can wrap it yourself inside a 1 line function which can take typed argument as value instead of void*,
 --         // and then pass their address to the generic function. For example:
@@ -2153,7 +2153,7 @@ label:
 --         r.ImGui_Text("Drags:");
 --         r.ImGui_Checkbox("Clamp integers to 0..50", &drag_clamp);
 --         r.ImGui_SameLine(); HelpMarker(
---             "As with every widgets in dear imgui, we never modify values unless there is a user interaction.\n"
+--             "As with every widget in dear imgui, we never modify values unless there is a user interaction.\n"
 --             "You can override the clamping limits by using CTRL+Click to input a value.");
 --         r.ImGui_DragScalar("drag s8",        ImGuiDataType_S8,     &s8_v,  drag_speed, drag_clamp ? &s8_zero  : NULL, drag_clamp ? &s8_fifty  : NULL);
 --         r.ImGui_DragScalar("drag u8",        ImGuiDataType_U8,     &u8_v,  drag_speed, drag_clamp ? &u8_zero  : NULL, drag_clamp ? &u8_fifty  : NULL, "%u ms");
@@ -2496,7 +2496,7 @@ label:
       r.ImGui_BeginDisabled(ctx, true)
     end
 
-    -- Submit selected item item so we can query their status in the code following it.
+    -- Submit selected items so we can query their status in the code following it.
     local item_type = widgets.query_item.item_type
     if item_type == 0  then -- Testing text items with no identifier/interaction
       r.ImGui_Text(ctx, 'ITEM: Text')
@@ -2552,6 +2552,10 @@ label:
       rv,widgets.query_item.current = r.ImGui_ListBox(ctx, 'ITEM: ListBox', widgets.query_item.current, 'Apple\0Banana\0Cherry\0Kiwi\0')
     end
 
+    local hovered_delay_none = r.ImGui_IsItemHovered(ctx)
+    local hovered_delay_short = r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_DelayShort())
+    local hovered_delay_normal = r.ImGui_IsItemHovered(ctx, r.ImGui_HoveredFlags_DelayNormal())
+
     -- Display the values of IsItemHovered() and other common item state functions.
     -- Note that the ImGuiHoveredFlags_XXX flags can be combined.
     -- Because BulletText is an item itself and that would affect the output of IsItemXXX functions,
@@ -2595,6 +2599,9 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
       r.ImGui_GetItemRectMax(ctx), select(2, r.ImGui_GetItemRectMax(ctx)),
       r.ImGui_GetItemRectSize(ctx), select(2, r.ImGui_GetItemRectSize(ctx))
     ))
+    r.ImGui_BulletText(ctx,
+      ('w/ Hovering Delay: None = %s, Fast = %s, Normal = %s'):format
+      (hovered_delay_none, hovered_delay_short, hovered_delay_normal))
 
     if widgets.query_item.item_disabled then
       r.ImGui_EndDisabled(ctx)
@@ -2718,6 +2725,37 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
   if r.ImGui_TreeNode(ctx, 'Disable block') then
     rv,widgets.disable_all = r.ImGui_Checkbox(ctx, 'Disable entire section above', widgets.disable_all)
     r.ImGui_SameLine(ctx); demo.HelpMarker('Demonstrate using BeginDisabled()/EndDisabled() across this section.')
+    r.ImGui_TreePop(ctx)
+  end
+
+  if r.ImGui_TreeNode(ctx, 'Text Filter') then
+    -- Helper class to easy setup a text filter.
+    -- You may want to implement a more feature-full filtering scheme in your own application.
+    if not widgets.filtering then
+      widgets.filtering = { inst = nil, text = '' }
+    end
+
+    -- the filter object is destroyed once unused for one or more frames
+    if not r.ImGui_ValidatePtr(widgets.filtering.inst, 'ImGui_TextFilter*') then
+      widgets.filtering.inst = r.ImGui_CreateTextFilter(widgets.filtering.text)
+    end
+
+    demo.HelpMarker('Not a widget per-se, but ImGui_TextFilter is a helper to perform simple filtering on text strings.')
+    r.ImGui_Text(ctx, [[Filter usage:
+  ""         display all lines
+  "xxx"      display lines containing "xxx"
+  "xxx,yyy"  display lines containing "xxx" or "yyy"
+  "-xxx"     hide lines containing "xxx"]])
+    if r.ImGui_TextFilter_Draw(widgets.filtering.inst, ctx) then
+      widgets.filtering.text = r.ImGui_TextFilter_Get(widgets.filtering.inst)
+    end
+    local lines = { 'aaa1.c', 'bbb1.c', 'ccc1.c', 'aaa2.cpp', 'bbb2.cpp', 'ccc2.cpp', 'abc.h', 'hello, world' }
+    for i, line in ipairs(lines) do
+      if r.ImGui_TextFilter_PassFilter(widgets.filtering.inst, line) then
+        r.ImGui_BulletText(ctx, line)
+      end
+    end
+
     r.ImGui_TreePop(ctx)
   end
 end
@@ -3674,7 +3712,7 @@ function demo.ShowDemoWindowPopups()
     --     if (IsItemHovered() && IsMouseReleased(ImGuiMouseButton_Right))
     --         OpenPopup(id);
     --     return BeginPopup(id);
-    -- For advanced advanced uses you may want to replicate and customize this code.
+    -- For advanced uses you may want to replicate and customize this code.
     -- See more details in BeginPopupContextItem().
 
     -- Example 1
@@ -4079,7 +4117,7 @@ function demo.ShowDemoWindowTables()
     end
 
     -- [Method 2] Using TableNextColumn() called multiple times, instead of using a for loop + TableSetColumnIndex().
-    -- This is generally more convenient when you have code manually submitting the contents of each columns.
+    -- This is generally more convenient when you have code manually submitting the contents of each column.
     demo.HelpMarker('Using TableNextRow() + calling TableNextColumn() _before_ each cell, manually.')
     if r.ImGui_BeginTable(ctx, 'table2', 3) then
       for row = 0, 3 do
@@ -4095,10 +4133,10 @@ function demo.ShowDemoWindowTables()
     end
 
     -- [Method 3] We call TableNextColumn() _before_ each cell. We never call TableNextRow(),
-    -- as TableNextColumn() will automatically wrap around and create new roes as needed.
+    -- as TableNextColumn() will automatically wrap around and create new rows as needed.
     -- This is generally more convenient when your cells all contains the same type of data.
     demo.HelpMarker(
-      'Only using TableNextColumn(), which tends to be convenient for tables where every cells contains the same type of contents.\n\z
+      'Only using TableNextColumn(), which tends to be convenient for tables where every cell contains the same type of contents.\n\z
        This is also more similar to the old NextColumn() function of the Columns API, and provided to facilitate the Columns->Tables API transition.')
     if r.ImGui_BeginTable(ctx, 'table3', 3) then
       for item = 0, 13 do
@@ -4148,7 +4186,7 @@ function demo.ShowDemoWindowTables()
     r.ImGui_SameLine(ctx); rv,tables.borders_bg.contents_type = r.ImGui_RadioButtonEx(ctx, 'Text', tables.borders_bg.contents_type, 0)
     r.ImGui_SameLine(ctx); rv,tables.borders_bg.contents_type = r.ImGui_RadioButtonEx(ctx, 'FillButton', tables.borders_bg.contents_type, 1)
     rv,tables.borders_bg.display_headers = r.ImGui_Checkbox(ctx, 'Display headers', tables.borders_bg.display_headers)
-    -- rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.borders_bg.flags, r.ImGui_TableFlags_NoBordersInBody()); r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body (borders will always appears in Headers')
+    -- rv,tables.borders_bg.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.borders_bg.flags, r.ImGui_TableFlags_NoBordersInBody()); r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body (borders will always appear in Headers')
     demo.PopStyleCompact()
 
     if r.ImGui_BeginTable(ctx, 'table1', 3, tables.borders_bg.flags) then
@@ -4190,8 +4228,8 @@ function demo.ShowDemoWindowTables()
       }
     end
 
-    -- By default, if we don't enable ScrollX the sizing policy for each columns is "Stretch"
-    -- Each columns maintain a sizing weight, and they will occupy all available width.
+    -- By default, if we don't enable ScrollX the sizing policy for each column is "Stretch"
+    -- All columns maintain a sizing weight, and they will occupy all available width.
     demo.PushStyleCompact()
     rv,tables.resz_stretch.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.resz_stretch.flags, r.ImGui_TableFlags_Resizable())
     rv,tables.resz_stretch.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.resz_stretch.flags, r.ImGui_TableFlags_BordersV())
@@ -4316,7 +4354,7 @@ function demo.ShowDemoWindowTables()
     rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Reorderable', tables.reorder.flags, r.ImGui_TableFlags_Reorderable())
     rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_Hideable', tables.reorder.flags, r.ImGui_TableFlags_Hideable())
     -- rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.reorder.flags, r.ImGui_TableFlags_NoBordersInBody())
-    -- rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.reorder.flags, r.ImGui_TableFlags_NoBordersInBodyUntilResize()); r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers)')
+    -- rv,tables.reorder.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.reorder.flags, r.ImGui_TableFlags_NoBordersInBodyUntilResize()); r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body until hovered for resize (borders will always appear in Headers)')
     demo.PopStyleCompact()
 
     if r.ImGui_BeginTable(ctx, 'table1', 3, tables.reorder.flags) then
@@ -4381,7 +4419,7 @@ function demo.ShowDemoWindowTables()
        - any form of row selection\n\z
        Because of this, activating BorderOuterV sets the default to PadOuterX. Using PadOuterX or NoPadOuterX you can override the default.\n\n\z
        Actual padding values are using style.CellPadding.\n\n\z
-       In this demo we don't show horizontal borders to emphasis how they don't affect default horizontal padding.")
+       In this demo we don't show horizontal borders to emphasize how they don't affect default horizontal padding.")
 
     demo.PushStyleCompact()
     rv,tables.padding.flags1 = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_PadOuterX', tables.padding.flags1, r.ImGui_TableFlags_PadOuterX())
@@ -4860,7 +4898,7 @@ function demo.ShowDemoWindowTables()
 
   DoOpenAction()
   if r.ImGui_TreeNode(ctx, 'Nested tables') then
-    demo.HelpMarker('This demonstrate embedding a table into another table cell.')
+    demo.HelpMarker('This demonstrates embedding a table into another table cell.')
 
     local flags = r.ImGui_TableFlags_Borders() | r.ImGui_TableFlags_Resizable() | r.ImGui_TableFlags_Reorderable() | r.ImGui_TableFlags_Hideable()
     if r.ImGui_BeginTable(ctx, 'table_nested1', 2, flags) then
@@ -4901,7 +4939,7 @@ function demo.ShowDemoWindowTables()
 
   DoOpenAction()
   if r.ImGui_TreeNode(ctx, 'Row height') then
-    demo.HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'style.CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'style.CellPadding.y * 2.0'.\n\nWe cannot honor a _maximum_ row height as that would requires a unique clipping rectangle per row.")
+    demo.HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'ImGui_StyleVar_CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'ImGui_StyleVar_CellPadding.y * 2.0'.\n\nWe cannot honor a _maximum_ row height as that would require a unique clipping rectangle per row.")
     if r.ImGui_BeginTable(ctx, 'table_row_height', 1, r.ImGui_TableFlags_BordersOuter() | r.ImGui_TableFlags_BordersInnerV()) then
       for row = 0, 9 do
         local min_row_height = TEXT_BASE_HEIGHT * 0.30 * row
@@ -5448,7 +5486,7 @@ function demo.ShowDemoWindowTables()
     end
 
     -- //static ImGuiTextFilter filter;
-    -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once()) -- FIXME-TABLE: Enabling this results in initial clipped first pass on table which tend to affects column sizing
+    -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once()) -- FIXME-TABLE: Enabling this results in initial clipped first pass on table which tend to affect column sizing
     if r.ImGui_TreeNode(ctx, 'Options') then
       -- Make the UI compact because there are so many fields
       demo.PushStyleCompact()
@@ -5472,8 +5510,8 @@ function demo.ShowDemoWindowTables()
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.advanced.flags, r.ImGui_TableFlags_BordersH())
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterH', tables.advanced.flags, r.ImGui_TableFlags_BordersOuterH())
         rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerH', tables.advanced.flags, r.ImGui_TableFlags_BordersInnerH())
-        -- rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.advanced.flags, r.ImGui_TableFlags_NoBordersInBody()) r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body (borders will always appears in Headers')
-        -- rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.advanced.flags, r.ImGui_TableFlags_NoBordersInBodyUntilResize()) r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers)')
+        -- rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.advanced.flags, r.ImGui_TableFlags_NoBordersInBody()) r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body (borders will always appear in Headers')
+        -- rv,tables.advanced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.advanced.flags, r.ImGui_TableFlags_NoBordersInBodyUntilResize()) r.ImGui_SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body until hovered for resize (borders will always appear in Headers)')
         r.ImGui_TreePop(ctx)
       end
 
@@ -5533,7 +5571,7 @@ function demo.ShowDemoWindowTables()
           'If scrolling is disabled (ScrollX and ScrollY not set):\n\z
            - The table is output directly in the parent window.\n\z
            - OuterSize.x < 0.0 will right-align the table.\n\z
-           - OuterSize.x = 0.0 will narrow fit the table unless there are any Stretch column.\n\z
+           - OuterSize.x = 0.0 will narrow fit the table unless there are any Stretch columns.\n\z
            - OuterSize.y then becomes the minimum size for the table, which will extend vertically if there are more rows (unless NoHostExtendY is set).')
 
         -- From a user point of view we will tend to use 'inner_width' differently depending on whether our table is embedding scrolling.
@@ -5639,7 +5677,7 @@ function demo.ShowDemoWindowTables()
           elseif contents_type == 4 or contents_type == 5 then -- selectable/selectable (span row)
             local selectable_flags = contents_type == 5 and r.ImGui_SelectableFlags_SpanAllColumns() | r.ImGui_SelectableFlags_AllowItemOverlap() or r.ImGui_SelectableFlags_None()
             if r.ImGui_Selectable(ctx, label, item.is_selected, selectable_flags, 0, tables.advanced.row_min_height) then
-              if r.ImGui_IsKeyDown(ctx, r.ImGui_Key_ModCtrl()) then
+              if r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Ctrl()) then
                 item.is_selected = not item.is_selected
               else
                 for _,it in ipairs(tables.advanced.items) do
@@ -5917,35 +5955,8 @@ end
 --     r.ImGui_TreePop();
 -- }
 
-function demo.ShowDemoWindowMisc()
+function demo.ShowDemoWindowInputs()
   local rv
-
-  if r.ImGui_CollapsingHeader(ctx, 'Filtering') then
-    -- Helper class to easy setup a text filter.
-    if not misc.filtering then
-      misc.filtering = { inst = nil, text = '' }
-    end
-
-    -- the filter object is destroyed once unused for one or more frames
-    if not r.ImGui_ValidatePtr(misc.filtering.inst, 'ImGui_TextFilter*') then
-      misc.filtering.inst = r.ImGui_CreateTextFilter(misc.filtering.text)
-    end
-
-    r.ImGui_Text(ctx, [[Filter usage:
-  ""         display all lines
-  "xxx"      display lines containing "xxx"
-  "xxx,yyy"  display lines containing "xxx" or "yyy"
-  "-xxx"     hide lines containing "xxx"]])
-    if r.ImGui_TextFilter_Draw(misc.filtering.inst, ctx) then
-      misc.filtering.text = r.ImGui_TextFilter_Get(misc.filtering.inst)
-    end
-    local lines = { 'aaa1.c', 'bbb1.c', 'ccc1.c', 'aaa2.cpp', 'bbb2.cpp', 'ccc2.cpp', 'abc.h', 'hello, world' }
-    for i, line in ipairs(lines) do
-      if r.ImGui_TextFilter_PassFilter(misc.filtering.inst, line) then
-        r.ImGui_BulletText(ctx, line)
-      end
-    end
-  end
 
   if r.ImGui_CollapsingHeader(ctx, 'Inputs, Navigation & Focus') then
     -- Display ImGuiIO output flags
@@ -5960,7 +5971,7 @@ function demo.ShowDemoWindowMisc()
     --   r.ImGui_TreePop(ctx)
     -- end
 
-    -- Display Mouse state
+    -- Display mouse state
     if r.ImGui_TreeNode(ctx, 'Mouse State') then
       if r.ImGui_IsMousePosValid(ctx) then
         r.ImGui_Text(ctx, ('Mouse pos: (%g, %g)'):format(r.ImGui_GetMousePos(ctx)))
@@ -5997,6 +6008,30 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_TreePop(ctx)
     end
 
+    -- Display mouse cursors
+    if r.ImGui_TreeNode(ctx, 'Mouse Cursors') then
+      local current = r.ImGui_GetMouseCursor(ctx)
+      for cursor, name in demo.EachEnum('MouseCursor') do
+        if cursor == current then
+          r.ImGui_Text(ctx, ('Current mouse cursor = %d: %s'):format(current, name))
+          break
+        end
+      end
+      r.ImGui_Text(ctx, 'Hover to see mouse cursors:')
+      -- r.ImGui_SameLine(ctx); demo.HelpMarker(
+      --   'Your application can render a different mouse cursor based on what r.ImGui_GetMouseCursor() returns. \z
+      --    If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, \z
+      --    otherwise your backend needs to handle it.')
+      for i, name in demo.EachEnum('MouseCursor') do
+        local label = ('Mouse cursor %d: %s'):format(i, name)
+        r.ImGui_Bullet(ctx); r.ImGui_Selectable(ctx, label, false)
+        if r.ImGui_IsItemHovered(ctx) then
+          r.ImGui_SetMouseCursor(ctx, i)
+        end
+      end
+      r.ImGui_TreePop(ctx)
+    end
+
     -- Display Keyboard/Mouse state
     if r.ImGui_TreeNode(ctx, 'Keyboard, Gamepad & Navigation State') then
       r.ImGui_Text(ctx, 'Keys down:')
@@ -6018,10 +6053,10 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_Text(ctx, 'Keys pressed:'); KeyboardState(r.ImGui_IsKeyPressed)
       r.ImGui_Text(ctx, 'Keys release:'); KeyboardState(r.ImGui_IsKeyReleased)
       r.ImGui_Text(ctx, ('Keys mods: %s%s%s%s'):format(
-        r.ImGui_IsKeyDown(ctx, r.ImGui_Key_ModCtrl())  and 'CTRL '   or '',
-        r.ImGui_IsKeyDown(ctx, r.ImGui_Key_ModShift()) and 'SHIFT '  or '',
-        r.ImGui_IsKeyDown(ctx, r.ImGui_Key_ModAlt())   and 'ALT '    or '',
-        r.ImGui_IsKeyDown(ctx, r.ImGui_Key_ModSuper()) and 'SUPER '  or ''))
+        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Ctrl())  and 'CTRL '   or '',
+        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Shift()) and 'SHIFT '  or '',
+        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Alt())   and 'ALT '    or '',
+        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Super()) and 'SUPER '  or ''))
 
       r.ImGui_Text(ctx, 'Chars queue:')
       local next_id = 0
@@ -6032,9 +6067,6 @@ function demo.ShowDemoWindowMisc()
         r.ImGui_SameLine(ctx)
         r.ImGui_Text(ctx, ("'%s' (0x%04X)"):format(utf8.char(c), c))
       end
-
-      -- r.ImGui_Text(ctx, 'NavInputs down:');     for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputs[i] > 0.0f)              { r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '[%d] %.2f (%.02f secs)', i, io.NavInputs[i], io.NavInputsDownDuration[i]); }
-      -- r.ImGui_Text('NavInputs pressed:');  for (int i = 0; i < IM_ARRAYSIZE(io.NavInputs); i++) if (io.NavInputsDownDuration[i] == 0.0f) { r.ImGui_SameLine(ctx); r.ImGui_Text(ctx, '[%d]', i); }
 
       -- Draw an arbitrary US keyboard layout to visualize translated keys
       do
@@ -6220,29 +6252,6 @@ function demo.ShowDemoWindowMisc()
       r.ImGui_Text(ctx, ('  w/ default threshold: (%.1f, %.1f)'):format(table.unpack(value_with_lock_threshold)))
       r.ImGui_Text(ctx, ('  w/ zero threshold: (%.1f, %.1f)'):format(table.unpack(value_raw)))
       r.ImGui_Text(ctx, ('GetMouseDelta() (%.1f, %.1f)'):format(table.unpack(mouse_delta)))
-      r.ImGui_TreePop(ctx)
-    end
-
-    if r.ImGui_TreeNode(ctx, 'Mouse cursors') then
-      local current = r.ImGui_GetMouseCursor(ctx)
-      for cursor, name in demo.EachEnum('MouseCursor') do
-        if cursor == current then
-          r.ImGui_Text(ctx, ('Current mouse cursor = %d: %s'):format(current, name))
-          break
-        end
-      end
-      r.ImGui_Text(ctx, 'Hover to see mouse cursors:')
-      -- r.ImGui_SameLine(ctx); demo.HelpMarker(
-      --   'Your application can render a different mouse cursor based on what r.ImGui_GetMouseCursor() returns. \z
-      --    If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, \z
-      --    otherwise your backend needs to handle it.')
-      for i, name in demo.EachEnum('MouseCursor') do
-        local label = ('Mouse cursor %d: %s'):format(i, name)
-        r.ImGui_Bullet(ctx); r.ImGui_Selectable(ctx, label, false)
-        if r.ImGui_IsItemHovered(ctx) then
-          r.ImGui_SetMouseCursor(ctx, i)
-        end
-      end
       r.ImGui_TreePop(ctx)
     end
   end
@@ -6676,6 +6685,39 @@ function demo.ShowStyleEditor()
 end
 
 -------------------------------------------------------------------------------
+-- [SECTION] User Guide / ShowUserGuide()
+-------------------------------------------------------------------------------
+--
+function demo.ShowUserGuide()
+  -- ImGuiIO& io = r.ImGui_GetIO() TODO
+  r.ImGui_BulletText(ctx, 'Double-click on title bar to collapse window.')
+  r.ImGui_BulletText(ctx,
+    'Click and drag on lower corner to resize window\n\z
+     (double-click to auto fit window to its contents).')
+  r.ImGui_BulletText(ctx, 'CTRL+Click on a slider or drag box to input value as text.')
+  r.ImGui_BulletText(ctx, 'TAB/SHIFT+TAB to cycle through keyboard editable fields.')
+  r.ImGui_BulletText(ctx, 'CTRL+Tab to select a window.')
+  -- if (io.FontAllowUserScaling)
+  --     r.ImGui_BulletText(ctx, 'CTRL+Mouse Wheel to zoom window contents.')
+  r.ImGui_BulletText(ctx, 'While inputing text:\n')
+  r.ImGui_Indent(ctx)
+  r.ImGui_BulletText(ctx, 'CTRL+Left/Right to word jump.')
+  r.ImGui_BulletText(ctx, 'CTRL+A or double-click to select all.')
+  r.ImGui_BulletText(ctx, 'CTRL+X/C/V to use clipboard cut/copy/paste.')
+  r.ImGui_BulletText(ctx, 'CTRL+Z,CTRL+Y to undo/redo.')
+  r.ImGui_BulletText(ctx, 'ESCAPE to revert.')
+  r.ImGui_Unindent(ctx)
+  r.ImGui_BulletText(ctx, 'With keyboard navigation enabled:')
+  r.ImGui_Indent(ctx)
+  r.ImGui_BulletText(ctx, 'Arrow keys to navigate.')
+  r.ImGui_BulletText(ctx, 'Space to activate a widget.')
+  r.ImGui_BulletText(ctx, 'Return to input text into a widget.')
+  r.ImGui_BulletText(ctx, 'Escape to deactivate a widget, close popup, exit child window.')
+  r.ImGui_BulletText(ctx, 'Alt to jump to the menu layer of a window.')
+  r.ImGui_Unindent(ctx)
+end
+
+-------------------------------------------------------------------------------
 -- [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
 -------------------------------------------------------------------------------
 -- - ShowExampleAppMainMenuBar()
@@ -6944,6 +6986,8 @@ end
 --             if (copy_to_clipboard)
 --                 r.ImGui_LogFinish();
 --
+--             // Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.
+--             // Using a scrollbar or mouse-wheel will take away from the bottom edge.
 --             if (ScrollToBottom || (AutoScroll && r.ImGui_GetScrollY() >= r.ImGui_GetScrollMaxY()))
 --                 r.ImGui_SetScrollHereY(1.0f);
 --             ScrollToBottom = false;
@@ -6955,7 +6999,7 @@ end
 --
 --         // Command-line
 --         bool reclaim_focus = false;
---         ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
+--         ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
 --         if (r.ImGui_InputText("Input", InputBuf, IM_ARRAYSIZE(InputBuf), input_text_flags, &TextEditCallbackStub, (void*)this))
 --         {
 --             char* s = InputBuf;
@@ -7236,6 +7280,8 @@ function ExampleAppLog.draw(self, title, p_open)
     end
     r.ImGui_PopStyleVar(self.ctx)
 
+    -- Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.
+    -- Using a scrollbar or mouse-wheel will take away from the bottom edge.
     if self.auto_scroll and r.ImGui_GetScrollY(self.ctx) >= r.ImGui_GetScrollMaxY(self.ctx) then
       r.ImGui_SetScrollHereY(self.ctx, 1.0)
     end
@@ -7526,54 +7572,81 @@ end
 -------------------------------------------------------------------------------
 
 -- Demonstrate creating a window with custom resize constraints.
+-- Note that size constraints currently don't work on a docked window.
 function demo.ShowExampleAppConstrainedResize()
   -- struct CustomConstraints
   -- {
   --   // Helper functions to demonstrate programmatic constraints
-  --   static void Square(ImGuiSizeCallbackData* data) { data->DesiredSize.x = data->DesiredSize.y = IM_MAX(data->DesiredSize.x, data->DesiredSize.y); }
-  --   static void Step(ImGuiSizeCallbackData* data)   { float step = (float)(int)(intptr_t)data->UserData; data->DesiredSize = ImVec2((int)(data->DesiredSize.x / step + 0.5f) * step, (int)(data->DesiredSize.y / step + 0.5f) * step); }
+  --   // FIXME: This doesn't take account of decoration size (e.g. title bar), library should make this easier.
+  --   static void AspectRatio(ImGuiSizeCallbackData* data)    { float aspect_ratio = *(float*)data->UserData; data->DesiredSize.x = IM_MAX(data->CurrentSize.x, data->CurrentSize.y); data->DesiredSize.y = (float)(int)(data->DesiredSize.x / aspect_ratio); }
+  --   static void Square(ImGuiSizeCallbackData* data)         { data->DesiredSize.x = data->DesiredSize.y = IM_MAX(data->CurrentSize.x, data->CurrentSize.y); }
+  --   static void Step(ImGuiSizeCallbackData* data)           { float step = *(float*)data->UserData; data->DesiredSize = ImVec2((int)(data->CurrentSize.x / step + 0.5f) * step, (int)(data->CurrentSize.y / step + 0.5f) * step); }
   -- };
 
   if not app.constrained_resize then
     app.constrained_resize = {
-      auto_resize   = false,
-      type          = 0,
-      display_lines = 10,
+      auto_resize    = false,
+      window_padding = true,
+      type           = 0, -- imgui's demo defaults to 5 (aspect ratio)
+      display_lines  = 10,
     }
   end
 
-  if app.constrained_resize.type == 0 then r.ImGui_SetNextWindowSizeConstraints(ctx, -1, 0, -1, FLT_MAX)         end -- Vertical only
-  if app.constrained_resize.type == 1 then r.ImGui_SetNextWindowSizeConstraints(ctx, 0, -1, FLT_MAX, -1)         end -- Horizontal only
-  if app.constrained_resize.type == 2 then r.ImGui_SetNextWindowSizeConstraints(ctx, 100, 100, FLT_MAX, FLT_MAX) end -- Width > 100, Height > 100
-  if app.constrained_resize.type == 3 then r.ImGui_SetNextWindowSizeConstraints(ctx, 400, -1, 500, -1)           end -- Width 400-500
-  if app.constrained_resize.type == 4 then r.ImGui_SetNextWindowSizeConstraints(ctx, -1, 400, -1, 500)           end -- Height 400-500
-  -- if (type == 5) r.ImGui_SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::Square);                     // Always Square
-  -- if (type == 6) r.ImGui_SetNextWindowSizeConstraints(ImVec2(0, 0),     ImVec2(FLT_MAX, FLT_MAX), CustomConstraints::Step, (void*)(intptr_t)100); // Fixed Step
+  -- Submit constraint
+  -- float aspect_ratio = 16.0f / 9.0f;
+  -- float fixed_step = 100.0f;
+  if app.constrained_resize.type == 0 then r.ImGui_SetNextWindowSizeConstraints(ctx, 100, 100,     500, 500)     end -- Between 100x100 and 500x500
+  if app.constrained_resize.type == 1 then r.ImGui_SetNextWindowSizeConstraints(ctx, 100, 100, FLT_MAX, FLT_MAX) end -- Width > 100, Height > 100
+  if app.constrained_resize.type == 2 then r.ImGui_SetNextWindowSizeConstraints(ctx,  -1,   0,      -1, FLT_MAX) end -- Vertical only
+  if app.constrained_resize.type == 3 then r.ImGui_SetNextWindowSizeConstraints(ctx,   0,  -1, FLT_MAX, -1)      end -- Horizontal only
+  if app.constrained_resize.type == 4 then r.ImGui_SetNextWindowSizeConstraints(ctx, 400,  -1,     500, -1)      end -- Width Between and 400 and 500
+  -- if app.constrained_resize.type == 5 then r.ImGui_SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, CustomConstraints::AspectRatio, (void*)&aspect_ratio);   // Aspect ratio
+  -- if app.constrained_resize.type == 6 then r.ImGui_SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, CustomConstraints::Square);                              // Always Square
+  -- if app.constrained_resize.type == 7 then r.ImGui_SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, CustomConstraints::Step, (void*)&fixed_step);            // Fixed Step
 
-  local flags = app.constrained_resize.auto_resize and r.ImGui_WindowFlags_AlwaysAutoResize() or 0
-  local rv,open = r.ImGui_Begin(ctx, 'Example: Constrained Resize', true, flags)
-  if not rv then return open end
-
-  if r.ImGui_IsWindowDocked(ctx) then
-    r.ImGui_Text(ctx, "Warning: Sizing Constraints won't work if the window is docked!")
+  -- Submit window
+  if not app.constrained_resize.window_padding then
+    r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_WindowPadding(), 0, 0)
   end
-  if r.ImGui_Button(ctx, '200x200') then r.ImGui_SetWindowSize(ctx, 200, 200) end r.ImGui_SameLine(ctx)
-  if r.ImGui_Button(ctx, '500x500') then r.ImGui_SetWindowSize(ctx, 500, 500) end r.ImGui_SameLine(ctx)
-  if r.ImGui_Button(ctx, '800x200') then r.ImGui_SetWindowSize(ctx, 800, 200) end
-  r.ImGui_SetNextItemWidth(ctx, 200)
-  rv,app.constrained_resize.type = r.ImGui_Combo(ctx, 'Constraint', app.constrained_resize.type,
-    'Resize vertical only\0\z
-     Resize horizontal only\0\z
-     Width > 100, Height > 100\0\z
-     Width 400-500\0\z
-     Height 400-500\0')
-     --Custom: Always Square\0\z
-     --Custom: Fixed Steps (100)\0')
-  r.ImGui_SetNextItemWidth(ctx, 200)
-  rv,app.constrained_resize.display_lines = r.ImGui_DragInt(ctx, 'Lines', app.constrained_resize.display_lines, 0.2, 1, 100)
-  rv,app.constrained_resize.auto_resize = r.ImGui_Checkbox(ctx, 'Auto-resize', app.constrained_resize.auto_resize)
-  for i = 1, app.constrained_resize.display_lines do
-    r.ImGui_Text(ctx, ('%sHello, sailor! Making this line long enough for the example.'):format((' '):rep(i * 4)))
+  local window_flags = app.constrained_resize.auto_resize and r.ImGui_WindowFlags_AlwaysAutoResize() or 0
+  local visible,open = r.ImGui_Begin(ctx, 'Example: Constrained Resize', true, window_flags)
+  if not app.constrained_resize.window_padding then
+    r.ImGui_PopStyleVar(ctx)
+  end
+  if not visible then return open end
+
+  if r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Shift()) then
+    -- Display a dummy viewport (in your real app you would likely use ImageButton() to display a texture.
+    local avail_size_w, avail_size_h = r.ImGui_GetContentRegionAvail(ctx)
+    local pos_x, pos_y = r.ImGui_GetCursorScreenPos(ctx)
+    r.ImGui_ColorButton(ctx, 'viewport', 0x7f337fff, r.ImGui_ColorEditFlags_NoTooltip() | r.ImGui_ColorEditFlags_NoDragDrop(), avail_size_w, avail_size_h)
+    r.ImGui_SetCursorScreenPos(ctx, pos_x + 10, pos_y + 10)
+    r.ImGui_Text(ctx, ('%.2f x %.2f'):format(avail_size_w, avail_size_h))
+  else
+    r.ImGui_Text(ctx, '(Hold SHIFT to display a dummy viewport)')
+    if r.ImGui_IsWindowDocked(ctx) then
+      r.ImGui_Text(ctx, "Warning: Sizing Constraints won't work if the window is docked!")
+    end
+    if r.ImGui_Button(ctx, 'Set 200x200') then r.ImGui_SetWindowSize(ctx, 200, 200) end r.ImGui_SameLine(ctx)
+    if r.ImGui_Button(ctx, 'Set 500x500') then r.ImGui_SetWindowSize(ctx, 500, 500) end r.ImGui_SameLine(ctx)
+    if r.ImGui_Button(ctx, 'Set 800x200') then r.ImGui_SetWindowSize(ctx, 800, 200) end
+    r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 20)
+    rv,app.constrained_resize.type = r.ImGui_Combo(ctx, 'Constraint', app.constrained_resize.type,
+      'Between 100x100 and 500x500\0\z
+      At least 100x100\0\z
+      Resize vertical only\0\z
+      Resize horizontal only\0\z
+      Width Between 400 and 500\0')
+      --Custom: Aspect Ratio 16:9\0\z
+      --Custom: Always Square\0\z
+      --Custom: Fixed Steps (100)\0')
+    r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 20)
+    rv,app.constrained_resize.display_lines = r.ImGui_DragInt(ctx, 'Lines', app.constrained_resize.display_lines, 0.2, 1, 100)
+    rv,app.constrained_resize.auto_resize = r.ImGui_Checkbox(ctx, 'Auto-resize', app.constrained_resize.auto_resize)
+    rv,app.constrained_resize.window_padding = r.ImGui_Checkbox(ctx, 'Window padding', app.constrained_resize.window_padding)
+    for i = 1, app.constrained_resize.display_lines do
+      r.ImGui_Text(ctx, ('%sHello, sailor! Making this line long enough for the example.'):format((' '):rep(i * 4)))
+    end
   end
   r.ImGui_End(ctx)
 
@@ -7589,7 +7662,7 @@ end
 function demo.ShowExampleAppSimpleOverlay()
   if not app.simple_overlay then
     app.simple_overlay = {
-      corner = 0,
+      location = 0,
     }
   end
 
@@ -7600,18 +7673,23 @@ function demo.ShowExampleAppSimpleOverlay()
                        r.ImGui_WindowFlags_NoFocusOnAppearing() |
                        r.ImGui_WindowFlags_NoNav()
 
-  if app.simple_overlay.corner ~= -1 then
+  if app.simple_overlay.location >= 0 then
     local PAD = 10.0
     local viewport = r.ImGui_GetMainViewport(ctx)
-    local work_pos = {r.ImGui_Viewport_GetWorkPos(viewport)} -- Use work area to avoid menu-bar/task-bar, if any!
-    local work_size = {r.ImGui_Viewport_GetWorkSize(viewport)}
+    local work_pos_x, work_pos_y = r.ImGui_Viewport_GetWorkPos(viewport) -- Use work area to avoid menu-bar/task-bar, if any!
+    local work_size_w, work_size_h = r.ImGui_Viewport_GetWorkSize(viewport)
     local window_pos_x, window_pos_y, window_pos_pivot_x, window_pos_pivot_y
-    window_pos_x = app.simple_overlay.corner & 1 ~= 0 and work_pos[1] + work_size[1] - PAD or work_pos[1] + PAD
-    window_pos_y = app.simple_overlay.corner & 2 ~= 0 and work_pos[2] + work_size[2] - PAD or work_pos[2] + PAD
-    window_pos_pivot_x = app.simple_overlay.corner & 1 ~= 0 and 1.0 or 0.0
-    window_pos_pivot_y = app.simple_overlay.corner & 2 ~= 0 and 1.0 or 0.0
+    window_pos_x = app.simple_overlay.location & 1 ~= 0 and work_pos_x + work_size_w - PAD or work_pos_x + PAD
+    window_pos_y = app.simple_overlay.location & 2 ~= 0 and work_pos_y + work_size_h - PAD or work_pos_y + PAD
+    window_pos_pivot_x = app.simple_overlay.location & 1 ~= 0 and 1.0 or 0.0
+    window_pos_pivot_y = app.simple_overlay.location & 2 ~= 0 and 1.0 or 0.0
     r.ImGui_SetNextWindowPos(ctx, window_pos_x, window_pos_y, r.ImGui_Cond_Always(), window_pos_pivot_x, window_pos_pivot_y)
     -- ImGui::SetNextWindowViewport(viewport->ID) TODO?
+    window_flags = window_flags | r.ImGui_WindowFlags_NoMove()
+  elseif app.simple_overlay.location == -2 then
+    -- Center window
+    local center_x, center_y = r.ImGui_Viewport_GetCenter(r.ImGui_GetMainViewport(ctx))
+    r.ImGui_SetNextWindowPos(ctx, center_x, center_y, r.ImGui_Cond_Always(), 0.5, 0.5)
     window_flags = window_flags | r.ImGui_WindowFlags_NoMove()
   end
 
@@ -7620,7 +7698,7 @@ function demo.ShowExampleAppSimpleOverlay()
   local rv,open = r.ImGui_Begin(ctx, 'Example: Simple overlay', true, window_flags)
   if not rv then return open end
 
-  r.ImGui_Text(ctx, 'Simple overlay\nin the corner of the screen.\n(right-click to change position)')
+  r.ImGui_Text(ctx, 'Simple overlay\n(right-click to change position)')
   r.ImGui_Separator(ctx)
   if r.ImGui_IsMousePosValid(ctx) then
     r.ImGui_Text(ctx, ('Mouse Position: (%.1f,%.1f)'):format(r.ImGui_GetMousePos(ctx)))
@@ -7628,11 +7706,12 @@ function demo.ShowExampleAppSimpleOverlay()
     r.ImGui_Text(ctx, 'Mouse Position: <invalid>')
   end
   if r.ImGui_BeginPopupContextWindow(ctx) then
-    if r.ImGui_MenuItem(ctx, 'Custom',       nil, app.simple_overlay.corner == -1) then app.simple_overlay.corner = -1 end
-    if r.ImGui_MenuItem(ctx, 'Top-left',     nil, app.simple_overlay.corner ==  0) then app.simple_overlay.corner =  0 end
-    if r.ImGui_MenuItem(ctx, 'Top-right',    nil, app.simple_overlay.corner ==  1) then app.simple_overlay.corner =  1 end
-    if r.ImGui_MenuItem(ctx, 'Bottom-left',  nil, app.simple_overlay.corner ==  2) then app.simple_overlay.corner =  2 end
-    if r.ImGui_MenuItem(ctx, 'Bottom-right', nil, app.simple_overlay.corner ==  3) then app.simple_overlay.corner =  3 end
+    if r.ImGui_MenuItem(ctx, 'Custom',       nil, app.simple_overlay.location == -1) then app.simple_overlay.location = -1 end
+    if r.ImGui_MenuItem(ctx, 'Center',       nil, app.simple_overlay.location == -2) then app.simple_overlay.location = -2 end
+    if r.ImGui_MenuItem(ctx, 'Top-left',     nil, app.simple_overlay.location ==  0) then app.simple_overlay.location =  0 end
+    if r.ImGui_MenuItem(ctx, 'Top-right',    nil, app.simple_overlay.location ==  1) then app.simple_overlay.location =  1 end
+    if r.ImGui_MenuItem(ctx, 'Bottom-left',  nil, app.simple_overlay.location ==  2) then app.simple_overlay.location =  2 end
+    if r.ImGui_MenuItem(ctx, 'Bottom-right', nil, app.simple_overlay.location ==  3) then app.simple_overlay.location =  3 end
     if r.ImGui_MenuItem(ctx, 'Close') then open = false end
     r.ImGui_EndPopup(ctx)
   end
@@ -7692,8 +7771,8 @@ end
 -- [SECTION] Example App: Manipulating window titles / ShowExampleAppWindowTitles()
 -------------------------------------------------------------------------------
 
--- Demonstrate using "##" and "###" in identifiers to manipulate ID generation.
--- This apply to all regular items as well.
+-- Demonstrate the use of "##" and "###" in identifiers to manipulate ID generation.
+-- This applies to all regular items as well.
 -- Read FAQ section "How can I have multiple widgets with the same label?" for details.
 function demo.ShowExampleAppWindowTitles()
   local viewport = r.ImGui_GetMainViewport(ctx)
@@ -8253,7 +8332,8 @@ end
 --             if (r.ImGui_MenuItem("Close All Documents", NULL, false, open_count > 0))
 --                 for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
 --                     app.Documents[doc_n].DoQueueClose();
---             if (r.ImGui_MenuItem("Exit", "Alt+F4")) {}
+--             if (r.ImGui_MenuItem("Exit", "Ctrl+F4") && p_open)
+--                 *p_open = false;
 --             r.ImGui_EndMenu();
 --         }
 --         r.ImGui_EndMenuBar();

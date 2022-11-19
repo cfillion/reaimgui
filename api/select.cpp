@@ -142,7 +142,7 @@ Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0)"
 
 // ImGuiSelectableFlags
 DEFINE_ENUM(ImGui, SelectableFlags_None,             "Flags for ImGui_Selectable.");
-DEFINE_ENUM(ImGui, SelectableFlags_DontClosePopups,  "Clicking this don't close parent popup window.");
+DEFINE_ENUM(ImGui, SelectableFlags_DontClosePopups,  "Clicking this doesn't close parent popup window.");
 DEFINE_ENUM(ImGui, SelectableFlags_SpanAllColumns,   "Selectable frame can span all columns (text will still fit in current column).");
 DEFINE_ENUM(ImGui, SelectableFlags_AllowDoubleClick, "Generate press events on double clicks too.");
 DEFINE_ENUM(ImGui, SelectableFlags_Disabled,         "Cannot be selected, display grayed out text.");

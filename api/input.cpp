@@ -251,7 +251,7 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
 });
 
 // ImGuiInputTextFlags
-DEFINE_ENUM(ImGui, InputTextFlags_None,                "Most of the InputTextFlags flags are only useful for ImGui_InputText and not for InputIntX, InputDouble etc.");
+DEFINE_ENUM(ImGui, InputTextFlags_None,                "Most of the InputTextFlags flags are only useful for ImGui_InputText and not for InputIntX, InputDouble etc. (Those are per-item flags. There are shared flags in ImGui_SetConfigVar: ImGui_ConfigVar_InputTextCursorBlink and ImGui_ConfigVar_InputTextEnterKeepActive)");
 DEFINE_ENUM(ImGui, InputTextFlags_CharsDecimal,        "Allow 0123456789.+-*/.");
 DEFINE_ENUM(ImGui, InputTextFlags_CharsHexadecimal,    "Allow 0123456789ABCDEFabcdef.");
 DEFINE_ENUM(ImGui, InputTextFlags_CharsUppercase,      "Turn a..z into A..Z.");
@@ -272,3 +272,4 @@ DEFINE_ENUM(ImGui, InputTextFlags_NoUndoRedo,          "Disable undo/redo. Note 
 DEFINE_ENUM(ImGui, InputTextFlags_CharsScientific,     "Allow 0123456789.+-*/eE (Scientific notation input).");
 // DEFINE_ENUM(ImGui, InputTextFlags_CallbackResize,      "Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this).");
 // DEFINE_ENUM(ImGui, InputTextFlags_CallbackEdit,        "Callback on any edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active).");
+DEFINE_ENUM(ImGui, InputTextFlags_EscapeClearsAll,     "Escape key clears content if not empty, and deactivate otherwise (constrast to default behavior of Escape to revert)");

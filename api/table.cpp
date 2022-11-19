@@ -35,7 +35,7 @@ The typical call flow is:
 - 4. Optionally call ImGui_TableHeadersRow to submit a header row. Names are pulled from ImGui_TableSetupColumn data.
 - 5. Populate contents:
    - In most situations you can use ImGui_TableNextRow + ImGui_TableSetColumnIndex(N) to start appending into a column.
-   - If you are using tables as a sort of grid, where every columns is holding the same type of contents,
+   - If you are using tables as a sort of grid, where every column is holding the same type of contents,
      you may prefer using ImGui_TableNextColumn instead of ImGui_TableNextRow + ImGui_TableSetColumnIndex.
      ImGui_TableNextColumn will automatically wrap-around into the next row if needed.
    - Summary of possible call flow:
@@ -249,7 +249,7 @@ Background colors are rendering in 3 layers:
  - Layer 1: draw with RowBg1 color if set, otherwise draw with ColumnBg1 if set.
  - Layer 2: draw with CellBg color if set.
 
-The purpose of the two row/columns layers is to let you decide if a background color changes should override or blend with the existing color.
+The purpose of the two row/columns layers is to let you decide if a background color change should override or blend with the existing color.
 When using ImGui_TableFlags_RowBg on the table, each row has the RowBg0 color automatically set for odd/even rows.
 If you set the color of RowBg0 target, your color will override the existing RowBg0 color.
 If you set the color of RowBg1 or ColumnBg1 target, your color will blend over the RowBg0 color.)");
@@ -276,7 +276,7 @@ DEFINE_ENUM(ImGui, TableFlags_None, R"(For ImGui_BeginTable.
 - When ScrollX is on:
    - Table defaults to ImGui_TableFlags_SizingFixedFit -> all Columns defaults to ImGui_TableColumnFlags_WidthFixed
    - Columns sizing policy allowed: Fixed/Auto mostly.
-   - Fixed Columns can be enlarged as needed. Table will show an horizontal scrollbar if needed.
+   - Fixed Columns can be enlarged as needed. Table will show a horizontal scrollbar if needed.
    - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. ImGui_SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
    - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in ImGui_BeginTable().
      If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
@@ -299,8 +299,8 @@ DEFINE_ENUM(ImGui, TableFlags_BordersV,                   "Draw vertical borders
 DEFINE_ENUM(ImGui, TableFlags_BordersInner,               "Draw inner borders.");
 DEFINE_ENUM(ImGui, TableFlags_BordersOuter,               "Draw outer borders.");
 DEFINE_ENUM(ImGui, TableFlags_Borders,                    "Draw all borders.");
-// DEFINE_ENUM(ImGui, TableFlags_NoBordersInBody,            "[ALPHA] Disable vertical borders in columns Body (borders will always appears in Headers). -> May move to style.");
-// DEFINE_ENUM(ImGui, TableFlags_NoBordersInBodyUntilResize, "[ALPHA] Disable vertical borders in columns Body until hovered for resize (borders will always appears in Headers). -> May move to style.");
+// DEFINE_ENUM(ImGui, TableFlags_NoBordersInBody,            "[ALPHA] Disable vertical borders in columns Body (borders will always appear in Headers). -> May move to style.");
+// DEFINE_ENUM(ImGui, TableFlags_NoBordersInBodyUntilResize, "[ALPHA] Disable vertical borders in columns Body until hovered for resize (borders will always appear in Headers). -> May move to style.");
 // Sizing Policy (read above for defaults)
 DEFINE_ENUM(ImGui, TableFlags_SizingFixedFit,             "Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching contents width.");
 DEFINE_ENUM(ImGui, TableFlags_SizingFixedSame,            "Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching the maximum contents width of all columns. Implicitly enable ImGui_TableFlags_NoKeepColumnsVisible.");
@@ -314,11 +314,11 @@ DEFINE_ENUM(ImGui, TableFlags_PreciseWidths,              "Disable distributing 
 // Clipping
 DEFINE_ENUM(ImGui, TableFlags_NoClip,                     "Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with ImGui_TableSetupScrollFreeze.");
 // Padding
-DEFINE_ENUM(ImGui, TableFlags_PadOuterX,                  "Default if ImGui_TableFlags_BordersOuterV is on. Enable outer-most padding. Generally desirable if you have headers.");
-DEFINE_ENUM(ImGui, TableFlags_NoPadOuterX,                "Default if ImGui_TableFlags_BordersOuterV is off. Disable outer-most padding.");
+DEFINE_ENUM(ImGui, TableFlags_PadOuterX,                  "Default if ImGui_TableFlags_BordersOuterV is on. Enable outermost padding. Generally desirable if you have headers.");
+DEFINE_ENUM(ImGui, TableFlags_NoPadOuterX,                "Default if ImGui_TableFlags_BordersOuterV is off. Disable outermost padding.");
 DEFINE_ENUM(ImGui, TableFlags_NoPadInnerX,                "Disable inner padding between columns (double inner padding if ImGui_TableFlags_BordersOuterV is on, single inner padding if BordersOuterV is off).");
 // Scrolling
-DEFINE_ENUM(ImGui, TableFlags_ScrollX,                    "Enable horizontal scrolling. Require 'outer_size' parameter of ImGui_BeginTable to specify the container size. Changes default sizing policy. Because this create a child window, ScrollY is currently generally recommended when using ScrollX.");
+DEFINE_ENUM(ImGui, TableFlags_ScrollX,                    "Enable horizontal scrolling. Require 'outer_size' parameter of ImGui_BeginTable to specify the container size. Changes default sizing policy. Because this creates a child window, ScrollY is currently generally recommended when using ScrollX.");
 DEFINE_ENUM(ImGui, TableFlags_ScrollY,                    "Enable vertical scrolling. Require 'outer_size' parameter of ImGui_BeginTable to specify the container size.");
 // Sorting
 DEFINE_ENUM(ImGui, TableFlags_SortMulti,                  "Hold shift when clicking headers to sort on multiple column. ImGui_TableGetGetSortSpecs may return specs where (SpecsCount > 1).");

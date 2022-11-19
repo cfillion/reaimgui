@@ -36,7 +36,7 @@ Default values: offset_from_start_x = 0.0, spacing = -1.0.)",
 });
 
 DEFINE_API(void, NewLine, (ImGui_Context*,ctx),
-"Undo a SameLine() or force a new line when in an horizontal-layout context.",
+"Undo a SameLine() or force a new line when in a horizontal-layout context.",
 {
   FRAME_GUARD;
   ImGui::NewLine();

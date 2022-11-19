@@ -243,12 +243,14 @@ static int translateKeyCode(NSEvent *event)
   // Send key to the system input manager. It will reply by sending insertText.
   [self interpretKeyEvents:@[event]];
 
-  m_window->context()->keyInput(translateKeyCode(event), true);
+  const ImGuiKey key { static_cast<ImGuiKey>(translateKeyCode(event)) };
+  m_window->context()->keyInput(key, true);
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-  m_window->context()->keyInput(translateKeyCode(event), false);
+  const ImGuiKey key { static_cast<ImGuiKey>(translateKeyCode(event)) };
+  m_window->context()->keyInput(key, false);
 }
 
 - (void)flagsChanged:(NSEvent *)event
@@ -265,19 +267,19 @@ static int translateKeyCode(NSEvent *event)
   };
 
   constexpr Modifier modifiers[] {
-    { ImGuiKey_ModCtrl,  NSEventModifierFlagControl, {
+    { ImGuiMod_Ctrl,  NSEventModifierFlagControl, {
       { kVK_Control,      ImGuiKey_LeftCtrl,  0x0001 },
       { kVK_RightControl, ImGuiKey_RightCtrl, 0x2000 }
     }},
-    { ImGuiKey_ModShift, NSEventModifierFlagShift, {
+    { ImGuiMod_Shift, NSEventModifierFlagShift, {
       { kVK_Shift,      ImGuiKey_LeftShift,  0x0002 },
       { kVK_RightShift, ImGuiKey_RightShift, 0x0004 }
     }},
-    { ImGuiKey_ModSuper, NSEventModifierFlagCommand, {
+    { ImGuiMod_Super, NSEventModifierFlagCommand, {
       { kVK_Command,      ImGuiKey_LeftSuper,  0x0008 },
       { kVK_RightCommand, ImGuiKey_RightSuper, 0x0010 },
     }},
-    { ImGuiKey_ModAlt,   NSEventModifierFlagOption, {
+    { ImGuiMod_Alt,   NSEventModifierFlagOption, {
       { kVK_Option,      ImGuiKey_LeftAlt,  0x0020 },
       { kVK_RightOption, ImGuiKey_RightAlt, 0x0040 },
     }},

@@ -73,6 +73,8 @@ enum ConfigVar {
   ReaImGuiConfigVar_MouseDragThreshold,
   ReaImGuiConfigVar_KeyRepeatDelay,
   ReaImGuiConfigVar_KeyRepeatRate,
+  ReaImGuiConfigVar_HoverDelayNormal,
+  ReaImGuiConfigVar_HoverDelayShort,
 
   // ReaImGuiConfigVar_FontGlobalScale,
   // ReaImGuiConfigVar_FontAllowUserScaling,
@@ -90,6 +92,7 @@ enum ConfigVar {
   ReaImGuiConfigVar_MacOSXBehaviors,
   ReaImGuiConfigVar_InputTrickleEventQueue,
   ReaImGuiConfigVar_InputTextCursorBlink,
+  ReaImGuiConfigVar_InputTextEnterKeepActive,
   ReaImGuiConfigVar_DragClickToInputText,
   ReaImGuiConfigVar_WindowsResizeFromEdges,
   ReaImGuiConfigVar_WindowsMoveFromTitleBarOnly,
@@ -101,6 +104,8 @@ enum ConfigVar {
   CASE_IOVAR(MouseDragThreshold)                \
   CASE_IOVAR(KeyRepeatDelay)                    \
   CASE_IOVAR(KeyRepeatRate)                     \
+  CASE_IOVAR(HoverDelayNormal)                  \
+  CASE_IOVAR(HoverDelayShort)                   \
                                                 \
   CASE_IOCONFIGVAR(DockingNoSplit)              \
   CASE_IOCONFIGVAR(DockingWithShift)            \
@@ -111,6 +116,7 @@ enum ConfigVar {
   CASE_IOCONFIGVAR(MacOSXBehaviors)             \
   CASE_IOCONFIGVAR(InputTrickleEventQueue)      \
   CASE_IOCONFIGVAR(InputTextCursorBlink)        \
+  CASE_IOCONFIGVAR(InputTextEnterKeepActive)    \
   CASE_IOCONFIGVAR(DragClickToInputText)        \
   CASE_IOCONFIGVAR(WindowsResizeFromEdges)      \
   CASE_IOCONFIGVAR(WindowsMoveFromTitleBarOnly) \
@@ -170,6 +176,9 @@ DEFINE_ENUM(ReaImGui, ConfigVar_MouseDoubleClickMaxDist,     "Distance threshold
 DEFINE_ENUM(ReaImGui, ConfigVar_MouseDragThreshold,          "Distance threshold before considering we are dragging.");
 DEFINE_ENUM(ReaImGui, ConfigVar_KeyRepeatDelay,              "When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).");
 DEFINE_ENUM(ReaImGui, ConfigVar_KeyRepeatRate,               "When holding a key/button, rate at which it repeats, in seconds.");
+DEFINE_ENUM(ReaImGui, ConfigVar_HoverDelayNormal,            "Delay on hovering before ImGui_IsItemHovered(ImGui_HoveredFlags_DelayNormal) returns true.");
+DEFINE_ENUM(ReaImGui, ConfigVar_HoverDelayShort,             "Delay on hovering before ImGui_IsItemHovered(ImGui_HoveredFlags_DelayShort) returns true.");
+
 DEFINE_ENUM(ReaImGui, ConfigVar_DockingNoSplit,              "Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.");
 DEFINE_ENUM(ReaImGui, ConfigVar_DockingWithShift,            "Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)");
 DEFINE_ENUM(ReaImGui, ConfigVar_DockingTransparentPayload,   "Make window or viewport transparent when docking and only display docking boxes on the target viewport.");
@@ -177,6 +186,7 @@ DEFINE_ENUM(ReaImGui, ConfigVar_ViewportsNoDecoration,       "Disable default OS
 DEFINE_ENUM(ReaImGui, ConfigVar_MacOSXBehaviors,             "OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.");
 DEFINE_ENUM(ReaImGui, ConfigVar_InputTrickleEventQueue,      "Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.");
 DEFINE_ENUM(ReaImGui, ConfigVar_InputTextCursorBlink,        "Enable blinking cursor (optional as some users consider it to be distracting).");
+DEFINE_ENUM(ReaImGui, ConfigVar_InputTextEnterKeepActive,    "Pressing Enter will keep item active and select contents (single-line only).");
 DEFINE_ENUM(ReaImGui, ConfigVar_DragClickToInputText,        "Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.");
 DEFINE_ENUM(ReaImGui, ConfigVar_WindowsResizeFromEdges,      "Enable resizing of windows from their edges and from the lower-left corner.");
 DEFINE_ENUM(ReaImGui, ConfigVar_WindowsMoveFromTitleBarOnly, "Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.");
@@ -184,7 +194,7 @@ DEFINE_ENUM(ReaImGui, ConfigVar_WindowsMoveFromTitleBarOnly, "Enable allowing to
 // ImGuiConfigFlags
 DEFINE_ENUM(ImGui, ConfigFlags_None,                 "Flags for ImGui_CreateContext and ImGui_SetConfigVar(ImGui_ConfigVar_Flags()).");
 DEFINE_ENUM(ImGui, ConfigFlags_NavEnableKeyboard,    "Master keyboard navigation enable flag.");
-// DEFINE_ENUM(ImGui, ConfigFlags_NavEnableGamepad,     "Master gamepad navigation enable flag. This is mostly to instruct your imgui backend to fill io.NavInputs[]. Backend also needs to set ImGuiBackendFlags_HasGamepad.");
+// DEFINE_ENUM(ImGui, ConfigFlags_NavEnableGamepad,     "Master gamepad navigation enable flag.");
 DEFINE_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos, "Instruct navigation to move the mouse cursor.");
 // DEFINE_ENUM(ImGui, ConfigFlags_NavNoCaptureKeyboard, "Instruct navigation to not set the io.WantCaptureKeyboard flag when io.NavActive is set.");
 DEFINE_ENUM(ImGui, ConfigFlags_NoMouse,              "Instruct imgui to ignore mouse position/buttons.");

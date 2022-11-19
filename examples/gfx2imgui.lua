@@ -65,22 +65,19 @@ local MOUSE_BTNS = {
   [reaper.ImGui_MouseButton_Middle()] = 1<<6,
 }
 local KEY_MODS = {
-  [reaper.ImGui_Key_ModCtrl() ] = 1<<2,
-  [reaper.ImGui_Key_ModShift()] = 1<<3,
-  [reaper.ImGui_Key_ModAlt()  ] = 1<<4,
-  [reaper.ImGui_Key_ModSuper()] = 1<<5,
+  [reaper.ImGui_Mod_Ctrl() ] = 1<<2,
+  [reaper.ImGui_Mod_Shift()] = 1<<3,
+  [reaper.ImGui_Mod_Alt()  ] = 1<<4,
+  [reaper.ImGui_Mod_Super()] = 1<<5,
 }
-local CHAR_MOD_MASK = reaper.ImGui_ModFlags_Ctrl() |
-                      reaper.ImGui_ModFlags_Alt()
+local CHAR_MOD_MASK = reaper.ImGui_Mod_Ctrl() |
+                      reaper.ImGui_Mod_Alt()
 local CHAR_MOD_BASE = {
-  [reaper.ImGui_ModFlags_Ctrl()] = 0x001,
-  [CHAR_MOD_MASK               ] = 0x101,
-  [reaper.ImGui_ModFlags_Alt() ] = 0x141,
+  [reaper.ImGui_Mod_Ctrl()] = 0x001,
+  [CHAR_MOD_MASK          ] = 0x101,
+  [reaper.ImGui_Mod_Alt() ] = 0x141,
 }
 local MW_TICK = 6 -- gfx.mouse_[h]wheel increments per wheel tick
-local MOD_CTRL, MOD_SHIFT, MOD_ALT, MOD_SUPER =
-  reaper.ImGui_Key_ModCtrl(), reaper.ImGui_Key_ModShift(),
-  reaper.ImGui_Key_ModAlt(),  reaper.ImGui_Key_ModSuper()
 local KEYS = {
   [reaper.ImGui_Key_Backspace()]   = 0x00000008,
   [reaper.ImGui_Key_Delete()]      = 0x0064656c,

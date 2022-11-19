@@ -191,7 +191,7 @@ DEFINE_API(void, ResetMouseDragDelta, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(int, GetMouseCursor, (ImGui_Context*,ctx),
-"Get desired cursor type, reset every frame. This is updated during the frame.",
+"Get desired mouse cursor shape, reset every frame. This is updated during the frame.",
 {
   FRAME_GUARD;
   return ImGui::GetMouseCursor();
@@ -199,7 +199,7 @@ DEFINE_API(int, GetMouseCursor, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
 (int,cursor_type),
-"Set desired cursor type",
+"Set desired mouse cursor shape",
 {
   FRAME_GUARD;
   IM_ASSERT(cursor_type >= 0 && cursor_type < ImGuiMouseCursor_COUNT);
@@ -211,7 +211,7 @@ DEFINE_API(bool, IsKeyDown, (ImGui_Context*,ctx)
 "Is key being held.",
 {
   FRAME_GUARD;
-  return ImGui::IsKeyDown(key);
+  return ImGui::IsKeyDown(static_cast<ImGuiKey>(key));
 });
 
 DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
@@ -219,7 +219,7 @@ DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
 "Duration the keyboard key has been down (0.0 == just pressed)",
 {
   FRAME_GUARD;
-  return ImGui::GetKeyData(key)->DownDuration;
+  return ImGui::GetKeyData(static_cast<ImGuiKey>(key))->DownDuration;
 });
 
 DEFINE_API(bool, IsKeyPressed, (ImGui_Context*,ctx)
@@ -229,7 +229,8 @@ R"(Was key pressed (went from !Down to Down)? If repeat=true, uses ImGui_ConfigV
 Default values: repeat = true)",
 {
   FRAME_GUARD;
-  return ImGui::IsKeyPressed(key, valueOr(API_RO(repeat), true));
+  return ImGui::IsKeyPressed(static_cast<ImGuiKey>(key),
+                             valueOr(API_RO(repeat), true));
 });
 
 DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
@@ -237,7 +238,7 @@ DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
 "Was key released (went from Down to !Down)?",
 {
   FRAME_GUARD;
-  return ImGui::IsKeyReleased(key);
+  return ImGui::IsKeyReleased(static_cast<ImGuiKey>(key));
 });
 
 DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
@@ -245,11 +246,11 @@ DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
 "Uses provided repeat rate/delay. Return a count, most often 0 or 1 but might be >1 if ImGui_ConfigVar_RepeatRate is small enough that ImGui_GetDeltaTime > RepeatRate.",
 {
   FRAME_GUARD;
-  return ImGui::GetKeyPressedAmount(key, repeat_delay, rate);
+  return ImGui::GetKeyPressedAmount(static_cast<ImGuiKey>(key), repeat_delay, rate);
 });
 
 DEFINE_API(int, GetKeyMods, (ImGui_Context*,ctx),
-"Ctrl/Shift/Alt/Super. See ImGui_ModFlags_*.",
+"Flags for the Ctrl/Shift/Alt/Super keys. Uses ImGui_Mod_* values.",
 {
   FRAME_GUARD;
   return ctx->IO().KeyMods;
@@ -262,7 +263,8 @@ DEFINE_API(bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
   FRAME_GUARD;
   const ImGuiIO &io { ctx->IO() };
   if(idx >= 0 && idx < io.InputQueueCharacters.Size) {
-    if(API_W(unicode_char)) *API_W(unicode_char) = io.InputQueueCharacters[idx];
+    if(API_W(unicode_char))
+      *API_W(unicode_char) = io.InputQueueCharacters[idx];
     return true;
   }
 
@@ -277,13 +279,6 @@ R"(Request capture of keyboard shortcuts in REAPER's global scope for the next f
   ImGui::SetNextFrameWantCaptureKeyboard(want_capture_keyboard);
 });
 
-// ImGuiModFlags
-DEFINE_ENUM(ImGui, ModFlags_None,  "");
-DEFINE_ENUM(ImGui, ModFlags_Ctrl,  "");
-DEFINE_ENUM(ImGui, ModFlags_Shift, "");
-DEFINE_ENUM(ImGui, ModFlags_Alt,   "Menu");
-DEFINE_ENUM(ImGui, ModFlags_Super, "Cmd/Super/Windows key");
-
 // ImGuiMouseButton
 DEFINE_ENUM(ImGui, MouseButton_Left,   "");
 DEFINE_ENUM(ImGui, MouseButton_Right,  "");
@@ -294,7 +289,7 @@ DEFINE_ENUM(ImGui, MouseButton_Middle, "");
 DEFINE_ENUM(ImGui, MouseCursor_Arrow,      "");
 DEFINE_ENUM(ImGui, MouseCursor_TextInput,  "When hovering over ImGui_InputText, etc.");
 DEFINE_ENUM(ImGui, MouseCursor_ResizeAll,  "(Unused by Dear ImGui functions)");
-DEFINE_ENUM(ImGui, MouseCursor_ResizeNS,   "When hovering over an horizontal border.");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeNS,   "When hovering over a horizontal border.");
 DEFINE_ENUM(ImGui, MouseCursor_ResizeEW,   "When hovering over a vertical border or a column.");
 DEFINE_ENUM(ImGui, MouseCursor_ResizeNESW, "When hovering over the bottom-left corner of a window.");
 DEFINE_ENUM(ImGui, MouseCursor_ResizeNWSE, "When hovering over the bottom-right corner of a window.");
@@ -410,8 +405,19 @@ DEFINE_ENUM(ImGui, Key_KeypadEnter, "");
 DEFINE_ENUM(ImGui, Key_KeypadEqual, "");
 // Gamepad
 // TODO
+// Mouse Buttons
+// - This is mirroring the data also written to io.MouseDown[], io.MouseWheel, in a format allowing them to be accessed via standard key API.
+DEFINE_ENUM(ImGui, Key_MouseLeft, "");
+DEFINE_ENUM(ImGui, Key_MouseRight, "");
+DEFINE_ENUM(ImGui, Key_MouseMiddle, "");
+DEFINE_ENUM(ImGui, Key_MouseX1, "");
+DEFINE_ENUM(ImGui, Key_MouseX2, "");
+DEFINE_ENUM(ImGui, Key_MouseWheelX, "");
+DEFINE_ENUM(ImGui, Key_MouseWheelY, "");
 // Keyboard Modifiers
-DEFINE_ENUM(ImGui, Key_ModCtrl, "");
-DEFINE_ENUM(ImGui, Key_ModShift, "");
-DEFINE_ENUM(ImGui, Key_ModAlt, "");
-DEFINE_ENUM(ImGui, Key_ModSuper, "");
+DEFINE_ENUM(ImGui, Mod_None, "");
+DEFINE_ENUM(ImGui, Mod_Ctrl, "");
+DEFINE_ENUM(ImGui, Mod_Shift, "");
+DEFINE_ENUM(ImGui, Mod_Alt, "");
+DEFINE_ENUM(ImGui, Mod_Super, "");
+DEFINE_ENUM(ImGui, Mod_Shortcut, "Alias for ImGui_Mod_Ctrl on Linux and Windows and ImGui_Mod_Super on macOS (Cmd key).");

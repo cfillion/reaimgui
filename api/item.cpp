@@ -194,14 +194,14 @@ DEFINE_API(bool, IsItemActivated, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, IsItemDeactivated, (ImGui_Context*,ctx),
-"Was the last item just made inactive (item was previously active). Useful for Undo/Redo patterns with widgets that requires continuous editing.",
+"Was the last item just made inactive (item was previously active). Useful for Undo/Redo patterns with widgets that require continuous editing.",
 {
   FRAME_GUARD;
   return ImGui::IsItemDeactivated();
 });
 
 DEFINE_API(bool, IsItemDeactivatedAfterEdit, (ImGui_Context*,ctx),
-"Was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that requires continuous editing. Note that you may get false positives (some widgets such as ImGui_Combo/ImGui_ListBox/ImGui_Selectable will return true even when clicking an already selected item).",
+"Was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that require continuous editing. Note that you may get false positives (some widgets such as ImGui_Combo/ImGui_ListBox/ImGui_Selectable will return true even when clicking an already selected item).",
 {
   FRAME_GUARD;
   return ImGui::IsItemDeactivatedAfterEdit();
@@ -243,3 +243,7 @@ DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenDisabled,            "ImGui_IsItemHover
 DEFINE_ENUM(ImGui, HoveredFlags_NoNavOverride,                "Disable using gamepad/keyboard navigation state when active, always query mouse.");
 DEFINE_ENUM(ImGui, HoveredFlags_RectOnly,                     "ImGui_HoveredFlags_AllowWhenBlockedByPopup | ImGui_HoveredFlags_AllowWhenBlockedByActiveItem | ImGui_HoveredFlags_AllowWhenOverlapped");
 DEFINE_ENUM(ImGui, HoveredFlags_RootAndChildWindows,          "ImGui_HoveredFlags_RootWindow | ImGui_HoveredFlags_ChildWindows");
+
+DEFINE_ENUM(ImGui, HoveredFlags_DelayNormal,                  "Return true after ImGui_ConfigVar_HoverDelayNormal elapsed (~0.30 sec)");
+DEFINE_ENUM(ImGui, HoveredFlags_DelayShort,                   "Return true after ImGui_ConfigVar_HoverDelayShort elapsed (~0.10 sec)");
+DEFINE_ENUM(ImGui, HoveredFlags_NoSharedDelay,                "Disable shared delay system where moving from one item to the next keeps the previous timer for a short time (standard for tooltips with long delays)");

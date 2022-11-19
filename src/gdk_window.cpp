@@ -299,10 +299,10 @@ void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
 
   struct Modifier { unsigned int vkey; ImGuiKey modkey, ikey; };
   constexpr Modifier modifiers[] {
-    { VK_CONTROL, ImGuiKey_ModCtrl,  ImGuiKey_LeftCtrl  },
-    { VK_SHIFT,   ImGuiKey_ModShift, ImGuiKey_LeftShift },
-    { VK_MENU,    ImGuiKey_ModAlt,   ImGuiKey_LeftAlt   },
-    { VK_LWIN,    ImGuiKey_ModSuper, ImGuiKey_LeftSuper },
+    { VK_CONTROL, ImGuiMod_Ctrl,  ImGuiKey_LeftCtrl  },
+    { VK_SHIFT,   ImGuiMod_Shift, ImGuiKey_LeftShift },
+    { VK_MENU,    ImGuiMod_Alt,   ImGuiKey_LeftAlt   },
+    { VK_LWIN,    ImGuiMod_Super, ImGuiKey_LeftSuper },
   };
 
   for(const auto &modifier : modifiers) {
@@ -337,5 +337,5 @@ void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
     m_ctx->charInput(unmangleSwellChar(swellKey, lParam));
 
   if(swellKey < 256)
-    m_ctx->keyInput(swellKey, down);
+    m_ctx->keyInput(static_cast<ImGuiKey>(swellKey), down);
 }

@@ -261,7 +261,7 @@ DEFINE_ENUM(ImGui, StyleVar_DisabledAlpha,       "Additional alpha multiplier ap
 DEFINE_ENUM(ImGui, StyleVar_WindowPadding,       "Padding within a window.");
 DEFINE_ENUM(ImGui, StyleVar_WindowRounding,      "Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.");
 DEFINE_ENUM(ImGui, StyleVar_WindowBorderSize,    "Thickness of border around windows. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).");
-DEFINE_ENUM(ImGui, StyleVar_WindowMinSize,       "Minimum window size. This is a global setting. If you want to constraint individual windows, use ImGui_SetNextWindowSizeConstraints.");
+DEFINE_ENUM(ImGui, StyleVar_WindowMinSize,       "Minimum window size. This is a global setting. If you want to constrain individual windows, use ImGui_SetNextWindowSizeConstraints.");
 DEFINE_ENUM(ImGui, StyleVar_WindowTitleAlign,    "Alignment for title bar text. Defaults to (0.0,0.5) for left-aligned,vertically centered.");
 DEFINE_ENUM(ImGui, StyleVar_ChildRounding,       "Radius of child window corners rounding. Set to 0.0 to have rectangular windows.");
 DEFINE_ENUM(ImGui, StyleVar_ChildBorderSize,     "Thickness of border around child windows. Generally set to 0.0 or 1.0. (Other values are not well tested and more CPU/GPU costly).");

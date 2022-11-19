@@ -419,22 +419,22 @@ void Win32Window::keyEvent(unsigned int msg,
   if(vk == VK_RETURN && (HIWORD(lParam) & KF_EXTENDED))
     m_ctx->keyInput(ImGuiKey_KeypadEnter, down);
   else if(!modKeyEvent(vk, down))
-    m_ctx->keyInput(vk, down);
+    m_ctx->keyInput(static_cast<ImGuiKey>(vk), down);
 }
 
 struct ModKey { uint8_t vk; ImGuiKey ik; };
 struct Modifier { uint8_t modVK; ImGuiKey modKey; ModKey keys[2]; };
 constexpr Modifier modifiers[] {
-  { VK_CONTROL, ImGuiKey_ModCtrl, {
+  { VK_CONTROL, ImGuiMod_Ctrl, {
     { VK_LCONTROL, ImGuiKey_LeftCtrl }, { VK_RCONTROL, ImGuiKey_RightCtrl },
   }},
-  { VK_SHIFT, ImGuiKey_ModShift, {
+  { VK_SHIFT, ImGuiMod_Shift, {
     { VK_LSHIFT, ImGuiKey_LeftShift }, { VK_RSHIFT, ImGuiKey_RightShift },
   }},
-  { VK_MENU, ImGuiKey_ModAlt, {
+  { VK_MENU, ImGuiMod_Alt, {
     { VK_LMENU, ImGuiKey_LeftAlt }, { VK_RMENU, ImGuiKey_RightAlt },
   }},
-  { VK_LWIN, ImGuiKey_ModSuper, {
+  { VK_LWIN, ImGuiMod_Super, {
     { VK_LWIN, ImGuiKey_LeftSuper }, { VK_RWIN, ImGuiKey_RightSuper },
   }},
 };

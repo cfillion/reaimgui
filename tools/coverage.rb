@@ -136,7 +136,7 @@ NATIVE_ONLY = [
   # images
   'ImVec2 ImGui::GetFontTexUvWhitePixel()',
   'void ImGui::Image(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)',
-  'bool ImGui::ImageButton(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, int, const ImVec4&, const ImVec4&)',
+  'bool ImGui::ImageButton(const char*, ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)',
   'void ImDrawList::PushTextureID(ImTextureID)',
   'void ImDrawList::PopTextureID()',
   'void ImDrawList::AddImage(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
@@ -177,8 +177,7 @@ NATIVE_ONLY_ENUMS = [
   /\AInputTextFlags_Callback/,
   /\ADataType_/,
   'Key_None',
-  /\AKey_(NamedKey|KeysData)/,
-  /\ANavInput_/,
+  /\AKey_(NamedKey|KeysData|Reserved)/,
   /\ABackendFlags_/,
   /\AFontAtlasFlags_/,
   'Cond_None',          # alias for Cond_Always
@@ -192,8 +191,6 @@ NATIVE_ONLY_ENUMS = [
   'WindowFlags_NoBringToFrontOnFocus', # not supported with per-window viewports
 
   # only for dear imgui's internal use
-  'InputTextFlags_Multiline',
-  'InputTextFlags_NoMarkEdited',
   /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu|DockNodeHost)\z/,
   /\ADrawListFlags_/,
   /\ADockNodeFlags_/,
@@ -638,6 +635,10 @@ NATIVE_ONLY.each do |sig|
 end
 
 NATIVE_ONLY_ENUMS.each do |rule|
+  if imgui_enums.none? { _1.match? rule }
+    warn "enum marked as native only not found in dear imgui: #{rule}"
+  end
+
   reaimgui_enums.select { _1.match? rule }.each do |enum|
     warn "enum marked as native only but exported anyway: #{enum}"
   end

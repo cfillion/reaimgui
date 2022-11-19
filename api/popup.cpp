@@ -43,7 +43,7 @@ Default values: flags = ImGui_WindowFlags_None)",
 
 DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
-R"(Block every interactions behind the window, cannot be closed by user, add a dimming background, has a title bar. Return true if the modal is open, and you can start outputting to it. See ImGui_BeginPopup.
+R"(Block every interaction behind the window, cannot be closed by user, add a dimming background, has a title bar. Return true if the modal is open, and you can start outputting to it. See ImGui_BeginPopup.
 
 Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 {

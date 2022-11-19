@@ -220,8 +220,8 @@ DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
 // ImGuiDragDropFlags
 DEFINE_ENUM(ImGui, DragDropFlags_None,                     "Flags for ImGui_BeginDragDropSource, ImGui_AcceptDragDropPayload.");
 // BeginDragDropSource() flags
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoPreviewTooltip,   "By default, a successful call to ImGui_BeginDragDropSource opens a tooltip so you can display a preview or description of the source contents. This flag disable this behavior.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoDisableHover,     "By default, when dragging we clear data so that ImGui_IsItemHovered will return false, to avoid subsequent user code submitting tooltips. This flag disable this behavior so you can still call ImGui_IsItemHovered on the source item.");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceNoPreviewTooltip,   "By default, a successful call to ImGui_BeginDragDropSource opens a tooltip so you can display a preview or description of the source contents. This flag disables this behavior.");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceNoDisableHover,     "By default, when dragging we clear data so that ImGui_IsItemHovered will return false, to avoid subsequent user code submitting tooltips. This flag disables this behavior so you can still call ImGui_IsItemHovered on the source item.");
 DEFINE_ENUM(ImGui, DragDropFlags_SourceNoHoldToOpenOthers, "Disable the behavior that allows to open tree nodes and collapsing header by holding over them while dragging a source item.");
 DEFINE_ENUM(ImGui, DragDropFlags_SourceAllowNullID,        "Allow items such as ImGui_Text, ImGui_Image that have no unique identifier to be used as drag source, by manufacturing a temporary identifier based on their window-relative position. This is extremely unusual within the dear imgui ecosystem and so we made it explicit.");
 DEFINE_ENUM(ImGui, DragDropFlags_SourceExtern,             "External source (from outside of dear imgui), won't attempt to read current item/window info. Will always return true. Only one Extern source can be active simultaneously.");

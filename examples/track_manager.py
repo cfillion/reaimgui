@@ -35,7 +35,7 @@ def trackRow(ti):
       ImGui_SelectableFlags_SpanAllColumns() |
       ImGui_SelectableFlags_AllowItemOverlap())
     if selectable[0]:
-      if ImGui_IsKeyDown(ctx, ImGui_Key_ModCtrl()):
+      if ImGui_IsKeyDown(ctx, ImGui_Mod_Ctrl()):
         RPR_SetTrackSelected(track, not selected)
       else:
         RPR_SetOnlyTrackSelected(track)

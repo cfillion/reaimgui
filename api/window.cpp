@@ -286,6 +286,14 @@ DEFINE_API(void, SetNextWindowFocus, (ImGui_Context*,ctx),
   ImGui::SetNextWindowFocus();
 });
 
+DEFINE_API(void, SetNextWindowScroll, (ImGui_Context*,ctx)
+(double,scroll_x)(double,scroll_y),
+"Set next window scrolling value (use < 0.0 to not affect a given axis).",
+{
+  FRAME_GUARD;
+  ImGui::SetNextWindowScroll(ImVec2(scroll_x, scroll_y));
+});
+
 DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
 (double,alpha),
 "Set next window background color alpha. Helper to easily override the Alpha component of ImGui_Col_WindowBg/ChildBg/PopupBg. You may also use ImGui_WindowFlags_NoBackground.",
@@ -424,7 +432,7 @@ DEFINE_API(void, GetWindowContentRegionMin, (ImGui_Context*,ctx)
 
 DEFINE_API(void, GetWindowContentRegionMax, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-"Content boundaries max (roughly (0,0)+Size-Scroll) where Size can be override with ImGui_SetNextWindowContentSize, in window coordinates.",
+"Content boundaries max (roughly (0,0)+Size-Scroll) where Size can be overridden with ImGui_SetNextWindowContentSize, in window coordinates.",
 {
   FRAME_GUARD;
 
@@ -448,9 +456,13 @@ DEFINE_API(double, GetScrollY, (ImGui_Context*,ctx),
   return ImGui::GetScrollY();
 });
 
+#define SET_SCROLL_NOTE "\n\n" \
+  "Any change of Scroll will be applied at the beginning of next frame in the first call to ImGui_Begin().\n" \
+  "You may instead use ImGui_SetNextWindowScroll() prior to calling Begin() to avoid this delay, as an alternative to using ImGui_SetScrollX()/ImGui_SetScrollY()."
+
 DEFINE_API(void, SetScrollX, (ImGui_Context*,ctx)
 (double,scroll_x),
-"Set scrolling amount [0 .. ImGui_GetScrollMaxX()]",
+"Set scrolling amount [0 .. ImGui_GetScrollMaxX()]" SET_SCROLL_NOTE,
 {
   FRAME_GUARD;
   ImGui::SetScrollX(scroll_x);
@@ -458,7 +470,7 @@ DEFINE_API(void, SetScrollX, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetScrollY, (ImGui_Context*,ctx)
 (double,scroll_y),
-"Set scrolling amount [0 .. ImGui_GetScrollMaxY()]",
+"Set scrolling amount [0 .. ImGui_GetScrollMaxY()]" SET_SCROLL_NOTE,
 {
   FRAME_GUARD;
   ImGui::SetScrollY(scroll_y);
@@ -589,7 +601,7 @@ DEFINE_ENUM(ImGui, FocusedFlags_RootAndChildWindows, "ImGui_FocusedFlags_RootWin
 
 // ImGuiWindowFlags
 // for Begin(), BeginChild()
-DEFINE_ENUM(ImGui, WindowFlags_None,                      "Default flag. See ImGui_Begin.");
+DEFINE_ENUM(ImGui, WindowFlags_None,                      "Default flag. See ImGui_Begin. (Those are per-window flags. There are shared flags in ImGui_SetConfigVar: ImGui_ConfigVar_WindowsResizeFromEdges and ImGui_ConfigVar_WindowsMoveFromTitleBarOnly)");
 DEFINE_ENUM(ImGui, WindowFlags_NoTitleBar,                "Disable title-bar.");
 DEFINE_ENUM(ImGui, WindowFlags_NoResize,                  "Disable user resizing with the lower-right grip.");
 DEFINE_ENUM(ImGui, WindowFlags_NoMove,                    "Disable user moving the window.");
