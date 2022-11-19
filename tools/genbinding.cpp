@@ -87,7 +87,7 @@ struct Argument {
 struct Function {
   std::string_view name, file;
   Type type;
-  unsigned int line;
+  API::LineRange lines;
   std::vector<Argument> args;
   std::string_view doc;
 
@@ -150,7 +150,7 @@ static const char *nextString(const char *&str)
 static void addFunc(const API *api)
 {
   const char *def { api->definition() };
-  Function func { api->name(), api->file(), def, api->line() };
+  Function func { api->name(), api->file(), def, api->lines() };
 
   std::string_view argTypes { nextString(def) };
   std::string_view argNames { nextString(def) };
@@ -689,7 +689,8 @@ static void humanBinding(std::ostream &stream)
       stream << "<p class=\"source\">"
                 "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
                 REAIMGUI_VERSION "/api/" << func->file << ".cpp#L"
-             << func->line << "\">View source</a></p>";
+             << func->lines.first << "-L" << func->lines.second
+             << "\">View source</a></p>";
 
       stream << "</details>";
     }

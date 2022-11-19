@@ -41,7 +41,10 @@
     return static_cast<type>(0);      \
   }
 
-#define DEFINE_API(type, name, args, help, ...)                 \
+#define DEFINE_API STORE_LINE DO_DEFINE_API
+#define STORE_LINE static const API::FirstLine \
+  BOOST_PP_CAT(line, __LINE__) { __LINE__ };
+#define DO_DEFINE_API(type, name, args, help, ...)              \
   type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _,           \
     BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))) noexcept               \
   try __VA_ARGS__                                               \

@@ -32,6 +32,12 @@ static auto &knownFuncs()
   return funcs;
 }
 
+static auto &firstLine()
+{
+  static unsigned int storedLine;
+  return storedLine;
+}
+
 const API *API::enumAPI()
 {
   const auto &container { knownFuncs() };
@@ -39,13 +45,18 @@ const API *API::enumAPI()
   return it == container.end() ? nullptr : *it++;
 }
 
+API::FirstLine::FirstLine(unsigned int line)
+{
+  firstLine() = line;
+}
+
 API::API(const char *name, void *cImpl, void *reascriptImpl,
-        const char *definition, const char *file, unsigned int line)
+        const char *definition, const char *file, unsigned int lastLine)
   : m_regs {
       { KEY("API"),       cImpl         },
       { KEY("APIvararg"), reascriptImpl },
       { KEY("APIdef"),    reinterpret_cast<void *>(const_cast<char *>(definition)) },
-    }, m_file { file }, m_line { line }
+    }, m_file { file }, m_lines { firstLine(), lastLine }
 {
   knownFuncs().push_back(this);
 }
