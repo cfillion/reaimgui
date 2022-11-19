@@ -22,14 +22,33 @@
 
 #include <string>
 
+#ifdef _WIN32
+#  ifdef IMPORT_GENBINDINGS_API
+#    define GENBINDINGS_API __declspec(dllimport)
+#  else
+#    define GENBINDINGS_API __declspec(dllexport)
+#  endif
+#else
+#  define GENBINDINGS_API __attribute__((visibility("default")))
+#endif
+
 class API {
 public:
   static void announceAll(bool add);
   static void handleError(const char *fnName, const reascript_error &);
   static void handleError(const char *fnName, const imgui_error &);
 
-  API(const char *name, void *cImpl, void *reascriptImpl, void *definition);
+  API(const char *name, void *cImpl, void *reascriptImpl, const char *definition,
+      const char *file, unsigned int line);
   ~API();
+
+  // internal helpers for genbindings
+  GENBINDINGS_API static const API *enumAPI();
+  inline const char *name() const { return &m_regs[0].key[4]; /* strlen("API_") */ }
+  inline const char *definition() const {
+    return static_cast<const char *>(m_regs[2].value); }
+  inline const char *file() const { return m_file; }
+  inline unsigned int line() const { return m_line; }
 
 private:
   struct RegInfo {
@@ -37,6 +56,8 @@ private:
     void *value;
     void announce(bool add) const;
   } m_regs[3];
+  const char *m_file;
+  unsigned int m_line;
 };
 
 #endif

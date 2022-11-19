@@ -15,9 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define IMPORT_GENBINDINGS_API
+#include "../src/api.hpp"
 #include "version.hpp"
 
 #include <algorithm>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <set>
@@ -25,25 +28,21 @@
 #include <unordered_map>
 #include <vector>
 
-#include <reaper_plugin.h>
-
 constexpr const char *GENERATED_FOR { "Generated for ReaImGui v" REAIMGUI_VERSION };
-
-extern "C" int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE, reaper_plugin_info_t *);
 
 struct Type {
   Type(const char *val)             : m_value { val } {}
   Type(const std::string_view &val) : m_value { val } {}
 
-  bool isVoid() const { return m_value == "void"; }
-  bool isInt() const { return m_value == "int"; }
-  bool isBool() const { return m_value == "bool"; }
-  bool isDouble() const { return m_value == "double"; }
-  bool isString() const { return m_value == "const char*" || m_value == "char*"; }
-  bool isPointer() const { return m_value.size() >= 1 && m_value.back() == '*'; }
-  bool isConst() const { return m_value.find("const ") == 0; }
-  bool isNumber() const { return isInt() || isDouble(); };
-  bool isScalar() const { return isBool() || isNumber(); }
+  bool isVoid()      const { return m_value == "void"; }
+  bool isInt()       const { return m_value == "int"; }
+  bool isBool()      const { return m_value == "bool"; }
+  bool isDouble()    const { return m_value == "double"; }
+  bool isString()    const { return m_value == "const char*" || m_value == "char*"; }
+  bool isPointer()   const { return m_value.size() >= 1 && m_value.back() == '*'; }
+  bool isConst()     const { return m_value.find("const ") == 0; }
+  bool isNumber()    const { return isInt() || isDouble(); };
+  bool isScalar()    const { return isBool() || isNumber(); }
   bool isScalarPtr() const { return isPointer() && removePtr().isScalar(); }
 
   Type removePtr() const
@@ -86,10 +85,11 @@ struct Argument {
 };
 
 struct Function {
-  std::string_view name;
+  std::string_view name, file;
   Type type;
+  unsigned int line;
   std::vector<Argument> args;
-  std::string_view doc, file, line;
+  std::string_view doc;
 
   bool isEnum() const { return type.isInt() && args.empty(); }
   bool hasOutputArgs() const;
@@ -147,19 +147,18 @@ static const char *nextString(const char *&str)
   return str += strlen(str) + 1;
 }
 
-static void addFunc(const char *name, const char *def)
+static void addFunc(const API *api)
 {
-  Function func { name, def };
+  const char *def { api->definition() };
+  Function func { api->name(), api->file(), def, api->line() };
 
   std::string_view argTypes { nextString(def) };
   std::string_view argNames { nextString(def) };
-  func.doc = { nextString(def) };
-  func.file = { nextString(def) };
-  func.line = { nextString(def) };
+  func.doc = nextString(def);
 
   while(argTypes.size() > 0 && argNames.size() > 0) {
-    size_t typeLen { argTypes.find(',') },
-           nameLen { argNames.find(',') };
+    const size_t typeLen { argTypes.find(',') },
+                 nameLen { argNames.find(',') };
 
     func.args.emplace_back(Argument {
       argTypes.substr(0, typeLen),
@@ -875,39 +874,12 @@ static void pythonBinding(std::ostream &stream)
   }
 }
 
-static int plugin_register(const char *key, void *value)
-{
-  if(strstr(key, "APIdef_") == key)
-    addFunc(key + strlen("APIdef_"), reinterpret_cast<const char *>(value));
-  return 0;
-}
-
-static int fakeFunc()
-{
-  return 0;
-}
-
-static void *getFunc(const char *name)
-{
-  struct FakeAPI { const char *name; void *func; };
-  const FakeAPI fakeAPI[] {
-    { "plugin_register", reinterpret_cast<void *>(&plugin_register) },
-  };
-
-  for(const FakeAPI &api : fakeAPI) {
-    if(!strcmp(name, api.name))
-      return api.func;
-  }
-
-  return reinterpret_cast<void *>(&fakeFunc);
-}
-
 int main(int argc, const char *argv[])
 {
-  reaper_plugin_info_t rec { REAPER_PLUGIN_VERSION };
-  rec.GetFunc = getFunc;
-
-  REAPER_PLUGIN_ENTRYPOINT(nullptr, &rec);
+  while(const API *func { API::enumAPI() }) {
+    if(func->definition()) // only handle function exported to ReaScript
+      addFunc(func);
+  }
 
   const std::string_view lang { argc >= 2 ? argv[1] : "cpp" };
 

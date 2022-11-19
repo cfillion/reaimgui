@@ -51,15 +51,13 @@
   static const API API_reg_##name { #name,                      \
     reinterpret_cast<void *>(&API_##name),                      \
     reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>), \
-    reinterpret_cast<void *>(const_cast<char *>(                \
-      #type "\0"                                                \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE,                \
-        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                \
-        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
-      help "\0"                                                 \
-      API_FILE "\0" BOOST_PP_STRINGIZE(__LINE__)                \
-    ))                                                          \
+    #type "\0"                                                  \
+    BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE,                  \
+      BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                  \
+    BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                  \
+      BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                  \
+    help,                                                       \
+    API_FILE, __LINE__,                                         \
   }
 
 #define DEFINE_ENUM(prefix, name, doc) \

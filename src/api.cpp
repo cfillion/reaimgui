@@ -32,12 +32,20 @@ static auto &knownFuncs()
   return funcs;
 }
 
-API::API(const char *name, void *cImpl, void *reascriptImpl, void *definition)
+const API *API::enumAPI()
+{
+  const auto &container { knownFuncs() };
+  static auto it { container.begin() };
+  return it == container.end() ? nullptr : *it++;
+}
+
+API::API(const char *name, void *cImpl, void *reascriptImpl,
+        const char *definition, const char *file, unsigned int line)
   : m_regs {
       { KEY("API"),       cImpl         },
       { KEY("APIvararg"), reascriptImpl },
-      { KEY("APIdef"),    definition    },
-    }
+      { KEY("APIdef"),    reinterpret_cast<void *>(const_cast<char *>(definition)) },
+    }, m_file { file }, m_line { line }
 {
   knownFuncs().push_back(this);
 }
