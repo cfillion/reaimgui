@@ -16,6 +16,7 @@
  */
 
 #include "helper.hpp"
+#include "variant.hpp"
 
 DEFINE_API(ImGui_Context*, CreateContext,
 (const char*,label)(int*,API_RO(config_flags)),
@@ -65,131 +66,119 @@ DEFINE_API(double, GetFramerate, (ImGui_Context*,ctx),
 });
 
 // expose most settings from ImGuiIO
-enum ConfigVar {
-  ReaImGuiConfigVar_Flags,
+// ITEM ORDER MUST MATCH WITH THE DEFINE_CONFIGVAR() BELOW!
+static const std::variant<
+  bool  ImGuiIO::*,
+  float ImGuiIO::*,
+  int   ImGuiIO::*
+> g_configVars[] {
+  &ImGuiIO::ConfigFlags,
 
-  ReaImGuiConfigVar_MouseDoubleClickTime,
-  ReaImGuiConfigVar_MouseDoubleClickMaxDist,
-  ReaImGuiConfigVar_MouseDragThreshold,
-  ReaImGuiConfigVar_KeyRepeatDelay,
-  ReaImGuiConfigVar_KeyRepeatRate,
-  ReaImGuiConfigVar_HoverDelayNormal,
-  ReaImGuiConfigVar_HoverDelayShort,
+  &ImGuiIO::MouseDoubleClickTime,
+  &ImGuiIO::MouseDoubleClickMaxDist,
+  &ImGuiIO::MouseDragThreshold,
+  &ImGuiIO::KeyRepeatDelay,
+  &ImGuiIO::KeyRepeatRate,
+  &ImGuiIO::HoverDelayNormal,
+  &ImGuiIO::HoverDelayShort,
 
-  // ReaImGuiConfigVar_FontGlobalScale,
-  // ReaImGuiConfigVar_FontAllowUserScaling,
+  // &ImGuiIO::FontGlobalScale,
+  // &ImGuiIO::FontAllowUserScaling,
 
-  ReaImGuiConfigVar_DockingNoSplit,
-  ReaImGuiConfigVar_DockingWithShift,
-  // ReaImGuiConfigVar_DockingAlwaysTabBar,
-  ReaImGuiConfigVar_DockingTransparentPayload,
+  &ImGuiIO::ConfigDockingNoSplit,
+  &ImGuiIO::ConfigDockingWithShift,
+  // &ImGuiIO::ConfigDockingAlwaysTabBar,
+  &ImGuiIO::ConfigDockingTransparentPayload,
 
-  // ReaImGuiConfigVar_ViewportsNoAutoMerge,
-  // ReaImGuiConfigVar_ViewportsNoTaskBarIcon,
-  ReaImGuiConfigVar_ViewportsNoDecoration,
-  // ReaImGuiConfigVar_ViewportsNoDefaultParent,
+  // &ImGuiIO::ConfigViewportsNoAutoMerge,
+  // &ImGuiIO::ConfigViewportsNoTaskBarIcon,
+  &ImGuiIO::ConfigViewportsNoDecoration,
+  // &ImGuiIO::ConfigViewportsNoDefaultParent,
 
-  ReaImGuiConfigVar_MacOSXBehaviors,
-  ReaImGuiConfigVar_InputTrickleEventQueue,
-  ReaImGuiConfigVar_InputTextCursorBlink,
-  ReaImGuiConfigVar_InputTextEnterKeepActive,
-  ReaImGuiConfigVar_DragClickToInputText,
-  ReaImGuiConfigVar_WindowsResizeFromEdges,
-  ReaImGuiConfigVar_WindowsMoveFromTitleBarOnly,
+  &ImGuiIO::ConfigMacOSXBehaviors,
+  &ImGuiIO::ConfigInputTrickleEventQueue,
+  &ImGuiIO::ConfigInputTextCursorBlink,
+  &ImGuiIO::ConfigInputTextEnterKeepActive,
+  &ImGuiIO::ConfigDragClickToInputText,
+  &ImGuiIO::ConfigWindowsResizeFromEdges,
+  &ImGuiIO::ConfigWindowsMoveFromTitleBarOnly,
 };
 
-#define IOCONFIGVAR_CASES                       \
-  CASE_IOVAR(MouseDoubleClickTime)              \
-  CASE_IOVAR(MouseDoubleClickMaxDist)           \
-  CASE_IOVAR(MouseDragThreshold)                \
-  CASE_IOVAR(KeyRepeatDelay)                    \
-  CASE_IOVAR(KeyRepeatRate)                     \
-  CASE_IOVAR(HoverDelayNormal)                  \
-  CASE_IOVAR(HoverDelayShort)                   \
-                                                \
-  CASE_IOCONFIGVAR(DockingNoSplit)              \
-  CASE_IOCONFIGVAR(DockingWithShift)            \
-  CASE_IOCONFIGVAR(DockingTransparentPayload)   \
-                                                \
-  CASE_IOCONFIGVAR(ViewportsNoDecoration)       \
-                                                \
-  CASE_IOCONFIGVAR(MacOSXBehaviors)             \
-  CASE_IOCONFIGVAR(InputTrickleEventQueue)      \
-  CASE_IOCONFIGVAR(InputTextCursorBlink)        \
-  CASE_IOCONFIGVAR(InputTextEnterKeepActive)    \
-  CASE_IOCONFIGVAR(DragClickToInputText)        \
-  CASE_IOCONFIGVAR(WindowsResizeFromEdges)      \
-  CASE_IOCONFIGVAR(WindowsMoveFromTitleBarOnly) \
+#define DEFINE_CONFIGVAR(name, doc) \
+  DEFINE_API(int, ConfigVar##_##name, NO_ARGS, doc, \
+    { return __COUNTER__ - baseConfigVar - 1; })
 
-#define CASE_IOVAR(var) \
-  case ReaImGuiConfigVar_##var: return io.var;
-#define CASE_IOCONFIGVAR(var) \
-  case ReaImGuiConfigVar_##var: return io.Config##var;
+constexpr int baseConfigVar { __COUNTER__ };
+DEFINE_CONFIGVAR(Flags,                       "ImGui_ConfigFlags_*");
+
+DEFINE_CONFIGVAR(MouseDoubleClickTime,        "Time for a double-click, in seconds.");
+DEFINE_CONFIGVAR(MouseDoubleClickMaxDist,     "Distance threshold to stay in to validate a double-click, in pixels.");
+DEFINE_CONFIGVAR(MouseDragThreshold,          "Distance threshold before considering we are dragging.");
+DEFINE_CONFIGVAR(KeyRepeatDelay,              "When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).");
+DEFINE_CONFIGVAR(KeyRepeatRate,               "When holding a key/button, rate at which it repeats, in seconds.");
+DEFINE_CONFIGVAR(HoverDelayNormal,            "Delay on hovering before ImGui_IsItemHovered(ImGui_HoveredFlags_DelayNormal) returns true.");
+DEFINE_CONFIGVAR(HoverDelayShort,             "Delay on hovering before ImGui_IsItemHovered(ImGui_HoveredFlags_DelayShort) returns true.");
+
+DEFINE_CONFIGVAR(DockingNoSplit,              "Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.");
+DEFINE_CONFIGVAR(DockingWithShift,            "Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)");
+DEFINE_CONFIGVAR(DockingTransparentPayload,   "Make window or viewport transparent when docking and only display docking boxes on the target viewport.");
+
+DEFINE_CONFIGVAR(ViewportsNoDecoration,       "Disable default OS window decoration. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).");
+
+DEFINE_CONFIGVAR(MacOSXBehaviors,             "OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.");
+DEFINE_CONFIGVAR(InputTrickleEventQueue,      "Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.");
+DEFINE_CONFIGVAR(InputTextCursorBlink,        "Enable blinking cursor (optional as some users consider it to be distracting).");
+DEFINE_CONFIGVAR(InputTextEnterKeepActive,    "Pressing Enter will keep item active and select contents (single-line only).");
+DEFINE_CONFIGVAR(DragClickToInputText,        "Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.");
+DEFINE_CONFIGVAR(WindowsResizeFromEdges,      "Enable resizing of windows from their edges and from the lower-left corner.");
+DEFINE_CONFIGVAR(WindowsMoveFromTitleBarOnly, "Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.");
+
+static_assert(__COUNTER__ - baseConfigVar - 1 == std::size(g_configVars),
+  "forgot to DEFINE_CONFIGVAR() a config var?");
 
 DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx),
 "See ImGui_SetConfigVar, ImGui_ConfigVar_*.",
 {
   assertValid(ctx);
-  const ImGuiIO &io { ctx->IO() };
+  if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
+    throw reascript_error { "unknown config variable" };
 
-  switch(static_cast<ConfigVar>(var_idx)) {
-  IOCONFIGVAR_CASES
-  case ReaImGuiConfigVar_Flags:
-    return ctx->userConfigFlags();
-  }
+  return std::visit([ctx](auto ImGuiIO::*field) -> double {
+    const ImGuiIO &io { ctx->IO() };
 
-  throw reascript_error { "unknown config variable" };
+    if constexpr (std::is_same_v<decltype(ImGuiIO::ConfigFlags),
+                                 std::decay_t<decltype(io.*field)>>) {
+      if(field == &ImGuiIO::ConfigFlags)
+        return ctx->userConfigFlags();
+    }
+
+    return io.*field;
+  }, g_configVars[var_idx]);
 });
-
-#undef CASE_IOVAR
-#undef CASE_IOCONFIGVAR
-
-#define CASE_IOVAR(var) \
-  case ReaImGuiConfigVar_##var: io.var = value; return;
-#define CASE_IOCONFIGVAR(var) \
-  case ReaImGuiConfigVar_##var: io.Config##var = value; return;
 
 DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,value),
 "See ImGui_GetConfigVar, ImGui_ConfigVar_*.",
 {
   assertValid(ctx);
-  ImGuiIO &io { ctx->IO() };
+  if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
+    throw reascript_error { "unknown config variable" };
 
-  switch(static_cast<ConfigVar>(var_idx)) {
-  IOCONFIGVAR_CASES
-  case ReaImGuiConfigVar_Flags:
-    ctx->setUserConfigFlags(value);
-    return;
-  }
+  std::visit([ctx, value](auto ImGuiIO::*field) {
+    ImGuiIO &io { ctx->IO() };
 
-  throw reascript_error { "unknown config variable" };
+    if constexpr (std::is_same_v<decltype(ImGuiIO::ConfigFlags),
+                                 std::decay_t<decltype(io.*field)>>) {
+      if(field == &ImGuiIO::ConfigFlags) {
+        ctx->setUserConfigFlags(value);
+        return;
+      }
+    }
+
+    io.*field = value;
+  }, g_configVars[var_idx]);
 });
-
-#undef CASE_IOVAR
-#undef CASE_IOCONFIGVAR
-
-DEFINE_ENUM(ReaImGui, ConfigVar_Flags,                       "ImGui_ConfigFlags_*");
-DEFINE_ENUM(ReaImGui, ConfigVar_MouseDoubleClickTime,        "Time for a double-click, in seconds.");
-DEFINE_ENUM(ReaImGui, ConfigVar_MouseDoubleClickMaxDist,     "Distance threshold to stay in to validate a double-click, in pixels.");
-DEFINE_ENUM(ReaImGui, ConfigVar_MouseDragThreshold,          "Distance threshold before considering we are dragging.");
-DEFINE_ENUM(ReaImGui, ConfigVar_KeyRepeatDelay,              "When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).");
-DEFINE_ENUM(ReaImGui, ConfigVar_KeyRepeatRate,               "When holding a key/button, rate at which it repeats, in seconds.");
-DEFINE_ENUM(ReaImGui, ConfigVar_HoverDelayNormal,            "Delay on hovering before ImGui_IsItemHovered(ImGui_HoveredFlags_DelayNormal) returns true.");
-DEFINE_ENUM(ReaImGui, ConfigVar_HoverDelayShort,             "Delay on hovering before ImGui_IsItemHovered(ImGui_HoveredFlags_DelayShort) returns true.");
-
-DEFINE_ENUM(ReaImGui, ConfigVar_DockingNoSplit,              "Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.");
-DEFINE_ENUM(ReaImGui, ConfigVar_DockingWithShift,            "Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)");
-DEFINE_ENUM(ReaImGui, ConfigVar_DockingTransparentPayload,   "Make window or viewport transparent when docking and only display docking boxes on the target viewport.");
-DEFINE_ENUM(ReaImGui, ConfigVar_ViewportsNoDecoration,       "Disable default OS window decoration. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).");
-DEFINE_ENUM(ReaImGui, ConfigVar_MacOSXBehaviors,             "OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End, Double click selects by word instead of selecting whole text, Multi-selection in lists uses Cmd/Super instead of Ctrl.");
-DEFINE_ENUM(ReaImGui, ConfigVar_InputTrickleEventQueue,      "Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.");
-DEFINE_ENUM(ReaImGui, ConfigVar_InputTextCursorBlink,        "Enable blinking cursor (optional as some users consider it to be distracting).");
-DEFINE_ENUM(ReaImGui, ConfigVar_InputTextEnterKeepActive,    "Pressing Enter will keep item active and select contents (single-line only).");
-DEFINE_ENUM(ReaImGui, ConfigVar_DragClickToInputText,        "Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.");
-DEFINE_ENUM(ReaImGui, ConfigVar_WindowsResizeFromEdges,      "Enable resizing of windows from their edges and from the lower-left corner.");
-DEFINE_ENUM(ReaImGui, ConfigVar_WindowsMoveFromTitleBarOnly, "Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.");
 
 // ImGuiConfigFlags
 DEFINE_ENUM(ImGui, ConfigFlags_None,                 "Flags for ImGui_CreateContext and ImGui_SetConfigVar(ImGui_ConfigVar_Flags()).");

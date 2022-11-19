@@ -18,52 +18,50 @@
 #include "helper.hpp"
 
 #include "color.hpp"
+#include "variant.hpp"
 
-#include <algorithm>
-
-enum class StyleVarType { Unknown, Float, ImVec2 };
-
-// also add a new case to GetStyleVar
-static StyleVarType styleVarType(const ImGuiStyleVar var)
+template<int Index, int EnumValue, typename T>
+constexpr auto assertStyleVar(T ImGuiStyle::*var)
 {
-  constexpr ImGuiStyleVar floatVars[] {
-    ImGuiStyleVar_Alpha,
-    ImGuiStyleVar_DisabledAlpha,
-    ImGuiStyleVar_ChildBorderSize,
-    ImGuiStyleVar_ChildRounding,
-    ImGuiStyleVar_FrameBorderSize,
-    ImGuiStyleVar_FrameRounding,
-    ImGuiStyleVar_GrabMinSize,
-    ImGuiStyleVar_GrabRounding,
-    ImGuiStyleVar_IndentSpacing,
-    ImGuiStyleVar_PopupBorderSize,
-    ImGuiStyleVar_PopupRounding,
-    ImGuiStyleVar_ScrollbarRounding,
-    ImGuiStyleVar_ScrollbarSize,
-    ImGuiStyleVar_TabRounding,
-    ImGuiStyleVar_WindowBorderSize,
-    ImGuiStyleVar_WindowRounding,
-  };
-
-  constexpr ImGuiStyleVar vec2Vars[] {
-    ImGuiStyleVar_ButtonTextAlign,
-    ImGuiStyleVar_SelectableTextAlign,
-    ImGuiStyleVar_CellPadding,
-    ImGuiStyleVar_ItemSpacing,
-    ImGuiStyleVar_ItemInnerSpacing,
-    ImGuiStyleVar_FramePadding,
-    ImGuiStyleVar_WindowPadding,
-    ImGuiStyleVar_WindowMinSize,
-    ImGuiStyleVar_WindowTitleAlign,
-  };
-
-  if(std::find(std::begin(floatVars), std::end(floatVars), var) != std::end(floatVars))
-    return StyleVarType::Float;
-  else if(std::find(std::begin(vec2Vars), std::end(vec2Vars), var) != std::end(vec2Vars))
-    return StyleVarType::ImVec2;
-  else
-    return StyleVarType::Unknown;
+  static_assert(Index == EnumValue,
+    "array indices do not match with enum values in imgui.h");
+  return var;
 }
+
+#define STYLEVAR(name) \
+  assertStyleVar<__COUNTER__ - baseStyleVar - 1, \
+                 ImGuiStyleVar_##name>(&ImGuiStyle::name)
+
+constexpr int baseStyleVar { __COUNTER__ };
+static const std::variant<float ImGuiStyle::*, ImVec2 ImGuiStyle::*> g_styleVars[] {
+  STYLEVAR(Alpha),
+  STYLEVAR(DisabledAlpha),
+  STYLEVAR(WindowPadding),
+  STYLEVAR(WindowRounding),
+  STYLEVAR(WindowBorderSize),
+  STYLEVAR(WindowMinSize),
+  STYLEVAR(WindowTitleAlign),
+  STYLEVAR(ChildRounding),
+  STYLEVAR(ChildBorderSize),
+  STYLEVAR(PopupRounding),
+  STYLEVAR(PopupBorderSize),
+  STYLEVAR(FramePadding),
+  STYLEVAR(FrameRounding),
+  STYLEVAR(FrameBorderSize),
+  STYLEVAR(ItemSpacing),
+  STYLEVAR(ItemInnerSpacing),
+  STYLEVAR(IndentSpacing),
+  STYLEVAR(CellPadding),
+  STYLEVAR(ScrollbarSize),
+  STYLEVAR(ScrollbarRounding),
+  STYLEVAR(GrabMinSize),
+  STYLEVAR(GrabRounding),
+  STYLEVAR(TabRounding),
+  STYLEVAR(ButtonTextAlign),
+  STYLEVAR(SelectableTextAlign),
+};
+
+static_assert(std::size(g_styleVars) == ImGuiStyleVar_COUNT);
 
 DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,val1)(double*,API_RO(val2)),
@@ -72,21 +70,21 @@ R"(See ImGui_StyleVar_* for possible values of 'var_idx'.
 Default values: val2 = nil)",
 {
   FRAME_GUARD;
-
-  switch(styleVarType(var_idx)) {
-  case StyleVarType::Unknown:
+  if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
     throw reascript_error { "unknown style variable" };
-  case StyleVarType::Float:
-    if(API_RO(val2))
-      throw reascript_error { "second value ignored for this variable" };
-    ImGui::PushStyleVar(var_idx, val1);
-    break;
-  case StyleVarType::ImVec2:
-    if(!API_RO(val2))
-      throw reascript_error { "this variable requires two values" };
-    ImGui::PushStyleVar(var_idx, ImVec2(val1, *API_RO(val2)));
-    break;
-  }
+
+  std::visit([var_idx, val1, API_RO(val2)](auto ImGuiStyle::*field) {
+    if constexpr (std::is_same_v<ImVec2, std::decay_t<decltype(ImGui::GetStyle().*field)>>) {
+      if(!API_RO(val2))
+        throw reascript_error { "this variable requires two values (x, y)" };
+      ImGui::PushStyleVar(var_idx, ImVec2(val1, *API_RO(val2)));
+    }
+    else {
+      if(API_RO(val2))
+        throw reascript_error { "second value ignored for this variable" };
+      ImGui::PushStyleVar(var_idx, val1);
+    }
+  }, g_styleVars[var_idx]);
 });
 
 DEFINE_API(void, PopStyleVar, (ImGui_Context*,ctx)
@@ -99,55 +97,23 @@ Default values: count = 1)",
   ImGui::PopStyleVar(valueOr(API_RO(count), 1));
 });
 
-#define CASE_FLOAT_VAR(var)                   \
-  case ImGuiStyleVar_##var:                   \
-    if(API_W(val1)) *API_W(val1) = style.var; \
-    break;
-
-#define CASE_IMVEC2_VAR(var)                    \
-  case ImGuiStyleVar_##var:                     \
-    if(API_W(val1)) *API_W(val1) = style.var.x; \
-    if(API_W(val2)) *API_W(val2) = style.var.y; \
-    break;
-
 DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double*,API_W(val1))(double*,API_W(val2)),
 "",
 {
   FRAME_GUARD;
-
-  const ImGuiStyle &style { ImGui::GetStyle() };
-
-  switch(var_idx) {
-  CASE_FLOAT_VAR(Alpha)
-  CASE_FLOAT_VAR(DisabledAlpha)
-  CASE_FLOAT_VAR(ChildBorderSize)
-  CASE_FLOAT_VAR(ChildRounding)
-  CASE_FLOAT_VAR(FrameBorderSize)
-  CASE_FLOAT_VAR(FrameRounding)
-  CASE_FLOAT_VAR(GrabMinSize)
-  CASE_FLOAT_VAR(GrabRounding)
-  CASE_FLOAT_VAR(IndentSpacing)
-  CASE_FLOAT_VAR(PopupBorderSize)
-  CASE_FLOAT_VAR(PopupRounding)
-  CASE_FLOAT_VAR(ScrollbarRounding)
-  CASE_FLOAT_VAR(ScrollbarSize)
-  CASE_FLOAT_VAR(TabRounding)
-  CASE_FLOAT_VAR(WindowBorderSize)
-  CASE_FLOAT_VAR(WindowRounding)
-
-  CASE_IMVEC2_VAR(ButtonTextAlign)
-  CASE_IMVEC2_VAR(SelectableTextAlign)
-  CASE_IMVEC2_VAR(CellPadding)
-  CASE_IMVEC2_VAR(ItemSpacing)
-  CASE_IMVEC2_VAR(ItemInnerSpacing)
-  CASE_IMVEC2_VAR(FramePadding)
-  CASE_IMVEC2_VAR(WindowPadding)
-  CASE_IMVEC2_VAR(WindowMinSize)
-  CASE_IMVEC2_VAR(WindowTitleAlign)
-  default:
+  if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
     throw reascript_error { "unknown style variable" };
-  }
+
+  std::visit([API_W(val1), API_W(val2)](auto ImGuiStyle::*field) {
+    const ImGuiStyle &style { ImGui::GetStyle() };
+    if constexpr (std::is_same_v<ImVec2, std::decay_t<decltype(style.*field)>>) {
+      if(API_W(val1)) *API_W(val1) = (style.*field).x;
+      if(API_W(val2)) *API_W(val2) = (style.*field).y;
+    }
+    else
+      if(API_W(val1)) *API_W(val1) = style.*field;
+  }, g_styleVars[var_idx]);
 });
 
 #undef CASE_FLOAT_VAR
