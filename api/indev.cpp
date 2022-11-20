@@ -21,6 +21,12 @@
 
 API_SECTION("Keyboard & Mouse");
 
+API_SUBSECTION("Mouse", R"(To refer to a mouse button, you may use named enums in your code e.g. ImGui_MouseButton_Left, ImGui_MouseButton_Right.
+
+You can also use regular integer: it is forever guaranteed that 0=Left, 1=Right, 2=Middle.
+
+Dragging operations are only reported after mouse has moved a certain distance away from the initial clicking position (see 'lock_threshold' parameters and 'ImGui_ConfigVar_MouseDragThreshold'))");
+
 DEFINE_API(bool, IsMouseDown, (ImGui_Context*,ctx)
 (int,button),
 "Is mouse button held?",
@@ -208,6 +214,23 @@ DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
   ImGui::SetMouseCursor(cursor_type);
 });
 
+DEFINE_ENUM(ImGui, MouseButton_Left,   "");
+DEFINE_ENUM(ImGui, MouseButton_Right,  "");
+DEFINE_ENUM(ImGui, MouseButton_Middle, "");
+
+// DEFINE_ENUM(ImGui, MouseCursor_None,       ""); // not implemented in ReaImGui
+DEFINE_ENUM(ImGui, MouseCursor_Arrow,      "");
+DEFINE_ENUM(ImGui, MouseCursor_TextInput,  "When hovering over ImGui_InputText, etc.");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeAll,  "(Unused by Dear ImGui functions)");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeNS,   "When hovering over a horizontal border.");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeEW,   "When hovering over a vertical border or a column.");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeNESW, "When hovering over the bottom-left corner of a window.");
+DEFINE_ENUM(ImGui, MouseCursor_ResizeNWSE, "When hovering over the bottom-right corner of a window.");
+DEFINE_ENUM(ImGui, MouseCursor_Hand,       "(Unused by Dear ImGui functions. Use for e.g. hyperlinks)");
+DEFINE_ENUM(ImGui, MouseCursor_NotAllowed, "When hovering something with disallowed interaction. Usually a crossed circle.");
+
+DEFINE_SECTION(keyboard, ROOT_SECTION, "Keyboard");
+
 DEFINE_API(bool, IsKeyDown, (ImGui_Context*,ctx)
 (int,key),
 "Is key being held.",
@@ -281,25 +304,8 @@ R"(Request capture of keyboard shortcuts in REAPER's global scope for the next f
   ImGui::SetNextFrameWantCaptureKeyboard(want_capture_keyboard);
 });
 
-// ImGuiMouseButton
-DEFINE_ENUM(ImGui, MouseButton_Left,   "");
-DEFINE_ENUM(ImGui, MouseButton_Right,  "");
-DEFINE_ENUM(ImGui, MouseButton_Middle, "");
-
-// ImGuiMouseCursor
-// DEFINE_ENUM(ImGui, MouseCursor_None,       ""); // not implemented in ReaImGui
-DEFINE_ENUM(ImGui, MouseCursor_Arrow,      "");
-DEFINE_ENUM(ImGui, MouseCursor_TextInput,  "When hovering over ImGui_InputText, etc.");
-DEFINE_ENUM(ImGui, MouseCursor_ResizeAll,  "(Unused by Dear ImGui functions)");
-DEFINE_ENUM(ImGui, MouseCursor_ResizeNS,   "When hovering over a horizontal border.");
-DEFINE_ENUM(ImGui, MouseCursor_ResizeEW,   "When hovering over a vertical border or a column.");
-DEFINE_ENUM(ImGui, MouseCursor_ResizeNESW, "When hovering over the bottom-left corner of a window.");
-DEFINE_ENUM(ImGui, MouseCursor_ResizeNWSE, "When hovering over the bottom-right corner of a window.");
-DEFINE_ENUM(ImGui, MouseCursor_Hand,       "(Unused by Dear ImGui functions. Use for e.g. hyperlinks)");
-DEFINE_ENUM(ImGui, MouseCursor_NotAllowed, "When hovering something with disallowed interaction. Usually a crossed circle.");
-
-// ImGuiKey
-// Keyboard
+DEFINE_SECTION(namedKeys, keyboard, "Named Keys");
+API_SECTION_P(namedKeys, "Keyboard");
 DEFINE_ENUM(ImGui, Key_Tab, "");
 DEFINE_ENUM(ImGui, Key_LeftArrow, "");
 DEFINE_ENUM(ImGui, Key_RightArrow, "");
@@ -405,10 +411,10 @@ DEFINE_ENUM(ImGui, Key_KeypadSubtract, "");
 DEFINE_ENUM(ImGui, Key_KeypadAdd, "");
 DEFINE_ENUM(ImGui, Key_KeypadEnter, "");
 DEFINE_ENUM(ImGui, Key_KeypadEqual, "");
-// Gamepad
+API_SECTION_P(namedKeys, "Gamepad");
 // TODO
-// Mouse Buttons
-// - This is mirroring the data also written to io.MouseDown[], io.MouseWheel, in a format allowing them to be accessed via standard key API.
+API_SECTION_P(namedKeys, "Mouse Buttons",
+"This is mirroring the data also written accessible via IsMouseDown, GetMouseWheel etc, in a format allowing them to be accessed via standard key API.");
 DEFINE_ENUM(ImGui, Key_MouseLeft, "");
 DEFINE_ENUM(ImGui, Key_MouseRight, "");
 DEFINE_ENUM(ImGui, Key_MouseMiddle, "");
@@ -416,7 +422,7 @@ DEFINE_ENUM(ImGui, Key_MouseX1, "");
 DEFINE_ENUM(ImGui, Key_MouseX2, "");
 DEFINE_ENUM(ImGui, Key_MouseWheelX, "");
 DEFINE_ENUM(ImGui, Key_MouseWheelY, "");
-// Keyboard Modifiers
+API_SECTION_P(namedKeys, "Modifiers");
 DEFINE_ENUM(ImGui, Mod_None, "");
 DEFINE_ENUM(ImGui, Mod_Ctrl, "");
 DEFINE_ENUM(ImGui, Mod_Shift, "");

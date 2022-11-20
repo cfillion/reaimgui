@@ -17,7 +17,9 @@
 
 #include "helper.hpp"
 
-API_SECTION("Button");
+API_SECTION("Button",
+R"(Most widgets return true when the value has been changed or when pressed/selected
+You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.)");
 
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
@@ -53,7 +55,7 @@ Default values: flags = ImGui_ButtonFlags_None)",
 
 DEFINE_API(bool, ArrowButton, (ImGui_Context*,ctx)
 (const char*,str_id)(int,dir),
-"Square button with an arrow shape.",
+"Square button with an arrow shape. 'dir' is one of the ImGui_Dir_* values",
 {
   FRAME_GUARD;
   return ImGui::ArrowButton(str_id, dir);
@@ -108,8 +110,15 @@ DEFINE_API(void, PopButtonRepeat, (ImGui_Context*,ctx),
   ImGui::PopButtonRepeat();
 });
 
-// ImGuiButtonFlags
-DEFINE_ENUM(ImGui, ButtonFlags_None,              "Flags for ImGui_InvisibleButton.");
+API_SUBSECTION("Flags", "For ImGui_InvisibleButton.");
+DEFINE_ENUM(ImGui, ButtonFlags_None,              "");
 DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonLeft,   "React on left mouse button (default).");
 DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonRight,  "React on right mouse button.");
 DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonMiddle, "React on center mouse button.");
+
+API_SUBSECTION("Cardinal directions", "For ImGui_ArrowButton.");
+DEFINE_ENUM(ImGui, Dir_None,  "");
+DEFINE_ENUM(ImGui, Dir_Left,  "");
+DEFINE_ENUM(ImGui, Dir_Right, "");
+DEFINE_ENUM(ImGui, Dir_Up,    "");
+DEFINE_ENUM(ImGui, Dir_Down,  "");

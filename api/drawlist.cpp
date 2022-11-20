@@ -25,8 +25,6 @@
 #include <reaper_plugin_secrets.h> // reaper_array
 #include <vector>
 
-API_SECTION("Draw List");
-
 struct ImGui_DrawList {
   enum Key {
     Window     = 0x574e444c, // WNDL
@@ -64,6 +62,12 @@ ResourceProxy DrawList {
   ImGui_DrawList::Foreground
 };
 
+API_SECTION("Draw List", R"(This is the low-level list of polygons that ImGui functions are filling. At the end of the frame, all draw lists are passed to the GPU for rendering.
+
+Each dear imgui window contains its own ImDrawList. You can use ImGui_GetWindowDrawList() to access the current window draw list and draw custom primitives.
+
+The Draw List API uses absolute coordinates (0,0 is the top-left corner of the primary monitor, not of your window!). See ImGui_GetCursorScreenPos.)");
+
 DEFINE_API(ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
 "The draw list associated to the current window, to append your own drawing primitives",
 {
@@ -81,6 +85,53 @@ DEFINE_API(ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
 {
   return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Foreground);
 });
+
+DEFINE_API(void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
+(double,clip_rect_min_x)(double,clip_rect_min_y)
+(double,clip_rect_max_x)(double,clip_rect_max_y)
+(bool*,API_RO(intersect_with_current_clip_rect)),
+R"(Render-level scissoring. Prefer using higher-level ImGui_PushClipRect to affect logic (hit-testing and widget culling).
+
+Default values: intersect_with_current_clip_rect = false)",
+{
+  draw_list->get()->PushClipRect(
+    ImVec2(clip_rect_min_x, clip_rect_min_y),
+    ImVec2(clip_rect_max_x, clip_rect_max_y),
+    valueOr(API_RO(intersect_with_current_clip_rect), false));
+});
+
+DEFINE_API(void, DrawList_PushClipRectFullScreen, (ImGui_DrawList*,draw_list),
+"",
+{
+  draw_list->get()->PushClipRectFullScreen();
+});
+
+DEFINE_API(void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
+"See DrawList_PushClipRect",
+{
+  draw_list->get()->PopClipRect();
+});
+
+DEFINE_ENUM(Im, DrawFlags_None,                         "");
+DEFINE_ENUM(Im, DrawFlags_Closed,                       "ImGui_DrawList_PathStroke, ImGui_DrawList_AddPolyline: specify that shape should be closed (Important: this is always == 1 for legacy reason).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopLeft,          "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding top-left corner only (when rounding > 0.0, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopRight,         "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding top-right corner only (when rounding > 0.0, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomLeft,       "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding bottom-left corner only (when rounding > 0.0, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomRight,      "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding bottom-right corner only (when rounding > 0.0, we default to all corners).");
+
+DEFINE_ENUM(Im, DrawFlags_RoundCornersNone            , "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: disable rounding on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!.");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTop             , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottom          , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersLeft            , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersRight           , "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersAll             , "");
+
+API_SUBSECTION("Primitives",
+R"(Filled shapes must always use clockwise winding order. The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
+
+For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
+
+For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).)");
 
 DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
@@ -313,31 +364,8 @@ Default values: num_segments = 0)",
     thickness, valueOr(API_RO(num_segments), 0));
 });
 
-DEFINE_API(void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
-(double,clip_rect_min_x)(double,clip_rect_min_y)
-(double,clip_rect_max_x)(double,clip_rect_max_y)
-(bool*,API_RO(intersect_with_current_clip_rect)),
-R"(Render-level scissoring. Prefer using higher-level ImGui_PushClipRect to affect logic (hit-testing and widget culling).
-
-Default values: intersect_with_current_clip_rect = false)",
-{
-  draw_list->get()->PushClipRect(
-    ImVec2(clip_rect_min_x, clip_rect_min_y),
-    ImVec2(clip_rect_max_x, clip_rect_max_y),
-    valueOr(API_RO(intersect_with_current_clip_rect), false));
-});
-
-DEFINE_API(void, DrawList_PushClipRectFullScreen, (ImGui_DrawList*,draw_list),
-"",
-{
-  draw_list->get()->PushClipRectFullScreen();
-});
-
-DEFINE_API(void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
-"See DrawList_PushClipRect",
-{
-  draw_list->get()->PopClipRect();
-});
+API_SUBSECTION("Stateful Path",
+"Stateful path API, add points then finish with PathFillConvex() or PathStroke().");
 
 DEFINE_API(void, DrawList_PathClear, (ImGui_DrawList*,draw_list),
 "",
@@ -347,7 +375,7 @@ DEFINE_API(void, DrawList_PathClear, (ImGui_DrawList*,draw_list),
 
 DEFINE_API(void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
 (double,pos_x)(double,pos_y),
-"Stateful path API, add points then finish with ImGui_DrawList_PathFillConvex or ImGui_DrawList_PathStroke.",
+"",
 {
   draw_list->get()->PathLineToMergeDuplicate(ImVec2(pos_x, pos_y));
 });
@@ -418,21 +446,6 @@ DEFINE_API(void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
     valueOr(API_RO(flags), ImDrawFlags_None));
 });
 
-// ImDrawFlags
-DEFINE_ENUM(Im, DrawFlags_None,                         "");
-DEFINE_ENUM(Im, DrawFlags_Closed,                       "ImGui_DrawList_PathStroke, ImGui_DrawList_AddPolyline: specify that shape should be closed (Important: this is always == 1 for legacy reason).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTopLeft,          "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding top-left corner only (when rounding > 0.0, we default to all corners).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTopRight,         "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding top-right corner only (when rounding > 0.0, we default to all corners).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomLeft,       "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding bottom-left corner only (when rounding > 0.0, we default to all corners).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomRight,      "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding bottom-right corner only (when rounding > 0.0, we default to all corners).");
-
-DEFINE_ENUM(Im, DrawFlags_RoundCornersNone            , "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: disable rounding on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!.");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTop             , "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottom          , "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersLeft            , "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersRight           , "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersAll             , "");
-
 DrawListSplitter::DrawListSplitter(ImGui_DrawList *draw_list)
   : m_drawlist { draw_list }, m_lastList { draw_list->get() }
 {
@@ -463,8 +476,7 @@ ImDrawList *DrawListSplitter::drawList() const
     throw reascript_error { "cannot use ImGui_DrawListSplitter over multiple windows" };
 }
 
-DEFINE_API(ImGui_DrawListSplitter*, CreateDrawListSplitter,
-(ImGui_DrawList*,draw_list),
+API_SUBSECTION("Splitter",
 R"(Split/Merge functions are used to split the draw list into different layers which can be drawn into out of order (e.g. submit FG primitives before BG primitives).
 
 Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end).
@@ -480,7 +492,11 @@ Usage:
   reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- foreground
   reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
   reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
-  reaper.ImGui_DrawListSplitter_Merge(splitter))",
+  reaper.ImGui_DrawListSplitter_Merge(splitter))");
+
+DEFINE_API(ImGui_DrawListSplitter*, CreateDrawListSplitter,
+(ImGui_DrawList*,draw_list),
+"",
 {
   return new DrawListSplitter { draw_list };
 });

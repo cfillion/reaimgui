@@ -19,7 +19,7 @@
 
 #include "color.hpp"
 
-API_SECTION("Color Edit");
+API_SECTION("Color Edit", "(Tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.)");
 
 static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 {
@@ -137,8 +137,8 @@ DEFINE_API(void, SetColorEditOptions, (ImGui_Context*,ctx)
   ImGui::SetColorEditOptions(flags);
 });
 
-// ImGuiColorEditFlags
-DEFINE_ENUM(ImGui, ColorEditFlags_None,             "Flags for ImGui_ColorEdit3 / ImGui_ColorEdit4 / ImGui_ColorPicker3 / ImGui_ColorPicker4 / ImGui_ColorButton.");
+DEFINE_SECTION(colorFlags, ROOT_SECTION, "Flags");
+DEFINE_ENUM(ImGui, ColorEditFlags_None,             "");
 DEFINE_ENUM(ImGui, ColorEditFlags_NoAlpha,          "ColorEdit, ColorPicker, ColorButton: ignore Alpha component (will only read 3 components from the input pointer).");
 DEFINE_ENUM(ImGui, ColorEditFlags_NoPicker,         "ColorEdit: disable picker when clicking on color square.");
 DEFINE_ENUM(ImGui, ColorEditFlags_NoOptions,        "ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.");
@@ -149,7 +149,7 @@ DEFINE_ENUM(ImGui, ColorEditFlags_NoLabel,          "ColorEdit, ColorPicker: dis
 DEFINE_ENUM(ImGui, ColorEditFlags_NoSidePreview,    "ColorPicker: disable bigger color preview on right side of the picker, use small color square preview instead.");
 DEFINE_ENUM(ImGui, ColorEditFlags_NoDragDrop,       "ColorEdit: disable drag and drop target. ColorButton: disable drag and drop source.");
 DEFINE_ENUM(ImGui, ColorEditFlags_NoBorder,         "ColorButton: disable border (which is enforced by default).");
-// User Options (right-click on widget to change some of them).
+API_SECTION_P(colorFlags, "User Options", "(right-click on widget to change some of them)");
 DEFINE_ENUM(ImGui, ColorEditFlags_AlphaBar,         "ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.");
 DEFINE_ENUM(ImGui, ColorEditFlags_AlphaPreview,     "ColorEdit, ColorPicker, ColorButton: display preview as a transparent color over a checkerboard, instead of opaque.");
 DEFINE_ENUM(ImGui, ColorEditFlags_AlphaPreviewHalf, "ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard, instead of opaque.");

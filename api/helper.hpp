@@ -40,12 +40,11 @@
     return static_cast<type>(0);       \
   }
 
-#define _FILE_SECTION BOOST_PP_CAT(API_FILE, Section)
 #define _STORE_LINE static const API::FirstLine \
   BOOST_PP_CAT(line, __LINE__) { __LINE__ };
 #define _DEFINE_API(type, name, args, help, ...)                \
   /* error out if API_SECTION() was not used in the file */     \
-  static_assert(&_FILE_SECTION + 1 > &_FILE_SECTION);           \
+  static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);             \
                                                                 \
   /* not static to have the linker check for duplicates */      \
   type API_##name(BOOST_PP_SEQ_FOR_EACH_I(_DEFARGS, _,          \
@@ -65,12 +64,21 @@
     help, __LINE__,                                             \
   }
 
-#define API_SECTION(...) static const API::Section _FILE_SECTION \
-  { BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ }
-
+#define DEFINE_SECTION(id, parent, ...) static const API::Section id \
+  { &parent, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ };
 #define DEFINE_API _STORE_LINE _DEFINE_API
 #define DEFINE_ENUM(prefix, name, doc) \
   DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
+
+// shortcuts with auto-generated identifier name for the section object
+// #define ROOT_SECTION BOOST_PP_CAT(API_FILE, Section)
+#define _UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
+#define API_SECTION(...) static const API::Section ROOT_SECTION \
+  { nullptr, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ }
+#define API_SUBSECTION(...) \
+  DEFINE_SECTION(_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
+#define API_SECTION_P(parent, ...) \
+  DEFINE_SECTION(_UNIQ_SEC_ID, parent,       __VA_ARGS__)
 
 #define NO_ARGS (,)
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)

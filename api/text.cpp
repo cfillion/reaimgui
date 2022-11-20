@@ -124,6 +124,20 @@ DEFINE_API(double, GetTextLineHeightWithSpacing, (ImGui_Context*,ctx),
   return ImGui::GetTextLineHeightWithSpacing();
 });
 
+DEFINE_API(double, GetFrameHeight, (ImGui_Context*,ctx),
+"~ ImGui_GetFontSize + ImGui_StyleVar_FramePadding.y * 2",
+{
+  FRAME_GUARD;
+  return ImGui::GetFrameHeight();
+});
+
+DEFINE_API(double, GetFrameHeightWithSpacing, (ImGui_Context*,ctx),
+"~ ImGui_GetFontSize + ImGui_StyleVar_FramePadding.y * 2 + ImGui_StyleVar_ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)",
+{
+  FRAME_GUARD;
+  return ImGui::GetFrameHeightWithSpacing();
+});
+
 DEFINE_API(void, CalcTextSize, (ImGui_Context*,ctx)
 (const char*,text)(double*,API_W(w))(double*,API_W(h))
 (bool*,API_RO(hide_text_after_double_hash))(double*,API_RO(wrap_width)),

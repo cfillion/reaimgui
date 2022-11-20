@@ -97,8 +97,9 @@ DEFINE_API(bool, IsItemToggledOpen, (ImGui_Context*,ctx),
   return ImGui::IsItemToggledOpen();
 });
 
-// ImGuiTreeNodeFlags
-DEFINE_ENUM(ImGui, TreeNodeFlags_None,                 "Flags for ImGui_TreeNode, ImGui_TreeNodeEx, ImGui_CollapsingHeader.");
+API_SUBSECTION("Flags", "For ImGui_TreeNode, ImGui_TreeNodeEx and ImGui_CollapsingHeader.");
+
+DEFINE_ENUM(ImGui, TreeNodeFlags_None,                 "");
 DEFINE_ENUM(ImGui, TreeNodeFlags_Selected,             "Draw as selected.");
 DEFINE_ENUM(ImGui, TreeNodeFlags_Framed,               "Draw frame with background (e.g. for ImGui_CollapsingHeader).");
 DEFINE_ENUM(ImGui, TreeNodeFlags_AllowItemOverlap,     "Hit testing to allow subsequent widgets to overlap this one.");

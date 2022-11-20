@@ -19,8 +19,6 @@
 
 #include "resource_proxy.hpp"
 
-API_SECTION("Viewport");
-
 struct ImGui_Viewport {
   enum Key {
     Main   = 0x4d4e5650, // MNVP
@@ -46,6 +44,8 @@ struct ImGui_Viewport {
 };
 
 ResourceProxy Viewport { ImGui_Viewport::Main, ImGui_Viewport::Window };
+
+API_SECTION("Viewport");
 
 DEFINE_API(ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
 "Currently represents REAPER's main window (arrange view). This may change in the future.",

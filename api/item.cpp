@@ -19,36 +19,6 @@
 
 API_SECTION("Item & Status");
 
-DEFINE_API(void, GetItemRectMin, (ImGui_Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
-"Get upper-left bounding rectangle of the last item (screen space)",
-{
-  FRAME_GUARD;
-  const ImVec2 &rect { ImGui::GetItemRectMin() };
-  if(API_W(x)) *API_W(x) = rect.x;
-  if(API_W(y)) *API_W(y) = rect.y;
-});
-
-DEFINE_API(void, GetItemRectMax, (ImGui_Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
-"Get lower-right bounding rectangle of the last item (screen space)",
-{
-  FRAME_GUARD;
-  const ImVec2 &rect { ImGui::GetItemRectMax() };
-  if(API_W(x)) *API_W(x) = rect.x;
-  if(API_W(y)) *API_W(y) = rect.y;
-});
-
-DEFINE_API(void, GetItemRectSize, (ImGui_Context*,ctx)
-(double*,API_W(w))(double*,API_W(h)),
-"Get size of last item",
-{
-  FRAME_GUARD;
-  const ImVec2 &rect { ImGui::GetItemRectSize() };
-  if(API_W(w)) *API_W(w) = rect.x;
-  if(API_W(h)) *API_W(h) = rect.y;
-});
-
 DEFINE_API(void, SetItemAllowOverlap, (ImGui_Context*,ctx),
 "Allow last item to be overlapped by a subsequent item. sometimes useful with invisible buttons, selectables, etc. to catch unused area.",
 {
@@ -75,11 +45,11 @@ DEFINE_API(void, EndDisabled, (ImGui_Context*,ctx),
   ImGui::EndDisabled();
 });
 
-// Focus, Activation
-DEFINE_API(void, SetItemDefaultFocus, (ImGui_Context*,ctx),
-R"~(Make last item the default focused item of a window.
+API_SUBSECTION("Focus & Activation",
+R"~(Prefer using "SetItemDefaultFocus()" over "if(ImGui_IsWindowAppearing()) ImGui_SetScrollHereY()" when applicable to signify "this is the default item".)~");
 
-Prefer using "SetItemDefaultFocus()" over "if (ImGui_IsWindowAppearing()) ImGui_SetScrollHereY()" when applicable to signify "this is the default item")~",
+DEFINE_API(void, SetItemDefaultFocus, (ImGui_Context*,ctx),
+"Make last item the default focused item of a window.",
 {
   FRAME_GUARD;
   ImGui::SetItemDefaultFocus();
@@ -110,9 +80,41 @@ DEFINE_API(void, PopAllowKeyboardFocus, (ImGui_Context*,ctx),
   ImGui::PopAllowKeyboardFocus();
 });
 
+API_SUBSECTION("Dimensions");
+
+DEFINE_API(void, GetItemRectMin, (ImGui_Context*,ctx)
+(double*,API_W(x))(double*,API_W(y)),
+"Get upper-left bounding rectangle of the last item (screen space)",
+{
+  FRAME_GUARD;
+  const ImVec2 &rect { ImGui::GetItemRectMin() };
+  if(API_W(x)) *API_W(x) = rect.x;
+  if(API_W(y)) *API_W(y) = rect.y;
+});
+
+DEFINE_API(void, GetItemRectMax, (ImGui_Context*,ctx)
+(double*,API_W(x))(double*,API_W(y)),
+"Get lower-right bounding rectangle of the last item (screen space)",
+{
+  FRAME_GUARD;
+  const ImVec2 &rect { ImGui::GetItemRectMax() };
+  if(API_W(x)) *API_W(x) = rect.x;
+  if(API_W(y)) *API_W(y) = rect.y;
+});
+
+DEFINE_API(void, GetItemRectSize, (ImGui_Context*,ctx)
+(double*,API_W(w))(double*,API_W(h)),
+"Get size of last item",
+{
+  FRAME_GUARD;
+  const ImVec2 &rect { ImGui::GetItemRectSize() };
+  if(API_W(w)) *API_W(w) = rect.x;
+  if(API_W(h)) *API_W(h) = rect.y;
+});
+
 DEFINE_API(void, PushItemWidth, (ImGui_Context*,ctx)
 (double,item_width),
-R"(Push width of items for common large "item+label" widgets. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side). 0.0 = default to ~2/3 of windows width,)",
+R"(Push width of items for common large "item+label" widgets. >0.0: width in pixels, <0.0 align xx pixels to the right of window (so -FLT_MIN always align width to the right side). 0.0 = default to ~2/3 of windows width.)",
 {
   FRAME_GUARD;
   ImGui::PushItemWidth(item_width);
@@ -139,6 +141,10 @@ DEFINE_API(double, CalcItemWidth, (ImGui_Context*,ctx),
   FRAME_GUARD;
   return ImGui::CalcItemWidth();
 });
+
+API_SUBSECTION("Item/Widgets Utilities and Query Functions",
+R"(Most of the functions are referring to the previous Item that has been submitted.
+See Demo Window under "Widgets->Querying Item Status" for an interactive visualization of most of those functions.)");
 
 DEFINE_API(bool, IsItemHovered, (ImGui_Context*,ctx)(int*,API_RO(flags)),
 R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGui_HoveredFlags_* for more options.
@@ -230,22 +236,27 @@ DEFINE_API(bool, IsAnyItemFocused, (ImGui_Context*,ctx),
   return ImGui::IsAnyItemFocused();
 });
 
-// ImGuiHoveredFlags
-// Flags: for IsItemHovered(), IsWindowHovered() etc.
+DEFINE_SECTION(hoveredFlags, ROOT_SECTION,
+               "Hovered Flags", "For IsItemHovered(), IsWindowHovered() etc.");
+
 DEFINE_ENUM(ImGui, HoveredFlags_None,                         "Return true if directly over the item/window, not obstructed by another window, not obstructed by an active popup or modal blocking inputs under them.");
-DEFINE_ENUM(ImGui, HoveredFlags_ChildWindows,                 "ImGui_IsWindowHovered only: Return true if any children of the window is hovered.");
-DEFINE_ENUM(ImGui, HoveredFlags_RootWindow,                   "ImGui_IsWindowHovered only: Test from root window (top most parent of the current hierarchy).");
-DEFINE_ENUM(ImGui, HoveredFlags_AnyWindow,                    "ImGui_IsWindowHovered only: Return true if any window is hovered.");
-DEFINE_ENUM(ImGui, HoveredFlags_NoPopupHierarchy,             "ImGui_IsWindowHovered only: Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow).");
-DEFINE_ENUM(ImGui, HoveredFlags_DockHierarchy,                "ImGui_IsWindowHovered only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow).");
 DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenBlockedByPopup,      "Return true even if a popup window is normally blocking access to this item/window.");
 DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenBlockedByActiveItem, "Return true even if an active item is blocking access to this item/window. Useful for Drag and Drop patterns.");
-DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenOverlapped,          "ImGui_IsItemHovered only: Return true even if the position is obstructed or overlapped by another window.");
-DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenDisabled,            "ImGui_IsItemHovered only: Return true even if the item is disabled.");
 DEFINE_ENUM(ImGui, HoveredFlags_NoNavOverride,                "Disable using gamepad/keyboard navigation state when active, always query mouse.");
-DEFINE_ENUM(ImGui, HoveredFlags_RectOnly,                     "ImGui_HoveredFlags_AllowWhenBlockedByPopup | ImGui_HoveredFlags_AllowWhenBlockedByActiveItem | ImGui_HoveredFlags_AllowWhenOverlapped");
-DEFINE_ENUM(ImGui, HoveredFlags_RootAndChildWindows,          "ImGui_HoveredFlags_RootWindow | ImGui_HoveredFlags_ChildWindows");
 
-DEFINE_ENUM(ImGui, HoveredFlags_DelayNormal,                  "Return true after ImGui_ConfigVar_HoverDelayNormal elapsed (~0.30 sec)");
-DEFINE_ENUM(ImGui, HoveredFlags_DelayShort,                   "Return true after ImGui_ConfigVar_HoverDelayShort elapsed (~0.10 sec)");
+DEFINE_ENUM(ImGui, HoveredFlags_DelayNormal,                  "Return true after ConfigVar_HoverDelayNormal elapsed (~0.30 sec)");
+DEFINE_ENUM(ImGui, HoveredFlags_DelayShort,                   "Return true after ConfigVar_HoverDelayShort elapsed (~0.10 sec)");
 DEFINE_ENUM(ImGui, HoveredFlags_NoSharedDelay,                "Disable shared delay system where moving from one item to the next keeps the previous timer for a short time (standard for tooltips with long delays)");
+
+API_SECTION_P(hoveredFlags, "IsItemHovered only");
+DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenOverlapped,          "IsItemHovered only: Return true even if the position is obstructed or overlapped by another window.");
+DEFINE_ENUM(ImGui, HoveredFlags_AllowWhenDisabled,            "IsItemHovered only: Return true even if the item is disabled.");
+DEFINE_ENUM(ImGui, HoveredFlags_RectOnly,                     "HoveredFlags_AllowWhenBlockedByPopup | HoveredFlags_AllowWhenBlockedByActiveItem | HoveredFlags_AllowWhenOverlapped");
+
+API_SECTION_P(hoveredFlags, "IsWindowHovered only");
+DEFINE_ENUM(ImGui, HoveredFlags_ChildWindows,                 "IsWindowHovered only: Return true if any children of the window is hovered.");
+DEFINE_ENUM(ImGui, HoveredFlags_RootWindow,                   "IsWindowHovered only: Test from root window (top most parent of the current hierarchy).");
+DEFINE_ENUM(ImGui, HoveredFlags_AnyWindow,                    "IsWindowHovered only: Return true if any window is hovered.");
+DEFINE_ENUM(ImGui, HoveredFlags_NoPopupHierarchy,             "IsWindowHovered only: Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow).");
+DEFINE_ENUM(ImGui, HoveredFlags_DockHierarchy,                "IsWindowHovered only: Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow).");
+DEFINE_ENUM(ImGui, HoveredFlags_RootAndChildWindows,          "HoveredFlags_RootWindow | HoveredFlags_ChildWindows");

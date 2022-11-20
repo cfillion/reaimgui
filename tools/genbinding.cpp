@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <deque>
 #include <iostream>
 #include <string_view>
 #include <unordered_map>
@@ -89,6 +90,7 @@ struct Function {
   API::LineRange lines;
   std::vector<Argument> args;
   std::string_view doc;
+  std::deque<const API::Section *> sections;
 
   bool isEnum() const { return type.isInt() && args.empty(); }
   bool hasOutputArgs() const;
@@ -138,6 +140,9 @@ static void addFunc(const API *api)
     argTypes.remove_prefix(typeLen + 1);
     argNames.remove_prefix(nameLen + 1);
   }
+
+  const API::Section *section { func.section };
+  do { func.sections.push_front(section); } while((section = section->parent));
 
   auto it { std::lower_bound(g_funcs.begin(), g_funcs.end(), func.name, FunctionComp{}) };
   g_funcs.insert(it, func);
@@ -474,6 +479,19 @@ void Function::pythonSignature(std::ostream &stream) const
   stream << ')';
 }
 
+static auto findNewSection
+  (const Function *func, std::vector<const API::Section *> &oldSections)
+{
+  auto oldSection { oldSections.begin() };
+  auto newSection { func->sections.begin() };
+  while(oldSection != oldSections.end() && newSection != func->sections.end() &&
+        *oldSection == *newSection)
+    ++oldSection, ++newSection;
+  oldSections.erase(oldSection, oldSections.end());
+  std::copy(newSection, func->sections.end(), std::back_inserter(oldSections));
+  return newSection;
+}
+
 static void formatHtmlText(std::ostream &stream, const std::string_view &text)
 {
   size_t nextLink { text.find("ImGui_") };
@@ -494,7 +512,6 @@ static void formatHtmlText(std::ostream &stream, const std::string_view &text)
       else
         nextLink = text.find("ImGui_", i);
     }
-
 
     switch(text[i]) {
     case '<':
@@ -536,7 +553,14 @@ static void humanBinding(std::ostream &stream)
                  [](const Function &f) { return &f; });
   std::stable_sort(sortedByGroup.begin(), sortedByGroup.end(),
     [](const Function *a, const Function *b) {
-      return strcmp(a->section->title, b->section->title) < 0;
+      const size_t maxDepth { std::min(a->sections.size(), b->sections.size()) };
+      for(size_t i {}; i < maxDepth; ++i) {
+        const int comparison
+          { strcmp(a->sections[i]->title, b->sections[i]->title) };
+        if(comparison == 0) continue;
+        return comparison < 0;
+      }
+      return a->sections.size() < b->sections.size();
     });
 
   stream << R"(<!DOCTYPE html>
@@ -545,6 +569,7 @@ static void humanBinding(std::ostream &stream)
   <meta charset="utf-8"/>
   <title>ReaImGui Documentation</title>
   <style>
+  html { scroll-padding-top: 1em; }
   body {
     background-color: #080808;
     color: #d9d3d3;
@@ -577,6 +602,14 @@ static void humanBinding(std::ostream &stream)
     margin-left: 200px;
     box-shadow: 0 0 10px #080808;
   }
+  h1, h2, h3, h4, h5, h6 { margin: 1em 0 1rem 0; }
+  h1 { font-size: 2.3em; }
+  h2 { font-size: 1.8em; }
+  h3 { font-size: 1.4em; }
+  h4 { font-size: 1.2em; }
+  h5 { font-size: 1.0em; }
+  h6 { font-size: 0.9em; }
+  h2:before { content: '〉'; color: #6f6f6f; }
   aside p, aside li a, main { padding-left: 1em; }
   details { margin-left: 20px; }
   a { text-decoration: none; }
@@ -598,8 +631,7 @@ static void humanBinding(std::ostream &stream)
     vertical-align: top;
     white-space: nowrap;
   }
-  table, pre { white-space: pre-wrap; margin: 0; margin: .3em 0; }
-  table + pre { margin-top: 1em; }
+  table, pre { white-space: pre-wrap; }
   code { border-radius: 3px; color: white; }
   code:hover { text-decoration: underline; cursor: copy; }
   code:active, aside a:hover { background-color: #3a3a3a; }
@@ -617,10 +649,10 @@ static void humanBinding(std::ostream &stream)
 
   const API::Section *section {};
   for(const Function *func : sortedByGroup) {
-    if(func->section == section)
+    if(func->sections[0] == section)
       continue;
 
-    section = func->section;
+    section = func->sections[0];
 
     stream << "<li><a href=\"#";
     formatHtmlSlug(stream, section->title); stream << "\">";
@@ -635,14 +667,28 @@ static void humanBinding(std::ostream &stream)
     <h1>ReaImGui Documentation</h1>
     <p>)" << GENERATED_FOR << "</p>\n\n";
 
-  section = nullptr;
+  std::vector<const API::Section *> sections;
   for(const Function *func : sortedByGroup) {
-    if(func->section != section) {
-      section = func->section;
+    for(auto it { findNewSection(func, sections) };
+        it != func->sections.end(); ++it) {
+      const API::Section *section { *it };
+      const auto level { std::distance(func->sections.begin(), it) + 2 };
 
-      stream << "<h2 id=\""; formatHtmlSlug(stream, section->title); stream << "\">";
+      stream << "<h" << level << " id=\"";
+      for(auto slugIt { func->sections.begin() }; slugIt <= it; ++slugIt) {
+        if(slugIt != func->sections.begin())
+          stream << '_';
+        formatHtmlSlug(stream, (*slugIt)->title);
+      }
+      stream << "\">";
       formatHtmlText(stream, section->title);
-      stream << "</h2>";
+      stream << "</h" << level << '>';
+
+      if(section->help) {
+        stream << "<pre>";
+        formatHtmlText(stream, section->help);
+        stream << "</pre>";
+      }
     }
     
     stream << "<details id=\"" << func->name << "\"><summary>";
@@ -650,12 +696,12 @@ static void humanBinding(std::ostream &stream)
     stream << func->name << "</summary>";
 
     stream << "<table>"
-            << "<tr><th>C++</th><td><code>";        func->cppSignature(stream);        stream << "</code></td></tr>"
-            << "<tr><th>EEL</th><td><code>";        func->eelSignature(stream, false); stream << "</code></td></tr>"
-            << "<tr><th>Legacy EEL</th><td><code>"; func->eelSignature(stream, true);  stream << "</code></td></tr>"
-            << "<tr><th>Lua</th><td><code>";        func->luaSignature(stream);        stream << "</code></td></tr>"
-            << "<tr><th>Python</th><td><code>";     func->pythonSignature(stream);     stream << "</code></td></tr>"
-            << "</table>";
+           << "<tr><th>C++</th><td><code>";        func->cppSignature(stream);        stream << "</code></td></tr>"
+           << "<tr><th>EEL</th><td><code>";        func->eelSignature(stream, false); stream << "</code></td></tr>"
+           << "<tr><th>Legacy EEL</th><td><code>"; func->eelSignature(stream, true);  stream << "</code></td></tr>"
+           << "<tr><th>Lua</th><td><code>";        func->luaSignature(stream);        stream << "</code></td></tr>"
+           << "<tr><th>Python</th><td><code>";     func->pythonSignature(stream);     stream << "</code></td></tr>"
+           << "</table>";
 
     if(!func->doc.empty()) {
       stream << "<pre>";
@@ -666,8 +712,8 @@ static void humanBinding(std::ostream &stream)
     stream << "<p class=\"source\">"
               "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
               REAIMGUI_VERSION "/api/" << section->file << ".cpp#L"
-            << func->lines.first << "-L" << func->lines.second
-            << "\">View source</a></p>";
+           << func->lines.first << "-L" << func->lines.second
+           << "\">View source</a></p>";
 
     stream << "</details>";
   }

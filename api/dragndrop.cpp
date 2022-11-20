@@ -23,7 +23,11 @@
 #include <cstring> // strlen
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
 
-API_SECTION("Drag & Drop");
+API_SECTION("Drag & Drop",
+R"(On source items, call BeginDragDropSource(), if it returns true also call SetDragDropPayload() + EndDragDropSource().
+On target candidates, call BeginDragDropTarget(), if it returns true also call AcceptDragDropPayload() + EndDragDropTarget().
+
+An item can be both a drag source and a drop target.)");
 
 static bool isUserType(const char *type)
 {
@@ -32,9 +36,8 @@ static bool isUserType(const char *type)
   return type && *type && type[0] != '_';
 }
 
-// Drag and Drop
 DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)(int*,API_RO(flags)),
-R"(Call when the current item is active. If this return true, you can call ImGui_SetDragDropPayload + ImGui_EndDragDropSource.
+R"(Call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
 
 If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).
 
@@ -220,18 +223,17 @@ DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
   return true;
 });
 
-// ImGuiDragDropFlags
-DEFINE_ENUM(ImGui, DragDropFlags_None,                     "Flags for ImGui_BeginDragDropSource, ImGui_AcceptDragDropPayload.");
-// BeginDragDropSource() flags
+DEFINE_SECTION(flags, ROOT_SECTION, "Flags");
+DEFINE_ENUM(ImGui, DragDropFlags_None,                     "");
+API_SECTION_P(flags, "Source", "For BeginDragDropSource");
 DEFINE_ENUM(ImGui, DragDropFlags_SourceNoPreviewTooltip,   "By default, a successful call to ImGui_BeginDragDropSource opens a tooltip so you can display a preview or description of the source contents. This flag disables this behavior.");
 DEFINE_ENUM(ImGui, DragDropFlags_SourceNoDisableHover,     "By default, when dragging we clear data so that ImGui_IsItemHovered will return false, to avoid subsequent user code submitting tooltips. This flag disables this behavior so you can still call ImGui_IsItemHovered on the source item.");
 DEFINE_ENUM(ImGui, DragDropFlags_SourceNoHoldToOpenOthers, "Disable the behavior that allows to open tree nodes and collapsing header by holding over them while dragging a source item.");
 DEFINE_ENUM(ImGui, DragDropFlags_SourceAllowNullID,        "Allow items such as ImGui_Text, ImGui_Image that have no unique identifier to be used as drag source, by manufacturing a temporary identifier based on their window-relative position. This is extremely unusual within the dear imgui ecosystem and so we made it explicit.");
 DEFINE_ENUM(ImGui, DragDropFlags_SourceExtern,             "External source (from outside of dear imgui), won't attempt to read current item/window info. Will always return true. Only one Extern source can be active simultaneously.");
 DEFINE_ENUM(ImGui, DragDropFlags_SourceAutoExpirePayload,  "Automatically expire the payload if the source cease to be submitted (otherwise payloads are persisting while being dragged).");
-// AcceptDragDropPayload() flags
+API_SECTION_P(flags, "Payload", "For AcceptDragDropPayload");
 DEFINE_ENUM(ImGui, DragDropFlags_AcceptBeforeDelivery,     "ImGui_AcceptDragDropPayload will returns true even before the mouse button is released. You can then check ImGui_GetDragDropPayload/is_delivery to test if the payload needs to be delivered.");
 DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoDrawDefaultRect,  "Do not draw the default highlight rectangle when hovering over target.");
 DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoPreviewTooltip,   "Request hiding the ImGui_BeginDragDropSource tooltip from the ImGui_BeginDragDropTarget site.");
 DEFINE_ENUM(ImGui, DragDropFlags_AcceptPeekOnly,           "For peeking ahead and inspecting the payload before delivery. Equivalent to ImGui_DragDropFlags_AcceptBeforeDelivery | ImGui_DragDropFlags_AcceptNoDrawDefaultRect.");
-

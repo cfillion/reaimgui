@@ -19,7 +19,7 @@
 
 #include <reaper_plugin_secrets.h> // reaper_array
 
-API_SECTION("Plot");
+API_SECTION("Plot", "Simple data plotting (uses reaper_array as data source).");
 
 static float getArrayValue(void *data, const int index)
 {
@@ -27,7 +27,6 @@ static float getArrayValue(void *data, const int index)
   return static_cast<float>(value);
 }
 
-// Widgets: Data Plotting
 DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)(int*,API_RO(values_offset))
 (const char*,API_RO(overlay_text))

@@ -57,8 +57,9 @@ API::FirstLine::FirstLine(unsigned int line)
   firstLine() = line;
 }
 
-API::Section::Section(const char *file, const char *title)
-  : file { file }, title { title }
+API::Section::Section(const Section *parent, const char *file,
+    const char *title, const char *help)
+  : parent { parent }, file { file }, title { title }, help { help }
 {
   lastSection() = this;
 }

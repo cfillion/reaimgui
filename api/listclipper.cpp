@@ -22,8 +22,6 @@
 #include <imgui/imgui_internal.h>
 #include <reaper_plugin_functions.h>
 
-API_SECTION("List Clipper");
-
 ListClipper::ListClipper(Context *ctx) : m_ctx { ctx } {}
 
 ListClipper::~ListClipper()
@@ -64,8 +62,8 @@ ImGuiListClipper *ListClipper::operator->()
   return &m_imlc;
 }
 
-DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
-R"(Helper: Manually clip large list of items.
+API_SECTION("List Clipper", R"(Helper to manually clip large list of items.
+
 If you have lots evenly spaced items and you have random access to the list, you can perform coarse clipping based on visibility to only submit items that are in view.
 The clipper calculates the range of visible items and advance the cursor to compensate for the non-visible items we have skipped.
 (Dear ImGui already clip items based on their bounds but: it needs to first layout the item to do so, and generally fetching/submitting your own data incurs additional cost. Coarse clipping using ImGui_ListClipper allows you to easily scale using lists with tens of thousands of items without a problem)
@@ -87,9 +85,10 @@ Generally what happens is:
 - Clipper can measure the height of the first element
 - Clipper calculate the actual range of elements to display based on the current clipping rectangle, position the cursor before the first visible element.
 - User code submit visible elements.
-- The clipper also handles various subtleties related to keyboard/gamepad navigation, wrapping etc.
+- The clipper also handles various subtleties related to keyboard/gamepad navigation, wrapping etc.)");
 
-The returned clipper object is tied to the context and is valid as long as it is used in each defer cycle. See ImGui_ListClipper_Begin.)",
+DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
+"The returned clipper object is only valid for the given context and is valid as long as it is used in each defer cycle. See ImGui_ListClipper_Begin.)",
 {
   assertValid(ctx);
   return new ListClipper { ctx };

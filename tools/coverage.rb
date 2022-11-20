@@ -526,7 +526,7 @@ puts "imgui:    found %d functions, %d enums (total: %d symbols)" %
 REAIMGUI_FUNC_R = /\ADEFINE_API \s*\(\s* (?<type>[\w\s\*]+) \s*,\s* (?<name>[\w]+) \s*,\s* (?<args>.*?) \s*(?<arg_end>,)?\s*(\/|\Z)/x
 REAIMGUI_ENUM_R = /\ADEFINE_ENUM \s*\(\s* (?<prefix>\w+) \s*,\s* (?<name>\w+) \s*,\s*/x
 REAIMGUI_ARGS_R = /\A\s* (?<args>\(.+?\)) \s*(?<arg_end>,)?\s*(\/|\Z)/x
-REAIMGUI_DEFS_R = /\A"?Default values: (?<values>.+?)(?:\.?(?:\).?)?",)?\Z/
+REAIMGUI_DEFS_R = /\A(?:"|R".*\()?Default values: (?<values>.+?)(?:\.?(?:\).?)?",)?\Z/
 REAIMGUI_DEF_R  = /\A(?<name>[\w_]+) = (?<value>.+)/
 REAIMGUI_ARGN_R =  /\A(?:(?<raw_name>[^\(\)]+)|(?<decoration>[^\(]+)\((?<raw_name>[^\)]+)\))\z/
 

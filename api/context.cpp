@@ -67,6 +67,8 @@ DEFINE_API(double, GetFramerate, (ImGui_Context*,ctx),
   return ctx->IO().Framerate;
 });
 
+API_SUBSECTION("Options");
+
 // expose most settings from ImGuiIO
 // ITEM ORDER MUST MATCH WITH THE DEFINE_CONFIGVAR() BELOW!
 static const std::variant<
@@ -182,8 +184,8 @@ DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
   }, g_configVars[var_idx]);
 });
 
-// ImGuiConfigFlags
-DEFINE_ENUM(ImGui, ConfigFlags_None,                 "Flags for ImGui_CreateContext and ImGui_SetConfigVar(ImGui_ConfigVar_Flags()).");
+API_SUBSECTION("Flags", "For ImGui_CreateContext and ImGui_SetConfigVar(ImGui_ConfigVar_Flags()).");
+DEFINE_ENUM(ImGui, ConfigFlags_None,                 "");
 DEFINE_ENUM(ImGui, ConfigFlags_NavEnableKeyboard,    "Master keyboard navigation enable flag.");
 // DEFINE_ENUM(ImGui, ConfigFlags_NavEnableGamepad,     "Master gamepad navigation enable flag.");
 DEFINE_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos, "Instruct navigation to move the mouse cursor.");

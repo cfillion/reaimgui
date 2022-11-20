@@ -252,7 +252,8 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
     API_RO(format), flags);
 });
 
-// ImGuiInputTextFlags
+API_SUBSECTION("Flags", "Most of these are only useful for InputText*() and not for InputDoubleX, InputIntX etc.");
+
 DEFINE_ENUM(ImGui, InputTextFlags_None,                "Most of the InputTextFlags flags are only useful for ImGui_InputText and not for InputIntX, InputDouble etc. (Those are per-item flags. There are shared flags in ImGui_SetConfigVar: ImGui_ConfigVar_InputTextCursorBlink and ImGui_ConfigVar_InputTextEnterKeepActive)");
 DEFINE_ENUM(ImGui, InputTextFlags_CharsDecimal,        "Allow 0123456789.+-*/.");
 DEFINE_ENUM(ImGui, InputTextFlags_CharsHexadecimal,    "Allow 0123456789ABCDEFabcdef.");

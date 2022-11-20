@@ -19,8 +19,6 @@
 
 #include "textfilter.hpp"
 
-API_SECTION("Text Filter");
-
 TextFilter::TextFilter(const char *filter)
   : m_filter { filter }
 {
@@ -39,9 +37,18 @@ ImGuiTextFilter *TextFilter::operator->()
   return &m_filter;
 }
 
+API_SECTION("Text Filter",
+R"(Helper to perform simple filtering on text strings. In format "aaaaa[,bbbb][,ccccc]".
+
+Filter usage:
+  ""         display all lines
+  "xxx"      display lines containing "xxx"
+  "xxx,yyy"  display lines containing "xxx" or "yyy"
+  "-xxx"     hide lines containing "xxx")");
+
 DEFINE_API(ImGui_TextFilter*, CreateTextFilter,
 (const char*,API_RO(default_filter)),
-R"(Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]". Valid until unused.
+R"(Valid while used every frame.
 
 Default values: default_filter = "")",
 {

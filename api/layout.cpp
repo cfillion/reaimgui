@@ -26,6 +26,10 @@ DEFINE_API(void, Separator, (ImGui_Context*,ctx),
   ImGui::Separator();
 });
 
+API_SUBSECTION("Cursor", R"(By "cursor" we mean the current output position.
+The typical widget behavior is to output themselves at the current cursor position, then move the cursor one line down.
+You can call SameLine() between widgets to undo the last carriage return and output at the right of the preceding widget.)");
+
 DEFINE_API(void, SameLine, (ImGui_Context*,ctx)
 (double*,API_RO(offset_from_start_x))(double*,API_RO(spacing)),
 R"(Call between widgets or groups to layout them horizontally. X position given in window coordinates.
@@ -59,7 +63,9 @@ DEFINE_API(void, Dummy, (ImGui_Context*,ctx)(double,size_w)(double,size_h),
 });
 
 DEFINE_API(void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
-R"(Move content position toward the right, by 'indent_w', or ImGui_StyleVar_IndentSpacing if 'indent_w' <= 0
+R"(Move content position toward the right, by 'indent_w', or ImGui_StyleVar_IndentSpacing if 'indent_w' <= 0.
+
+See ImGui_Unindent.
 
 Default values: indent_w = 0.0)",
 {
@@ -168,25 +174,13 @@ DEFINE_API(void, SetCursorScreenPos, (ImGui_Context*,ctx)
   ImGui::SetCursorScreenPos(ImVec2(pos_x, pos_y));
 });
 
-DEFINE_API(double, GetFrameHeight, (ImGui_Context*,ctx),
-"~ ImGui_GetFontSize + ImGui_StyleVar_FramePadding.y * 2",
-{
-  FRAME_GUARD;
-  return ImGui::GetFrameHeight();
-});
-
-DEFINE_API(double, GetFrameHeightWithSpacing, (ImGui_Context*,ctx),
-"~ ImGui_GetFontSize + ImGui_StyleVar_FramePadding.y * 2 + ImGui_StyleVar_ItemSpacing.y (distance in pixels between 2 consecutive lines of framed widgets)",
-{
-  FRAME_GUARD;
-  return ImGui::GetFrameHeightWithSpacing();
-});
+API_SUBSECTION("Clipping", "Mouse hovering is affected by ImGui_PushClipRect() calls, unlike direct calls to ImGui_DrawList_PushClipRect() which are render only.");
 
 DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
 (double,clip_rect_max_x)(double,clip_rect_max_y)
 (bool,intersect_with_current_clip_rect),
-"Mouse hovering is affected by PushClipRect() calls, unlike direct calls to ImGui_DrawList_PushClipRect which are render only. See ImGui_PopClipRect.",
+"",
 {
   FRAME_GUARD;
   ImGui::PushClipRect(

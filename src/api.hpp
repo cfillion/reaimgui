@@ -37,9 +37,11 @@ public:
   using LineRange = std::pair<unsigned int, unsigned int>;
   struct FirstLine { FirstLine(unsigned int); };
   struct Section {
-    Section(const char *file, const char *title);
+    Section(const Section *parent, const char *file,
+      const char *title, const char *help = nullptr);
 
-    const char *file, *title;
+    const Section *parent;
+    const char *file, *title, *help;
   };
 
   static void announceAll(bool add);
