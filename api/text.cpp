@@ -19,6 +19,8 @@
 
 #include "color.hpp"
 
+API_SECTION("Text");
+
 DEFINE_API(void, Text, (ImGui_Context*,ctx)
 (const char*,text),
 "",

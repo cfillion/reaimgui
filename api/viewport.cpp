@@ -19,6 +19,8 @@
 
 #include "resource_proxy.hpp"
 
+API_SECTION("Viewport");
+
 struct ImGui_Viewport {
   enum Key {
     Main   = 0x4d4e5650, // MNVP

@@ -19,6 +19,8 @@
 
 #include "textfilter.hpp"
 
+API_SECTION("Text Filter");
+
 TextFilter::TextFilter(const char *filter)
   : m_filter { filter }
 {

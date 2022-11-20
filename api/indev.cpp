@@ -19,6 +19,8 @@
 
 #include <imgui/imgui_internal.h> // GetKeyData
 
+API_SECTION("Keyboard & Mouse");
+
 DEFINE_API(bool, IsMouseDown, (ImGui_Context*,ctx)
 (int,button),
 "Is mouse button held?",

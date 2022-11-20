@@ -19,6 +19,8 @@
 
 #include "flags.hpp"
 
+API_SECTION("Popup & Modal");
+
 DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
 R"(Popups, Modals

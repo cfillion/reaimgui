@@ -19,6 +19,8 @@
 
 #include "color.hpp"
 
+API_SECTION("Color Edit");
+
 static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 {
   flags &= ~ImGuiColorEditFlags_HDR; // enforce 0.0..1.0 limits

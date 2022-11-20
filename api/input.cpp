@@ -24,6 +24,8 @@
 #include <reaper_plugin_secrets.h>   // reaper_array
 #include <vector>
 
+API_SECTION("Text & Scalar Input");
+
 static void copyToBuffer(const std::string &value, char *buf, const size_t bufSize)
 {
   int newSize {};

@@ -40,9 +40,14 @@
     return static_cast<type>(0);       \
   }
 
+#define _FILE_SECTION BOOST_PP_CAT(API_FILE, Section)
 #define _STORE_LINE static const API::FirstLine \
   BOOST_PP_CAT(line, __LINE__) { __LINE__ };
 #define _DEFINE_API(type, name, args, help, ...)                \
+  /* error out if API_SECTION() was not used in the file */     \
+  static_assert(&_FILE_SECTION + 1 > &_FILE_SECTION);           \
+                                                                \
+  /* not static to have the linker check for duplicates */      \
   type API_##name(BOOST_PP_SEQ_FOR_EACH_I(_DEFARGS, _,          \
     BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))) noexcept               \
   try __VA_ARGS__                                               \
@@ -57,9 +62,11 @@
       BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                  \
     BOOST_PP_SEQ_FOR_EACH_I(_DOCARGS, _ARG_NAME,                \
       BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                  \
-    help,                                                       \
-    API_FILE, __LINE__,                                         \
+    help, __LINE__,                                             \
   }
+
+#define API_SECTION(...) static const API::Section _FILE_SECTION \
+  { BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ }
 
 #define DEFINE_API _STORE_LINE _DEFINE_API
 #define DEFINE_ENUM(prefix, name, doc) \

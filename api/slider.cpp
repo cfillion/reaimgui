@@ -21,6 +21,8 @@
 
 #include <reaper_plugin_secrets.h> // reaper_array
 
+API_SECTION("Drag & Slider");
+
 DEFINE_API(bool, DragInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(double*,API_RO(v_speed))
 (int*,API_RO(v_min))(int*,API_RO(v_max))

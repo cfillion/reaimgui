@@ -17,6 +17,8 @@
 
 #include "helper.hpp"
 
+API_SECTION("Tab Bar");
+
 DEFINE_API(bool, BeginTabBar, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
 R"(Create and append into a TabBar.

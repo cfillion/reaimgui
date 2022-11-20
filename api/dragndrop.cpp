@@ -23,6 +23,8 @@
 #include <cstring> // strlen
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
 
+API_SECTION("Drag & Drop");
+
 static bool isUserType(const char *type)
 {
   // types starting with '_' are reserved for ImGui use

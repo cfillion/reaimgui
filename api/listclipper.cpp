@@ -22,6 +22,8 @@
 #include <imgui/imgui_internal.h>
 #include <reaper_plugin_functions.h>
 
+API_SECTION("List Clipper");
+
 ListClipper::ListClipper(Context *ctx) : m_ctx { ctx } {}
 
 ListClipper::~ListClipper()

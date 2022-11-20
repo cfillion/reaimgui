@@ -17,6 +17,8 @@
 
 #include "helper.hpp"
 
+API_SECTION("Combo & List");
+
 static std::vector<const char *> splitList(const char *buf, const int size)
 {
   // REAPER's buf, buf_sz mechanism did not handle strings containing null

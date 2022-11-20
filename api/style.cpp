@@ -20,6 +20,8 @@
 #include "color.hpp"
 #include "variant.hpp"
 
+API_SECTION("Style");
+
 template<int Index, int EnumValue, typename T>
 constexpr auto assertStyleVar(T ImGuiStyle::*var)
 {

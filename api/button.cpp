@@ -17,6 +17,8 @@
 
 #include "helper.hpp"
 
+API_SECTION("Button");
+
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
 R"(Most widgets return true when the value has been changed or when pressed/selected

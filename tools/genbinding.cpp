@@ -22,8 +22,6 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
-#include <map>
-#include <set>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -85,7 +83,8 @@ struct Argument {
 };
 
 struct Function {
-  std::string_view name, file;
+  const API::Section *section;
+  std::string_view name;
   Type type;
   API::LineRange lines;
   std::vector<Argument> args;
@@ -94,7 +93,6 @@ struct Function {
   bool isEnum() const { return type.isInt() && args.empty(); }
   bool hasOutputArgs() const;
   bool hasOptionalArgs() const;
-  bool operator<(const Function &o) const { return name < o.name; }
 
   void cppSignature(std::ostream &) const;
   void luaSignature(std::ostream &) const;
@@ -107,40 +105,9 @@ struct FunctionComp {
     { return n < f.name; }
   bool operator()(const Function &f, const std::string_view &n) const
     { return f.name < n; }
-
-  bool operator()(const Function *a, const Function *b) const
-    { return *a < *b; }
 };
 
-static std::set<Function> g_funcs;
-static std::map<std::string_view, std::set<const Function *, FunctionComp>> g_groups;
-static std::unordered_map<std::string_view, std::string_view> g_groupAliases {
-  { "button",      "Button" },
-  { "coloredit",   "Color Edit" },
-  { "context",     "Context" },
-  { "dragndrop",   "Drag & Drop" },
-  { "drawlist",    "Draw List" },
-  { "font",        "Font" },
-  { "indev",       "Keyboard & Mouse" },
-  { "input",       "Text & Scalar Input" },
-  { "item",        "Item & Status" },
-  { "layout",      "Layout" },
-  { "listclipper", "List Clipper" },
-  { "menu",        "Menu" },
-  { "plot",        "Plot" },
-  { "popup",       "Popup & Modal" },
-  { "select",      "Combo & List" },
-  { "slider",      "Drag & Slider" },
-  { "style",       "Style" },
-  { "tabbar",      "Tab Bar" },
-  { "table",       "Table" },
-  { "text",        "Text" },
-  { "textfilter",  "Text Filter" },
-  { "treenode",    "Tree Node" },
-  { "utility",     "Utility" },
-  { "viewport",    "Viewport" },
-  { "window",      "Window" },
-};
+static std::vector<Function> g_funcs;
 
 static const char *nextString(const char *&str)
 {
@@ -150,7 +117,7 @@ static const char *nextString(const char *&str)
 static void addFunc(const API *api)
 {
   const char *def { api->definition() };
-  Function func { api->name(), api->file(), def, api->lines() };
+  Function func { api->m_section, api->name(), def, api->m_lines };
 
   std::string_view argTypes { nextString(def) };
   std::string_view argNames { nextString(def) };
@@ -172,12 +139,8 @@ static void addFunc(const API *api)
     argNames.remove_prefix(nameLen + 1);
   }
 
-  const auto &alias { g_groupAliases.find(func.file) };
-  const std::string_view &group
-    { alias == g_groupAliases.end() ? func.file : alias->second };
-
-  const auto &it { g_funcs.insert(func).first };
-  g_groups[group].insert(&*it);
+  auto it { std::lower_bound(g_funcs.begin(), g_funcs.end(), func.name, FunctionComp{}) };
+  g_funcs.insert(it, func);
 }
 
 struct CommaSep {
@@ -567,6 +530,15 @@ static void formatHtmlSlug(std::ostream &stream, const std::string_view &text)
 
 static void humanBinding(std::ostream &stream)
 {
+  std::vector<const Function *> sortedByGroup;
+  sortedByGroup.reserve(g_funcs.size());
+  std::transform(g_funcs.begin(), g_funcs.end(), std::back_inserter(sortedByGroup),
+                 [](const Function &f) { return &f; });
+  std::stable_sort(sortedByGroup.begin(), sortedByGroup.end(),
+    [](const Function *a, const Function *b) {
+      return strcmp(a->section->title, b->section->title) < 0;
+    });
+
   stream << R"(<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -643,13 +615,16 @@ static void humanBinding(std::ostream &stream)
     <p><strong>Table of Contents</strong></p>
     <ol>)";
 
-  for(const auto &group : g_groups) {
-    if(group.first.empty())
+  const API::Section *section {};
+  for(const Function *func : sortedByGroup) {
+    if(func->section == section)
       continue;
 
+    section = func->section;
+
     stream << "<li><a href=\"#";
-    formatHtmlSlug(stream, group.first); stream << "\">";
-    formatHtmlText(stream, group.first);
+    formatHtmlSlug(stream, section->title); stream << "\">";
+    formatHtmlText(stream, section->title);
     stream << "</a></li>";
   }
 
@@ -660,40 +635,41 @@ static void humanBinding(std::ostream &stream)
     <h1>ReaImGui Documentation</h1>
     <p>)" << GENERATED_FOR << "</p>\n\n";
 
-  for(const auto &group : g_groups) {
-    if(!group.first.empty()) {
-      stream << "<h2 id=\""; formatHtmlSlug(stream, group.first); stream << "\">";
-      formatHtmlText(stream, group.first);
+  section = nullptr;
+  for(const Function *func : sortedByGroup) {
+    if(func->section != section) {
+      section = func->section;
+
+      stream << "<h2 id=\""; formatHtmlSlug(stream, section->title); stream << "\">";
+      formatHtmlText(stream, section->title);
       stream << "</h2>";
     }
     
-    for(const Function *func : group.second) {
-      stream << "<details id=\"" << func->name << "\"><summary>";
-      stream << (func->isEnum() ? "Constant: " : "Function: ");
-      stream << func->name << "</summary>";
+    stream << "<details id=\"" << func->name << "\"><summary>";
+    stream << (func->isEnum() ? "Constant: " : "Function: ");
+    stream << func->name << "</summary>";
 
-      stream << "<table>"
-             << "<tr><th>C++</th><td><code>";        func->cppSignature(stream);        stream << "</code></td></tr>"
-             << "<tr><th>EEL</th><td><code>";        func->eelSignature(stream, false); stream << "</code></td></tr>"
-             << "<tr><th>Legacy EEL</th><td><code>"; func->eelSignature(stream, true);  stream << "</code></td></tr>"
-             << "<tr><th>Lua</th><td><code>";        func->luaSignature(stream);        stream << "</code></td></tr>"
-             << "<tr><th>Python</th><td><code>";     func->pythonSignature(stream);     stream << "</code></td></tr>"
-             << "</table>";
+    stream << "<table>"
+            << "<tr><th>C++</th><td><code>";        func->cppSignature(stream);        stream << "</code></td></tr>"
+            << "<tr><th>EEL</th><td><code>";        func->eelSignature(stream, false); stream << "</code></td></tr>"
+            << "<tr><th>Legacy EEL</th><td><code>"; func->eelSignature(stream, true);  stream << "</code></td></tr>"
+            << "<tr><th>Lua</th><td><code>";        func->luaSignature(stream);        stream << "</code></td></tr>"
+            << "<tr><th>Python</th><td><code>";     func->pythonSignature(stream);     stream << "</code></td></tr>"
+            << "</table>";
 
-      if(!func->doc.empty()) {
-        stream << "<pre>";
-        formatHtmlText(stream, func->doc);
-        stream << "</pre>";
-      }
-
-      stream << "<p class=\"source\">"
-                "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
-                REAIMGUI_VERSION "/api/" << func->file << ".cpp#L"
-             << func->lines.first << "-L" << func->lines.second
-             << "\">View source</a></p>";
-
-      stream << "</details>";
+    if(!func->doc.empty()) {
+      stream << "<pre>";
+      formatHtmlText(stream, func->doc);
+      stream << "</pre>";
     }
+
+    stream << "<p class=\"source\">"
+              "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
+              REAIMGUI_VERSION "/api/" << section->file << ".cpp#L"
+            << func->lines.first << "-L" << func->lines.second
+            << "\">View source</a></p>";
+
+    stream << "</details>";
   }
 
   stream << R"(<p>EOF</p>

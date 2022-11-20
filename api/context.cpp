@@ -18,6 +18,8 @@
 #include "helper.hpp"
 #include "variant.hpp"
 
+API_SECTION("Context");
+
 DEFINE_API(ImGui_Context*, CreateContext,
 (const char*,label)(int*,API_RO(config_flags)),
 R"(Create a new ReaImGui context. The context will remain valid as long as it is used in each defer cycle.

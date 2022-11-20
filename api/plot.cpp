@@ -19,6 +19,8 @@
 
 #include <reaper_plugin_secrets.h> // reaper_array
 
+API_SECTION("Plot");
+
 static float getArrayValue(void *data, const int index)
 {
   const double value { static_cast<double *>(data)[index] };

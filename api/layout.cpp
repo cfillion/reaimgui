@@ -17,6 +17,8 @@
 
 #include "helper.hpp"
 
+API_SECTION("Layout");
+
 DEFINE_API(void, Separator, (ImGui_Context*,ctx),
 "Separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.",
 {

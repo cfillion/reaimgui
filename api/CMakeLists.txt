@@ -36,7 +36,7 @@ get_target_property(API_FILES api SOURCES)
 foreach(API_FILE IN LISTS API_FILES)
   get_filename_component(API_BASENAME "${API_FILE}" NAME_WE)
   set_property(SOURCE "${API_FILE}"
-    PROPERTY COMPILE_DEFINITIONS API_FILE=\"${API_BASENAME}\")
+    PROPERTY COMPILE_DEFINITIONS "API_FILE=${API_BASENAME}")
 endforeach()
 
 find_package(Boost REQUIRED)

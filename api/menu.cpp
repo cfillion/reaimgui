@@ -17,6 +17,8 @@
 
 #include "helper.hpp"
 
+API_SECTION("Menu");
+
 DEFINE_API(bool, BeginMenuBar, (ImGui_Context*,ctx),
 R"(Append to menu-bar of current window (requires ImGui_WindowFlags_MenuBar flag set on parent window). See ImGui_EndMenuBar.)",
 {

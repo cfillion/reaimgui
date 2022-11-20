@@ -19,6 +19,8 @@
 
 #include "font.hpp"
 
+API_SECTION("Font");
+
 DEFINE_API(ImGui_Font*, CreateFont,
 (const char*,family_or_file)(int,size)(int*,API_RO(flags)),
 R"(Load a font matching a font family name or from a font file. The font will remain valid while it's attached to a context. See ImGui_AttachFont.

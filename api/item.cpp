@@ -17,6 +17,8 @@
 
 #include "helper.hpp"
 
+API_SECTION("Item & Status");
+
 DEFINE_API(void, GetItemRectMin, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 "Get upper-left bounding rectangle of the last item (screen space)",

@@ -39,6 +39,12 @@ static auto &firstLine()
   return storedLine;
 }
 
+static const API::Section *&lastSection()
+{
+  static const API::Section *section;
+  return section;
+}
+
 const API *API::enumAPI()
 {
   const auto &container { knownFuncs() };
@@ -51,13 +57,20 @@ API::FirstLine::FirstLine(unsigned int line)
   firstLine() = line;
 }
 
+API::Section::Section(const char *file, const char *title)
+  : file { file }, title { title }
+{
+  lastSection() = this;
+}
+
 API::API(const char *name, void *cImpl, void *reascriptImpl,
-        const char *definition, const char *file, unsigned int lastLine)
-  : m_regs {
+        const char *definition, const unsigned int lastLine)
+  : m_section { lastSection() }, m_lines { firstLine(), lastLine },
+    m_regs {
       { KEY("API"),       cImpl         },
       { KEY("APIvararg"), reascriptImpl },
       { KEY("APIdef"),    reinterpret_cast<void *>(const_cast<char *>(definition)) },
-    }, m_file { file }, m_lines { firstLine(), lastLine }
+    }
 {
   knownFuncs().push_back(this);
 }

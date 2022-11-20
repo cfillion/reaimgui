@@ -36,13 +36,18 @@ class API {
 public:
   using LineRange = std::pair<unsigned int, unsigned int>;
   struct FirstLine { FirstLine(unsigned int); };
+  struct Section {
+    Section(const char *file, const char *title);
+
+    const char *file, *title;
+  };
 
   static void announceAll(bool add);
   static void handleError(const char *fnName, const reascript_error &);
   static void handleError(const char *fnName, const imgui_error &);
 
-  API(const char *name, void *cImpl, void *reascriptImpl, const char *definition,
-      const char *file, unsigned int lastLine);
+  API(const char *name, void *cImpl, void *reascriptImpl,
+      const char *definition, unsigned int lastLine);
   ~API();
 
   // internal helpers for genbindings
@@ -50,8 +55,8 @@ public:
   inline const char *name() const { return &m_regs[0].key[4]; /* strlen("API_") */ }
   inline const char *definition() const {
     return static_cast<const char *>(m_regs[2].value); }
-  inline const char *file() const { return m_file; }
-  inline const auto &lines() const { return m_lines; }
+  const Section *m_section;
+  LineRange m_lines;
 
 private:
   struct RegInfo {
@@ -59,8 +64,6 @@ private:
     void *value;
     void announce(bool add) const;
   } m_regs[3];
-  const char *m_file;
-  LineRange m_lines;
 };
 
 #endif

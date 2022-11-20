@@ -21,6 +21,8 @@
 #include "version.hpp"
 #include <imgui/imgui.h>
 
+API_SECTION("Window");
+
 class DecorationBehavior {
 public:
   DecorationBehavior(Context *ctx, ImGuiWindowFlags *flags)

@@ -26,6 +26,8 @@
 #include "textfilter.hpp"
 #include "version.hpp"
 
+API_SECTION("Utility");
+
 DEFINE_API(void, GetVersion,
 (char*,API_W(imgui_version))(int,API_W_SZ(imgui_version))
 (int*,API_W(imgui_version_num))

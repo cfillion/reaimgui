@@ -17,6 +17,8 @@
 
 #include "helper.hpp"
 
+API_SECTION("Tree Node");
+
 DEFINE_API(bool, TreeNode, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags)),
 R"(TreeNode functions return true when the node is open, in which case you need to also call ImGui_TreePop when you are finished displaying the tree node contents.
