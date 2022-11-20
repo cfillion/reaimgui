@@ -64,9 +64,9 @@ ResourceProxy DrawList {
 
 API_SECTION("Draw List", R"(This is the low-level list of polygons that ImGui functions are filling. At the end of the frame, all draw lists are passed to the GPU for rendering.
 
-Each dear imgui window contains its own ImDrawList. You can use ImGui_GetWindowDrawList() to access the current window draw list and draw custom primitives.
+Each dear imgui window contains its own ImDrawList. You can use GetWindowDrawList() to access the current window draw list and draw custom primitives.
 
-The Draw List API uses absolute coordinates (0,0 is the top-left corner of the primary monitor, not of your window!). See ImGui_GetCursorScreenPos.)");
+The Draw List API uses absolute coordinates (0,0 is the top-left corner of the primary monitor, not of your window!). See GetCursorScreenPos.)");
 
 DEFINE_API(ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
 "The draw list associated to the current window, to append your own drawing primitives",
@@ -90,7 +90,7 @@ DEFINE_API(void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
 (double,clip_rect_max_x)(double,clip_rect_max_y)
 (bool*,API_RO(intersect_with_current_clip_rect)),
-R"(Render-level scissoring. Prefer using higher-level ImGui_PushClipRect to affect logic (hit-testing and widget culling).
+R"(Render-level scissoring. Prefer using higher-level PushClipRect to affect logic (hit-testing and widget culling).
 
 Default values: intersect_with_current_clip_rect = false)",
 {
@@ -113,13 +113,13 @@ DEFINE_API(void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
 });
 
 DEFINE_ENUM(Im, DrawFlags_None,                         "");
-DEFINE_ENUM(Im, DrawFlags_Closed,                       "ImGui_DrawList_PathStroke, ImGui_DrawList_AddPolyline: specify that shape should be closed (Important: this is always == 1 for legacy reason).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTopLeft,          "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding top-left corner only (when rounding > 0.0, we default to all corners).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTopRight,         "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding top-right corner only (when rounding > 0.0, we default to all corners).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomLeft,       "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding bottom-left corner only (when rounding > 0.0, we default to all corners).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomRight,      "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: enable rounding bottom-right corner only (when rounding > 0.0, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_Closed,                       "DrawList_PathStroke, DrawList_AddPolyline: specify that shape should be closed (Important: this is always == 1 for legacy reason).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopLeft,          "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding top-left corner only (when rounding > 0.0, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopRight,         "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding top-right corner only (when rounding > 0.0, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomLeft,       "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding bottom-left corner only (when rounding > 0.0, we default to all corners).");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomRight,      "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding bottom-right corner only (when rounding > 0.0, we default to all corners).");
 
-DEFINE_ENUM(Im, DrawFlags_RoundCornersNone            , "ImGui_DrawList_AddRect, ImGui_DrawList_AddRectFilled, ImGui_DrawList_PathRect: disable rounding on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!.");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersNone            , "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: disable rounding on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!.");
 DEFINE_ENUM(Im, DrawFlags_RoundCornersTop             , "");
 DEFINE_ENUM(Im, DrawFlags_RoundCornersBottom          , "");
 DEFINE_ENUM(Im, DrawFlags_RoundCornersLeft            , "");
@@ -147,7 +147,7 @@ DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
 (double*,API_RO(rounding))(int*,API_RO(flags))
 (double*,API_RO(thickness)),
-"Default values: rounding = 0.0, flags = ImGui_DrawFlags_None, thickness = 1.0",
+"Default values: rounding = 0.0, flags = DrawFlags_None, thickness = 1.0",
 {
   draw_list->get()->AddRect(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
@@ -159,7 +159,7 @@ DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
 DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
 (double*,API_RO(rounding))(int*,API_RO(flags)),
-"Default values: rounding = 0.0, flags = ImGui_DrawFlags_None",
+"Default values: rounding = 0.0, flags = DrawFlags_None",
 {
   draw_list->get()->AddRectFilled(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
@@ -389,7 +389,7 @@ DEFINE_API(void, DrawList_PathFillConvex, (ImGui_DrawList*,draw_list)
 
 DEFINE_API(void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
 (int,col_rgba)(int*,API_RO(flags))(double*,API_RO(thickness)),
-"Default values: flags = ImGui_DrawFlags_None, thickness = 1.0",
+"Default values: flags = DrawFlags_None, thickness = 1.0",
 {
   draw_list->get()->PathStroke(
     Color::fromBigEndian(col_rgba), valueOr(API_RO(flags), ImDrawFlags_None),
@@ -439,7 +439,7 @@ Default values: num_segments = 0)",
 DEFINE_API(void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
 (double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y)
 (double*,API_RO(rounding))(int*,API_RO(flags)),
-"Default values: rounding = 0.0, flags = ImGui_DrawFlags_None",
+"Default values: rounding = 0.0, flags = DrawFlags_None",
 {
   draw_list->get()->PathRect(ImVec2(rect_min_x, rect_min_y),
     ImVec2(rect_max_x, rect_max_y), valueOr(API_RO(rounding), 0.f),

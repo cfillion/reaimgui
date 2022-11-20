@@ -28,9 +28,9 @@ DEFINE_API(void, SetItemAllowOverlap, (ImGui_Context*,ctx),
 
 DEFINE_API(void, BeginDisabled, (ImGui_Context*,ctx)
 (bool*,API_RO(disabled)),
-R"(Disable all user interactions and dim items visuals (applying ImGui_StyleVar_DisabledAlpha over current colors).
+R"(Disable all user interactions and dim items visuals (applying StyleVar_DisabledAlpha over current colors).
 
-ImGui_BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling ImGui_BeginDisabled(false)/ImGui_EndDisabled() best to avoid it.
+BeginDisabled(false) essentially does nothing useful but is provided to facilitate use of boolean expressions. If you can avoid calling BeginDisabled(false)/EndDisabled() best to avoid it.
 
 Default values: disabled = true)",
 {
@@ -39,14 +39,14 @@ Default values: disabled = true)",
 });
 
 DEFINE_API(void, EndDisabled, (ImGui_Context*,ctx),
-"See ImGui_BeginDisabled.",
+"See BeginDisabled.",
 {
   FRAME_GUARD;
   ImGui::EndDisabled();
 });
 
 API_SUBSECTION("Focus & Activation",
-R"~(Prefer using "SetItemDefaultFocus()" over "if(ImGui_IsWindowAppearing()) ImGui_SetScrollHereY()" when applicable to signify "this is the default item".)~");
+R"~(Prefer using "SetItemDefaultFocus()" over "if(IsWindowAppearing()) SetScrollHereY()" when applicable to signify "this is the default item".)~");
 
 DEFINE_API(void, SetItemDefaultFocus, (ImGui_Context*,ctx),
 "Make last item the default focused item of a window.",
@@ -74,7 +74,7 @@ DEFINE_API(void, PushAllowKeyboardFocus, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(void, PopAllowKeyboardFocus, (ImGui_Context*,ctx),
-"See ImGui_PushAllowKeyboardFocus",
+"See PushAllowKeyboardFocus",
 {
   FRAME_GUARD;
   ImGui::PopAllowKeyboardFocus();
@@ -121,7 +121,7 @@ R"(Push width of items for common large "item+label" widgets. >0.0: width in pix
 });
 
 DEFINE_API(void, PopItemWidth, (ImGui_Context*,ctx),
-"See ImGui_PushItemWidth",
+"See PushItemWidth",
 {
   FRAME_GUARD;
   ImGui::PopItemWidth();
@@ -147,9 +147,9 @@ R"(Most of the functions are referring to the previous Item that has been submit
 See Demo Window under "Widgets->Querying Item Status" for an interactive visualization of most of those functions.)");
 
 DEFINE_API(bool, IsItemHovered, (ImGui_Context*,ctx)(int*,API_RO(flags)),
-R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.). See ImGui_HoveredFlags_* for more options.
+R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.). See HoveredFlags_* for more options.
 
-Default values: flags = ImGui_HoveredFlags_None)",
+Default values: flags = HoveredFlags_None)",
 {
   FRAME_GUARD;
   return ImGui::IsItemHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
@@ -170,11 +170,11 @@ DEFINE_API(bool, IsItemFocused, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, IsItemClicked, (ImGui_Context*,ctx)(int*,API_RO(mouse_button)),
-R"(Is the last item clicked? (e.g. button/node just clicked on) == ImGui_IsMouseClicked(mouse_button) && ImGui_IsItemHovered().
+R"(Is the last item clicked? (e.g. button/node just clicked on) == IsMouseClicked(mouse_button) && IsItemHovered().
 
-This is NOT equivalent to the behavior of e.g. ImGui_Button. Most widgets have specific reactions based on mouse-up/down state, mouse position etc.
+This is NOT equivalent to the behavior of e.g. Button. Most widgets have specific reactions based on mouse-up/down state, mouse position etc.
 
-Default values: mouse_button = ImGui_MouseButton_Left)",
+Default values: mouse_button = MouseButton_Left)",
 {
   FRAME_GUARD;
   return ImGui::IsItemClicked(valueOr(API_RO(mouse_button), ImGuiMouseButton_Left));
@@ -209,7 +209,7 @@ DEFINE_API(bool, IsItemDeactivated, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, IsItemDeactivatedAfterEdit, (ImGui_Context*,ctx),
-"Was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that require continuous editing. Note that you may get false positives (some widgets such as ImGui_Combo/ImGui_ListBox/ImGui_Selectable will return true even when clicking an already selected item).",
+"Was the last item just made inactive and made a value change when it was active? (e.g. Slider/Drag moved). Useful for Undo/Redo patterns with widgets that require continuous editing. Note that you may get false positives (some widgets such as Combo/ListBox/Selectable will return true even when clicking an already selected item).",
 {
   FRAME_GUARD;
   return ImGui::IsItemDeactivatedAfterEdit();

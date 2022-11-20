@@ -64,7 +64,7 @@ R"(Push window to the stack and start appending to it.
 - You may append multiple times to the same window during the same frame by calling Begin()/End() pairs multiple times. Some information such as 'flags' or 'p_open' will only be considered by the first call to Begin().
 - Begin() return false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
 
-Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
+Default values: p_open = nil, flags = WindowFlags_None)",
 {
   FRAME_GUARD;
 
@@ -80,7 +80,7 @@ Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
 });
 
 DEFINE_API(void, End, (ImGui_Context*,ctx),
-R"(Pop window from the stack. See ImGui_Begin.)",
+R"(Pop window from the stack. See Begin.)",
 {
   FRAME_GUARD;
   ImGui::End();
@@ -101,7 +101,7 @@ For each independent axis of 'size':
 
 Returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.
 
-Default values: size_w = 0.0, size_h = 0.0, border = false, flags = ImGui_WindowFlags_None)",
+Default values: size_w = 0.0, size_h = 0.0, border = false, flags = WindowFlags_None)",
 {
   FRAME_GUARD;
   const ImGuiWindowFlags flags { valueOr(API_RO(flags), ImGuiWindowFlags_None) };
@@ -115,7 +115,7 @@ Default values: size_w = 0.0, size_h = 0.0, border = false, flags = ImGui_Window
 });
 
 DEFINE_API(void, EndChild, (ImGui_Context*,ctx),
-"See ImGui_BeginChild.",
+"See BeginChild.",
 {
   FRAME_GUARD;
   ImGui::EndChild();
@@ -123,9 +123,9 @@ DEFINE_API(void, EndChild, (ImGui_Context*,ctx),
 
 DEFINE_API(bool, BeginChildFrame, (ImGui_Context*,ctx)
 (const char*,str_id)(double,size_w)(double,size_h)(int*,API_RO(flags)),
-R"(Helper to create a child window / scrolling region that looks like a normal widget frame. See ImGui_BeginChild.
+R"(Helper to create a child window / scrolling region that looks like a normal widget frame. See BeginChild.
 
-Default values: flags = ImGui_WindowFlags_None)",
+Default values: flags = WindowFlags_None)",
 {
   FRAME_GUARD;
   const ImGuiID id { ImGui::GetID(str_id) };
@@ -137,7 +137,7 @@ Default values: flags = ImGui_WindowFlags_None)",
 });
 
 DEFINE_API(void, EndChildFrame, (ImGui_Context*,ctx),
-"See ImGui_BeginChildFrame.",
+"See BeginChildFrame.",
 {
   FRAME_GUARD;
   ImGui::EndChildFrame();
@@ -149,7 +149,7 @@ R"(Prefer using SetNextXXX functions (before Begin) rather that SetXXX functions
 'Current window' = the window we are appending into while inside a Begin()/End() block. 'Next window' = next window we will Begin() into.)");
 
 DEFINE_API(bool, IsWindowAppearing, (ImGui_Context*,ctx),
-"Use after ImGui_Begin/ImGui_BeginPopup/ImGui_BeginPopupModal to tell if a window just opened.",
+"Use after Begin/BeginPopup/BeginPopupModal to tell if a window just opened.",
 {
   FRAME_GUARD;
   return ImGui::IsWindowAppearing();
@@ -166,7 +166,7 @@ DEFINE_API(bool, IsWindowFocused, (ImGui_Context*,ctx)
 (int*,API_RO(flags)),
 R"(Is current window focused? or its root/child, depending on flags. see flags for options.
 
-Default values: flags = ImGui_FocusedFlags_None)",
+Default values: flags = FocusedFlags_None)",
 {
   FRAME_GUARD;
   return ImGui::IsWindowFocused(valueOr(API_RO(flags), ImGuiFocusedFlags_None));
@@ -176,7 +176,7 @@ DEFINE_API(bool, IsWindowHovered, (ImGui_Context*,ctx)
 (int*,API_RO(flags)),
 R"(Is current window hovered (and typically: not blocked by a popup/modal)? see flags for options.
 
-Default values: flags = ImGui_HoveredFlags_None)",
+Default values: flags = HoveredFlags_None)",
 {
   FRAME_GUARD;
   return ImGui::IsWindowHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
@@ -203,14 +203,14 @@ DEFINE_API(void, GetWindowSize, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(double, GetWindowWidth, (ImGui_Context*,ctx),
-"Get current window width (shortcut for ({ImGui_GetWindowSize()})[1])",
+"Get current window width (shortcut for (select(1, GetWindowSize())).",
 {
   FRAME_GUARD;
   return ImGui::GetWindowWidth();
 });
 
 DEFINE_API(double, GetWindowHeight, (ImGui_Context*,ctx),
-"Get current window height (shortcut for ({ImGui_GetWindowSize()})[2])",
+"Get current window height (shortcut for (select(2, GetWindowSize())).",
 {
   FRAME_GUARD;
   return ImGui::GetWindowHeight();
@@ -226,9 +226,9 @@ DEFINE_API(double, GetWindowDpiScale, (ImGui_Context*,ctx),
 DEFINE_API(void, SetNextWindowPos, (ImGui_Context*,ctx)
 (double,pos_x)(double,pos_y)(int*,API_RO(cond))
 (double*,API_RO(pivot_x))(double*,API_RO(pivot_y)),
-R"(Set next window position. Call before ImGui_Begin. Use pivot=(0.5,0.5) to center on given point, etc.
+R"(Set next window position. Call before Begin. Use pivot=(0.5,0.5) to center on given point, etc.
 
-Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
+Default values: cond = Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -239,9 +239,9 @@ Default values: cond = ImGui_Cond_Always, pivot_x = 0.0, pivot_y = 0.0)",
 
 DEFINE_API(void, SetNextWindowSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h)(int*,API_RO(cond)),
-R"(Set next window size. set axis to 0.0 to force an auto-fit on this axis. Call before ImGui_Begin.
+R"(Set next window size. set axis to 0.0 to force an auto-fit on this axis. Call before Begin.
 
-Default values: cond = ImGui_Cond_Always)",
+Default values: cond = Cond_Always)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -259,7 +259,7 @@ DEFINE_API(void, SetNextWindowSizeConstraints, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetNextWindowContentSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h),
-"Set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor ImGui_StyleVar_WindowPadding. set an axis to 0.0 to leave it automatic. Call before ImGui_Begin.",
+"Set next window content size (~ scrollable client area, which enforce the range of scrollbars). Not including window decorations (title bar, menu bar, etc.) nor StyleVar_WindowPadding. set an axis to 0.0 to leave it automatic. Call before Begin.",
 {
   FRAME_GUARD;
   ImGui::SetNextWindowContentSize(ImVec2(size_w, size_h));
@@ -267,9 +267,9 @@ DEFINE_API(void, SetNextWindowContentSize, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetNextWindowCollapsed, (ImGui_Context*,ctx)
 (bool,collapsed)(int*,API_RO(cond)),
-R"(Set next window collapsed state. Call before ImGui_Begin.
+R"(Set next window collapsed state. Call before Begin.
 
-Default values: cond = ImGui_Cond_Always)",
+Default values: cond = Cond_Always)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -277,7 +277,7 @@ Default values: cond = ImGui_Cond_Always)",
 });
 
 DEFINE_API(void, SetNextWindowFocus, (ImGui_Context*,ctx),
-"Set next window to be focused / top-most. Call before ImGui_Begin.",
+"Set next window to be focused / top-most. Call before Begin.",
 {
   FRAME_GUARD;
   ImGui::SetNextWindowFocus();
@@ -293,7 +293,7 @@ DEFINE_API(void, SetNextWindowScroll, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
 (double,alpha),
-"Set next window background color alpha. Helper to easily override the Alpha component of ImGui_Col_WindowBg/ChildBg/PopupBg. You may also use ImGui_WindowFlags_NoBackground.",
+"Set next window background color alpha. Helper to easily override the Alpha component of Col_WindowBg/Col_ChildBg/Col_PopupBg. You may also use WindowFlags_NoBackground.",
 {
   FRAME_GUARD;
   ImGui::SetNextWindowBgAlpha(alpha);
@@ -301,9 +301,9 @@ DEFINE_API(void, SetNextWindowBgAlpha, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetWindowPos, (ImGui_Context*,ctx)
 (double,pos_x)(double,pos_y)(int*,API_RO(cond)),
-R"((Not recommended) Set current window position - call within ImGui_Begin/ImGui_End. Prefer using ImGui_SetNextWindowPos, as this may incur tearing and side-effects.
+R"((Not recommended) Set current window position - call within Begin/End. Prefer using SetNextWindowPos, as this may incur tearing and side-effects.
 
-Default values: cond = ImGui_Cond_Always)",
+Default values: cond = Cond_Always)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -312,9 +312,9 @@ Default values: cond = ImGui_Cond_Always)",
 
 DEFINE_API(void, SetWindowSize, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h)(int*,API_RO(cond)),
-R"((Not recommended) Set current window size - call within ImGui_Begin/ImGui_End. Set size_w and size_h to 0 to force an auto-fit. Prefer using ImGui_SetNextWindowSize, as this may incur tearing and minor side-effects.
+R"((Not recommended) Set current window size - call within Begin/End. Set size_w and size_h to 0 to force an auto-fit. Prefer using SetNextWindowSize, as this may incur tearing and minor side-effects.
 
-Default values: cond = ImGui_Cond_Always)",
+Default values: cond = Cond_Always)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -323,9 +323,9 @@ Default values: cond = ImGui_Cond_Always)",
 
 DEFINE_API(void, SetWindowCollapsed, (ImGui_Context*,ctx)
 (bool,collapsed)(int*,API_RO(cond)),
-R"((Not recommended) Set current window collapsed state. Prefer using ImGui_SetNextWindowCollapsed.
+R"((Not recommended) Set current window collapsed state. Prefer using SetNextWindowCollapsed.
 
-Default values: cond = ImGui_Cond_Always)",
+Default values: cond = Cond_Always)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -333,7 +333,7 @@ Default values: cond = ImGui_Cond_Always)",
 });
 
 DEFINE_API(void, SetWindowFocus, (ImGui_Context*,ctx),
-"(Not recommended) Set current window to be focused / top-most. Prefer using ImGui_SetNextWindowFocus.",
+"(Not recommended) Set current window to be focused / top-most. Prefer using SetNextWindowFocus.",
 {
   FRAME_GUARD;
   ImGui::SetWindowFocus();
@@ -343,7 +343,7 @@ DEFINE_API(void, SetWindowPosEx, (ImGui_Context*,ctx)
 (const char*,name)(double,pos_x)(double,pos_y)(int*,API_RO(cond)),
 R"(Set named window position.
 
-Default values: cond = ImGui_Cond_Always)",
+Default values: cond = Cond_Always)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -354,7 +354,7 @@ DEFINE_API(void, SetWindowSizeEx, (ImGui_Context*,ctx)
 (const char*,name)(double,size_w)(double,size_h)(int*,API_RO(cond)),
 R"(Set named window size. Set axis to 0.0 to force an auto-fit on this axis.
 
-Default values: cond = ImGui_Cond_Always)",
+Default values: cond = Cond_Always)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -365,7 +365,7 @@ DEFINE_API(void, SetWindowCollapsedEx, (ImGui_Context*,ctx)
 (const char*,name)(bool,collapsed)(int*,API_RO(cond)),
 R"(Set named window collapsed state.
 
-Default values: cond = ImGui_Cond_Always)",
+Default values: cond = Cond_Always)",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -381,7 +381,7 @@ DEFINE_API(void, SetWindowFocusEx, (ImGui_Context*,ctx)
   ImGui::SetWindowFocus(name);
 });
 
-API_SECTION_P(properties, "Focused Flags", "For ImGui_IsWindowFocused.");
+API_SECTION_P(properties, "Focused Flags", "For IsWindowFocused.");
 
 DEFINE_ENUM(ImGui, FocusedFlags_None,                "");
 DEFINE_ENUM(ImGui, FocusedFlags_ChildWindows,        "Return true if any children of the window is focused.");
@@ -389,14 +389,14 @@ DEFINE_ENUM(ImGui, FocusedFlags_RootWindow,          "Test from root window (top
 DEFINE_ENUM(ImGui, FocusedFlags_AnyWindow,           "Return true if any window is focused.");
 DEFINE_ENUM(ImGui, FocusedFlags_NoPopupHierarchy,    "Do not consider popup hierarchy (do not treat popup emitter as parent of popup) (when used with _ChildWindows or _RootWindow).");
 DEFINE_ENUM(ImGui, FocusedFlags_DockHierarchy,       "Consider docking hierarchy (treat dockspace host as parent of docked window) (when used with _ChildWindows or _RootWindow).");
-DEFINE_ENUM(ImGui, FocusedFlags_RootAndChildWindows, "ImGui_FocusedFlags_RootWindow | ImGui_FocusedFlags_ChildWindows");
+DEFINE_ENUM(ImGui, FocusedFlags_RootAndChildWindows, "FocusedFlags_RootWindow | FocusedFlags_ChildWindows");
 
 
 API_SUBSECTION("Docking", R"(Dock windows into other windows or in REAPER dockers.
 
 Dock IDs are: 0 = undocked, -1 to -16 = REAPER docker index, > 0 = Dear ImGui dockspace ID (when the user docked the window into another one).
 
-Set ImGui_ConfigFlags_DockingEnable when creating your context or with ImGui_SetConfigVar(ImGui_ConfigVar_Flags) to enable docking (disabled by default).)");
+Set ConfigFlags_DockingEnable when creating your context or with SetConfigVar(ConfigVar_Flags) to enable docking (disabled by default).)");
 
 DEFINE_API(bool, IsWindowDocked, (ImGui_Context*,ctx),
 "Is current window docked into another window or a REAPER docker?",
@@ -406,7 +406,7 @@ DEFINE_API(bool, IsWindowDocked, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(int, GetWindowDockID, (ImGui_Context*,ctx),
-"See ImGui_SetNextWindowDockID.",
+"",
 {
   FRAME_GUARD;
   return ImGui::GetWindowDockID();
@@ -414,9 +414,7 @@ DEFINE_API(int, GetWindowDockID, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetNextWindowDockID, (ImGui_Context*,ctx)
 (int,dock_id)(int*,API_RO(cond)),
-R"(Set next window dock ID.
-
-Default values: cond = ImGui_Cond_Always)",
+"Default values: cond = Cond_Always",
 {
   FRAME_GUARD;
   const ImGuiCond cond { valueOr(API_RO(cond), ImGuiCond_Always) };
@@ -424,11 +422,11 @@ Default values: cond = ImGui_Cond_Always)",
 });
 
 API_SUBSECTION("Content Region",
-R"(Retrieve available space from a given point. ImGui_GetContentRegionAvail() is frequently useful.)");
+R"(Retrieve available space from a given point. GetContentRegionAvail() is frequently useful.)");
 
 DEFINE_API(void, GetContentRegionAvail, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-"== ImGui_GetContentRegionMax() - ImGui_GetCursorPos()",
+"== GetContentRegionMax() - GetCursorPos()",
 {
   FRAME_GUARD;
 
@@ -461,7 +459,7 @@ DEFINE_API(void, GetWindowContentRegionMin, (ImGui_Context*,ctx)
 
 DEFINE_API(void, GetWindowContentRegionMax, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-"Content boundaries max (roughly (0,0)+Size-Scroll) where Size can be overridden with ImGui_SetNextWindowContentSize, in window coordinates.",
+"Content boundaries max (roughly (0,0)+Size-Scroll) where Size can be overridden with SetNextWindowContentSize, in window coordinates.",
 {
   FRAME_GUARD;
 
@@ -472,17 +470,17 @@ DEFINE_API(void, GetWindowContentRegionMax, (ImGui_Context*,ctx)
 
 API_SUBSECTION("Scrolling",
 R"(Any change of Scroll will be applied at the beginning of next frame in the first call to Begin().
-You may instead use ImGui_SetNextWindowScroll() prior to calling ImGui_Begin() to avoid this delay, as an alternative to using ImGui_SetScrollX()/ImGui_SetScrollY().)");
+You may instead use SetNextWindowScroll() prior to calling Begin() to avoid this delay, as an alternative to using SetScrollX()/SetScrollY().)");
 
 DEFINE_API(double, GetScrollX, (ImGui_Context*,ctx),
-"Get scrolling amount [0 .. ImGui_GetScrollMaxX()]",
+"Get scrolling amount [0 .. GetScrollMaxX()]",
 {
   FRAME_GUARD;
   return ImGui::GetScrollX();
 });
 
 DEFINE_API(double, GetScrollY, (ImGui_Context*,ctx),
-"Get scrolling amount [0 .. ImGui_GetScrollMaxY()]",
+"Get scrolling amount [0 .. GetScrollMaxY()]",
 {
   FRAME_GUARD;
   return ImGui::GetScrollY();
@@ -490,7 +488,7 @@ DEFINE_API(double, GetScrollY, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetScrollX, (ImGui_Context*,ctx)
 (double,scroll_x),
-"Set scrolling amount [0 .. ImGui_GetScrollMaxX()]",
+"Set scrolling amount [0 .. GetScrollMaxX()]",
 {
   FRAME_GUARD;
   ImGui::SetScrollX(scroll_x);
@@ -498,7 +496,7 @@ DEFINE_API(void, SetScrollX, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetScrollY, (ImGui_Context*,ctx)
 (double,scroll_y),
-"Set scrolling amount [0 .. ImGui_GetScrollMaxY()]",
+"Set scrolling amount [0 .. GetScrollMaxY()]",
 {
   FRAME_GUARD;
   ImGui::SetScrollY(scroll_y);
@@ -520,7 +518,7 @@ DEFINE_API(double, GetScrollMaxY, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetScrollHereX, (ImGui_Context*,ctx)
 (double*,API_RO(center_x_ratio)),
-R"(Adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using ImGui_SetItemDefaultFocus instead.
+R"(Adjust scrolling amount to make current cursor position visible. center_x_ratio=0.0: left, 0.5: center, 1.0: right. When using to make a "default/current item" visible, consider using SetItemDefaultFocus instead.
 
 Default values: center_x_ratio = 0.5)",
 {
@@ -530,7 +528,7 @@ Default values: center_x_ratio = 0.5)",
 
 DEFINE_API(void, SetScrollHereY, (ImGui_Context*,ctx)
 (double*,API_RO(center_y_ratio)),
-R"(Adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using ImGui_SetItemDefaultFocus instead.
+R"(Adjust scrolling amount to make current cursor position visible. center_y_ratio=0.0: top, 0.5: center, 1.0: bottom. When using to make a "default/current item" visible, consider using SetItemDefaultFocus instead.
 
 Default values: center_y_ratio = 0.5)",
 {
@@ -540,7 +538,7 @@ Default values: center_y_ratio = 0.5)",
 
 DEFINE_API(void, SetScrollFromPosX, (ImGui_Context*,ctx)
 (double,local_x)(double*,API_RO(center_x_ratio)),
-R"(Adjust scrolling amount to make given position visible. Generally ImGui_GetCursorStartPos() + offset to compute a valid position.
+R"(Adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
 
 Default values: center_x_ratio = 0.5)",
 {
@@ -550,7 +548,7 @@ Default values: center_x_ratio = 0.5)",
 
 DEFINE_API(void, SetScrollFromPosY, (ImGui_Context*,ctx)
 (double,local_y)(double*,API_RO(center_y_ratio)),
-R"(Adjust scrolling amount to make given position visible. Generally ImGui_GetCursorStartPos() + offset to compute a valid position.
+R"(Adjust scrolling amount to make given position visible. Generally GetCursorStartPos() + offset to compute a valid position.
 
 Default values: center_y_ratio = 0.5)",
 {
@@ -620,9 +618,9 @@ Default values: p_open = nil)",
     ImGui::ShowStackToolWindow();
 });
 
-API_SUBSECTION("Flags", R"(For ImGui_Begin and ImGui_BeginChild.
+API_SUBSECTION("Flags", R"(For Begin and BeginChild.
 
-(Those are per-window flags. There are shared flags in ImGui_SetConfigVar: ImGui_ConfigVar_WindowsResizeFromEdges and ImGui_ConfigVar_WindowsMoveFromTitleBarOnly))");
+(Those are per-window flags. There are shared flags in SetConfigVar: ConfigVar_WindowsResizeFromEdges and ConfigVar_WindowsMoveFromTitleBarOnly))");
 
 DEFINE_ENUM(ImGui, WindowFlags_None,                      "Default flag.");
 DEFINE_ENUM(ImGui, WindowFlags_NoTitleBar,                "Disable title-bar.");
@@ -632,22 +630,22 @@ DEFINE_ENUM(ImGui, WindowFlags_NoScrollbar,               "Disable scrollbars (w
 DEFINE_ENUM(ImGui, WindowFlags_NoScrollWithMouse,         "Disable user vertically scrolling with mouse wheel. On child window, mouse wheel will be forwarded to the parent unless NoScrollbar is also set.");
 DEFINE_ENUM(ImGui, WindowFlags_NoCollapse,                "Disable user collapsing window by double-clicking on it. Also referred to as Window Menu Button (e.g. within a docking node).");
 DEFINE_ENUM(ImGui, WindowFlags_AlwaysAutoResize,          "Resize every window to its content every frame.");
-DEFINE_ENUM(ImGui, WindowFlags_NoBackground,              "Disable drawing background color (WindowBg, etc.) and outside border. Similar as using ImGui_SetNextWindowBgAlpha(0.0).");
+DEFINE_ENUM(ImGui, WindowFlags_NoBackground,              "Disable drawing background color (WindowBg, etc.) and outside border. Similar as using SetNextWindowBgAlpha(0.0).");
 DEFINE_ENUM(ImGui, WindowFlags_NoSavedSettings,           "Never load/save settings in .ini file.");
 DEFINE_ENUM(ImGui, WindowFlags_NoMouseInputs,             "Disable catching mouse, hovering test with pass through.");
 DEFINE_ENUM(ImGui, WindowFlags_MenuBar,                   "Has a menu-bar.");
-DEFINE_ENUM(ImGui, WindowFlags_HorizontalScrollbar,     R"(Allow horizontal scrollbar to appear (off by default). You may use ImGui_SetNextWindowContentSize(width, 0.0) prior to calling ImGui_Begin() to specify width. Read code in the demo's "Horizontal Scrolling" section.)");
+DEFINE_ENUM(ImGui, WindowFlags_HorizontalScrollbar,     R"(Allow horizontal scrollbar to appear (off by default). You may use SetNextWindowContentSize(width, 0.0) prior to calling Begin() to specify width. Read code in the demo's "Horizontal Scrolling" section.)");
 DEFINE_ENUM(ImGui, WindowFlags_NoFocusOnAppearing,        "Disable taking focus when transitioning from hidden to visible state.");
 // DEFINE_ENUM(ImGui, WindowFlags_NoBringToFrontOnFocus,     "Disable bringing window to front when taking focus (e.g. clicking on it or programmatically giving it focus).");
 DEFINE_ENUM(ImGui, WindowFlags_AlwaysVerticalScrollbar,   "Always show vertical scrollbar (even if ContentSize.y < Size.y).");
 DEFINE_ENUM(ImGui, WindowFlags_AlwaysHorizontalScrollbar, "Always show horizontal scrollbar (even if ContentSize.x < Size.x).");
-DEFINE_ENUM(ImGui, WindowFlags_AlwaysUseWindowPadding,    "Ensure child windows without border uses ImGui_StyleVar_WindowPadding (ignored by default for non-bordered child windows, because more convenient).");
+DEFINE_ENUM(ImGui, WindowFlags_AlwaysUseWindowPadding,    "Ensure child windows without border uses StyleVar_WindowPadding (ignored by default for non-bordered child windows, because more convenient).");
 DEFINE_ENUM(ImGui, WindowFlags_NoNavInputs,               "No gamepad/keyboard navigation within the window.");
 DEFINE_ENUM(ImGui, WindowFlags_NoNavFocus,                "No focusing toward this window with gamepad/keyboard navigation (e.g. skipped by CTRL+TAB).");
 DEFINE_ENUM(ImGui, WindowFlags_UnsavedDocument,           "Display a dot next to the title. When used in a tab/docking context, tab is selected when clicking the X + closure is not assumed (will wait for user to stop submitting the tab). Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.");
 DEFINE_ENUM(ImGui, WindowFlags_NoDocking,                 "Disable docking of this window.");
-DEFINE_ENUM(ImGui, WindowFlags_NoNav,                     "ImGui_WindowFlags_NoNavInputs | ImGui_WindowFlags_NoNavFocus");
-DEFINE_ENUM(ImGui, WindowFlags_NoDecoration,              "ImGui_WindowFlags_NoTitleBar | ImGui_WindowFlags_NoResize | ImGui_WindowFlags_NoScrollbar | ImGui_WindowFlags_NoCollapse");
-DEFINE_ENUM(ImGui, WindowFlags_NoInputs,                  "ImGui_WindowFlags_NoMouseInputs | ImGui_WindowFlags_NoNavInputs | ImGui_WindowFlags_NoNavFocus");
+DEFINE_ENUM(ImGui, WindowFlags_NoNav,                     "WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
+DEFINE_ENUM(ImGui, WindowFlags_NoDecoration,              "WindowFlags_NoTitleBar | WindowFlags_NoResize | WindowFlags_NoScrollbar | WindowFlags_NoCollapse");
+DEFINE_ENUM(ImGui, WindowFlags_NoInputs,                  "WindowFlags_NoMouseInputs | WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
 
 DEFINE_ENUM(ReaImGui, WindowFlags_TopMost,                "Show the window above all non-topmost windows.");

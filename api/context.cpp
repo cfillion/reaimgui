@@ -26,7 +26,7 @@ R"(Create a new ReaImGui context. The context will remain valid as long as it is
 
 The label is used for the tab text when windows are docked in REAPER and also as a unique identifier for storing settings.
 
-Default values: config_flags = ImGui_ConfigFlags_None)",
+Default values: config_flags = ConfigFlags_None)",
 {
   const int flags { valueOr(API_RO(config_flags), ImGuiConfigFlags_None) };
   return new Context { label, flags };
@@ -61,7 +61,7 @@ DEFINE_API(int, GetFrameCount, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(double, GetFramerate, (ImGui_Context*,ctx),
-"Estimate of application framerate (rolling average over 60 frames, based on ImGui_GetDeltaTime), in frame per second. Solely for convenience.",
+"Estimate of application framerate (rolling average over 60 frames, based on GetDeltaTime), in frame per second. Solely for convenience.",
 {
   FRAME_GUARD;
   return ctx->IO().Framerate;
@@ -113,15 +113,15 @@ static const std::variant<
     { return __COUNTER__ - baseConfigVar - 1; })
 
 constexpr int baseConfigVar { __COUNTER__ };
-DEFINE_CONFIGVAR(Flags,                       "ImGui_ConfigFlags_*");
+DEFINE_CONFIGVAR(Flags,                       "ConfigFlags_*");
 
 DEFINE_CONFIGVAR(MouseDoubleClickTime,        "Time for a double-click, in seconds.");
 DEFINE_CONFIGVAR(MouseDoubleClickMaxDist,     "Distance threshold to stay in to validate a double-click, in pixels.");
 DEFINE_CONFIGVAR(MouseDragThreshold,          "Distance threshold before considering we are dragging.");
 DEFINE_CONFIGVAR(KeyRepeatDelay,              "When holding a key/button, time before it starts repeating, in seconds (for buttons in Repeat mode, etc.).");
 DEFINE_CONFIGVAR(KeyRepeatRate,               "When holding a key/button, rate at which it repeats, in seconds.");
-DEFINE_CONFIGVAR(HoverDelayNormal,            "Delay on hovering before ImGui_IsItemHovered(ImGui_HoveredFlags_DelayNormal) returns true.");
-DEFINE_CONFIGVAR(HoverDelayShort,             "Delay on hovering before ImGui_IsItemHovered(ImGui_HoveredFlags_DelayShort) returns true.");
+DEFINE_CONFIGVAR(HoverDelayNormal,            "Delay on hovering before IsItemHovered(HoveredFlags_DelayNormal) returns true.");
+DEFINE_CONFIGVAR(HoverDelayShort,             "Delay on hovering before IsItemHovered(HoveredFlags_DelayShort) returns true.");
 
 DEFINE_CONFIGVAR(DockingNoSplit,              "Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.");
 DEFINE_CONFIGVAR(DockingWithShift,            "Enable docking with holding Shift key (reduce visual noise, allows dropping in wider space)");
@@ -142,7 +142,7 @@ static_assert(__COUNTER__ - baseConfigVar - 1 == std::size(g_configVars),
 
 DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx),
-"See ImGui_SetConfigVar, ImGui_ConfigVar_*.",
+"",
 {
   assertValid(ctx);
   if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
@@ -163,7 +163,7 @@ DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,value),
-"See ImGui_GetConfigVar, ImGui_ConfigVar_*.",
+"",
 {
   assertValid(ctx);
   if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
@@ -184,12 +184,12 @@ DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
   }, g_configVars[var_idx]);
 });
 
-API_SUBSECTION("Flags", "For ImGui_CreateContext and ImGui_SetConfigVar(ImGui_ConfigVar_Flags()).");
+API_SUBSECTION("Flags", "For CreateContext and SetConfigVar(ConfigVar_Flags()).");
 DEFINE_ENUM(ImGui, ConfigFlags_None,                 "");
 DEFINE_ENUM(ImGui, ConfigFlags_NavEnableKeyboard,    "Master keyboard navigation enable flag.");
 // DEFINE_ENUM(ImGui, ConfigFlags_NavEnableGamepad,     "Master gamepad navigation enable flag.");
 DEFINE_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos, "Instruct navigation to move the mouse cursor.");
-DEFINE_ENUM(ImGui, ConfigFlags_NavNoCaptureKeyboard, "Instruct navigation to not capture global keyboard input when ImGui_ConfigFlags_NavEnableKeyboard is set (see ImGui_SetNextFrameWantCaptureKeyboard).");
+DEFINE_ENUM(ImGui, ConfigFlags_NavNoCaptureKeyboard, "Instruct navigation to not capture global keyboard input when ConfigFlags_NavEnableKeyboard is set (see SetNextFrameWantCaptureKeyboard).");
 DEFINE_ENUM(ImGui, ConfigFlags_NoMouse,              "Instruct imgui to ignore mouse position/buttons.");
 DEFINE_ENUM(ImGui, ConfigFlags_NoMouseCursorChange,  "Instruct backend to not alter mouse cursor shape and visibility.");
 DEFINE_ENUM(ImGui, ConfigFlags_DockingEnable,        "[BETA] Enable docking functionality.");

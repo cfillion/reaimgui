@@ -43,7 +43,7 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_DrawListSplitter*, ImGui_Font*, ImGui_ListClipper*, ImGui_TextFilter* and ImGui_Viewport*.)",
+R"(Return whether the pointer of the specified type is valid. Supported types are Context*, DrawList*, DrawListSplitter*, Font*, ListClipper*, TextFilter* and Viewport*.)",
 {
   ResourceProxy::Key proxyKey;
 
@@ -209,7 +209,7 @@ Default values: auto_open_depth = -1, filename = nil)",
 
 DEFINE_API(void, LogToClipboard, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth)),
-R"(Start logging all text output from the interface to the OS clipboard. See also ImGui_SetClipboardText.
+R"(Start logging all text output from the interface to the OS clipboard. See also SetClipboardText.
 
 Default values: auto_open_depth = -1)",
 {
@@ -244,7 +244,7 @@ DEFINE_API(const char*, GetClipboardText, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetClipboardText, (ImGui_Context*,ctx)
 (const char*,text),
-"See also the ImGui_LogToClipboard function to capture GUI into clipboard, or easily output text data to the clipboard.",
+"See also the LogToClipboard function to capture GUI into clipboard, or easily output text data to the clipboard.",
 {
   assertValid(ctx);
   ctx->setCurrent();

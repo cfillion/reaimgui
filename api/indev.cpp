@@ -21,11 +21,11 @@
 
 API_SECTION("Keyboard & Mouse");
 
-API_SUBSECTION("Mouse", R"(To refer to a mouse button, you may use named enums in your code e.g. ImGui_MouseButton_Left, ImGui_MouseButton_Right.
+API_SUBSECTION("Mouse", R"(To refer to a mouse button, you may use named enums in your code e.g. MouseButton_Left, MouseButton_Right.
 
 You can also use regular integer: it is forever guaranteed that 0=Left, 1=Right, 2=Middle.
 
-Dragging operations are only reported after mouse has moved a certain distance away from the initial clicking position (see 'lock_threshold' parameters and 'ImGui_ConfigVar_MouseDragThreshold'))");
+Dragging operations are only reported after mouse has moved a certain distance away from the initial clicking position (see 'lock_threshold' parameters and 'ConfigVar_MouseDragThreshold'))");
 
 DEFINE_API(bool, IsMouseDown, (ImGui_Context*,ctx)
 (int,button),
@@ -46,7 +46,7 @@ DEFINE_API(double, GetMouseDownDuration, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsMouseClicked, (ImGui_Context*,ctx)
 (int,button)(bool*,API_RO(repeat)),
-R"(Did mouse button clicked? (went from !Down to Down). Same as ImGui_GetMouseClickedCount() == 1.
+R"(Did mouse button clicked? (went from !Down to Down). Same as GetMouseClickedCount() == 1.
 
 Default values: repeat = false)",
 {
@@ -75,7 +75,7 @@ DEFINE_API(bool, IsMouseReleased, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
 (int,button),
-"Did mouse button double-clicked? Same as ImGui_GetMouseClickedCount() == 2. (note that a double-click will also report ImGui_IsMouseClicked() == true)",
+"Did mouse button double-clicked? Same as GetMouseClickedCount() == 2. (note that a double-click will also report IsMouseClicked() == true)",
 {
   FRAME_GUARD;
   return ImGui::IsMouseDoubleClicked(button);
@@ -157,7 +157,7 @@ DEFINE_API(void, GetMouseWheel, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsMouseDragging, (ImGui_Context*,ctx)
 (int,button)(double*,API_RO(lock_threshold)),
-R"(Is mouse dragging? (if lock_threshold < -1.0, uses ImGui_ConfigVar_MouseDragThreshold)
+R"(Is mouse dragging? (if lock_threshold < -1.0, uses ConfigVar_MouseDragThreshold)
 
 Default values: lock_threshold = -1.0)",
 {
@@ -177,9 +177,9 @@ DEFINE_API(void, GetMouseDelta, (ImGui_Context*,ctx)
 DEFINE_API(void, GetMouseDragDelta, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y))
 (int*,API_RO(button))(double*,API_RO(lock_threshold)),
-R"(Return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses ImGui_ConfigVar_MouseDragThreshold).
+R"(Return the delta from the initial clicking position while the mouse button is pressed or was just released. This is locked and return 0.0 until the mouse moves past a distance threshold at least once (if lock_threshold < -1.0, uses ConfigVar_MouseDragThreshold).
 
-Default values: button = ImGui_MouseButton_Left, lock_threshold = -1.0)",
+Default values: button = MouseButton_Left, lock_threshold = -1.0)",
 {
   FRAME_GUARD;
   const ImVec2 &delta {
@@ -192,7 +192,7 @@ Default values: button = ImGui_MouseButton_Left, lock_threshold = -1.0)",
 
 DEFINE_API(void, ResetMouseDragDelta, (ImGui_Context*,ctx)
 (int*,API_RO(button)),
-"Default values: button = ImGui_MouseButton_Left",
+"Default values: button = MouseButton_Left",
 {
   FRAME_GUARD;
   ImGui::ResetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left));
@@ -220,7 +220,7 @@ DEFINE_ENUM(ImGui, MouseButton_Middle, "");
 
 // DEFINE_ENUM(ImGui, MouseCursor_None,       ""); // not implemented in ReaImGui
 DEFINE_ENUM(ImGui, MouseCursor_Arrow,      "");
-DEFINE_ENUM(ImGui, MouseCursor_TextInput,  "When hovering over ImGui_InputText, etc.");
+DEFINE_ENUM(ImGui, MouseCursor_TextInput,  "When hovering over InputText, etc.");
 DEFINE_ENUM(ImGui, MouseCursor_ResizeAll,  "(Unused by Dear ImGui functions)");
 DEFINE_ENUM(ImGui, MouseCursor_ResizeNS,   "When hovering over a horizontal border.");
 DEFINE_ENUM(ImGui, MouseCursor_ResizeEW,   "When hovering over a vertical border or a column.");
@@ -249,7 +249,7 @@ DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsKeyPressed, (ImGui_Context*,ctx)
 (int,key)(bool*,API_RO(repeat)),
-R"(Was key pressed (went from !Down to Down)? If repeat=true, uses ImGui_ConfigVar_KeyRepeatDelay / ImGui_ConfigVar_KeyRepeatRate.
+R"(Was key pressed (went from !Down to Down)? If repeat=true, uses ConfigVar_KeyRepeatDelay / ConfigVar_KeyRepeatRate.
 
 Default values: repeat = true)",
 {
@@ -268,14 +268,14 @@ DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)
 
 DEFINE_API(int, GetKeyPressedAmount, (ImGui_Context*,ctx)
 (int,key)(double,repeat_delay)(double,rate),
-"Uses provided repeat rate/delay. Return a count, most often 0 or 1 but might be >1 if ImGui_ConfigVar_RepeatRate is small enough that ImGui_GetDeltaTime > RepeatRate.",
+"Uses provided repeat rate/delay. Return a count, most often 0 or 1 but might be >1 if ConfigVar_RepeatRate is small enough that GetDeltaTime > RepeatRate.",
 {
   FRAME_GUARD;
   return ImGui::GetKeyPressedAmount(static_cast<ImGuiKey>(key), repeat_delay, rate);
 });
 
 DEFINE_API(int, GetKeyMods, (ImGui_Context*,ctx),
-"Flags for the Ctrl/Shift/Alt/Super keys. Uses ImGui_Mod_* values.",
+"Flags for the Ctrl/Shift/Alt/Super keys. Uses Mod_* values.",
 {
   FRAME_GUARD;
   return ctx->IO().KeyMods;
@@ -428,4 +428,4 @@ DEFINE_ENUM(ImGui, Mod_Ctrl, "");
 DEFINE_ENUM(ImGui, Mod_Shift, "");
 DEFINE_ENUM(ImGui, Mod_Alt, "");
 DEFINE_ENUM(ImGui, Mod_Super, "");
-DEFINE_ENUM(ImGui, Mod_Shortcut, "Alias for ImGui_Mod_Ctrl on Linux and Windows and ImGui_Mod_Super on macOS (Cmd key).");
+DEFINE_ENUM(ImGui, Mod_Shortcut, "Alias for Mod_Ctrl on Linux and Windows and Mod_Super on macOS (Cmd key).");

@@ -28,11 +28,11 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 
 DEFINE_API(bool, ColorEdit4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgba))(int*,API_RO(flags)),
-R"(Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xXXRRGGBB (XX is ignored and will not be modified).
+R"(Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xXXRRGGBB (XX is ignored and will not be modified).
 
 Tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
 
-Default values: flags = ImGui_ColorEditFlags_None)",
+Default values: flags = ColorEditFlags_None)",
 {
   FRAME_GUARD;
   assertValid(API_RW(col_rgba));
@@ -57,7 +57,7 @@ R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.
 
 Tip: the ColorEdit* functions have a little color square that can be left-clicked to open a picker, and right-clicked to open an option menu.
 
-Default values: flags = ImGui_ColorEditFlags_None)",
+Default values: flags = ColorEditFlags_None)",
 {
   // unneeded, only to show Edit3 in the error message instead of Edit4
   FRAME_GUARD;
@@ -70,7 +70,7 @@ Default values: flags = ImGui_ColorEditFlags_None)",
 
 DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgba))(int*,API_RO(flags))(int*,API_RO(ref_col)),
-"Default values: flags = ImGui_ColorEditFlags_None, ref_col = nil",
+"Default values: flags = ColorEditFlags_None, ref_col = nil",
 {
   FRAME_GUARD;
   assertValid(API_RW(col_rgba));
@@ -97,7 +97,7 @@ DEFINE_API(bool, ColorPicker3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgb))(int*,API_RO(flags)),
 R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.
 
-Default values: flags = ImGui_ColorEditFlags_None)",
+Default values: flags = ColorEditFlags_None)",
 {
   // unneeded, only to show Picker3 in the error message instead of Picker4
   FRAME_GUARD;
@@ -111,9 +111,9 @@ Default values: flags = ImGui_ColorEditFlags_None)",
 DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)
 (const char*,desc_id)(int,col_rgba)(int*,API_RO(flags))
 (double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Display a color square/button, hover for details, return true when pressed. Color is in 0xRRGGBBAA or, if ImGui_ColorEditFlags_NoAlpha is set, 0xRRGGBB.
+R"(Display a color square/button, hover for details, return true when pressed. Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xRRGGBB.
 
-Default values: flags = ImGui_ColorEditFlags_None, size_w = 0.0, size_h = 0.0)",
+Default values: flags = ColorEditFlags_None, size_w = 0.0, size_h = 0.0)",
 {
   FRAME_GUARD;
 

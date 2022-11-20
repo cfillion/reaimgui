@@ -42,9 +42,9 @@ API_SUBSECTION("Combo Box (Dropdown)");
 
 DEFINE_API(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
 (const char*,preview_value)(int*,API_RO(flags)),
-R"(The ImGui_BeginCombo/ImGui_EndCombo API allows you to manage your contents and selection state however you want it, by creating e.g. ImGui_Selectable items.
+R"(The BeginCombo/EndCombo API allows you to manage your contents and selection state however you want it, by creating e.g. Selectable items.
 
-Default values: flags = ImGui_ComboFlags_None)",
+Default values: flags = ComboFlags_None)",
 {
   FRAME_GUARD;
 
@@ -53,7 +53,7 @@ Default values: flags = ImGui_ComboFlags_None)",
 });
 
 DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
-"Only call EndCombo() if ImGui_BeginCombo returns true!",
+"Only call EndCombo() if BeginCombo returns true!",
 {
   FRAME_GUARD;
   ImGui::EndCombo();
@@ -62,7 +62,7 @@ DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
 DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(popup_max_height_in_items)),
-R"(Helper over ImGui_BeginCombo/ImGui_EndCombo for convenience purpose. Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lua).
+R"(Helper over BeginCombo/EndCombo for convenience purpose. Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lua).
 
 Default values: popup_max_height_in_items = -1)",
 {
@@ -73,9 +73,9 @@ Default values: popup_max_height_in_items = -1)",
     valueOr(API_RO(popup_max_height_in_items), -1));
 });
 
-DEFINE_ENUM(ImGui, ComboFlags_None,           "Flags for ImGui_BeginCombo.");
+DEFINE_ENUM(ImGui, ComboFlags_None,           "");
 DEFINE_ENUM(ImGui, ComboFlags_PopupAlignLeft, "Align the popup toward the left by default.");
-DEFINE_ENUM(ImGui, ComboFlags_HeightSmall,    "Max ~4 items visible. Tip: If you want your combo popup to be a specific size you can use ImGui_SetNextWindowSizeConstraints prior to calling ImGui_BeginCombo.");
+DEFINE_ENUM(ImGui, ComboFlags_HeightSmall,    "Max ~4 items visible. Tip: If you want your combo popup to be a specific size you can use SetNextWindowSizeConstraints prior to calling BeginCombo.");
 DEFINE_ENUM(ImGui, ComboFlags_HeightRegular,  "Max ~8 items visible (default).");
 DEFINE_ENUM(ImGui, ComboFlags_HeightLarge,    "Max ~20 items visible.");
 DEFINE_ENUM(ImGui, ComboFlags_HeightLargest,  "As many fitting items as possible.");
@@ -87,7 +87,7 @@ API_SUBSECTION("List Boxes", "This is essentially a thin wrapper to using BeginC
 DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(height_in_items)),
-R"(This is an helper over ImGui_BeginListBox/ImGui_EndListBox for convenience purpose.
+R"(This is an helper over BeginListBox/EndListBox for convenience purpose.
 
 Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lua).
 
@@ -102,16 +102,16 @@ Default values: height_in_items = -1)",
 
 DEFINE_API(bool, BeginListBox, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Open a framed scrolling region.  This is essentially a thin wrapper to using ImGui_BeginChild/ImGui_EndChild with some stylistic changes.
+R"(Open a framed scrolling region.  This is essentially a thin wrapper to using BeginChild/EndChild with some stylistic changes.
 
-The ImGui_BeginListBox/ImGui_EndListBox API allows you to manage your contents and selection state however you want it, by creating e.g. ImGui_Selectable or any items.
+The BeginListBox/EndListBox API allows you to manage your contents and selection state however you want it, by creating e.g. Selectable or any items.
 
 - Choose frame width:   width  > 0.0: custom  /  width  < 0.0 or -FLT_MIN: right-align   /  width  = 0.0 (default): use current ItemWidth
 - Choose frame height:  height > 0.0: custom  /  height < 0.0 or -FLT_MIN: bottom-align  /  height = 0.0 (default): arbitrary default height which can fit ~7 items
 
 Default values: size_w = 0.0, size_h = 0.0
 
-See ImGui_EndListBox.)",
+See EndListBox.)",
 {
   FRAME_GUARD;
   const ImVec2 size { valueOr(API_RO(size_w), 0.f),
@@ -120,7 +120,7 @@ See ImGui_EndListBox.)",
 });
 
 DEFINE_API(void, EndListBox, (ImGui_Context*,ctx),
-"Only call EndListBox() if ImGui_BeginListBox returned true!",
+"Only call EndListBox() if BeginListBox returned true!",
 {
   FRAME_GUARD;
   ImGui::EndListBox();
@@ -133,7 +133,7 @@ Neighbors selectable extend their highlight bounds in order to leave no gap betw
 DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RW(p_selected))
 (int*,API_RO(flags))(double*,API_RO(size_w))(double*,API_RO(size_h)),
-"Default values: flags = ImGui_SelectableFlags_None, size_w = 0.0, size_h = 0.0",
+"Default values: flags = SelectableFlags_None, size_w = 0.0, size_h = 0.0",
 {
   FRAME_GUARD;
   bool selectedOmitted {};
@@ -145,7 +145,7 @@ DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
   return ImGui::Selectable(label, selected, flags, size);
 });
 
-DEFINE_ENUM(ImGui, SelectableFlags_None,             "Flags for ImGui_Selectable.");
+DEFINE_ENUM(ImGui, SelectableFlags_None,             "");
 DEFINE_ENUM(ImGui, SelectableFlags_DontClosePopups,  "Clicking this doesn't close parent popup window.");
 DEFINE_ENUM(ImGui, SelectableFlags_SpanAllColumns,   "Selectable frame can span all columns (text will still fit in current column).");
 DEFINE_ENUM(ImGui, SelectableFlags_AllowDoubleClick, "Generate press events on double clicks too.");

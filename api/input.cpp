@@ -43,7 +43,7 @@ static void copyToBuffer(const std::string &value, char *buf, const size_t bufSi
 DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags)),
-"Default values: flags = ImGui_InputTextFlags_None",
+"Default values: flags = InputTextFlags_None",
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
@@ -66,7 +66,7 @@ DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (double*,API_RO(size_w))(double*,API_RO(size_h))
 (int*,API_RO(flags)),
-"Default values: size_w = 0.0, size_h = 0.0, flags = ImGui_InputTextFlags_None",
+"Default values: size_w = 0.0, size_h = 0.0, flags = InputTextFlags_None",
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
@@ -87,7 +87,7 @@ DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 (const char*,label)(const char*,hint)
 (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags)),
-"Default values: flags = ImGui_InputTextFlags_None",
+"Default values: flags = InputTextFlags_None",
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
@@ -105,7 +105,7 @@ DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 DEFINE_API(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v))(int*,API_RO(step))(int*,API_RO(step_fast))
 (int*,API_RO(flags)),
-"Default values: step = 1, step_fast = 100, flags = ImGui_InputTextFlags_None",
+"Default values: step = 1, step_fast = 100, flags = InputTextFlags_None",
 {
   FRAME_GUARD;
 
@@ -116,7 +116,7 @@ DEFINE_API(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
 
 DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RO(flags)),
-"Default values: flags = ImGui_InputTextFlags_None",
+"Default values: flags = InputTextFlags_None",
 {
   FRAME_GUARD;
 
@@ -132,7 +132,7 @@ DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
 DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RO(flags)),
-"Default values: flags = ImGui_InputTextFlags_None",
+"Default values: flags = InputTextFlags_None",
 {
   FRAME_GUARD;
 
@@ -148,7 +148,7 @@ DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
 DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RW(v4))(int*,API_RO(flags)),
-"Default values: flags = ImGui_InputTextFlags_None",
+"Default values: flags = InputTextFlags_None",
 {
   FRAME_GUARD;
 
@@ -165,7 +165,7 @@ DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
 DEFINE_API(bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v))(double*,API_RO(step))(double*,API_RO(step_fast))
 (const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: step = 0.0, step_fast = 0.0, format = '%.3f', flags = ImGui_InputTextFlags_None",
+"Default values: step = 0.0, step_fast = 0.0, format = '%.3f', flags = InputTextFlags_None",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -187,7 +187,7 @@ static bool inputDoubleN(const char *label, double *data, const size_t size,
 DEFINE_API(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
 (const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: format = '%.3f', flags = ImGui_InputTextFlags_None",
+"Default values: format = '%.3f', flags = InputTextFlags_None",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -204,7 +204,7 @@ DEFINE_API(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
 DEFINE_API(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: format = '%.3f', flags = ImGui_InputTextFlags_None",
+"Default values: format = '%.3f', flags = InputTextFlags_None",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -221,7 +221,7 @@ DEFINE_API(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
 DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double*,API_RW(v4))(const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: format = '%.3f', flags = ImGui_InputTextFlags_None",
+"Default values: format = '%.3f', flags = InputTextFlags_None",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -239,7 +239,7 @@ DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
 DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
 (reaper_array*,values)(double*,API_RO(step))(double*,API_RO(step_fast))
 (const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: step = nil, format = nil, step_fast = nil, format = '%.3f', flags = ImGui_InputTextFlags_None",
+"Default values: step = nil, format = nil, step_fast = nil, format = '%.3f', flags = InputTextFlags_None",
 {
   FRAME_GUARD;
   assertValid(values);
@@ -254,13 +254,13 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
 
 API_SUBSECTION("Flags", "Most of these are only useful for InputText*() and not for InputDoubleX, InputIntX etc.");
 
-DEFINE_ENUM(ImGui, InputTextFlags_None,                "Most of the InputTextFlags flags are only useful for ImGui_InputText and not for InputIntX, InputDouble etc. (Those are per-item flags. There are shared flags in ImGui_SetConfigVar: ImGui_ConfigVar_InputTextCursorBlink and ImGui_ConfigVar_InputTextEnterKeepActive)");
+DEFINE_ENUM(ImGui, InputTextFlags_None,                "Most of the InputTextFlags flags are only useful for InputText and not for InputIntX, InputDouble etc. (Those are per-item flags. There are shared flags in SetConfigVar: ConfigVar_InputTextCursorBlink and ConfigVar_InputTextEnterKeepActive)");
 DEFINE_ENUM(ImGui, InputTextFlags_CharsDecimal,        "Allow 0123456789.+-*/.");
 DEFINE_ENUM(ImGui, InputTextFlags_CharsHexadecimal,    "Allow 0123456789ABCDEFabcdef.");
 DEFINE_ENUM(ImGui, InputTextFlags_CharsUppercase,      "Turn a..z into A..Z.");
 DEFINE_ENUM(ImGui, InputTextFlags_CharsNoBlank,        "Filter out spaces, tabs.");
 DEFINE_ENUM(ImGui, InputTextFlags_AutoSelectAll,       "Select entire text when first taking mouse focus.");
-DEFINE_ENUM(ImGui, InputTextFlags_EnterReturnsTrue,    "Return 'true' when Enter is pressed (as opposed to every time the value was modified). Consider looking at the ImGui_IsItemDeactivatedAfterEdit function.");
+DEFINE_ENUM(ImGui, InputTextFlags_EnterReturnsTrue,    "Return 'true' when Enter is pressed (as opposed to every time the value was modified). Consider looking at the IsItemDeactivatedAfterEdit function.");
 // DEFINE_ENUM(ImGui, InputTextFlags_CallbackCompletion,  "Callback on pressing TAB (for completion handling).");
 // DEFINE_ENUM(ImGui, InputTextFlags_CallbackHistory,     "Callback on pressing Up/Down arrows (for history handling).");
 // DEFINE_ENUM(ImGui, InputTextFlags_CallbackAlways,      "Callback on each iteration. User code may query cursor position, modify text buffer.");

@@ -23,7 +23,7 @@ API_SECTION("Font");
 
 DEFINE_API(ImGui_Font*, CreateFont,
 (const char*,family_or_file)(int,size)(int*,API_RO(flags)),
-R"(Load a font matching a font family name or from a font file. The font will remain valid while it's attached to a context. See ImGui_AttachFont.
+R"(Load a font matching a font family name or from a font file. The font will remain valid while it's attached to a context. See AttachFont.
 
 The family name can be an installed font or one of the generic fonts: sans-serif, serif, monospace, cursive, fantasy.
 
@@ -31,7 +31,7 @@ If 'family_or_file' specifies a path to a font file (contains a / or \):
 - The first byte of 'flags' is used as the font index within the file
 - The font styles in 'flags' are simulated by the font renderer
 
-Default values: flags = ImGui_FontFlags_None)",
+Default values: flags = FontFlags_None)",
 {
   const int flags { valueOr(API_RO(flags), ReaImGuiFontFlags_None) };
   return new Font { family_or_file, size, flags };
@@ -74,14 +74,14 @@ DEFINE_API(ImGui_Font*, GetFont, (ImGui_Context*,ctx),
 
 DEFINE_API(void, PushFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
-"Change the current font. Use nil to push the default font. See ImGui_PopFont.",
+"Change the current font. Use nil to push the default font. See PopFont.",
 {
   FRAME_GUARD;
   ImGui::PushFont(ctx->fonts().instanceOf(font));
 });
 
 DEFINE_API(void, PopFont, (ImGui_Context*,ctx),
-"See ImGui_PushFont.",
+"See PushFont.",
 {
   FRAME_GUARD;
   ImGui::PopFont();

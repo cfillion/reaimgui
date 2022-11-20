@@ -56,16 +56,14 @@ DEFINE_API(void, Spacing, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, Dummy, (ImGui_Context*,ctx)(double,size_w)(double,size_h),
-"Add a dummy item of given size. unlike ImGui_InvisibleButton, Dummy() won't take the mouse click or be navigable into.",
+"Add a dummy item of given size. unlike InvisibleButton, Dummy() won't take the mouse click or be navigable into.",
 {
   FRAME_GUARD;
   ImGui::Dummy(ImVec2(size_w, size_h));
 });
 
 DEFINE_API(void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
-R"(Move content position toward the right, by 'indent_w', or ImGui_StyleVar_IndentSpacing if 'indent_w' <= 0.
-
-See ImGui_Unindent.
+R"(Move content position toward the right, by 'indent_w', or StyleVar_IndentSpacing if 'indent_w' <= 0. See Unindent.
 
 Default values: indent_w = 0.0)",
 {
@@ -74,7 +72,7 @@ Default values: indent_w = 0.0)",
 });
 
 DEFINE_API(void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
-R"(Move content position back to the left, by 'indent_w', or ImGui_StyleVar_IndentSpacing if 'indent_w' <= 0
+R"(Move content position back to the left, by 'indent_w', or mGui_StyleVar_IndentSpacing if 'indent_w' <= 0
 
 Default values: indent_w = 0.0)",
 {
@@ -83,16 +81,16 @@ Default values: indent_w = 0.0)",
 });
 
 DEFINE_API(void, BeginGroup, (ImGui_Context*,ctx),
-"Lock horizontal starting position. See ImGui_EndGroup.",
+"Lock horizontal starting position. See EndGroup.",
 {
   FRAME_GUARD;
   ImGui::BeginGroup();
 });
 
 DEFINE_API(void, EndGroup, (ImGui_Context*,ctx),
-R"(Unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use ImGui_IsItemHovered or layout primitives such as ImGui_SameLine on whole group, etc.).
+R"(Unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered or layout primitives such as SameLine on whole group, etc.).
 
-See ImGui_BeginGroup.)",
+See BeginGroup.)",
 {
   FRAME_GUARD;
   ImGui::EndGroup();
@@ -174,7 +172,7 @@ DEFINE_API(void, SetCursorScreenPos, (ImGui_Context*,ctx)
   ImGui::SetCursorScreenPos(ImVec2(pos_x, pos_y));
 });
 
-API_SUBSECTION("Clipping", "Mouse hovering is affected by ImGui_PushClipRect() calls, unlike direct calls to ImGui_DrawList_PushClipRect() which are render only.");
+API_SUBSECTION("Clipping", "Mouse hovering is affected by PushClipRect() calls, unlike direct calls to DrawList_PushClipRect() which are render only.");
 
 DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
@@ -191,7 +189,7 @@ DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(void, PopClipRect, (ImGui_Context*,ctx),
-"See ImGui_PushClipRect",
+"See PushClipRect",
 {
   FRAME_GUARD;
   ImGui::PopClipRect();

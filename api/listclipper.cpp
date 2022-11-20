@@ -88,7 +88,7 @@ Generally what happens is:
 - The clipper also handles various subtleties related to keyboard/gamepad navigation, wrapping etc.)");
 
 DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
-"The returned clipper object is only valid for the given context and is valid as long as it is used in each defer cycle. See ImGui_ListClipper_Begin.)",
+"The returned clipper object is only valid for the given context and is valid as long as it is used in each defer cycle. See ListClipper_Begin.)",
 {
   assertValid(ctx);
   return new ListClipper { ctx };
@@ -97,7 +97,7 @@ DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
 DEFINE_API(void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
 (int,items_count)(double*,API_RO(items_height)),
 R"(items_count: Use INT_MAX if you don't know how many items you have (in which case the cursor won't be advanced in the final step)
-items_height: Use -1.0 to be calculated automatically on first step. Otherwise pass in the distance between your items, typically ImGui_GetTextLineHeightWithSpacing or ImGui_GetFrameHeightWithSpacing.
+items_height: Use -1.0 to be calculated automatically on first step. Otherwise pass in the distance between your items, typically GetTextLineHeightWithSpacing or GetFrameHeightWithSpacing.
 
 Default values: items_height = -1.0)",
 {
@@ -105,13 +105,13 @@ Default values: items_height = -1.0)",
 });
 
 DEFINE_API(bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
-"Call until it returns false. The display_start/display_end fields from ImGui_ListClipper_GetDisplayRange will be set and you can process/draw those items.",
+"Call until it returns false. The display_start/display_end fields from ListClipper_GetDisplayRange will be set and you can process/draw those items.",
 {
   return (*clipper)->Step();
 });
 
 DEFINE_API(void, ListClipper_End, (ImGui_ListClipper*,clipper),
-"Automatically called on the last call of ImGui_ListClipper_Step that returns false.",
+"Automatically called on the last call of ListClipper_Step that returns false.",
 {
   (*clipper)->End();
 });
@@ -127,7 +127,7 @@ DEFINE_API(void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
 
 DEFINE_API(void, ListClipper_ForceDisplayRangeByIndices, (ImGui_ListClipper*,clipper)
 (int,item_min)(int,item_max),
-R"(Call ImGui_ListClipper_ForceDisplayRangeByIndices before first call to ImGui_ListClipper_Step if you need a range of items to be displayed regardless of visibility.
+R"(Call ListClipper_ForceDisplayRangeByIndices before first call to ListClipper_Step if you need a range of items to be displayed regardless of visibility.
 
 item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due to alignment/padding of certain items it is likely that an extra item may be included on either end of the display range.)",
 {

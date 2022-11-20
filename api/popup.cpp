@@ -26,17 +26,17 @@ R"(- They block normal mouse hovering detection (and therefore most mouse intera
 
 The 3 properties above are related: we need to retain popup visibility state in the library because popups may be closed as any time.
 
-You can bypass the hovering restriction by using ImGui_HoveredFlags_AllowWhenBlockedByPopup when calling ImGui_IsItemHovered or ImGui_IsWindowHovered.
+You can bypass the hovering restriction by using HoveredFlags_AllowWhenBlockedByPopup when calling IsItemHovered or IsWindowHovered.
 
-IMPORTANT: Popup identifiers are relative to the current ID stack, so ImGui_OpenPopup and BeginPopup generally needs to be at the same level of the stack.)");
+IMPORTANT: Popup identifiers are relative to the current ID stack, so OpenPopup and BeginPopup generally needs to be at the same level of the stack.)");
 
 DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
-R"(Query popup state, if open start appending into the window. Call ImGui_EndPopup afterwards. ImGui_WindowFlags* are forwarded to the window.
+R"(Query popup state, if open start appending into the window. Call EndPopup afterwards. WindowFlags* are forwarded to the window.
 
 Return true if the popup is open, and you can start outputting to it.
 
-Default values: flags = ImGui_WindowFlags_None)",
+Default values: flags = WindowFlags_None)",
 {
   FRAME_GUARD;
   WindowFlags flags { API_RO(flags) };
@@ -45,9 +45,9 @@ Default values: flags = ImGui_WindowFlags_None)",
 
 DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
-R"(Block every interaction behind the window, cannot be closed by user, add a dimming background, has a title bar. Return true if the modal is open, and you can start outputting to it. See ImGui_BeginPopup.
+R"(Block every interaction behind the window, cannot be closed by user, add a dimming background, has a title bar. Return true if the modal is open, and you can start outputting to it. See BeginPopup.
 
-Default values: p_open = nil, flags = ImGui_WindowFlags_None)",
+Default values: p_open = nil, flags = WindowFlags_None)",
 {
   FRAME_GUARD;
   WindowFlags flags { API_RO(flags) };
@@ -66,9 +66,9 @@ DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
 R"(Set popup state to open (don't call every frame!). ImGuiPopupFlags are available for opening options.
 
 If not modal: they can be closed by clicking anywhere outside them, or by pressing ESCAPE.
-Use ImGui_PopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level.
+Use PopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's already one at the same level.
 
-Default values: popup_flags = ImGui_PopupFlags_None)",
+Default values: popup_flags = PopupFlags_None)",
 {
   FRAME_GUARD;
   ImGui::OpenPopup(str_id, valueOr(API_RO(popup_flags), ImGuiPopupFlags_None));
@@ -78,7 +78,7 @@ DEFINE_API(void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
 R"(Helper to open popup when clicked on last item. return true when just opened. (note: actually triggers on the mouse _released_ event to be consistent with popup behaviors)
 
-Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
+Default values: str_id = nil, popup_flags = PopupFlags_MouseButtonRight)",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
@@ -88,9 +88,9 @@ Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
 });
 
 DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
-R"(Manually close the popup we have begin-ed into. Use inside the ImGui_BeginPopup/ImGui_EndPopup scope to close manually.
+R"(Manually close the popup we have begin-ed into. Use inside the BeginPopup/EndPopup scope to close manually.
 
-CloseCurrentPopup() is called by default by ImGui_Selectable/ImGui_MenuItem when activated.)",
+CloseCurrentPopup() is called by default by Selectable/MenuItem when activated.)",
 {
   FRAME_GUARD;
   ImGui::CloseCurrentPopup();
@@ -98,45 +98,45 @@ CloseCurrentPopup() is called by default by ImGui_Selectable/ImGui_MenuItem when
 
 DEFINE_API(bool, IsPopupOpen, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags)),
-R"(Return true if the popup is open at the current ImGui_BeginPopup level of the popup stack.
+R"(Return true if the popup is open at the current BeginPopup level of the popup stack.
 
-With ImGui_PopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.
-With ImGui_PopupFlags_AnyPopupId + ImGui_PopupFlags_AnyPopupLevel: return true if any popup is open.
+With PopupFlags_AnyPopupId: return true if any popup is open at the current BeginPopup() level of the popup stack.
+With PopupFlags_AnyPopupId + PopupFlags_AnyPopupLevel: return true if any popup is open.
 
-Default values: flags = ImGui_PopupFlags_None)",
+Default values: flags = PopupFlags_None)",
 {
   FRAME_GUARD;
   const ImGuiPopupFlags flags { valueOr(API_RO(flags), ImGuiPopupFlags_None) };
   return ImGui::IsPopupOpen(str_id, flags);
 });
 
-API_SUBSECTION("Flags", "For OpenPopup*(), BeginPopupContext*() and ImGui_IsPopupOpen.");
+API_SUBSECTION("Flags", "For OpenPopup*(), BeginPopupContext*() and IsPopupOpen.");
 
 DEFINE_ENUM(ImGui, PopupFlags_None,                    "");
-DEFINE_ENUM(ImGui, PopupFlags_MouseButtonLeft,         "For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as ImGui_MouseButton_Left).");
-DEFINE_ENUM(ImGui, PopupFlags_MouseButtonRight,        "For BeginPopupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as ImGui_MouseButton_Right).");
-DEFINE_ENUM(ImGui, PopupFlags_MouseButtonMiddle,       "For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as ImGui_MouseButton_Middle).");
+DEFINE_ENUM(ImGui, PopupFlags_MouseButtonLeft,         "For BeginPopupContext*(): open on Left Mouse release. Guaranteed to always be == 0 (same as MouseButton_Left).");
+DEFINE_ENUM(ImGui, PopupFlags_MouseButtonRight,        "For BeginPopupContext*(): open on Right Mouse release. Guaranteed to always be == 1 (same as MouseButton_Right).");
+DEFINE_ENUM(ImGui, PopupFlags_MouseButtonMiddle,       "For BeginPopupContext*(): open on Middle Mouse release. Guaranteed to always be == 2 (same as MouseButton_Middle).");
 DEFINE_ENUM(ImGui, PopupFlags_NoOpenOverExistingPopup, "For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup at the same level of the popup stack.");
-DEFINE_ENUM(ImGui, PopupFlags_NoOpenOverItems,         "For ImGui_BeginPopupContextWindow: don't return true when hovering items, only when hovering empty space.");
-DEFINE_ENUM(ImGui, PopupFlags_AnyPopupId,              "For ImGui_IsPopupOpen: ignore the str_id parameter and test for any popup.");
-DEFINE_ENUM(ImGui, PopupFlags_AnyPopupLevel,           "For ImGui_IsPopupOpen: search/test at any level of the popup stack (default test in the current level).");
-DEFINE_ENUM(ImGui, PopupFlags_AnyPopup,                "ImGui_PopupFlags_AnyPopupId | ImGui_PopupFlags_AnyPopupLevel");
+DEFINE_ENUM(ImGui, PopupFlags_NoOpenOverItems,         "For BeginPopupContextWindow: don't return true when hovering items, only when hovering empty space.");
+DEFINE_ENUM(ImGui, PopupFlags_AnyPopupId,              "For IsPopupOpen: ignore the str_id parameter and test for any popup.");
+DEFINE_ENUM(ImGui, PopupFlags_AnyPopupLevel,           "For IsPopupOpen: search/test at any level of the popup stack (default test in the current level).");
+DEFINE_ENUM(ImGui, PopupFlags_AnyPopup,                "PopupFlags_AnyPopupId | PopupFlags_AnyPopupLevel");
 
 API_SUBSECTION("Open+begin combined helpers", R"(
 Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.g. hovering an item and right-clicking.
 They are convenient to easily create context menus, hence the name.
 
-Notice that BeginPopupContextXXX takes ImGui_PopupFlags just like ImGui_OpenPopup and unlike ImGui_BeginPopup.
+Notice that BeginPopupContextXXX takes PopupFlags just like OpenPopup and unlike BeginPopup.
 
-We exceptionally default their flags to 1 (== ImGui_PopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the ImGui_PopupFlags_MouseButtonRight.)");
+We exceptionally default their flags to 1 (== PopupFlags_MouseButtonRight) for backward compatibility with older API taking 'int mouse_button = 1' parameter, so if you add other flags remember to re-add the PopupFlags_MouseButtonRight.)");
 
 DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
-R"(This is a helper to handle the simplest case of associating one named popup to one given widget. You can pass a nil str_id to use the identifier of the last item. This is essentially the same as calling ImGui_OpenPopupOnItemClick + ImGui_BeginPopup but written to avoid computing the ID twice because BeginPopupContextXXX functions may be called very frequently.
+R"(This is a helper to handle the simplest case of associating one named popup to one given widget. You can pass a nil str_id to use the identifier of the last item. This is essentially the same as calling OpenPopupOnItemClick + BeginPopup but written to avoid computing the ID twice because BeginPopupContextXXX functions may be called very frequently.
 
-If you want to use that on a non-interactive item such as ImGui_Text you need to pass in an explicit ID here.
+If you want to use that on a non-interactive item such as Text you need to pass in an explicit ID here.
 
-Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
+Default values: str_id = nil, popup_flags = PopupFlags_MouseButtonRight)",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
@@ -149,7 +149,7 @@ DEFINE_API(bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
 R"(Open+begin popup when clicked on current window.
 
-Default values: str_id = nil, popup_flags = ImGui_PopupFlags_MouseButtonRight)",
+Default values: str_id = nil, popup_flags = PopupFlags_MouseButtonRight)",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
@@ -175,7 +175,7 @@ DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
-"Set a text-only tooltip, typically use with ImGui_IsItemHovered. override any previous call to ImGui_SetTooltip.",
+"Set a text-only tooltip, typically use with IsItemHovered. override any previous call to SetTooltip.",
 {
   FRAME_GUARD;
   ImGui::SetTooltip("%s", text);

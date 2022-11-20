@@ -90,7 +90,10 @@ struct Function {
   API::LineRange lines;
   std::vector<Argument> args;
   std::string_view doc;
+  std::string_view displayName;
   std::deque<const API::Section *> sections;
+
+  bool operator<(const Function &) const;
 
   bool isEnum() const { return type.isInt() && args.empty(); }
   bool hasOutputArgs() const;
@@ -102,14 +105,21 @@ struct Function {
   void pythonSignature(std::ostream &) const;
 };
 
-struct FunctionComp {
-  bool operator()(const std::string_view &n, const Function &f) const
-    { return n < f.name; }
-  bool operator()(const Function &f, const std::string_view &n) const
-    { return f.name < n; }
-};
+bool Function::operator<(const Function &o) const
+{
+  const size_t maxDepth { std::min(sections.size(), o.sections.size()) };
+  for(size_t i {}; i < maxDepth; ++i) {
+    if(sections[i] != o.sections[i])
+      return strcmp(sections[i]->title, o.sections[i]->title) < 0;
+  }
 
-static std::vector<Function> g_funcs;
+  if(sections.size() != o.sections.size())
+    return sections.size() < o.sections.size();
+
+  return displayName < o.displayName;
+}
+
+static std::deque<Function> g_funcs;
 
 static const char *nextString(const char *&str)
 {
@@ -124,6 +134,10 @@ static void addFunc(const API *api)
   std::string_view argTypes { nextString(def) };
   std::string_view argNames { nextString(def) };
   func.doc = nextString(def);
+
+  // C++20's starts_with isn't available when building for old macOS
+  func.displayName = func.name.substr(0, strlen("ImGui_")) == "ImGui_"
+                   ? func.name.substr(strlen("ImGui_")) : func.name;
 
   while(argTypes.size() > 0 && argNames.size() > 0) {
     const size_t typeLen { argTypes.find(',') },
@@ -144,8 +158,7 @@ static void addFunc(const API *api)
   const API::Section *section { func.section };
   do { func.sections.push_front(section); } while((section = section->parent));
 
-  auto it { std::lower_bound(g_funcs.begin(), g_funcs.end(), func.name, FunctionComp{}) };
-  g_funcs.insert(it, func);
+  g_funcs.push_back(func);
 }
 
 struct CommaSep {
@@ -480,37 +493,66 @@ void Function::pythonSignature(std::ostream &stream) const
 }
 
 static auto findNewSection
-  (const Function *func, std::vector<const API::Section *> &oldSections)
+  (const Function &func, std::vector<const API::Section *> &oldSections)
 {
   auto oldSection { oldSections.begin() };
-  auto newSection { func->sections.begin() };
-  while(oldSection != oldSections.end() && newSection != func->sections.end() &&
+  auto newSection { func.sections.begin() };
+  while(oldSection != oldSections.end() && newSection != func.sections.end() &&
         *oldSection == *newSection)
     ++oldSection, ++newSection;
   oldSections.erase(oldSection, oldSections.end());
-  std::copy(newSection, func->sections.end(), std::back_inserter(oldSections));
+  std::copy(newSection, func.sections.end(), std::back_inserter(oldSections));
   return newSection;
 }
 
-static void formatHtmlText(std::ostream &stream, const std::string_view &text)
+static void formatHtmlText(std::ostream &stream, const std::string_view &text,
+  const bool parseLinks = false)
 {
-  size_t nextLink { text.find("ImGui_") };
+  struct Link {
+    Link(const Function *f, size_t p, size_t s)
+      : func { f }, pos { p }, size { s } {}
+
+    bool operator<(const Link &o) const { return pos < o.pos; }
+    // to remove submatches using std::unique
+    bool operator==(const Link &o) const { return pos <= o.pos && pos + size >= o.pos + o.size; }
+
+    const Function *func;
+    size_t pos, size;
+  };
+
+  std::vector<Link> links;
+  if(parseLinks) {
+    const size_t prefixSize { strlen("ImGui_") };
+    for(const Function &func : g_funcs) {
+      size_t pos {};
+      do {
+        size_t matchSize { func.displayName.size() };
+        pos = text.find(func.displayName, pos);
+        if(pos == std::string_view::npos)
+          break;
+        const size_t end { pos + matchSize };
+        if(pos > prefixSize && text.substr(pos - prefixSize, prefixSize) == "ImGui_")
+          pos -= prefixSize, matchSize += prefixSize;
+        if((pos == 0 || !isalpha(text[pos - 1])) &&
+           (end >= text.size() || !isalpha(text[end])))
+          links.emplace_back(&func, pos, matchSize);
+        pos += matchSize;
+      } while(true);
+    }
+    std::sort(links.begin(), links.end());
+    links.erase(std::unique(links.begin(),links.end()), links.end());
+  }
+
+  auto nextLink { links.begin() };
   for(size_t i {}; i < text.size(); ++i) {
-    size_t linkStart { i };
-    if(i == nextLink) {
-      while(i < text.size() && (isalnum(text[i]) || text[i] == '_'))
-        ++i;
-
-      const std::string_view linkTo { &text[linkStart], i - linkStart };
-      if(std::binary_search(g_funcs.begin(), g_funcs.end(), linkTo, FunctionComp{}))
-        stream << "<a href=\"#" << linkTo << "\">" << linkTo << "</a>";
-      else
-        stream << linkTo;
-
-      if(i == text.size())
-        break;
-      else
-        nextLink = text.find("ImGui_", i);
+    if(nextLink != links.end()) {
+      if(nextLink->pos == i) {
+        stream << "<a href=\"#" << nextLink->func->displayName << "\">"
+               << text.substr(nextLink->pos, nextLink->size) << "</a>";
+        i += nextLink->size - 1;
+        ++nextLink;
+        continue;
+      }
     }
 
     switch(text[i]) {
@@ -547,22 +589,6 @@ static void formatHtmlSlug(std::ostream &stream, const std::string_view &text)
 
 static void humanBinding(std::ostream &stream)
 {
-  std::vector<const Function *> sortedByGroup;
-  sortedByGroup.reserve(g_funcs.size());
-  std::transform(g_funcs.begin(), g_funcs.end(), std::back_inserter(sortedByGroup),
-                 [](const Function &f) { return &f; });
-  std::stable_sort(sortedByGroup.begin(), sortedByGroup.end(),
-    [](const Function *a, const Function *b) {
-      const size_t maxDepth { std::min(a->sections.size(), b->sections.size()) };
-      for(size_t i {}; i < maxDepth; ++i) {
-        const int comparison
-          { strcmp(a->sections[i]->title, b->sections[i]->title) };
-        if(comparison == 0) continue;
-        return comparison < 0;
-      }
-      return a->sections.size() < b->sections.size();
-    });
-
   stream << R"(<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -602,7 +628,7 @@ static void humanBinding(std::ostream &stream)
     margin-left: 200px;
     box-shadow: 0 0 10px #080808;
   }
-  h1, h2, h3, h4, h5, h6 { margin: 1em 0 1rem 0; }
+  h2, h3, h4, h5, h6 { margin: 1em 0 1rem 0; }
   h1 { font-size: 2.3em; }
   h2 { font-size: 1.8em; }
   h3 { font-size: 1.4em; }
@@ -648,11 +674,11 @@ static void humanBinding(std::ostream &stream)
     <ol>)";
 
   const API::Section *section {};
-  for(const Function *func : sortedByGroup) {
-    if(func->sections[0] == section)
+  for(const Function &func : g_funcs) {
+    if(func.sections[0] == section)
       continue;
 
-    section = func->sections[0];
+    section = func.sections[0];
 
     stream << "<li><a href=\"#";
     formatHtmlSlug(stream, section->title); stream << "\">";
@@ -668,15 +694,15 @@ static void humanBinding(std::ostream &stream)
     <p>)" << GENERATED_FOR << "</p>\n\n";
 
   std::vector<const API::Section *> sections;
-  for(const Function *func : sortedByGroup) {
+  for(const Function &func : g_funcs) {
     for(auto it { findNewSection(func, sections) };
-        it != func->sections.end(); ++it) {
+        it != func.sections.end(); ++it) {
       const API::Section *section { *it };
-      const auto level { std::distance(func->sections.begin(), it) + 2 };
+      const auto level { std::distance(func.sections.begin(), it) + 2 };
 
       stream << "<h" << level << " id=\"";
-      for(auto slugIt { func->sections.begin() }; slugIt <= it; ++slugIt) {
-        if(slugIt != func->sections.begin())
+      for(auto slugIt { func.sections.begin() }; slugIt <= it; ++slugIt) {
+        if(slugIt != func.sections.begin())
           stream << '_';
         formatHtmlSlug(stream, (*slugIt)->title);
       }
@@ -686,33 +712,33 @@ static void humanBinding(std::ostream &stream)
 
       if(section->help) {
         stream << "<pre>";
-        formatHtmlText(stream, section->help);
+        formatHtmlText(stream, section->help, true);
         stream << "</pre>";
       }
     }
     
-    stream << "<details id=\"" << func->name << "\"><summary>";
-    stream << (func->isEnum() ? "Constant: " : "Function: ");
-    stream << func->name << "</summary>";
+    stream << "<details id=\"" << func.displayName << "\"><summary>";
+    stream << (func.isEnum() ? "Constant: " : "Function: ");
+    stream << func.displayName << "</summary>";
 
     stream << "<table>"
-           << "<tr><th>C++</th><td><code>";        func->cppSignature(stream);        stream << "</code></td></tr>"
-           << "<tr><th>EEL</th><td><code>";        func->eelSignature(stream, false); stream << "</code></td></tr>"
-           << "<tr><th>Legacy EEL</th><td><code>"; func->eelSignature(stream, true);  stream << "</code></td></tr>"
-           << "<tr><th>Lua</th><td><code>";        func->luaSignature(stream);        stream << "</code></td></tr>"
-           << "<tr><th>Python</th><td><code>";     func->pythonSignature(stream);     stream << "</code></td></tr>"
+           << "<tr><th>C++</th><td><code>";        func.cppSignature(stream);        stream << "</code></td></tr>"
+           << "<tr><th>EEL</th><td><code>";        func.eelSignature(stream, false); stream << "</code></td></tr>"
+           << "<tr><th>Legacy EEL</th><td><code>"; func.eelSignature(stream, true);  stream << "</code></td></tr>"
+           << "<tr><th>Lua</th><td><code>";        func.luaSignature(stream);        stream << "</code></td></tr>"
+           << "<tr><th>Python</th><td><code>";     func.pythonSignature(stream);     stream << "</code></td></tr>"
            << "</table>";
 
-    if(!func->doc.empty()) {
+    if(!func.doc.empty()) {
       stream << "<pre>";
-      formatHtmlText(stream, func->doc);
+      formatHtmlText(stream, func.doc, true);
       stream << "</pre>";
     }
 
     stream << "<p class=\"source\">"
               "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
-              REAIMGUI_VERSION "/api/" << section->file << ".cpp#L"
-           << func->lines.first << "-L" << func->lines.second
+              REAIMGUI_VERSION "/api/" << func.section->file << ".cpp#L"
+           << func.lines.first << "-L" << func.lines.second
            << "\">View source</a></p>";
 
     stream << "</details>";
@@ -903,6 +929,7 @@ int main(int argc, const char *argv[])
     if(func->definition()) // only handle function exported to ReaScript
       addFunc(func);
   }
+  std::sort(g_funcs.begin(), g_funcs.end());
 
   const std::string_view lang { argc >= 2 ? argv[1] : "cpp" };
 

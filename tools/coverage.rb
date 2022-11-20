@@ -383,13 +383,13 @@ private
     if arg.default == 'NULL'
       arg.default = 'nil'
     elsif arg.default == '0' && arg.type.start_with?(/Im(Gui)?/) && arg.type != 'ImGuiID'
-      arg.default = 'ImGui_' + arg.type[$~[0].size..-1] + '_None'
-      arg.default = 'ImGui_Cond_Always' if arg.default == 'ImGui_Cond_None'
-      arg.default = 'ImGui_MouseButton_Left' if arg.default == 'ImGui_MouseButton_None'
+      arg.default = arg.type[$~[0].size..-1] + '_None'
+      arg.default = 'Cond_Always' if arg.default == 'Cond_None'
+      arg.default = 'MouseButton_Left' if arg.default == 'MouseButton_None'
     elsif arg.default =~ /\AIm(Gui)?[\w_]+\z/
-      arg.default.gsub! /\AIm(Gui)?/, 'ImGui_'
+      arg.default.gsub! /\AIm(Gui)?/, '' # remove ImGui_ enum prefix (hidden in documentation)
     elsif arg.default == '1' && arg.type == 'ImGuiPopupFlags'
-      arg.default = 'ImGui_PopupFlags_MouseButtonRight'
+      arg.default = 'PopupFlags_MouseButtonRight'
     elsif !arg.default.nil? && arg.type == 'float'
       arg.default = arg.default[0..-2] # 0.0f -> 0.0
     elsif arg.default =~ /\A"(.+)"\z/
