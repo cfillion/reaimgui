@@ -27,45 +27,46 @@
 #include <boost/type_index.hpp>
 #include <cstring> // strlen
 
-#define ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
-#define ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
+#define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
+#define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
 
-#define NO_ARGS (,)
-#define DEFARGS(r, data, i, arg) BOOST_PP_COMMA_IF(i) ARG_TYPE(arg) ARG_NAME(arg)
-#define DOCARGS(r, macro, i, arg) \
+#define _DEFARGS(r, data, i, arg) \
+  BOOST_PP_COMMA_IF(i) _ARG_TYPE(arg) _ARG_NAME(arg)
+#define _DOCARGS(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
 
-#define API_CATCH(name, type, except) \
-  catch(const except &e) {            \
-    API::handleError(#name, e);       \
-    return static_cast<type>(0);      \
+#define _API_CATCH(name, type, except) \
+  catch(const except &e) {             \
+    API::handleError(#name, e);        \
+    return static_cast<type>(0);       \
   }
 
-#define DEFINE_API STORE_LINE DO_DEFINE_API
-#define STORE_LINE static const API::FirstLine \
+#define _STORE_LINE static const API::FirstLine \
   BOOST_PP_CAT(line, __LINE__) { __LINE__ };
-#define DO_DEFINE_API(type, name, args, help, ...)              \
-  type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _,           \
+#define _DEFINE_API(type, name, args, help, ...)                \
+  type API_##name(BOOST_PP_SEQ_FOR_EACH_I(_DEFARGS, _,          \
     BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))) noexcept               \
   try __VA_ARGS__                                               \
-  API_CATCH(name, type, reascript_error)                        \
-  API_CATCH(name, type, imgui_error)                            \
+  _API_CATCH(name, type, reascript_error)                       \
+  _API_CATCH(name, type, imgui_error)                           \
                                                                 \
   static const API API_reg_##name { #name,                      \
     reinterpret_cast<void *>(&API_##name),                      \
     reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>), \
     #type "\0"                                                  \
-    BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE,                  \
+    BOOST_PP_SEQ_FOR_EACH_I(_DOCARGS, _ARG_TYPE,                \
       BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                  \
-    BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                  \
+    BOOST_PP_SEQ_FOR_EACH_I(_DOCARGS, _ARG_NAME,                \
       BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                  \
     help,                                                       \
     API_FILE, __LINE__,                                         \
   }
 
+#define DEFINE_API _STORE_LINE _DEFINE_API
 #define DEFINE_ENUM(prefix, name, doc) \
   DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
 
+#define NO_ARGS (,)
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write
 #define API_RWO(var)      var##InOutOptional // documentation/python only
