@@ -73,7 +73,7 @@ Default values: label = "Filter (inc,-exc)", width = 0.0)~",
   assertValid(filter);
   FRAME_GUARD;
 
-  if(!API_RO(label) || !strlen(API_RO(label)))
+  if(!API_RO(label) || !API_RO(label)[0] /* empty */)
     API_RO(label) = "Filter (inc,-exc)";
 
   return (*filter)->Draw(API_RO(label), valueOr(API_RO(width), 0.f));

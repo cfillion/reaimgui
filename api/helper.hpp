@@ -25,7 +25,6 @@
 #include <array>
 #include <boost/preprocessor.hpp>
 #include <boost/type_index.hpp>
-#include <cstring> // strlen
 
 #define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
 #define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
@@ -91,7 +90,7 @@ inline void nullIfEmpty(const char *&string)
 {
   extern const char *(*GetAppVersion)();
   static bool hasNullableStrings { atof(GetAppVersion()) >= 6.58 };
-  if(!hasNullableStrings && string && !strlen(string))
+  if(!hasNullableStrings && string && !string[0] /* empty */)
     string = nullptr;
 }
 

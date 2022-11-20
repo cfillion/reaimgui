@@ -20,6 +20,7 @@
 #include "color.hpp"
 
 #include <cassert>
+#include <cstring> // strlen
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
 
 static bool isUserType(const char *type)
