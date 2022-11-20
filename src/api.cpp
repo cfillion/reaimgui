@@ -19,7 +19,8 @@
 
 #include "context.hpp"
 
-#include <list>
+#include <cassert>
+#include <deque>
 #include <reaper_plugin_functions.h>
 
 using namespace std::string_literals;
@@ -28,7 +29,7 @@ using namespace std::string_literals;
 
 static auto &knownFuncs()
 {
-  static std::list<const API *> funcs;
+  static std::deque<const API *> funcs;
   return funcs;
 }
 
@@ -63,7 +64,8 @@ API::API(const char *name, void *cImpl, void *reascriptImpl,
 
 API::~API()
 {
-  knownFuncs().remove(this);
+  assert(knownFuncs().back() == this);
+  knownFuncs().pop_back();
 }
 
 void API::RegInfo::announce(const bool add) const
