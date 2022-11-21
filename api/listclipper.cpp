@@ -69,16 +69,17 @@ The clipper calculates the range of visible items and advance the cursor to comp
 (Dear ImGui already clip items based on their bounds but: it needs to first layout the item to do so, and generally fetching/submitting your own data incurs additional cost. Coarse clipping using ImGui_ListClipper allows you to easily scale using lists with tens of thousands of items without a problem)
 
 Usage:
-  if not reaper.ImGui_ValidatePtr(clipper, 'ImGui_ListClipper*') then
-    clipper = reaper.ImGui_CreateListClipper(ctx)
-  end
-  reaper.ImGui_ListClipper_Begin(clipper, 1000) -- We have 1000 elements, evenly spaced
-  while reaper.ImGui_ListClipper_Step(clipper) do
-    local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
-    for row = display_start, display_end - 1 do
-      reaper.ImGui_Text(ctx, ("line number %d"):format(i))
+
+    if not reaper.ImGui_ValidatePtr(clipper, 'ImGui_ListClipper*') then
+      clipper = reaper.ImGui_CreateListClipper(ctx)
     end
-  end
+    reaper.ImGui_ListClipper_Begin(clipper, 1000) -- We have 1000 elements, evenly spaced
+    while reaper.ImGui_ListClipper_Step(clipper) do
+      local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
+      for row = display_start, display_end - 1 do
+        reaper.ImGui_Text(ctx, ("line number %d"):format(i))
+      end
+    end
 
 Generally what happens is:
 - Clipper lets you process the first element (DisplayStart = 0, DisplayEnd = 1) regardless of it being visible or not.

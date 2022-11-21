@@ -275,7 +275,9 @@ DEFINE_API(void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
 (int,col_rgba)(const char*,text)(double*,API_RO(wrap_width))
 (double*,API_RO(cpu_fine_clip_rect_x))(double*,API_RO(cpu_fine_clip_rect_y))
 (double*,API_RO(cpu_fine_clip_rect_w))(double*,API_RO(cpu_fine_clip_rect_h)),
-R"(The last pushed font is used if font is nil. The size of the last pushed font is used if font_size is 0. cpu_fine_clip_rect_* only takes effect if all four are non-nil.
+R"(The last pushed font is used if font is nil.
+The size of the last pushed font is used if font_size is 0.
+cpu_fine_clip_rect_* only takes effect if all four are non-nil.
 
 Default values: wrap_width = 0.0, cpu_fine_clip_rect_x = nil, cpu_fine_clip_rect_y = nil, cpu_fine_clip_rect_w = nil, cpu_fine_clip_rect_h = nil)",
 {
@@ -477,22 +479,25 @@ ImDrawList *DrawListSplitter::drawList() const
 }
 
 API_SUBSECTION("Splitter",
-R"(Split/Merge functions are used to split the draw list into different layers which can be drawn into out of order (e.g. submit FG primitives before BG primitives).
+R"(Split/Merge functions are used to split the draw list into different layers
+which can be drawn into out of order (e.g. submit FG primitives before BG primitives).
 
-Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end).
+Use to minimize draw calls (e.g. if going back-and-forth between multiple
+clipping rectangles, prefer to append into separate channels then merge at the end).
 
 Usage:
-  if not reaper.ImGui_ValidatePtr(splitter, 'ImGui_DrawListSplitter*') then
-    splitter = reaper.ImGui_CreateDrawListSplitter(draw_list)
-  end
-  reaper.ImGui_DrawListSplitter_Split(splitter, 2)
-  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
-  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
-  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 1)
-  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- foreground
-  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
-  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
-  reaper.ImGui_DrawListSplitter_Merge(splitter))");
+
+    if not reaper.ImGui_ValidatePtr(splitter, 'ImGui_DrawListSplitter*') then
+      splitter = reaper.ImGui_CreateDrawListSplitter(draw_list)
+    end
+    reaper.ImGui_DrawListSplitter_Split(splitter, 2)
+    reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
+    reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
+    reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 1)
+    reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- foreground
+    reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
+    reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
+    reaper.ImGui_DrawListSplitter_Merge(splitter))");
 
 DEFINE_API(ImGui_DrawListSplitter*, CreateDrawListSplitter,
 (ImGui_DrawList*,draw_list),

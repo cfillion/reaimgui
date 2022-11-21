@@ -23,6 +23,7 @@
 #include <cstring>
 #include <deque>
 #include <iostream>
+#include <md4c-html.h>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -322,7 +323,7 @@ static std::string hl(const Highlight type = Highlight::End)
     tag += "ss";
     break;
   case Highlight::Constant:
-    tag += "sc";
+    tag += "sn";
     break;
   case Highlight::End:
     return "Invalid Highlight";
@@ -506,7 +507,7 @@ static auto findNewSection
   return newSection;
 }
 
-static void formatHtmlText(std::ostream &stream, std::string_view text)
+static void outputHtmlText(std::ostream &stream, std::string_view text)
 {
   // outputting char by char is slower than as many as possible at once
   while(!text.empty()) {
@@ -530,180 +531,82 @@ static void formatHtmlText(std::ostream &stream, std::string_view text)
   }
 }
 
-struct Token {
-  using List = std::vector<std::unique_ptr<Token>>;
-  using Iterator = List::iterator;
-
-  Token(const std::string_view &range) : m_range { range } {}
-  virtual ~Token() = default;
-
-  virtual void format(std::ostream &stream,
-    Iterator &nextToken, const Iterator &end) const
-  {
-    std::string_view text { m_range };
-    while(nextToken != end && contains(**nextToken)) {
-      formatHtmlText(stream, (*nextToken)->before(text));
-      (*nextToken)->advance(text);
-      (*nextToken)->format(stream, ++nextToken, end);
-    }
-    formatHtmlText(stream, text);
-  }
-
-  std::string_view before(const std::string_view &text) const
-  {
-    return text.substr(0, m_range.begin() - text.begin());
-  }
-
-  void advance(std::string_view &text) const
-  {
-    text.remove_prefix(m_range.end() - text.begin());
-  }
-
-  bool contains(const Token &o) const
-  {
-    return o.m_range.begin() < m_range.end();
-  }
-
-  std::string_view m_range;
+struct Reference {
+  const Function *func;
+  std::string_view range;
 };
 
-static bool operator<(const std::unique_ptr<Token> &a,
-                      const std::unique_ptr<Token> &b)
+static std::vector<Reference> parseReferences(const std::string_view &input)
 {
-  const auto cmp { a->m_range.begin() - b->m_range.begin() };
-  if(cmp == 0) // longest matches first
-    return &a->m_range.back() > &b->m_range.back();
-  else
-    return cmp < 0;
-}
-
-static void eachLine(std::string_view text,
-  const std::function<void (const std::string_view &)> &callback)
-{
-  while(!text.empty()) {
-    size_t nl { text.find("\n", 1) };
-    if(nl != std::string_view::npos)
-      ++nl; // include the newline in the new line
-    callback(text.substr(0, nl));
-    if(nl >= text.size())
-      return;
-    text.remove_prefix(nl);
-  }
-}
-
-static void eachBlock(std::string_view text,
-  const std::function<bool (const std::string_view &, bool inBlock)> &addLine,
-  const std::function<void (const std::string_view &)> &addBlock)
-{
-  const char *begin {};
-  eachLine(text, [&](const std::string_view &line) {
-    if(addLine(line, begin != nullptr)) {
-      if(!begin)
-        begin = line.begin();
-    }
-    else if(begin) {
-      addBlock({ begin, static_cast<size_t>(line.begin() - begin) });
-      begin = nullptr;
-    }
-  });
-  if(begin) // when the block does not end before the text
-    addBlock({ begin, static_cast<size_t>(text.end() - begin) });
-}
-
-struct CodeBlock : Token {
-  static constexpr std::string_view s_prefix { "\x20\x20" };
-
-  static void tokenize(const std::string_view &text, List &tokens)
-  {
-    eachBlock(text, [&](std::string_view line, bool inBlock) {
-      if(line.size() >= s_prefix.size())
-        inBlock = line.substr(0, s_prefix.size()) == s_prefix;
-      if(inBlock) {
-        if(line.size() >= s_prefix.size())
-          line.remove_prefix(s_prefix.size());
-        tokens.push_back(std::make_unique<Token>(line));
-      }
-      return inBlock;
-    }, [&](const std::string_view &block) {
-      tokens.push_back(std::make_unique<CodeBlock>(block));
-    });
-  }
-
-  CodeBlock(const std::string_view &range) : Token { range } {}
-
-  void format(std::ostream &stream,
-    Iterator &nextToken, const Iterator &end) const override
-  {
-    std::string_view text { m_range };
-    stream << "<code>";
-    // only print line tokens (and subtokens) to remove s_prefix
-    while(nextToken != end && contains(**nextToken)) {
-      (*nextToken)->advance(text);
-      (*nextToken)->format(stream, ++nextToken, end);
-    }
-    stream << "</code>";
-  }
-};
-
-struct Reference : Token {
-  static void tokenize(const std::string_view &text, List &tokens)
-  {
-    const std::string_view prefix { "ImGui_" };
+  // build a map of known references for fast lookup
+  static std::unordered_map<std::string_view, const Function *> funcs;
+  if(funcs.empty()) {
     for(const Function &func : g_funcs) {
-      size_t pos {};
-      do {
-        size_t size { func.displayName.size() };
-        pos = text.find(func.displayName, pos);
-        if(pos == std::string_view::npos)
-          break;
-        if(pos > prefix.size() &&
-           text.substr(pos - prefix.size(), prefix.size()) == prefix)
-          pos -= prefix.size(), size += prefix.size();
-        // check if match is not part of a bigger word
-        const size_t end { pos + size };
-        if((pos == 0 || !isalpha(text[pos - 1])) &&
-            (end >= text.size() || !isalpha(text[end])))
-          tokens.push_back(std::make_unique<Reference>(&func, text.substr(pos, size)));
-        pos += size;
-      } while(true);
+      funcs.emplace(func.displayName, &func);
+      funcs.emplace(func.name, &func);
     }
   }
 
-  Reference(const Function *func, const std::string_view &range)
-    : Token { range }, m_func { func } {}
+  std::vector<Reference> links;
 
-  void format(std::ostream &stream,
-    Iterator &nextToken, const Iterator &end) const override
-  {
-    stream << "<a href=\"#" << m_func->displayName << "\">";
-    formatHtmlText(stream, m_range);
-    stream << "</a>";
-
-    while(nextToken != end && contains(**nextToken)) ++nextToken;
+  auto start { input.begin() };
+  while(start != input.end()) {
+    start = std::find_if(start, input.end(),
+      [](const char c) { return c >= 'A' && c <= 'Z'; });
+    if(start == input.end())
+      break;
+    const auto end { std::find_if_not(start, input.end(),
+      [](const char c) { return (c >= 'A' && c <= 'z') ||
+                                (c >= '0' && c <= '9') || c == '_'; }) };
+    // constructor taking first, last iterators is C++20
+    const std::string_view word { &*start, static_cast<size_t>(end - start) };
+    const auto it { funcs.find(word) };
+    if(it != funcs.end())
+      links.push_back({ it->second, word });
+    start += word.size();
   }
 
-  const Function *m_func;
-};
-
-static void formatHtmlBlock(std::ostream &stream, std::string_view text)
-{
-  std::vector<std::unique_ptr<Token>> tokens;
-  CodeBlock::tokenize(text, tokens);
-  Reference::tokenize(text, tokens);
-  std::sort(tokens.begin(), tokens.end());
-
-  auto token { tokens.begin() };
-  stream << "<pre>";
-  while(token != tokens.end()) {
-    formatHtmlText(stream, (*token)->before(text));
-    (*token)->advance(text);
-    (*token)->format(stream, ++token, tokens.end());
-  }
-  formatHtmlText(stream, text);
-  stream << "</pre>";
+  return links;
 }
 
-static void formatHtmlSlug(std::ostream &stream, const std::string_view &text)
+static void outputHtmlBlock(std::ostream &stream, std::string_view html,
+  const bool escape = true)
+{
+  const auto &links { parseReferences(html) };
+  for(auto link { links.begin() }; link != links.end(); ++link) {
+    const auto prefixSize { link->range.data() - html.data() };
+    const std::string_view prefix { html.substr(0, prefixSize) };
+    if(escape)
+      outputHtmlText(stream, prefix);
+    else
+      stream << prefix;
+    stream << "<a href=\"#" << link->func->displayName << "\">"
+           << link->range << "</a>";
+    html.remove_prefix(prefixSize + link->range.size());
+  }
+  if(escape)
+    outputHtmlText(stream, html);
+  else
+    stream << html;
+}
+
+static void outputMarkdown(const char *data, MD_SIZE size, void *userData)
+{
+  std::ostream &stream { *static_cast<std::ostream *>(userData) };
+  outputHtmlBlock(stream, { data, size }, false);
+}
+
+static void outputMarkdown(std::ostream &stream, const std::string_view &text)
+{
+  const auto parserFlags { MD_FLAG_NOHTML | MD_FLAG_PERMISSIVEURLAUTOLINKS };
+  if(md_html(text.data(), text.size(), &outputMarkdown, &stream, parserFlags, 0)) {
+    stream << "<pre>";
+    outputHtmlBlock(stream, text);
+    stream << "</pre>";
+  }
+}
+
+static void outputHtmlSlug(std::ostream &stream, const std::string_view &text)
 {
   bool prevWasPrintable { false };
   for(const char c : text) {
@@ -736,13 +639,13 @@ static void humanBinding(std::ostream &stream)
     overflow-anchor: none;
   }
   body, pre, code { font-family: Consolas, monospace; }
-  aside, pre code { background-color: #262626; /* Grey15 */ }
   aside {
+    background-color: #262626; /* Grey15 */
     border-right: 1px solid #6f6f6f;
+    bottom: 0;
     overflow-y: auto;
     position: fixed;
     top: 0;
-    bottom: 0;
     width: 200px;
   }
   aside ol {
@@ -760,19 +663,22 @@ static void humanBinding(std::ostream &stream)
     margin-right: 1em;
     box-shadow: 0 0 10px #080808;
   }
-  h2, h3, h4, h5, h6, pre code { margin: 1em 0 1rem 0; }
+  aside p, aside li a, main { padding-left: 1em; }
+  h2, h3, h4, h5, h6, pre { margin: 1em 0 1rem 0; }
   h1 { font-size: 2.3em; }
   h2 { font-size: 1.8em; }
   h3 { font-size: 1.4em; }
-  h4 { font-size: 1.2em; }
+  h4 { font-size: 1.15em; }
   h5 { font-size: 1.0em; }
   h6 { font-size: 0.9em; }
   h2:before { content: '〉'; color: #6f6f6f; }
-  aside p, aside li a, main { padding-left: 1em; }
-  details { margin-left: 20px; }
+  ol { padding-left: 2em; }
+  ul { padding-left: 1em; }
+  li ul { list-style-type: square; }
   a { text-decoration: none; }
   a, summary { color: #00ff87; /* SpringGreen1 */ }
   a:hover, summary:hover { text-decoration: underline; }
+  details { margin-left: 20px; }
   summary {
     cursor: pointer;
     display: inline-block;
@@ -789,19 +695,24 @@ static void humanBinding(std::ostream &stream)
     vertical-align: top;
     white-space: nowrap;
   }
-  table, pre { white-space: pre-wrap; }
+  table { white-space: pre-wrap; }
   code, code a { color: white; }
   table code:hover { text-decoration: underline; cursor: copy; }
   table code:active, aside a:hover { background-color: #3a3a3a; }
+  pre { overflow: scroll; }
   pre code {
+    background-color: black;
     border-radius: 5px;
+    border: 1px solid #6f6f6f;
     display: inline-block;
-    padding: 5px;
+    padding: 0.5em;
   }
   .st { color: #87afff; /* SkyBlue2 */ }
-  .ss { color: #5faf5f; /* DarkSeaGreen4 */ }
-  .sc { color: #5f87d7; /* SteelBlue3 */ }
-  .sr { color: #d7875f; /* LightSalmon3 */ }
+  .ss, .hljs-string   { color: #5faf5f; /* DarkSeaGreen4 */ }
+  .sn, .hljs-number   { color: #5f87d7; /* SteelBlue3    */ }
+  .sr, .hljs-keyword  { color: #d7875f; /* LightSalmon3  */ }
+       .hljs-comment  { color: #b2b2b2; /* Grey70        */ }
+       .hljs-built_in { color: #87d75f; /* DarkOliveGreen3 */ }
   .source a { color: gray; }
   </style>
 </head>
@@ -818,8 +729,8 @@ static void humanBinding(std::ostream &stream)
     section = func.sections[0];
 
     stream << "<li><a href=\"#";
-    formatHtmlSlug(stream, section->title); stream << "\">";
-    formatHtmlText(stream, section->title);
+    outputHtmlSlug(stream, section->title); stream << "\">";
+    outputHtmlText(stream, section->title);
     stream << "</a></li>";
   }
 
@@ -841,14 +752,14 @@ static void humanBinding(std::ostream &stream)
       for(auto slugIt { func.sections.begin() }; slugIt <= it; ++slugIt) {
         if(slugIt != func.sections.begin())
           stream << '_';
-        formatHtmlSlug(stream, (*slugIt)->title);
+        outputHtmlSlug(stream, (*slugIt)->title);
       }
       stream << "\">";
-      formatHtmlText(stream, section->title);
+      outputHtmlText(stream, section->title);
       stream << "</h" << level << '>';
 
       if(section->help)
-        formatHtmlBlock(stream, section->help);
+        outputMarkdown(stream, section->help);
     }
     
     stream << "<details id=\"" << func.displayName << "\"><summary>";
@@ -856,7 +767,7 @@ static void humanBinding(std::ostream &stream)
     stream << func.displayName << "</summary>";
 
     stream << "<table>"
-           << "<tr><th>C++</th><td><code>";        func.cppSignature(stream);        stream << "</code></td></tr>"
+           << "<tr><th>C/C++</th><td><code>";      func.cppSignature(stream);        stream << "</code></td></tr>"
            << "<tr><th>EEL</th><td><code>";        func.eelSignature(stream, false); stream << "</code></td></tr>"
            << "<tr><th>Legacy EEL</th><td><code>"; func.eelSignature(stream, true);  stream << "</code></td></tr>"
            << "<tr><th>Lua</th><td><code>";        func.luaSignature(stream);        stream << "</code></td></tr>"
@@ -864,7 +775,7 @@ static void humanBinding(std::ostream &stream)
            << "</table>";
 
     if(!func.doc.empty())
-      formatHtmlBlock(stream, func.doc);
+      outputMarkdown(stream, func.doc);
 
     stream << "<p class=\"source\">"
               "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
@@ -898,6 +809,10 @@ static void humanBinding(std::ostream &stream)
       navigator.clipboard.writeText(e.target.textContent);
   });
   </script>
+  <!-- highlight.js v11 removed auto-merging of html (removes links) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/highlight.min.js" integrity="sha512-tL84mD+FR70jI7X8vYj5AfRqe0EifOaFUapjt1KvDaPLHgTlUZ2gQL/Tzvvn8HXuQm9oHYShJpNFdyJmH2yHrw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/languages/lua.min.js" integrity="sha512-h4/Yr93778WemxjiZYuMmmAZmdoQGMpZHPVAQmMiCOV+QDNlTM8vZcZtTNyW/aiiqtNeu9J8K59gIKSM9SvrLw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>hljs.highlightAll();</script>
 </body>
 </html>
 )";

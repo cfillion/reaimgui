@@ -8,6 +8,9 @@ if(NOT WIN32)
   target_link_libraries(genbinding SWELL::swell)
 endif()
 
+find_package(md4c REQUIRED)
+target_link_libraries(genbinding md4c::md4c-html)
+
 function(add_binding lang output)
   add_custom_command(
     OUTPUT ${output}

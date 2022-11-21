@@ -43,7 +43,17 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid. Supported types are Context*, DrawList*, DrawListSplitter*, Font*, ListClipper*, TextFilter* and Viewport*.)",
+R"(Return whether the pointer of the specified type is valid.
+
+Supported types are:
+
+- Context*
+- DrawList*
+- DrawListSplitter*
+- Font*
+- ListClipper*
+- TextFilter*
+- Viewport*)",
 {
   ResourceProxy::Key proxyKey;
 
@@ -80,9 +90,11 @@ DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
 
 DEFINE_API(void, PointConvertNative, (ImGui_Context*,ctx)
 (double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native)),
-R"(Convert a position from the current platform's native coordinate position system to ReaImGui global coordinates (or vice versa).
+R"(Convert a position from the current platform's native coordinate position
+system to ReaImGui global coordinates (or vice versa).
 
-This flips the Y coordinate on macOS and applies HiDPI scaling on Windows and Linux.
+This flips the Y coordinate on macOS and applies HiDPI scaling on Windows and
+Linux.
 
 Default values: to_native = false)",
 {
@@ -107,15 +119,22 @@ DEFINE_API(void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
   *API_W(max) = FLT_MAX;
 });
 
-API_SUBSECTION("ID stack/scope", R"(Read the FAQ (<https://dearimgui.org/faq>) for more details about how IDs are handled in dear imgui.
+API_SUBSECTION("ID stack/scope",
+R"(Read the [FAQ](https://dearimgui.org/faq) for more details about how IDs are
+handled in dear imgui.
 
 - Those questions are answered and impacted by understanding of the ID stack system:
   - "Q: Why is my widget not reacting when I click on it?"
   - "Q: How can I have widgets with an empty label?"
   - "Q: How can I have multiple widgets with the same label?"
-- Short version: ID are hashes of the entire ID stack. If you are creating widgets in a loop you most likely want to push a unique identifier (e.g. object pointer, loop index) to uniquely differentiate them.
-- You can also use the "Label##foobar" syntax within widget label to distinguish them from each others.
-- We use the "label"/"name" terminology to denote a string that will be displayed + used as an ID, whereas "str_id" denote a string that is only used as an ID and not normally displayed.)");
+- Short version: ID are hashes of the entire ID stack. If you are creating widgets
+  in a loop you most likely want to push a unique identifier (e.g. object pointer,
+  loop index) to uniquely differentiate them.
+- You can also use the "Label##foobar" syntax within widget label to distinguish
+  them from each others.
+- We use the "label"/"name" terminology to denote a string that will be
+  displayed + used as an ID, whereas "str_id" denote a string that is only used
+  as an ID and not normally displayed.)");
 
 DEFINE_API(void, PushID, (ImGui_Context*,ctx)
 (const char*,str_id),
@@ -179,12 +198,15 @@ DEFINE_API(void, ColorConvertRGBtoHSV,
 
 DEFINE_API(int, ColorConvertNative,
 (int,rgb),
-"Convert a native color coming from REAPER or 0xRRGGBB to native. This swaps the red and blue channels on Windows.",
+R"(Convert a native color coming from REAPER or 0xRRGGBB to native.
+This swaps the red and blue channels on Windows.)",
 {
   return Color::convertNative(rgb);
 });
 
-API_SUBSECTION("Logging/Capture", R"(All text output from the interface can be captured into tty/file/clipboard. By default, tree nodes are automatically opened during logging.)");
+API_SUBSECTION("Logging/Capture",
+R"(All text output from the interface can be captured into tty/file/clipboard.
+By default, tree nodes are automatically opened during logging.)");
 
 DEFINE_API(void, LogToTTY, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth)),
@@ -198,7 +220,8 @@ Default values: auto_open_depth = -1)",
 
 DEFINE_API(void, LogToFile, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth))(const char*,API_RO(filename)),
-R"(Start logging all text output from the interface to a file. The data is saved to $resource_path/imgui_log.txt if filename is nil.
+R"(Start logging all text output from the interface to a file.
+The data is saved to $resource_path/imgui_log.txt if filename is nil.
 
 Default values: auto_open_depth = -1, filename = nil)",
 {
@@ -209,7 +232,8 @@ Default values: auto_open_depth = -1, filename = nil)",
 
 DEFINE_API(void, LogToClipboard, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth)),
-R"(Start logging all text output from the interface to the OS clipboard. See also SetClipboardText.
+R"(Start logging all text output from the interface to the OS clipboard.
+See also SetClipboardText.
 
 Default values: auto_open_depth = -1)",
 {
@@ -244,7 +268,8 @@ DEFINE_API(const char*, GetClipboardText, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetClipboardText, (ImGui_Context*,ctx)
 (const char*,text),
-"See also the LogToClipboard function to capture GUI into clipboard, or easily output text data to the clipboard.",
+R"(See also the LogToClipboard function to capture GUI into clipboard,
+or easily output text data to the clipboard.)",
 {
   assertValid(ctx);
   ctx->setCurrent();
@@ -252,7 +277,11 @@ DEFINE_API(void, SetClipboardText, (ImGui_Context*,ctx)
 });
 
 API_SUBSECTION("Conditions", "Used for many Set*() functions.");
-DEFINE_ENUM(ImGui, Cond_Always,       "No condition (always set the variable).");
-DEFINE_ENUM(ImGui, Cond_Once,         "Set the variable once per runtime session (only the first call will succeed).");
-DEFINE_ENUM(ImGui, Cond_FirstUseEver, "Set the variable if the object/window has no persistently saved data (no entry in .ini file).");
-DEFINE_ENUM(ImGui, Cond_Appearing,    "Set the variable if the object/window is appearing after being hidden/inactive (or the first time).");
+DEFINE_ENUM(ImGui, Cond_Always,
+  "No condition (always set the variable).");
+DEFINE_ENUM(ImGui, Cond_Once,
+  "Set the variable once per runtime session (only the first call will succeed).");
+DEFINE_ENUM(ImGui, Cond_FirstUseEver,
+  "Set the variable if the object/window has no persistently saved data (no entry in .ini file).");
+DEFINE_ENUM(ImGui, Cond_Appearing,
+  "Set the variable if the object/window is appearing after being hidden/inactive (or the first time).");

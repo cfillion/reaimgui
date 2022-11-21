@@ -18,15 +18,13 @@
 #include "helper.hpp"
 
 API_SECTION("Button",
-R"(Most widgets return true when the value has been changed or when pressed/selected
+R"(Most widgets return true when the value has been changed or when pressed/selected.
+
 You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.)");
 
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Most widgets return true when the value has been changed or when pressed/selected
-You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.
-
-Default values: size_w = 0.0, size_h = 0.0)",
+"Default values: size_w = 0.0, size_h = 0.0",
 {
   FRAME_GUARD;
 
