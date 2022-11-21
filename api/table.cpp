@@ -29,17 +29,17 @@ The typical call flow is:
 - 3. Optionally call TableSetupScrollFreeze to request scroll freezing of columns/rows.
 - 4. Optionally call TableHeadersRow to submit a header row. Names are pulled from TableSetupColumn data.
 - 5. Populate contents:
-   - In most situations you can use TableNextRow + TableSetColumnIndex(N) to start appending into a column.
-   - If you are using tables as a sort of grid, where every column is holding the same type of contents,
-     you may prefer using TableNextColumn instead of TableNextRow + TableSetColumnIndex.
-     TableNextColumn will automatically wrap-around into the next row if needed.
-   - Summary of possible call flow:
-       --------------------------------------------------------------------------------------------------------
-       TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
-       TableNextRow() -> TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
-                         TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
-       TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
-       --------------------------------------------------------------------------------------------------------
+   - In most situations you can use TableNextRow + TableSetColumnIndex(N) to start appending into a column.
+   - If you are using tables as a sort of grid, where every column is holding the same type of contents,
+     you may prefer using TableNextColumn instead of TableNextRow + TableSetColumnIndex.
+     TableNextColumn will automatically wrap-around into the next row if needed.
+   - Summary of possible call flow:
+       --------------------------------------------------------------------------------------------------------
+       TableNextRow() -> TableSetColumnIndex(0) -> Text("Hello 0") -> TableSetColumnIndex(1) -> Text("Hello 1")  // OK
+       TableNextRow() -> TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK
+                         TableNextColumn()      -> Text("Hello 0") -> TableNextColumn()      -> Text("Hello 1")  // OK: TableNextColumn() automatically gets to next row!
+       TableNextRow()                           -> Text("Hello 0")                                               // Not OK! Missing TableSetColumnIndex() or TableNextColumn()! Text will not appear!
+       --------------------------------------------------------------------------------------------------------
 - 5. Call EndTable.
 )");
 
@@ -246,9 +246,9 @@ DEFINE_API(bool, TableGetColumnSortSpecs, (ImGui_Context*,ctx)
 (int*,API_W(sort_order))(int*,API_W(sort_direction)),
 R"(Sorting specification for one column of a table. Call while incrementing id from 0 until false is returned.
 
-ColumnUserID:  User id of the column (if specified by a TableSetupColumn call)
-ColumnIndex:   Index of the column
-SortOrder:     Index within parent SortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
+ColumnUserID:  User id of the column (if specified by a TableSetupColumn call)
+ColumnIndex:   Index of the column
+SortOrder:     Index within parent SortSpecs (always stored in order starting from 0, tables sorted on a single criteria will always have a 0 here)
 SortDirection: SortDirection_Ascending or SortDirection_Descending (you can use this or SortSign, whichever is more convenient for your sort function)
 
 See TableNeedSort.)",
@@ -303,25 +303,25 @@ DEFINE_SECTION(tableFlags, ROOT_SECTION, "Table Flags",
 R"(For BeginTable.
 
 - Important! Sizing policies have complex and subtle side effects, more so than you would expect.
-  Read comments/demos carefully + experiment with live demos to get acquainted with them.
+  Read comments/demos carefully + experiment with live demos to get acquainted with them.
 - The DEFAULT sizing policies are:
-   - Default to TableFlags_SizingFixedFit    if ScrollX is on, or if host window has WindowFlags_AlwaysAutoResize.
-   - Default to TableFlags_SizingStretchSame if ScrollX is off.
+   - Default to TableFlags_SizingFixedFit    if ScrollX is on, or if host window has WindowFlags_AlwaysAutoResize.
+   - Default to TableFlags_SizingStretchSame if ScrollX is off.
 - When ScrollX is off:
-   - Table defaults to TableFlags_SizingStretchSame -> all Columns defaults to TableColumnFlags_WidthStretch with same weight.
-   - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
-   - Fixed Columns will generally obtain their requested width (unless the table cannot fit them all).
-   - Stretch Columns will share the remaining width.
-   - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
-     The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
-     (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
+   - Table defaults to TableFlags_SizingStretchSame -> all Columns defaults to TableColumnFlags_WidthStretch with same weight.
+   - Columns sizing policy allowed: Stretch (default), Fixed/Auto.
+   - Fixed Columns will generally obtain their requested width (unless the table cannot fit them all).
+   - Stretch Columns will share the remaining width.
+   - Mixed Fixed/Stretch columns is possible but has various side-effects on resizing behaviors.
+     The typical use of mixing sizing policies is: any number of LEADING Fixed columns, followed by one or two TRAILING Stretch columns.
+     (this is because the visible order of columns have subtle but necessary effects on how they react to manual resizing).
 - When ScrollX is on:
-   - Table defaults to TableFlags_SizingFixedFit -> all Columns defaults to TableColumnFlags_WidthFixed
-   - Columns sizing policy allowed: Fixed/Auto mostly.
-   - Fixed Columns can be enlarged as needed. Table will show a horizontal scrollbar if needed.
-   - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
-   - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
-     If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
+   - Table defaults to TableFlags_SizingFixedFit -> all Columns defaults to TableColumnFlags_WidthFixed
+   - Columns sizing policy allowed: Fixed/Auto mostly.
+   - Fixed Columns can be enlarged as needed. Table will show a horizontal scrollbar if needed.
+   - When using auto-resizing (non-resizable) fixed columns, querying the content width to use item right-alignment e.g. SetNextItemWidth(-FLT_MIN) doesn't make sense, would create a feedback loop.
+   - Using Stretch columns OFTEN DOES NOT MAKE SENSE if ScrollX is on, UNLESS you have specified a value for 'inner_width' in BeginTable().
+     If you specify a value for 'inner_width' then effectively the scrolling space is known and Stretch or mixed Fixed/Stretch columns become meaningful again.
 - Read on documentation at the top of imgui_tables.cpp for details.)");
 
 DEFINE_ENUM(ImGui, TableFlags_None, "");

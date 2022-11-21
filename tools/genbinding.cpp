@@ -282,7 +282,8 @@ private:
 #undef REAIMGUIAPI_EXTERN
 #undef REAIMGUIAPI_INIT
 
-#endif)" << std::endl;
+#endif
+)";
 }
 
 std::string_view Argument::humanName() const
@@ -505,57 +506,16 @@ static auto findNewSection
   return newSection;
 }
 
-static void formatHtmlText(std::ostream &stream, const std::string_view &text,
-  const bool parseLinks = false)
+static void formatHtmlText(std::ostream &stream, std::string_view text)
 {
-  struct Link {
-    Link(const Function *f, size_t p, size_t s)
-      : func { f }, pos { p }, size { s } {}
+  // outputting char by char is slower than as many as possible at once
+  while(!text.empty()) {
+    const size_t nextEntity { text.find_first_of("<>&") };
+    stream << text.substr(0, nextEntity);
+    if(nextEntity == std::string_view::npos)
+      return;
 
-    bool operator<(const Link &o) const { return pos < o.pos; }
-    // to remove submatches using std::unique
-    bool operator==(const Link &o) const { return pos <= o.pos && pos + size >= o.pos + o.size; }
-
-    const Function *func;
-    size_t pos, size;
-  };
-
-  std::vector<Link> links;
-  if(parseLinks) {
-    const size_t prefixSize { strlen("ImGui_") };
-    for(const Function &func : g_funcs) {
-      size_t pos {};
-      do {
-        size_t matchSize { func.displayName.size() };
-        pos = text.find(func.displayName, pos);
-        if(pos == std::string_view::npos)
-          break;
-        const size_t end { pos + matchSize };
-        if(pos > prefixSize && text.substr(pos - prefixSize, prefixSize) == "ImGui_")
-          pos -= prefixSize, matchSize += prefixSize;
-        if((pos == 0 || !isalpha(text[pos - 1])) &&
-           (end >= text.size() || !isalpha(text[end])))
-          links.emplace_back(&func, pos, matchSize);
-        pos += matchSize;
-      } while(true);
-    }
-    std::sort(links.begin(), links.end());
-    links.erase(std::unique(links.begin(),links.end()), links.end());
-  }
-
-  auto nextLink { links.begin() };
-  for(size_t i {}; i < text.size(); ++i) {
-    if(nextLink != links.end()) {
-      if(nextLink->pos == i) {
-        stream << "<a href=\"#" << nextLink->func->displayName << "\">"
-               << text.substr(nextLink->pos, nextLink->size) << "</a>";
-        i += nextLink->size - 1;
-        ++nextLink;
-        continue;
-      }
-    }
-
-    switch(text[i]) {
+    switch(text[nextEntity]) {
     case '<':
       stream << "&lt;";
       break;
@@ -565,11 +525,182 @@ static void formatHtmlText(std::ostream &stream, const std::string_view &text,
     case '&':
       stream << "&amp;";
       break;
-    default:
-      stream << text[i];
-      break;
+    }
+    text.remove_prefix(nextEntity + 1);
+  }
+}
+
+struct Token {
+  using List = std::vector<std::unique_ptr<Token>>;
+  using Iterator = List::iterator;
+
+  Token(const std::string_view &range) : m_range { range } {}
+  virtual ~Token() = default;
+
+  virtual void format(std::ostream &stream,
+    Iterator &nextToken, const Iterator &end) const
+  {
+    std::string_view text { m_range };
+    while(nextToken != end && contains(**nextToken)) {
+      formatHtmlText(stream, (*nextToken)->before(text));
+      (*nextToken)->advance(text);
+      (*nextToken)->format(stream, ++nextToken, end);
+    }
+    formatHtmlText(stream, text);
+  }
+
+  std::string_view before(const std::string_view &text) const
+  {
+    return text.substr(0, m_range.begin() - text.begin());
+  }
+
+  void advance(std::string_view &text) const
+  {
+    text.remove_prefix(m_range.end() - text.begin());
+  }
+
+  bool contains(const Token &o) const
+  {
+    return o.m_range.begin() < m_range.end();
+  }
+
+  std::string_view m_range;
+};
+
+static bool operator<(const std::unique_ptr<Token> &a,
+                      const std::unique_ptr<Token> &b)
+{
+  const auto cmp { a->m_range.begin() - b->m_range.begin() };
+  if(cmp == 0) // longest matches first
+    return &a->m_range.back() > &b->m_range.back();
+  else
+    return cmp < 0;
+}
+
+static void eachLine(std::string_view text,
+  const std::function<void (const std::string_view &)> &callback)
+{
+  while(!text.empty()) {
+    size_t nl { text.find("\n", 1) };
+    if(nl != std::string_view::npos)
+      ++nl; // include the newline in the new line
+    callback(text.substr(0, nl));
+    if(nl >= text.size())
+      return;
+    text.remove_prefix(nl);
+  }
+}
+
+static void eachBlock(std::string_view text,
+  const std::function<bool (const std::string_view &, bool inBlock)> &addLine,
+  const std::function<void (const std::string_view &)> &addBlock)
+{
+  const char *begin {};
+  eachLine(text, [&](const std::string_view &line) {
+    if(addLine(line, begin != nullptr)) {
+      if(!begin)
+        begin = line.begin();
+    }
+    else if(begin) {
+      addBlock({ begin, static_cast<size_t>(line.begin() - begin) });
+      begin = nullptr;
+    }
+  });
+  if(begin) // when the block does not end before the text
+    addBlock({ begin, static_cast<size_t>(text.end() - begin) });
+}
+
+struct CodeBlock : Token {
+  static constexpr std::string_view s_prefix { "\x20\x20" };
+
+  static void tokenize(const std::string_view &text, List &tokens)
+  {
+    eachBlock(text, [&](std::string_view line, bool inBlock) {
+      if(line.size() >= s_prefix.size())
+        inBlock = line.substr(0, s_prefix.size()) == s_prefix;
+      if(inBlock) {
+        if(line.size() >= s_prefix.size())
+          line.remove_prefix(s_prefix.size());
+        tokens.push_back(std::make_unique<Token>(line));
+      }
+      return inBlock;
+    }, [&](const std::string_view &block) {
+      tokens.push_back(std::make_unique<CodeBlock>(block));
+    });
+  }
+
+  CodeBlock(const std::string_view &range) : Token { range } {}
+
+  void format(std::ostream &stream,
+    Iterator &nextToken, const Iterator &end) const override
+  {
+    std::string_view text { m_range };
+    stream << "<code>";
+    // only print line tokens (and subtokens) to remove s_prefix
+    while(nextToken != end && contains(**nextToken)) {
+      (*nextToken)->advance(text);
+      (*nextToken)->format(stream, ++nextToken, end);
+    }
+    stream << "</code>";
+  }
+};
+
+struct Reference : Token {
+  static void tokenize(const std::string_view &text, List &tokens)
+  {
+    const std::string_view prefix { "ImGui_" };
+    for(const Function &func : g_funcs) {
+      size_t pos {};
+      do {
+        size_t size { func.displayName.size() };
+        pos = text.find(func.displayName, pos);
+        if(pos == std::string_view::npos)
+          break;
+        if(pos > prefix.size() &&
+           text.substr(pos - prefix.size(), prefix.size()) == prefix)
+          pos -= prefix.size(), size += prefix.size();
+        // check if match is not part of a bigger word
+        const size_t end { pos + size };
+        if((pos == 0 || !isalpha(text[pos - 1])) &&
+            (end >= text.size() || !isalpha(text[end])))
+          tokens.push_back(std::make_unique<Reference>(&func, text.substr(pos, size)));
+        pos += size;
+      } while(true);
     }
   }
+
+  Reference(const Function *func, const std::string_view &range)
+    : Token { range }, m_func { func } {}
+
+  void format(std::ostream &stream,
+    Iterator &nextToken, const Iterator &end) const override
+  {
+    stream << "<a href=\"#" << m_func->displayName << "\">";
+    formatHtmlText(stream, m_range);
+    stream << "</a>";
+
+    while(nextToken != end && contains(**nextToken)) ++nextToken;
+  }
+
+  const Function *m_func;
+};
+
+static void formatHtmlBlock(std::ostream &stream, std::string_view text)
+{
+  std::vector<std::unique_ptr<Token>> tokens;
+  CodeBlock::tokenize(text, tokens);
+  Reference::tokenize(text, tokens);
+  std::sort(tokens.begin(), tokens.end());
+
+  auto token { tokens.begin() };
+  stream << "<pre>";
+  while(token != tokens.end()) {
+    formatHtmlText(stream, (*token)->before(text));
+    (*token)->advance(text);
+    (*token)->format(stream, ++token, tokens.end());
+  }
+  formatHtmlText(stream, text);
+  stream << "</pre>";
 }
 
 static void formatHtmlSlug(std::ostream &stream, const std::string_view &text)
@@ -605,8 +736,8 @@ static void humanBinding(std::ostream &stream)
     overflow-anchor: none;
   }
   body, pre, code { font-family: Consolas, monospace; }
+  aside, pre code { background-color: #262626; /* Grey15 */ }
   aside {
-    background-color: #262626; /* Grey15 */
     border-right: 1px solid #6f6f6f;
     overflow-y: auto;
     position: fixed;
@@ -626,9 +757,10 @@ static void humanBinding(std::ostream &stream)
   }
   main {
     margin-left: 200px;
+    margin-right: 1em;
     box-shadow: 0 0 10px #080808;
   }
-  h2, h3, h4, h5, h6 { margin: 1em 0 1rem 0; }
+  h2, h3, h4, h5, h6, pre code { margin: 1em 0 1rem 0; }
   h1 { font-size: 2.3em; }
   h2 { font-size: 1.8em; }
   h3 { font-size: 1.4em; }
@@ -658,9 +790,14 @@ static void humanBinding(std::ostream &stream)
     white-space: nowrap;
   }
   table, pre { white-space: pre-wrap; }
-  code { border-radius: 3px; color: white; }
-  code:hover { text-decoration: underline; cursor: copy; }
-  code:active, aside a:hover { background-color: #3a3a3a; }
+  code, code a { color: white; }
+  table code:hover { text-decoration: underline; cursor: copy; }
+  table code:active, aside a:hover { background-color: #3a3a3a; }
+  pre code {
+    border-radius: 5px;
+    display: inline-block;
+    padding: 5px;
+  }
   .st { color: #87afff; /* SkyBlue2 */ }
   .ss { color: #5faf5f; /* DarkSeaGreen4 */ }
   .sc { color: #5f87d7; /* SteelBlue3 */ }
@@ -710,11 +847,8 @@ static void humanBinding(std::ostream &stream)
       formatHtmlText(stream, section->title);
       stream << "</h" << level << '>';
 
-      if(section->help) {
-        stream << "<pre>";
-        formatHtmlText(stream, section->help, true);
-        stream << "</pre>";
-      }
+      if(section->help)
+        formatHtmlBlock(stream, section->help);
     }
     
     stream << "<details id=\"" << func.displayName << "\"><summary>";
@@ -729,11 +863,8 @@ static void humanBinding(std::ostream &stream)
            << "<tr><th>Python</th><td><code>";     func.pythonSignature(stream);     stream << "</code></td></tr>"
            << "</table>";
 
-    if(!func.doc.empty()) {
-      stream << "<pre>";
-      formatHtmlText(stream, func.doc, true);
-      stream << "</pre>";
-    }
+    if(!func.doc.empty())
+      formatHtmlBlock(stream, func.doc);
 
     stream << "<p class=\"source\">"
               "<a href=\"https://github.com/cfillion/reaimgui/blob/v"

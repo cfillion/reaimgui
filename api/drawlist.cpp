@@ -64,7 +64,7 @@ ResourceProxy DrawList {
 
 API_SECTION("Draw List", R"(This is the low-level list of polygons that ImGui functions are filling. At the end of the frame, all draw lists are passed to the GPU for rendering.
 
-Each dear imgui window contains its own ImDrawList. You can use GetWindowDrawList() to access the current window draw list and draw custom primitives.
+Each dear imgui window contains its own Draw List. You can use GetWindowDrawList() to access the current window draw list and draw custom primitives.
 
 The Draw List API uses absolute coordinates (0,0 is the top-left corner of the primary monitor, not of your window!). See GetCursorScreenPos.)");
 
@@ -482,17 +482,17 @@ R"(Split/Merge functions are used to split the draw list into different layers w
 Use to minimize draw calls (e.g. if going back-and-forth between multiple clipping rectangles, prefer to append into separate channels then merge at the end).
 
 Usage:
-  if not reaper.ImGui_ValidatePtr(splitter, 'ImGui_DrawListSplitter*') then
-    splitter = reaper.ImGui_CreateDrawListSplitter(draw_list)
-  end
-  reaper.ImGui_DrawListSplitter_Split(splitter, 2)
-  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
-  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
-  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 1)
-  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- foreground
-  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
-  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
-  reaper.ImGui_DrawListSplitter_Merge(splitter))");
+  if not reaper.ImGui_ValidatePtr(splitter, 'ImGui_DrawListSplitter*') then
+    splitter = reaper.ImGui_CreateDrawListSplitter(draw_list)
+  end
+  reaper.ImGui_DrawListSplitter_Split(splitter, 2)
+  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
+  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
+  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 1)
+  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- foreground
+  reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
+  reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
+  reaper.ImGui_DrawListSplitter_Merge(splitter))");
 
 DEFINE_API(ImGui_DrawListSplitter*, CreateDrawListSplitter,
 (ImGui_DrawList*,draw_list),

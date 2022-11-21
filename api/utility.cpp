@@ -107,7 +107,7 @@ DEFINE_API(void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
   *API_W(max) = FLT_MAX;
 });
 
-API_SUBSECTION("ID stack/scope", R"(Read the FAQ (https://dearimgui.org/faq) for more details about how IDs are handled in dear imgui.
+API_SUBSECTION("ID stack/scope", R"(Read the FAQ (<https://dearimgui.org/faq>) for more details about how IDs are handled in dear imgui.
 
 - Those questions are answered and impacted by understanding of the ID stack system:
   - "Q: Why is my widget not reacting when I click on it?"
