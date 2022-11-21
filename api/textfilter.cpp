@@ -38,13 +38,14 @@ ImGuiTextFilter *TextFilter::operator->()
 }
 
 API_SECTION("Text Filter",
-R"(Helper to perform simple filtering on text strings. In format "aaaaa[,bbbb][,ccccc]".
+R"(Helper to perform simple filtering on text strings.
+In format "aaaaa[,bbbb][,ccccc]".
 
 Filter usage:
-  ""         display all lines
-  "xxx"      display lines containing "xxx"
-  "xxx,yyy"  display lines containing "xxx" or "yyy"
-  "-xxx"     hide lines containing "xxx")");
+- ""         display all lines
+- "xxx"      display lines containing "xxx"
+- "xxx,yyy"  display lines containing "xxx" or "yyy"
+- "-xxx"     hide lines containing "xxx")");
 
 DEFINE_API(ImGui_TextFilter*, CreateTextFilter,
 (const char*,API_RO(default_filter)),

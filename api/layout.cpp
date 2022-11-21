@@ -20,19 +20,25 @@
 API_SECTION("Layout");
 
 DEFINE_API(void, Separator, (ImGui_Context*,ctx),
-"Separator, generally horizontal. inside a menu bar or in horizontal layout mode, this becomes a vertical separator.",
+R"(Separator, generally horizontal. inside a menu bar or in horizontal layout
+mode, this becomes a vertical separator.)",
 {
   FRAME_GUARD;
   ImGui::Separator();
 });
 
-API_SUBSECTION("Cursor", R"(By "cursor" we mean the current output position.
-The typical widget behavior is to output themselves at the current cursor position, then move the cursor one line down.
-You can call SameLine() between widgets to undo the last carriage return and output at the right of the preceding widget.)");
+API_SUBSECTION("Cursor",
+R"(By "cursor" we mean the current output position.
+The typical widget behavior is to output themselves at the current cursor
+position, then move the cursor one line down.
+
+You can call SameLine() between widgets to undo the last carriage return and
+output at the right of the preceding widget.)");
 
 DEFINE_API(void, SameLine, (ImGui_Context*,ctx)
 (double*,API_RO(offset_from_start_x))(double*,API_RO(spacing)),
-R"(Call between widgets or groups to layout them horizontally. X position given in window coordinates.
+R"(Call between widgets or groups to layout them horizontally.
+X position given in window coordinates.
 
 Default values: offset_from_start_x = 0.0, spacing = -1.0.)",
 {
@@ -56,14 +62,16 @@ DEFINE_API(void, Spacing, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, Dummy, (ImGui_Context*,ctx)(double,size_w)(double,size_h),
-"Add a dummy item of given size. unlike InvisibleButton, Dummy() won't take the mouse click or be navigable into.",
+R"(Add a dummy item of given size. unlike InvisibleButton, Dummy() won't take the
+mouse click or be navigable into.)",
 {
   FRAME_GUARD;
   ImGui::Dummy(ImVec2(size_w, size_h));
 });
 
 DEFINE_API(void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
-R"(Move content position toward the right, by 'indent_w', or StyleVar_IndentSpacing if 'indent_w' <= 0. See Unindent.
+R"(Move content position toward the right, by 'indent_w', or
+StyleVar_IndentSpacing if 'indent_w' <= 0. See Unindent.
 
 Default values: indent_w = 0.0)",
 {
@@ -72,7 +80,8 @@ Default values: indent_w = 0.0)",
 });
 
 DEFINE_API(void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
-R"(Move content position back to the left, by 'indent_w', or mGui_StyleVar_IndentSpacing if 'indent_w' <= 0
+R"(Move content position back to the left, by 'indent_w', or
+StyleVar_IndentSpacing if 'indent_w' <= 0
 
 Default values: indent_w = 0.0)",
 {
@@ -88,7 +97,9 @@ DEFINE_API(void, BeginGroup, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, EndGroup, (ImGui_Context*,ctx),
-R"(Unlock horizontal starting position + capture the whole group bounding box into one "item" (so you can use IsItemHovered or layout primitives such as SameLine on whole group, etc.).
+R"(Unlock horizontal starting position + capture the whole group bounding box
+into one "item" (so you can use IsItemHovered or layout primitives such as
+SameLine on whole group, etc.).
 
 See BeginGroup.)",
 {
@@ -172,7 +183,9 @@ DEFINE_API(void, SetCursorScreenPos, (ImGui_Context*,ctx)
   ImGui::SetCursorScreenPos(ImVec2(pos_x, pos_y));
 });
 
-API_SUBSECTION("Clipping", "Mouse hovering is affected by PushClipRect() calls, unlike direct calls to DrawList_PushClipRect() which are render only.");
+API_SUBSECTION("Clipping",
+R"(Mouse hovering is affected by PushClipRect() calls, unlike direct calls to
+DrawList_PushClipRect() which are render only.)");
 
 DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
@@ -197,7 +210,8 @@ DEFINE_API(void, PopClipRect, (ImGui_Context*,ctx),
 
 DEFINE_API(bool, IsRectVisible, (ImGui_Context*,ctx)
 (double,size_w)(double,size_h),
-"Test if rectangle (of given size, starting from cursor position) is visible / not clipped.",
+R"(Test if rectangle (of given size, starting from cursor position) is
+visible / not clipped.)",
 {
   FRAME_GUARD;
   return ImGui::IsRectVisible(ImVec2(size_w, size_h));
@@ -205,7 +219,8 @@ DEFINE_API(bool, IsRectVisible, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsRectVisibleEx, (ImGui_Context*,ctx)
 (double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y),
-"Test if rectangle (in screen space) is visible / not clipped. to perform coarse clipping on user's side.",
+R"(Test if rectangle (in screen space) is visible / not clipped. to perform
+coarse clipping on user's side.)",
 {
   FRAME_GUARD;
   return ImGui::IsRectVisible(

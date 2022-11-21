@@ -22,19 +22,28 @@
 #include <reaper_plugin_secrets.h> // reaper_array
 
 API_SECTION("Drag & Slider",
-"We use the same sets of flags for DragXXX() and SliderXXX() functions as the features are the same and it makes it easier to swap them.");
+R"(We use the same sets of flags for DragXXX() and SliderXXX() functions as the
+features are the same and it makes it easier to swap them.
+
+CTRL+Click on any drag box or slider to turn them into an input box.
+Manually input values aren't clamped by default and can go off-bounds.
+Use SliderFlags_AlwaysClamp to always clamp.
+
+Adjust format string to decorate the value with a prefix, a suffix, or adapt the
+editing and display precision e.g. "%.3f" -> 1.234; "%5.2f secs" -> 01.23 secs;
+"Biscuit: %.0f" -> Biscuit: 1; etc.
+
+Format string may also be set to nil or use the default format ("%f" or "%d").)");
 
 API_SUBSECTION("Drag Sliders",
-R"(CTRL+Click on any drag box to turn them into an input box. Manually input values aren't clamped by default and can go off-bounds. Use SliderFlags_AlwaysClamp to always clamp.
+R"(Speed are per-pixel of mouse movement (v_speed=0.2: mouse needs to move by 5
+pixels to increase value by 1). For gamepad/keyboard navigation, minimum speed
+is Max(v_speed, minimum_step_at_given_precision).
 
-Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.g. "%.3f" -> 1.234; "%5.2f secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
-
-Format string may also be set to NULL or use the default format ("%f" or "%d").
-
-Speed are per-pixel of mouse movement (v_speed=0.2: mouse needs to move by 5 pixels to increase value by 1). For gamepad/keyboard navigation, minimum speed is Max(v_speed, minimum_step_at_given_precision).
-
-Use v_min < v_max to clamp edits to given limits. Note that CTRL+Click manual input can override those limits if SliderFlags_AlwaysClamp is not used.
-Use v_max = FLT_MAX / INT_MAX etc to avoid clamping to a maximum, same with v_min = -FLT_MAX / INT_MIN to avoid clamping to a minimum.)");
+Use v_min < v_max to clamp edits to given limits. Note that CTRL+Click manual
+input can override those limits if SliderFlags_AlwaysClamp is not used.
+Use v_max = FLT_MAX / INT_MAX etc to avoid clamping to a maximum, same with
+v_min = -FLT_MAX / INT_MIN to avoid clamping to a minimum.)");
 
 DEFINE_API(bool, DragInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(double*,API_RO(v_speed))
@@ -257,11 +266,7 @@ DEFINE_API(bool, DragDoubleN, (ImGui_Context*,ctx)
     API_RO(min), API_RO(max), API_RO(format), flags);
 });
 
-API_SUBSECTION("Regular Sliders", R"(
-CTRL+Click on any slider to turn them into an input box. Manually input values aren't clamped by default and can go off-bounds. Use SliderFlags_AlwaysClamp to always clamp.
-
-Adjust format string to decorate the value with a prefix, a suffix, or adapt the editing and display precision e.g. "%.3f" -> 1.234; "%5.2f secs" -> 01.23 secs; "Biscuit: %.0f" -> Biscuit: 1; etc.
-Format string may also be set to nil or use the default format ("%f" or "%d").)");
+API_SUBSECTION("Regular Sliders");
 
 DEFINE_API(bool, SliderInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(int,v_min)(int,v_max)
@@ -478,9 +483,19 @@ DEFINE_API(bool, VSliderDouble, (ImGui_Context*,ctx)
     API_RO(format) ? API_RO(format) : "%.3f", flags);
 });
 
-API_SUBSECTION("Flags", "For DragDouble, DragInt, SliderDouble, SliderInt etc. (Those are per-item flags. There are shared flags in SetConfigVar: ConfigVar_DragClickToInputText)");
+API_SUBSECTION("Flags",
+R"(For DragDouble, DragInt, SliderDouble, SliderInt etc. (Those are per-item
+flags. There are shared flags in SetConfigVar: ConfigVar_DragClickToInputText)");
 DEFINE_ENUM(ImGui, SliderFlags_None,            "");
-DEFINE_ENUM(ImGui, SliderFlags_AlwaysClamp,     "Clamp value to min/max bounds when input manually with CTRL+Click. By default CTRL+Click allows going out of bounds.");
-DEFINE_ENUM(ImGui, SliderFlags_Logarithmic,     "Make the widget logarithmic (linear otherwise). Consider using SliderFlags_NoRoundToFormat with this if using a format-string with small amount of digits.");
-DEFINE_ENUM(ImGui, SliderFlags_NoRoundToFormat, "Disable rounding underlying value to match precision of the display format string (e.g. %.3f values are rounded to those 3 digits).");
-DEFINE_ENUM(ImGui, SliderFlags_NoInput,         "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
+DEFINE_ENUM(ImGui, SliderFlags_AlwaysClamp,
+R"(Clamp value to min/max bounds when input manually with CTRL+Click.
+   By default CTRL+Click allows going out of bounds.)");
+DEFINE_ENUM(ImGui, SliderFlags_Logarithmic,
+R"(Make the widget logarithmic (linear otherwise).
+   Consider using SliderFlags_NoRoundToFormat with this if using a format-string
+   with small amount of digits.)");
+DEFINE_ENUM(ImGui, SliderFlags_NoRoundToFormat,
+R"(Disable rounding underlying value to match precision of the display format
+   string (e.g. %.3f values are rounded to those 3 digits).)");
+DEFINE_ENUM(ImGui, SliderFlags_NoInput,
+  "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");

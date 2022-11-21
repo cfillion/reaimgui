@@ -20,7 +20,8 @@
 API_SECTION("Button",
 R"(Most widgets return true when the value has been changed or when pressed/selected.
 
-You may also use one of the many IsItemXXX functions (e.g. IsItemActive, IsItemHovered, etc.) to query widget state.)");
+You may also use one of the many IsItemXXX functions (e.g. IsItemActive,
+IsItemHovered, etc.) to query widget state.)");
 
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
@@ -42,7 +43,8 @@ DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, InvisibleButton, (ImGui_Context*,ctx)
 (const char*,str_id)(double,size_w)(double,size_h)(int*,API_RO(flags)),
-R"(Flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).
+R"(Flexible button behavior without the visuals, frequently useful to build
+custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).
 
 Default values: flags = ButtonFlags_None)",
 {
@@ -95,7 +97,11 @@ DEFINE_API(bool, RadioButtonEx, (ImGui_Context*,ctx)
 
 DEFINE_API(void, PushButtonRepeat, (ImGui_Context*,ctx)
 (bool,repeat),
-"In 'repeat' mode, Button*() functions return repeated true in a typematic manner (using ConfigVar_KeyRepeatDelay/ConfigVar_KeyRepeatRate settings). Note that you can call IsItemActive after any Button to tell if the button is held in the current frame.",
+R"(In 'repeat' mode, Button*() functions return repeated true in a typematic
+manner (using ConfigVar_KeyRepeatDelay/ConfigVar_KeyRepeatRate settings).
+
+Note that you can call IsItemActive after any Button to tell if the button is
+held in the current frame.)",
 {
   FRAME_GUARD;
   ImGui::PushButtonRepeat(repeat);
@@ -109,10 +115,13 @@ DEFINE_API(void, PopButtonRepeat, (ImGui_Context*,ctx),
 });
 
 API_SUBSECTION("Flags", "For InvisibleButton.");
-DEFINE_ENUM(ImGui, ButtonFlags_None,              "");
-DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonLeft,   "React on left mouse button (default).");
-DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonRight,  "React on right mouse button.");
-DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonMiddle, "React on center mouse button.");
+DEFINE_ENUM(ImGui, ButtonFlags_None, "");
+DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonLeft,
+  "React on left mouse button (default).");
+DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonRight,
+  "React on right mouse button.");
+DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonMiddle,
+  "React on center mouse button.");
 
 API_SUBSECTION("Cardinal directions", "For ArrowButton.");
 DEFINE_ENUM(ImGui, Dir_None,  "");

@@ -24,8 +24,11 @@
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
 
 API_SECTION("Drag & Drop",
-R"(On source items, call BeginDragDropSource(), if it returns true also call SetDragDropPayload() + EndDragDropSource().
-On target candidates, call BeginDragDropTarget(), if it returns true also call AcceptDragDropPayload() + EndDragDropTarget().
+R"(On source items, call BeginDragDropSource(),
+if it returns true also call SetDragDropPayload() + EndDragDropSource().
+
+On target candidates, call BeginDragDropTarget(),
+if it returns true also call AcceptDragDropPayload() + EndDragDropTarget().
 
 An item can be both a drag source and a drop target.)");
 
@@ -37,9 +40,12 @@ static bool isUserType(const char *type)
 }
 
 DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)(int*,API_RO(flags)),
-R"(Call after submitting an item which may be dragged. when this return true, you can call SetDragDropPayload() + EndDragDropSource()
+R"(Call after submitting an item which may be dragged. when this return true,
+you can call SetDragDropPayload() + EndDragDropSource()
 
-If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).
+If you stop calling BeginDragDropSource() the payload is preserved however
+it won't have a preview tooltip (we currently display a fallback "..." tooltip
+as replacement).
 
 Default values: flags = DragDropFlags_None)",
 {
@@ -49,7 +55,9 @@ Default values: flags = DragDropFlags_None)",
 
 DEFINE_API(bool, SetDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)(const char*,data)(int*,API_RO(cond)),
-R"(type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
+R"(The type is a user defined string of maximum 32 characters.
+Strings starting with '_' are reserved for dear imgui internal types.
+Data is copied and held by imgui.
 
 Default values: cond = Cond_Always)",
 {
@@ -71,7 +79,8 @@ DEFINE_API(void, EndDragDropSource, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
-"Call after submitting an item that may receive a payload. If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.",
+R"(Call after submitting an item that may receive a payload.
+If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.)",
 {
   FRAME_GUARD;
   return ImGui::BeginDragDropTarget();
@@ -98,7 +107,8 @@ DEFINE_API(bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
 (int*,API_RO(flags)),
-R"(Accept contents of a given type. If DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
+R"(Accept contents of a given type. If DragDropFlags_AcceptBeforeDelivery is set
+you can peek into the payload before the mouse button is released.
 
 Default values: flags = DragDropFlags_None)",
 {
@@ -206,7 +216,8 @@ DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
 (int,index)(char*,API_W(filename))(int,API_W_SZ(filename)),
-"Get a filename from the list of dropped files. Returns false if index is out of bounds.",
+R"(Get a filename from the list of dropped files.
+Returns false if index is out of bounds.)",
 {
   FRAME_GUARD;
 
@@ -224,16 +235,41 @@ DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
 });
 
 DEFINE_SECTION(flags, ROOT_SECTION, "Flags");
-DEFINE_ENUM(ImGui, DragDropFlags_None,                     "");
+DEFINE_ENUM(ImGui, DragDropFlags_None, "");
 API_SECTION_P(flags, "Source", "For BeginDragDropSource");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoPreviewTooltip,   "By default, a successful call to BeginDragDropSource opens a tooltip so you can display a preview or description of the source contents. This flag disables this behavior.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoDisableHover,     "By default, when dragging we clear data so that IsItemHovered will return false, to avoid subsequent user code submitting tooltips. This flag disables this behavior so you can still call IsItemHovered on the source item.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoHoldToOpenOthers, "Disable the behavior that allows to open tree nodes and collapsing header by holding over them while dragging a source item.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceAllowNullID,        "Allow items such as Text, Image that have no unique identifier to be used as drag source, by manufacturing a temporary identifier based on their window-relative position. This is extremely unusual within the dear imgui ecosystem and so we made it explicit.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceExtern,             "External source (from outside of dear imgui), won't attempt to read current item/window info. Will always return true. Only one Extern source can be active simultaneously.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceAutoExpirePayload,  "Automatically expire the payload if the source cease to be submitted (otherwise payloads are persisting while being dragged).");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceNoPreviewTooltip,
+R"(By default, a successful call to BeginDragDropSource opens a tooltip so you
+   can display a preview or description of the source contents.
+   This flag disables this behavior.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceNoDisableHover,
+R"(By default, when dragging we clear data so that IsItemHovered will return
+   false, to avoid subsequent user code submitting tooltips. This flag disables
+   this behavior so you can still call IsItemHovered on the source item.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceNoHoldToOpenOthers,
+R"(Disable the behavior that allows to open tree nodes and collapsing header by
+   holding over them while dragging a source item.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceAllowNullID,
+R"(Allow items such as Text, Image that have no unique identifier to be used as
+   drag source, by manufacturing a temporary identifier based on their
+   window-relative position. This is extremely unusual within the dear imgui
+   ecosystem and so we made it explicit.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceExtern,
+R"(External source (from outside of dear imgui), won't attempt to read current
+   item/window info. Will always return true.
+   Only one Extern source can be active simultaneously.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceAutoExpirePayload,
+R"(Automatically expire the payload if the source cease to be submitted
+   (otherwise payloads are persisting while being dragged).)");
 API_SECTION_P(flags, "Payload", "For AcceptDragDropPayload");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptBeforeDelivery,     "AcceptDragDropPayload will returns true even before the mouse button is released. You can then check GetDragDropPayload/is_delivery to test if the payload needs to be delivered.");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoDrawDefaultRect,  "Do not draw the default highlight rectangle when hovering over target.");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoPreviewTooltip,   "Request hiding the BeginDragDropSource tooltip from the BeginDragDropTarget site.");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptPeekOnly,           "For peeking ahead and inspecting the payload before delivery. Equivalent to DragDropFlags_AcceptBeforeDelivery | DragDropFlags_AcceptNoDrawDefaultRect.");
+DEFINE_ENUM(ImGui, DragDropFlags_AcceptBeforeDelivery,
+R"(AcceptDragDropPayload will returns true even before the mouse button is
+   released. You can then check GetDragDropPayload/is_delivery to test if the
+   payload needs to be delivered.)");
+DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoDrawDefaultRect,
+  "Do not draw the default highlight rectangle when hovering over target.");
+DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoPreviewTooltip,
+  "Request hiding the BeginDragDropSource tooltip from the BeginDragDropTarget site.");
+DEFINE_ENUM(ImGui, DragDropFlags_AcceptPeekOnly,
+R"(For peeking ahead and inspecting the payload before delivery.
+   Equivalent to DragDropFlags_AcceptBeforeDelivery |
+   DragDropFlags_AcceptNoDrawDefaultRect.)");

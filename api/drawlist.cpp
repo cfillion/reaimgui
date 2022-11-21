@@ -62,11 +62,16 @@ ResourceProxy DrawList {
   ImGui_DrawList::Foreground
 };
 
-API_SECTION("Draw List", R"(This is the low-level list of polygons that ImGui functions are filling. At the end of the frame, all draw lists are passed to the GPU for rendering.
+API_SECTION("Draw List",
+R"(This is the low-level list of polygons that ImGui functions are filling.
+At the end of the frame, all draw lists are passed to the GPU for rendering.
 
-Each dear imgui window contains its own Draw List. You can use GetWindowDrawList() to access the current window draw list and draw custom primitives.
+Each dear imgui window contains its own Draw List.
+You can use GetWindowDrawList() to access the current window draw list and draw
+custom primitives.
 
-The Draw List API uses absolute coordinates (0,0 is the top-left corner of the primary monitor, not of your window!). See GetCursorScreenPos.)");
+The Draw List API uses absolute coordinates (0,0 is the top-left corner of the
+rimary monitor, not of your window!). See GetCursorScreenPos.)");
 
 DEFINE_API(ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
 "The draw list associated to the current window, to append your own drawing primitives",
@@ -75,13 +80,15 @@ DEFINE_API(ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(ImGui_DrawList*, GetBackgroundDrawList, (ImGui_Context*,ctx),
-"This draw list will be the first rendering one. Useful to quickly draw shapes/text behind dear imgui contents.",
+R"(This draw list will be the first rendering one. Useful to quickly draw
+shapes/text behind dear imgui contents.)",
 {
   return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Background);
 });
 
 DEFINE_API(ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
-"This draw list will be the last rendered one. Useful to quickly draw shapes/text over dear imgui contents.",
+R"(This draw list will be the last rendered one. Useful to quickly draw
+shapes/text over dear imgui contents.)",
 {
   return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Foreground);
 });
@@ -90,7 +97,8 @@ DEFINE_API(void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
 (double,clip_rect_max_x)(double,clip_rect_max_y)
 (bool*,API_RO(intersect_with_current_clip_rect)),
-R"(Render-level scissoring. Prefer using higher-level PushClipRect to affect logic (hit-testing and widget culling).
+R"(Render-level scissoring. Prefer using higher-level PushClipRect to affect
+logic (hit-testing and widget culling).
 
 Default values: intersect_with_current_clip_rect = false)",
 {
@@ -112,26 +120,40 @@ DEFINE_API(void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
   draw_list->get()->PopClipRect();
 });
 
-DEFINE_ENUM(Im, DrawFlags_None,                         "");
-DEFINE_ENUM(Im, DrawFlags_Closed,                       "DrawList_PathStroke, DrawList_AddPolyline: specify that shape should be closed (Important: this is always == 1 for legacy reason).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTopLeft,          "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding top-left corner only (when rounding > 0.0, we default to all corners).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTopRight,         "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding top-right corner only (when rounding > 0.0, we default to all corners).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomLeft,       "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding bottom-left corner only (when rounding > 0.0, we default to all corners).");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomRight,      "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding bottom-right corner only (when rounding > 0.0, we default to all corners).");
-
-DEFINE_ENUM(Im, DrawFlags_RoundCornersNone            , "DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: disable rounding on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!.");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTop             , "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottom          , "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersLeft            , "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersRight           , "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersAll             , "");
+DEFINE_ENUM(Im, DrawFlags_None, "");
+DEFINE_ENUM(Im, DrawFlags_Closed,
+R"(DrawList_PathStroke, DrawList_AddPolyline: specify that shape should be
+   closed (Important: this is always == 1 for legacy reason).)");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopLeft,
+R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
+   top-left corner only (when rounding > 0.0, we default to all corners).)");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTopRight,
+R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
+   top-right corner only (when rounding > 0.0, we default to all corners).)");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomLeft,
+R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
+   bottom-left corner only (when rounding > 0.0, we default to all corners).)");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomRight,
+R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
+   bottom-right corner only (when rounding > 0.0, we default to all corners).)");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersNone,
+R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: disable rounding
+   on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!.)");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersTop,    "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersBottom, "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersLeft,   "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersRight,  "");
+DEFINE_ENUM(Im, DrawFlags_RoundCornersAll,    "");
 
 API_SUBSECTION("Primitives",
-R"(Filled shapes must always use clockwise winding order. The anti-aliasing fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
+R"(Filled shapes must always use clockwise winding order. The anti-aliasing
+fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
 
-For rectangular primitives, "p_min" and "p_max" represent the upper-left and lower-right corners.
+For rectangular primitives, "p_min" and "p_max" represent the upper-left and
+lower-right corners.
 
-For circle primitives, use "num_segments == 0" to automatically calculate tessellation (preferred).)");
+For circle primitives, use "num_segments == 0" to automatically calculate
+tessellation (preferred).)");
 
 DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)

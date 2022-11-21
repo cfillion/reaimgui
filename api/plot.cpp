@@ -19,7 +19,7 @@
 
 #include <reaper_plugin_secrets.h> // reaper_array
 
-API_SECTION("Plot", "Simple data plotting (uses reaper_array as data source).");
+API_SECTION("Plot", "Simple data plotting using reaper_array as data source.");
 
 static float getArrayValue(void *data, const int index)
 {

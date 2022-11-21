@@ -23,9 +23,11 @@ API_SECTION("Font");
 
 DEFINE_API(ImGui_Font*, CreateFont,
 (const char*,family_or_file)(int,size)(int*,API_RO(flags)),
-R"(Load a font matching a font family name or from a font file. The font will remain valid while it's attached to a context. See AttachFont.
+R"(Load a font matching a font family name or from a font file.
+The font will remain valid while it's attached to a context. See AttachFont.
 
-The family name can be an installed font or one of the generic fonts: sans-serif, serif, monospace, cursive, fantasy.
+The family name can be an installed font or one of the generic fonts:
+sans-serif, serif, monospace, cursive, fantasy.
 
 If 'family_or_file' specifies a path to a font file (contains a / or \):
 - The first byte of 'flags' is used as the font index within the file
@@ -45,7 +47,8 @@ static void outOfFrameCheck(Context *ctx)
 
 DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
-"Enable a font for use in the given context. Fonts must be attached as soon as possible after creating the context or on a new defer cycle.",
+R"(Enable a font for use in the given context.Fonts must be attached as soon
+as possible after creating the context or on a new defer cycle.)",
 {
   assertValid(ctx);
   assertValid(font);
@@ -56,7 +59,8 @@ DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
 
 DEFINE_API(void, DetachFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
-"Unload a font from the given context. The font will be destroyed if is not attached to any context.",
+R"(Unload a font from the given context. The font will be destroyed if is not
+attached to any context.)",
 {
   assertValid(ctx);
   assertValid(font);
@@ -94,6 +98,6 @@ DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
   return ImGui::GetFontSize();
 });
 
-DEFINE_ENUM(ReaImGui, FontFlags_None, "");
-DEFINE_ENUM(ReaImGui, FontFlags_Bold, "");
+DEFINE_ENUM(ReaImGui, FontFlags_None,   "");
+DEFINE_ENUM(ReaImGui, FontFlags_Bold,   "");
 DEFINE_ENUM(ReaImGui, FontFlags_Italic, "");

@@ -23,8 +23,10 @@ static std::vector<const char *> splitList(const char *buf, const int size)
 {
   // REAPER's buf, buf_sz mechanism did not handle strings containing null
   // bytes (and len was inaccurate) prior to v6.44.
-  if(size < 1 || buf[size - 1] != '\0')
-    throw reascript_error { "requires REAPER v6.44 or newer (use BeginCombo or BeginListBox for wider compatibility)" };
+  if(size < 1 || buf[size - 1] != '\0') {
+    throw reascript_error { "requires REAPER v6.44 or newer"
+      " (use BeginCombo or BeginListBox for wider compatibility)" };
+  }
   else if(size < 2 || buf[size - 2] != '\0')
     throw reascript_error { "items must be null-terminated" };
 
@@ -42,7 +44,8 @@ API_SUBSECTION("Combo Box (Dropdown)");
 
 DEFINE_API(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
 (const char*,preview_value)(int*,API_RO(flags)),
-R"(The BeginCombo/EndCombo API allows you to manage your contents and selection state however you want it, by creating e.g. Selectable items.
+R"(The BeginCombo/EndCombo API allows you to manage your contents and selection
+state however you want it, by creating e.g. Selectable items.
 
 Default values: flags = ComboFlags_None)",
 {
@@ -62,7 +65,8 @@ DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
 DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(popup_max_height_in_items)),
-R"(Helper over BeginCombo/EndCombo for convenience purpose. Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lua).
+R"(Helper over BeginCombo/EndCombo for convenience purpose. Each item must be
+null-terminated (requires REAPER v6.44 or newer for EEL and Lua).
 
 Default values: popup_max_height_in_items = -1)",
 {
@@ -74,15 +78,21 @@ Default values: popup_max_height_in_items = -1)",
 });
 
 DEFINE_ENUM(ImGui, ComboFlags_None,           "");
-DEFINE_ENUM(ImGui, ComboFlags_PopupAlignLeft, "Align the popup toward the left by default.");
-DEFINE_ENUM(ImGui, ComboFlags_HeightSmall,    "Max ~4 items visible. Tip: If you want your combo popup to be a specific size you can use SetNextWindowSizeConstraints prior to calling BeginCombo.");
+DEFINE_ENUM(ImGui, ComboFlags_PopupAlignLeft,
+  "Align the popup toward the left by default.");
+DEFINE_ENUM(ImGui, ComboFlags_HeightSmall,
+R"(Max ~4 items visible. Tip: If you want your combo popup to be a specific size
+you can use SetNextWindowSizeConstraints prior to calling BeginCombo.)");
 DEFINE_ENUM(ImGui, ComboFlags_HeightRegular,  "Max ~8 items visible (default).");
 DEFINE_ENUM(ImGui, ComboFlags_HeightLarge,    "Max ~20 items visible.");
 DEFINE_ENUM(ImGui, ComboFlags_HeightLargest,  "As many fitting items as possible.");
-DEFINE_ENUM(ImGui, ComboFlags_NoArrowButton,  "Display on the preview box without the square arrow button.");
+DEFINE_ENUM(ImGui, ComboFlags_NoArrowButton,
+  "Display on the preview box without the square arrow button.");
 DEFINE_ENUM(ImGui, ComboFlags_NoPreview,      "Display only a square arrow button.");
 
-API_SUBSECTION("List Boxes", "This is essentially a thin wrapper to using BeginChild/EndChild with some stylistic changes.");
+API_SUBSECTION("List Boxes",
+R"(This is essentially a thin wrapper to using BeginChild/EndChild with some
+stylistic changes.)");
 
 DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(current_item))(const char*,items)(int,items_sz)
@@ -102,12 +112,20 @@ Default values: height_in_items = -1)",
 
 DEFINE_API(bool, BeginListBox, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Open a framed scrolling region.  This is essentially a thin wrapper to using BeginChild/EndChild with some stylistic changes.
+R"(Open a framed scrolling region. This is essentially a thin wrapper to using
+BeginChild/EndChild with some stylistic changes.
 
-The BeginListBox/EndListBox API allows you to manage your contents and selection state however you want it, by creating e.g. Selectable or any items.
+The BeginListBox/EndListBox API allows you to manage your contents and selection
+state however you want it, by creating e.g. Selectable or any items.
 
-- Choose frame width:   width  > 0.0: custom  /  width  < 0.0 or -FLT_MIN: right-align   /  width  = 0.0 (default): use current ItemWidth
-- Choose frame height:  height > 0.0: custom  /  height < 0.0 or -FLT_MIN: bottom-align  /  height = 0.0 (default): arbitrary default height which can fit ~7 items
+- Choose frame width:
+  - width  > 0.0: custom
+  - width  < 0.0 or -FLT_MIN: right-align
+  - width  = 0.0 (default): use current ItemWidth
+- Choose frame height:
+  - height > 0.0: custom
+  - height < 0.0 or -FLT_MIN: bottom-align
+  - height = 0.0 (default): arbitrary default height which can fit ~7 items
 
 Default values: size_w = 0.0, size_h = 0.0
 
@@ -127,8 +145,10 @@ DEFINE_API(void, EndListBox, (ImGui_Context*,ctx),
 });
 
 API_SUBSECTION("Selectables",
-R"(A selectable highlights when hovered, and can display another color when selected.
-Neighbors selectable extend their highlight bounds in order to leave no gap between them. This is so a series of selected Selectable appear contiguous.)");
+R"(A selectable highlights when hovered, and can display another color when
+selected. Neighbors selectable extend their highlight bounds in order to leave
+no gap between them. This is so a series of selected Selectable appear
+contiguous.)");
 
 DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RW(p_selected))
@@ -145,9 +165,14 @@ DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
   return ImGui::Selectable(label, selected, flags, size);
 });
 
-DEFINE_ENUM(ImGui, SelectableFlags_None,             "");
-DEFINE_ENUM(ImGui, SelectableFlags_DontClosePopups,  "Clicking this doesn't close parent popup window.");
-DEFINE_ENUM(ImGui, SelectableFlags_SpanAllColumns,   "Selectable frame can span all columns (text will still fit in current column).");
-DEFINE_ENUM(ImGui, SelectableFlags_AllowDoubleClick, "Generate press events on double clicks too.");
-DEFINE_ENUM(ImGui, SelectableFlags_Disabled,         "Cannot be selected, display grayed out text.");
-DEFINE_ENUM(ImGui, SelectableFlags_AllowItemOverlap, "Hit testing to allow subsequent widgets to overlap this one.");
+DEFINE_ENUM(ImGui, SelectableFlags_None, "");
+DEFINE_ENUM(ImGui, SelectableFlags_DontClosePopups,
+  "Clicking this doesn't close parent popup window.");
+DEFINE_ENUM(ImGui, SelectableFlags_SpanAllColumns,
+  "Selectable frame can span all columns (text will still fit in current column).");
+DEFINE_ENUM(ImGui, SelectableFlags_AllowDoubleClick,
+  "Generate press events on double clicks too.");
+DEFINE_ENUM(ImGui, SelectableFlags_Disabled,
+  "Cannot be selected, display grayed out text.");
+DEFINE_ENUM(ImGui, SelectableFlags_AllowItemOverlap,
+  "Hit testing to allow subsequent widgets to overlap this one.");

@@ -20,7 +20,8 @@
 API_SECTION("Menu");
 
 DEFINE_API(bool, BeginMenuBar, (ImGui_Context*,ctx),
-R"(Append to menu-bar of current window (requires WindowFlags_MenuBar flag set on parent window). See EndMenuBar.)",
+R"(Append to menu-bar of current window (requires WindowFlags_MenuBar flag set
+on parent window). See EndMenuBar.)",
 {
   FRAME_GUARD;
   return ImGui::BeginMenuBar();
@@ -53,7 +54,9 @@ R"(Only call EndMenu() if BeginMenu returns true!)",
 DEFINE_API(bool, MenuItem, (ImGui_Context*,ctx)
 (const char*,label)(const char*,API_RO(shortcut))
 (bool*,API_RWO(p_selected))(bool*,API_RO(enabled)),
-R"(Return true when activated. Shortcuts are displayed for convenience but not processed by ImGui at the moment. Toggle state is written to 'selected' when provided.
+R"(Return true when activated. Shortcuts are displayed for convenience but not
+processed by ImGui at the moment. Toggle state is written to 'selected' when
+provided.
 
 Default values: enabled = true)",
 {

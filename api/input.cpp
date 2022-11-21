@@ -252,27 +252,57 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
     API_RO(format), flags);
 });
 
-API_SUBSECTION("Flags", "Most of these are only useful for InputText*() and not for InputDoubleX, InputIntX etc.");
+API_SUBSECTION("Flags",
+R"(Most of these are only useful for InputText*() and not for InputDoubleX,
+InputIntX etc.
 
-DEFINE_ENUM(ImGui, InputTextFlags_None,                "Most of the InputTextFlags flags are only useful for InputText and not for InputIntX, InputDouble etc. (Those are per-item flags. There are shared flags in SetConfigVar: ConfigVar_InputTextCursorBlink and ConfigVar_InputTextEnterKeepActive)");
-DEFINE_ENUM(ImGui, InputTextFlags_CharsDecimal,        "Allow 0123456789.+-*/.");
-DEFINE_ENUM(ImGui, InputTextFlags_CharsHexadecimal,    "Allow 0123456789ABCDEFabcdef.");
-DEFINE_ENUM(ImGui, InputTextFlags_CharsUppercase,      "Turn a..z into A..Z.");
-DEFINE_ENUM(ImGui, InputTextFlags_CharsNoBlank,        "Filter out spaces, tabs.");
-DEFINE_ENUM(ImGui, InputTextFlags_AutoSelectAll,       "Select entire text when first taking mouse focus.");
-DEFINE_ENUM(ImGui, InputTextFlags_EnterReturnsTrue,    "Return 'true' when Enter is pressed (as opposed to every time the value was modified). Consider looking at the IsItemDeactivatedAfterEdit function.");
-// DEFINE_ENUM(ImGui, InputTextFlags_CallbackCompletion,  "Callback on pressing TAB (for completion handling).");
-// DEFINE_ENUM(ImGui, InputTextFlags_CallbackHistory,     "Callback on pressing Up/Down arrows (for history handling).");
-// DEFINE_ENUM(ImGui, InputTextFlags_CallbackAlways,      "Callback on each iteration. User code may query cursor position, modify text buffer.");
-// DEFINE_ENUM(ImGui, InputTextFlags_CallbackCharFilter,  "Callback on character inputs to replace or discard them. Modify 'EventChar' to replace or discard, or return 1 in callback to discard.");
-DEFINE_ENUM(ImGui, InputTextFlags_AllowTabInput,       "Pressing TAB input a '\\t' character into the text field.");
-DEFINE_ENUM(ImGui, InputTextFlags_CtrlEnterForNewLine, "In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter (default is opposite: unfocus with Ctrl+Enter, add line with Enter).");
-DEFINE_ENUM(ImGui, InputTextFlags_NoHorizontalScroll,  "Disable following the cursor horizontally.");
-DEFINE_ENUM(ImGui, InputTextFlags_AlwaysOverwrite,     "Overwrite mode.");
-DEFINE_ENUM(ImGui, InputTextFlags_ReadOnly,            "Read-only mode.");
-DEFINE_ENUM(ImGui, InputTextFlags_Password,            "Password mode, display all characters as '*'.");
-DEFINE_ENUM(ImGui, InputTextFlags_NoUndoRedo,          "Disable undo/redo. Note that input text owns the text data while active.");
-DEFINE_ENUM(ImGui, InputTextFlags_CharsScientific,     "Allow 0123456789.+-*/eE (Scientific notation input).");
-// DEFINE_ENUM(ImGui, InputTextFlags_CallbackResize,      "Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this).");
-// DEFINE_ENUM(ImGui, InputTextFlags_CallbackEdit,        "Callback on any edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active).");
-DEFINE_ENUM(ImGui, InputTextFlags_EscapeClearsAll,     "Escape key clears content if not empty, and deactivate otherwise (constrast to default behavior of Escape to revert)");
+(Those are per-item flags. There are shared flags in SetConfigVar:
+ConfigVar_InputTextCursorBlink and ConfigVar_InputTextEnterKeepActive.))");
+
+DEFINE_ENUM(ImGui, InputTextFlags_None,             "");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsDecimal,     "Allow 0123456789.+-*/.");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsHexadecimal, "Allow 0123456789ABCDEFabcdef.");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsUppercase,   "Turn a..z into A..Z.");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsNoBlank,     "Filter out spaces, tabs.");
+DEFINE_ENUM(ImGui, InputTextFlags_AutoSelectAll,
+  "Select entire text when first taking mouse focus.");
+DEFINE_ENUM(ImGui, InputTextFlags_EnterReturnsTrue,
+R"(Return 'true' when Enter is pressed (as opposed to every time the value was
+   modified). Consider looking at the IsItemDeactivatedAfterEdit function.)");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackCompletion,
+//   "Callback on pressing TAB (for completion handling).");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackHistory,
+//   "Callback on pressing Up/Down arrows (for history handling).");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackAlways,
+//   "Callback on each iteration. User code may query cursor position, modify text buffer.");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackCharFilter,
+// R"(Callback on character inputs to replace or discard them.
+//    Modify 'EventChar' to replace or discard, or return 1 in callback to discard.)");
+DEFINE_ENUM(ImGui, InputTextFlags_AllowTabInput,
+  "Pressing TAB input a '\\t' character into the text field.");
+DEFINE_ENUM(ImGui, InputTextFlags_CtrlEnterForNewLine,
+R"(In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter
+   (default is opposite: unfocus with Ctrl+Enter, add line with Enter).)");
+DEFINE_ENUM(ImGui, InputTextFlags_NoHorizontalScroll,
+  "Disable following the cursor horizontally.");
+DEFINE_ENUM(ImGui, InputTextFlags_AlwaysOverwrite, "Overwrite mode.");
+DEFINE_ENUM(ImGui, InputTextFlags_ReadOnly,        "Read-only mode.");
+DEFINE_ENUM(ImGui, InputTextFlags_Password,
+    "Password mode, display all characters as '*'.");
+DEFINE_ENUM(ImGui, InputTextFlags_NoUndoRedo,
+    "Disable undo/redo. Note that input text owns the text data while active.");
+DEFINE_ENUM(ImGui, InputTextFlags_CharsScientific,
+    "Allow 0123456789.+-*/eE (Scientific notation input).");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackResize,
+// R"(Callback on buffer capacity changes request (beyond 'buf_size' parameter
+//    value), allowing the string to grow. Notify when the string wants to be
+//    resized (for string types which hold a cache of their Size). You will be
+//    provided a new BufSize in the callback and NEED to honor it.
+//    (See misc/cpp/imgui_stdlib.h for an example of using this.))");
+// DEFINE_ENUM(ImGui, InputTextFlags_CallbackEdit,
+// R"(Callback on any edit (note that InputText() already returns true on edit,
+//    the callback is useful mainly to manipulate the underlying buffer while
+//    focus is active).)");
+DEFINE_ENUM(ImGui, InputTextFlags_EscapeClearsAll,
+R"(Escape key clears content if not empty, and deactivate otherwise
+   (constrast to default behavior of Escape to revert).)");

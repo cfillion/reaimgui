@@ -47,13 +47,13 @@ R"(Return whether the pointer of the specified type is valid.
 
 Supported types are:
 
-- Context*
-- DrawList*
-- DrawListSplitter*
-- Font*
-- ListClipper*
-- TextFilter*
-- Viewport*)",
+- ImGui_Context*
+- ImGui_DrawList*
+- ImGui_DrawListSplitter*
+- ImGui_Font*
+- ImGui_ListClipper*
+- ImGui_TextFilter*
+- ImGui_Viewport*)",
 {
   ResourceProxy::Key proxyKey;
 
@@ -282,6 +282,8 @@ DEFINE_ENUM(ImGui, Cond_Always,
 DEFINE_ENUM(ImGui, Cond_Once,
   "Set the variable once per runtime session (only the first call will succeed).");
 DEFINE_ENUM(ImGui, Cond_FirstUseEver,
-  "Set the variable if the object/window has no persistently saved data (no entry in .ini file).");
+R"(Set the variable if the object/window has no persistently saved data
+   (no entry in .ini file).)");
 DEFINE_ENUM(ImGui, Cond_Appearing,
-  "Set the variable if the object/window is appearing after being hidden/inactive (or the first time).");
+R"(Set the variable if the object/window is appearing after being
+   hidden/inactive (or the first time).)");
