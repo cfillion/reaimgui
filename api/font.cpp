@@ -22,7 +22,7 @@
 API_SECTION("Font");
 
 DEFINE_API(ImGui_Font*, CreateFont,
-(const char*,family_or_file)(int,size)(int*,API_RO(flags)),
+(const char*,family_or_file)(int,size)(int*,API_RO(flags),ReaImGuiFontFlags_None),
 R"(Load a font matching a font family name or from a font file.
 The font will remain valid while it's attached to a context. See AttachFont.
 
@@ -31,12 +31,9 @@ sans-serif, serif, monospace, cursive, fantasy.
 
 If 'family_or_file' specifies a path to a font file (contains a / or \):
 - The first byte of 'flags' is used as the font index within the file
-- The font styles in 'flags' are simulated by the font renderer
-
-Default values: flags = FontFlags_None)",
+- The font styles in 'flags' are simulated by the font renderer)",
 {
-  const int flags { valueOr(API_RO(flags), ReaImGuiFontFlags_None) };
-  return new Font { family_or_file, size, flags };
+  return new Font { family_or_file, size, API_RO_GET(flags) };
 });
 
 static void outOfFrameCheck(Context *ctx)

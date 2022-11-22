@@ -65,8 +65,9 @@ API::Section::Section(const Section *parent, const char *file,
 }
 
 API::API(const char *name, void *cImpl, void *reascriptImpl,
-        const char *definition, const unsigned int lastLine)
-  : m_section { lastSection() }, m_lines { firstLine(), lastLine },
+        const char *definition, const char *defargs, const unsigned int lastLine)
+  : m_section { lastSection() }, m_defargs { defargs },
+    m_lines { firstLine(), lastLine },
     m_regs {
       { KEY("API"),       cImpl         },
       { KEY("APIvararg"), reascriptImpl },

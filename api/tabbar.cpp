@@ -20,13 +20,11 @@
 API_SECTION("Tab Bar");
 
 DEFINE_API(bool, BeginTabBar, (ImGui_Context*,ctx)
-(const char*,str_id)(int*,API_RO(flags)),
-R"(Create and append into a TabBar.
-
-Default values: flags = TabBarFlags_None)",
+(const char*,str_id)(int*,API_RO(flags),ImGuiTabBarFlags_None),
+"Create and append into a TabBar.",
 {
   FRAME_GUARD;
-  return ImGui::BeginTabBar(str_id, valueOr(API_RO(flags), ImGuiTabBarFlags_None));
+  return ImGui::BeginTabBar(str_id, API_RO_GET(flags));
 });
 
 DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
@@ -61,15 +59,14 @@ DEFINE_ENUM(ImGui, TabBarFlags_FittingPolicyScroll,
 API_SUBSECTION("Tab Item");
 
 DEFINE_API(bool, BeginTabItem, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
+(const char*,label)(bool*,API_RWO(p_open))
+(int*,API_RO(flags),ImGuiTabItemFlags_None),
 R"(Create a Tab. Returns true if the Tab is selected.
-Set 'p_open' to true to enable the close button.
-
-Default values: p_open = nil, flags = TabItemFlags_None)",
+Set 'p_open' to true to enable the close button.)",
 {
   FRAME_GUARD;
-  return ImGui::BeginTabItem(label, openPtrBehavior(API_RWO(p_open)),
-    valueOr(API_RO(flags), ImGuiTabItemFlags_None));
+  return ImGui::BeginTabItem(label,
+    openPtrBehavior(API_RWO(p_open)), API_RO_GET(flags));
 });
 
 DEFINE_API(void, EndTabItem, (ImGui_Context*,ctx),
@@ -80,15 +77,12 @@ DEFINE_API(void, EndTabItem, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(bool, TabItemButton, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RO(flags)),
+(const char*,label)(int*,API_RO(flags),ImGuiTabItemFlags_None),
 R"(Create a Tab behaving like a button. Return true when clicked.
-Cannot be selected in the tab bar.
-
-Default values: flags = TabItemFlags_None)",
+Cannot be selected in the tab bar.)",
 {
   FRAME_GUARD;
-  return ImGui::TabItemButton(label,
-    valueOr(API_RO(flags), ImGuiTabItemFlags_None));
+  return ImGui::TabItemButton(label, API_RO_GET(flags));
 });
 
 DEFINE_API(void, SetTabItemClosed, (ImGui_Context*,ctx)

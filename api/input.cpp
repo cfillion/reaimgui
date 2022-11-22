@@ -26,6 +26,25 @@
 
 API_SECTION("Text & Scalar Input");
 
+class InputTextFlags : public Flags<ImGuiInputTextFlags> {
+public:
+  InputTextFlags(int flags) : Flags { flags }
+  {
+    *this &= ~(
+      // don't expose these to users
+      ImGuiInputTextFlags_CallbackCompletion |
+      ImGuiInputTextFlags_CallbackHistory    |
+      ImGuiInputTextFlags_CallbackAlways     |
+      ImGuiInputTextFlags_CallbackCharFilter |
+      ImGuiInputTextFlags_CallbackEdit       |
+      ImGuiInputTextFlags_CallbackResize     |
+
+      // reserved for ImGui's internal use
+      ImGuiInputTextFlags_Multiline | ImGuiInputTextFlags_NoMarkEdited
+    );
+  }
+};
+
 static void copyToBuffer(const std::string &value, char *buf, const size_t bufSize)
 {
   int newSize {};
@@ -42,14 +61,14 @@ static void copyToBuffer(const std::string &value, char *buf, const size_t bufSi
 
 DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
-(int*,API_RO(flags)),
-"Default values: flags = InputTextFlags_None",
+(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
 
   std::string value { API_RWBIG(buf) };
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
 
   // The output buffer is updated only when true is returned.
   // This differs from upstream Dear ImGui when InputTextFlags_EnterReturnsTrue
@@ -64,17 +83,16 @@ DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
-(double*,API_RO(size_w))(double*,API_RO(size_h))
-(int*,API_RO(flags)),
-"Default values: size_w = 0.0, size_h = 0.0, flags = InputTextFlags_None",
+(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0)
+(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
 
   std::string value { API_RWBIG(buf) };
-  const ImVec2 size { valueOr(API_RO(size_w), 0.f),
-                      valueOr(API_RO(size_h), 0.f) };
-  const InputTextFlags flags { API_RO(flags) };
+  const ImVec2 size(API_RO_GET(size_w), API_RO_GET(size_h));
+  const InputTextFlags flags { API_RO_GET(flags) };
 
   if(ImGui::InputTextMultiline(label, &value, size, flags, nullptr, nullptr)) {
     copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
@@ -86,14 +104,14 @@ DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
 DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 (const char*,label)(const char*,hint)
 (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
-(int*,API_RO(flags)),
-"Default values: flags = InputTextFlags_None",
+(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
 
   std::string value { API_RWBIG(buf) };
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
 
   if(ImGui::InputTextWithHint(label, hint, &value, flags, nullptr, nullptr)) {
     copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
@@ -103,25 +121,25 @@ DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
-(int*,API_RW(v))(int*,API_RO(step))(int*,API_RO(step_fast))
-(int*,API_RO(flags)),
-"Default values: step = 1, step_fast = 100, flags = InputTextFlags_None",
+(int*,API_RW(v))(int*,API_RO(step),1)(int*,API_RO(step_fast),100)
+(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
 
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
   return ImGui::InputInt(label, API_RW(v),
-    valueOr(API_RO(step), 1), valueOr(API_RO(step_fast), 100), flags);
+    API_RO_GET(step), API_RO_GET(step_fast), flags);
 });
 
 DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
-(int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RO(flags)),
-"Default values: flags = InputTextFlags_None",
+(int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
 
   ReadWriteArray<int, int, 2> values { API_RW(v1), API_RW(v2) };
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
 
   if(ImGui::InputInt2(label, values.data(), flags))
     return values.commit();
@@ -131,13 +149,13 @@ DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
 
 DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
-(int*,API_RO(flags)),
-"Default values: flags = InputTextFlags_None",
+(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
 
   ReadWriteArray<int, int, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
 
   if(ImGui::InputInt3(label, values.data(), flags))
     return values.commit();
@@ -147,14 +165,14 @@ DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
 
 DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
-(int*,API_RW(v4))(int*,API_RO(flags)),
-"Default values: flags = InputTextFlags_None",
+(int*,API_RW(v4))(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
 
   ReadWriteArray<int, int, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
 
   if(ImGui::InputInt4(label, values.data(), flags))
     return values.commit();
@@ -163,39 +181,38 @@ DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
 });
 
 DEFINE_API(bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
-(double*,API_RW(v))(double*,API_RO(step))(double*,API_RO(step_fast))
-(const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: step = 0.0, step_fast = 0.0, format = '%.3f', flags = InputTextFlags_None",
+(double*,API_RW(v))(double*,API_RO(step),0.0)(double*,API_RO(step_fast),0.0)
+(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
 
   return ImGui::InputDouble(label, API_RW(v),
-    valueOr(API_RO(step), 0.0), valueOr(API_RO(step_fast), 0.0),
-    API_RO(format) ? API_RO(format) : "%.3f", flags);
+    API_RO_GET(step), API_RO_GET(step_fast), API_RO_GET(format), flags);
 });
 
 static bool inputDoubleN(const char *label, double *data, const size_t size,
-  const char *format, const ImGuiInputTextFlags flags)
+  const char *format, const InputTextFlags flags)
 {
   return ImGui::InputScalarN(label, ImGuiDataType_Double, data, size,
-    nullptr, nullptr, format ? format : "%.3f", flags);
+    nullptr, nullptr, format, flags);
 }
 
 DEFINE_API(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
-(const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: format = '%.3f', flags = InputTextFlags_None",
+(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
   ReadWriteArray<double, double, 2> values { API_RW(v1), API_RW(v2) };
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
 
-  if(inputDoubleN(label, values.data(), values.size(), API_RO(format), flags))
+  if(inputDoubleN(label, values.data(), values.size(), API_RO_GET(format), flags))
     return values.commit();
   else
     return false;
@@ -203,34 +220,34 @@ DEFINE_API(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
 
 DEFINE_API(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
-(const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: format = '%.3f', flags = InputTextFlags_None",
+(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
   ReadWriteArray<double, double, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
 
-  if(inputDoubleN(label, values.data(), values.size(), API_RO(format), flags))
+  if(inputDoubleN(label, values.data(), values.size(), API_RO_GET(format), flags))
     return values.commit();
   else
     return false;
 });
 
 DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
-(double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
-(double*,API_RW(v4))(const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: format = '%.3f', flags = InputTextFlags_None",
+(double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))(double*,API_RW(v4))
+(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
   ReadWriteArray<double, double, 4> values
     { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
-  const InputTextFlags flags { API_RO(flags) };
+  const InputTextFlags flags { API_RO_GET(flags) };
 
-  if(inputDoubleN(label, values.data(), values.size(), API_RO(format), flags))
+  if(inputDoubleN(label, values.data(), values.size(), API_RO_GET(format), flags))
     return values.commit();
   else
     return false;
@@ -238,18 +255,16 @@ DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
 
 DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
 (reaper_array*,values)(double*,API_RO(step))(double*,API_RO(step_fast))
-(const char*,API_RO(format))(int*,API_RO(flags)),
-"Default values: step = nil, format = nil, step_fast = nil, format = '%.3f', flags = InputTextFlags_None",
+(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+"",
 {
   FRAME_GUARD;
   assertValid(values);
   nullIfEmpty(API_RO(format));
 
-  const InputTextFlags flags { API_RO(flags) };
-
   return ImGui::InputScalarN(label, ImGuiDataType_Double,
     values->data, values->size, API_RO(step), API_RO(step_fast),
-    API_RO(format), flags);
+    API_RO_GET(format), InputTextFlags { API_RO_GET(flags) });
 });
 
 API_SUBSECTION("Flags",

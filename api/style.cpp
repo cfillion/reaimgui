@@ -69,9 +69,7 @@ API_SUBSECTION("Variables");
 
 DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,val1)(double*,API_RO(val2)),
-R"(See StyleVar_* for possible values of 'var_idx'.
-
-Default values: val2 = nil)",
+"See StyleVar_* for possible values of 'var_idx'.",
 {
   FRAME_GUARD;
   if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
@@ -93,13 +91,11 @@ Default values: val2 = nil)",
 });
 
 DEFINE_API(void, PopStyleVar, (ImGui_Context*,ctx)
-(int*,API_RO(count)),
-R"(Reset a style variable.
-
-Default values: count = 1)",
+(int*,API_RO(count),1),
+"Reset a style variable.",
 {
   FRAME_GUARD;
-  ImGui::PopStyleVar(valueOr(API_RO(count), 1));
+  ImGui::PopStyleVar(API_RO_GET(count));
 });
 
 DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
@@ -189,15 +185,13 @@ R"(Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned).
 API_SUBSECTION("Colors");
 
 DEFINE_API(int, GetColor, (ImGui_Context*,ctx)
-(int,idx)(double*,API_RO(alpha_mul)),
+(int,idx)(double*,API_RO(alpha_mul),1.0),
 R"(Retrieve given style color with style alpha applied and optional extra alpha
-multiplier, packed as a 32-bit value (RGBA). See Col_* for available style colors.
-
-Default values: alpha_mul = 1.0)",
+multiplier, packed as a 32-bit value (RGBA). See Col_* for available style colors.)",
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
-  return Color::toBigEndian(ImGui::GetColorU32(idx, valueOr(API_RO(alpha_mul), 1.0)));
+  return Color::toBigEndian(ImGui::GetColorU32(idx, API_RO_GET(alpha_mul)));
 });
 
 DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
@@ -231,11 +225,11 @@ See Col_* for available style colors.)",
 });
 
 DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
-(int*,API_RO(count)),
-"Default values: count = 1",
+(int*,API_RO(count),1),
+"",
 {
   FRAME_GUARD;
-  ImGui::PopStyleColor(valueOr(API_RO(count), 1));
+  ImGui::PopStyleColor(API_RO_GET(count));
 });
 
 DEFINE_ENUM(ImGui, Col_Text,                  "");

@@ -109,16 +109,14 @@ as long as it is used in each defer cycle. See ListClipper_Begin.)",
 });
 
 DEFINE_API(void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
-(int,items_count)(double*,API_RO(items_height)),
+(int,items_count)(double*,API_RO(items_height),-1.0),
 R"(- items_count: Use INT_MAX if you don't know how many items you have
 (in which case the cursor won't be advanced in the final step)
 - items_height: Use -1.0 to be calculated automatically on first step.
   Otherwise pass in the distance between your items, typically
-  GetTextLineHeightWithSpacing or GetFrameHeightWithSpacing.
-
-Default values: items_height = -1.0)",
+  GetTextLineHeightWithSpacing or GetFrameHeightWithSpacing.)",
 {
-  (*clipper)->Begin(items_count, valueOr(API_RO(items_height), -1.0));
+  (*clipper)->Begin(items_count, API_RO_GET(items_height));
 });
 
 DEFINE_API(bool, ListClipper_Step, (ImGui_ListClipper*,clipper),

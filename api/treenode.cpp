@@ -20,27 +20,23 @@
 API_SECTION("Tree Node");
 
 DEFINE_API(bool, TreeNode, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RO(flags)),
+(const char*,label)(int*,API_RO(flags),ImGuiTreeNodeFlags_None),
 R"(TreeNode functions return true when the node is open, in which case you need
-to also call TreePop when you are finished displaying the tree node contents.
-
-Default values: flags = TreeNodeFlags_None)",
+to also call TreePop when you are finished displaying the tree node contents.)",
 {
   FRAME_GUARD;
-  return ImGui::TreeNodeEx(label, valueOr(API_RO(flags), ImGuiTreeNodeFlags_None));
+  return ImGui::TreeNodeEx(label, API_RO_GET(flags));
 });
 
 DEFINE_API(bool, TreeNodeEx, (ImGui_Context*,ctx)
-(const char*,str_id)(const char*,label)(int*,API_RO(flags)),
+(const char*,str_id)(const char*,label)
+(int*,API_RO(flags),ImGuiTreeNodeFlags_None),
 R"(Helper variation to easily decorelate the id from the displayed string.
 Read the [FAQ](https://dearimgui.org/faq) about why and how to use ID.
-To align arbitrary text at the same level as a TreeNode you can use Bullet.
-
-Default values: flags = TreeNodeFlags_None)",
+To align arbitrary text at the same level as a TreeNode you can use Bullet.)",
 {
   FRAME_GUARD;
-  const ImGuiTreeNodeFlags flags { valueOr(API_RO(flags), ImGuiTreeNodeFlags_None) };
-  return ImGui::TreeNodeEx(str_id, flags, "%s", label);
+  return ImGui::TreeNodeEx(str_id, API_RO_GET(flags), "%s", label);
 });
 
 DEFINE_API(void, TreePush, (ImGui_Context*,ctx)
@@ -68,7 +64,8 @@ R"(Horizontal distance preceding label when using TreeNode*() or Bullet()
 });
 
 DEFINE_API(bool, CollapsingHeader, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_RW(p_visible))(int*,API_RO(flags)),
+(const char*,label)(bool*,API_RW(p_visible))
+(int*,API_RO(flags),ImGuiTreeNodeFlags_None),
 R"(Returns true when opened but do not indent nor push into the ID stack
 (because of the TreeNodeFlags_NoTreePushOnOpen flag).
 
@@ -78,27 +75,23 @@ TreeNode.
 
 When 'visible' is provided: if 'true' display an additional small close button
 on upper right of the header which will set the bool to false when clicked,
-if 'false' don't display the header.
-
-Default values: flags = TreeNodeFlags_None)",
+if 'false' don't display the header.)",
 {
   FRAME_GUARD;
   // p_visible behavior differs from ImGui: false as input is treated the same
   // as NULL. This is because EEL doesn't have a NULL (0 = false), API_W never
   // receives a NULL, and API_RWO aren't listed in the output values list.
-  const ImGuiTreeNodeFlags flags { valueOr(API_RO(flags), ImGuiTreeNodeFlags_None) };
-  return ImGui::CollapsingHeader(label, openPtrBehavior(API_RW(p_visible)), flags);
+  return ImGui::CollapsingHeader(label,
+    openPtrBehavior(API_RW(p_visible)), API_RO_GET(flags));
 });
 
 DEFINE_API(void, SetNextItemOpen, (ImGui_Context*,ctx)
-(bool,is_open)(int*,API_RO(cond)),
+(bool,is_open)(int*,API_RO(cond),ImGuiCond_Always),
 R"(Set next TreeNode/CollapsingHeader open state.
-Can also be done with the TreeNodeFlags_DefaultOpen flag.
-
-Default values: cond = Cond_Always.)",
+Can also be done with the TreeNodeFlags_DefaultOpen flag.)",
 {
   FRAME_GUARD;
-  ImGui::SetNextItemOpen(is_open, valueOr(API_RO(cond), ImGuiCond_Always));
+  ImGui::SetNextItemOpen(is_open, API_RO_GET(cond));
 });
 
 DEFINE_API(bool, IsItemToggledOpen, (ImGui_Context*,ctx),

@@ -50,14 +50,12 @@ DEFINE_API(double, GetMouseDownDuration, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, IsMouseClicked, (ImGui_Context*,ctx)
-(int,button)(bool*,API_RO(repeat)),
+(int,button)(bool*,API_RO(repeat),false),
 R"(Did mouse button clicked? (went from !Down to Down).
-Same as GetMouseClickedCount() == 1.
-
-Default values: repeat = false)",
+Same as GetMouseClickedCount() == 1.)",
 {
   FRAME_GUARD;
-  return ImGui::IsMouseClicked(button, valueOr(API_RO(repeat), false));
+  return ImGui::IsMouseClicked(button, API_RO_GET(repeat));
 });
 
 DEFINE_API(void, GetMouseClickedPos, (ImGui_Context*,ctx)
@@ -98,22 +96,19 @@ DEFINE_API(int, GetMouseClickedCount, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, IsMouseHoveringRect, (ImGui_Context*,ctx)
 (double,r_min_x)(double,r_min_y)(double,r_max_x)(double,r_max_y)
-(bool*,API_RO(clip)),
+(bool*,API_RO(clip),true),
 R"(Is mouse hovering given bounding rect (in screen space).
 Clipped by current clipping settings, but disregarding of other consideration
-of focus/window ordering/popup-block.
-
-Default values: clip = true)",
+of focus/window ordering/popup-block.)",
 {
   FRAME_GUARD;
   return ImGui::IsMouseHoveringRect(
-    ImVec2(r_min_x, r_min_y), ImVec2(r_max_x, r_max_y),
-    valueOr(API_RO(clip), true));
+    ImVec2(r_min_x, r_min_y), ImVec2(r_max_x, r_max_y), API_RO_GET(clip));
 });
 
 DEFINE_API(bool, IsMousePosValid, (ImGui_Context*,ctx)
 (double*,API_RO(mouse_pos_x))(double*,API_RO(mouse_pos_y)),
-"Default values: mouse_pos_x = nil, mouse_pos_y = nil",
+"",
 {
   FRAME_GUARD;
 
@@ -166,13 +161,11 @@ DEFINE_API(void, GetMouseWheel, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, IsMouseDragging, (ImGui_Context*,ctx)
-(int,button)(double*,API_RO(lock_threshold)),
-R"(Is mouse dragging? (if lock_threshold < -1.0, uses ConfigVar_MouseDragThreshold)
-
-Default values: lock_threshold = -1.0)",
+(int,button)(double*,API_RO(lock_threshold),-1.0),
+"Is mouse dragging? (if lock_threshold < -1.0, uses ConfigVar_MouseDragThreshold)",
 {
   FRAME_GUARD;
-  return ImGui::IsMouseDragging(button, valueOr(API_RO(lock_threshold), -1.0));
+  return ImGui::IsMouseDragging(button, API_RO_GET(lock_threshold));
 });
 
 DEFINE_API(void, GetMouseDelta, (ImGui_Context*,ctx)
@@ -188,29 +181,26 @@ a huge delta.)",
 
 DEFINE_API(void, GetMouseDragDelta, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y))
-(int*,API_RO(button))(double*,API_RO(lock_threshold)),
+(int*,API_RO(button),ImGuiMouseButton_Left)(double*,API_RO(lock_threshold),-1.0),
 R"(Return the delta from the initial clicking position while the mouse button is
 pressed or was just released. This is locked and return 0.0 until the mouse
 moves past a distance threshold at least once (if lock_threshold < -1.0, uses
-ConfigVar_MouseDragThreshold).
-
-Default values: button = MouseButton_Left, lock_threshold = -1.0)",
+ConfigVar_MouseDragThreshold).)",
 {
   FRAME_GUARD;
   const ImVec2 &delta {
-    ImGui::GetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left),
-      valueOr(API_RO(lock_threshold), -1.0))
+    ImGui::GetMouseDragDelta(API_RO_GET(button), API_RO_GET(lock_threshold))
   };
   if(API_W(x)) *API_W(x) = delta.x;
   if(API_W(y)) *API_W(y) = delta.y;
 });
 
 DEFINE_API(void, ResetMouseDragDelta, (ImGui_Context*,ctx)
-(int*,API_RO(button)),
-"Default values: button = MouseButton_Left",
+(int*,API_RO(button),ImGuiMouseButton_Left),
+"",
 {
   FRAME_GUARD;
-  ImGui::ResetMouseDragDelta(valueOr(API_RO(button), ImGuiMouseButton_Left));
+  ImGui::ResetMouseDragDelta(API_RO_GET(button));
 });
 
 DEFINE_API(int, GetMouseCursor, (ImGui_Context*,ctx),
@@ -269,15 +259,12 @@ DEFINE_API(double, GetKeyDownDuration, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, IsKeyPressed, (ImGui_Context*,ctx)
-(int,key)(bool*,API_RO(repeat)),
+(int,key)(bool*,API_RO(repeat),true),
 R"(Was key pressed (went from !Down to Down)?
-If repeat=true, uses ConfigVar_KeyRepeatDelay / ConfigVar_KeyRepeatRate.
-
-Default values: repeat = true)",
+If repeat=true, uses ConfigVar_KeyRepeatDelay / ConfigVar_KeyRepeatRate.)",
 {
   FRAME_GUARD;
-  return ImGui::IsKeyPressed(static_cast<ImGuiKey>(key),
-                             valueOr(API_RO(repeat), true));
+  return ImGui::IsKeyPressed(static_cast<ImGuiKey>(key), API_RO_GET(repeat));
 });
 
 DEFINE_API(bool, IsKeyReleased, (ImGui_Context*,ctx)

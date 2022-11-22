@@ -77,26 +77,23 @@ Supported types are:
 
 DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
 (double,fraction)
-(double*,API_RO(size_arg_w))(double*,API_RO(size_arg_h))
+(double*,API_RO(size_arg_w),-FLT_MIN)(double*,API_RO(size_arg_h),0.0)
 (const char*,API_RO(overlay)),
-"Default values: size_arg_w = -FLT_MIN, size_arg_h = 0.0, overlay = nil",
+"",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(overlay));
-  const ImVec2 size { valueOr(API_RO(size_arg_w), -FLT_MIN),
-                      valueOr(API_RO(size_arg_h), 0.f) };
+  const ImVec2 size(API_RO_GET(size_arg_w), API_RO_GET(size_arg_h));
   ImGui::ProgressBar(fraction, size, API_RO(overlay));
 });
 
 DEFINE_API(void, PointConvertNative, (ImGui_Context*,ctx)
-(double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native)),
+(double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native),false),
 R"(Convert a position from the current platform's native coordinate position
 system to ReaImGui global coordinates (or vice versa).
 
-This flips the Y coordinate on macOS and applies HiDPI scaling on Windows and
-Linux.
-
-Default values: to_native = false)",
+This effectively flips the Y coordinate on macOS and applies HiDPI scaling on
+Windows and Linux.)",
 {
   FRAME_GUARD; // scalePosition uses the active context and its monitor list
   assertValid(API_RW(x));
@@ -105,7 +102,7 @@ Default values: to_native = false)",
   ImVec2 point;
   point.x = *API_RW(x);
   point.y = *API_RW(y);
-  Platform::scalePosition(&point, valueOr(API_RO(to_native), false));
+  Platform::scalePosition(&point, API_RO_GET(to_native));
   *API_RW(x) = point.x;
   *API_RW(y) = point.y;
 });
@@ -209,36 +206,30 @@ R"(All text output from the interface can be captured into tty/file/clipboard.
 By default, tree nodes are automatically opened during logging.)");
 
 DEFINE_API(void, LogToTTY, (ImGui_Context*,ctx)
-(int*,API_RO(auto_open_depth)),
-R"(Start logging all text output from the interface to the TTY (stdout).
-
-Default values: auto_open_depth = -1)",
+(int*,API_RO(auto_open_depth),-1),
+"Start logging all text output from the interface to the TTY (stdout).",
 {
   FRAME_GUARD;
-  ImGui::LogToTTY(valueOr(API_RO(auto_open_depth), -1));
+  ImGui::LogToTTY(API_RO_GET(auto_open_depth));
 });
 
 DEFINE_API(void, LogToFile, (ImGui_Context*,ctx)
-(int*,API_RO(auto_open_depth))(const char*,API_RO(filename)),
+(int*,API_RO(auto_open_depth),-1)(const char*,API_RO(filename)),
 R"(Start logging all text output from the interface to a file.
-The data is saved to $resource_path/imgui_log.txt if filename is nil.
-
-Default values: auto_open_depth = -1, filename = nil)",
+The data is saved to $resource_path/imgui_log.txt if filename is nil.)",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(filename));
-  ImGui::LogToFile(valueOr(API_RO(auto_open_depth), -1), API_RO(filename));
+  ImGui::LogToFile(API_RO_GET(auto_open_depth), API_RO(filename));
 });
 
 DEFINE_API(void, LogToClipboard, (ImGui_Context*,ctx)
-(int*,API_RO(auto_open_depth)),
+(int*,API_RO(auto_open_depth),-1),
 R"(Start logging all text output from the interface to the OS clipboard.
-See also SetClipboardText.
-
-Default values: auto_open_depth = -1)",
+See also SetClipboardText.)",
 {
   FRAME_GUARD;
-  ImGui::LogToClipboard(valueOr(API_RO(auto_open_depth), -1));
+  ImGui::LogToClipboard(API_RO_GET(auto_open_depth));
 });
 
 DEFINE_API(void, LogFinish, (ImGui_Context*,ctx),

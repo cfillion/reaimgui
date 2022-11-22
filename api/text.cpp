@@ -92,17 +92,15 @@ DEFINE_API(void, BulletText, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(void, PushTextWrapPos, (ImGui_Context*,ctx)
-(double*,API_RO(wrap_local_pos_x)),
+(double*,API_RO(wrap_local_pos_x),0.0),
 R"(Push word-wrapping position for Text*() commands.
 
 -  < 0.0: no wrapping
 -  = 0.0: wrap to end of window (or column)
-- \> 0.0: wrap at 'wrap_pos_x' position in window local space.
-
-Default values: wrap_local_pos_x = 0.0)",
+- \> 0.0: wrap at 'wrap_pos_x' position in window local space.)",
 {
   FRAME_GUARD;
-  ImGui::PushTextWrapPos(valueOr(API_RO(wrap_local_pos_x), 0.f));
+  ImGui::PushTextWrapPos(API_RO_GET(wrap_local_pos_x));
 });
 
 DEFINE_API(void, PopTextWrapPos, (ImGui_Context*,ctx),
@@ -153,14 +151,14 @@ R"(GetFontSize + StyleVar_FramePadding.y * 2 + StyleVar_ItemSpacing.y
 
 DEFINE_API(void, CalcTextSize, (ImGui_Context*,ctx)
 (const char*,text)(double*,API_W(w))(double*,API_W(h))
-(bool*,API_RO(hide_text_after_double_hash))(double*,API_RO(wrap_width)),
-"Default values: hide_text_after_double_hash = false, wrap_width = -1.0",
+(bool*,API_RO(hide_text_after_double_hash),false)
+(double*,API_RO(wrap_width),-1.0),
+"",
 {
   FRAME_GUARD;
   const ImVec2 &size {
     ImGui::CalcTextSize(text, nullptr,
-      valueOr(API_RO(hide_text_after_double_hash), false),
-      valueOr(API_RO(wrap_width), -1.0))
+      API_RO_GET(hide_text_after_double_hash), API_RO_GET(wrap_width))
   };
   if(API_W(w)) *API_W(w) = size.x;
   if(API_W(h)) *API_W(h) = size.y;

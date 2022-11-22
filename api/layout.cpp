@@ -36,15 +36,12 @@ You can call SameLine() between widgets to undo the last carriage return and
 output at the right of the preceding widget.)");
 
 DEFINE_API(void, SameLine, (ImGui_Context*,ctx)
-(double*,API_RO(offset_from_start_x))(double*,API_RO(spacing)),
+(double*,API_RO(offset_from_start_x),0.0)(double*,API_RO(spacing),-1.0),
 R"(Call between widgets or groups to layout them horizontally.
-X position given in window coordinates.
-
-Default values: offset_from_start_x = 0.0, spacing = -1.0.)",
+X position given in window coordinates.)",
 {
   FRAME_GUARD;
-  ImGui::SameLine(valueOr(API_RO(offset_from_start_x), 0.f),
-    valueOr(API_RO(spacing), -1.0));
+  ImGui::SameLine(API_RO_GET(offset_from_start_x), API_RO_GET(spacing));
 });
 
 DEFINE_API(void, NewLine, (ImGui_Context*,ctx),
@@ -69,24 +66,20 @@ mouse click or be navigable into.)",
   ImGui::Dummy(ImVec2(size_w, size_h));
 });
 
-DEFINE_API(void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
+DEFINE_API(void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indent_w),0.0),
 R"(Move content position toward the right, by 'indent_w', or
-StyleVar_IndentSpacing if 'indent_w' <= 0. See Unindent.
-
-Default values: indent_w = 0.0)",
+StyleVar_IndentSpacing if 'indent_w' <= 0. See Unindent.)",
 {
   FRAME_GUARD;
-  ImGui::Indent(valueOr(API_RO(indent_w), 0.f));
+  ImGui::Indent(API_RO_GET(indent_w));
 });
 
-DEFINE_API(void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indent_w)),
+DEFINE_API(void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indent_w),0.0),
 R"(Move content position back to the left, by 'indent_w', or
-StyleVar_IndentSpacing if 'indent_w' <= 0
-
-Default values: indent_w = 0.0)",
+StyleVar_IndentSpacing if 'indent_w' <= 0)",
 {
   FRAME_GUARD;
-  ImGui::Unindent(valueOr(API_RO(indent_w), 0.f));
+  ImGui::Unindent(API_RO_GET(indent_w));
 });
 
 DEFINE_API(void, BeginGroup, (ImGui_Context*,ctx),

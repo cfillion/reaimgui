@@ -381,7 +381,7 @@ private
     out = [arg]
 
     if arg.default == 'NULL'
-      arg.default = 'nil'
+      arg.default = nil # no default value on reaimgui's side
     elsif arg.default == '0' && arg.type.start_with?(/Im(Gui)?/) && arg.type != 'ImGuiID'
       arg.default = arg.type[$~[0].size..-1] + '_None'
       arg.default = 'Cond_Always' if arg.default == 'Cond_None'
@@ -392,8 +392,6 @@ private
       arg.default = 'PopupFlags_MouseButtonRight'
     elsif !arg.default.nil? && arg.type == 'float'
       arg.default = arg.default[0..-2] # 0.0f -> 0.0
-    elsif arg.default =~ /\A"(.+)"\z/
-      arg.default = "'#{$~[1]}'"
     end
 
     arg.name += '_rgba' if arg.type == 'ImU32' && %[col color].include?(arg.name)
@@ -401,8 +399,9 @@ private
     arg.name = arg.name[4..-1] if arg.name =~ /\Aout_.+/ && arg.type.end_with?('*')
 
     if arg.type.include? 'ImVec2'
+      null_optional = arg.type.end_with? '*'
       arg.type = 'double'
-      arg.type += '*' if arg.default
+      arg.type += '*' if arg.default or null_optional
       out << Argument.new(arg.type, arg.name, arg.default, arg.size)
 
       if arg.name =~ /size/
@@ -526,9 +525,7 @@ puts "imgui:    found %d functions, %d enums (total: %d symbols)" %
 REAIMGUI_FUNC_R = /\ADEFINE_API \s*\(\s* (?<type>[\w\s\*]+) \s*,\s* (?<name>[\w]+) \s*,\s* (?<args>.*?) \s*(?<arg_end>,)?\s*(\/|\Z)/x
 REAIMGUI_ENUM_R = /\ADEFINE_ENUM \s*\(\s* (?<prefix>\w+) \s*,\s* (?<name>\w+) \s*,\s*/x
 REAIMGUI_ARGS_R = /\A\s* (?<args>\(.+?\)) \s*(?<arg_end>,)?\s*(\/|\Z)/x
-REAIMGUI_DEFS_R = /\A(?:"|R".*\()?Default values: (?<values>.+?)(?:\.?(?:\).?)?",)?\Z/
-REAIMGUI_DEF_R  = /\A(?<name>[\w_]+) = (?<value>.+)/
-REAIMGUI_ARGN_R =  /\A(?:(?<raw_name>[^\(\)]+)|(?<decoration>[^\(]+)\((?<raw_name>[^\)]+)\))\z/
+REAIMGUI_ARGN_R = /\A(?:(?<raw_name>[^\(\)]+)|(?<decoration>[^\(]+)\((?<raw_name>[^\)]+)\))\z/
 
 def split_reaimgui_args(args)
   return [] if args == 'NO_ARGS'
@@ -539,32 +536,9 @@ def split_reaimgui_args(args)
   args.last[-1] = '' # remove trailing )
 
   args.map do |arg|
-    type, name = arg.split /\s*,\s*/
-    Argument.new type, name, nil, 0
-  end
-end
-
-def add_reaimgui_defaults(func, values)
-  values = values.split ', ' # strict with whitespace
-  values.each do |value|
-    if not value =~ REAIMGUI_DEF_R
-      warn "#{func.name}: invalid default value: #{value}"
-      next
-    end
-
-    name, default = $~[:name], $~[:value]
-
-    arg = func.args.find {
-      _1.name =~ REAIMGUI_ARGN_R
-      $~[:raw_name] == name && $~[:decoration]&.[](-1) == 'O'
-    }
-
-    if not arg then
-      warn "#{func.name}: default for unknown optional argument: #{value}"
-      next
-    end
-
-    arg.default = default
+    type, name, default = arg.split /\s*,\s*/
+    default.gsub! /\AIm(Gui)?/, '' if default
+    Argument.new type, name, default, 0
   end
 end
 
@@ -589,8 +563,6 @@ Dir.glob(REAIMGUI_API_CPP).each do |source_file|
       elsif want_args && line =~ REAIMGUI_ARGS_R
         reaimgui_funcs.last.args += split_reaimgui_args $~[:args]
         want_args = !$~[:arg_end]
-      elsif line =~ REAIMGUI_DEFS_R
-        add_reaimgui_defaults reaimgui_funcs.last, $~[:values]
       end
     end
   end
@@ -719,9 +691,10 @@ reaimgui_funcs.each do |func|
     end
 
     unless func.match
-      if decoration && decoration[-1] == 'O' && rea_arg.default.nil?
-        warn "#{func.name}: argument ##{i+1} '#{raw_name}' has no documented default value"
-      end
+      # no default value = nil
+      # if decoration && decoration[-1] == 'O' && rea_arg.default.nil?
+      #   warn "#{func.name}: argument ##{i+1} '#{raw_name}' has no documented default value"
+      # end
       next
     end
 

@@ -50,18 +50,16 @@ The typical call flow is:
 )");
 
 DEFINE_API(bool, BeginTable, (ImGui_Context*,ctx)
-(const char*,str_id)(int,column)(int*,API_RO(flags))
-(double*,API_RO(outer_size_w))(double*,API_RO(outer_size_h))
-(double*,API_RO(inner_width)),
-R"(Default values: flags = TableFlags_None, outer_size_w = 0.0, outer_size_h = 0.0, inner_width = 0.0)",
+(const char*,str_id)(int,column)(int*,API_RO(flags),ImGuiTableFlags_None)
+(double*,API_RO(outer_size_w),0.0)(double*,API_RO(outer_size_h),0.0)
+(double*,API_RO(inner_width),0.0),
+"",
 {
   FRAME_GUARD;
 
-  const ImGuiTableFlags flags { valueOr(API_RO(flags), ImGuiTableFlags_None) };
-  const ImVec2 size { valueOr(API_RO(outer_size_w), 0.f),
-                      valueOr(API_RO(outer_size_h), 0.f) };
-  const float inner_width { valueOr(API_RO(inner_width), 0.f) };
-  return ImGui::BeginTable(str_id, column, flags, size, inner_width);
+  return ImGui::BeginTable(str_id, column, API_RO_GET(flags),
+    ImVec2(API_RO_GET(outer_size_w), API_RO_GET(outer_size_h)),
+    API_RO_GET(inner_width));
 });
 
 DEFINE_API(void, EndTable, (ImGui_Context*,ctx),
@@ -72,15 +70,12 @@ DEFINE_API(void, EndTable, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, TableNextRow, (ImGui_Context*,ctx)
-(int*,API_RO(row_flags))(double*,API_RO(min_row_height)),
-R"(Append into the first cell of a new row.
-
-Default values: row_flags = TableRowFlags_None, min_row_height = 0.0)",
+(int*,API_RO(row_flags),ImGuiTableRowFlags_None)
+(double*,API_RO(min_row_height),0.0),
+"Append into the first cell of a new row.",
 {
   FRAME_GUARD;
-  const ImGuiTableRowFlags flags
-    { valueOr(API_RO(row_flags), ImGuiTableRowFlags_None) };
-  ImGui::TableNextRow(flags, valueOr(API_RO(min_row_height), 0.f));
+  ImGui::TableNextRow(API_RO_GET(row_flags), API_RO_GET(min_row_height));
 });
 
 DEFINE_ENUM(ImGui, TableRowFlags_None, "For TableNextRow.");
@@ -142,17 +137,15 @@ Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when
 scrolled.)");
 
 DEFINE_API(void, TableSetupColumn, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RO(flags))(double*,API_RO(init_width_or_weight))
-(int*,API_RO(user_id)),
+(const char*,label)(int*,API_RO(flags),ImGuiTableColumnFlags_None)
+(double*,API_RO(init_width_or_weight),0.0)
+(int*,API_RO(user_id),0),
 R"(Use to specify label, resizing policy, default width/weight, id,
-various other flags etc.
-
-Default values: flags = TableColumnFlags_None, init_width_or_weight = 0.0, user_id = 0)",
+various other flags etc.)",
 {
   FRAME_GUARD;
-  ImGui::TableSetupColumn(label,
-    valueOr(API_RO(flags), ImGuiTableColumnFlags_None),
-    valueOr(API_RO(init_width_or_weight), 0.f), valueOr(API_RO(user_id), 0));
+  ImGui::TableSetupColumn(label, API_RO_GET(flags),
+    API_RO_GET(init_width_or_weight), API_RO_GET(user_id));
 });
 
 DEFINE_API(void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
@@ -180,25 +173,21 @@ DEFINE_API(void, TableHeader, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(const char*, TableGetColumnName, (ImGui_Context*,ctx)
-(int*,API_RO(column_n)),
+(int*,API_RO(column_n),-1),
 R"(Return "" if column didn't have a name declared by TableSetupColumn.
-Pass -1 to use current column.
-
-Default values: column_n = -1)",
+Pass -1 to use current column.)",
 {
   FRAME_GUARD;
-  return ImGui::TableGetColumnName(valueOr(API_RO(column_n), -1));
+  return ImGui::TableGetColumnName(API_RO_GET(column_n));
 });
 
 DEFINE_API(int, TableGetColumnFlags, (ImGui_Context*,ctx)
-(int*,API_RO(column_n)),
+(int*,API_RO(column_n),-1),
 R"(Return column flags so you can query their Enabled/Visible/Sorted/Hovered
-status flags. Pass -1 to use current column.
-
-Default values: column_n = -1)",
+status flags. Pass -1 to use current column.)",
 {
   FRAME_GUARD;
-  return ImGui::TableGetColumnFlags(valueOr(API_RO(column_n), -1));
+  return ImGui::TableGetColumnFlags(API_RO_GET(column_n));
 });
 
 DEFINE_API(void, TableSetColumnEnabled, (ImGui_Context*,ctx)
@@ -349,14 +338,13 @@ If you set the color of RowBg1 or ColumnBg1 target, your color will blend over
 the RowBg0 color.)");
 
 DEFINE_API(void, TableSetBgColor, (ImGui_Context*,ctx)
-(int,target)(int,color_rgba)(int*,API_RO(column_n)),
-R"(Change the color of a cell, row, or column. See TableBgTarget_* flags for details.
-
-Default values: column_n = -1)",
+(int,target)(int,color_rgba)(int*,API_RO(column_n),-1),
+R"(Change the color of a cell, row, or column.
+See TableBgTarget_* flags for details.)",
 {
   FRAME_GUARD;
   ImGui::TableSetBgColor(target,
-    Color::fromBigEndian(color_rgba), valueOr(API_RO(column_n), -1));
+    Color::fromBigEndian(color_rgba), API_RO_GET(column_n));
 });
 
 DEFINE_ENUM(ImGui, TableBgTarget_None, "");

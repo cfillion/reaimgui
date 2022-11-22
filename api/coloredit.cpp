@@ -29,16 +29,15 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 }
 
 DEFINE_API(bool, ColorEdit4, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgba))(int*,API_RO(flags)),
+(const char*,label)(int*,API_RW(col_rgba))
+(int*,API_RO(flags),ImGuiColorEditFlags_None),
 R"(Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xXXRRGGBB
-(XX is ignored and will not be modified).
-
-Default values: flags = ColorEditFlags_None)",
+(XX is ignored and will not be modified).)",
 {
   FRAME_GUARD;
   assertValid(API_RW(col_rgba));
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
+  ImGuiColorEditFlags flags { API_RO_GET(flags) };
   sanitizeColorEditFlags(flags);
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
@@ -53,28 +52,28 @@ Default values: flags = ColorEditFlags_None)",
 });
 
 DEFINE_API(bool, ColorEdit3, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgb))(int*,API_RO(flags)),
-R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.
-
-Default values: flags = ColorEditFlags_None)",
+(const char*,label)(int*,API_RW(col_rgb))
+(int*,API_RO(flags),ImGuiColorEditFlags_None),
+"Color is in 0xXXRRGGBB. XX is ignored and will not be modified.",
 {
   // unneeded, only to show Edit3 in the error message instead of Edit4
   FRAME_GUARD;
   assertValid(API_RW(col_rgb));
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
+  ImGuiColorEditFlags flags { API_RO_GET(flags) };
   flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorEdit4(ctx, label, API_RW(col_rgb), &flags);
+  return API_ColorEdit4::invoke(ctx, label, API_RW(col_rgb), &flags);
 });
 
 DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgba))(int*,API_RO(flags))(int*,API_RO(ref_col)),
-"Default values: flags = ColorEditFlags_None, ref_col = nil",
+(const char*,label)(int*,API_RW(col_rgba))
+(int*,API_RO(flags),ImGuiColorEditFlags_None)(int*,API_RO(ref_col)),
+"",
 {
   FRAME_GUARD;
   assertValid(API_RW(col_rgba));
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
+  ImGuiColorEditFlags flags { API_RO_GET(flags) };
   sanitizeColorEditFlags(flags);
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
@@ -93,37 +92,33 @@ DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, ColorPicker3, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgb))(int*,API_RO(flags)),
-R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.
-
-Default values: flags = ColorEditFlags_None)",
+(const char*,label)(int*,API_RW(col_rgb))
+(int*,API_RO(flags),ImGuiColorEditFlags_None),
+R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.)",
 {
   // unneeded, only to show Picker3 in the error message instead of Picker4
   FRAME_GUARD;
   assertValid(API_RW(col_rgb));
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
+  ImGuiColorEditFlags flags { API_RO_GET(flags) };
   flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorPicker4(ctx, label, API_RW(col_rgb), &flags, nullptr);
+  return API_ColorPicker4::invoke(ctx, label, API_RW(col_rgb), &flags, nullptr);
 });
 
 DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)
-(const char*,desc_id)(int,col_rgba)(int*,API_RO(flags))
-(double*,API_RO(size_w))(double*,API_RO(size_h)),
+(const char*,desc_id)(int,col_rgba)(int*,API_RO(flags),ImGuiColorEditFlags_None)
+(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
 R"(Display a color square/button, hover for details, return true when pressed.
-Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xRRGGBB.
-
-Default values: flags = ColorEditFlags_None, size_w = 0.0, size_h = 0.0)",
+Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xRRGGBB.)",
 {
   FRAME_GUARD;
 
-  ImGuiColorEditFlags flags { valueOr(API_RO(flags), ImGuiColorEditFlags_None) };
+  ImGuiColorEditFlags flags { API_RO_GET(flags) };
   sanitizeColorEditFlags(flags);
 
   const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
-  const ImVec4 col { Color(col_rgba, alpha) };
-  const ImVec2 size { valueOr(API_RO(size_w), 0.f),
-                      valueOr(API_RO(size_h), 0.f) };
+  const Color col(col_rgba, alpha);
+  const ImVec2 size(API_RO_GET(size_w), API_RO_GET(size_h));
 
   return ImGui::ColorButton(desc_id, col, flags, size);
 });

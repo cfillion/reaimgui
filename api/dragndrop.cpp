@@ -39,27 +39,24 @@ static bool isUserType(const char *type)
   return type && *type && type[0] != '_';
 }
 
-DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)(int*,API_RO(flags)),
+DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)
+(int*,API_RO(flags),ImGuiDragDropFlags_None),
 R"(Call after submitting an item which may be dragged. when this return true,
 you can call SetDragDropPayload() + EndDragDropSource()
 
 If you stop calling BeginDragDropSource() the payload is preserved however
 it won't have a preview tooltip (we currently display a fallback "..." tooltip
-as replacement).
-
-Default values: flags = DragDropFlags_None)",
+as replacement).)",
 {
   FRAME_GUARD;
-  return ImGui::BeginDragDropSource(valueOr(API_RO(flags), ImGuiDragDropFlags_None));
+  return ImGui::BeginDragDropSource(API_RO_GET(flags));
 });
 
 DEFINE_API(bool, SetDragDropPayload, (ImGui_Context*,ctx)
-(const char*,type)(const char*,data)(int*,API_RO(cond)),
+(const char*,type)(const char*,data)(int*,API_RO(cond),ImGuiCond_Always),
 R"(The type is a user defined string of maximum 32 characters.
 Strings starting with '_' are reserved for dear imgui internal types.
-Data is copied and held by imgui.
-
-Default values: cond = Cond_Always)",
+Data is copied and held by imgui.)",
 {
   FRAME_GUARD;
   nullIfEmpty(data);
@@ -67,8 +64,8 @@ Default values: cond = Cond_Always)",
   if(!isUserType(type))
     return false;
 
-  return ImGui::SetDragDropPayload(type, data, data ? strlen(data) : 0,
-    valueOr(API_RO(cond), ImGuiCond_Always));
+  return ImGui::SetDragDropPayload(
+    type, data, data ? strlen(data) : 0, API_RO_GET(cond));
 });
 
 DEFINE_API(void, EndDragDropSource, (ImGui_Context*,ctx),
@@ -106,18 +103,16 @@ static void copyPayload(const ImGuiPayload *payload, char **reabuf, const int re
 DEFINE_API(bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
-(int*,API_RO(flags)),
+(int*,API_RO(flags),ImGuiDragDropFlags_None),
 R"(Accept contents of a given type. If DragDropFlags_AcceptBeforeDelivery is set
-you can peek into the payload before the mouse button is released.
-
-Default values: flags = DragDropFlags_None)",
+you can peek into the payload before the mouse button is released.)",
 {
   FRAME_GUARD;
 
   if(!isUserType(type))
     return false;
 
-  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
+  const ImGuiDragDropFlags flags { API_RO_GET(flags) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
 
   if(payload)
@@ -126,7 +121,8 @@ Default values: flags = DragDropFlags_None)",
   return payload;
 });
 
-static bool AcceptDragDropPayloadColor(int *color, bool alpha, ImGuiDragDropFlags flags)
+static bool AcceptDragDropPayloadColor(int *color, bool alpha,
+  ImGuiDragDropFlags flags)
 {
   assertValid(color);
 
@@ -147,38 +143,31 @@ static bool AcceptDragDropPayloadColor(int *color, bool alpha, ImGuiDragDropFlag
 }
 
 DEFINE_API(bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
-(int*,API_W(rgb))(int*,API_RO(flags)),
-R"(Accept a RGB color. See AcceptDragDropPayload.
-
-Default values: flags = DragDropFlags_None)",
+(int*,API_W(rgb))(int*,API_RO(flags),ImGuiDragDropFlags_None),
+"Accept a RGB color. See AcceptDragDropPayload.",
 {
   FRAME_GUARD;
-  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
-  return AcceptDragDropPayloadColor(API_W(rgb), false, flags);
+  return AcceptDragDropPayloadColor(API_W(rgb), false, API_RO_GET(flags));
 });
 
 DEFINE_API(bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
-(int*,API_W(rgba))(int*,API_RO(flags)),
-R"(Accept a RGBA color. See AcceptDragDropPayload.
-
-Default values: flags = DragDropFlags_None)",
+(int*,API_W(rgba))(int*,API_RO(flags),ImGuiDragDropFlags_None),
+"Accept a RGBA color. See AcceptDragDropPayload.",
 {
   FRAME_GUARD;
-  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
-  return AcceptDragDropPayloadColor(API_W(rgba), true, flags);
+  return AcceptDragDropPayloadColor(API_W(rgba), true, API_RO_GET(flags));
 });
 
 DEFINE_API(bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
-(int*,API_W(count))(int*,API_RO(flags)),
-R"(Accept a list of dropped files. See AcceptDragDropPayload and GetDragDropPayloadFile.
-
-Default values: flags = DragDropFlags_None)",
+(int*,API_W(count))(int*,API_RO(flags),ImGuiDragDropFlags_None),
+R"(Accept a list of dropped files. See AcceptDragDropPayload and GetDragDropPayloadFile.)",
 {
   FRAME_GUARD;
   assertValid(API_W(count));
 
-  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
-  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, flags) };
+  const ImGuiPayload *payload {
+    ImGui::AcceptDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, API_RO_GET(flags))
+  };
 
   if(payload)
     *API_W(count) = ctx->draggedFiles().size();

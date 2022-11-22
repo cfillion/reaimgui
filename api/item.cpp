@@ -28,18 +28,16 @@ invisible buttons, selectables, etc. to catch unused area.)",
 });
 
 DEFINE_API(void, BeginDisabled, (ImGui_Context*,ctx)
-(bool*,API_RO(disabled)),
+(bool*,API_RO(disabled),true),
 R"(Disable all user interactions and dim items visuals
 (applying StyleVar_DisabledAlpha over current colors).
 
 BeginDisabled(false) essentially does nothing useful but is provided to
 facilitate use of boolean expressions.
-If you can avoid calling BeginDisabled(false)/EndDisabled() best to avoid it.
-
-Default values: disabled = true)",
+If you can avoid calling BeginDisabled(false)/EndDisabled() best to avoid it.)",
 {
   FRAME_GUARD;
-  ImGui::BeginDisabled(valueOr(API_RO(disabled), true));
+  ImGui::BeginDisabled(API_RO_GET(disabled));
 });
 
 DEFINE_API(void, EndDisabled, (ImGui_Context*,ctx),
@@ -62,14 +60,12 @@ DEFINE_API(void, SetItemDefaultFocus, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, SetKeyboardFocusHere, (ImGui_Context*,ctx)
-(int*,API_RO(offset)),
+(int*,API_RO(offset),0),
 R"(Focus keyboard on the next widget. Use positive 'offset' to access sub
-components of a multiple component widget. Use -1 to access previous widget.
-
-Default values: offset = 0)",
+components of a multiple component widget. Use -1 to access previous widget.)",
 {
   FRAME_GUARD;
-  ImGui::SetKeyboardFocusHere(valueOr(API_RO(offset), 0));
+  ImGui::SetKeyboardFocusHere(API_RO_GET(offset));
 });
 
 DEFINE_API(void, PushAllowKeyboardFocus, (ImGui_Context*,ctx)
@@ -166,14 +162,13 @@ R"(Most of the functions are referring to the previous Item that has been submit
 See Demo Window under "Widgets->Querying Item Status" for an interactive
 visualization of most of those functions.)");
 
-DEFINE_API(bool, IsItemHovered, (ImGui_Context*,ctx)(int*,API_RO(flags)),
+DEFINE_API(bool, IsItemHovered, (ImGui_Context*,ctx)
+(int*,API_RO(flags),ImGuiHoveredFlags_None),
 R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.).
-See HoveredFlags_* for more options.
-
-Default values: flags = HoveredFlags_None)",
+See HoveredFlags_* for more options.)",
 {
   FRAME_GUARD;
-  return ImGui::IsItemHovered(valueOr(API_RO(flags), ImGuiHoveredFlags_None));
+  return ImGui::IsItemHovered(API_RO_GET(flags));
 });
 
 DEFINE_API(bool, IsItemActive, (ImGui_Context*,ctx),
@@ -192,17 +187,16 @@ DEFINE_API(bool, IsItemFocused, (ImGui_Context*,ctx),
   return ImGui::IsItemFocused();
 });
 
-DEFINE_API(bool, IsItemClicked, (ImGui_Context*,ctx)(int*,API_RO(mouse_button)),
+DEFINE_API(bool, IsItemClicked, (ImGui_Context*,ctx)
+(int*,API_RO(mouse_button),ImGuiMouseButton_Left),
 R"(Is the last item clicked? (e.g. button/node just clicked on)
 == IsMouseClicked(mouse_button) && IsItemHovered().
 
 This is NOT equivalent to the behavior of e.g. Button.
-Most widgets have specific reactions based on mouse-up/down state, mouse position etc.
-
-Default values: mouse_button = MouseButton_Left)",
+Most widgets have specific reactions based on mouse-up/down state, mouse position etc.)",
 {
   FRAME_GUARD;
-  return ImGui::IsItemClicked(valueOr(API_RO(mouse_button), ImGuiMouseButton_Left));
+  return ImGui::IsItemClicked(API_RO_GET(mouse_button));
 });
 
 DEFINE_API(bool, IsItemVisible, (ImGui_Context*,ctx),

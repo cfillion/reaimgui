@@ -24,13 +24,11 @@ You may also use one of the many IsItemXXX functions (e.g. IsItemActive,
 IsItemHovered, etc.) to query widget state.)");
 
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)
-(const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
-"Default values: size_w = 0.0, size_h = 0.0",
+(const char*,label)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
+"",
 {
   FRAME_GUARD;
-
-  ImVec2 size { valueOr(API_RO(size_w), 0.f), valueOr(API_RO(size_h), 0.f) };
-  return ImGui::Button(label, size);
+  return ImGui::Button(label, ImVec2(API_RO_GET(size_w), API_RO_GET(size_h)));
 });
 
 DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
@@ -42,15 +40,13 @@ DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
 });
 
 DEFINE_API(bool, InvisibleButton, (ImGui_Context*,ctx)
-(const char*,str_id)(double,size_w)(double,size_h)(int*,API_RO(flags)),
+(const char*,str_id)(double,size_w)(double,size_h)
+(int*,API_RO(flags),ImGuiButtonFlags_None),
 R"(Flexible button behavior without the visuals, frequently useful to build
-custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).
-
-Default values: flags = ButtonFlags_None)",
+custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).)",
 {
   FRAME_GUARD;
-  return ImGui::InvisibleButton(str_id, ImVec2(size_w, size_h),
-    valueOr(API_RO(flags), ImGuiButtonFlags_None));
+  return ImGui::InvisibleButton(str_id, ImVec2(size_w, size_h), API_RO_GET(flags));
 });
 
 DEFINE_API(bool, ArrowButton, (ImGui_Context*,ctx)

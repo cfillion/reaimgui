@@ -49,7 +49,7 @@ public:
   static void handleError(const char *fnName, const imgui_error &);
 
   API(const char *name, void *cImpl, void *reascriptImpl,
-      const char *definition, unsigned int lastLine);
+      const char *definition, const char *defargs, unsigned int lastLine);
   ~API();
 
   // internal helpers for genbindings
@@ -58,6 +58,7 @@ public:
   inline const char *definition() const {
     return static_cast<const char *>(m_regs[2].value); }
   const Section *m_section;
+  const char *m_defargs;
   LineRange m_lines;
 
 private:

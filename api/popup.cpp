@@ -37,29 +37,25 @@ IMPORTANT: Popup identifiers are relative to the current ID stack, so OpenPopup
 and BeginPopup generally needs to be at the same level of the stack.)");
 
 DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
-(const char*,str_id)(int*,API_RO(flags)),
+(const char*,str_id)(int*,API_RO(flags),ImGuiWindowFlags_None),
 R"(Query popup state, if open start appending into the window. Call EndPopup
 afterwards. WindowFlags* are forwarded to the window.
 
-Return true if the popup is open, and you can start outputting to it.
-
-Default values: flags = WindowFlags_None)",
+Return true if the popup is open, and you can start outputting to it.)",
 {
   FRAME_GUARD;
-  WindowFlags flags { API_RO(flags) };
-  return ImGui::BeginPopup(str_id, flags);
+  return ImGui::BeginPopup(str_id, WindowFlags { API_RO_GET(flags) });
 });
 
 DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
-(const char*,name)(bool*,API_RWO(p_open))(int*,API_RO(flags)),
+(const char*,name)(bool*,API_RWO(p_open))
+(int*,API_RO(flags),ImGuiWindowFlags_None),
 R"(Block every interaction behind the window, cannot be closed by user, add a
 dimming background, has a title bar. Return true if the modal is open, and you
-can start outputting to it. See BeginPopup.
-
-Default values: p_open = nil, flags = WindowFlags_None)",
+can start outputting to it. See BeginPopup.)",
 {
   FRAME_GUARD;
-  WindowFlags flags { API_RO(flags) };
+  WindowFlags flags { API_RO_GET(flags) };
   return ImGui::BeginPopupModal(name, openPtrBehavior(API_RWO(p_open)), flags);
 });
 
@@ -71,7 +67,7 @@ DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
-(const char*,str_id)(int*,API_RO(popup_flags)),
+(const char*,str_id)(int*,API_RO(popup_flags),ImGuiPopupFlags_None),
 R"(Set popup state to open (don't call every frame!).
 ImGuiPopupFlags are available for opening options.
 
@@ -79,27 +75,23 @@ If not modal: they can be closed by clicking anywhere outside them, or by
 pressing ESCAPE.
 
 Use PopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's
-already one at the same level.
-
-Default values: popup_flags = PopupFlags_None)",
+already one at the same level.)",
 {
   FRAME_GUARD;
-  ImGui::OpenPopup(str_id, valueOr(API_RO(popup_flags), ImGuiPopupFlags_None));
+  ImGui::OpenPopup(str_id, API_RO_GET(popup_flags));
 });
 
 DEFINE_API(void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
-(const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
+(const char*,API_RO(str_id))
+(int*,API_RO(popup_flags),ImGuiPopupFlags_MouseButtonRight),
 R"(Helper to open popup when clicked on last item. return true when just opened.
 (Note: actually triggers on the mouse _released_ event to be consistent with
-popup behaviors.)
-
-Default values: str_id = nil, popup_flags = PopupFlags_MouseButtonRight)",
+popup behaviors.))",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
-  ImGui::OpenPopupOnItemClick(API_RO(str_id),
-    valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
+  ImGui::OpenPopupOnItemClick(API_RO(str_id), API_RO_GET(popup_flags));
 });
 
 DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
@@ -113,20 +105,17 @@ CloseCurrentPopup() is called by default by Selectable/MenuItem when activated.)
 });
 
 DEFINE_API(bool, IsPopupOpen, (ImGui_Context*,ctx)
-(const char*,str_id)(int*,API_RO(flags)),
+(const char*,str_id)(int*,API_RO(flags),ImGuiPopupFlags_None),
 R"(Return true if the popup is open at the current BeginPopup level of the
 popup stack.
 
 - With PopupFlags_AnyPopupId: return true if any popup is open at the current
   BeginPopup() level of the popup stack.
 - With PopupFlags_AnyPopupId + PopupFlags_AnyPopupLevel: return true if any
-  popup is open.
-
-Default values: flags = PopupFlags_None)",
+  popup is open.)",
 {
   FRAME_GUARD;
-  const ImGuiPopupFlags flags { valueOr(API_RO(flags), ImGuiPopupFlags_None) };
-  return ImGui::IsPopupOpen(str_id, flags);
+  return ImGui::IsPopupOpen(str_id, API_RO_GET(flags));
 });
 
 DEFINE_SECTION(flags, ROOT_SECTION, "Flags",
@@ -171,7 +160,8 @@ backward compatibility with older API taking 'int mouse_button = 1' parameter,
 so if you add other flags remember to re-add the PopupFlags_MouseButtonRight.)");
 
 DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
-(const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
+(const char*,API_RO(str_id))
+(int*,API_RO(popup_flags),ImGuiPopupFlags_MouseButtonRight),
 R"(This is a helper to handle the simplest case of associating one named popup
 to one given widget. You can pass a nil str_id to use the identifier of the last
 item. This is essentially the same as calling OpenPopupOnItemClick + BeginPopup
@@ -179,28 +169,23 @@ but written to avoid computing the ID twice because BeginPopupContextXXX
 functions may be called very frequently.
 
 If you want to use that on a non-interactive item such as Text you need to pass
-in an explicit ID here.
-
-Default values: str_id = nil, popup_flags = PopupFlags_MouseButtonRight)",
+in an explicit ID here.)",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
-  return ImGui::BeginPopupContextItem(API_RO(str_id),
-    valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
+  return ImGui::BeginPopupContextItem(API_RO(str_id), API_RO_GET(popup_flags));
 });
 
 DEFINE_API(bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
-(const char*,API_RO(str_id))(int*,API_RO(popup_flags)),
-R"(Open+begin popup when clicked on current window.
-
-Default values: str_id = nil, popup_flags = PopupFlags_MouseButtonRight)",
+(const char*,API_RO(str_id))
+(int*,API_RO(popup_flags),ImGuiPopupFlags_MouseButtonRight),
+"Open+begin popup when clicked on current window.",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
-  return ImGui::BeginPopupContextWindow(API_RO(str_id),
-    valueOr(API_RO(popup_flags), ImGuiPopupFlags_MouseButtonRight));
+  return ImGui::BeginPopupContextWindow(API_RO(str_id), API_RO_GET(popup_flags));
 });
 
 API_SUBSECTION("Tooltips",
