@@ -63,12 +63,13 @@
       BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                  \
     help, __LINE__,                                             \
   }
+#define _DEFINE_ENUM(prefix, name, doc) \
+  _DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
 
 #define DEFINE_SECTION(id, parent, ...) static const API::Section id \
   { &parent, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ };
 #define DEFINE_API _STORE_LINE _DEFINE_API
-#define DEFINE_ENUM(prefix, name, doc) \
-  DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
+#define DEFINE_ENUM _STORE_LINE _DEFINE_ENUM
 
 // shortcuts with auto-generated identifier name for the section object
 // #define ROOT_SECTION BOOST_PP_CAT(API_FILE, Section)
