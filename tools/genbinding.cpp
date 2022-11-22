@@ -539,11 +539,19 @@ struct Reference {
 static std::vector<Reference> parseReferences(const std::string_view &input)
 {
   // build a map of known references for fast lookup
+  enum CharInfo { InitialChar = 1<<0, ValidChar = 1<<1 };
   static std::unordered_map<std::string_view, const Function *> funcs;
+  static char charmap[0x100];
   if(funcs.empty()) {
     for(const Function &func : g_funcs) {
       funcs.emplace(func.displayName, &func);
       funcs.emplace(func.name, &func);
+    }
+    // build a maps of which characters may be present in a reference
+    for(const auto &pair : funcs) {
+      charmap[static_cast<unsigned char>(pair.first[0])] |= InitialChar;
+      for(const unsigned char c : pair.first)
+        charmap[c] |= ValidChar;
     }
   }
 
@@ -552,13 +560,12 @@ static std::vector<Reference> parseReferences(const std::string_view &input)
   auto start { input.begin() };
   while(start != input.end()) {
     start = std::find_if(start, input.end(),
-      [](const char c) { return c >= 'A' && c <= 'Z'; });
+      [&](const unsigned char c) { return charmap[c] & InitialChar; });
     if(start == input.end())
       break;
     const auto end { std::find_if_not(start, input.end(),
-      [](const char c) { return (c >= 'A' && c <= 'z') ||
-                                (c >= '0' && c <= '9') || c == '_'; }) };
-    // constructor taking first, last iterators is C++20
+      [&](const unsigned char c) { return charmap[c] & ValidChar; }) };
+    // constructor taking (first, last) iterators is C++20
     const std::string_view word { &*start, static_cast<size_t>(end - start) };
     const auto it { funcs.find(word) };
     if(it != funcs.end())
