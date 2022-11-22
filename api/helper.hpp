@@ -23,12 +23,20 @@
 #include "context.hpp"
 
 #include <array>
-#include <boost/preprocessor.hpp>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/control/expr_if.hpp>
+#include <boost/preprocessor/punctuation/comma_if.hpp>
+#include <boost/preprocessor/seq/for_each_i.hpp>
+#include <boost/preprocessor/seq/variadic_seq_to_seq.hpp>
+#include <boost/preprocessor/stringize.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/type_index.hpp>
 
-#define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
-#define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
+#define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
+#define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
 
+#define _FOREACH_ARG(macro, data, args) \
+  BOOST_PP_SEQ_FOR_EACH_I(macro, data, BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))
 #define _DEFARGS(r, data, i, arg) \
   BOOST_PP_COMMA_IF(i) _ARG_TYPE(arg) _ARG_NAME(arg)
 #define _DOCARGS(r, macro, i, arg) \
@@ -47,8 +55,7 @@
   static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);             \
                                                                 \
   /* not static to have the linker check for duplicates */      \
-  type API_##name(BOOST_PP_SEQ_FOR_EACH_I(_DEFARGS, _,          \
-    BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))) noexcept               \
+  type API_##name(_FOREACH_ARG(_DEFARGS, _, args)) noexcept     \
   try __VA_ARGS__                                               \
   _API_CATCH(name, type, reascript_error)                       \
   _API_CATCH(name, type, imgui_error)                           \
@@ -57,10 +64,8 @@
     reinterpret_cast<void *>(&API_##name),                      \
     reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>), \
     #type "\0"                                                  \
-    BOOST_PP_SEQ_FOR_EACH_I(_DOCARGS, _ARG_TYPE,                \
-      BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                  \
-    BOOST_PP_SEQ_FOR_EACH_I(_DOCARGS, _ARG_NAME,                \
-      BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                  \
+    _FOREACH_ARG(_DOCARGS, _ARG_TYPE, args) "\0"                \
+    _FOREACH_ARG(_DOCARGS, _ARG_NAME, args) "\0"                \
     help, __LINE__,                                             \
   }
 #define _DEFINE_ENUM(prefix, name, doc) \
