@@ -26,7 +26,6 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/comparison/greater_equal.hpp>
 #include <boost/preprocessor/control/expr_if.hpp>
-#include <boost/preprocessor/control/if.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/seq/for_each_i.hpp>
 #include <boost/preprocessor/seq/variadic_seq_to_seq.hpp>
@@ -34,7 +33,7 @@
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
 #include <boost/type_index.hpp>
-#include <type_traits> // std::remove_pointer_t
+#include <type_traits>
 
 #define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
 #define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
@@ -48,27 +47,19 @@
 #define _STRARG(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
 
-template<typename ArgT, typename ValT>
+template<typename T>
 using DefArgVal = std::conditional_t<
-  // std::bool_constant<
-  //   std::is_null_pointer_v<ValT> ||
-
-    // string literals (const char &[])
-    std::is_array_v<std::remove_reference_t<ValT>>,
-  // >::value,
-  ArgT, std::remove_pointer_t<ArgT>
+  std::is_same_v<const char *, T>,
+  T, std::remove_pointer_t<T>
 >;
 
 #define _DEFARG_ID(argName) BOOST_PP_CAT(argName, Default)
-#define _DEFARG_EXPAND(arg)                                     \
-  constexpr DefArgVal<_ARG_TYPE(arg), decltype(_ARG_DEFV(arg))> \
-  _DEFARG_ID(_ARG_NAME(arg)) { _ARG_DEFV(arg) };
-#define _DEFARG_SKIP(arg) // cannot be in BOOST_PP_EXPR_IF because of the commas
 #define _DEFARG(r, name, i, arg)                         \
-  BOOST_PP_IF(                                           \
+  BOOST_PP_EXPR_IF(                                      \
     BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3), \
-    _DEFARG_EXPAND, _DEFARG_SKIP                         \
-  )(arg)
+    constexpr DefArgVal<_ARG_TYPE(arg)>                  \
+      _DEFARG_ID(_ARG_NAME(arg)) { _ARG_DEFV(arg) };     \
+  )
 
 #define _API_CATCH(name, type, except) \
   catch(const except &e) {             \
