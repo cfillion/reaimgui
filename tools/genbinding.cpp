@@ -20,10 +20,10 @@
 #include "version.hpp"
 
 #include <algorithm>
+#include <cmark.h>
 #include <cstring>
 #include <deque>
 #include <iostream>
-#include <md4c-html.h>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -590,16 +590,13 @@ static void outputHtmlBlock(std::ostream &stream, std::string_view html,
     stream << html;
 }
 
-static void outputMarkdown(const char *data, MD_SIZE size, void *userData)
-{
-  std::ostream &stream { *static_cast<std::ostream *>(userData) };
-  outputHtmlBlock(stream, { data, size }, false);
-}
-
 static void outputMarkdown(std::ostream &stream, const std::string_view &text)
 {
-  const auto parserFlags { MD_FLAG_NOHTML | MD_FLAG_PERMISSIVEURLAUTOLINKS };
-  if(md_html(text.data(), text.size(), &outputMarkdown, &stream, parserFlags, 0)) {
+  if(char *html { cmark_markdown_to_html(text.data(), text.size(), 0) }) {
+    outputHtmlBlock(stream, html, false);
+    free(html);
+  }
+  else {
     stream << "<pre>";
     outputHtmlBlock(stream, text);
     stream << "</pre>";
@@ -761,7 +758,7 @@ static void humanBinding(std::ostream &stream)
       if(section->help)
         outputMarkdown(stream, section->help);
     }
-    
+
     stream << "<details id=\"" << func.displayName << "\"><summary>";
     stream << (func.isEnum() ? "Constant: " : "Function: ");
     stream << func.displayName << "</summary>";

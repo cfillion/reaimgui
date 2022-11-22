@@ -87,9 +87,9 @@ for:
       # https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
       - sudo curl -k https://curl.se/ca/cacert.pem -o /etc/ssl/cert.pem
 
-      # update to Catch2 v3
-      - git -C ~/vcpkg fetch
-      - git -C ~/vcpkg restore -s 50fe35a3c3ca43ffe3b436380cf563100406459a ports/catch2
+      # update to cmark 0.30.1 for static linkage
+      - git -C ~/vcpkg fetch origin 790418c9037196ef499b642decc2cd880e15db30
+      - git -C ~/vcpkg restore -s 790418c9037196ef499b642decc2cd880e15db30 ports/cmark
     artifacts:
       - path: build/reaper_imgui*.dylib
       - path: build/tools/imgui.lua

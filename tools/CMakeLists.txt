@@ -8,8 +8,12 @@ if(NOT WIN32)
   target_link_libraries(genbinding SWELL::swell)
 endif()
 
-find_package(md4c REQUIRED)
-target_link_libraries(genbinding md4c::md4c-html)
+find_package(cmark REQUIRED)
+if(VCPKG_TOOLCHAIN)
+  target_link_libraries(genbinding cmark::cmark_static)
+else()
+  target_link_libraries(genbinding cmark::cmark)
+endif()
 
 function(add_binding lang output)
   add_custom_command(
