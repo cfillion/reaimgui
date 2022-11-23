@@ -20,7 +20,17 @@
 #include "color.hpp"
 
 #include <cassert>
+#include <cstring> // strlen
 #include <reaper_plugin_functions.h> // realloc_cmd_ptr
+
+API_SECTION("Drag & Drop",
+R"(On source items, call BeginDragDropSource(),
+if it returns true also call SetDragDropPayload() + EndDragDropSource().
+
+On target candidates, call BeginDragDropTarget(),
+if it returns true also call AcceptDragDropPayload() + EndDragDropTarget().
+
+An item can be both a drag source and a drop target.)");
 
 static bool isUserType(const char *type)
 {
@@ -29,23 +39,24 @@ static bool isUserType(const char *type)
   return type && *type && type[0] != '_';
 }
 
-// Drag and Drop
-DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)(int*,API_RO(flags)),
-R"(Call when the current item is active. If this return true, you can call ImGui_SetDragDropPayload + ImGui_EndDragDropSource.
+DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)
+(int*,API_RO(flags),ImGuiDragDropFlags_None),
+R"(Call after submitting an item which may be dragged. when this return true,
+you can call SetDragDropPayload() + EndDragDropSource()
 
-If you stop calling BeginDragDropSource() the payload is preserved however it won't have a preview tooltip (we currently display a fallback "..." tooltip as replacement).
-
-Default values: flags = ImGui_DragDropFlags_None)",
+If you stop calling BeginDragDropSource() the payload is preserved however
+it won't have a preview tooltip (we currently display a fallback "..." tooltip
+as replacement).)",
 {
   FRAME_GUARD;
-  return ImGui::BeginDragDropSource(valueOr(API_RO(flags), ImGuiDragDropFlags_None));
+  return ImGui::BeginDragDropSource(API_RO_GET(flags));
 });
 
 DEFINE_API(bool, SetDragDropPayload, (ImGui_Context*,ctx)
-(const char*,type)(const char*,data)(int*,API_RO(cond)),
-R"(type is a user defined string of maximum 32 characters. Strings starting with '_' are reserved for dear imgui internal types. Data is copied and held by imgui.
-
-Default values: cond = ImGui_Cond_Always)",
+(const char*,type)(const char*,data)(int*,API_RO(cond),ImGuiCond_Always),
+R"(The type is a user defined string of maximum 32 characters.
+Strings starting with '_' are reserved for dear imgui internal types.
+Data is copied and held by imgui.)",
 {
   FRAME_GUARD;
   nullIfEmpty(data);
@@ -53,19 +64,20 @@ Default values: cond = ImGui_Cond_Always)",
   if(!isUserType(type))
     return false;
 
-  return ImGui::SetDragDropPayload(type, data, data ? strlen(data) : 0,
-    valueOr(API_RO(cond), ImGuiCond_Always));
+  return ImGui::SetDragDropPayload(
+    type, data, data ? strlen(data) : 0, API_RO_GET(cond));
 });
 
 DEFINE_API(void, EndDragDropSource, (ImGui_Context*,ctx),
-"Only call EndDragDropSource() if ImGui_BeginDragDropSource returns true!",
+"Only call EndDragDropSource() if BeginDragDropSource returns true!",
 {
   FRAME_GUARD;
   ImGui::EndDragDropSource();
 });
 
 DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
-"Call after submitting an item that may receive a payload. If this returns true, you can call ImGui_AcceptDragDropPayload + ImGui_EndDragDropTarget.",
+R"(Call after submitting an item that may receive a payload.
+If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.)",
 {
   FRAME_GUARD;
   return ImGui::BeginDragDropTarget();
@@ -91,17 +103,16 @@ static void copyPayload(const ImGuiPayload *payload, char **reabuf, const int re
 DEFINE_API(bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
-(int*,API_RO(flags)),
-R"(Accept contents of a given type. If ImGui_DragDropFlags_AcceptBeforeDelivery is set you can peek into the payload before the mouse button is released.
-
-Default values: flags = ImGui_DragDropFlags_None)",
+(int*,API_RO(flags),ImGuiDragDropFlags_None),
+R"(Accept contents of a given type. If DragDropFlags_AcceptBeforeDelivery is set
+you can peek into the payload before the mouse button is released.)",
 {
   FRAME_GUARD;
 
   if(!isUserType(type))
     return false;
 
-  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
+  const ImGuiDragDropFlags flags { API_RO_GET(flags) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
 
   if(payload)
@@ -110,7 +121,8 @@ Default values: flags = ImGui_DragDropFlags_None)",
   return payload;
 });
 
-static bool AcceptDragDropPayloadColor(int *color, bool alpha, ImGuiDragDropFlags flags)
+static bool AcceptDragDropPayloadColor(int *color, bool alpha,
+  ImGuiDragDropFlags flags)
 {
   assertValid(color);
 
@@ -131,38 +143,31 @@ static bool AcceptDragDropPayloadColor(int *color, bool alpha, ImGuiDragDropFlag
 }
 
 DEFINE_API(bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
-(int*,API_W(rgb))(int*,API_RO(flags)),
-R"(Accept a RGB color. See ImGui_AcceptDragDropPayload.
-
-Default values: flags = ImGui_DragDropFlags_None)",
+(int*,API_W(rgb))(int*,API_RO(flags),ImGuiDragDropFlags_None),
+"Accept a RGB color. See AcceptDragDropPayload.",
 {
   FRAME_GUARD;
-  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
-  return AcceptDragDropPayloadColor(API_W(rgb), false, flags);
+  return AcceptDragDropPayloadColor(API_W(rgb), false, API_RO_GET(flags));
 });
 
 DEFINE_API(bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
-(int*,API_W(rgba))(int*,API_RO(flags)),
-R"(Accept a RGBA color. See ImGui_AcceptDragDropPayload.
-
-Default values: flags = ImGui_DragDropFlags_None)",
+(int*,API_W(rgba))(int*,API_RO(flags),ImGuiDragDropFlags_None),
+"Accept a RGBA color. See AcceptDragDropPayload.",
 {
   FRAME_GUARD;
-  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
-  return AcceptDragDropPayloadColor(API_W(rgba), true, flags);
+  return AcceptDragDropPayloadColor(API_W(rgba), true, API_RO_GET(flags));
 });
 
 DEFINE_API(bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
-(int*,API_W(count))(int*,API_RO(flags)),
-R"(Accept a list of dropped files. See ImGui_AcceptDragDropPayload and ImGui_GetDragDropPayloadFile.
-
-Default values: flags = ImGui_DragDropFlags_None)",
+(int*,API_W(count))(int*,API_RO(flags),ImGuiDragDropFlags_None),
+R"(Accept a list of dropped files. See AcceptDragDropPayload and GetDragDropPayloadFile.)",
 {
   FRAME_GUARD;
   assertValid(API_W(count));
 
-  const ImGuiDragDropFlags flags { valueOr(API_RO(flags), ImGuiDragDropFlags_None) };
-  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, flags) };
+  const ImGuiPayload *payload {
+    ImGui::AcceptDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, API_RO_GET(flags))
+  };
 
   if(payload)
     *API_W(count) = ctx->draggedFiles().size();
@@ -171,7 +176,7 @@ Default values: flags = ImGui_DragDropFlags_None)",
 });
 
 DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
-"Only call EndDragDropTarget() if ImGui_BeginDragDropTarget returns true!",
+"Only call EndDragDropTarget() if BeginDragDropTarget returns true!",
 {
   FRAME_GUARD;
   ImGui::EndDragDropTarget();
@@ -200,7 +205,8 @@ DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
 
 DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
 (int,index)(char*,API_W(filename))(int,API_W_SZ(filename)),
-"Get a filename from the list of dropped files. Returns false if index is out of bounds.",
+R"(Get a filename from the list of dropped files.
+Returns false if index is out of bounds.)",
 {
   FRAME_GUARD;
 
@@ -217,18 +223,42 @@ DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
   return true;
 });
 
-// ImGuiDragDropFlags
-DEFINE_ENUM(ImGui, DragDropFlags_None,                     "Flags for ImGui_BeginDragDropSource, ImGui_AcceptDragDropPayload.");
-// BeginDragDropSource() flags
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoPreviewTooltip,   "By default, a successful call to ImGui_BeginDragDropSource opens a tooltip so you can display a preview or description of the source contents. This flag disables this behavior.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoDisableHover,     "By default, when dragging we clear data so that ImGui_IsItemHovered will return false, to avoid subsequent user code submitting tooltips. This flag disables this behavior so you can still call ImGui_IsItemHovered on the source item.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoHoldToOpenOthers, "Disable the behavior that allows to open tree nodes and collapsing header by holding over them while dragging a source item.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceAllowNullID,        "Allow items such as ImGui_Text, ImGui_Image that have no unique identifier to be used as drag source, by manufacturing a temporary identifier based on their window-relative position. This is extremely unusual within the dear imgui ecosystem and so we made it explicit.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceExtern,             "External source (from outside of dear imgui), won't attempt to read current item/window info. Will always return true. Only one Extern source can be active simultaneously.");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceAutoExpirePayload,  "Automatically expire the payload if the source cease to be submitted (otherwise payloads are persisting while being dragged).");
-// AcceptDragDropPayload() flags
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptBeforeDelivery,     "ImGui_AcceptDragDropPayload will returns true even before the mouse button is released. You can then check ImGui_GetDragDropPayload/is_delivery to test if the payload needs to be delivered.");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoDrawDefaultRect,  "Do not draw the default highlight rectangle when hovering over target.");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoPreviewTooltip,   "Request hiding the ImGui_BeginDragDropSource tooltip from the ImGui_BeginDragDropTarget site.");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptPeekOnly,           "For peeking ahead and inspecting the payload before delivery. Equivalent to ImGui_DragDropFlags_AcceptBeforeDelivery | ImGui_DragDropFlags_AcceptNoDrawDefaultRect.");
-
+DEFINE_SECTION(flags, ROOT_SECTION, "Flags");
+DEFINE_ENUM(ImGui, DragDropFlags_None, "");
+API_SECTION_P(flags, "Source", "For BeginDragDropSource");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceNoPreviewTooltip,
+R"(By default, a successful call to BeginDragDropSource opens a tooltip so you
+   can display a preview or description of the source contents.
+   This flag disables this behavior.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceNoDisableHover,
+R"(By default, when dragging we clear data so that IsItemHovered will return
+   false, to avoid subsequent user code submitting tooltips. This flag disables
+   this behavior so you can still call IsItemHovered on the source item.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceNoHoldToOpenOthers,
+R"(Disable the behavior that allows to open tree nodes and collapsing header by
+   holding over them while dragging a source item.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceAllowNullID,
+R"(Allow items such as Text, Image that have no unique identifier to be used as
+   drag source, by manufacturing a temporary identifier based on their
+   window-relative position. This is extremely unusual within the dear imgui
+   ecosystem and so we made it explicit.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceExtern,
+R"(External source (from outside of dear imgui), won't attempt to read current
+   item/window info. Will always return true.
+   Only one Extern source can be active simultaneously.)");
+DEFINE_ENUM(ImGui, DragDropFlags_SourceAutoExpirePayload,
+R"(Automatically expire the payload if the source cease to be submitted
+   (otherwise payloads are persisting while being dragged).)");
+API_SECTION_P(flags, "Payload", "For AcceptDragDropPayload");
+DEFINE_ENUM(ImGui, DragDropFlags_AcceptBeforeDelivery,
+R"(AcceptDragDropPayload will returns true even before the mouse button is
+   released. You can then check GetDragDropPayload/is_delivery to test if the
+   payload needs to be delivered.)");
+DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoDrawDefaultRect,
+  "Do not draw the default highlight rectangle when hovering over target.");
+DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoPreviewTooltip,
+  "Request hiding the BeginDragDropSource tooltip from the BeginDragDropTarget site.");
+DEFINE_ENUM(ImGui, DragDropFlags_AcceptPeekOnly,
+R"(For peeking ahead and inspecting the payload before delivery.
+   Equivalent to DragDropFlags_AcceptBeforeDelivery |
+   DragDropFlags_AcceptNoDrawDefaultRect.)");

@@ -8,6 +8,13 @@ if(NOT WIN32)
   target_link_libraries(genbinding SWELL::swell)
 endif()
 
+find_package(cmark REQUIRED)
+if(VCPKG_TOOLCHAIN)
+  target_link_libraries(genbinding cmark::cmark_static)
+else()
+  target_link_libraries(genbinding cmark::cmark)
+endif()
+
 function(add_binding lang output)
   add_custom_command(
     OUTPUT ${output}

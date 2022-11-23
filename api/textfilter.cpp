@@ -37,16 +37,21 @@ ImGuiTextFilter *TextFilter::operator->()
   return &m_filter;
 }
 
+API_SECTION("Text Filter",
+R"(Helper to perform simple filtering on text strings.
+In format "aaaaa[,bbbb][,ccccc]".
+
+Filter usage:
+- ""         display all lines
+- "xxx"      display lines containing "xxx"
+- "xxx,yyy"  display lines containing "xxx" or "yyy"
+- "-xxx"     hide lines containing "xxx")");
+
 DEFINE_API(ImGui_TextFilter*, CreateTextFilter,
-(const char*,API_RO(default_filter)),
-R"(Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]". Valid until unused.
-
-Default values: default_filter = "")",
+(const char*,API_RO(default_filter),""),
+"Valid while used every frame.",
 {
-  if(!API_RO(default_filter))
-    API_RO(default_filter) = "";
-
-  return new TextFilter { API_RO(default_filter) };
+  return new TextFilter { API_RO_GET(default_filter) };
 });
 
 DEFINE_API(void, TextFilter_Set, (ImGui_TextFilter*,filter)
@@ -65,18 +70,14 @@ DEFINE_API(const char*, TextFilter_Get, (ImGui_TextFilter*,filter),
 });
 
 DEFINE_API(bool, TextFilter_Draw, (ImGui_TextFilter*,filter)
-(ImGui_Context*,ctx)(const char*,API_RO(label))(double*,API_RO(width)),
-R"~(Helper calling InputText+TextFilter_Set
-
-Default values: label = "Filter (inc,-exc)", width = 0.0)~",
+(ImGui_Context*,ctx)(const char*,API_RO(label),"Filter (inc,-exc)")
+(double*,API_RO(width),0.0),
+"Helper calling InputText+TextFilter_Set",
 {
   assertValid(filter);
   FRAME_GUARD;
 
-  if(!API_RO(label) || !strlen(API_RO(label)))
-    API_RO(label) = "Filter (inc,-exc)";
-
-  return (*filter)->Draw(API_RO(label), valueOr(API_RO(width), 0.f));
+  return (*filter)->Draw(API_RO_GET(label), API_RO_GET(width));
 });
 
 DEFINE_API(bool, TextFilter_PassFilter, (ImGui_TextFilter*,filter)

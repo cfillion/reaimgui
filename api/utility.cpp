@@ -26,6 +26,8 @@
 #include "textfilter.hpp"
 #include "version.hpp"
 
+API_SECTION("Utility");
+
 DEFINE_API(void, GetVersion,
 (char*,API_W(imgui_version))(int,API_W_SZ(imgui_version))
 (int*,API_W(imgui_version_num))
@@ -41,7 +43,17 @@ DEFINE_API(void, GetVersion,
 });
 
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid. Supported types are ImGui_Context*, ImGui_DrawList*, ImGui_DrawListSplitter*, ImGui_Font*, ImGui_ListClipper*, ImGui_TextFilter* and ImGui_Viewport*.)",
+R"(Return whether the pointer of the specified type is valid.
+
+Supported types are:
+
+- ImGui_Context*
+- ImGui_DrawList*
+- ImGui_DrawListSplitter*
+- ImGui_Font*
+- ImGui_ListClipper*
+- ImGui_TextFilter*
+- ImGui_Viewport*)",
 {
   ResourceProxy::Key proxyKey;
 
@@ -62,6 +74,81 @@ R"(Return whether the pointer of the specified type is valid. Supported types ar
   else
     return false;
 });
+
+DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
+(double,fraction)
+(double*,API_RO(size_arg_w),-FLT_MIN)(double*,API_RO(size_arg_h),0.0)
+(const char*,API_RO(overlay)),
+"",
+{
+  FRAME_GUARD;
+  nullIfEmpty(API_RO(overlay));
+  const ImVec2 size(API_RO_GET(size_arg_w), API_RO_GET(size_arg_h));
+  ImGui::ProgressBar(fraction, size, API_RO(overlay));
+});
+
+DEFINE_API(void, PointConvertNative, (ImGui_Context*,ctx)
+(double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native),false),
+R"(Convert a position from the current platform's native coordinate position
+system to ReaImGui global coordinates (or vice versa).
+
+This effectively flips the Y coordinate on macOS and applies HiDPI scaling on
+Windows and Linux.)",
+{
+  FRAME_GUARD; // scalePosition uses the active context and its monitor list
+  assertValid(API_RW(x));
+  assertValid(API_RW(y));
+
+  ImVec2 point;
+  point.x = *API_RW(x);
+  point.y = *API_RW(y);
+  Platform::scalePosition(&point, API_RO_GET(to_native));
+  *API_RW(x) = point.x;
+  *API_RW(y) = point.y;
+});
+
+DEFINE_API(void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
+"Returns FLT_MIN and FLT_MAX for this system.",
+{
+  assertValid(API_W(min));
+  assertValid(API_W(max));
+  *API_W(min) = FLT_MIN;
+  *API_W(max) = FLT_MAX;
+});
+
+API_SUBSECTION("ID stack/scope",
+R"(Read the [FAQ](https://dearimgui.org/faq) for more details about how IDs are
+handled in dear imgui.
+
+- Those questions are answered and impacted by understanding of the ID stack system:
+  - "Q: Why is my widget not reacting when I click on it?"
+  - "Q: How can I have widgets with an empty label?"
+  - "Q: How can I have multiple widgets with the same label?"
+- Short version: ID are hashes of the entire ID stack. If you are creating widgets
+  in a loop you most likely want to push a unique identifier (e.g. object pointer,
+  loop index) to uniquely differentiate them.
+- You can also use the "Label##foobar" syntax within widget label to distinguish
+  them from each others.
+- We use the "label"/"name" terminology to denote a string that will be
+  displayed + used as an ID, whereas "str_id" denote a string that is only used
+  as an ID and not normally displayed.)");
+
+DEFINE_API(void, PushID, (ImGui_Context*,ctx)
+(const char*,str_id),
+"Push string into the ID stack.",
+{
+  FRAME_GUARD;
+  ImGui::PushID(str_id);
+});
+
+DEFINE_API(void, PopID, (ImGui_Context*,ctx),
+"Pop from the ID stack.",
+{
+  FRAME_GUARD;
+  ImGui::PopID();
+});
+
+API_SUBSECTION("Color Conversion");
 
 DEFINE_API(void, ColorConvertU32ToDouble4,
 (int,rgba)
@@ -108,86 +195,41 @@ DEFINE_API(void, ColorConvertRGBtoHSV,
 
 DEFINE_API(int, ColorConvertNative,
 (int,rgb),
-"Convert a native color coming from REAPER or 0xRRGGBB to native. This swaps the red and blue channels on Windows.",
+R"(Convert a native color coming from REAPER or 0xRRGGBB to native.
+This swaps the red and blue channels on Windows.)",
 {
   return Color::convertNative(rgb);
 });
 
-DEFINE_API(void, PointConvertNative, (ImGui_Context*,ctx)
-(double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native)),
-R"(Convert a position from the current platform's native coordinate position system to ReaImGui global coordinates (or vice versa).
-
-This flips the Y coordinate on macOS and applies HiDPI scaling on Windows and Linux.
-
-Default values: to_native = false)",
-{
-  FRAME_GUARD; // scalePosition uses the active context and its monitor list
-  assertValid(API_RW(x));
-  assertValid(API_RW(y));
-
-  ImVec2 point;
-  point.x = *API_RW(x);
-  point.y = *API_RW(y);
-  Platform::scalePosition(&point, valueOr(API_RO(to_native), false));
-  *API_RW(x) = point.x;
-  *API_RW(y) = point.y;
-});
-
-DEFINE_API(void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
-"Returns FLT_MIN and FLT_MAX for this system.",
-{
-  assertValid(API_W(min));
-  assertValid(API_W(max));
-  *API_W(min) = FLT_MIN;
-  *API_W(max) = FLT_MAX;
-});
-
-DEFINE_API(void, PushID, (ImGui_Context*,ctx)
-(const char*,str_id),
-R"(Push string into the ID stack. Read the FAQ for more details about how ID are handled in dear imgui.
-If you are creating widgets in a loop you most likely want to push a unique identifier (e.g. object pointer, loop index) to uniquely differentiate them.
-You can also use the "Label##foobar" syntax within widget label to distinguish them from each others.)",
-{
-  FRAME_GUARD;
-  ImGui::PushID(str_id);
-});
-
-DEFINE_API(void, PopID, (ImGui_Context*,ctx),
-"Pop from the ID stack.",
-{
-  FRAME_GUARD;
-  ImGui::PopID();
-});
+API_SUBSECTION("Logging/Capture",
+R"(All text output from the interface can be captured into tty/file/clipboard.
+By default, tree nodes are automatically opened during logging.)");
 
 DEFINE_API(void, LogToTTY, (ImGui_Context*,ctx)
-(int*,API_RO(auto_open_depth)),
-R"(Start logging all text output from the interface to the TTY (stdout). By default, tree nodes are automatically opened during logging.
-
-Default values: auto_open_depth = -1)",
+(int*,API_RO(auto_open_depth),-1),
+"Start logging all text output from the interface to the TTY (stdout).",
 {
   FRAME_GUARD;
-  ImGui::LogToTTY(valueOr(API_RO(auto_open_depth), -1));
+  ImGui::LogToTTY(API_RO_GET(auto_open_depth));
 });
 
 DEFINE_API(void, LogToFile, (ImGui_Context*,ctx)
-(int*,API_RO(auto_open_depth))(const char*,API_RO(filename)),
-R"(Start logging all text output from the interface to a file. By default, tree nodes are automatically opened during logging. The data is saved to $resource_path/imgui_log.txt if filename is nil.
-
-Default values: auto_open_depth = -1, filename = nil)",
+(int*,API_RO(auto_open_depth),-1)(const char*,API_RO(filename)),
+R"(Start logging all text output from the interface to a file.
+The data is saved to $resource_path/imgui_log.txt if filename is nil.)",
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(filename));
-  ImGui::LogToFile(valueOr(API_RO(auto_open_depth), -1), API_RO(filename));
+  ImGui::LogToFile(API_RO_GET(auto_open_depth), API_RO(filename));
 });
 
 DEFINE_API(void, LogToClipboard, (ImGui_Context*,ctx)
-(int*,API_RO(auto_open_depth)),
-R"(Start logging all text output from the interface to the OS clipboard. By default, tree nodes are automatically opened during logging. See also ImGui_SetClipboardText.
-
-Default values: auto_open_depth = -1)",
+(int*,API_RO(auto_open_depth),-1),
+R"(Start logging all text output from the interface to the OS clipboard.
+See also SetClipboardText.)",
 {
   FRAME_GUARD;
-  ImGui::LogToClipboard(valueOr(API_RO(auto_open_depth), -1));
+  ImGui::LogToClipboard(API_RO_GET(auto_open_depth));
 });
 
 DEFINE_API(void, LogFinish, (ImGui_Context*,ctx),
@@ -205,8 +247,10 @@ DEFINE_API(void, LogText, (ImGui_Context*,ctx)
   ImGui::LogText("%s", text);
 });
 
+API_SUBSECTION("Clipboard");
+
 DEFINE_API(const char*, GetClipboardText, (ImGui_Context*,ctx),
-"See ImGui_SetClipboardText.",
+"",
 {
   assertValid(ctx);
   ctx->setCurrent();
@@ -215,35 +259,22 @@ DEFINE_API(const char*, GetClipboardText, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetClipboardText, (ImGui_Context*,ctx)
 (const char*,text),
-"See also the ImGui_LogToClipboard function to capture GUI into clipboard, or easily output text data to the clipboard.",
+R"(See also the LogToClipboard function to capture GUI into clipboard,
+or easily output text data to the clipboard.)",
 {
   assertValid(ctx);
   ctx->setCurrent();
   return ImGui::SetClipboardText(text);
 });
 
-DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
-(double,fraction)
-(double*,API_RO(size_arg_w))(double*,API_RO(size_arg_h))
-(const char*,API_RO(overlay)),
-"Default values: size_arg_w = -FLT_MIN, size_arg_h = 0.0, overlay = nil",
-{
-  FRAME_GUARD;
-  nullIfEmpty(API_RO(overlay));
-  const ImVec2 size { valueOr(API_RO(size_arg_w), -FLT_MIN),
-                      valueOr(API_RO(size_arg_h), 0.f) };
-  ImGui::ProgressBar(fraction, size, API_RO(overlay));
-});
-
-// ImGuiCond
-DEFINE_ENUM(ImGui, Cond_Always,       "No condition (always set the variable).");
-DEFINE_ENUM(ImGui, Cond_Once,         "Set the variable once per runtime session (only the first call will succeed).");
-DEFINE_ENUM(ImGui, Cond_FirstUseEver, "Set the variable if the object/window has no persistently saved data (no entry in .ini file).");
-DEFINE_ENUM(ImGui, Cond_Appearing,    "Set the variable if the object/window is appearing after being hidden/inactive (or the first time).");
-
-// ImGuiDir
-DEFINE_ENUM(ImGui, Dir_None,  "A cardinal direction.");
-DEFINE_ENUM(ImGui, Dir_Left,  "A cardinal direction.");
-DEFINE_ENUM(ImGui, Dir_Right, "A cardinal direction.");
-DEFINE_ENUM(ImGui, Dir_Up,    "A cardinal direction.");
-DEFINE_ENUM(ImGui, Dir_Down,  "A cardinal direction.");
+API_SUBSECTION("Conditions", "Used for many Set*() functions.");
+DEFINE_ENUM(ImGui, Cond_Always,
+  "No condition (always set the variable).");
+DEFINE_ENUM(ImGui, Cond_Once,
+  "Set the variable once per runtime session (only the first call will succeed).");
+DEFINE_ENUM(ImGui, Cond_FirstUseEver,
+R"(Set the variable if the object/window has no persistently saved data
+   (no entry in .ini file).)");
+DEFINE_ENUM(ImGui, Cond_Appearing,
+R"(Set the variable if the object/window is appearing after being
+   hidden/inactive (or the first time).)");

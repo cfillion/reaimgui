@@ -17,41 +17,41 @@
 
 #include "helper.hpp"
 
-DEFINE_API(bool, Button, (ImGui_Context*,ctx)
-(const char*,label)(double*,API_RO(size_w))(double*,API_RO(size_h)),
-R"(Most widgets return true when the value has been changed or when pressed/selected
-You may also use one of the many IsItemXXX functions (e.g. ImGui_IsItemActive, ImGui_IsItemHovered, etc.) to query widget state.
+API_SECTION("Button",
+R"(Most widgets return true when the value has been changed or when pressed/selected.
 
-Default values: size_w = 0.0, size_h = 0.0)",
+You may also use one of the many IsItemXXX functions (e.g. IsItemActive,
+IsItemHovered, etc.) to query widget state.)");
+
+DEFINE_API(bool, Button, (ImGui_Context*,ctx)
+(const char*,label)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
+"",
 {
   FRAME_GUARD;
-
-  ImVec2 size { valueOr(API_RO(size_w), 0.f), valueOr(API_RO(size_h), 0.f) };
-  return ImGui::Button(label, size);
+  return ImGui::Button(label, ImVec2(API_RO_GET(size_w), API_RO_GET(size_h)));
 });
 
 DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
 (const char*,label),
-"Button with ImGui_StyleVar_FramePadding=(0,0) to easily embed within text.",
+"Button with StyleVar_FramePadding=(0,0) to easily embed within text.",
 {
   FRAME_GUARD;
   return ImGui::SmallButton(label);
 });
 
 DEFINE_API(bool, InvisibleButton, (ImGui_Context*,ctx)
-(const char*,str_id)(double,size_w)(double,size_h)(int*,API_RO(flags)),
-R"(Flexible button behavior without the visuals, frequently useful to build custom behaviors using the public api (along with ImGui_IsItemActive, ImGui_IsItemHovered, etc.).
-
-Default values: flags = ImGui_ButtonFlags_None)",
+(const char*,str_id)(double,size_w)(double,size_h)
+(int*,API_RO(flags),ImGuiButtonFlags_None),
+R"(Flexible button behavior without the visuals, frequently useful to build
+custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).)",
 {
   FRAME_GUARD;
-  return ImGui::InvisibleButton(str_id, ImVec2(size_w, size_h),
-    valueOr(API_RO(flags), ImGuiButtonFlags_None));
+  return ImGui::InvisibleButton(str_id, ImVec2(size_w, size_h), API_RO_GET(flags));
 });
 
 DEFINE_API(bool, ArrowButton, (ImGui_Context*,ctx)
 (const char*,str_id)(int,dir),
-"Square button with an arrow shape.",
+"Square button with an arrow shape. 'dir' is one of the Dir_* values",
 {
   FRAME_GUARD;
   return ImGui::ArrowButton(str_id, dir);
@@ -93,21 +93,35 @@ DEFINE_API(bool, RadioButtonEx, (ImGui_Context*,ctx)
 
 DEFINE_API(void, PushButtonRepeat, (ImGui_Context*,ctx)
 (bool,repeat),
-"In 'repeat' mode, Button*() functions return repeated true in a typematic manner (using ImGui_ConfigVar_KeyRepeatDelay/ImGui_ConfigVar_KeyRepeatRate settings). Note that you can call ImGui_IsItemActive after any ImGui_Button to tell if the button is held in the current frame.",
+R"(In 'repeat' mode, Button*() functions return repeated true in a typematic
+manner (using ConfigVar_KeyRepeatDelay/ConfigVar_KeyRepeatRate settings).
+
+Note that you can call IsItemActive after any Button to tell if the button is
+held in the current frame.)",
 {
   FRAME_GUARD;
   ImGui::PushButtonRepeat(repeat);
 });
 
 DEFINE_API(void, PopButtonRepeat, (ImGui_Context*,ctx),
-"See ImGui_PushButtonRepeat",
+"See PushButtonRepeat",
 {
   FRAME_GUARD;
   ImGui::PopButtonRepeat();
 });
 
-// ImGuiButtonFlags
-DEFINE_ENUM(ImGui, ButtonFlags_None,              "Flags for ImGui_InvisibleButton.");
-DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonLeft,   "React on left mouse button (default).");
-DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonRight,  "React on right mouse button.");
-DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonMiddle, "React on center mouse button.");
+API_SUBSECTION("Flags", "For InvisibleButton.");
+DEFINE_ENUM(ImGui, ButtonFlags_None, "");
+DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonLeft,
+  "React on left mouse button (default).");
+DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonRight,
+  "React on right mouse button.");
+DEFINE_ENUM(ImGui, ButtonFlags_MouseButtonMiddle,
+  "React on center mouse button.");
+
+API_SUBSECTION("Cardinal directions", "For ArrowButton.");
+DEFINE_ENUM(ImGui, Dir_None,  "");
+DEFINE_ENUM(ImGui, Dir_Left,  "");
+DEFINE_ENUM(ImGui, Dir_Right, "");
+DEFINE_ENUM(ImGui, Dir_Up,    "");
+DEFINE_ENUM(ImGui, Dir_Down,  "");

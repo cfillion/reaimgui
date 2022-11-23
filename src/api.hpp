@@ -20,20 +20,51 @@
 
 #include "error.hpp"
 
-#include <string>
+#include <utility>
+
+#ifdef _WIN32
+#  ifdef IMPORT_GENBINDINGS_API
+#    define GENBINDINGS_API __declspec(dllimport)
+#  else
+#    define GENBINDINGS_API __declspec(dllexport)
+#  endif
+#else
+#  define GENBINDINGS_API __attribute__((visibility("default")))
+#endif
 
 class API {
 public:
+  using LineRange = std::pair<unsigned int, unsigned int>;
+  struct FirstLine { FirstLine(unsigned int); };
+  struct RegKeys { const char *impl, *vararg, *defdoc; };
+  struct Section {
+    Section(const Section *parent, const char *file,
+      const char *title, const char *help = nullptr);
+
+    const Section *parent;
+    const char *file, *title, *help;
+  };
+
   static void announceAll(bool add);
   static void handleError(const char *fnName, const reascript_error &);
   static void handleError(const char *fnName, const imgui_error &);
 
-  API(const char *name, void *cImpl, void *reascriptImpl, void *definition);
-  ~API();
+  API(const RegKeys &, void *impl, void *vararg,
+      const char *definition, unsigned int lastLine);
+
+  // internal helpers for genbindings
+  GENBINDINGS_API static const API *head();
+  inline const char *name() const {
+    return &m_regs[0].key[5]; /* strlen("-API_") */ }
+  inline const char *definition() const {
+    return static_cast<const char *>(m_regs[2].value); }
+  const Section * const m_section;
+  const LineRange m_lines;
+  const API *m_next;
 
 private:
-  struct RegInfo {
-    std::string key;
+  struct RegDesc {
+    const char *key;
     void *value;
     void announce(bool add) const;
   } m_regs[3];

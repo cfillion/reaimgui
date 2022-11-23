@@ -23,45 +23,17 @@
 template<typename T>
 class Flags {
 public:
-  operator T() const { return m_flags; }
-  T *operator *() { return &m_flags; }
-  T operator |=(T op) { return m_flags |= op; }
-  T operator &=(T op) { return m_flags &= op; }
+  operator T() const       { return m_flags; }
+  T *operator *()          { return &m_flags; }
+  T operator |=(T op)      { return m_flags |= op; }
+  T operator &=(T op)      { return m_flags &= op; }
   T operator &(T op) const { return m_flags & op; }
 
 protected:
-  Flags(int *flags) : m_flags { valueOr(flags, 0) } {}
+  Flags(int flags) : m_flags { flags } {}
 
 private:
   T m_flags;
-};
-
-class InputTextFlags : public Flags<ImGuiInputTextFlags> {
-public:
-  InputTextFlags(int *flags) : Flags(flags)
-  {
-    *this &= ~(
-      // don't expose these to users
-      ImGuiInputTextFlags_CallbackCompletion |
-      ImGuiInputTextFlags_CallbackHistory    |
-      ImGuiInputTextFlags_CallbackAlways     |
-      ImGuiInputTextFlags_CallbackCharFilter |
-      ImGuiInputTextFlags_CallbackEdit       |
-      ImGuiInputTextFlags_CallbackResize     |
-
-      // reserved for ImGui's internal use
-      ImGuiInputTextFlags_Multiline | ImGuiInputTextFlags_NoMarkEdited
-    );
-  }
-};
-
-class SliderFlags : public Flags<ImGuiSliderFlags> {
-public:
-  SliderFlags(int *flags) : Flags(flags)
-  {
-    // dear imgui will assert if these bits are set
-    *this &= ~ImGuiSliderFlags_InvalidMask_;
-  }
 };
 
 enum {
@@ -71,7 +43,7 @@ enum {
 
 class WindowFlags : public Flags<ImGuiWindowFlags> {
 public:
-  WindowFlags(int *flags) : Flags(flags)
+  WindowFlags(int flags) : Flags { flags }
   {
     if(*this & ReaImGuiWindowFlags_TopMost) {
       ImGuiWindowClass topmost;

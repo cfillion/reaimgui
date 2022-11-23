@@ -19,46 +19,74 @@
 
 #include "context.hpp"
 
-#include <list>
+#include <cassert>
 #include <reaper_plugin_functions.h>
 
-using namespace std::string_literals;
-
-#define KEY(prefix) (prefix "_ImGui_"s + name)
-
-static auto &knownFuncs()
+static API *&lastFunc()
 {
-  static std::list<const API *> funcs;
-  return funcs;
+  static API *head;
+  return head;
 }
 
-API::API(const char *name, void *cImpl, void *reascriptImpl, void *definition)
-  : m_regs {
-      { KEY("API"),       cImpl         },
-      { KEY("APIvararg"), reascriptImpl },
-      { KEY("APIdef"),    definition    },
+static auto &firstLine()
+{
+  static unsigned int storedLine;
+  return storedLine;
+}
+
+static const API::Section *&lastSection()
+{
+  static const API::Section *section;
+  return section;
+}
+
+const API *API::head()
+{
+  return lastFunc();
+}
+
+API::FirstLine::FirstLine(unsigned int line)
+{
+  firstLine() = line;
+}
+
+API::Section::Section(const Section *parent, const char *file,
+    const char *title, const char *help)
+  : parent { parent }, file { file }, title { title }, help { help }
+{
+  lastSection() = this;
+}
+
+API::API(const RegKeys &keys, void *impl, void *vararg,
+         const char *defdoc, const unsigned int lastLine)
+  : m_section { lastSection() }, m_lines { firstLine(), lastLine },
+    m_regs {
+      { keys.impl,   impl   },
+      { keys.vararg, vararg },
+      { keys.defdoc, reinterpret_cast<void *>(const_cast<char *>(defdoc)) },
     }
 {
-  knownFuncs().push_back(this);
+  m_next = lastFunc();
+  lastFunc() = this;
 }
 
-API::~API()
-{
-  knownFuncs().remove(this);
-}
+// API::~API()
+// {
+//   assert(lastFunc() == this);
+//   lastFunc() = const_cast<API *>(m_next);
+// }
 
-void API::RegInfo::announce(const bool add) const
+void API::RegDesc::announce(const bool add) const
 {
   // the original key string must remain valid even when unregistering
   // in REAPER < 6.67 (see reapack#56)
-  if(value)
-    plugin_register(add ? key.c_str() : ("-" + key).c_str(), value);
+  plugin_register(add ? key + 1 : key, value);
 }
 
 void API::announceAll(const bool add)
 {
-  for(const API *func : knownFuncs()) {
-    for(const RegInfo &reg : func->m_regs)
+  for(const API *func { head() }; func; func = func->m_next) {
+    for(const RegDesc &reg : func->m_regs)
       reg.announce(add);
   }
 }

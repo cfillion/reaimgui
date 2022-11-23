@@ -23,48 +23,101 @@
 #include "context.hpp"
 
 #include <array>
-#include <boost/preprocessor.hpp>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/comparison/greater_equal.hpp>
+#include <boost/preprocessor/control/expr_if.hpp>
+#include <boost/preprocessor/punctuation/comma_if.hpp>
+#include <boost/preprocessor/seq/for_each_i.hpp>
+#include <boost/preprocessor/seq/variadic_seq_to_seq.hpp>
+#include <boost/preprocessor/stringize.hpp>
+#include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/tuple/size.hpp>
 #include <boost/type_index.hpp>
-#include <cstring> // strlen
+#include <type_traits>
 
-#define ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(2, 0, arg)
-#define ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(2, 1, arg)
+#define API_PREFIX ImGui_
+#define API_KEYS(name) { \
+  "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) name, \
+  "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) name, \
+  "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) name, \
+}
 
-#define NO_ARGS (,)
-#define DEFARGS(r, data, i, arg) BOOST_PP_COMMA_IF(i) ARG_TYPE(arg) ARG_NAME(arg)
-#define DOCARGS(r, macro, i, arg) \
+#define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
+#define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
+#define _ARG_DEFV(arg) BOOST_PP_TUPLE_ELEM(2, arg)
+#define _ARG_DEFV_T(arg) decltype(_ARG_DEFV(arg))
+
+#define _FOREACH_ARG(macro, data, args) \
+  BOOST_PP_SEQ_FOR_EACH_I(macro, data, BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))
+#define _SIGARG(r, data, i, arg) \
+  BOOST_PP_COMMA_IF(i) _ARG_TYPE(arg) _ARG_NAME(arg)
+#define _STRARG(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
 
-#define API_CATCH(name, type, except) \
-  catch(const except &e) {            \
-    API::handleError(#name, e);       \
-    return static_cast<type>(0);      \
+template<typename T>
+using DefArgVal = std::conditional_t<
+  std::is_same_v<const char *, T>,
+  T, std::remove_pointer_t<T>
+>;
+
+#define _DEFARG_ID(argName) BOOST_PP_CAT(argName, Default)
+#define _DEFARG(r, name, i, arg)                         \
+  BOOST_PP_EXPR_IF(                                      \
+    BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3), \
+    constexpr DefArgVal<_ARG_TYPE(arg)>                  \
+      _DEFARG_ID(_ARG_NAME(arg)) { _ARG_DEFV(arg) };     \
+  )
+
+#define _API_CATCH(name, type, except) \
+  catch(const except &e) {             \
+    API::handleError(#name, e);        \
+    return static_cast<type>(0);       \
   }
 
-#define DEFINE_API(type, name, args, help, ...)                 \
-  type API_##name(BOOST_PP_SEQ_FOR_EACH_I(DEFARGS, _,           \
-    BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))) noexcept               \
-  try __VA_ARGS__                                               \
-  API_CATCH(name, type, reascript_error)                        \
-  API_CATCH(name, type, imgui_error)                            \
-                                                                \
-  static const API API_reg_##name { #name,                      \
-    reinterpret_cast<void *>(&API_##name),                      \
-    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name>), \
-    reinterpret_cast<void *>(const_cast<char *>(                \
-      #type "\0"                                                \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_TYPE,                \
-        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
-      BOOST_PP_SEQ_FOR_EACH_I(DOCARGS, ARG_NAME,                \
-        BOOST_PP_VARIADIC_SEQ_TO_SEQ(args)) "\0"                \
-      help "\0"                                                 \
-      API_FILE "\0" BOOST_PP_STRINGIZE(__LINE__)                \
-    ))                                                          \
+#define _STORE_LINE static const API::FirstLine \
+  BOOST_PP_CAT(line, __LINE__) { __LINE__ };
+#define _DEFINE_API(type, name, args, help, ...)                        \
+  /* error out if API_SECTION() was not used in the file */             \
+  static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);                     \
+                                                                        \
+  namespace API_##name {                                                \
+    _FOREACH_ARG(_DEFARG, name, args) /* constexprs of default args */  \
+                                                                        \
+    static type invoke(_FOREACH_ARG(_SIGARG, _, args)) noexcept         \
+    try __VA_ARGS__                                                     \
+    _API_CATCH(name, type, reascript_error)                             \
+    _API_CATCH(name, type, imgui_error)                                 \
+  }                                                                     \
+                                                                        \
+  extern const API API_EXPORT_##name; /* link-time duplicate check */   \
+  const API API_EXPORT_##name { API_KEYS(#name),                        \
+    reinterpret_cast<void *>(&API_##name::invoke),                      \
+    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name::invoke>), \
+    #type                                  "\0"                         \
+    _FOREACH_ARG(_STRARG, _ARG_TYPE, args) "\0"                         \
+    _FOREACH_ARG(_STRARG, _ARG_NAME, args) "\0"                         \
+    help                                   "\0"                         \
+    _FOREACH_ARG(_STRARG, _ARG_DEFV, args), __LINE__,                   \
   }
+#define _DEFINE_ENUM(prefix, name, doc) \
+  _DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
 
-#define DEFINE_ENUM(prefix, name, doc) \
-  DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
+#define DEFINE_SECTION(id, parent, ...) static const API::Section id \
+  { &parent, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ };
+#define DEFINE_API _STORE_LINE _DEFINE_API
+#define DEFINE_ENUM _STORE_LINE _DEFINE_ENUM
 
+// shortcuts with auto-generated identifier name for the section object
+// #define ROOT_SECTION BOOST_PP_CAT(API_FILE, Section)
+#define _UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
+#define API_SECTION(...) static const API::Section ROOT_SECTION \
+  { nullptr, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ }
+#define API_SUBSECTION(...) \
+  DEFINE_SECTION(_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
+#define API_SECTION_P(parent, ...) \
+  DEFINE_SECTION(_UNIQ_SEC_ID, parent,       __VA_ARGS__)
+
+#define NO_ARGS (,)
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write
 #define API_RWO(var)      var##InOutOptional // documentation/python only
@@ -76,20 +129,23 @@
 #define API_WBIG(var)     var##OutNeedBig
 #define API_WBIG_SZ(var)  var##OutNeedBig_sz
 
-#define FRAME_GUARD assertValid(ctx); assertFrame(ctx);
+#define _API_GET(var) [](const auto v, const auto d) { \
+  if constexpr(std::is_pointer_v<decltype(d)>)         \
+    return v ?  v : d;                                 \
+  else                                                 \
+    return v ? *v : d;                                 \
+}(var, _DEFARG_ID(var))
+#define API_RO_GET(var)  _API_GET(API_RO(var))
+#define API_RWO_GET(var) _API_GET(API_RWO(var))
 
-template<typename Output, typename Input>
-Output valueOr(const Input *ptr, const Output fallback)
-{
-  return ptr ? static_cast<Output>(*ptr) : fallback;
-}
+#define FRAME_GUARD assertValid(ctx); assertFrame(ctx);
 
 // const char *foobarInOptional from REAPER are never null before 6.58
 inline void nullIfEmpty(const char *&string)
 {
   extern const char *(*GetAppVersion)();
   static bool hasNullableStrings { atof(GetAppVersion()) >= 6.58 };
-  if(!hasNullableStrings && string && !strlen(string))
+  if(!hasNullableStrings && string && !string[0] /* empty */)
     string = nullptr;
 }
 

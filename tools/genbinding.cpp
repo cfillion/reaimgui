@@ -15,35 +15,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define IMPORT_GENBINDINGS_API
+#include "../src/api.hpp"
 #include "version.hpp"
 
 #include <algorithm>
+#include <cmark.h>
+#include <cstring>
+#include <deque>
 #include <iostream>
-#include <map>
-#include <set>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 
-#include <reaper_plugin.h>
-
 constexpr const char *GENERATED_FOR { "Generated for ReaImGui v" REAIMGUI_VERSION };
-
-extern "C" int REAPER_PLUGIN_ENTRYPOINT(REAPER_PLUGIN_HINSTANCE, reaper_plugin_info_t *);
 
 struct Type {
   Type(const char *val)             : m_value { val } {}
   Type(const std::string_view &val) : m_value { val } {}
 
-  bool isVoid() const { return m_value == "void"; }
-  bool isInt() const { return m_value == "int"; }
-  bool isBool() const { return m_value == "bool"; }
-  bool isDouble() const { return m_value == "double"; }
-  bool isString() const { return m_value == "const char*" || m_value == "char*"; }
-  bool isPointer() const { return m_value.size() >= 1 && m_value.back() == '*'; }
-  bool isConst() const { return m_value.find("const ") == 0; }
-  bool isNumber() const { return isInt() || isDouble(); };
-  bool isScalar() const { return isBool() || isNumber(); }
+  bool isVoid()      const { return m_value == "void"; }
+  bool isInt()       const { return m_value == "int"; }
+  bool isBool()      const { return m_value == "bool"; }
+  bool isDouble()    const { return m_value == "double"; }
+  bool isString()    const { return m_value == "const char*" || m_value == "char*"; }
+  bool isPointer()   const { return m_value.size() >= 1 && m_value.back() == '*'; }
+  bool isConst()     const { return m_value.find("const ") == 0; }
+  bool isNumber()    const { return isInt() || isDouble(); };
+  bool isScalar()    const { return isBool() || isNumber(); }
   bool isScalarPtr() const { return isPointer() && removePtr().isScalar(); }
 
   Type removePtr() const
@@ -69,6 +68,7 @@ private:
 struct Argument {
   Type type;
   std::string_view name;
+  std::string_view defv;
 
   bool isInput() const
     { return !isOutput() || name.find("In") != std::string_view::npos; }
@@ -83,18 +83,26 @@ struct Argument {
   std::string_view bufName() const { return name.substr(0, name.size() - 3); }
 
   std::string_view humanName() const;
+  void defaultValue(std::ostream &, const char *null) const;
 };
 
 struct Function {
+  Function(const API *);
+
+  const API::Section *section;
   std::string_view name;
   Type type;
+  API::LineRange lines;
   std::vector<Argument> args;
-  std::string_view doc, file, line;
+  std::string_view doc;
+  std::string_view displayName;
+  std::deque<const API::Section *> sections;
+
+  bool operator<(const Function &) const;
 
   bool isEnum() const { return type.isInt() && args.empty(); }
   bool hasOutputArgs() const;
   bool hasOptionalArgs() const;
-  bool operator<(const Function &o) const { return name < o.name; }
 
   void cppSignature(std::ostream &) const;
   void luaSignature(std::ostream &) const;
@@ -102,83 +110,74 @@ struct Function {
   void pythonSignature(std::ostream &) const;
 };
 
-struct FunctionComp {
-  bool operator()(const std::string_view &n, const Function &f) const
-    { return n < f.name; }
-  bool operator()(const Function &f, const std::string_view &n) const
-    { return f.name < n; }
+bool Function::operator<(const Function &o) const
+{
+  const size_t maxDepth { std::min(sections.size(), o.sections.size()) };
+  for(size_t i {}; i < maxDepth; ++i) {
+    if(sections[i] != o.sections[i])
+      return strcmp(sections[i]->title, o.sections[i]->title) < 0;
+  }
 
-  bool operator()(const Function *a, const Function *b) const
-    { return *a < *b; }
-};
+  if(sections.size() != o.sections.size())
+    return sections.size() < o.sections.size();
 
-static std::set<Function> g_funcs;
-static std::map<std::string_view, std::set<const Function *, FunctionComp>> g_groups;
-static std::unordered_map<std::string_view, std::string_view> g_groupAliases {
-  { "button",      "Button" },
-  { "coloredit",   "Color Edit" },
-  { "context",     "Context" },
-  { "dragndrop",   "Drag & Drop" },
-  { "drawlist",    "Draw List" },
-  { "font",        "Font" },
-  { "indev",       "Keyboard & Mouse" },
-  { "input",       "Text & Scalar Input" },
-  { "item",        "Item & Status" },
-  { "layout",      "Layout" },
-  { "listclipper", "List Clipper" },
-  { "menu",        "Menu" },
-  { "plot",        "Plot" },
-  { "popup",       "Popup & Modal" },
-  { "select",      "Combo & List" },
-  { "slider",      "Drag & Slider" },
-  { "style",       "Style" },
-  { "tabbar",      "Tab Bar" },
-  { "table",       "Table" },
-  { "text",        "Text" },
-  { "textfilter",  "Text Filter" },
-  { "treenode",    "Tree Node" },
-  { "utility",     "Utility" },
-  { "viewport",    "Viewport" },
-  { "window",      "Window" },
-};
+  return displayName < o.displayName;
+}
+
+static std::deque<Function> g_funcs;
 
 static const char *nextString(const char *&str)
 {
   return str += strlen(str) + 1;
 }
 
-static void addFunc(const char *name, const char *def)
+Function::Function(const API *api)
+  : section { api->m_section }, name { api->name() },
+    type { api->definition() }, lines { api->m_lines }
 {
-  Function func { name, def };
-
+  const char *def { api->definition() };
   std::string_view argTypes { nextString(def) };
   std::string_view argNames { nextString(def) };
-  func.doc = { nextString(def) };
-  func.file = { nextString(def) };
-  func.line = { nextString(def) };
+  doc = nextString(def);
+  std::string_view argDefvs { nextString(def) }; // non-standard field
 
-  while(argTypes.size() > 0 && argNames.size() > 0) {
+  // C++20's starts_with isn't available when building for old macOS
+  displayName = name.substr(0, strlen("ImGui_")) == "ImGui_"
+              ? name.substr(   strlen("ImGui_")) : name;
+
+  while(argTypes.size() > 0 && argNames.size() > 0) { // argDefvs may be empty
     size_t typeLen { argTypes.find(',') },
-           nameLen { argNames.find(',') };
+           nameLen { argNames.find(',') },
+           defvLen { argDefvs.find(',') };
 
-    func.args.emplace_back(Argument {
+    if(argDefvs.substr(0, strlen("ImGui")) == "ImGui") {
+      argDefvs.remove_prefix(strlen("ImGui"));
+      defvLen -= strlen("ImGui");
+    }
+    else if(argDefvs.substr(0, strlen("ImDraw")) == "ImDraw") {
+      argDefvs.remove_prefix(strlen("Im"));
+      defvLen -= strlen("Im");
+    }
+
+    args.emplace_back(Argument {
       argTypes.substr(0, typeLen),
-      argNames.substr(0, nameLen)
+      argNames.substr(0, nameLen),
+      argDefvs.substr(0, defvLen),
     });
 
-    if(typeLen == std::string_view::npos || nameLen == std::string_view::npos)
+    if(typeLen == std::string_view::npos ||
+       nameLen == std::string_view::npos ||
+       defvLen == std::string_view::npos)
       break;
 
     argTypes.remove_prefix(typeLen + 1);
     argNames.remove_prefix(nameLen + 1);
+    argDefvs.remove_prefix(defvLen + 1);
   }
 
-  const auto &alias { g_groupAliases.find(func.file) };
-  const std::string_view &group
-    { alias == g_groupAliases.end() ? func.file : alias->second };
-
-  const auto &it { g_funcs.insert(func).first };
-  g_groups[group].insert(&*it);
+  const API::Section *curSection { section };
+  do { sections.push_front(curSection); }
+  while((curSection = curSection->parent));
 }
 
 struct CommaSep {
@@ -302,7 +301,8 @@ private:
 #undef REAIMGUIAPI_EXTERN
 #undef REAIMGUIAPI_INIT
 
-#endif)" << std::endl;
+#endif
+)";
 }
 
 std::string_view Argument::humanName() const
@@ -341,13 +341,24 @@ static std::string hl(const Highlight type = Highlight::End)
     tag += "ss";
     break;
   case Highlight::Constant:
-    tag += "sc";
+    tag += "sn";
     break;
   case Highlight::End:
     return "Invalid Highlight";
   }
   tag += "\">";
   return tag;
+}
+
+void Argument::defaultValue(std::ostream &stream, const char *null) const
+{
+  if(defv.empty())
+    stream << hl(Highlight::Constant) << "nullptr";
+  else if(defv[0] == '"')
+    stream << hl(Highlight::String) << defv;
+  else
+    stream << hl(Highlight::Constant) << defv;
+  stream << hl();
 }
 
 bool Function::hasOutputArgs() const
@@ -376,8 +387,10 @@ void Function::cppSignature(std::ostream &stream) const
   CommaSep cs { stream };
   for(const Argument &arg : args) {
     cs << hl(Highlight::Type) << arg.type << hl() << ' ' << arg.name;
-    if(arg.isOptional())
-      stream << " = " << hl(Highlight::Constant) << "nullptr" << hl();
+    if(arg.isOptional()) {
+      stream << " = ";
+      arg.defaultValue(stream, "nullptr");
+    }
   }
   stream << ')';
 }
@@ -427,8 +440,10 @@ void Function::luaSignature(std::ostream &stream) const
       }
       cs << hl(Highlight::Type) << luaType(arg.type)
          << hl() << ' ' << arg.humanName();
-      if(arg.isOptional())
-        stream << " = " << hl(Highlight::Constant) << "nil" << hl();
+      if(arg.isOptional()) {
+        stream << " = ";
+        arg.defaultValue(stream, "nil");
+      }
     }
   }
   stream << ')';
@@ -461,8 +476,10 @@ void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
         stream << hl(Highlight::Reference) << "&amp;" << hl();
       stream << arg.humanName();
     }
-    if(arg.isOptional())
-      stream << " = " << hl(Highlight::Constant) << '0' << hl();
+    if(arg.isOptional()) {
+      stream << " = ";
+      arg.defaultValue(stream, "0");
+    }
   }
   stream << ')';
 }
@@ -504,37 +521,39 @@ void Function::pythonSignature(std::ostream &stream) const
       if(arg.isBufSize() || !arg.isInput())
         continue;
       cs << hl(Highlight::Type) << pythonType(arg.type)
-         << hl() << ' ' << arg.name;
-      if(arg.isOptional())
-        stream << " = " << hl(Highlight::Constant) << "None" << hl();
+         << hl() << ' ' << arg.humanName();
+      if(arg.isOptional()) {
+        stream << " = ";
+        arg.defaultValue(stream, "None");
+      }
     }
   }
   stream << ')';
 }
 
-static void formatHtmlText(std::ostream &stream, const std::string_view &text)
+static auto findNewSection
+  (const Function &func, std::vector<const API::Section *> &oldSections)
 {
-  size_t nextLink { text.find("ImGui_") };
-  for(size_t i {}; i < text.size(); ++i) {
-    size_t linkStart { i };
-    if(i == nextLink) {
-      while(i < text.size() && (isalnum(text[i]) || text[i] == '_'))
-        ++i;
+  auto oldSection { oldSections.begin() };
+  auto newSection { func.sections.begin() };
+  while(oldSection != oldSections.end() && newSection != func.sections.end() &&
+        *oldSection == *newSection)
+    ++oldSection, ++newSection;
+  oldSections.erase(oldSection, oldSections.end());
+  std::copy(newSection, func.sections.end(), std::back_inserter(oldSections));
+  return newSection;
+}
 
-      const std::string_view linkTo { &text[linkStart], i - linkStart };
-      if(std::binary_search(g_funcs.begin(), g_funcs.end(), linkTo, FunctionComp{}))
-        stream << "<a href=\"#" << linkTo << "\">" << linkTo << "</a>";
-      else
-        stream << linkTo;
+static void outputHtmlText(std::ostream &stream, std::string_view text)
+{
+  // outputting char by char is slower than as many as possible at once
+  while(!text.empty()) {
+    const size_t nextEntity { text.find_first_of("<>&") };
+    stream << text.substr(0, nextEntity);
+    if(nextEntity == std::string_view::npos)
+      return;
 
-      if(i == text.size())
-        break;
-      else
-        nextLink = text.find("ImGui_", i);
-    }
-
-
-    switch(text[i]) {
+    switch(text[nextEntity]) {
     case '<':
       stream << "&lt;";
       break;
@@ -544,14 +563,91 @@ static void formatHtmlText(std::ostream &stream, const std::string_view &text)
     case '&':
       stream << "&amp;";
       break;
-    default:
-      stream << text[i];
-      break;
     }
+    text.remove_prefix(nextEntity + 1);
   }
 }
 
-static void formatHtmlSlug(std::ostream &stream, const std::string_view &text)
+struct Reference {
+  const Function *func;
+  std::string_view range;
+};
+
+static std::vector<Reference> parseReferences(const std::string_view &input)
+{
+  // build a map of known references for fast lookup
+  enum CharInfo { InitialChar = 1<<0, ValidChar = 1<<1 };
+  static std::unordered_map<std::string_view, const Function *> funcs;
+  static char charmap[0x100];
+  if(funcs.empty()) {
+    for(const Function &func : g_funcs) {
+      funcs.emplace(func.displayName, &func);
+      funcs.emplace(func.name, &func);
+    }
+    // build a maps of which characters may be present in a reference
+    for(const auto &pair : funcs) {
+      charmap[static_cast<unsigned char>(pair.first[0])] |= InitialChar;
+      for(const unsigned char c : pair.first)
+        charmap[c] |= ValidChar;
+    }
+  }
+
+  std::vector<Reference> links;
+
+  auto start { input.begin() };
+  while(start != input.end()) {
+    start = std::find_if(start, input.end(),
+      [&](const unsigned char c) { return charmap[c] & InitialChar; });
+    if(start == input.end())
+      break;
+    const auto end { std::find_if_not(start, input.end(),
+      [&](const unsigned char c) { return charmap[c] & ValidChar; }) };
+    // constructor taking (first, last) iterators is C++20
+    const std::string_view word { &*start, static_cast<size_t>(end - start) };
+    const auto it { funcs.find(word) };
+    if(it != funcs.end())
+      links.push_back({ it->second, word });
+    start += word.size();
+  }
+
+  return links;
+}
+
+static void outputHtmlBlock(std::ostream &stream, std::string_view html,
+  const bool escape = true)
+{
+  const auto &links { parseReferences(html) };
+  for(auto link { links.begin() }; link != links.end(); ++link) {
+    const auto prefixSize { link->range.data() - html.data() };
+    const std::string_view prefix { html.substr(0, prefixSize) };
+    if(escape)
+      outputHtmlText(stream, prefix);
+    else
+      stream << prefix;
+    stream << "<a href=\"#" << link->func->displayName << "\">"
+           << link->range << "</a>";
+    html.remove_prefix(prefixSize + link->range.size());
+  }
+  if(escape)
+    outputHtmlText(stream, html);
+  else
+    stream << html;
+}
+
+static void outputMarkdown(std::ostream &stream, const std::string_view &text)
+{
+  if(char *html { cmark_markdown_to_html(text.data(), text.size(), 0) }) {
+    outputHtmlBlock(stream, html, false);
+    free(html);
+  }
+  else {
+    stream << "<pre>";
+    outputHtmlBlock(stream, text);
+    stream << "</pre>";
+  }
+}
+
+static void outputHtmlSlug(std::ostream &stream, const std::string_view &text)
 {
   bool prevWasPrintable { false };
   for(const char c : text) {
@@ -574,8 +670,9 @@ static void humanBinding(std::ostream &stream)
   <meta charset="utf-8"/>
   <title>ReaImGui Documentation</title>
   <style>
+  html { scroll-padding-top: 1em; }
   body {
-    background-color: #080808;
+    background-color: #0D0D0D;
     color: #d9d3d3;
     font-size: 15px;
     line-height: 20px;
@@ -586,10 +683,10 @@ static void humanBinding(std::ostream &stream)
   aside {
     background-color: #262626; /* Grey15 */
     border-right: 1px solid #6f6f6f;
+    bottom: 0;
     overflow-y: auto;
     position: fixed;
     top: 0;
-    bottom: 0;
     width: 200px;
   }
   aside ol {
@@ -604,13 +701,25 @@ static void humanBinding(std::ostream &stream)
   }
   main {
     margin-left: 200px;
+    margin-right: 1em;
     box-shadow: 0 0 10px #080808;
   }
   aside p, aside li a, main { padding-left: 1em; }
-  details { margin-left: 20px; }
+  h2, h3, h4, h5, h6, pre { margin: 1em 0 1rem 0; }
+  h1 { font-size: 2.3em; }
+  h2 { font-size: 1.8em; }
+  h3 { font-size: 1.4em; }
+  h4 { font-size: 1.15em; }
+  h5 { font-size: 1.0em; }
+  h6 { font-size: 0.9em; }
+  h2:before { content: '〉'; color: #6f6f6f; }
+  ol { padding-left: 2em; }
+  ul { padding-left: 1em; }
+  li ul { list-style-type: square; }
   a { text-decoration: none; }
   a, summary { color: #00ff87; /* SpringGreen1 */ }
   a:hover, summary:hover { text-decoration: underline; }
+  details { margin-left: 20px; }
   summary {
     cursor: pointer;
     display: inline-block;
@@ -627,15 +736,25 @@ static void humanBinding(std::ostream &stream)
     vertical-align: top;
     white-space: nowrap;
   }
-  table, pre { white-space: pre-wrap; margin: 0; margin: .3em 0; }
-  table + pre { margin-top: 1em; }
-  code { border-radius: 3px; color: white; }
-  code:hover { text-decoration: underline; cursor: copy; }
-  code:active, aside a:hover { background-color: #3a3a3a; }
+  table { white-space: pre-wrap; }
+  code, code a { color: white; }
+  table code:hover { text-decoration: underline; cursor: copy; }
+  table code:active, aside a:hover { background-color: #3a3a3a; }
+  tr + tr td { border-top: 1px solid #555; }
+  pre { overflow: auto; }
+  pre code {
+    background-color: black;
+    border-radius: 5px;
+    border: 1px solid #6f6f6f;
+    display: inline-block;
+    padding: 0.5em;
+  }
   .st { color: #87afff; /* SkyBlue2 */ }
-  .ss { color: #5faf5f; /* DarkSeaGreen4 */ }
-  .sc { color: #5f87d7; /* SteelBlue3 */ }
-  .sr { color: #d7875f; /* LightSalmon3 */ }
+  .ss, .hljs-string   { color: #5faf5f; /* DarkSeaGreen4 */ }
+  .sn, .hljs-number   { color: #5f87d7; /* SteelBlue3    */ }
+  .sr, .hljs-keyword  { color: #d7875f; /* LightSalmon3  */ }
+       .hljs-comment  { color: #b2b2b2; /* Grey70        */ }
+       .hljs-built_in { color: #87d75f; /* DarkOliveGreen3 */ }
   .source a { color: gray; }
   </style>
 </head>
@@ -644,13 +763,16 @@ static void humanBinding(std::ostream &stream)
     <p><strong>Table of Contents</strong></p>
     <ol>)";
 
-  for(const auto &group : g_groups) {
-    if(group.first.empty())
+  const API::Section *section {};
+  for(const Function &func : g_funcs) {
+    if(func.sections[0] == section)
       continue;
 
+    section = func.sections[0];
+
     stream << "<li><a href=\"#";
-    formatHtmlSlug(stream, group.first); stream << "\">";
-    formatHtmlText(stream, group.first);
+    outputHtmlSlug(stream, section->title); stream << "\">";
+    outputHtmlText(stream, section->title);
     stream << "</a></li>";
   }
 
@@ -661,39 +783,49 @@ static void humanBinding(std::ostream &stream)
     <h1>ReaImGui Documentation</h1>
     <p>)" << GENERATED_FOR << "</p>\n\n";
 
-  for(const auto &group : g_groups) {
-    if(!group.first.empty()) {
-      stream << "<h2 id=\""; formatHtmlSlug(stream, group.first); stream << "\">";
-      formatHtmlText(stream, group.first);
-      stream << "</h2>";
-    }
-    
-    for(const Function *func : group.second) {
-      stream << "<details id=\"" << func->name << "\"><summary>";
-      stream << (func->isEnum() ? "Constant: " : "Function: ");
-      stream << func->name << "</summary>";
+  std::vector<const API::Section *> sections;
+  for(const Function &func : g_funcs) {
+    for(auto it { findNewSection(func, sections) };
+        it != func.sections.end(); ++it) {
+      const API::Section *section { *it };
+      const auto level { std::distance(func.sections.begin(), it) + 2 };
 
-      stream << "<table>"
-             << "<tr><th>C++</th><td><code>";        func->cppSignature(stream);        stream << "</code></td></tr>"
-             << "<tr><th>EEL</th><td><code>";        func->eelSignature(stream, false); stream << "</code></td></tr>"
-             << "<tr><th>Legacy EEL</th><td><code>"; func->eelSignature(stream, true);  stream << "</code></td></tr>"
-             << "<tr><th>Lua</th><td><code>";        func->luaSignature(stream);        stream << "</code></td></tr>"
-             << "<tr><th>Python</th><td><code>";     func->pythonSignature(stream);     stream << "</code></td></tr>"
-             << "</table>";
-
-      if(!func->doc.empty()) {
-        stream << "<pre>";
-        formatHtmlText(stream, func->doc);
-        stream << "</pre>";
+      stream << "<h" << level << " id=\"";
+      for(auto slugIt { func.sections.begin() }; slugIt <= it; ++slugIt) {
+        if(slugIt != func.sections.begin())
+          stream << '_';
+        outputHtmlSlug(stream, (*slugIt)->title);
       }
+      stream << "\">";
+      outputHtmlText(stream, section->title);
+      stream << "</h" << level << '>';
 
-      stream << "<p class=\"source\">"
-                "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
-                REAIMGUI_VERSION "/api/" << func->file << ".cpp#L"
-             << func->line << "\">View source</a></p>";
-
-      stream << "</details>";
+      if(section->help)
+        outputMarkdown(stream, section->help);
     }
+
+    stream << "<details id=\"" << func.displayName << "\"><summary>";
+    stream << (func.isEnum() ? "Constant: " : "Function: ");
+    stream << func.displayName << "</summary>";
+
+    stream << "<table>"
+           << "<tr><th>C/C++</th><td><code>";      func.cppSignature(stream);        stream << "</code></td></tr>"
+           << "<tr><th>EEL</th><td><code>";        func.eelSignature(stream, false); stream << "</code></td></tr>"
+           << "<tr><th>Legacy EEL</th><td><code>"; func.eelSignature(stream, true);  stream << "</code></td></tr>"
+           << "<tr><th>Lua</th><td><code>";        func.luaSignature(stream);        stream << "</code></td></tr>"
+           << "<tr><th>Python</th><td><code>";     func.pythonSignature(stream);     stream << "</code></td></tr>"
+           << "</table>";
+
+    if(!func.doc.empty())
+      outputMarkdown(stream, func.doc);
+
+    stream << "<p class=\"source\">"
+              "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
+              REAIMGUI_VERSION "/api/" << func.section->file << ".cpp#L"
+           << func.lines.first << "-L" << func.lines.second
+           << "\">View source</a></p>";
+
+    stream << "</details>";
   }
 
   stream << R"(<p>EOF</p>
@@ -719,6 +851,10 @@ static void humanBinding(std::ostream &stream)
       navigator.clipboard.writeText(e.target.textContent);
   });
   </script>
+  <!-- highlight.js v11 removed auto-merging of html (removes links) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/highlight.min.js" integrity="sha512-tL84mD+FR70jI7X8vYj5AfRqe0EifOaFUapjt1KvDaPLHgTlUZ2gQL/Tzvvn8HXuQm9oHYShJpNFdyJmH2yHrw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/languages/lua.min.js" integrity="sha512-h4/Yr93778WemxjiZYuMmmAZmdoQGMpZHPVAQmMiCOV+QDNlTM8vZcZtTNyW/aiiqtNeu9J8K59gIKSM9SvrLw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>hljs.highlightAll();</script>
 </body>
 </html>
 )";
@@ -875,39 +1011,11 @@ static void pythonBinding(std::ostream &stream)
   }
 }
 
-static int plugin_register(const char *key, void *value)
-{
-  if(strstr(key, "APIdef_") == key)
-    addFunc(key + strlen("APIdef_"), reinterpret_cast<const char *>(value));
-  return 0;
-}
-
-static int fakeFunc()
-{
-  return 0;
-}
-
-static void *getFunc(const char *name)
-{
-  struct FakeAPI { const char *name; void *func; };
-  const FakeAPI fakeAPI[] {
-    { "plugin_register", reinterpret_cast<void *>(&plugin_register) },
-  };
-
-  for(const FakeAPI &api : fakeAPI) {
-    if(!strcmp(name, api.name))
-      return api.func;
-  }
-
-  return reinterpret_cast<void *>(&fakeFunc);
-}
-
 int main(int argc, const char *argv[])
 {
-  reaper_plugin_info_t rec { REAPER_PLUGIN_VERSION };
-  rec.GetFunc = getFunc;
-
-  REAPER_PLUGIN_ENTRYPOINT(nullptr, &rec);
+  for(const API *func { API::head() }; func; func = func->m_next)
+    g_funcs.push_back(func);
+  std::sort(g_funcs.begin(), g_funcs.end());
 
   const std::string_view lang { argc >= 2 ? argv[1] : "cpp" };
 

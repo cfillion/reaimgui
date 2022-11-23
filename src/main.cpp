@@ -120,8 +120,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
 
   Window::s_instance = instance;
   API::announceAll(true);
-  if(instance) // don't load settings when loaded from genbindings
-    Settings::setup();
+  Settings::setup();
 
   return 1;
 }
