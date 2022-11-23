@@ -57,34 +57,31 @@ API::Section::Section(const Section *parent, const char *file,
   lastSection() = this;
 }
 
-using namespace std::string_literals;
-#define KEY(prefix) (prefix "_ImGui_"s + name)
-
-API::API(const char *name, void *cImpl, void *reascriptImpl,
-         const char *definition, const unsigned int lastLine)
+API::API(const RegKeys &keys, void *impl, void *vararg,
+         const char *defdoc, const unsigned int lastLine)
   : m_section { lastSection() }, m_lines { firstLine(), lastLine },
     m_regs {
-      { KEY("-API"),       cImpl         },
-      { KEY("-APIvararg"), reascriptImpl },
-      { KEY("-APIdef"),    reinterpret_cast<void *>(const_cast<char *>(definition)) },
+      { keys.impl,   impl   },
+      { keys.vararg, vararg },
+      { keys.defdoc, reinterpret_cast<void *>(const_cast<char *>(defdoc)) },
     }
 {
   m_next = lastFunc();
   lastFunc() = this;
 }
 
-API::~API()
-{
-  assert(lastFunc() == this);
-  lastFunc() = const_cast<API *>(m_next);
-}
+// API::~API()
+// {
+//   assert(lastFunc() == this);
+//   lastFunc() = const_cast<API *>(m_next);
+// }
 
 void API::RegDesc::announce(const bool add) const
 {
   // the original key string must remain valid even when unregistering
   // in REAPER < 6.67 (see reapack#56)
   if(value)
-    plugin_register(add ? key.c_str() + 1 : key.c_str(), value);
+    plugin_register(add ? key + 1 : key, value);
 }
 
 void API::announceAll(const bool add)

@@ -22,7 +22,6 @@
 #include "api_vararg.hpp"
 #include "context.hpp"
 
-#include <array>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/comparison/greater_equal.hpp>
 #include <boost/preprocessor/control/expr_if.hpp>
@@ -83,7 +82,8 @@ using DefArgVal = std::conditional_t<
   }                                                                     \
                                                                         \
   extern const API API_EXPORT_##name; /* link-time duplicate check */   \
-  const API API_EXPORT_##name { #name,                                  \
+  constexpr char API_NAME_##name[] { #name };                           \
+  const API API_EXPORT_##name { MakeRegKeys<&API_NAME_##name>::keys,    \
     reinterpret_cast<void *>(&API_##name::invoke),                      \
     reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name::invoke>), \
     #type                                  "\0"                         \

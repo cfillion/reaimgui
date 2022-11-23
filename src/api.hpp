@@ -20,7 +20,7 @@
 
 #include "error.hpp"
 
-#include <string>
+#include <array>
 
 #ifdef _WIN32
 #  ifdef IMPORT_GENBINDINGS_API
@@ -31,6 +31,35 @@
 #else
 #  define GENBINDINGS_API __attribute__((visibility("default")))
 #endif
+
+#define API_PREFIX "ImGui_"
+
+struct RegKeys {
+  const char *impl, *vararg, *defdoc;
+};
+
+template<auto name>
+class MakeRegKeys {
+  static constexpr size_t N { sizeof(*name) };
+
+  template<size_t PN>
+  static constexpr auto concat(const char (&prefix)[PN])
+  {
+    std::array<char, PN + N - 1> key {};
+    for(size_t i {}; i < PN - 1; ++i)
+      key[i] = prefix[i];
+    for(size_t i {}; i < N; ++i)
+      key[PN + i - 1] = (*name)[i];
+    return key;
+  }
+
+public:
+  static constexpr auto impl   { concat("-API_"       API_PREFIX) };
+  static constexpr auto vararg { concat("-APIvararg_" API_PREFIX) };
+  static constexpr auto defdoc { concat("-APIdef_"    API_PREFIX) };
+  static constexpr RegKeys keys
+    { impl.data(), vararg.data(), defdoc.data() };
+};
 
 class API {
 public:
@@ -48,9 +77,8 @@ public:
   static void handleError(const char *fnName, const reascript_error &);
   static void handleError(const char *fnName, const imgui_error &);
 
-  API(const char *name, void *cImpl, void *reascriptImpl,
+  API(const RegKeys &, void *impl, void *vararg,
       const char *definition, unsigned int lastLine);
-  ~API();
 
   // internal helpers for genbindings
   GENBINDINGS_API static const API *head();
@@ -64,7 +92,7 @@ public:
 
 private:
   struct RegDesc {
-    std::string key;
+    const char *key;
     void *value;
     void announce(bool add) const;
   } m_regs[3];
