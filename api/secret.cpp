@@ -24,8 +24,7 @@
   __VA_ARGS__                                              \
                                                            \
   static const API API_reg_##name                          \
-    { #name, reinterpret_cast<void *>(&API_##name),        \
-      nullptr, nullptr, nullptr, 0 };
+    { #name, reinterpret_cast<void *>(&API_##name), nullptr, nullptr, 0 };
 
 DEFINE_SECRET_API(bool, CheckVersionAndDataLayout, (const char*,version)
 (size_t,sz_io)(size_t,sz_style)(size_t,sz_vec2)(size_t,sz_vec4)(size_t,sz_vert)

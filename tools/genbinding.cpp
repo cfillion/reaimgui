@@ -68,6 +68,7 @@ private:
 struct Argument {
   Type type;
   std::string_view name;
+  std::string_view defv;
 
   bool isInput() const
     { return !isOutput() || name.find("In") != std::string_view::npos; }
@@ -82,9 +83,12 @@ struct Argument {
   std::string_view bufName() const { return name.substr(0, name.size() - 3); }
 
   std::string_view humanName() const;
+  void defaultValue(std::ostream &, const char *null) const;
 };
 
 struct Function {
+  Function(const API *);
+
   const API::Section *section;
   std::string_view name;
   Type type;
@@ -127,39 +131,53 @@ static const char *nextString(const char *&str)
   return str += strlen(str) + 1;
 }
 
-static void addFunc(const API *api)
+Function::Function(const API *api)
+  : section { api->m_section }, name { api->name() },
+    type { api->definition() }, lines { api->m_lines }
 {
   const char *def { api->definition() };
-  Function func { api->m_section, api->name(), def, api->m_lines };
-
   std::string_view argTypes { nextString(def) };
   std::string_view argNames { nextString(def) };
-  func.doc = nextString(def);
+  doc = nextString(def);
+  std::string_view argDefvs { nextString(def) }; // non-standard field
 
   // C++20's starts_with isn't available when building for old macOS
-  func.displayName = func.name.substr(0, strlen("ImGui_")) == "ImGui_"
-                   ? func.name.substr(strlen("ImGui_")) : func.name;
+  displayName = name.substr(0, strlen("ImGui_")) == "ImGui_"
+              ? name.substr(   strlen("ImGui_")) : name;
 
-  while(argTypes.size() > 0 && argNames.size() > 0) {
-    const size_t typeLen { argTypes.find(',') },
-                 nameLen { argNames.find(',') };
+  while(argTypes.size() > 0 && argNames.size() > 0) { // argDefvs may be empty
+    size_t typeLen { argTypes.find(',') },
+           nameLen { argNames.find(',') },
+           defvLen { argDefvs.find(',') };
 
-    func.args.emplace_back(Argument {
+    if(argDefvs.substr(0, strlen("ImGui")) == "ImGui") {
+      argDefvs.remove_prefix(strlen("ImGui"));
+      defvLen -= strlen("ImGui");
+    }
+    else if(argDefvs.substr(0, strlen("ImDraw")) == "ImDraw") {
+      argDefvs.remove_prefix(strlen("Im"));
+      defvLen -= strlen("Im");
+    }
+
+    args.emplace_back(Argument {
       argTypes.substr(0, typeLen),
-      argNames.substr(0, nameLen)
+      argNames.substr(0, nameLen),
+      argDefvs.substr(0, defvLen),
     });
 
-    if(typeLen == std::string_view::npos || nameLen == std::string_view::npos)
+    if(typeLen == std::string_view::npos ||
+       nameLen == std::string_view::npos ||
+       defvLen == std::string_view::npos)
       break;
 
     argTypes.remove_prefix(typeLen + 1);
     argNames.remove_prefix(nameLen + 1);
+    argDefvs.remove_prefix(defvLen + 1);
   }
 
-  const API::Section *section { func.section };
-  do { func.sections.push_front(section); } while((section = section->parent));
-
-  g_funcs.push_back(func);
+  const API::Section *curSection { section };
+  do { sections.push_front(curSection); }
+  while((curSection = curSection->parent));
 }
 
 struct CommaSep {
@@ -332,6 +350,17 @@ static std::string hl(const Highlight type = Highlight::End)
   return tag;
 }
 
+void Argument::defaultValue(std::ostream &stream, const char *null) const
+{
+  if(defv.empty())
+    stream << hl(Highlight::Constant) << "nullptr";
+  else if(defv[0] == '"')
+    stream << hl(Highlight::String) << defv;
+  else
+    stream << hl(Highlight::Constant) << defv;
+  stream << hl();
+}
+
 bool Function::hasOutputArgs() const
 {
   for(const Argument &arg : args) {
@@ -358,8 +387,10 @@ void Function::cppSignature(std::ostream &stream) const
   CommaSep cs { stream };
   for(const Argument &arg : args) {
     cs << hl(Highlight::Type) << arg.type << hl() << ' ' << arg.name;
-    if(arg.isOptional())
-      stream << " = " << hl(Highlight::Constant) << "nullptr" << hl();
+    if(arg.isOptional()) {
+      stream << " = ";
+      arg.defaultValue(stream, "nullptr");
+    }
   }
   stream << ')';
 }
@@ -409,8 +440,10 @@ void Function::luaSignature(std::ostream &stream) const
       }
       cs << hl(Highlight::Type) << luaType(arg.type)
          << hl() << ' ' << arg.humanName();
-      if(arg.isOptional())
-        stream << " = " << hl(Highlight::Constant) << "nil" << hl();
+      if(arg.isOptional()) {
+        stream << " = ";
+        arg.defaultValue(stream, "nil");
+      }
     }
   }
   stream << ')';
@@ -443,8 +476,10 @@ void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
         stream << hl(Highlight::Reference) << "&amp;" << hl();
       stream << arg.humanName();
     }
-    if(arg.isOptional())
-      stream << " = " << hl(Highlight::Constant) << '0' << hl();
+    if(arg.isOptional()) {
+      stream << " = ";
+      arg.defaultValue(stream, "0");
+    }
   }
   stream << ')';
 }
@@ -486,9 +521,11 @@ void Function::pythonSignature(std::ostream &stream) const
       if(arg.isBufSize() || !arg.isInput())
         continue;
       cs << hl(Highlight::Type) << pythonType(arg.type)
-         << hl() << ' ' << arg.name;
-      if(arg.isOptional())
-        stream << " = " << hl(Highlight::Constant) << "None" << hl();
+         << hl() << ' ' << arg.humanName();
+      if(arg.isOptional()) {
+        stream << " = ";
+        arg.defaultValue(stream, "None");
+      }
     }
   }
   stream << ')';
@@ -635,7 +672,7 @@ static void humanBinding(std::ostream &stream)
   <style>
   html { scroll-padding-top: 1em; }
   body {
-    background-color: #080808;
+    background-color: #0D0D0D;
     color: #d9d3d3;
     font-size: 15px;
     line-height: 20px;
@@ -703,7 +740,8 @@ static void humanBinding(std::ostream &stream)
   code, code a { color: white; }
   table code:hover { text-decoration: underline; cursor: copy; }
   table code:active, aside a:hover { background-color: #3a3a3a; }
-  pre { overflow: scroll; }
+  tr + tr td { border-top: 1px solid #555; }
+  pre { overflow: auto; }
   pre code {
     background-color: black;
     border-radius: 5px;
@@ -977,7 +1015,7 @@ int main(int argc, const char *argv[])
 {
   for(const API *func { API::head() }; func; func = func->m_next) {
     if(func->definition()) // only handle function exported to ReaScript
-      addFunc(func);
+      g_funcs.push_back(func);
   }
   std::sort(g_funcs.begin(), g_funcs.end());
 

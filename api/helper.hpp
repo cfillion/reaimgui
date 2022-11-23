@@ -86,10 +86,11 @@ using DefArgVal = std::conditional_t<
   const API API_EXPORT_##name { #name,                                  \
     reinterpret_cast<void *>(&API_##name::invoke),                      \
     reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name::invoke>), \
-    #type "\0"                                                          \
+    #type                                  "\0"                         \
     _FOREACH_ARG(_STRARG, _ARG_TYPE, args) "\0"                         \
     _FOREACH_ARG(_STRARG, _ARG_NAME, args) "\0"                         \
-    help, _FOREACH_ARG(_STRARG, _ARG_DEFV, args) "", __LINE__,          \
+    help                                   "\0"                         \
+    _FOREACH_ARG(_STRARG, _ARG_DEFV, args), __LINE__,                   \
   }
 #define _DEFINE_ENUM(prefix, name, doc) \
   _DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })

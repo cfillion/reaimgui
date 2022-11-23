@@ -61,7 +61,7 @@ using namespace std::string_literals;
 #define KEY(prefix) (prefix "_ImGui_"s + name)
 
 API::API(const char *name, void *cImpl, void *reascriptImpl,
-         const char *definition, const char *defargs, const unsigned int lastLine)
+         const char *definition, const unsigned int lastLine)
   : m_section { lastSection() }, m_lines { firstLine(), lastLine },
     m_regs {
       { KEY("-API"),       cImpl         },

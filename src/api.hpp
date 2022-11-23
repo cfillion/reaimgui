@@ -49,7 +49,7 @@ public:
   static void handleError(const char *fnName, const imgui_error &);
 
   API(const char *name, void *cImpl, void *reascriptImpl,
-      const char *definition, const char *defargs, unsigned int lastLine);
+      const char *definition, unsigned int lastLine);
   ~API();
 
   // internal helpers for genbindings
