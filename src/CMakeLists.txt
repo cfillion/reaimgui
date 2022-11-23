@@ -8,9 +8,11 @@ add_library(src OBJECT
   docker.cpp
   error.cpp
   font.cpp
+  image.cpp
   keymap.cpp
   main.cpp
   opengl_renderer.cpp
+  png_image.cpp
   renderer.cpp
   resource.cpp
   settings.cpp
@@ -110,6 +112,9 @@ target_link_libraries(src Boost::headers)
 
 find_package(ImGui REQUIRED)
 target_link_libraries(src ImGui::ImGui)
+
+find_package(PNG REQUIRED)
+target_link_libraries(src PNG::PNG)
 
 find_package(WDL REQUIRED)
 target_link_libraries(src WDL::WDL)

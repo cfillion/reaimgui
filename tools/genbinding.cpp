@@ -214,6 +214,7 @@ class ImGui_Context;
 class ImGui_DrawList;
 class ImGui_DrawListSplitter;
 class ImGui_Font;
+class ImGui_Image;
 class ImGui_ListClipper;
 class ImGui_TextFilter;
 class ImGui_Viewport;

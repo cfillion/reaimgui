@@ -26,7 +26,8 @@ struct TextureCmd;
 
 class TextureManager {
 public:
-  using PixelGetter = unsigned char *(*)(void *object, float scale, int *width, int *height);
+  using PixelGetter = const unsigned char *(*)(void *object, float scale,
+                                               int *width, int *height);
   using CommandRunner = std::function<void (const TextureCmd &)>;
 
   TextureManager();
@@ -36,7 +37,7 @@ public:
   void invalidate(void *object);
 
   void update(TextureCookie *, const CommandRunner &) const;
-  unsigned char *getPixels(size_t index, int *width, int *height) const;
+  const unsigned char *getPixels(size_t index, int *width, int *height) const;
 
 private:
   friend TextureCookie;

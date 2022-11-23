@@ -22,9 +22,9 @@
 #include <cassert>
 #include <reaper_plugin_functions.h>
 
-static API *&lastFunc()
+static const API *&lastFunc()
 {
-  static API *head;
+  static const API *head;
   return head;
 }
 
@@ -40,7 +40,7 @@ static const API::Section *&lastSection()
   return section;
 }
 
-const API *API::head()
+const API *API::head() // immutable public accessor
 {
   return lastFunc();
 }
@@ -60,13 +60,13 @@ API::Section::Section(const Section *parent, const char *file,
 API::API(const RegKeys &keys, void *impl, void *vararg,
          const char *defdoc, const unsigned int lastLine)
   : m_section { lastSection() }, m_lines { firstLine(), lastLine },
+    m_next { lastFunc() },
     m_regs {
       { keys.impl,   impl   },
       { keys.vararg, vararg },
       { keys.defdoc, reinterpret_cast<void *>(const_cast<char *>(defdoc)) },
     }
 {
-  m_next = lastFunc();
   lastFunc() = this;
 }
 

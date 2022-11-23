@@ -135,8 +135,6 @@ NATIVE_ONLY = [
 
   # images
   'ImVec2 ImGui::GetFontTexUvWhitePixel()',
-  'void ImGui::Image(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)',
-  'bool ImGui::ImageButton(const char*, ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)',
   'void ImDrawList::PushTextureID(ImTextureID)',
   'void ImDrawList::PopTextureID()',
   'void ImDrawList::AddImage(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
@@ -222,6 +220,8 @@ RENAMES = {
 ARG_RENAMES = {
   'ListBox' => { 'items_count' => 'items_sz' },
   'ColorConvertDouble4ToU32' => { 'in_x' => 'r', 'in_y' => 'g', 'in_w' => 'b', 'in_h' => 'a' },
+  'Image'       => { 'user_texture_id' => 'img' },
+  'ImageButton' => { 'user_texture_id' => 'img' },
 }
 
 # these functions were not ported 1:1 (same name, otherwise add to RENAMES above too!)
@@ -283,6 +283,7 @@ RESOURCES = {
   'ImGui_DrawList*'         => 'draw_list',
   'ImGui_DrawListSplitter*' => 'splitter',
   'ImGui_Font*'             => 'font',
+  'ImGui_Image*'            => 'img',
   'ImGui_ListClipper*'      => 'clipper',
   'ImGui_TextFilter*'       => 'filter',
   'ImGui_Viewport*'         => 'viewport',
@@ -364,6 +365,8 @@ private
       "double#{$~[1] && '*'}"
     when /unsigned int(\*)?/, /size_t(\*)?/
       "int#{$~[1]}"
+    when 'ImTextureID'
+      'ImGui_Image*'
     when /\AIm(?:Gui|Draw)[^\*]+(?:Flags\*)?\z/, 'ImU32'
       'int'
     when 'const char* const'

@@ -8,6 +8,7 @@
     { "name": "boost-variant", "platform": "osx" },
     { "name": "freetype", "default-features": false, "platform": "!linux" },
     { "name": "gl3w", "platform": "windows" },
+    { "name": "libpng", "platform": "!linux" },
     "cmark",
     "gtest"
   ]

@@ -65,7 +65,7 @@ using DefArgVal = std::conditional_t<
   BOOST_PP_EXPR_IF(                                      \
     BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3), \
     constexpr DefArgVal<_ARG_TYPE(arg)>                  \
-      _DEFARG_ID(_ARG_NAME(arg)) { _ARG_DEFV(arg) };     \
+      _DEFARG_ID(_ARG_NAME(arg))(_ARG_DEFV(arg));        \
   )
 
 #define _API_CATCH(name, type, except) \

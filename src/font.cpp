@@ -25,11 +25,12 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
 
-static unsigned char *getAtlasPixels(void *object, const float scale, int *width, int *height)
+static const unsigned char *getAtlasPixels(void *object, const float scale,
+  int *width, int *height)
 {
   FontList *list { static_cast<FontList *>(object) };
   ImFontAtlas *atlas { list->getAtlas(scale) };
-  unsigned char *pixels;
+  unsigned char *pixels {};
   atlas->GetTexDataAsRGBA32(&pixels, width, height);
   return pixels;
 }

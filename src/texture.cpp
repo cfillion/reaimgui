@@ -26,7 +26,8 @@ TextureManager::TextureManager()
 {
 }
 
-size_t TextureManager::touch(void *object, const float scale, const PixelGetter getPixels)
+size_t TextureManager::touch(void *object, const float scale,
+  const PixelGetter getPixels)
 {
   const auto [begin, end]
     { std::equal_range(m_textures.begin(), m_textures.end(), object) };
@@ -135,7 +136,8 @@ void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) 
   }
 }
 
-unsigned char *TextureManager::getPixels(const size_t index, int *width, int *height) const
+const unsigned char *TextureManager::getPixels(const size_t index,
+  int *width, int *height) const
 {
   const Texture &tex { m_textures[index] };
   return tex.getPixels(tex.user, tex.scale, width, height);

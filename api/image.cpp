@@ -1,0 +1,77 @@
+/* ReaImGui: ReaScript binding for Dear ImGui
+ * Copyright (C) 2021-2022  Christian Fillion
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "helper.hpp"
+
+#include "color.hpp"
+#include "image.hpp"
+
+API_SECTION("Image",
+R"(ReaImGui currently supports loading PNG and JPEG bitmap images.
+Flat vector images may be loaded as fonts, see CreateFont.)");
+
+// TODO: Attach/Detach API
+DEFINE_API(ImGui_Image*, CreateImage,
+(const char*,file)(int*,API_RO(flags)),
+R"(The returned object is valid as long as it is used in each defer cycle.
+('flags' is reserved for future expansion))",
+{
+  return Image::fromFile(file);
+});
+
+DEFINE_API(void, Image_GetSize, (ImGui_Image*,img)
+(double*,API_W(w))(double*,API_W(h)),
+"",
+{
+  assertValid(img);
+  if(API_W(w)) *API_W(w) = img->width();
+  if(API_W(h)) *API_W(h) = img->height();
+});
+
+DEFINE_API(void, Image, (ImGui_Context*,ctx)
+(ImGui_Image*,img)(double,size_w)(double,size_h)
+(double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
+(double*,API_RO(uv1_x),1)(double*,API_RO(uv1_y),1)
+(int*,API_RO(tint_col_rgba),0xFFFFFFFF)(int*,API_RO(border_col_rgba),0x00000000),
+"",
+{
+  FRAME_GUARD;
+  assertValid(img);
+
+  const ImTextureID tex { img->makeTexture(ctx, ImGui::GetWindowDpiScale()) };
+  ImGui::Image(tex, ImVec2(size_w, size_h),
+    ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
+    ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
+    Color(API_RO_GET(tint_col_rgba)), Color(API_RO_GET(border_col_rgba)));
+});
+
+DEFINE_API(bool, ImageButton, (ImGui_Context*,ctx)
+(const char*,str_id)(ImGui_Image*,img)(double,size_w)(double,size_h)
+(double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
+(double*,API_RO(uv1_x),1)(double*,API_RO(uv1_y),1)
+(int*,API_RO(bg_col_rgba),0x00000000)(int*,API_RO(tint_col_rgba),0xFFFFFFFF),
+"",
+{
+  FRAME_GUARD;
+  assertValid(img);
+
+  const ImTextureID tex { img->makeTexture(ctx, ImGui::GetWindowDpiScale()) };
+  return ImGui::ImageButton(str_id, tex, ImVec2(size_w, size_h),
+    ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
+    ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
+    Color(API_RO_GET(bg_col_rgba)), Color(API_RO_GET(tint_col_rgba)));
+});
