@@ -19,7 +19,20 @@
 
 #include "font.hpp"
 
-API_SECTION("Font");
+API_SECTION("Font",
+R"(Supports loading fonts from the system by family name or from a file.
+Glyphs may contain colors in COLR/CPAL format.
+
+This API currently has multiple limitations (v1.0 blockers):
+- ReaImGui rasterizes glyphs only from the Basic Latin and Latin Supplement
+  Unicode blocks (U+0020 to U+00FF). UTF-8 is fully supported internally,
+  however characters outside those blocks are displayed as '?'.
+  See [issue #5](https://github.com/cfillion/reaimgui/issues/5).
+- Dear ImGui does not support using new fonts in the middle of a frame.
+  Because of this, fonts must first be registered using AttachFont before any
+  other context functions are used in the same defer cycle.
+  (Attaching a font is a heavy operation and should ideally be done outside
+  of the defer loop.))");
 
 DEFINE_API(ImGui_Font*, CreateFont,
 (const char*,family_or_file)(int,size)(int*,API_RO(flags),ReaImGuiFontFlags_None),
