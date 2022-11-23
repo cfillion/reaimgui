@@ -13,7 +13,6 @@ add_library(api OBJECT
   menu.cpp
   plot.cpp
   popup.cpp
-  secret.cpp
   select.cpp
   slider.cpp
   style.cpp

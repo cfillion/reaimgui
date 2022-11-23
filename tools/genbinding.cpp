@@ -1013,10 +1013,8 @@ static void pythonBinding(std::ostream &stream)
 
 int main(int argc, const char *argv[])
 {
-  for(const API *func { API::head() }; func; func = func->m_next) {
-    if(func->definition()) // only handle function exported to ReaScript
-      g_funcs.push_back(func);
-  }
+  for(const API *func { API::head() }; func; func = func->m_next)
+    g_funcs.push_back(func);
   std::sort(g_funcs.begin(), g_funcs.end());
 
   const std::string_view lang { argc >= 2 ? argv[1] : "cpp" };

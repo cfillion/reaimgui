@@ -80,8 +80,7 @@ void API::RegDesc::announce(const bool add) const
 {
   // the original key string must remain valid even when unregistering
   // in REAPER < 6.67 (see reapack#56)
-  if(value)
-    plugin_register(add ? key + 1 : key, value);
+  plugin_register(add ? key + 1 : key, value);
 }
 
 void API::announceAll(const bool add)
