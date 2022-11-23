@@ -15,24 +15,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string>
 #include <reaper_plugin_functions.h>
 
 class PluginRegister {
 public:
-  PluginRegister(const std::string &key, void *value)
+  PluginRegister(const char *key, void *value)
     : m_key { key }, m_value { value }
   {
-    plugin_register(m_key.c_str(), m_value);
+    // assert(m_key[0] == '-');
+    plugin_register(m_key + 1, m_value);
   }
 
   ~PluginRegister()
   {
     // the original m_key passed when registering must remain valid in REAPER < 6.67
-    plugin_register(("-" + m_key).c_str(), m_value);
+    plugin_register(m_key, m_value);
   }
 
 private:
-  std::string m_key;
+  const char *m_key;
   void *m_value;
 };

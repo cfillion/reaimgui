@@ -129,14 +129,14 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Viewport { viewport }, m_dockerHost { dockerHost },
     m_accel { &translateAccel, true, this },
-    m_accelReg { "accelerator", &m_accel },
+    m_accelReg { "-accelerator", &m_accel },
     m_mouseDown { 0 }, m_noFocus { false }
 {
   static std::weak_ptr<PluginRegister> g_hwndInfo; // v6.29+
 
   if(g_hwndInfo.expired())
     g_hwndInfo = m_hwndInfo = std::make_shared<PluginRegister>
-      ("hwnd_info", reinterpret_cast<void *>(&Window::hwndInfo));
+      ("-hwnd_info", reinterpret_cast<void *>(&Window::hwndInfo));
   else
     m_hwndInfo = g_hwndInfo.lock();
 

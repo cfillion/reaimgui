@@ -53,16 +53,17 @@ public:
   ~API();
 
   // internal helpers for genbindings
-  GENBINDINGS_API static const API *enumAPI();
-  inline const char *name() const { return &m_regs[0].key[4]; /* strlen("API_") */ }
+  GENBINDINGS_API static const API *head();
+  inline const char *name() const {
+    return &m_regs[0].key[5]; /* strlen("-API_") */ }
   inline const char *definition() const {
     return static_cast<const char *>(m_regs[2].value); }
-  const Section *m_section;
-  const char *m_defargs;
-  LineRange m_lines;
+  const Section * const m_section;
+  const LineRange m_lines;
+  const API *m_next;
 
 private:
-  struct RegInfo {
+  struct RegDesc {
     std::string key;
     void *value;
     void announce(bool add) const;

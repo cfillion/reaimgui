@@ -975,7 +975,7 @@ static void pythonBinding(std::ostream &stream)
 
 int main(int argc, const char *argv[])
 {
-  while(const API *func { API::enumAPI() }) {
+  for(const API *func { API::head() }; func; func = func->m_next) {
     if(func->definition()) // only handle function exported to ReaScript
       addFunc(func);
   }
