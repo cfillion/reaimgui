@@ -22,6 +22,7 @@
 #include "api_vararg.hpp"
 #include "context.hpp"
 
+#include <array>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/comparison/greater_equal.hpp>
 #include <boost/preprocessor/control/expr_if.hpp>
@@ -33,6 +34,13 @@
 #include <boost/preprocessor/tuple/size.hpp>
 #include <boost/type_index.hpp>
 #include <type_traits>
+
+#define API_PREFIX ImGui_
+#define API_KEYS(name) { \
+  "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) name, \
+  "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) name, \
+  "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) name, \
+}
 
 #define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
 #define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
@@ -82,8 +90,7 @@ using DefArgVal = std::conditional_t<
   }                                                                     \
                                                                         \
   extern const API API_EXPORT_##name; /* link-time duplicate check */   \
-  constexpr char API_NAME_##name[] { #name };                           \
-  const API API_EXPORT_##name { MakeRegKeys<&API_NAME_##name>::keys,    \
+  const API API_EXPORT_##name { API_KEYS(#name),                        \
     reinterpret_cast<void *>(&API_##name::invoke),                      \
     reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name::invoke>), \
     #type                                  "\0"                         \

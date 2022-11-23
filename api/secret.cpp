@@ -23,9 +23,8 @@
   type API_##name(_FOREACH_ARG(_SIGARG, _, args)) noexcept \
   __VA_ARGS__                                              \
                                                            \
-  constexpr char API_NAME_##name[] { #name };              \
   static const API API_reg_##name                          \
-    { MakeRegKeys<&API_NAME_##name>::keys,                 \
+    { API_KEYS(#name),                                     \
       reinterpret_cast<void *>(&API_##name), nullptr, nullptr, 0 };
 
 DEFINE_SECRET_API(bool, CheckVersionAndDataLayout, (const char*,version)

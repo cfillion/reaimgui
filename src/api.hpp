@@ -20,7 +20,7 @@
 
 #include "error.hpp"
 
-#include <array>
+#include <utility>
 
 #ifdef _WIN32
 #  ifdef IMPORT_GENBINDINGS_API
@@ -32,39 +32,11 @@
 #  define GENBINDINGS_API __attribute__((visibility("default")))
 #endif
 
-#define API_PREFIX "ImGui_"
-
-struct RegKeys {
-  const char *impl, *vararg, *defdoc;
-};
-
-template<auto name>
-class MakeRegKeys {
-  static constexpr size_t N { sizeof(*name) };
-
-  template<size_t PN>
-  static constexpr auto concat(const char (&prefix)[PN])
-  {
-    std::array<char, PN + N - 1> key {};
-    for(size_t i {}; i < PN - 1; ++i)
-      key[i] = prefix[i];
-    for(size_t i {}; i < N; ++i)
-      key[PN + i - 1] = (*name)[i];
-    return key;
-  }
-
-public:
-  static constexpr auto impl   { concat("-API_"       API_PREFIX) };
-  static constexpr auto vararg { concat("-APIvararg_" API_PREFIX) };
-  static constexpr auto defdoc { concat("-APIdef_"    API_PREFIX) };
-  static constexpr RegKeys keys
-    { impl.data(), vararg.data(), defdoc.data() };
-};
-
 class API {
 public:
   using LineRange = std::pair<unsigned int, unsigned int>;
   struct FirstLine { FirstLine(unsigned int); };
+  struct RegKeys { const char *impl, *vararg, *defdoc; };
   struct Section {
     Section(const Section *parent, const char *file,
       const char *title, const char *help = nullptr);
