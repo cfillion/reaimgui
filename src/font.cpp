@@ -25,7 +25,7 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
 
-static const unsigned char *getAtlasPixels(void *object, const float scale,
+static const unsigned char *getPixels(void *object, const float scale,
   int *width, int *height)
 {
   FontList *list { static_cast<FontList *>(object) };
@@ -33,6 +33,12 @@ static const unsigned char *getAtlasPixels(void *object, const float scale,
   unsigned char *pixels {};
   atlas->GetTexDataAsRGBA32(&pixels, width, height);
   return pixels;
+}
+
+static void removeScale(void *object, const float scale)
+{
+  FontList *list { static_cast<FontList *>(object) };
+  list->removeAtlas(scale);
 }
 
 Font::Font(const char *family, const int size, const int flags)
@@ -150,13 +156,33 @@ void FontList::setScale(const float scale)
 
   // after build() because it clears the texture ID!
   // (via ImFontAtlasBuildWithFreeTypeEx)
-  atlas->SetTexID(m_textureManager->touch(this, scale, &getAtlasPixels));
+  Texture tex { this, scale, &getPixels };
+  tex.m_compact = &removeScale;
+  atlas->SetTexID(m_textureManager->touch(tex));
 }
 
 ImFontAtlas *FontList::getAtlas(const float scale)
 {
   const auto it { m_atlases.find(scale) };
   return it != m_atlases.end() ? it->second.get() : nullptr;
+}
+
+void FontList::removeAtlas(const float scale)
+{
+  const float primaryScale { ImGui::GetPlatformIO().Monitors[0].DpiScale };
+  if(scale == primaryScale)
+    return;
+
+  const auto it { m_atlases.find(scale) };
+  if(it == m_atlases.end())
+    return;
+
+  ImGuiIO &io { ImGui::GetIO() };
+  if(io.Fonts == it->second.get())
+    io.Fonts = m_atlases[primaryScale].get();
+
+  it->second->Locked = false;
+  m_atlases.erase(it);
 }
 
 void FontList::build(const float scale)

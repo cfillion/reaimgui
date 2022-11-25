@@ -87,6 +87,7 @@ void TextureManager::cleanup()
     if(it->lastTimeActive >= cutoff)
       ++it;
     else {
+      it->compact();
       it = m_textures.erase(it);
       m_version = versionIfChange;
     }

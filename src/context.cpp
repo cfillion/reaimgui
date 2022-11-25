@@ -178,8 +178,12 @@ bool Context::beginFrame() try
 
   m_inFrame = true;
 
-  Platform::updateMonitors(); // TODO
+  Platform::updateMonitors(); // TODO only if changed
   m_fonts->update(); // uses the monitor list
+
+  // before the manager begins giving texture IDs
+  // used in the frame to avoid flicker
+  m_textureManager->cleanup();
 
   updateFrameInfo();
   updateTheme();
@@ -217,7 +221,6 @@ bool Context::endFrame(const bool render) try
   if(render) {
     updateCursor();
     updateDragDrop();
-    m_textureManager->cleanup(); // remove unused/deleted textures
     ImGui::Render();
   }
   else
