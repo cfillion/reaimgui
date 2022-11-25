@@ -1,6 +1,7 @@
 // For compatibility with REAPER versions prior 6.24.
 // See hello_world.eel (ReaImGui_Hello World.eel) for an example using the new extension API syntax.
 
+ctx = extension_api("ImGui_CreateContext", "Hello World!");
 extension_api("ImGui_NumericLimits_Float", FLT_MIN, FLT_MAX);
 
 color = 0;
@@ -45,9 +46,4 @@ function loop() (
   open ? defer("loop()");
 );
 
-function init() (
-  ctx = extension_api("ImGui_CreateContext", "Hello World!");
-  loop();
-);
-
-defer("init()");
+defer("loop()");

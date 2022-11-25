@@ -1,5 +1,6 @@
 // REAPER 6.24 or newer only! (Use the legacy syntax extension_api(...) for older versions)
 
+ctx = ImGui_CreateContext("Hello World!");
 ImGui_NumericLimits_Float(FLT_MIN, FLT_MAX);
 
 color = 0;
@@ -34,14 +35,10 @@ function frame() (
 
 function loop() (
   open = 1; // enable the close button
-  ImGUi_SetNextWindowSize(ctx, 500, 420, ImGui_Cond_FirstUseEver());
+  ImGui_SetNextWindowSize(ctx, 500, 420, ImGui_Cond_FirstUseEver());
   ImGui_Begin(ctx, "Hello World!", open) ? ( frame(); ImGui_End(ctx); );
   open ? defer("loop()")
 );
 
-function init() (
-  ctx = ImGui_CreateContext("Hello World!");
-  loop();
-);
+defer("loop()");
 
-defer("init()");
