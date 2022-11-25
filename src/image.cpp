@@ -22,6 +22,7 @@
 #include "texture.hpp"
 #include "win32_unicode.hpp"
 
+#include <boost/iostreams/stream.hpp>
 #include <fstream>
 
 static const Image::RegisterType *&typeHead()
@@ -54,6 +55,13 @@ Image *Image::fromFile(const char *file)
   stream.open(WIDEN(file), std::ios_base::binary);
   if(!stream.good())
     throw reascript_error { strerror(errno) };
+  return create(stream);
+}
+
+Image *Image::fromMemory(const char *data, const int size)
+{
+  using boost::iostreams::array_source;
+  boost::iostreams::stream<array_source> stream { data, size };
   return create(stream);
 }
 

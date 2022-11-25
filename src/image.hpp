@@ -41,6 +41,7 @@ public:
   };
 
   static Image *fromFile(const char *);
+  static Image *fromMemory(const char *, int size);
 
   auto width()  const { return m_width;  }
   auto height() const { return m_height; }

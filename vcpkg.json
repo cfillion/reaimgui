@@ -3,6 +3,7 @@
   "version-string": "current",
   "dependencies": [
     { "name": "boost-filesystem", "platform": "osx" },
+    { "name": "boost-iostreams", "platform": "!linux" },
     { "name": "boost-preprocessor", "platform": "!linux" },
     { "name": "boost-type-index", "platform": "!linux" },
     { "name": "boost-variant", "platform": "osx" },
