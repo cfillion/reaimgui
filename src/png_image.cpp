@@ -24,6 +24,11 @@
 
 constexpr size_t HEADER_SIZE { 8 }; // must not be > 8
 
+class PNGImage : public Bitmap {
+public:
+  PNGImage(std::istream &);
+};
+
 static bool isPng(std::istream &stream)
 {
   png_byte header[HEADER_SIZE];

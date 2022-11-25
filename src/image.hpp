@@ -23,7 +23,7 @@
 #include <vector>
 #include <istream>
 
-class Context;
+class TextureManager;
 
 class Image : public Resource {
 public:
@@ -43,13 +43,21 @@ public:
   static Image *fromFile(const char *);
   static Image *fromMemory(const char *, int size);
 
-  auto width()  const { return m_width;  }
-  auto height() const { return m_height; }
+  virtual size_t width()  const = 0;
+  virtual size_t height() const = 0;
+  virtual size_t makeTexture(TextureManager *) = 0;
+};
 
-  size_t makeTexture(Context *, float scale);
+using ImGui_Image = Image;
+
+class Bitmap : public Image {
+public:
+  size_t width()  const override { return m_width;  }
+  size_t height() const override { return m_height; }
+  size_t makeTexture(TextureManager *) override;
 
 protected:
-  Image() = default;
+  Bitmap() = default;
   std::vector<unsigned char> m_pixels;
   size_t m_width, m_height;
 
@@ -58,11 +66,34 @@ private:
     int *width, int *height);
 };
 
-using ImGui_Image = Image;
-
-class PNGImage : public Image {
+class ImageSet : public Image {
 public:
-  PNGImage(std::istream &);
+  static constexpr const char *api_type_name { "ImGui_ImageSet" };
+
+  void add(float scale, Image *);
+
+  size_t width() const override;
+  size_t height() const override;
+  size_t makeTexture(TextureManager *) override;
+
+protected:
+  bool heartbeat() override;
+
+private:
+  struct Item {
+    Item(float scale, Image *image) : scale { scale }, image { image } {}
+    float scale;
+    Image *image;
+    bool operator<(float targetScale) const { return scale < targetScale; }
+  };
+
+  static const unsigned char *getPixels(void *object, float scale,
+    int *width, int *height);
+  const Item &select() const;
+
+  std::vector<Item> m_images;
 };
+
+using ImGui_ImageSet = ImageSet;
 
 #endif

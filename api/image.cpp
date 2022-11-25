@@ -61,7 +61,7 @@ DEFINE_API(void, Image, (ImGui_Context*,ctx)
   FRAME_GUARD;
   assertValid(img);
 
-  const ImTextureID tex { img->makeTexture(ctx, ImGui::GetWindowDpiScale()) };
+  const ImTextureID tex { img->makeTexture(ctx->textureManager()) };
   ImGui::Image(tex, ImVec2(size_w, size_h),
     ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
     ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
@@ -78,9 +78,42 @@ DEFINE_API(bool, ImageButton, (ImGui_Context*,ctx)
   FRAME_GUARD;
   assertValid(img);
 
-  const ImTextureID tex { img->makeTexture(ctx, ImGui::GetWindowDpiScale()) };
+  const ImTextureID tex { img->makeTexture(ctx->textureManager()) };
   return ImGui::ImageButton(str_id, tex, ImVec2(size_w, size_h),
     ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
     ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
     Color(API_RO_GET(bg_col_rgba)), Color(API_RO_GET(tint_col_rgba)));
+});
+
+API_SUBSECTION("Image Set",
+R"(Helper to automatically select and scale an image to the DPI scale of
+the current window upon usage.
+
+ImGui_ImageSet objects can be given to any function that expect an image as
+parameter.
+
+Usage:
+
+    local set = reaper.ImGui_CreateImageSet()
+    reaper.ImGui_ImageSet_Add(set, 1.0, reaper.ImGui_CreateImage('32x32.png'))
+    reaper.ImGui_ImageSet_Add(set, 2.0, reaper.ImGui_CreateImage('64x64.png'))
+
+    local function frame()
+      reaper.ImGui_Image(ctx, set, reaper.ImGui_Image_GetSize(set))
+      -- ...
+    end)");
+
+DEFINE_API(ImGui_ImageSet*, CreateImageSet, NO_ARGS,
+"",
+{
+  return new ImageSet;
+});
+
+DEFINE_API(void, ImageSet_Add, (ImGui_ImageSet*,set)
+(double,scale)(ImGui_Image*,img),
+"'img' cannot be another ImageSet.",
+{
+  assertValid(set);
+  assertValid(img);
+  set->add(scale, img);
 });

@@ -284,6 +284,7 @@ RESOURCES = {
   'ImGui_DrawListSplitter*' => 'splitter',
   'ImGui_Font*'             => 'font',
   'ImGui_Image*'            => 'img',
+  'ImGui_ImageSet*'         => 'set',
   'ImGui_ListClipper*'      => 'clipper',
   'ImGui_TextFilter*'       => 'filter',
   'ImGui_Viewport*'         => 'viewport',

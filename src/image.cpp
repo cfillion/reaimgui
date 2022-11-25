@@ -17,13 +17,14 @@
 
 #include "image.hpp"
 
-#include "context.hpp"
 #include "error.hpp"
 #include "texture.hpp"
 #include "win32_unicode.hpp"
 
 #include <boost/iostreams/stream.hpp>
+#include <cmath> // abs
 #include <fstream>
+#include <imgui/imgui.h>
 
 static const Image::RegisterType *&typeHead()
 {
@@ -65,19 +66,79 @@ Image *Image::fromMemory(const char *data, const int size)
   return create(stream);
 }
 
-const unsigned char *Image::getPixels(void *object, const float scale,
+const unsigned char *Bitmap::getPixels(void *object, const float,
   int *width, int *height)
 {
-  printf("getPixels obj=%p scale=%f\n", object, scale);
-  const Image *image { static_cast<Image *>(object) };
+  const Bitmap *image { static_cast<Bitmap *>(object) };
   *width = image->m_width, *height = image->m_height;
   return image->m_pixels.data();
 }
 
-size_t Image::makeTexture(Context *ctx, const float)
+size_t Bitmap::makeTexture(TextureManager *textureManager)
 {
   keepAlive();
   Texture tex { this, 1.f, &getPixels };
   tex.m_isValid = &Resource::isValid;
-  return ctx->textureManager()->touch(tex);
+  return textureManager->touch(tex);
+}
+
+void ImageSet::add(const float scale, Image *img)
+{
+  // don't allow infinite recursion
+  if(dynamic_cast<ImageSet *>(img))
+    throw reascript_error { "image cannot be a set" };
+
+  auto it { std::lower_bound(m_images.begin(), m_images.end(), scale) };
+  if(it != m_images.end() && it->scale == scale)
+    throw reascript_error { "scale is already in the set" };
+
+  m_images.emplace(it, scale, img);
+}
+
+const ImageSet::Item &ImageSet::select() const
+{
+  if(m_images.empty())
+    throw reascript_error { "image set is empty" };
+
+  const float scale { ImGui::GetWindowDpiScale() };
+  const auto it { std::lower_bound(m_images.begin(), m_images.end(), scale) };
+  if(it == m_images.begin())
+    return *it;
+  else if(it == m_images.end())
+    return m_images.back();
+
+  const auto prev { std::prev(it) };
+  if(std::abs(prev->scale - scale) < std::abs(it->scale - scale))
+    return *prev;
+  else
+    return *it;
+}
+
+size_t ImageSet::width() const
+{
+  const Item &item { select() };
+  return item.image->width() / item.scale;
+}
+
+size_t ImageSet::height() const
+{
+  const Item &item { select() };
+  return item.image->height() / item.scale;
+}
+
+size_t ImageSet::makeTexture(TextureManager *textureManager)
+{
+  keepAlive();
+  return select().image->makeTexture(textureManager);
+}
+
+bool ImageSet::heartbeat()
+{
+  if(!Resource::heartbeat())
+    return false;
+
+  for(const auto &item : m_images)
+    item.image->keepAlive();
+
+  return true;
 }
