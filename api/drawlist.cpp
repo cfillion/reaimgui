@@ -20,6 +20,7 @@
 #include "color.hpp"
 #include "drawlist.hpp"
 #include "font.hpp"
+#include "image.hpp"
 #include "resource_proxy.hpp"
 
 #include <reaper_plugin_secrets.h> // reaper_array
@@ -370,6 +371,62 @@ DEFINE_API(void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
   draw_list->get()->AddBezierQuadratic(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     Color::fromBigEndian(col_rgba), thickness, API_RO_GET(num_segments));
+});
+
+DEFINE_API(void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
+(ImGui_Image*,img)
+(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
+(double*,API_RO(uv_min_x),0.0)(double*,API_RO(uv_min_y),0.0)
+(double*,API_RO(uv_max_x),1.0)(double*,API_RO(uv_max_y),1.0)
+(int*,API_RO(col_rgba),0xFFFFFFFF),
+"",
+{
+  Context *ctx;
+  ImDrawList *dl { draw_list->get(&ctx) };
+  assertValid(img);
+  dl->AddImage(img->makeTexture(ctx->textureManager()),
+    ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
+    ImVec2(API_RO_GET(uv_min_x), API_RO_GET(uv_min_y)),
+    ImVec2(API_RO_GET(uv_max_x), API_RO_GET(uv_max_y)),
+    Color::fromBigEndian(API_RO_GET(col_rgba)));
+});
+
+DEFINE_API(void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
+(ImGui_Image*,img)(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
+(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
+(double*,API_RO(uv1_x),0.0)(double*,API_RO(uv1_y),0.0)
+(double*,API_RO(uv2_x),1.0)(double*,API_RO(uv2_y),0.0)
+(double*,API_RO(uv3_x),1.0)(double*,API_RO(uv3_y),1.0)
+(double*,API_RO(uv4_x),0.0)(double*,API_RO(uv4_y),1.0)
+(int*,API_RO(col_rgba),0xFFFFFFFF),
+"",
+{
+  Context *ctx;
+  ImDrawList *dl { draw_list->get(&ctx) };
+  assertValid(img);
+  dl->AddImageQuad(img->makeTexture(ctx->textureManager()),
+    ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
+    ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
+    ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
+    ImVec2(API_RO_GET(uv2_x), API_RO_GET(uv2_y)),
+    ImVec2(API_RO_GET(uv3_x), API_RO_GET(uv3_y)),
+    ImVec2(API_RO_GET(uv4_x), API_RO_GET(uv4_y)),
+    Color::fromBigEndian(API_RO_GET(col_rgba)));
+});
+
+DEFINE_API(void, DrawList_AddImageRounded, (ImGui_DrawList*,draw_list)
+(ImGui_Image*,img)(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
+(double,uv_min_x)(double,uv_min_y)(double,uv_max_x)(double,uv_max_y)
+(int,col_rgba)(double,rounding)(int*,API_RO(flags),ImDrawFlags_None),
+"",
+{
+  Context *ctx;
+  ImDrawList *dl { draw_list->get(&ctx) };
+  assertValid(img);
+  dl->AddImageRounded(img->makeTexture(ctx->textureManager()),
+    ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
+    ImVec2(uv_min_x, uv_min_y), ImVec2(uv_max_x, uv_max_y),
+    Color::fromBigEndian(col_rgba), rounding, API_RO_GET(flags));
 });
 
 API_SUBSECTION("Stateful Path",

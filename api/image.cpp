@@ -22,7 +22,13 @@
 
 API_SECTION("Image",
 R"(ReaImGui currently supports loading PNG and JPEG bitmap images.
-Flat vector images may be loaded as fonts, see CreateFont.)");
+Flat vector images may be loaded as fonts, see CreateFont.
+
+UV parameters are texture coordinates in a scale of 0.0 (top/left) to 1.0
+(bottom/right). Use values below 0.0 or above 1.0 to tile the image.
+
+There are also image functions in the DrawList API such as
+DrawList_AddImageQuad and DrawList_AddImageRounded.)");
 
 // TODO: Attach/Detach API
 DEFINE_API(ImGui_Image*, CreateImage,
@@ -54,7 +60,7 @@ DEFINE_API(void, Image_GetSize, (ImGui_Image*,img)
 DEFINE_API(void, Image, (ImGui_Context*,ctx)
 (ImGui_Image*,img)(double,size_w)(double,size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
-(double*,API_RO(uv1_x),1)(double*,API_RO(uv1_y),1)
+(double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
 (int*,API_RO(tint_col_rgba),0xFFFFFFFF)(int*,API_RO(border_col_rgba),0x00000000),
 "",
 {
@@ -71,7 +77,7 @@ DEFINE_API(void, Image, (ImGui_Context*,ctx)
 DEFINE_API(bool, ImageButton, (ImGui_Context*,ctx)
 (const char*,str_id)(ImGui_Image*,img)(double,size_w)(double,size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
-(double*,API_RO(uv1_x),1)(double*,API_RO(uv1_y),1)
+(double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
 (int*,API_RO(bg_col_rgba),0x00000000)(int*,API_RO(tint_col_rgba),0xFFFFFFFF),
 "",
 {
