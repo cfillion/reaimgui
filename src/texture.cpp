@@ -27,7 +27,7 @@ TextureManager::TextureManager()
 }
 
 size_t TextureManager::touch(void *object, const float scale,
-  const PixelGetter getPixels)
+  const GetPixelsFunc getPixels, const IsValidFunc isValid)
 {
   const auto [begin, end]
     { std::equal_range(m_textures.begin(), m_textures.end(), object) };
@@ -36,7 +36,7 @@ size_t TextureManager::touch(void *object, const float scale,
   const auto now { static_cast<float>(ImGui::GetTime()) };
 
   if(it == end || it->user != object || it->scale != scale) {
-    it = m_textures.insert(it, { object, scale, 0, now, getPixels });
+    it = m_textures.emplace(it, object, scale, getPixels, isValid, now);
     ++m_version;
   }
   else
@@ -62,13 +62,44 @@ void TextureManager::invalidate(void *object)
     { equal_range(m_textures.begin(), m_textures.end(), object) };
 
   for(auto it { begin }; it < end; ++it)
-    ++it->version;
+    ++(it->version);
 
   ++m_version;
 }
 
+void TextureManager::cleanup()
+{
+  const float ttl { ImGui::GetIO().ConfigMemoryCompactTimer };
+  const auto cutoff { static_cast<float>(ImGui::GetTime()) - ttl };
+  const auto versionIfChange { m_version + 1 };
+
+  auto it { m_textures.begin() };
+  while(it != m_textures.end()) {
+    if(it->isValid && !it->isValid(it->user)) {
+      auto nextObjIt { it };
+      do { ++nextObjIt; }
+      while(nextObjIt != m_textures.end() && nextObjIt->user == it->user);
+
+      it = m_textures.erase(it, nextObjIt);
+      m_version = versionIfChange;
+      continue;
+    }
+
+    if(it->lastTimeActive >= cutoff)
+      ++it;
+    else {
+      it = m_textures.erase(it);
+      m_version = versionIfChange;
+    }
+  }
+}
+
 void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) const
 {
+  // There is no need for it now, but we might eventually want to have this
+  // allow selecting only textures of a given scale (eg. if the GDK backend
+  // ever gain multi-DPI capability.)
+
   constexpr auto NullCmd { static_cast<TextureCmd::Type>(-1) };
 
   if(m_version == cookie->m_version)

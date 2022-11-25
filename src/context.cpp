@@ -217,6 +217,7 @@ bool Context::endFrame(const bool render) try
   if(render) {
     updateCursor();
     updateDragDrop();
+    m_textureManager->cleanup(); // remove unused/deleted textures
     ImGui::Render();
   }
   else

@@ -69,5 +69,5 @@ const unsigned char *Image::getPixels(void *object, const float scale,
 size_t Image::makeTexture(Context *ctx, const float)
 {
   keepAlive();
-  return ctx->textureManager()->touch(this, 1.f, &getPixels);
+  return ctx->textureManager()->touch(this, 1.f, &getPixels, &isValid);
 }

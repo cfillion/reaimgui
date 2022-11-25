@@ -26,16 +26,18 @@ struct TextureCmd;
 
 class TextureManager {
 public:
-  using PixelGetter = const unsigned char *(*)(void *object, float scale,
+  using GetPixelsFunc = const unsigned char *(*)(void *object, float scale,
                                                int *width, int *height);
+  using IsValidFunc   = bool(*)(void *object);
   using CommandRunner = std::function<void (const TextureCmd &)>;
 
   TextureManager();
 
-  size_t touch(void *object, float scale, PixelGetter);
+  size_t touch(void *object, float scale, GetPixelsFunc, IsValidFunc = nullptr);
   void remove(void *object);
   void invalidate(void *object);
 
+  void cleanup();
   void update(TextureCookie *, const CommandRunner &) const;
   const unsigned char *getPixels(size_t index, int *width, int *height) const;
 
@@ -43,11 +45,19 @@ private:
   friend TextureCookie;
 
   struct Texture {
+    Texture(void *user, float scale, GetPixelsFunc getPixels,
+            IsValidFunc isValid, float now)
+      : user { user }, scale { scale }, getPixels { getPixels },
+        isValid { isValid }, version { 0u }, lastTimeActive { now }
+    {}
+
     void *user;
     float scale;
+    GetPixelsFunc getPixels;
+    IsValidFunc   isValid;
+
     unsigned int version;
     float lastTimeActive;
-    PixelGetter getPixels;
 
     operator void *() const { return user; }
     operator float() const { return scale; }
