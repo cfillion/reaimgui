@@ -226,8 +226,7 @@ void D3D10Renderer::Shared::textureCommand(const TextureCmd &cmd)
 
   for(size_t i {}; i < cmd.size; ++i) {
     int width, height;
-    const unsigned char *pixels
-      { cmd.manager->getPixels(cmd.offset + i, &width, &height) };
+    const unsigned char *pixels { cmd[i].getPixels(&width, &height) };
 
     CComPtr<ID3D10Texture2D> texture;
     const D3D10_TEXTURE2D_DESC textureDesc {

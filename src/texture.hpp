@@ -22,47 +22,63 @@
 #include <vector>
 
 class TextureCookie;
+class TextureManager;
 struct TextureCmd;
+
+class Texture {
+public:
+  using GetPixelsFunc = const unsigned char *(*)(void *object, float scale,
+                                                 int *width, int *height);
+  using IsValidFunc   = bool(*)(void *object);
+
+  Texture(void *user, float scale, GetPixelsFunc getPixels)
+    : user { user }, scale { scale }, m_getPixels { getPixels },
+      m_isValid { nullptr }, version { 0u }, lastTimeActive { 0.f }
+  {}
+
+  void *user;
+  float scale;
+  GetPixelsFunc m_getPixels;
+  IsValidFunc   m_isValid;
+
+  const unsigned char *getPixels(int *width, int *height) const
+  {
+    return m_getPixels(user, scale, width, height);
+  }
+
+  bool isValid() const
+  {
+    return m_isValid ? m_isValid(user) : true;
+  }
+
+  operator void*() const { return user;  }
+  operator float() const { return scale; }
+
+private:
+  friend TextureManager;
+  friend TextureCookie;
+
+  unsigned int version;
+  float lastTimeActive;
+};
 
 class TextureManager {
 public:
-  using GetPixelsFunc = const unsigned char *(*)(void *object, float scale,
-                                               int *width, int *height);
-  using IsValidFunc   = bool(*)(void *object);
   using CommandRunner = std::function<void (const TextureCmd &)>;
 
   TextureManager();
 
-  size_t touch(void *object, float scale, GetPixelsFunc, IsValidFunc = nullptr);
+  size_t touch(const Texture &);
+  template<typename... Args>
+  size_t touch(Args &&...args) { return touch({ args... }); }
+  const Texture &get(size_t i) const { return m_textures[i]; }
   void remove(void *object);
   void invalidate(void *object);
 
   void cleanup();
   void update(TextureCookie *, const CommandRunner &) const;
-  const unsigned char *getPixels(size_t index, int *width, int *height) const;
 
 private:
-  friend TextureCookie;
-
-  struct Texture {
-    Texture(void *user, float scale, GetPixelsFunc getPixels,
-            IsValidFunc isValid, float now)
-      : user { user }, scale { scale }, getPixels { getPixels },
-        isValid { isValid }, version { 0u }, lastTimeActive { now }
-    {}
-
-    void *user;
-    float scale;
-    GetPixelsFunc getPixels;
-    IsValidFunc   isValid;
-
-    unsigned int version;
-    float lastTimeActive;
-
-    operator void *() const { return user; }
-    operator float() const { return scale; }
-  };
-
   std::vector<Texture> m_textures;
   unsigned int m_version;
 };
@@ -91,6 +107,11 @@ struct TextureCmd {
   enum Type { Insert, Update, Remove };
   Type type;
   size_t offset, size;
+
+  const Texture &operator[](const size_t i) const
+  {
+    return manager->get(offset + i);
+  }
 };
 
 #endif
