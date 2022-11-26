@@ -980,33 +980,35 @@ function gfx.lineto(x, y, aa)
 end
 
 function gfx.loadimg(image, filename)
-  local rv = ogfx.loadimg(1, filename)
-  if rv < 0 then return rv end
+  local bitmap = reaper.ImGui_CreateImage(filename)
+  -- gfx returns < 0 on failure, reaimgui throws an error
 
-  local w, h = ogfx.getimgdim(1)
+  local w, h = reaper.ImGui_Image_GetSize(bitmap)
   gfx.setimgdim(image, w, h)
 
   local dest_backup = gfx.dest
   gfx.dest = image
 
-  warn('bitmap images not implemented (placeholder pattern)')
-
-  local AddRect, AddLine = reaper.ImGui_DrawList_AddRect,
-                           reaper.ImGui_DrawList_AddLine
+  local attached = false
+  local AddImage = reaper.ImGui_DrawList_AddImage
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local c = transformColor(0xFF00FFFF, blit_opts)
-    local w, h = transformPoint(w, h, blit_opts)
-    local x, y = screen_x + blit_opts.x1, screen_y + blit_opts.y1
-    local max_w, max_h = blit_opts.x2 - blit_opts.x1,
-                         blit_opts.y2 - blit_opts.y1
-    if w > max_w then w = max_w end if h > max_h then h = max_h end
-
-    AddRect(draw_list, x, y, x + w, y + h, c)
-    local pitch = 10 * blit_opts.scale_x
-    for i = pitch, w * 2, pitch do
-      AddLine(draw_list, x + i, y, (x + i) - w, y + h, c)
-      AddLine(draw_list, (x + i) - w, y, x + i, y + h, c)
+    if not attached then
+      -- could not attach before in loadimg, as it can be called before gfx.init
+      if not reaper.ImGui_ValidatePtr(bitmap, 'ImGui_Image*') then
+        bitmap = reaper.ImGui_CreateImage(filename)
+      end
+      reaper.ImGui_Attach(state.ctx, bitmap)
+      attached = true
     end
+
+    local w, h = transformPoint(w, h, blit_opts)
+    local uv0_x, uv0_y = blit_opts.x1 / w, blit_opts.y1 / h
+    local uv1_x, uv1_y = blit_opts.x2 / w, blit_opts.y2 / h
+
+    reaper.ImGui_DrawList_AddImage(draw_list, bitmap,
+      screen_x + blit_opts.x1, screen_y + blit_opts.y1,
+      screen_x + blit_opts.x2, screen_y + blit_opts.y2,
+      uv0_x, uv0_y, uv1_x, uv1_y)
   end)
 
   gfx.dest = dest_backup
