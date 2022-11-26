@@ -49,7 +49,7 @@ Filter usage:
 
 DEFINE_API(ImGui_TextFilter*, CreateTextFilter,
 (const char*,API_RO(default_filter),""),
-"Valid while used every frame.",
+"Valid while used every frame unless attached to a context (see Attach).",
 {
   return new TextFilter { API_RO_GET(default_filter) };
 });

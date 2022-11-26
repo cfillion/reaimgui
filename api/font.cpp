@@ -29,7 +29,7 @@ This API currently has multiple limitations (v1.0 blockers):
   however characters outside those blocks are displayed as '?'.
   See [issue #5](https://github.com/cfillion/reaimgui/issues/5).
 - Dear ImGui does not support using new fonts in the middle of a frame.
-  Because of this, fonts must first be registered using AttachFont before any
+  Because of this, fonts must first be registered using Attach before any
   other context functions are used in the same defer cycle.
   (Attaching a font is a heavy operation and should ideally be done outside
   of the defer loop.))");
@@ -37,7 +37,7 @@ This API currently has multiple limitations (v1.0 blockers):
 DEFINE_API(ImGui_Font*, CreateFont,
 (const char*,family_or_file)(int,size)(int*,API_RO(flags),ReaImGuiFontFlags_None),
 R"(Load a font matching a font family name or from a font file.
-The font will remain valid while it's attached to a context. See AttachFont.
+The font will remain valid while it's attached to a context. See Attach.
 
 The family name can be an installed font or one of the generic fonts:
 sans-serif, serif, monospace, cursive, fantasy.
@@ -49,36 +49,6 @@ If 'family_or_file' specifies a path to a font file (contains a / or \):
   return new Font { family_or_file, size, API_RO_GET(flags) };
 });
 
-static void outOfFrameCheck(Context *ctx)
-{
-  if(ctx->inFrame())
-    throw reascript_error { "cannot modify font texture: a frame has already begun" };
-}
-
-DEFINE_API(void, AttachFont, (ImGui_Context*,ctx)
-(ImGui_Font*,font),
-R"(Enable a font for use in the given context.Fonts must be attached as soon
-as possible after creating the context or on a new defer cycle.)",
-{
-  assertValid(ctx);
-  assertValid(font);
-  outOfFrameCheck(ctx);
-
-  ctx->fonts().add(font);
-});
-
-DEFINE_API(void, DetachFont, (ImGui_Context*,ctx)
-(ImGui_Font*,font),
-R"(Unload a font from the given context. The font will be destroyed if is not
-attached to any context.)",
-{
-  assertValid(ctx);
-  assertValid(font);
-  outOfFrameCheck(ctx);
-
-  ctx->fonts().remove(font);
-});
-
 DEFINE_API(ImGui_Font*, GetFont, (ImGui_Context*,ctx),
 "Get the current font",
 {
@@ -88,7 +58,8 @@ DEFINE_API(ImGui_Font*, GetFont, (ImGui_Context*,ctx),
 
 DEFINE_API(void, PushFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
-"Change the current font. Use nil to push the default font. See PopFont.",
+R"(Change the current font. Use nil to push the default font.
+The font object must have been registered using Attach. See PopFont.)",
 {
   FRAME_GUARD;
   ImGui::PushFont(ctx->fonts().instanceOf(font));
@@ -102,7 +73,8 @@ DEFINE_API(void, PopFont, (ImGui_Context*,ctx),
 });
 
 DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
-"Get current font size (= height in pixels) of current font with current scale applied",
+R"(Get current font size (= height in pixels) of current font with current scale
+applied.)",
 {
   FRAME_GUARD;
   return ImGui::GetFontSize();

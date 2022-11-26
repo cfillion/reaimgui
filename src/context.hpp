@@ -54,13 +54,17 @@ public:
   Context(const char *label, int userConfigFlags = ImGuiConfigFlags_None);
   ~Context();
 
+  // public api
   int userConfigFlags() const;
   void setUserConfigFlags(int);
+  void attach(Resource *);
+  void detach(Resource *);
 
+  // api helpers
   void setCurrent();
-  bool inFrame() const { return m_inFrame; }
   bool enterFrame();
 
+  // for backends
   void mouseInput(int button, bool down);
   void mouseWheel(bool horizontal, float delta);
   void keyInput(ImGuiKey key, bool down);
@@ -82,12 +86,15 @@ public:
   const char *name() const { return m_name.c_str(); }
   const auto &draggedFiles() const { return m_draggedFiles; }
 
+  bool attachable(const Context *) const override { return false; }
+
 protected:
   bool heartbeat() override;
 
 private:
   bool beginFrame();
   bool endFrame(bool render);
+  void assertOutOfFrame();
 
   void updateFrameInfo();
   void updateTheme();
@@ -106,6 +113,7 @@ private:
   HCURSOR m_cursor;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
   std::vector<std::string> m_draggedFiles;
+  std::vector<Resource *> m_attachments;
   std::string m_name, m_iniFilename;
 
   struct ContextDeleter { void operator()(ImGuiContext *); };

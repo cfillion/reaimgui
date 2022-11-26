@@ -30,6 +30,8 @@ public:
   ImDrawList *drawList() const;
   ImDrawListSplitter *operator->();
 
+  bool attachable(const Context *) const override { return true; }
+
 protected:
   bool isValid() const override;
 

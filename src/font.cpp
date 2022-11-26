@@ -99,7 +99,7 @@ void FontList::invalidate()
 void FontList::add(Font *font)
 {
   if(std::find(m_fonts.begin(), m_fonts.end(), font) != m_fonts.end())
-    return; // the font was already attached
+    return;
 
   m_fonts.push_back(font);
   invalidate();
@@ -109,16 +109,10 @@ void FontList::remove(Font *font)
 {
   const auto it { std::find(m_fonts.begin(), m_fonts.end(), font) };
   if(it == m_fonts.end())
-    throw reascript_error { "the font is not attached to this context" };
+    return;
 
   m_fonts.erase(it);
   invalidate();
-}
-
-void FontList::keepAliveAll()
-{
-  for(Font *font : m_fonts)
-    font->keepAlive();
 }
 
 void FontList::update()
@@ -232,7 +226,7 @@ ImFont *FontList::instanceOf(Font *font) const
 
   const auto it { std::find(m_fonts.begin(), m_fonts.end(), font) };
   if(it == m_fonts.end())
-    throw reascript_error { "font is not attached to the context (did you call AttachFont?)" };
+    throw reascript_error { "font is not attached to the context" };
 
   const auto index { std::distance(m_fonts.begin(), it) + 1 };
   const ImFontAtlas *atlas { ImGui::GetIO().Fonts };

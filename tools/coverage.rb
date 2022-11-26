@@ -281,6 +281,7 @@ RESOURCES = {
   'ImGui_Image*'            => 'img',
   'ImGui_ImageSet*'         => 'set',
   'ImGui_ListClipper*'      => 'clipper',
+  'ImGui_Resource*'         => 'obj',
   'ImGui_TextFilter*'       => 'filter',
   'ImGui_Viewport*'         => 'viewport',
 }

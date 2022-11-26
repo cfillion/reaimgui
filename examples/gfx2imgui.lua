@@ -487,8 +487,8 @@ local function unloadUnusedFonts()
 
   for i = UNUSED_FONTS_CACHE_SIZE + 1, #garbage do
     local old_font = garbage[i]
-    -- print(('DetachFont() size=%d'):format(old_font.cache_key))
-    reaper.ImGui_DetachFont(state.ctx, old_font.cache_val.instance)
+    -- print(('Detach() size=%d'):format(old_font.cache_key))
+    reaper.ImGui_Detach(state.ctx, old_font.cache_val.instance)
     old_font.cache_val.attached = false
     old_font.cache[old_font.cache_key] = nil
   end
@@ -509,10 +509,10 @@ local function loadRequestedFonts()
         throttled = true
       end
 
-      -- print(('AttachFont() %s@%d[%d]'):format(font.family, font.size, font.flags))
+      -- print(('Attach() %s@%d[%d]'):format(font.family, font.size, font.flags))
       local instance = reaper.ImGui_CreateFont(font.family, font.size, font.flags)
       local keep_alive = hasValue(global_state.fonts, font)
-      reaper.ImGui_AttachFont(state.ctx, instance)
+      reaper.ImGui_Attach(state.ctx, instance)
       put(state.fontmap, font.family, font.flags, font.size, {
         attached   = true,
         last_use   = state.frame_count,

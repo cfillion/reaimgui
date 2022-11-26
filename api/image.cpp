@@ -33,8 +33,10 @@ DrawList_AddImageQuad and DrawList_AddImageRounded.)");
 // TODO: Attach/Detach API
 DEFINE_API(ImGui_Image*, CreateImage,
 (const char*,file)(int*,API_RO(flags)),
-R"(The returned object is valid as long as it is used in each defer cycle.
-('flags' is reserved for future expansion))",
+R"(The returned object is valid as long as it is used in each defer cycle
+unless attached to a context (see Attach).
+
+('flags' currently unused and reserved for future expansion))",
 {
   return Image::fromFile(file);
 });

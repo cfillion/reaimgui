@@ -54,6 +54,8 @@ public:
   Font(const char *family, int size, int style);
   ImFont *load(ImFontAtlas *, float scale);
 
+  bool attachable(const Context *) const override { return true; }
+
 private:
   bool resolve(const char *family, int style);
 
@@ -70,7 +72,6 @@ public:
 
   void add(Font *);
   void remove(Font *);
-  void keepAliveAll();
   void update();
   void setScale(float scale);
   ImFontAtlas *getAtlas(float scale);

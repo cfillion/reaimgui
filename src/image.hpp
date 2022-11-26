@@ -46,6 +46,8 @@ public:
   virtual size_t width()  const = 0;
   virtual size_t height() const = 0;
   virtual size_t makeTexture(TextureManager *) = 0;
+
+  bool attachable(const Context *) const override { return true; }
 };
 
 using ImGui_Image = Image;

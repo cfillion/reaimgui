@@ -70,6 +70,33 @@ GetDeltaTime), in frame per second. Solely for convenience.)",
   return ctx->IO().Framerate;
 });
 
+DEFINE_API(void, Attach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
+R"(Link the object's lifetime to the given context.
+Objects can be draw list splitters, fonts, images, list clippers, etc.
+Call Detach to let the object be garbage-collected after unuse again.
+
+List clipper objects may only be attached to the context they were created for.
+
+Fonts are (currently) a special case: they must be attached to the context
+before usage. Furthermore, fonts may only be attached or detached immediately
+after the context is created or before any other function calls modifying the
+context per defer cycle. See "limitations" in the font API documentation.)",
+{
+  assertValid(ctx);
+  assertValid(obj);
+  ctx->attach(obj);
+});
+
+DEFINE_API(void, Detach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
+R"(Unlink the object's lifetime. Unattached objects are automatically destroyed
+when left unused. You may check whether an object has been destroyed using
+ValidatePtr.)",
+{
+  assertValid(ctx);
+  assertValid(obj);
+  ctx->detach(obj);
+});
+
 API_SUBSECTION("Options");
 
 // expose most settings from ImGuiIO

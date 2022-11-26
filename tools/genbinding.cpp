@@ -217,6 +217,7 @@ class ImGui_Font;
 class ImGui_Image;
 class ImGui_ImageSet;
 class ImGui_ListClipper;
+class ImGui_Resource;
 class ImGui_TextFilter;
 class ImGui_Viewport;
 
@@ -811,7 +812,7 @@ static void humanBinding(std::ostream &stream)
     stream << func.displayName << "</summary>";
 
     stream << "<table>"
-           << "<tr><th>C/C++</th><td><code>";      func.cppSignature(stream);        stream << "</code></td></tr>"
+           << "<tr><th>C++</th><td><code>";        func.cppSignature(stream);        stream << "</code></td></tr>"
            << "<tr><th>EEL</th><td><code>";        func.eelSignature(stream, false); stream << "</code></td></tr>"
            << "<tr><th>Legacy EEL</th><td><code>"; func.eelSignature(stream, true);  stream << "</code></td></tr>"
            << "<tr><th>Lua</th><td><code>";        func.luaSignature(stream);        stream << "</code></td></tr>"
