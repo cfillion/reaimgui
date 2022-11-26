@@ -5,7 +5,7 @@ stack: ruby 2.7
 before_build:
   - git submodule update --init --depth 1
 build_script:
-  - bash -c "cmake -B build
+  - bash -c "cmake -B build -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
               -DVCPKG_CHAINLOAD_TOOLCHAIN_FILE=$TOOLCHAIN
               -DVCPKG_TARGET_TRIPLET=$VCPKG_TARGET_TRIPLET"
   - cmake --build build --target reaimgui
