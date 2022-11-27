@@ -319,8 +319,7 @@ void Context::updateMouseData()
 
   // disabled by the GDK backend
   if(io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
-    io.MouseHoveredViewport = hoveredViewport;
-    // io.AddMouseViewportEvent(hoveredViewport); FIXME: imgui#5837
+    io.AddMouseViewportEvent(hoveredViewport);
 }
 
 void Context::mouseInput(const int button, const bool down)
