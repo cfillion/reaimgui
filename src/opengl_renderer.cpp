@@ -120,10 +120,12 @@ void OpenGLRenderer::Shared::textureCommand(const TextureCmd &cmd)
   case TextureCmd::Update:
     for(size_t i {}; i < cmd.size; ++i) {
       int width, height;
-      const unsigned char *pixels { cmd.manager->getPixels(cmd.offset + i, &width, &height) };
+      const unsigned char *pixels { cmd[i].getPixels(&width, &height) };
       glBindTexture(GL_TEXTURE_2D, m_textures[cmd.offset + i]);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     }
     break;

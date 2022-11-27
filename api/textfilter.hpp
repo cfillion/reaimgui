@@ -28,6 +28,8 @@ public:
   void set(const char *filter);
   ImGuiTextFilter *operator->();
 
+  bool attachable(const Context *) const override { return true; }
+
 private:
   ImGuiTextFilter m_filter;
 };

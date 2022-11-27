@@ -147,6 +147,42 @@ void Context::setUserConfigFlags(const int userFlags)
   m_imgui->IO.ConfigFlags = userFlags | PRIVATE_CONFIG_FLAGS;
 }
 
+void Context::assertOutOfFrame()
+{
+  if(m_inFrame)
+    throw reascript_error { "cannot modify font texture: a frame has already begun" };
+}
+
+void Context::attach(Resource *obj)
+{
+  if(std::find(m_attachments.begin(), m_attachments.end(), obj)
+      != m_attachments.end())
+    throw reascript_error { "the object is already attached to this context" };
+  else if(!obj->attachable(this))
+    throw reascript_error { "the object cannot be attached to this context" };
+
+  if(Font *font { dynamic_cast<Font *>(obj) }) {
+    assertOutOfFrame();
+    m_fonts->add(font);
+  }
+
+  m_attachments.push_back(obj);
+}
+
+void Context::detach(Resource *obj)
+{
+  const auto it { std::find(m_attachments.begin(), m_attachments.end(), obj) };
+  if(it == m_attachments.end())
+    throw reascript_error { "the object is not attached to this context" };
+
+  if(Font *font { dynamic_cast<Font *>(obj) }) {
+    assertOutOfFrame();
+    m_fonts->remove(font);
+  }
+
+  m_attachments.erase(it);
+}
+
 bool Context::heartbeat()
 {
   if(m_inFrame) {
@@ -154,7 +190,8 @@ bool Context::heartbeat()
       return false;
 
     keepAlive();
-    m_fonts->keepAliveAll();
+    for(Resource *obj : m_attachments)
+      obj->keepAlive();
   }
 
   // Keep the frame alive for at least one full timer cycle to prevent contexts
@@ -178,8 +215,12 @@ bool Context::beginFrame() try
 
   m_inFrame = true;
 
-  Platform::updateMonitors(); // TODO
+  Platform::updateMonitors(); // TODO only if changed
   m_fonts->update(); // uses the monitor list
+
+  // before the manager begins giving texture IDs
+  // used in the frame to avoid flicker
+  m_textureManager->cleanup();
 
   updateFrameInfo();
   updateTheme();

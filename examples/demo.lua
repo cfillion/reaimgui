@@ -1055,85 +1055,179 @@ function demo.ShowDemoWindowWidgets()
     r.ImGui_TreePop(ctx)
   end
 
---     if (r.ImGui_TreeNode("Images"))
---     {
---         ImGuiIO& io = r.ImGui_GetIO();
---         r.ImGui_TextWrapped(
---             "Below we are displaying the font texture (which is the only texture we have access to in this demo). "
---             "Use the 'ImTextureID' type as storage to pass pointers or identifier to your own texture data. "
---             "Hover the texture for a zoomed view!");
---
---         // Below we are displaying the font texture because it is the only texture we have access to inside the demo!
---         // Remember that ImTextureID is just storage for whatever you want it to be. It is essentially a value that
---         // will be passed to the rendering backend via the ImDrawCmd structure.
---         // If you use one of the default imgui_impl_XXXX.cpp rendering backend, they all have comments at the top
---         // of their respective source file to specify what they expect to be stored in ImTextureID, for example:
---         // - The imgui_impl_dx11.cpp renderer expect a 'ID3D11ShaderResourceView*' pointer
---         // - The imgui_impl_opengl3.cpp renderer expect a GLuint OpenGL texture identifier, etc.
---         // More:
---         // - If you decided that ImTextureID = MyEngineTexture*, then you can pass your MyEngineTexture* pointers
---         //   to r.ImGui_Image(), and gather width/height through your own functions, etc.
---         // - You can use ShowMetricsWindow() to inspect the draw data that are being passed to your renderer,
---         //   it will help you debug issues if you are confused about it.
---         // - Consider using the lower-level ImDrawList::AddImage() API, via r.ImGui_GetWindowDrawList()->AddImage().
---         // - Read https://github.com/ocornut/imgui/blob/master/docs/FAQ.md
---         // - Read https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
---         ImTextureID my_tex_id = io.Fonts->TexID;
---         float my_tex_w = (float)io.Fonts->TexWidth;
---         float my_tex_h = (float)io.Fonts->TexHeight;
---         {
---             r.ImGui_Text("%.0fx%.0f", my_tex_w, my_tex_h);
---             ImVec2 pos = r.ImGui_GetCursorScreenPos();
---             ImVec2 uv_min = ImVec2(0.0f, 0.0f);                 // Top-left
---             ImVec2 uv_max = ImVec2(1.0f, 1.0f);                 // Lower-right
---             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);   // No tint
---             ImVec4 border_col = ImVec4(1.0f, 1.0f, 1.0f, 0.5f); // 50% opaque white
---             r.ImGui_Image(my_tex_id, ImVec2(my_tex_w, my_tex_h), uv_min, uv_max, tint_col, border_col);
---             if (r.ImGui_IsItemHovered())
---             {
---                 r.ImGui_BeginTooltip();
---                 float region_sz = 32.0f;
---                 float region_x = io.MousePos.x - pos.x - region_sz * 0.5f;
---                 float region_y = io.MousePos.y - pos.y - region_sz * 0.5f;
---                 float zoom = 4.0f;
---                 if (region_x < 0.0f) { region_x = 0.0f; }
---                 else if (region_x > my_tex_w - region_sz) { region_x = my_tex_w - region_sz; }
---                 if (region_y < 0.0f) { region_y = 0.0f; }
---                 else if (region_y > my_tex_h - region_sz) { region_y = my_tex_h - region_sz; }
---                 r.ImGui_Text("Min: (%.2f, %.2f)", region_x, region_y);
---                 r.ImGui_Text("Max: (%.2f, %.2f)", region_x + region_sz, region_y + region_sz);
---                 ImVec2 uv0 = ImVec2((region_x) / my_tex_w, (region_y) / my_tex_h);
---                 ImVec2 uv1 = ImVec2((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
---                 r.ImGui_Image(my_tex_id, ImVec2(region_sz * zoom, region_sz * zoom), uv0, uv1, tint_col, border_col);
---                 r.ImGui_EndTooltip();
---             }
---         }
---         r.ImGui_TextWrapped("And now some textured buttons..");
---         static int pressed_count = 0;
---         for (int i = 0; i < 8; i++)
---         {
---             // UV coordinates are often (0.0f, 0.0f) and (1.0f, 1.0f) to display an entire textures.
---             // Here are trying to display only a 32x32 pixels area of the texture, hence the UV computation.
---             // Read about UV coordinates here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
---             r.ImGui_PushID(i);
---             if (i > 0)
---                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(i - 1.0f, i - 1.0f));
---             ImVec2 size = ImVec2(32.0f, 32.0f);                         // Size of the image we want to make visible
---             ImVec2 uv0 = ImVec2(0.0f, 0.0f);                            // UV coordinates for lower-left
---             ImVec2 uv1 = ImVec2(32.0f / my_tex_w, 32.0f / my_tex_h);    // UV coordinates for (32,32) in our texture
---             ImVec4 bg_col = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);             // Black background
---             ImVec4 tint_col = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);           // No tint
---             if (ImGui::ImageButton("", my_tex_id, size, uv0, uv1, bg_col, tint_col))
---                 pressed_count += 1;
---             if (i > 0)
---                 ImGui::PopStyleVar();
---             r.ImGui_PopID();
---             r.ImGui_SameLine();
---         }
---         r.ImGui_NewLine();
---         r.ImGui_Text("Pressed %d times.", pressed_count);
---         r.ImGui_TreePop();
---     }
+  if r.ImGui_TreeNode(ctx, 'Images') then
+    if not widgets.images then
+      widgets.images = {
+        pressed_count = 0,
+      }
+    end
+    if not r.ImGui_ValidatePtr(widgets.images.bitmap, 'ImGui_Image*') then
+      widgets.images.bitmap = r.ImGui_CreateImageFromMem(
+       "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52\z
+        \x00\x00\x01\x9D\x00\x00\x00\x45\x08\x00\x00\x00\x00\xB4\xAE\x64\z
+        \x88\x00\x00\x06\x2D\x49\x44\x41\x54\x78\xDA\xED\x9D\xBF\x6E\xE3\z
+        \x36\x1C\xC7\xBF\xC3\x01\x77\xC3\x19\x47\x2F\x09\x70\x68\x21\x08\z
+        \x87\x03\x32\x14\x08\x24\x20\x1E\x3A\xA4\x03\x81\x2B\xD0\xB1\x30\z
+        \xF4\x06\xEA\x18\x64\xE2\xD4\xB1\x83\xF3\x00\x1D\xB8\x76\xF4\xD0\z
+        \x17\xE0\x2B\xE8\x15\xF4\x0A\x7A\x85\x5F\x07\x4A\xB2\x9D\x88\xB4\z
+        \xA4\x23\x6D\xDA\xE5\x6F\x49\x22\x3A\x24\xCD\x8F\xF9\xFB\x4B\xC9\z
+        \xA0\x21\x51\x14\x25\x04\xC1\xD0\xC5\x12\xDB\xB8\x32\xA1\xD2\x29\z
+        \x01\xD6\xC4\xA5\x09\x93\x8E\x00\x80\x32\x2E\x4D\x90\x74\x14\x00\z
+        \x00\x75\x5C\x9B\x10\xE9\xA4\x9A\x4E\xDC\x3C\x21\xD2\xD9\x02\x00\z
+        \x44\x89\x68\x79\x02\xA4\xB3\x06\xC0\x14\x29\x48\x07\xBD\xF3\xFF\z
+        \xDD\x7A\x4A\xE9\x95\x0E\x00\x56\x11\x11\xB8\x8F\xDE\xAF\x5E\x84\z
+        \xF0\x49\xA7\x02\x74\xB0\x03\x17\xAA\x2D\xD2\x71\xBB\x7E\x0A\xED\z
+        \xA6\x01\x54\xA4\x13\x1A\x1D\xD1\x51\x01\x44\xA4\x13\x1E\x9D\xB4\z
+        \xB3\x3F\x65\xA4\x13\x1A\x9D\x6D\xBB\x65\x6A\xB8\x70\x0B\x22\x1D\z
+        \xD7\x76\x47\x74\x61\x4F\xA4\x13\x20\x1D\x6D\x76\x4A\x60\x1D\xE9\z
+        \x9C\x9D\x4E\xC5\x0F\x24\x43\xC6\x39\xE7\x8F\xEF\x80\x84\x7F\xB7\z
+        \x80\xFB\x96\xC7\xEC\xF1\xF0\xEF\x2F\x4B\xE0\x43\xC2\x4F\x20\xD9\z
+        \xCF\x03\x17\x13\x17\x43\x3F\x3C\x70\x9E\x65\x59\xF6\xD7\xEB\x4F\z
+        \x77\xAD\x35\x9B\xC0\x85\x78\xD4\xEA\x70\x9A\x1B\x76\xBA\x2C\xE1\z
+        \xA0\x53\xEB\x64\xEF\x70\x4E\x04\x00\x02\x83\x63\x36\x0C\x60\x74\z
+        \x71\x74\x9A\x35\x3A\x69\xAE\x93\x4E\xBE\x26\x9D\x6C\x2B\x2F\x8F\z
+        \x0E\xEF\xE1\xA0\xBA\x4E\x3A\x65\xDA\xE6\xA9\xEB\x8B\xA3\x23\x77\z
+        \x70\x18\x5D\x27\x1D\x89\xBA\x66\x70\x92\x29\x70\x4C\xA7\xD9\x70\z
+        \x20\x15\x66\x3A\xF9\x8E\x8E\x18\xDD\xC1\x65\xD1\xA9\xB1\xC9\x01\z
+        \xA4\x4D\x68\x74\x86\x0D\xFE\x3E\x9D\x1D\x9C\xBC\x19\xDD\xC1\x65\z
+        \xD1\x69\x6B\xA3\x6E\xCE\x4C\xB9\xA3\x63\x32\xF8\xFB\x74\xDE\xD9\z
+        \xE0\xB8\xF7\x18\xCE\x42\x87\xC3\x95\x5E\x73\x49\xC7\x64\xF0\xF7\z
+        \xE9\x24\x9D\x5A\x6B\x26\x74\x10\x36\x9D\x46\x1D\xCA\x33\x00\x64\z
+        \xCA\x2A\xFF\x3E\x17\x8F\x59\xF1\xA7\x3A\x2A\x50\x8E\xE4\x79\xB7\z
+        \xB6\x1F\x0F\x1A\x5E\xF0\xD2\xFF\x9E\xFD\xFE\x15\xF8\x5A\xFC\x33\z
+        \xA9\x83\xF9\x82\x62\xE0\x62\x51\x38\xE8\x39\xCB\x94\x02\x80\x3F\z
+        \x50\x8B\x03\xF9\x06\x00\xB7\x4F\xC2\x22\x4F\xF7\x78\xFF\xAD\x28\z
+        \x8A\xD5\x6D\x21\x8E\x08\xC4\x44\x79\xFA\x25\x01\x3E\xAD\xDE\x5C\z
+        \xBF\xDD\x2D\xEE\x61\x63\x81\xDD\x24\x12\xCB\x7C\x8C\x1D\x1C\x19\z
+        \xD8\xF6\xE6\x86\x5E\xBD\x5A\x89\xEF\x97\x24\x11\x02\x00\x0A\xBC\z
+        \x76\x81\x8E\x3A\xD3\x15\x03\xD3\x2F\x68\x72\xE9\x58\xB3\x19\x0D\z
+        \xB7\xD1\xE0\xEF\x6B\x36\x6E\x31\x96\x1E\x3C\x86\x93\xDB\x9D\x8A\z
+        \x1D\xA5\x53\xB3\xCE\x2A\x35\x22\x67\xB5\x4B\x3A\x66\xC3\xAD\x8C\z
+        \x06\x7F\x2C\x1D\x0F\x1E\xC3\xA9\xE9\x34\x29\x00\xB6\xC5\xE6\x88\z
+        \x79\xDE\xF6\xE1\x45\xE9\x92\x8E\xD9\x70\x2B\xA3\xC1\x1F\x4B\xC7\z
+        \x83\xC7\x30\x99\xCE\x61\xAA\x73\x32\x1D\x0E\x00\x92\x52\x4B\xED\z
+        \xA0\xEA\xDD\xED\x2D\x80\xAE\x90\x3A\x89\x8E\x29\x28\xB4\x84\xFA\z
+        \x8A\xCB\x1C\xC8\x45\x6D\xCD\x15\xD8\xE8\xF0\x67\x43\x07\x23\x72\z
+        \x0C\x86\x09\x4F\xA6\x83\x03\x99\x4A\x47\x68\x38\x54\x5A\xFE\x53\z
+        \xF4\x1F\x30\x79\x6C\x0C\x03\x1D\xA3\x8A\xB7\x84\xFA\x8A\x8F\xC9\z
+        \xE4\x58\xE9\x58\xDA\x8E\xE4\x18\x4C\x13\x3E\x2D\x9D\xAA\x9B\xC2\z
+        \xD6\x12\x8B\xF2\xBE\xE3\x1A\x38\x5A\x3F\xC5\x04\x15\x5F\x59\x0C\z
+        \xB7\x5F\x3A\x56\x8F\xC1\x3C\xE1\xD3\xD2\xE1\x00\x72\x22\xA2\xC6\z
+        \x12\x8C\xEE\x75\x2C\x19\xF2\x6A\x2A\x1D\x8B\x6D\xB1\x18\x6E\xBF\z
+        \x74\xAC\x1E\x83\x79\xC2\x27\xA5\x23\x81\xCE\x55\xCE\xF9\x18\x3A\z
+        \x73\x72\x05\x36\xDB\x62\x31\xDC\x7E\xE9\xD8\x3C\x06\xCB\x84\x4F\z
+        \x41\xA7\xAF\x5C\x2F\x00\x7C\xD1\x85\xD3\x05\x96\x9F\x93\x87\xE1\z
+        \x5A\x34\x80\x11\xF5\xE8\xB6\x80\xFC\xE6\x95\x8B\xDD\xEC\x5E\x97\z
+        \x78\xB3\xE5\xDD\x02\x58\x24\x43\xF5\xE0\x6C\x69\x2C\x1F\xEB\x4A\z
+        \x3B\xE7\x9C\xF3\x65\x66\x9E\x90\xB5\xED\x47\xE3\xC0\xB6\x09\x1F\z
+        \x5E\x78\xBC\xBB\x59\x00\xF8\xF8\x83\x83\xCA\xF5\x72\xA9\x17\xFA\z
+        \x57\xEC\xAB\x7D\x4E\x44\x54\x75\x7B\x39\x55\xB3\xF7\x4E\x67\x48\z
+        \x31\x41\xC5\x2B\x8B\x0D\xF3\xBB\x77\x66\xDA\xA4\x83\xBD\x23\x18\z
+        \x00\x51\xD3\xFD\xBD\x97\x78\xA7\x3B\x49\x50\x31\xAB\x07\xC3\x47\z
+        \xD0\xB1\x04\x77\x98\x63\x5B\xCE\x49\xC7\x62\x93\xF6\x96\xA7\xC9\z
+        \x01\xF0\x9A\x88\x9E\xEF\xBC\xD0\xE1\xDA\x25\xA8\xD9\xBE\x6E\x2C\z
+        \x2D\x1E\x35\x11\x11\x95\x6A\x5A\x70\x87\x39\xB6\xE5\x9C\x74\x2C\z
+        \x36\x69\x8F\xCE\x1A\x60\x3A\x44\x17\x6B\x2F\x74\x72\x40\xEA\x71\z
+        \x90\x0B\xCE\x64\xC9\xD0\x67\x05\x06\xA3\x51\x22\xA2\x86\x4D\x33\z
+        \xA4\x04\x69\x0C\x0A\xC3\xA4\x63\x89\x62\x77\x74\x14\xB0\x6E\xDA\z
+        \x0F\xEF\xC6\x0B\x1D\x9D\x5E\xAB\x01\x26\x89\x04\x1A\xAD\x9F\x52\z
+        \x4B\x26\x87\x88\x36\x7C\x62\x70\x87\x39\x04\xCE\x4A\x47\x8D\xC8\z
+        \xE4\x94\xED\xAD\x68\x55\xEE\xE6\x66\xF5\x21\x3A\xA9\x4E\xCF\x6C\z
+        \xFA\xF7\x5C\xEA\xD4\x81\x29\x0B\x4A\x54\xA5\xF5\xC4\xE0\xEE\x3A\z
+        \xE9\xA4\xB2\xD7\xFA\x4E\xCA\x96\x43\x76\x87\x53\x7F\x0B\x42\x1B\z
+        \x8F\xF2\xA1\xE3\xBA\xBB\x0A\x42\x95\x0E\x06\xA3\xCC\x12\xDC\x5D\z
+        \x27\x1D\x10\x11\xA9\xDC\xD9\x99\x85\xB7\x74\xD6\x2D\x1D\xBD\x0E\z
+        \x3A\x11\x5A\x0F\xA6\x39\x9B\x12\x4C\x2A\xB5\x2D\x79\x65\x4E\xC5\z
+        \x19\x82\xBB\xEB\xA4\x93\x6F\xA8\x2A\x01\xA4\x8E\x6E\x1A\x7D\x1B\z
+        \x8D\x26\x58\x72\xCE\x33\xE8\xB8\xEF\xE6\x43\x17\x8B\x0D\xC6\x9A\z
+        \x77\xC9\xCD\xD2\x10\xAE\x72\xCE\xCD\x51\xA5\xED\x60\xB5\x39\xE2\z
+        \xF4\x1E\x8D\xCE\x6B\xDB\x45\xA3\x0F\x4B\x00\xCB\xCF\x3F\xB9\x3A\z
+        \xA1\x3D\x14\x8D\xE6\x44\x44\x4C\x9B\x35\x81\xF6\x87\xE3\xF3\x82\z
+        \xD7\xB9\x77\x5C\xCB\x40\x9E\x2D\x47\x4D\x44\x42\x8F\xD9\xBE\x69\z
+        \xA1\x91\x45\x3A\x67\xA7\x23\xF5\x68\x39\x24\x11\xD5\xDA\x59\x2B\z
+        \x5D\x1F\xE6\x8F\x74\x66\xD2\xA1\x1C\x15\x11\x35\x1C\x65\x3F\x74\z
+        \x0A\x15\xE9\x84\x41\xA7\x6A\x5D\xE0\x8D\x68\x5F\x40\x12\xAE\x1F\z
+        \xD6\x11\xE9\xCC\xA5\x43\x72\x2F\x42\x59\xE7\x44\x0D\x63\x55\xA4\z
+        \x13\x0A\x1D\x92\x5D\x2E\x8F\x48\x80\xEA\x1C\x92\x22\x9D\x60\xE8\z
+        \x90\x4A\xC1\x65\xDD\xFA\x08\x8C\xB9\x7F\x3C\x68\xA4\x33\x8D\xCE\z
+        \xE1\x49\xDD\xA7\xD5\x27\x00\xC9\x2D\x80\xF7\xAB\x27\xE1\x5C\x2C\z
+        \x47\x77\x8B\x64\x4E\xDB\xD8\x93\xBA\x1E\xDA\xB0\x12\x9E\x64\x77\z
+        \x52\xF7\xF5\x29\x77\xF5\x77\x51\x64\x45\xF1\xDB\xDE\xE9\x71\x87\z
+        \x62\x39\xF6\xFE\x92\xCD\x6B\x1B\x79\x70\xFC\xC5\x7D\x9B\x77\xA9\z
+        \x4D\xAA\xA6\x71\x6F\x73\xBC\x68\xB6\xD1\xCA\xC2\x83\xD6\xF3\x2F\z
+        \x38\xAD\x56\x8D\x74\xE6\x2F\x57\xB3\x11\x9B\x26\xD2\x09\x93\x8E\z
+        \x62\xDD\x83\x0D\x23\x9D\xE0\xE8\x34\xBA\x6C\xC6\x03\xA4\xE3\x57\z
+        \x2E\x82\xCE\x06\x7B\x4F\xA2\xAE\x83\xF2\x0A\x22\x9D\xBE\xA6\xD9\z
+        \xDE\xFF\xA1\x22\x9D\x00\xF7\x8E\x3E\xE5\x54\x32\x8A\x74\x42\xA2\z
+        \xD3\xDE\xA2\x21\xB5\x0D\x2A\x4F\x4D\x87\xE4\xB9\xD6\x40\xD2\x05\z
+        \xD0\x21\x8E\x94\xAF\xF5\x6C\xD6\x9E\xBE\x07\xE1\xE2\x1E\xA7\x17\z
+        \x0E\x9D\xAA\xAF\x18\x94\xBE\x32\x7C\x91\xCE\xFC\xE5\x92\x0C\xA2\z
+        \x22\xDA\x72\x6F\x4F\x9F\xBB\xB8\x47\xEF\x0B\x0A\x86\x4E\x77\x77\z
+        \x48\x1A\xBF\xBA\x2A\x0C\x79\xF3\xE4\x49\x29\x44\xFC\xD6\xB7\x50\z
+        \xE4\x3F\xB8\xA9\x68\x06\x1B\x45\x77\x96\x00\x00\x00\x00\x49\x45\z
+        \x4E\x44\xAE\x42\x60\x82")
+    end
+
+    r.ImGui_TextWrapped(ctx, 'Hover the texture for a zoomed view!')
+
+    -- Consider using the lower-level Draw List API, via r.ImGui_DrawList_AddImage(r.ImGui_GetWindowDrawList()).
+    local my_tex_w, my_tex_h = reaper.ImGui_Image_GetSize(widgets.images.bitmap)
+    do
+      r.ImGui_Text(ctx, ('%.0fx%.0f'):format(my_tex_w, my_tex_h))
+      local pos_x, pos_y = r.ImGui_GetCursorScreenPos(ctx)
+      local uv_min_x, uv_min_y = 0.0, 0.0 -- Top-left
+      local uv_max_x, uv_max_y = 1.0, 1.0 -- Lower-right
+      local tint_col   = 0xFFFFFFFF       -- No tint
+      local border_col = 0xFFFFFF7F       -- 50% opaque white
+      r.ImGui_Image(ctx, widgets.images.bitmap, my_tex_w, my_tex_h,
+        uv_min_x, uv_min_y, uv_max_x, uv_max_y, tint_col, border_col)
+      if r.ImGui_IsItemHovered(ctx) then
+        r.ImGui_BeginTooltip(ctx)
+        local region_sz = 32.0
+        local mouse_x, mouse_y = reaper.ImGui_GetMousePos(ctx)
+        local region_x = mouse_x - pos_x - region_sz * 0.5
+        local region_y = mouse_y - pos_y - region_sz * 0.5
+        local zoom = 4.0
+        if region_x < 0.0 then region_x = 0.0
+        elseif region_x > my_tex_w - region_sz then region_x = my_tex_w - region_sz end
+        if region_y < 0.0 then region_y = 0.0
+        elseif region_y > my_tex_h - region_sz then region_y = my_tex_h - region_sz end
+        r.ImGui_Text(ctx, ('Min: (%.2f, %.2f)'):format(region_x, region_y))
+        r.ImGui_Text(ctx, ('Max: (%.2f, %.2f)'):format(region_x + region_sz, region_y + region_sz))
+        local uv0_x, uv0_y = region_x / my_tex_w, region_y / my_tex_h
+        local uv1_x, uv1_y = (region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h
+        r.ImGui_Image(ctx, widgets.images.bitmap, region_sz * zoom, region_sz * zoom,
+          uv0_x, uv0_y, uv1_x, uv1_y, tint_col, border_col)
+        r.ImGui_EndTooltip(ctx)
+      end
+    end
+    r.ImGui_TextWrapped(ctx, 'And now some textured buttons...')
+    -- static int pressed_count = 0;
+    for i = 0, 8 do
+      -- UV coordinates are (0.0, 0.0) and (1.0, 1.0) to display an entire textures.
+      -- Here we are trying to display only a 32x32 pixels area of the texture, hence the UV computation.
+      -- Read about UV coordinates here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
+      if i > 0 then
+        r.ImGui_PushStyleVar(ctx, r.ImGui_StyleVar_FramePadding(), i - 1, i - 1)
+      end
+      local size_w, size_h = 32.0, 32.0                     -- Size of the image we want to make visible
+      local uv0_x, uv0_y = 0.0, 0.0                         -- UV coordinates for lower-left
+      local uv1_x, uv1_y = 32.0 / my_tex_w, 32.0 / my_tex_h -- UV coordinates for (32,32) in our texture
+      local bg_col = 0x000000FF   -- Black background
+      local tint_col = 0xFFFFFFFF -- No tint
+      if r.ImGui_ImageButton(ctx, i, widgets.images.bitmap, size_w, size_h,
+                             uv0_x, uv0_y, uv1_x, uv1_y, bg_col, tint_col) then
+        widgets.images.pressed_count = widgets.images.pressed_count + 1
+      end
+      if i > 0 then
+        r.ImGui_PopStyleVar(ctx)
+      end
+      r.ImGui_SameLine(ctx)
+    end
+    r.ImGui_NewLine(ctx)
+    r.ImGui_Text(ctx, ('Pressed %d times.'):format(widgets.images.pressed_count))
+    r.ImGui_TreePop(ctx)
+  end
 
   if r.ImGui_TreeNode(ctx, 'Combo') then
     if not widgets.combos then

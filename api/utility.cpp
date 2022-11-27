@@ -20,6 +20,7 @@
 #include "color.hpp"
 #include "drawlist.hpp"
 #include "font.hpp"
+#include "image.hpp"
 #include "listclipper.hpp"
 #include "platform.hpp"
 #include "resource_proxy.hpp"
@@ -51,6 +52,8 @@ Supported types are:
 - ImGui_DrawList*
 - ImGui_DrawListSplitter*
 - ImGui_Font*
+- ImGui_Image*
+- ImGui_ImageSet*
 - ImGui_ListClipper*
 - ImGui_TextFilter*
 - ImGui_Viewport*)",
@@ -65,6 +68,10 @@ Supported types are:
     return Resource::isValid(static_cast<DrawListSplitter *>(pointer));
   else if(!strcmp(type, "ImGui_Font*"))
     return Resource::isValid(static_cast<Font *>(pointer));
+  else if(!strcmp(type, "ImGui_Image*"))
+    return Resource::isValid(static_cast<Image *>(pointer));
+  else if(!strcmp(type, "ImGui_ImageSet*"))
+    return Resource::isValid(static_cast<ImageSet *>(pointer));
   else if(!strcmp(type, "ImGui_ListClipper*"))
     return Resource::isValid(static_cast<ListClipper *>(pointer));
   else if(!strcmp(type, "ImGui_TextFilter*"))

@@ -3,11 +3,15 @@
   "version-string": "current",
   "dependencies": [
     { "name": "boost-filesystem", "platform": "osx" },
+    { "name": "boost-iostreams", "platform": "!linux" },
     { "name": "boost-preprocessor", "platform": "!linux" },
     { "name": "boost-type-index", "platform": "!linux" },
     { "name": "boost-variant", "platform": "osx" },
-    { "name": "freetype", "default-features": false, "platform": "!linux" },
+    { "name": "freetype", "default-features": false,
+      "features": ["png", "zlib"], "platform": "!linux" },
     { "name": "gl3w", "platform": "windows" },
+    { "name": "libjpeg-turbo", "platform": "!linux" },
+    { "name": "libpng", "platform": "!linux" },
     "cmark",
     "gtest"
   ]

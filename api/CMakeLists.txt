@@ -5,6 +5,7 @@ add_library(api OBJECT
   dragndrop.cpp
   drawlist.cpp
   font.cpp
+  image.cpp
   indev.cpp
   input.cpp
   item.cpp

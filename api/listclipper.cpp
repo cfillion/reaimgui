@@ -102,7 +102,7 @@ Generally what happens is:
 
 DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
 R"(The returned clipper object is only valid for the given context and is valid
-as long as it is used in each defer cycle. See ListClipper_Begin.)",
+as long as it is used in each defer cycle unless attached (see Attach).)",
 {
   assertValid(ctx);
   return new ListClipper { ctx };

@@ -33,10 +33,15 @@ them separately):
 - [GDK3](https://developer.gnome.org/gdk3/stable/) (3.22 or newer)
 - [GoogleTest](https://github.com/google/googletest)
 - [libepoxy](https://github.com/anholt/libepoxy)
+- [libjpeg-turbo](https://www.libjpeg-turbo.org/)
+- [libpng](http://www.libpng.org/pub/png/libpng.html)
 
 #### macOS
 
-Install Boost, FreeType and GoogleTest using [Homebrew](https://brew.sh) (recommended).
+Using [Homebrew](https://brew.sh) (recommended):
+```sh
+brew install boost cmark freetype googletest jpeg-turbo libpng
+```
 The build tools can be installed using `xcode-select --install` or the Xcode IDE.
 
 #### Windows

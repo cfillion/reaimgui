@@ -28,6 +28,8 @@ public:
   ~ListClipper();
   ImGuiListClipper *operator->();
 
+  bool attachable(const Context *ctx) const override { return m_ctx == ctx; }
+
 protected:
   bool isValid() const override;
 

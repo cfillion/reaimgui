@@ -25,13 +25,20 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
 
-static unsigned char *getAtlasPixels(void *object, const float scale, int *width, int *height)
+static const unsigned char *getPixels(void *object, const float scale,
+  int *width, int *height)
 {
   FontList *list { static_cast<FontList *>(object) };
   ImFontAtlas *atlas { list->getAtlas(scale) };
-  unsigned char *pixels;
+  unsigned char *pixels {};
   atlas->GetTexDataAsRGBA32(&pixels, width, height);
   return pixels;
+}
+
+static void removeScale(void *object, const float scale)
+{
+  FontList *list { static_cast<FontList *>(object) };
+  list->removeAtlas(scale);
 }
 
 Font::Font(const char *family, const int size, const int flags)
@@ -92,7 +99,7 @@ void FontList::invalidate()
 void FontList::add(Font *font)
 {
   if(std::find(m_fonts.begin(), m_fonts.end(), font) != m_fonts.end())
-    return; // the font was already attached
+    return;
 
   m_fonts.push_back(font);
   invalidate();
@@ -102,16 +109,10 @@ void FontList::remove(Font *font)
 {
   const auto it { std::find(m_fonts.begin(), m_fonts.end(), font) };
   if(it == m_fonts.end())
-    throw reascript_error { "the font is not attached to this context" };
+    return;
 
   m_fonts.erase(it);
   invalidate();
-}
-
-void FontList::keepAliveAll()
-{
-  for(Font *font : m_fonts)
-    font->keepAlive();
 }
 
 void FontList::update()
@@ -149,13 +150,33 @@ void FontList::setScale(const float scale)
 
   // after build() because it clears the texture ID!
   // (via ImFontAtlasBuildWithFreeTypeEx)
-  atlas->SetTexID(m_textureManager->touch(this, scale, &getAtlasPixels));
+  Texture tex { this, scale, &getPixels };
+  tex.m_compact = &removeScale;
+  atlas->SetTexID(m_textureManager->touch(tex));
 }
 
 ImFontAtlas *FontList::getAtlas(const float scale)
 {
   const auto it { m_atlases.find(scale) };
   return it != m_atlases.end() ? it->second.get() : nullptr;
+}
+
+void FontList::removeAtlas(const float scale)
+{
+  const float primaryScale { ImGui::GetPlatformIO().Monitors[0].DpiScale };
+  if(scale == primaryScale)
+    return;
+
+  const auto it { m_atlases.find(scale) };
+  if(it == m_atlases.end())
+    return;
+
+  ImGuiIO &io { ImGui::GetIO() };
+  if(io.Fonts == it->second.get())
+    io.Fonts = m_atlases[primaryScale].get();
+
+  it->second->Locked = false;
+  m_atlases.erase(it);
 }
 
 void FontList::build(const float scale)
@@ -205,7 +226,7 @@ ImFont *FontList::instanceOf(Font *font) const
 
   const auto it { std::find(m_fonts.begin(), m_fonts.end(), font) };
   if(it == m_fonts.end())
-    throw reascript_error { "font is not attached to the context (did you call AttachFont?)" };
+    throw reascript_error { "font is not attached to the context" };
 
   const auto index { std::distance(m_fonts.begin(), it) + 1 };
   const ImFontAtlas *atlas { ImGui::GetIO().Fonts };

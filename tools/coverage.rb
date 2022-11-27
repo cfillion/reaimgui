@@ -135,13 +135,8 @@ NATIVE_ONLY = [
 
   # images
   'ImVec2 ImGui::GetFontTexUvWhitePixel()',
-  'void ImGui::Image(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)',
-  'bool ImGui::ImageButton(const char*, ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec4&, const ImVec4&)',
   'void ImDrawList::PushTextureID(ImTextureID)',
   'void ImDrawList::PopTextureID()',
-  'void ImDrawList::AddImage(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
-  'void ImDrawList::AddImageQuad(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
-  'void ImDrawList::AddImageRounded(ImTextureID, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32, float, ImDrawFlags)',
 
   # value helpers (just Text() with a "prefix: value" format string)
   'void ImGui::Value(const char*, bool)',
@@ -283,7 +278,10 @@ RESOURCES = {
   'ImGui_DrawList*'         => 'draw_list',
   'ImGui_DrawListSplitter*' => 'splitter',
   'ImGui_Font*'             => 'font',
+  'ImGui_Image*'            => 'img',
+  'ImGui_ImageSet*'         => 'set',
   'ImGui_ListClipper*'      => 'clipper',
+  'ImGui_Resource*'         => 'obj',
   'ImGui_TextFilter*'       => 'filter',
   'ImGui_Viewport*'         => 'viewport',
 }
@@ -364,6 +362,8 @@ private
       "double#{$~[1] && '*'}"
     when /unsigned int(\*)?/, /size_t(\*)?/
       "int#{$~[1]}"
+    when 'ImTextureID'
+      'ImGui_Image*'
     when /\AIm(?:Gui|Draw)[^\*]+(?:Flags\*)?\z/, 'ImU32'
       'int'
     when 'const char* const'
@@ -392,11 +392,16 @@ private
       arg.default = 'PopupFlags_MouseButtonRight'
     elsif !arg.default.nil? && arg.type == 'float'
       arg.default = arg.default[0..-2] # 0.0f -> 0.0
+    elsif (matches = arg.default.to_s.scan(/(?:ImVec4\(|\G(?!\A))\s*([\d\.]+)f?\s*,?/)) && !matches.empty?
+      arg.default = '0x' + matches.map { |m| '%02X' % (m[0].to_f * 255) }.join
+    elsif arg.default == 'IM_COL32_WHITE'
+      arg.default = '0xFFFFFFFF'
     end
 
     arg.name += '_rgba' if arg.type == 'ImU32' && %[col color].include?(arg.name)
     arg.type = cpp_type_to_reascript_type arg.type
     arg.name = arg.name[4..-1] if arg.name =~ /\Aout_.+/ && arg.type.end_with?('*')
+    arg.name = 'img' if arg.type == 'ImGui_Image*'
 
     if arg.type.include? 'ImVec2'
       null_optional = arg.type.end_with? '*'
@@ -432,10 +437,11 @@ private
       arg.size = 0
     end
 
-    if arg.default =~ /ImVec2\((.+?)f?,\s*(.+?)f?\)/
+    if (matches = arg.default.to_s.scan(/(?:ImVec2\(|\G(?!\A))\s*([^f,\)]+)f?\s*,?/)) && !matches.empty?
+      matches.flatten!
       out.each_with_index do |out_arg, index|
-        out_arg.default = $~[index + 1]
-        out_arg.default = '0.0' if out_arg.default == '0'
+        out_arg.default = matches[index]
+        out_arg.default += '.0' if out_arg.default =~ /\A[0-9]+\z/
       end
     end
 

@@ -31,9 +31,10 @@ vertex VertexOut vertex_main(VertexIn in [[stage_in]],
 fragment half4 fragment_main(VertexOut in [[stage_in]],
   texture2d<half, access::sample> texture [[texture(0)]])
 {
-  constexpr sampler linearSampler
-    { coord::normalized,  min_filter::linear,
-      mag_filter::linear, mip_filter::linear };
+  // sampler parameters are documented at page 39
+  // "Table 2.7. Sampler state enumeration values"
+  // https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf
+  constexpr sampler linearSampler { address::repeat, filter::linear };
   const half4 texColor = texture.sample(linearSampler, in.texCoords);
   return half4(in.color) * texColor;
 }

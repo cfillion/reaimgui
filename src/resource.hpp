@@ -20,13 +20,19 @@
 
 #include <memory>
 
+class Context;
+
 class Resource {
 public:
+  static constexpr const char *api_type_name { "ImGui_Resource" };
+
   Resource();
   Resource(const Resource &) = delete;
   virtual ~Resource();
 
   void keepAlive();
+
+  virtual bool attachable(const Context *) const = 0;
 
   template<typename T>
   static bool isValid(T *userData)
@@ -52,5 +58,7 @@ private:
 
 template<>
 bool Resource::isValid<Resource>(Resource *);
+
+using ImGui_Resource = Resource;
 
 #endif

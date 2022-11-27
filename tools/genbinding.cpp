@@ -214,7 +214,10 @@ class ImGui_Context;
 class ImGui_DrawList;
 class ImGui_DrawListSplitter;
 class ImGui_Font;
+class ImGui_Image;
+class ImGui_ImageSet;
 class ImGui_ListClipper;
+class ImGui_Resource;
 class ImGui_TextFilter;
 class ImGui_Viewport;
 
@@ -750,11 +753,11 @@ static void humanBinding(std::ostream &stream)
     padding: 0.5em;
   }
   .st { color: #87afff; /* SkyBlue2 */ }
-  .ss, .hljs-string   { color: #5faf5f; /* DarkSeaGreen4 */ }
-  .sn, .hljs-number   { color: #5f87d7; /* SteelBlue3    */ }
-  .sr, .hljs-keyword  { color: #d7875f; /* LightSalmon3  */ }
-       .hljs-comment  { color: #b2b2b2; /* Grey70        */ }
-       .hljs-built_in { color: #87d75f; /* DarkOliveGreen3 */ }
+  .ss, .string   { color: #5faf5f; /* DarkSeaGreen4 */ }
+  .sn, .number   { color: #5f87d7; /* SteelBlue3    */ }
+  .sr, .keyword  { color: #d7875f; /* LightSalmon3  */ }
+       .comment  { color: #b2b2b2; /* Grey70        */ }
+       .built_in { color: #87d75f; /* DarkOliveGreen3 */ }
   .source a { color: gray; }
   </style>
 </head>
@@ -809,7 +812,7 @@ static void humanBinding(std::ostream &stream)
     stream << func.displayName << "</summary>";
 
     stream << "<table>"
-           << "<tr><th>C/C++</th><td><code>";      func.cppSignature(stream);        stream << "</code></td></tr>"
+           << "<tr><th>C++</th><td><code>";        func.cppSignature(stream);        stream << "</code></td></tr>"
            << "<tr><th>EEL</th><td><code>";        func.eelSignature(stream, false); stream << "</code></td></tr>"
            << "<tr><th>Legacy EEL</th><td><code>"; func.eelSignature(stream, true);  stream << "</code></td></tr>"
            << "<tr><th>Lua</th><td><code>";        func.luaSignature(stream);        stream << "</code></td></tr>"
@@ -853,8 +856,13 @@ static void humanBinding(std::ostream &stream)
   </script>
   <!-- highlight.js v11 removed auto-merging of html (removes links) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/highlight.min.js" integrity="sha512-tL84mD+FR70jI7X8vYj5AfRqe0EifOaFUapjt1KvDaPLHgTlUZ2gQL/Tzvvn8HXuQm9oHYShJpNFdyJmH2yHrw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.7.3/languages/lua.min.js" integrity="sha512-h4/Yr93778WemxjiZYuMmmAZmdoQGMpZHPVAQmMiCOV+QDNlTM8vZcZtTNyW/aiiqtNeu9J8K59gIKSM9SvrLw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script>hljs.highlightAll();</script>
+  <script>
+  hljs.configure({
+    classPrefix: '',
+    languages: ['lua', 'cpp'],
+  });
+  hljs.highlightAll();
+  </script>
 </body>
 </html>
 )";

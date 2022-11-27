@@ -8,9 +8,12 @@ add_library(src OBJECT
   docker.cpp
   error.cpp
   font.cpp
+  image.cpp
+  jpeg_image.cpp
   keymap.cpp
   main.cpp
   opengl_renderer.cpp
+  png_image.cpp
   renderer.cpp
   resource.cpp
   settings.cpp
@@ -105,11 +108,24 @@ else()
   target_link_libraries(src PkgConfig::Epoxy PkgConfig::GTK)
 endif()
 
+if(APPLE AND NOT VCPKG_TOOLCHAIN)
+  # before boost otherwise IJG's libjpeg's jpeglib.h will take precedence
+  # over libjpeg-turbo's jpeglib.h (-> JCS_EXT_RGBA not defined)
+  find_package(libjpeg-turbo REQUIRED)
+  target_link_libraries(src libjpeg-turbo::jpeg-static)
+else()
+  find_package(JPEG REQUIRED)
+  target_link_libraries(src JPEG::JPEG)
+endif()
+
 find_package(Boost REQUIRED)
 target_link_libraries(src Boost::headers)
 
 find_package(ImGui REQUIRED)
 target_link_libraries(src ImGui::ImGui)
+
+find_package(PNG REQUIRED)
+target_link_libraries(src PNG::PNG)
 
 find_package(WDL REQUIRED)
 target_link_libraries(src WDL::WDL)

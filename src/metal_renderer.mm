@@ -184,8 +184,7 @@ void MetalRenderer::Shared::textureCommand(const TextureCmd &cmd)
 
   for(size_t i {}; i < cmd.size; ++i) {
     int width, height;
-    const unsigned char *pixels
-      { cmd.manager->getPixels(cmd.offset + i, &width, &height) };
+    const unsigned char *pixels { cmd[i].getPixels(&width, &height) };
 
     MTLTextureDescriptor *texDesc =
       [_MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
