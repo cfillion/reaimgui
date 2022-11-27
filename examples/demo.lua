@@ -6003,7 +6003,7 @@ function demo.ShowDemoWindowInputs()
           r.ImGui_Text(ctx, ('b%d'):format(button))
         end
       end
-      r.ImGui_Text(ctx, ('Mouse wheel: %.1f'):format(r.ImGui_GetMouseWheel(ctx)))
+      r.ImGui_Text(ctx, ('Mouse wheel: %.1f %.1f'):format(r.ImGui_GetMouseWheel(ctx)))
       -- r.ImGui_Text(cxt, ('Pen Pressure: %.1f'):format(r.ImGui_GetPenPressure(ctx))) -- Note: currently unused
       r.ImGui_TreePop(ctx)
     end
