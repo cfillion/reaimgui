@@ -9,6 +9,7 @@ add_library(src OBJECT
   error.cpp
   font.cpp
   image.cpp
+  jpeg_image.cpp
   keymap.cpp
   main.cpp
   opengl_renderer.cpp
@@ -105,6 +106,16 @@ else()
   pkg_search_module(Epoxy REQUIRED IMPORTED_TARGET epoxy)
   pkg_search_module(GTK REQUIRED IMPORTED_TARGET gtk+-3.0)
   target_link_libraries(src PkgConfig::Epoxy PkgConfig::GTK)
+endif()
+
+if(APPLE AND NOT VCPKG_TOOLCHAIN)
+  # before boost otherwise IJG's libjpeg's jpeglib.h will take precedence
+  # over libjpeg-turbo's jpeglib.h (-> JCS_EXT_RGBA not defined)
+  find_package(libjpeg-turbo REQUIRED)
+  target_link_libraries(src libjpeg-turbo::jpeg-static)
+else()
+  find_package(JPEG REQUIRED)
+  target_link_libraries(src JPEG::JPEG)
 endif()
 
 find_package(Boost REQUIRED)

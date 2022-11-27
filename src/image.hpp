@@ -60,12 +60,16 @@ public:
 
 protected:
   Bitmap() = default;
-  std::vector<unsigned char> m_pixels;
-  size_t m_width, m_height;
+
+  void resize(int width, int height, int format);
+  std::vector<unsigned char *> makeScanlines();
 
 private:
   static const unsigned char *getPixels(void *object, float scale,
     int *width, int *height);
+
+  std::vector<unsigned char> m_pixels;
+  size_t m_width, m_height;
 };
 
 class ImageSet : public Image {

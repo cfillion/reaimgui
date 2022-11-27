@@ -33,7 +33,7 @@ for:
       install-deps() {
         local arch="$1"; shift
         local native=("$@" php-cli qemu-user-binfmt)
-        local target=(libboost-dev libboost-filesystem-dev libgtk-3-dev)
+        local target=(libboost-dev libboost-filesystem-dev libgtk-3-dev libjpeg-dev)
 
         sudo dpkg --add-architecture $arch
         sudo apt-get update -qq
@@ -86,6 +86,9 @@ for:
 
       # https://letsencrypt.org/docs/dst-root-ca-x3-expiration-september-2021/
       - sudo curl -k https://curl.se/ca/cacert.pem -o /etc/ssl/cert.pem
+
+      # don't use libjpeg from Mono
+      - sudo rm -r /Library/Frameworks/Mono.framework
 
       # update to cmark 0.30.1 for static linkage
       - git -C ~/vcpkg fetch origin 790418c9037196ef499b642decc2cd880e15db30

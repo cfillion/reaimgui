@@ -74,6 +74,29 @@ const unsigned char *Bitmap::getPixels(void *object, const float,
   return image->m_pixels.data();
 }
 
+void Bitmap::resize(const int width, const int height, const int format)
+try
+{
+  if(format != 4)
+    throw reascript_error { "BUG: unexpected pixel format, missing transform?" };
+  m_width = width, m_height = height;
+  m_pixels.resize(m_width * m_height * format);
+}
+catch(const std::bad_alloc &)
+{
+  throw reascript_error { "cannot allocate memory" };
+}
+
+std::vector<unsigned char *> Bitmap::makeScanlines()
+{
+  std::vector<unsigned char *> scanlines;
+  scanlines.reserve(m_height);
+  const auto rowStride { m_width * 4 };
+  for(auto it { m_pixels.begin() }; it < m_pixels.end(); it += rowStride)
+    scanlines.push_back(&*it);
+  return scanlines;
+}
+
 size_t Bitmap::makeTexture(TextureManager *textureManager)
 {
   keepAlive();

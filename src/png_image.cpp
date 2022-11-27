@@ -19,8 +19,8 @@
 
 #include "error.hpp"
 
-#include <png.h>    // http://www.libpng.org/pub/png/libpng-manual.txt
-#include <string.h> // strerror
+#include <png.h>   // http://www.libpng.org/pub/png/libpng-manual.txt
+#include <cstring> // strerror
 
 constexpr size_t HEADER_SIZE { 8 }; // must not be > 8
 
@@ -29,7 +29,7 @@ public:
   PNGImage(std::istream &);
 };
 
-static bool isPng(std::istream &stream)
+static bool isPNG(std::istream &stream)
 {
   png_byte header[HEADER_SIZE];
   if(!stream.read(reinterpret_cast<char *>(header), sizeof(header)))
@@ -42,7 +42,7 @@ static Image *create(std::istream &stream)
   return new PNGImage(stream);
 }
 
-static const Image::RegisterType PNG { &isPng, &create };
+static const Image::RegisterType PNG { &isPNG, &create };
 
 static void read(png_structp png, png_bytep data, const png_size_t length)
 {
@@ -86,7 +86,6 @@ static void transformToRGBA(png_structp png, png_infop info)
 }
 
 PNGImage::PNGImage(std::istream &stream)
-try
 {
   struct PNG {
     ~PNG() { png_destroy_read_struct(&read, &info, nullptr); }
@@ -108,23 +107,10 @@ try
   png_read_info(png.read, png.info);
   transformToRGBA(png.read, png.info);
 
-  m_width  = png_get_image_width(png.read,  png.info);
-  m_height = png_get_image_height(png.read, png.info);
+  resize(png_get_image_width(png.read,  png.info),
+         png_get_image_height(png.read, png.info),
+         png_get_rowbytes(png.read,     png.info) /
+         png_get_image_width(png.read,  png.info));
 
-  const size_t rowBytes { png_get_rowbytes(png.read, png.info) };
-  if(rowBytes != m_width * 4)
-    throw reascript_error { "BUG: rowBytes != width * 4 (missing transform?)" };
-  // assert(rowBytes == m_width * 4);
-  m_pixels.resize(m_height * rowBytes);
-
-  std::vector<png_bytep> rows;
-  rows.reserve(m_height);
-  for(auto it { m_pixels.begin() }; it < m_pixels.end(); it += rowBytes)
-    rows.push_back(&*it);
-
-  png_read_image(png.read, rows.data());
-}
-catch(const std::bad_alloc &)
-{
-  throw reascript_error { "cannot allocate memory" };
+  png_read_image(png.read, makeScanlines().data());
 }

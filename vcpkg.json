@@ -10,6 +10,7 @@
     { "name": "freetype", "default-features": false,
       "features": ["png", "zlib"], "platform": "!linux" },
     { "name": "gl3w", "platform": "windows" },
+    { "name": "libjpeg-turbo", "platform": "!linux" },
     { "name": "libpng", "platform": "!linux" },
     "cmark",
     "gtest"
