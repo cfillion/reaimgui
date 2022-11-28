@@ -26,7 +26,7 @@ R"(To refer to a mouse button, you may use named enums in your code e.g.
 MouseButton_Left, MouseButton_Right.
 
 You can also use regular integer: it is forever guaranteed that
-0=Left, 1=Right, 2=Middle.
+0=Left, 1=Right, 2=Middle. Buttons 3 and 4 do not have a named enum.
 
 Dragging operations are only reported after mouse has moved a certain distance
 away from the initial clicking position (see 'lock_threshold' parameters and

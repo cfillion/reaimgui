@@ -19,7 +19,6 @@
 
 #include "dialog.hpp"
 #include "renderer.hpp"
-#include "version.hpp"
 #include "win32_unicode.hpp"
 #include "window.hpp"
 
