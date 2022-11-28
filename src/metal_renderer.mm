@@ -191,10 +191,12 @@ void MetalRenderer::Shared::textureCommand(const TextureCmd &cmd)
                                                           width:width
                                                          height:height
                                                       mipmapped:NO];
-    texDesc.storageMode = MTLStorageModePrivate;
+    texDesc.storageMode = MTLStorageModeManaged;
     texDesc.usage = MTLTextureUsageShaderRead;
 
     id<MTLTexture> texture { [m_device newTextureWithDescriptor:texDesc] };
+    if(!texture)
+      throw backend_error { "failed to create texture" };
     [texture replaceRegion:MTLRegionMake2D(0, 0, width, height)
                mipmapLevel:0
                  withBytes:pixels
