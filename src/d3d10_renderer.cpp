@@ -244,7 +244,7 @@ void D3D10Renderer::Shared::textureCommand(const TextureCmd &cmd)
       .SysMemPitch = textureDesc.Width * 4,
     };
     if(FAILED(m_device->CreateTexture2D(&textureDesc, &subResourceDesc, &texture)))
-      continue;
+      throw backend_error { "failed to create texture" };
 
     const D3D10_SHADER_RESOURCE_VIEW_DESC resourceViewDesc {
       .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
