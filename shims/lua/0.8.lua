@@ -12,3 +12,15 @@ reaper.ImGui_Key_ModSuper = reaper.ImGui_Mod_Super
 -- new generic object attachment functions
 reaper.ImGui_AttachFont = reaper.ImGui_Attach
 reaper.ImGui_DetachFont = reaper.ImGui_Detach
+
+-- obsoleted window boundary extension via SetCursorPos (ocornut/imgui#5548)
+local function shimWindowEnd(func)
+  return function(ctx, ...)
+    reaper.ImGui_SameLine(ctx, nil, 0)
+    func(ctx, ...)
+  end
+end
+reaper.ImGui_End           = shimWindowEnd(reaper.ImGui_End)
+reaper.ImGui_EndChild      = shimWindowEnd(reaper.ImGui_EndChild)
+reaper.ImGui_EndChildFrame = shimWindowEnd(reaper.ImGui_EndChildFrame)
+reaper.ImGui_EndGroup      = shimWindowEnd(reaper.ImGui_EndGroup)
