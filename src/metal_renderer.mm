@@ -240,12 +240,13 @@ MetalRenderer::~MetalRenderer()
 void MetalRenderer::resizeBuffer(const size_t buf, const unsigned int wantSize,
   const unsigned int reserveExtra, const unsigned int stride)
 {
-  if(m_buffers[buf] && [m_buffers[buf] length] <= wantSize)
+  if(m_buffers[buf] && [m_buffers[buf] length] >= wantSize * stride)
     return;
 
   const unsigned int size { (wantSize + reserveExtra) * stride };
-  m_buffers[buf] = [m_shared->m_device newBufferWithLength:size
-                                       options:MTLResourceStorageModeShared];
+  constexpr auto options
+    { MTLResourceStorageModeShared | MTLResourceCPUCacheModeWriteCombined };
+  m_buffers[buf] = [m_shared->m_device newBufferWithLength:size options:options];
 }
 
 void MetalRenderer::setSize(const ImVec2 size)
