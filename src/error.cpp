@@ -94,6 +94,7 @@ static WDL_DLGRET errorProc(HWND hwnd, const unsigned int msg,
     headerRect.top = headerRect.left;
 
     HGDIOBJ defaultFont { SelectObject(dc, headerFont) };
+    SetTextColor(dc, GetSysColor(COLOR_BTNTEXT));
     DrawText(dc, err->header, -1, &headerRect, DT_LEFT);
     SelectObject(dc, defaultFont);
     DeleteObject(headerFont);
