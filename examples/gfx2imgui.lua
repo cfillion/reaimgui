@@ -124,9 +124,9 @@ local BLIT_NO_SOURCE_ALPHA = 2
 local gfx, global_state, state = {}, {
   commands   = {},
   fonts      = {},
+  images     = {},
   log        = { ptr=0, size=0, max_size=64 },
   log_lines  = {},
-  imgdim     = {},
   dock       = 0,
   pos_x = 0, pos_y = 0,
 }
@@ -638,7 +638,7 @@ function gfx.blit(source, ...)
     toint(destx), toint(desty), toint(destw), toint(desth)
   rotxoffs, rotyoffs = rotxoffs or 0.0, rotyoffs or 0.0
 
-  local dim = global_state.imgdim[source]
+  local dim = global_state.images[source]
 
   if n_args <  1 then scale = 1            end
   if n_args <  5 and dim then srcw = dim.w end
@@ -862,10 +862,9 @@ function gfx.getfont()
 end
 
 function gfx.getimgdim(image)
-  image = toint(image)
-  local dim = global_state.imgdim[image]
-  if not dim then return 0, 0 end
-  return dim.w, dim.h
+  image = global_state.images[toint(image)]
+  if not image then return 0, 0 end
+  return image.w, image.h
 end
 
 function gfx.getpixel()
@@ -980,16 +979,34 @@ function gfx.lineto(x, y, aa)
 end
 
 function gfx.loadimg(image, filename)
-  local bitmap = reaper.ImGui_CreateImage(filename)
-  -- gfx returns < 0 on failure, reaimgui throws an error
+  image = toint(image)
+
+  local bitmap
+  if not pcall(function() bitmap = reaper.ImGui_CreateImage(filename) end) then
+    return -1
+  end
 
   local w, h = reaper.ImGui_Image_GetSize(bitmap)
   gfx.setimgdim(image, w, h)
 
-  local dest_backup = gfx.dest
-  gfx.dest = image
+  local data = global_state.images[image]
+  if data.inst and state then
+    reaper.ImGui_Detach(state.ctx, data.inst)
+  end
 
   local attached = false
+  local attach = function()
+    data.inst = bitmap
+    reaper.ImGui_Attach(state.ctx, data.inst)
+    attached = true
+  end
+  if state then attach() end
+
+  local dest_backup = gfx.dest
+  gfx.dest = image
+  local commands = global_state.commands[gfx.dest]
+  if commands then commands.want_clear = true end
+
   local AddImage = reaper.ImGui_DrawList_AddImage
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     if not attached then
@@ -997,8 +1014,7 @@ function gfx.loadimg(image, filename)
       if not reaper.ImGui_ValidatePtr(bitmap, 'ImGui_Image*') then
         bitmap = reaper.ImGui_CreateImage(filename)
       end
-      reaper.ImGui_Attach(state.ctx, bitmap)
-      attached = true
+      attach()
     end
 
     local w, h = transformPoint(w, h, blit_opts)
@@ -1184,8 +1200,14 @@ end
 
 function gfx.setimgdim(image, w, h)
   image = toint(image)
-  local dim = { w=math.max(0, toint(w)), h=math.max(0, toint(h)) }
-  global_state.imgdim[image] = dim
+
+  local dim = global_state.images[image]
+  if not dim then
+    dim = {}
+    global_state.images[image] = dim
+  end
+
+  dim.w, dim.h = math.max(0, toint(w)), math.max(0, toint(h))
 
   local commands = global_state.commands[image]
   if commands and dim.w == 0 and dim.h == 0 then
