@@ -79,7 +79,7 @@ struct Argument {
   bool isBigBuf() const
     { return name.find("NeedBig") != std::string_view::npos; }
   bool isBufSize() const
-    { return name.find("_sz") == name.size() - 3; }
+    { return name.size() > 3 && name.find("_sz") == name.size() - 3; }
   std::string_view bufName() const { return name.substr(0, name.size() - 3); }
 
   std::string_view humanName() const;
