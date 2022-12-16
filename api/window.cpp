@@ -396,7 +396,7 @@ R"(Dock windows into other windows or in REAPER dockers.
 Dock IDs are:
 - 0 = undocked
 - -1 to -16 = REAPER docker index
-- > 0 = Dear ImGui dockspace ID (when the user docked the window into another one).
+- \> 0 = Dear ImGui dockspace ID (when the user docked the window into another one).
 
 Set ConfigFlags_DockingEnable when creating your context or with
 SetConfigVar(ConfigVar_Flags) to enable docking (disabled by default).)");
