@@ -242,12 +242,6 @@ void DockerHost::setAlpha(float)
 {
 }
 
-void DockerHost::update()
-{
-  if(m_window)
-    m_window->update();
-}
-
 float DockerHost::scaleFactor() const
 {
   return m_window ? m_window->scaleFactor() : 1.f;
@@ -255,18 +249,8 @@ float DockerHost::scaleFactor() const
 
 void DockerHost::onChanged()
 {
-  const bool isActive { m_docker->isActive() };
-  if(isActive ^ !!m_window) {
-    if(isActive)
-      activate();
-    else if(!ImGui::IsMouseDown(ImGuiMouseButton_Left) &&
-            !ImGui::IsMouseReleased(ImGuiMouseButton_Left)) {
-      m_viewport->PlatformHandle = nullptr;
-      if(m_window)
-        m_window->destroy();
-      m_window.reset();
-    }
-  }
+  if(!m_window && m_docker->isActive())
+    activate();
 
   ImGuiViewportP *viewport { static_cast<ImGuiViewportP *>(m_viewport) };
   if(ImGuiWindow *userWindow { viewport->Window }) {
@@ -283,6 +267,26 @@ void DockerHost::onChanged()
 
     m_window->onChanged();
   }
+}
+
+void DockerHost::update()
+{
+  if(!m_window)
+    return;
+
+  // in update() rather than onChanged() to be executed after DockSpace()
+  // handles drag/drop events, so that we don't close the docker in the frame
+  // during which a window is dropped creating a dock request
+  const ImGuiContext *ctx { ImGui::GetCurrentContext() };
+  if(!m_docker->isActive() &&
+     !ctx->MovingWindow && ctx->DockContext.Requests.Size == 0) {
+    m_viewport->PlatformHandle = nullptr;
+    m_window->destroy();
+    m_window.reset();
+    return;
+  }
+
+  m_window->update();
 }
 
 void DockerHost::setIME(ImGuiPlatformImeData *data)
