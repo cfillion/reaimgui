@@ -386,7 +386,10 @@ bool Function::hasOptionalArgs() const
 
 void Function::cppSignature(std::ostream &stream) const
 {
-  stream << hl(Highlight::Type) << type << hl() << ' ' << name << '(';
+  stream << hl(Highlight::Type) << type << hl() << ' ' << name;
+  if(isEnum())
+    return;
+  stream << '(';
   CommaSep cs { stream };
   for(const Argument &arg : args) {
     cs << hl(Highlight::Type) << arg.type << hl() << ' ' << arg.name;
