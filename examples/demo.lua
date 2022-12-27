@@ -212,6 +212,22 @@ function demo.EachEnum(enum)
   end
 end
 
+function demo.DockName(dock_id)
+  if dock_id == 0 then
+    return 'Floating'
+  elseif dock_id > 0 then
+    return ('ImGui docker %d'):format(dock_id)
+  end
+
+  -- reaper.DockGetPosition was added in v6.01+dev1207
+  local positions = {
+    [0]='Bottom', [1]='Left', [2]='Top', [3]='Right', [4]='Floating'
+  }
+  local position = reaper.DockGetPosition and
+    positions[reaper.DockGetPosition(~dock_id)] or 'Unknown'
+  return ('REAPER docker %d (%s)'):format(-dock_id, position)
+end
+
 -------------------------------------------------------------------------------
 -- [SECTION] Demo Window / ShowDemoWindow()
 -------------------------------------------------------------------------------
@@ -554,24 +570,16 @@ function demo.ShowDemoWindow(open)
     end
 
     local dock_id = r.ImGui_GetWindowDockID(ctx)
-    local dock_label
-    if dock_id < 0 then
-      dock_label = ('REAPER docker %d'):format(math.abs(dock_id))
-    elseif dock_id > 0 then
-      dock_label = ('ImGui docker %d'):format(dock_id)
-    else
-      dock_label = 'Floating'
-    end
     r.ImGui_AlignTextToFramePadding(ctx)
     r.ImGui_Text(ctx, 'Dock in docker:')
     r.ImGui_SameLine(ctx)
-    r.ImGui_SetNextItemWidth(ctx, 150)
-    if r.ImGui_BeginCombo(ctx, '##docker', dock_label) then
+    r.ImGui_SetNextItemWidth(ctx, 222)
+    if r.ImGui_BeginCombo(ctx, '##docker', demo.DockName(dock_id)) then
       if r.ImGui_Selectable(ctx, 'Floating', dock_id == 0) then
         demo.set_dock_id = 0
       end
       for id = -1, -16, -1 do
-        if r.ImGui_Selectable(ctx, ('REAPER docker %d'):format(math.abs(id)), dock_id == id) then
+        if r.ImGui_Selectable(ctx, demo.DockName(id), dock_id == id) then
           demo.set_dock_id = id
         end
       end
