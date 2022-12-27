@@ -25,6 +25,7 @@
 #include "settings.hpp"
 #include "texture.hpp"
 #include "viewport.hpp"
+#include "window.hpp"
 
 #include <cassert>
 #include <imgui/imgui_internal.h>
@@ -338,18 +339,19 @@ void Context::updateMouseData()
   pos.y = point.y;
 
   ImGuiID hoveredViewport { 0 };
-  ImGuiViewport *viewportForPos;
+  ImGuiViewport *viewportForPos { nullptr };
+  HWND capture { Platform::getCapture() };
   if(ImGuiViewport *viewportForInput { Platform::viewportUnder(pos) }) {
-    viewportForPos = viewportForInput;
-    // WindowFromPoint returns viewports with NoInputs set (despite using
-    // WM_NCHITTEST->HTTRANSPARENT) when decorations are enabled on Windows
-    if(!(viewportForInput->Flags & ImGuiViewportFlags_NoInputs))
-      hoveredViewport = viewportForInput->ID;
+    if(!capture || Window::contextFromHwnd(capture) == this) {
+      viewportForPos = viewportForInput;
+      // WindowFromPoint returns viewports with NoInputs set (despite using
+      // WM_NCHITTEST->HTTRANSPARENT) when decorations are enabled on Windows
+      if(!(viewportForInput->Flags & ImGuiViewportFlags_NoInputs))
+        hoveredViewport = viewportForInput->ID;
+    }
   }
-  else if(HWND capture { Platform::getCapture() })
+  else if(capture)
     viewportForPos = ImGui::FindViewportByPlatformHandle(capture);
-  else
-    viewportForPos = nullptr;
 
   if(viewportForPos && ImGui::GetMainViewport() != viewportForPos) {
     Platform::scalePosition(&pos, false, viewportForPos);
