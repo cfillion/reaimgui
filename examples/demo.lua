@@ -156,7 +156,7 @@ function demo.RgbaToArgb(rgba)
 end
 
 function demo.ArgbToRgba(argb)
-  return (argb << 8) | (argb >> 24 & 0xFF)
+  return (argb << 8 & 0xFFFFFF00) | (argb >> 24 & 0xFF)
 end
 
 function demo.round(n)
