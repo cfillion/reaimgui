@@ -156,7 +156,7 @@ Docker *DockerList::findByViewport(const ImGuiViewport *viewport)
 }
 
 DockerHost::DockerHost(Docker *docker, ImGuiViewport *viewport)
-  : Viewport { viewport }, m_docker { docker }
+  : Viewport { viewport }, m_docker { docker }, m_resetNextFrame { false }
 {
 }
 
@@ -248,6 +248,13 @@ float DockerHost::scaleFactor() const
 
 void DockerHost::onChanged()
 {
+  if(m_resetNextFrame) {
+    m_viewport->PlatformHandle = nullptr;
+    m_window->destroy();
+    m_window.reset();
+    m_resetNextFrame = false;
+  }
+
   if(!m_window && m_docker->isActive())
     activate();
 
@@ -273,19 +280,20 @@ void DockerHost::update()
   if(!m_window)
     return;
 
-  // in update() rather than onChanged() to be executed after DockSpace()
+  m_window->update();
+
+  // In update() rather than onChanged() to be executed after DockSpace()
   // handles drag/drop events, so that we don't close the docker in the frame
   // during which a window is dropped creating a dock request
+  //
+  // The platform window must be reset only in onChanged() however, otherwise
+  // windows would become invisible in the following scenario:
+  // 1) dock 2) move to split 3) undock via API = windows stays attached to the
+  // dock's viewport if m_window.reset() is done here in update().
   const ImGuiContext *ctx { ImGui::GetCurrentContext() };
   if(!m_docker->isActive() &&
-     !ctx->MovingWindow && ctx->DockContext.Requests.Size == 0) {
-    m_viewport->PlatformHandle = nullptr;
-    m_window->destroy();
-    m_window.reset();
-    return;
-  }
-
-  m_window->update();
+     !ctx->MovingWindow && ctx->DockContext.Requests.Size == 0)
+    m_resetNextFrame = true;
 }
 
 void DockerHost::setIME(ImGuiPlatformImeData *data)

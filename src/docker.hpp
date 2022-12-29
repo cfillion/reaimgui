@@ -92,6 +92,7 @@ private:
 
   Docker *m_docker;
   std::unique_ptr<Window> m_window;
+  bool m_resetNextFrame;
 };
 
 #endif
