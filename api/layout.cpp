@@ -178,7 +178,7 @@ DEFINE_API(void, SetCursorScreenPos, (ImGui_Context*,ctx)
 
 API_SUBSECTION("Clipping",
 R"(Mouse hovering is affected by PushClipRect() calls, unlike direct calls to
-DrawList_PushClipRect() which are render only.)");
+DrawList_PushClipRect() which are render only. Coordinates are in screen space.)");
 
 DEFINE_API(void, PushClipRect, (ImGui_Context*,ctx)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
