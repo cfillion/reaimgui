@@ -41,7 +41,7 @@ void Docker::draw()
     ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings
   };
 
-  constexpr ImGuiDockNodeFlags dockSpaceFlags {
+  ImGuiDockNodeFlags dockSpaceFlags {
     ImGuiDockNodeFlags_AutoHideTabBar | ImGuiDockNodeFlags_PassthruCentralNode
   };
 
@@ -50,8 +50,13 @@ void Docker::draw()
   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
   const int visible { ImGui::Begin(m_windowTitle, nullptr, windowFlags) };
   ImGui::PopStyleVar(3);
-  if(visible) // just in case, altough NoDecoration implies NoCollapse
+  if(visible) { // just in case, altough NoDecoration implies NoCollapse
+    // Prevent the dock space's drop target from remaining active at 0,0 after
+    // a temporary docker tab got closed while a window is still being moved.
+    if(ImGui::GetWindowViewport()->Flags & ImGuiViewportFlags_Minimized)
+      dockSpaceFlags |= ImGuiDockNodeFlags_KeepAliveOnly;
     ImGui::DockSpace(nodeId(), { 0.f, 0.f }, dockSpaceFlags);
+  }
   ImGui::End();
 }
 
@@ -75,13 +80,34 @@ static bool anyNodeWindow(const ImGuiDockNode *node,
          anyNodeWindow(node->ChildNodes[1], callback);
 }
 
-bool Docker::isActive() const
+void Docker::update(bool deactivate)
 {
-  return anyNodeWindow(rootNode(), [](ImGuiWindow *window) {
+  const ImGuiContext *ctx { ImGui::GetCurrentContext() };
+  if(ctx->DockContext.Requests.Size > 0)
+    deactivate = false;
+
+  const bool active { anyNodeWindow(rootNode(), [](ImGuiWindow *window) {
     return
       (window->Active || window->WasActive) &&
       (window->DockIsActive || window->DockTabIsVisible);
-  });
+  }) };
+
+  if(active || (!ctx->MovingWindow && deactivate))
+    m_active.set(0, active);
+
+  const bool isDropTarget { Context::current()->dockers().dropTarget() == this };
+  if(isDropTarget || deactivate)
+    m_active.set(1, isDropTarget);
+}
+
+bool Docker::isActive() const
+{
+  return m_active.any();
+}
+
+bool Docker::isDropTarget() const
+{
+  return m_active.test(1);
 }
 
 bool Docker::isNoFocus() const
@@ -119,7 +145,8 @@ constexpr std::array<Docker, sizeof...(IDs)>
 makeDockers(std::integer_sequence<ReaDockID, IDs...>) { return { IDs... }; }
 
 DockerList::DockerList()
-  : m_dockers { makeDockers(std::make_integer_sequence<ReaDockID, DOCKER_COUNT>{}) }
+  : m_dockers { makeDockers(std::make_integer_sequence<ReaDockID, DOCKER_COUNT>{}) },
+    m_dropTarget { nullptr }
 {
 }
 
@@ -127,6 +154,18 @@ void DockerList::drawAll()
 {
   if(!(ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DockingEnable))
     return;
+
+  const ImGuiPayload *payload { ImGui::GetDragDropPayload() };
+  if(payload && payload->IsDataType(IMGUI_PAYLOAD_TYPE_WINDOW)) {
+    POINT point;
+    GetCursorPos(&point);
+    HWND target { Platform::windowFromPoint(ImVec2(point.x, point.y)) };
+    m_dropTarget = findByChildHwnd(target);
+    if(!m_dropTarget && IsChild(GetMainHwnd(), target))
+      m_dropTarget = findNearby(point);
+  }
+  else
+    m_dropTarget = nullptr;
 
   for(Docker &docker : m_dockers)
     docker.draw();
@@ -155,8 +194,90 @@ Docker *DockerList::findByViewport(const ImGuiViewport *viewport)
   return nullptr;
 }
 
+const Docker *DockerList::findByChildHwnd(HWND window) const
+{
+  const size_t index { static_cast<size_t>(DockIsChildOfDock(window, nullptr)) };
+  if(index < m_dockers.size())
+    return &m_dockers[index];
+
+  return nullptr;
+}
+
+const Docker *DockerList::findNearby(POINT point) const
+{
+  if(!DockGetPosition)
+    return nullptr; // REAPER v6.02+
+
+  constexpr int HANDLE_SIZE { 32 }; // * Platform::scaleForWindow(main)?
+
+  enum DockPos { Unknown = -1, Bottom, Left, Top, Right }; // DockGetPosition
+  struct Side { LONG RECT::*dir; LONG POINT::*coord; DockPos dockPos; };
+  constexpr Side sides[] {
+    { &RECT::left,   &POINT::x, Left   },
+    { &RECT::top,    &POINT::y, Top    },
+    { &RECT::right,  &POINT::x, Right  },
+    { &RECT::bottom, &POINT::y, Bottom },
+  };
+
+  RECT rect;
+  HWND main { GetMainHwnd() };
+  GetClientRect(main, &rect);
+  ScreenToClient(main, &point);
+
+  DockPos wantPos { Unknown };
+  for(const auto side : sides) {
+    if(point.*(side.coord) > rect.*(side.dir) - HANDLE_SIZE &&
+       point.*(side.coord) < rect.*(side.dir) + HANDLE_SIZE) {
+      wantPos = side.dockPos;
+      break;
+    }
+  }
+  if(wantPos == Unknown)
+    return nullptr;
+
+  for(const Docker &docker : m_dockers) {
+    if(DockGetPosition(docker.id()) == wantPos)
+      return &docker;
+  }
+
+  return nullptr;
+}
+
+static void restoreMovingWindowFocus()
+{
+  // Workaround for:
+  // - Moved window going under floating dockers
+  // - On Linux: Moving floating windows lose focus when a
+  //   docker drop target is destroyed.
+  const ImGuiContext *ctx { ImGui::GetCurrentContext() };
+  if(ctx->MovingWindow && ctx->MovingWindow->ViewportOwned) {
+    void *viewport { ctx->MovingWindow->Viewport->PlatformUserData };
+    static_cast<Viewport *>(viewport)->setFocus();
+  }
+}
+
+static void DockWindowActivate2(HWND window, const bool allowStealFocus)
+{
+#ifdef _WIN32
+  // Workaround for DockWindowActivate stealing focus from the moving window
+  HWND dockerWindow;
+  bool wasEnabled;
+  if(!allowStealFocus) {
+    dockerWindow = GetMainHwnd();
+    wasEnabled = IsWindowEnabled(dockerWindow);
+    EnableWindow(dockerWindow, false);
+  }
+#endif
+  DockWindowActivate(window);
+  restoreMovingWindowFocus();
+#ifdef _WIN32
+  if(!allowStealFocus)
+    EnableWindow(dockerWindow, wasEnabled);
+#endif
+}
+
 DockerHost::DockerHost(Docker *docker, ImGuiViewport *viewport)
-  : Viewport { viewport }, m_docker { docker }, m_resetNextFrame { false }
+  : Viewport { viewport }, m_docker { docker }
 {
 }
 
@@ -175,7 +296,7 @@ void DockerHost::activate()
   // ImGuiViewportFlags_NoFocusOnAppearing is not inherited from the
   // docked windows, but would from the Begin in Docker::draw
   if(!m_docker->isNoFocus())
-    DockWindowActivate(hwnd);
+    DockWindowActivate2(hwnd, !m_docker->isDropTarget());
 
   m_window->show();
 }
@@ -248,15 +369,18 @@ float DockerHost::scaleFactor() const
 
 void DockerHost::onChanged()
 {
-  if(m_resetNextFrame) {
+  m_docker->update(false);
+
+  if(m_docker->isActive()) {
+    if(!m_window)
+      activate();
+  }
+  else if(m_window) {
     m_viewport->PlatformHandle = nullptr;
     m_window->destroy();
     m_window.reset();
-    m_resetNextFrame = false;
+    restoreMovingWindowFocus();
   }
-
-  if(!m_window && m_docker->isActive())
-    activate();
 
   ImGuiViewportP *viewport { static_cast<ImGuiViewportP *>(m_viewport) };
   if(ImGuiWindow *userWindow { viewport->Window }) {
@@ -277,23 +401,20 @@ void DockerHost::onChanged()
 
 void DockerHost::update()
 {
+  // Deactivate only after DockSpace handles drag/drop events
+  // so that we don't close the docker in the frame during which a window is
+  // dropped (when a dock request is created).
+  m_docker->update(true);
+
   if(!m_window)
     return;
 
   m_window->update();
 
-  // In update() rather than onChanged() to be executed after DockSpace()
-  // handles drag/drop events, so that we don't close the docker in the frame
-  // during which a window is dropped creating a dock request
-  //
-  // The platform window must be reset only in onChanged() however, otherwise
-  // windows would become invisible in the following scenario:
-  // 1) dock 2) move to split 3) undock via API = windows stays attached to the
-  // dock's viewport if m_window.reset() is done here in update().
-  const ImGuiContext *ctx { ImGui::GetCurrentContext() };
-  if(!m_docker->isActive() &&
-     !ctx->MovingWindow && ctx->DockContext.Requests.Size == 0)
-    m_resetNextFrame = true;
+  // Checking m_window->isMinimized here would prevent restoring
+  // the moving window to the foreground over floating dockers on macOS
+  if(m_docker->isDropTarget())
+    DockWindowActivate2(m_window->nativeHandle(), false);
 }
 
 void DockerHost::setIME(ImGuiPlatformImeData *data)

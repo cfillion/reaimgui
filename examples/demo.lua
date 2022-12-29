@@ -219,7 +219,7 @@ function demo.DockName(dock_id)
     return ('ImGui docker %d'):format(dock_id)
   end
 
-  -- reaper.DockGetPosition was added in v6.01+dev1207
+  -- reaper.DockGetPosition was added in v6.02
   local positions = {
     [0]='Bottom', [1]='Left', [2]='Top', [3]='Right', [4]='Floating'
   }

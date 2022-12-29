@@ -27,7 +27,7 @@
 
 #include <imgui/imgui.h>
 
-#define IMPORT(name) { reinterpret_cast<void **>(&name), #name }
+#define IMPORT(name, ...) { reinterpret_cast<void **>(&name), #name, __VA_ARGS__ }
 
 #ifdef MessageBox
 #  undef MessageBox
@@ -42,7 +42,7 @@ static void fatalError(const char *message)
 
 static bool loadAPI(void *(*getFunc)(const char *))
 {
-  struct ApiImport { void **ptr; const char *name; };
+  struct ApiImport { void **ptr; const char *name; bool required = true; };
 
   const ApiImport funcs[] {
     IMPORT(Splash_GetWnd), // v4.7
@@ -50,6 +50,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(AttachWindowTopmostButton),
     IMPORT(DetachWindowTopmostButton),
     IMPORT(Dock_UpdateDockID),
+    IMPORT(DockGetPosition, false), // v6.02
     IMPORT(DockIsChildOfDock),
     IMPORT(DockWindowActivate),
     IMPORT(DockWindowAddEx),
@@ -79,7 +80,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
   for(const ApiImport &func : funcs) {
     *func.ptr = getFunc(func.name);
 
-    if(*func.ptr == nullptr) {
+    if(*func.ptr == nullptr && func.required) {
       char message[1024];
       snprintf(message, sizeof(message),
         "ReaImGui v%s is incompatible with this version of REAPER.\n\n"

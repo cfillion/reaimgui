@@ -21,6 +21,7 @@
 #include "viewport.hpp"
 
 #include <array>
+#include <bitset>
 #include <memory>
 
 using ReaDockID = unsigned int;
@@ -38,8 +39,10 @@ public:
   ImGuiID nodeId() const { return ~m_id; } // for SetNextWindowDockID
   ImGuiID windowId() const { return m_windowId; }
 
+  void update(bool deactivate);
   void draw();
   bool isActive() const;
+  bool isDropTarget() const;
   bool isNoFocus() const;
   void moveTo(Docker *other);
 
@@ -50,6 +53,7 @@ private:
   ReaDockID m_id;
   ImGuiID m_windowId;
   char m_windowTitle[20];
+  std::bitset<2> m_active;
 };
 
 class DockerList {
@@ -60,9 +64,13 @@ public:
   void drawAll();
   Docker *findById(unsigned int);
   Docker *findByViewport(const ImGuiViewport *);
+  const Docker *dropTarget() const { return m_dropTarget; }
 
 private:
+  const Docker *findByChildHwnd(HWND) const;
+  const Docker *findNearby(POINT) const;
   std::array<Docker, DOCKER_COUNT> m_dockers;
+  const Docker *m_dropTarget;
 };
 
 class DockerHost : public Viewport {
@@ -92,7 +100,6 @@ private:
 
   Docker *m_docker;
   std::unique_ptr<Window> m_window;
-  bool m_resetNextFrame;
 };
 
 #endif
