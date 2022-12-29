@@ -417,10 +417,6 @@ std::optional<LRESULT> Win32Window::handleMessage
       m_ctx->charInputUTF16(wParam);
       return 0;
     }
-  case WM_NCHITTEST:
-    if(m_viewport->Flags & ImGuiViewportFlags_NoInputs)
-      return HTTRANSPARENT;
-    break;
   case WM_KILLFOCUS:
     m_ctx->updateFocus();
     return 0;

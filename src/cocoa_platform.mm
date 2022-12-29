@@ -74,45 +74,24 @@ void Platform::scalePosition(ImVec2 *pos, bool, const ImGuiViewport *)
   pos->y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - pos->y;
 }
 
-static ImGuiViewport *nextViewportUnder
-  (const NSPoint pos, const NSInteger windowNumber)
+HWND Platform::windowFromPoint(const ImVec2 nativePoint)
 {
-  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  NSPoint point { NSMakePoint(nativePoint.x, nativePoint.y) };
+  const NSInteger windowNumber
+    { [NSWindow windowNumberAtPoint:point belowWindowWithWindowNumber:0] };
+  NSWindow *window { [NSApp windowWithWindowNumber:windowNumber] };
+  if(!window)
+    return nullptr;
 
-  for(int i { 1 }; i < pio.Viewports.Size; ++i) { // skip the main viewport
-    ImGuiViewport *viewport { pio.Viewports[i] };
-    NSView *superView { (__bridge NSView *)viewport->PlatformHandle };
+  NSView *view { [window contentView] };
+  if(!view || ![view respondsToSelector:@selector(onSwellMessage:p1:p2:)])
+    return nullptr;
 
-    // PlatformHandle is NULL for inactive DockerHosts
-    if(!superView || [[superView window] windowNumber] != windowNumber)
-      continue;
+  point = [window convertScreenToBase:point];
+  if(NSView *childView { [view hitTest:point] })
+    view = childView;
 
-    // NSView's hitTest takes a point in the coordinate system of the view's
-    // superview, not of the view itself.
-    NSPoint clientPos { [[superView window] convertScreenToBase:pos] };
-    clientPos = [superView convertPoint:clientPos fromView:nil];
-
-    NSView *inputView { [superView subviews][0] };
-    if([inputView hitTest:clientPos])
-     return viewport;
-  }
-
-  return nullptr;
-}
-
-ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
-{
-  const NSPoint point { NSMakePoint(pos.x, pos.y) };
-
-  NSInteger number { 0 };
-  ImGuiViewport *viewport;
-
-  do {
-    number = [NSWindow windowNumberAtPoint:point belowWindowWithWindowNumber:number];
-    viewport = nextViewportUnder(point, number);
-  } while(viewport && !!(viewport->Flags & ImGuiViewportFlags_NoInputs));
-
-  return viewport;
+  return (__bridge HWND)view;
 }
 
 float Platform::scaleForWindow(HWND hwnd)

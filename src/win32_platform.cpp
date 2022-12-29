@@ -119,15 +119,47 @@ void Platform::updateMonitors()
   EnumDisplayMonitors(nullptr, nullptr, enumMonitors, 0);
 }
 
-ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
+static HWND windowBehind(HWND candidate, const POINT point)
 {
-  HWND target { WindowFromPoint(POINT(pos.x, pos.y)) };
+  HWND hit { nullptr };
 
-  ImGuiViewport *viewport { ImGui::FindViewportByPlatformHandle(target) };
-  if(viewport && ImGui::GetMainViewport() != viewport)
-    return viewport;
+  while((candidate = GetWindow(candidate, GW_HWNDNEXT))) {
+    do {
+      RECT clientRect;
+      GetClientRect(candidate, &clientRect);
+      POINT clientPoint { point };
+      ScreenToClient(candidate, &clientPoint);
+      if(PtInRect(&clientRect, clientPoint)) {
+        hit = candidate;
+        if(!(candidate = GetWindow(candidate, GW_CHILD)))
+          return hit;
+      }
+      else
+        break;
+    } while(candidate);
+  }
 
-  return nullptr;
+  return hit;
+}
+
+HWND Platform::windowFromPoint(const ImVec2 nativePoint)
+{
+  const POINT point(nativePoint.x, nativePoint.y);
+  HWND hit { WindowFromPoint(point) };
+
+  // 1. Honor WM_NCHITTEST returning HTTRANSPARENT over
+  //    non-client areas (native decorations)
+  // 2. Make the native titlebar always passthrough to match macOS/Linux
+  if(hit && GetWindowLong(hit, GWL_STYLE) & WS_CAPTION) {
+    RECT clientRect;
+    GetClientRect(hit, &clientRect);
+    ClientToScreen(hit, reinterpret_cast<POINT *>(&clientRect));
+    ClientToScreen(hit, reinterpret_cast<POINT *>(&clientRect) + 1);
+    if(!PtInRect(&clientRect, point))
+      hit = windowBehind(hit, point);
+  }
+
+  return hit;
 }
 
 void Platform::scalePosition(ImVec2 *pos, const bool toNative, const ImGuiViewport *viewport)

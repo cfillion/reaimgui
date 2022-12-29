@@ -183,8 +183,15 @@ void CocoaWindow::update()
   // disable shadows under the window when WindowFlags_NoBackground is set
   // (shadows wouldn't be updated along with the contents until next resize)
   if(diff & ImGuiViewportFlags_NoRendererClear) {
-    const bool opaque { (m_viewport->Flags & ImGuiViewportFlags_NoRendererClear) != 0 };
+    const bool opaque
+      { (m_viewport->Flags & ImGuiViewportFlags_NoRendererClear) != 0 };
     [window setHasShadow:opaque];
+  }
+
+  if(diff & ImGuiViewportFlags_NoInputs) {
+    const bool hitTestTransparent
+      { (m_viewport->Flags & ImGuiViewportFlags_NoInputs) != 0 };
+    [window setIgnoresMouseEvents:hitTestTransparent];
   }
 }
 

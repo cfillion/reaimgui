@@ -103,7 +103,7 @@ private:
   void updateSettings();
   void updateDragDrop();
 
-  ImGuiViewport *viewportUnder(POINT) const;
+  ImGuiViewport *viewportUnder(ImVec2) const;
   ImGuiViewport *focusedViewport() const;
   void dragSources();
   void clearFocus();

@@ -344,17 +344,16 @@ void Context::updateMouseData()
   ImGuiID hoveredViewport { 0 };
   ImGuiViewport *viewportForPos { nullptr };
   HWND capture { Platform::getCapture() };
-  if(ImGuiViewport *viewportForInput { Platform::viewportUnder(pos) }) {
+  if(ImGuiViewport *viewportForInput { viewportUnder(pos) }) {
     if(!capture || Window::contextFromHwnd(capture) == this) {
       viewportForPos = viewportForInput;
-      // WindowFromPoint returns viewports with NoInputs set (despite using
-      // WM_NCHITTEST->HTTRANSPARENT) when decorations are enabled on Windows
-      if(!(viewportForInput->Flags & ImGuiViewportFlags_NoInputs))
-        hoveredViewport = viewportForInput->ID;
+      hoveredViewport = viewportForInput->ID;
     }
   }
   else if(capture)
     viewportForPos = ImGui::FindViewportByPlatformHandle(capture);
+
+  io.AddMouseViewportEvent(hoveredViewport);
 
   if(viewportForPos && ImGui::GetMainViewport() != viewportForPos) {
     Platform::scalePosition(&pos, false, viewportForPos);
@@ -362,10 +361,6 @@ void Context::updateMouseData()
   }
   else
     io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
-
-  // disabled by the GDK backend
-  if(io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
-    io.AddMouseViewportEvent(hoveredViewport);
 }
 
 void Context::mouseInput(const int button, const bool down)
@@ -521,6 +516,20 @@ void Context::endDrag(const bool drop)
     m_draggedFiles.clear();
   }
   m_imgui->IO.AddMouseButtonEvent(DND_MouseButton, false);
+}
+
+ImGuiViewport *Context::viewportUnder(const ImVec2 pos) const
+{
+  HWND target { Platform::windowFromPoint(pos) };
+#ifdef __APPLE__
+  target = GetParent(target);
+#endif
+
+  ImGuiViewport *viewport { ImGui::FindViewportByPlatformHandle(target) };
+  if(viewport && ImGui::GetMainViewport() != viewport)
+    return viewport;
+
+  return nullptr;
 }
 
 ImGuiViewport *Context::focusedViewport() const

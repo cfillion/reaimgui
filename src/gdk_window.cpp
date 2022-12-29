@@ -22,7 +22,6 @@
 #include "platform.hpp"
 
 #include <gtk/gtk.h>
-
 #include <reaper_plugin_functions.h>
 #include <swell/swell.h>
 #include <WDL/wdltypes.h>

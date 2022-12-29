@@ -59,7 +59,6 @@ static void setClipboardText(void *, const char *text)
 void Platform::install()
 {
   ImGuiIO &io { ImGui::GetIO() };
-  io.BackendFlags &= ~ImGuiBackendFlags_HasMouseHoveredViewport;
   io.BackendPlatformName = "reaper_imgui_gdk";
   io.GetClipboardTextFn = &getClipboardText;
   io.SetClipboardTextFn = &setClipboardText;
@@ -108,22 +107,29 @@ void Platform::updateMonitors()
   }
 }
 
-ImGuiViewport *Platform::viewportUnder(const ImVec2 pos)
+HWND Platform::windowFromPoint(const ImVec2 nativePoint)
 {
-  // FIXME: SWELL does not support HTTRANSPARENT or hit testing that
-  // would be required for implementing ImGui's MouseHoveredViewport
-
   POINT point;
-  point.x = pos.x;
-  point.y = pos.y;
+  point.x = nativePoint.x;
+  point.y = nativePoint.y;
 
-  HWND target { WindowFromPoint(point) };
+  HWND window { WindowFromPoint(point) };
 
-  ImGuiViewport *viewport { ImGui::FindViewportByPlatformHandle(target) };
-  if(viewport && ImGui::GetMainViewport() != viewport)
-    return viewport;
+  if(window && HTTRANSPARENT ==
+      SendMessage(window, WM_NCHITTEST, 0, MAKELPARAM(point.x, point.y))) {
+    // For compatibility when running v6.73 or older (SWELL prior to da86a62)
+    //
+    // Trick WindowFromPoint into skipping this window by overwriting
+    // HWND::m_visible. Storing the original value as a sanity-check
+    // in case the offset isn't always valid in odd configurations.
+    char *visible { reinterpret_cast<char *>(window) + 0x2b0 };
+    const char originalValue { *visible };
+    *visible = 0;
+    window = WindowFromPoint(point);
+    *visible = originalValue;
+  }
 
-  return nullptr;
+  return window;
 }
 
 void Platform::scalePosition(ImVec2 *pos, const bool toHiDpi, const ImGuiViewport *)

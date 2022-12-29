@@ -120,6 +120,10 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   case WM_RBUTTONUP:
     self->mouseUp(ImGuiMouseButton_Right);
     return 0;
+  case WM_NCHITTEST: // using [NSWindow ignoresMouseEvents] for this on macOS
+    if(self->m_viewport->Flags & ImGuiViewportFlags_NoInputs)
+      return HTTRANSPARENT;
+    break;
 #endif // __APPLE__
   }
 
