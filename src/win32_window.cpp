@@ -385,9 +385,21 @@ std::optional<LRESULT> Win32Window::handleMessage
     keyEvent(msg, wParam, lParam);
     return 0;
   case WM_CHAR:
-    if(wParam >= 0 && wParam < 0x10000)
+    if(wParam < 0 || wParam > 0xffff)
+      break;
+
+    // https://learn.microsoft.com/en-us/windows/win32/inputdev/using-keyboard-input#processing-character-messages
+    switch(wParam) {
+    case '\b':
+    case 0x1B: // \e
+    case '\r':
+    case '\n':
+    case '\t':
+      break;
+    default:
       m_ctx->charInputUTF16(wParam);
-    return 0;
+      return 0;
+    }
   case WM_NCHITTEST:
     if(m_viewport->Flags & ImGuiViewportFlags_NoInputs)
       return HTTRANSPARENT;
