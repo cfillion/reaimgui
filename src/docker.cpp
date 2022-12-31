@@ -19,6 +19,7 @@
 
 #include "context.hpp"
 #include "platform.hpp"
+#include "win32_unicode.hpp"
 #include "window.hpp"
 
 #include <cassert>
@@ -203,20 +204,34 @@ const Docker *DockerList::findByChildHwnd(HWND window) const
   return nullptr;
 }
 
+namespace DockPos {
+  // DockGetPosition return values
+  enum Pos { Unknown = -1, Bottom, Left, Top, Right, Floating };
+}
+
+static int CompatDockGetPosition(const int whichDock) // for REAPER v5
+{
+  char key[16];
+  snprintf(key, sizeof(key), "dockermode%d", whichDock);
+  const int mode { static_cast<int>(
+    GetPrivateProfileInt(TEXT("REAPER"), WIDEN(key),
+                         DockPos::Unknown, WIDEN(get_ini_file()))) };
+  if(mode == DockPos::Unknown)
+    return DockPos::Unknown;
+
+  return mode & 0x8000 ? DockPos::Floating : mode & 3;
+}
+
 const Docker *DockerList::findNearby(POINT point) const
 {
-  if(!DockGetPosition)
-    return nullptr; // REAPER v6.02+
-
   constexpr int HANDLE_SIZE { 32 }; // * Platform::scaleForWindow(main)?
 
-  enum DockPos { Unknown = -1, Bottom, Left, Top, Right }; // DockGetPosition
-  struct Side { LONG RECT::*dir; LONG POINT::*coord; DockPos dockPos; };
+  struct Side { LONG RECT::*dir; LONG POINT::*coord; DockPos::Pos dockPos; };
   constexpr Side sides[] {
-    { &RECT::left,   &POINT::x, Left   },
-    { &RECT::top,    &POINT::y, Top    },
-    { &RECT::right,  &POINT::x, Right  },
-    { &RECT::bottom, &POINT::y, Bottom },
+    { &RECT::left,   &POINT::x, DockPos::Left   },
+    { &RECT::top,    &POINT::y, DockPos::Top    },
+    { &RECT::right,  &POINT::x, DockPos::Right  },
+    { &RECT::bottom, &POINT::y, DockPos::Bottom },
   };
 
   RECT rect;
@@ -224,7 +239,7 @@ const Docker *DockerList::findNearby(POINT point) const
   GetClientRect(main, &rect);
   ScreenToClient(main, &point);
 
-  DockPos wantPos { Unknown };
+  DockPos::Pos wantPos { DockPos::Unknown };
   for(const auto side : sides) {
     if(point.*(side.coord) > rect.*(side.dir) - HANDLE_SIZE &&
        point.*(side.coord) < rect.*(side.dir) + HANDLE_SIZE) {
@@ -232,11 +247,14 @@ const Docker *DockerList::findNearby(POINT point) const
       break;
     }
   }
-  if(wantPos == Unknown)
+  if(wantPos == DockPos::Unknown)
     return nullptr;
 
+  const decltype(DockGetPosition) getPosition
+    { DockGetPosition ? DockGetPosition : &CompatDockGetPosition };
+
   for(const Docker &docker : m_dockers) {
-    if(DockGetPosition(docker.id()) == wantPos)
+    if(getPosition(docker.id()) == wantPos)
       return &docker;
   }
 
