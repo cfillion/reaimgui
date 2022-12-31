@@ -20,14 +20,22 @@
 
 struct RendererType;
 
+#ifdef SETTINGS_IMPLEMENT
+#  define SETTING
+#else
+#  define SETTING extern
+#endif
+
 namespace Settings {
   void open();
   void setup();
   void save();
   void teardown();
 
-  extern bool NoSavedSettings;
-  extern const RendererType *Renderer;
+  SETTING bool NoSavedSettings;
+  SETTING const RendererType *Renderer;
 }
+
+#undef SETTING
 
 #endif

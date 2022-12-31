@@ -15,10 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define SETTINGS_IMPLEMENT
 #include "settings.hpp"
 
 #include "dialog.hpp"
+#include "optional.hpp"
 #include "renderer.hpp"
+#include "variant.hpp"
 #include "win32_unicode.hpp"
 #include "window.hpp"
 
@@ -26,22 +29,165 @@
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h> // WDL_DLGRET
 
-bool Settings::NoSavedSettings { false };
-const RendererType *Settings::Renderer;
+struct Checkbox {
+  enum Flags { None = 0, Invert = 1<<0 };
+  int box, flags = None;
+
+  void fill(HWND, bool)     const;
+  void apply(HWND, bool *)  const;
+  bool hitTest(HWND, POINT) const;
+  std::optional<bool> isChangeEvent(short control, short notification) const;
+};
+
+struct Combobox {
+  int box, label;
+
+  void fill(HWND, const RendererType *) const;
+  void apply(HWND, const RendererType **) const;
+  bool hitTest(HWND, POINT) const;
+  std::optional<bool> isChangeEvent(short control, short notification) const;
+};
+
+template<typename T> struct Control;
+template<> struct Control<bool>                 { using type = Checkbox; };
+template<> struct Control<const RendererType *> { using type = Combobox; };
+
+template<typename T>
+struct Setting {
+  T *value;
+  const TCHAR *key, *help;
+  typename Control<T>::type control;
+
+  void read(const TCHAR *file)  const;
+  void write(const TCHAR *file) const;
+};
+
+template<typename... Ts>
+struct SettingVariant : std::variant<Setting<Ts>...> {
+  template<typename T, typename... Args>
+  constexpr SettingVariant(T *value, Args&&... args)
+    : std::variant<Setting<Ts>...> { Setting<T> { value, args... } } {}
+};
+
+#if defined(_WIN32)
+#  define PLATFORM_SUFFIX L"_win32"
+#elif defined(__APPLE__)
+#  define PLATFORM_SUFFIX "_cocoa"
+#else
+#  define PLATFORM_SUFFIX "_gdk"
+#endif
+
+constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
+  { &Settings::NoSavedSettings, TEXT("nosavedsettings"),
+    TEXT("Disable to force ReaImGui scripts to start with "
+         "their default first-use state (safe mode)."),
+    Checkbox { IDC_SAVEDSETTINGS, Checkbox::Invert },
+  },
+  { &Settings::Renderer, TEXT("renderer") PLATFORM_SUFFIX,
+    TEXT("Select a different renderer if you encounter compatibility problems."),
+    Combobox { IDC_RENDERER, IDC_RENDERERTXT },
+  },
+};
+
+constexpr const TCHAR *SECTION { TEXT("reaimgui") };
+
+template<>
+void Setting<bool>::read(const TCHAR *file) const
+{
+  *value = GetPrivateProfileInt(SECTION, key, *value, file);
+}
+
+template<>
+void Setting<const RendererType *>::read(const TCHAR *file) const
+{
+  TCHAR id[32];
+  GetPrivateProfileString(SECTION, key, TEXT(""), id, std::size(id), file);
+  *value = RendererType::bestMatch(NARROW(id));
+}
+
+template<>
+void Setting<bool>::write(const TCHAR *file) const
+{
+  constexpr const TCHAR *bools[] { TEXT("0"), TEXT("1") };
+  WritePrivateProfileString(SECTION, key, bools[*value], file);
+}
+
+template<>
+void Setting<const RendererType *>::write(const TCHAR *file) const
+{
+  WritePrivateProfileString(SECTION, key, WIDEN((*value)->id), file);
+}
+
+void Checkbox::fill(HWND window, const bool value) const
+{
+  const bool invert { (flags & Invert) != 0 };
+  CheckDlgButton(window, box, value ^ invert);
+}
+
+void Combobox::fill(HWND window, const RendererType *value) const
+{
+  HWND combo { GetDlgItem(window, box) };
+  for(const RendererType *type : RendererType::knownTypes()) {
+    const auto index {
+      SendMessage(combo, CB_ADDSTRING, 0,
+                  reinterpret_cast<LPARAM>(WIDEN(type->displayName)))
+    };
+    SendMessage(combo, CB_SETITEMDATA, index, reinterpret_cast<LPARAM>(type));
+    if(type == value)
+      SendMessage(combo, CB_SETCURSEL, index, 0);
+  }
+}
+
+void Checkbox::apply(HWND window, bool *value) const
+{
+  const bool invert { (flags & Invert) != 0 };
+  *value = !!IsDlgButtonChecked(window, box) ^ invert;
+}
+
+void Combobox::apply(HWND window, const RendererType **value) const
+{
+  HWND combo { GetDlgItem(window, box) };
+  const auto index { SendMessage(combo, CB_GETCURSEL, 0, 0) };
+  *value = reinterpret_cast<const RendererType *>
+    (SendMessage(combo, CB_GETITEMDATA, index, 0));
+}
+
+static bool hitTest(HWND window, const POINT point, const int control)
+{
+  RECT rect;
+  GetWindowRect(GetDlgItem(window, control), &rect);
+  return PtInRect(&rect, point);
+}
+
+bool Checkbox::hitTest(HWND window, const POINT point) const
+{
+  return ::hitTest(window, point, box);
+}
+
+bool Combobox::hitTest(HWND window, const POINT point) const
+{
+  return ::hitTest(window, point, box) || ::hitTest(window, point, label);
+}
+
+std::optional<bool> Checkbox::isChangeEvent
+  (const short controlId, const short notification) const
+{
+  if(controlId == box)
+    return notification == BN_CLICKED;
+  return std::nullopt;
+}
+
+std::optional<bool> Combobox::isChangeEvent
+  (const short controlId, const short notification) const
+{
+  if(controlId == box)
+    return notification == CBN_SELCHANGE;
+  return std::nullopt;
+}
 
 static void updateHelp(HWND hwnd)
 {
   constexpr int IDC_PREFS_HELP { 0x4eb }, IDT_PREFS_HELP_CLEAR { 0x654 };
-  constexpr const TCHAR *PREVIOUS_TEXT {};
-
-  struct HelpText { int control; const TCHAR *text; };
-  constexpr HelpText helpMap[] {
-    { IDC_SAVEDSETTINGS, TEXT("Disable to force ReaImGui scripts to start with "
-                              "their default first-use state (safe mode).") },
-    { IDC_RENDERER,      TEXT("Select a different renderer if you encounter "
-                              "compatibility problems.") },
-    { IDC_RENDERERTXT,   PREVIOUS_TEXT },
-  };
 
   static const TCHAR *shownText;
 
@@ -56,56 +202,33 @@ static void updateHelp(HWND hwnd)
   POINT point;
   GetCursorPos(&point);
 
-  const TCHAR *helpText;
-  for(const HelpText &help : helpMap) {
-    RECT rect;
-    GetWindowRect(GetDlgItem(hwnd, help.control), &rect);
-    if(help.text != PREVIOUS_TEXT)
-      helpText = help.text;
-    if(PtInRect(&rect, point)) {
-      // repeatedly setting the same text flickers on Windows
-      if(shownText != helpText) {
-        shownText = helpText;
-        SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, helpText);
-      }
+  for(const auto &setting : SETTINGS) {
+    if(std::visit([hwnd, point](const auto &setting) {
+      if(!setting.control.hitTest(hwnd, point))
+        return false;
+      if(shownText == setting.help)
+        return true; // repeatedly setting the same text flickers on Windows
+      shownText = setting.help;
+      SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, setting.help);
+      return true;
+    }, setting))
       return;
-    }
   }
 
   shownText = nullptr;
-  SetTimer(prefs, IDT_PREFS_HELP_CLEAR, 200, 0); // same speed as REAPER
-}
-
-static void fillRenderers(HWND combo)
-{
-  for(const RendererType *type : RendererType::knownTypes()) {
-    const auto index {
-      SendMessage(combo, CB_ADDSTRING, 0,
-                  reinterpret_cast<LPARAM>(WIDEN(type->displayName)))
-    };
-    SendMessage(combo, CB_SETITEMDATA, index, reinterpret_cast<LPARAM>(type));
-    if(type == Settings::Renderer)
-      SendMessage(combo, CB_SETCURSEL, index, 0);
-  }
-}
-
-static const RendererType *selectedRenderer(HWND combo)
-{
-  const auto index { SendMessage(combo, CB_GETCURSEL, 0, 0) };
-  return reinterpret_cast<const RendererType *>
-    (SendMessage(combo, CB_GETITEMDATA, index, 0));
+  SetTimer(prefs, IDT_PREFS_HELP_CLEAR, 200, nullptr); // same speed as REAPER
 }
 
 static bool isChangeEvent(const short control, const short notification)
 {
-  switch(control) {
-  case IDC_SAVEDSETTINGS:
-    return true;
-  case IDC_RENDERER:
-    return notification == CBN_SELCHANGE;
-  default:
-    return false;
+  for(const auto &setting : SETTINGS) {
+    if(auto rv { std::visit([control, notification] (const auto &setting) {
+      return setting.control.isChangeEvent(control, notification);
+    }, setting) })
+      return *rv;
   }
+
+  return false;
 }
 
 static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
@@ -115,19 +238,13 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
 
   switch(message) {
   case WM_INITDIALOG: {
-    CheckDlgButton(hwnd, IDC_SAVEDSETTINGS, !Settings::NoSavedSettings);
-    fillRenderers(GetDlgItem(hwnd, IDC_RENDERER));
+    for(const auto &setting : SETTINGS) {
+      std::visit([hwnd] (const auto &setting) {
+        setting.control.fill(hwnd, *setting.value);
+      }, setting);
+    }
     return 1;
   }
-  case WM_SHOWWINDOW: // to clear shownText when the page becomes inactive
-  case WM_SETCURSOR:  // WM_MOUSEMOVE is not sent over children controls (win32)
-    updateHelp(hwnd);
-    return 0;
-  case WM_PREFS_APPLY:
-    Settings::NoSavedSettings = !IsDlgButtonChecked(hwnd, IDC_SAVEDSETTINGS);
-    Settings::Renderer = selectedRenderer(GetDlgItem(hwnd, IDC_RENDERER));
-    Settings::save();
-    return 0;
   case WM_SIZE: {
     RECT pageRect;
     GetClientRect(hwnd, &pageRect);
@@ -138,9 +255,21 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
       SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
     return 0;
   }
+  case WM_SHOWWINDOW: // to clear shownText when the page becomes inactive
+  case WM_SETCURSOR:  // WM_MOUSEMOVE is not sent over children controls (win32)
+    updateHelp(hwnd);
+    return 0;
   case WM_COMMAND:
     if(isChangeEvent(LOWORD(wParam), HIWORD(wParam)))
       EnableWindow(GetDlgItem(GetParent(hwnd), IDC_PREFS_APPLY), true);
+    return 0;
+  case WM_PREFS_APPLY:
+    for(const auto &setting : SETTINGS) {
+      std::visit([hwnd] (const auto &setting) {
+        setting.control.apply(hwnd, setting.value);
+      }, setting);
+    }
+    Settings::save();
     return 0;
   }
 
@@ -159,18 +288,6 @@ static prefs_page_register_t g_page {
   0,        // won't have children
 };
 
-constexpr const TCHAR *APP { TEXT("reaimgui") },
-                      *KEY_NOSAVEDSETTINGS { TEXT("nosavedsettings") },
-                      *KEY_RENDERER        { TEXT("renderer_")
-#if defined(_WIN32)
-                                             L"win32"
-#elif defined(__APPLE__)
-                                             "cocoa"
-#else
-                                             "gdk"
-#endif
-                                           };
-
 void Settings::open()
 {
   ViewPrefs(0, g_page.idstr);
@@ -187,16 +304,14 @@ void Settings::setup()
   const char *file { get_ini_file() };
 #endif
 
-  TCHAR buffer[4096];
-  const DWORD bufSize { static_cast<DWORD>(std::size(buffer)) };
+  for(const auto &setting : SETTINGS) {
+    std::visit([file] (const auto &setting) {
+      setting.read(file);
 
-  NoSavedSettings = GetPrivateProfileInt
-    (APP, KEY_NOSAVEDSETTINGS, NoSavedSettings, file);
-  GetPrivateProfileString(APP, KEY_RENDERER, TEXT(""), buffer, bufSize, file);
-  Renderer = RendererType::bestMatch(NARROW(buffer));
-
-  // store default settings without waiting for the user to apply
-  save();
+      // store default settings without waiting for the user to apply
+      setting.write(file);
+    }, setting);
+  }
 }
 
 void Settings::save()
@@ -208,9 +323,8 @@ void Settings::save()
   const char *file { get_ini_file() };
 #endif
 
-  constexpr const TCHAR *bools[] { TEXT("0"), TEXT("1") };
-  WritePrivateProfileString(APP, KEY_NOSAVEDSETTINGS, bools[NoSavedSettings], file);
-  WritePrivateProfileString(APP, KEY_RENDERER, WIDEN(Renderer->id), file);
+  for(const auto &setting : SETTINGS)
+    std::visit([file] (const auto &setting) { setting.write(file); }, setting);
 }
 
 void Settings::teardown()
