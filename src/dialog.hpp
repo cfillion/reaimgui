@@ -22,15 +22,18 @@
   DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_SYSMENU | WS_CAPTION
 #define DIALOG_FONT 8, "MS Shell Dlg"
 
-#define IDD_SETTINGS      100
-#define IDC_GROUPBOX      200
-#define IDC_SAVEDSETTINGS 201
-#define IDC_RENDERERTXT   202
-#define IDC_RENDERER      203
+#define IDD_SETTINGS        100
+#define IDC_GROUPBOX        200
+#define IDC_SAVEDSETTINGS   201
+#define IDC_RENDERERTXT     202
+#define IDC_RENDERER        203
+#define IDC_DOCKWITHSHIFT   204
+#define IDC_DOCKSPLIT       205
+#define IDC_DOCKTRANSPARENT 206
 
-#define IDD_ERROR         101
-#define IDC_MESSAGE       200
-#define IDC_REPORT        201
-#define IDC_SETTINGS      202
+#define IDD_ERROR    101
+#define IDC_MESSAGE  200
+#define IDC_REPORT   201
+#define IDC_SETTINGS 202
 
 #endif

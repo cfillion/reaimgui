@@ -83,6 +83,21 @@ constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
          "their default first-use state (safe mode)."),
     Checkbox { IDC_SAVEDSETTINGS, Checkbox::Invert },
   },
+  { &Settings::DockingNoSplit, TEXT("dockingnosplit"),
+    TEXT("Disable to limit docking to merging multiple windows together into "
+         "tab bars (simplified docking mode)."),
+    Checkbox { IDC_DOCKSPLIT, Checkbox::Invert },
+  },
+  { &Settings::DockingWithShift, TEXT("dockingwithshift"),
+    TEXT("Press the Shift key to disable or enable docking when dragging "
+         "windows using the title bar. This option inverts the behavior."),
+    Checkbox { IDC_DOCKWITHSHIFT },
+  },
+  { &Settings::DockingTransparentPayload, TEXT("dockingtransparentpayload"),
+    TEXT("Windows become semi-transparent when docking into another window. "
+         "Docking boxes are shown only in the target window."),
+    Checkbox { IDC_DOCKTRANSPARENT },
+  },
   { &Settings::Renderer, TEXT("renderer") PLATFORM_SUFFIX,
     TEXT("Select a different renderer if you encounter compatibility problems."),
     Combobox { IDC_RENDERER, IDC_RENDERERTXT },

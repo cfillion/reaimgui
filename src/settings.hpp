@@ -33,6 +33,7 @@ namespace Settings {
   void teardown();
 
   SETTING bool NoSavedSettings;
+  SETTING bool DockingNoSplit, DockingWithShift, DockingTransparentPayload;
   SETTING const RendererType *Renderer;
 }
 

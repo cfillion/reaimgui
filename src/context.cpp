@@ -107,6 +107,9 @@ Context::Context(const char *label, const int userConfigFlags)
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
   io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
   io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+  io.ConfigDockingNoSplit = Settings::DockingNoSplit;
+  io.ConfigDockingWithShift = Settings::DockingWithShift;
+  io.ConfigDockingTransparentPayload = Settings::DockingTransparentPayload;
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
