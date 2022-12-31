@@ -22,22 +22,10 @@
 #  include <variant>
 #else
   // Xcode 9 for macOS 32-bit builds
-#  include <boost/variant/apply_visitor.hpp>
-#  include <boost/variant/get.hpp>
-#  include <boost/variant/variant.hpp>
+#  include <boost/variant2/variant.hpp>
   namespace std {
-    template<typename... T>
-    using variant = boost::variant<T...>;
-
-    template<typename Visitor, typename Variant>
-    auto visit(const Visitor &visitor, Variant &&operand)
-    { return boost::apply_visitor(visitor, operand); }
-
-    template<typename T, typename... V>
-    auto &get(std::variant<V...> &v) { return boost::get<T>(v); }
-
-    template<typename T, typename... V>
-    auto get_if(const std::variant<V...> *v) { return boost::get<T>(v); }
+    using namespace boost::variant2;
+    using boost::variant2::get;
   }
 #endif
 

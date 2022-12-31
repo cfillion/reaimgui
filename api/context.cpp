@@ -101,7 +101,7 @@ API_SUBSECTION("Options");
 
 // expose most settings from ImGuiIO
 // ITEM ORDER MUST MATCH WITH THE DEFINE_CONFIGVAR() BELOW!
-static const std::variant<
+static constexpr std::variant<
   bool  ImGuiIO::*,
   float ImGuiIO::*,
   int   ImGuiIO::*

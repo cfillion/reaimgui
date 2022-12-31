@@ -6,7 +6,7 @@
     { "name": "boost-iostreams", "platform": "!linux" },
     { "name": "boost-preprocessor", "platform": "!linux" },
     { "name": "boost-type-index", "platform": "!linux" },
-    { "name": "boost-variant", "platform": "osx" },
+    { "name": "boost-variant2", "platform": "osx" },
     { "name": "freetype", "default-features": false,
       "features": ["png", "zlib"], "platform": "!linux" },
     { "name": "gl3w", "platform": "windows" },
