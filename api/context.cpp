@@ -99,13 +99,12 @@ ValidatePtr.)",
 
 API_SUBSECTION("Options");
 
+template<typename... T>
+using IOFields = std::variant<T ImGuiIO::*...>;
+
 // expose most settings from ImGuiIO
 // ITEM ORDER MUST MATCH WITH THE DEFINE_CONFIGVAR() BELOW!
-static constexpr std::variant<
-  bool  ImGuiIO::*,
-  float ImGuiIO::*,
-  int   ImGuiIO::*
-> g_configVars[] {
+static constexpr IOFields<bool, float, int> g_configVars[] {
   &ImGuiIO::ConfigFlags,
 
   &ImGuiIO::MouseDoubleClickTime,

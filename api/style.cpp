@@ -34,8 +34,11 @@ constexpr auto assertStyleVar(T ImGuiStyle::*var)
   assertStyleVar<__COUNTER__ - baseStyleVar - 1, \
                  ImGuiStyleVar_##name>(&ImGuiStyle::name)
 
+template<typename... T>
+using StyleFields = std::variant<T ImGuiStyle::*...>;
+
 constexpr int baseStyleVar { __COUNTER__ };
-static constexpr std::variant<float ImGuiStyle::*, ImVec2 ImGuiStyle::*> g_styleVars[] {
+static constexpr StyleFields<float, ImVec2> g_styleVars[] {
   STYLEVAR(Alpha),
   STYLEVAR(DisabledAlpha),
   STYLEVAR(WindowPadding),
