@@ -29,19 +29,9 @@
 bool Settings::NoSavedSettings { false };
 const RendererType *Settings::Renderer;
 
-// constant values from REAPER
-constexpr int WM_PREFS_APPLY  { WM_USER * 2 },
-              IDC_PREFS_APPLY { 0x478 }, IDC_PREFS_HELP  { 0x4eb };
-
-static void CALLBACK updateHelp(HWND hwnd, UINT, UINT_PTR, DWORD)
+static void updateHelp(HWND hwnd)
 {
-  static const TCHAR *shownText;
-
-  if(!IsWindowVisible(hwnd)) {
-    shownText = nullptr;
-    return; // another preference page is active
-  }
-
+  constexpr int IDC_PREFS_HELP { 0x4eb }, IDT_PREFS_HELP_CLEAR { 0x654 };
   constexpr const TCHAR *PREVIOUS_TEXT {};
 
   struct HelpText { int control; const TCHAR *text; };
@@ -52,6 +42,16 @@ static void CALLBACK updateHelp(HWND hwnd, UINT, UINT_PTR, DWORD)
                               "compatibility problems.") },
     { IDC_RENDERERTXT,   PREVIOUS_TEXT },
   };
+
+  static const TCHAR *shownText;
+
+  if(!IsWindowVisible(hwnd)) {
+    shownText = nullptr;
+    return; // another preference page is active
+  }
+
+  HWND prefs { GetParent(hwnd) };
+  KillTimer(prefs, IDT_PREFS_HELP_CLEAR);
 
   POINT point;
   GetCursorPos(&point);
@@ -65,15 +65,15 @@ static void CALLBACK updateHelp(HWND hwnd, UINT, UINT_PTR, DWORD)
     if(PtInRect(&rect, point)) {
       // repeatedly setting the same text flickers on Windows
       if(shownText != helpText) {
-        SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, helpText);
         shownText = helpText;
+        SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, helpText);
       }
       return;
     }
   }
 
-  SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, TEXT(""));
   shownText = nullptr;
+  SetTimer(prefs, IDT_PREFS_HELP_CLEAR, 200, 0); // same speed as REAPER
 }
 
 static void fillRenderers(HWND combo)
@@ -111,15 +111,18 @@ static bool isChangeEvent(const short control, const short notification)
 static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
   const WPARAM wParam, const LPARAM lParam)
 {
+  constexpr int WM_PREFS_APPLY { WM_USER * 2 }, IDC_PREFS_APPLY { 0x478 };
+
   switch(message) {
   case WM_INITDIALOG: {
-    SetTimer(hwnd, 1, 200, &updateHelp); // same speed as REAPER
-
     CheckDlgButton(hwnd, IDC_SAVEDSETTINGS, !Settings::NoSavedSettings);
     fillRenderers(GetDlgItem(hwnd, IDC_RENDERER));
-
     return 1;
   }
+  case WM_SHOWWINDOW: // to clear shownText when the page becomes inactive
+  case WM_SETCURSOR:  // WM_MOUSEMOVE is not sent over children controls (win32)
+    updateHelp(hwnd);
+    return 0;
   case WM_PREFS_APPLY:
     Settings::NoSavedSettings = !IsDlgButtonChecked(hwnd, IDC_SAVEDSETTINGS);
     Settings::Renderer = selectedRenderer(GetDlgItem(hwnd, IDC_RENDERER));
