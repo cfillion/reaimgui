@@ -33,7 +33,7 @@ for:
       install-deps() {
         local arch="$1"; shift
         local native=("$@" php-cli qemu-user-binfmt)
-        local target=(libboost-dev libboost-filesystem-dev libgtk-3-dev)
+        local target=(libgtk-3-dev)
 
         sudo dpkg --add-architecture $arch
         sudo apt-get update -qq

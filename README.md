@@ -27,7 +27,7 @@ Software requirements:
 Install the following libraries (and development headers if your system provides
 them separately):
 
-- [Boost](https://www.boost.org/)
+- [Boost](https://www.boost.org/) (1.71 or newer)
 - [Fontconfig](https://www.fontconfig.org)
 - [FreeType](https://www.freetype.org/)
 - [GDK3](https://developer.gnome.org/gdk3/stable/) (3.22 or newer)

@@ -35,6 +35,7 @@
   }
 #else
 #  include <boost/filesystem.hpp>
+#  include <boost/filesystem/fstream.hpp>
   namespace fs {
     using namespace boost::filesystem;
     using error_code = boost::system::error_code;
