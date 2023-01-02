@@ -553,7 +553,9 @@ void Context::clearFocus()
   else
     ImGui::FocusWindow(nullptr); // also calls ClearActiveID
 
+  const ImVec2 mousePos { m_imgui->IO.MousePos };
   m_imgui->IO.ClearInputKeys();
+  m_imgui->IO.MousePos = mousePos;
 }
 
 void Context::enableViewports(const bool enable)
