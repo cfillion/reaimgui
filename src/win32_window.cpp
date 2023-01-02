@@ -72,6 +72,22 @@ float Win32Window::scaleForDpi(const unsigned int dpi)
   return static_cast<float>(dpi) / USER_DEFAULT_SCREEN_DPI;
 }
 
+// Preferences > General > Advanced UI/system tweaks >
+// Use large (non-tool) window frames for windows
+static bool useBigFrame()
+{
+  static int *bigwndframes;
+
+  if(!bigwndframes) {
+    int size;
+    bigwndframes = static_cast<int *>(get_config_var("bigwndframes", &size));
+    if(size != sizeof(*bigwndframes))
+      bigwndframes = nullptr;
+  }
+
+  return bigwndframes ? *bigwndframes : false;
+}
+
 void Win32Window::updateStyles()
 {
   m_style = WS_POPUP; // fix AttachWindowTopmostButton when a titlebar is shown
@@ -79,7 +95,8 @@ void Win32Window::updateStyles()
 
   if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration)) {
     m_style |= WS_OVERLAPPEDWINDOW & ~WS_MINIMIZEBOX;
-    m_exStyle |= WS_EX_TOOLWINDOW;
+    if(!useBigFrame())
+      m_exStyle |= WS_EX_TOOLWINDOW;
   }
 
   // tooltips & other short-lived windows
