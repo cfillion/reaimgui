@@ -174,6 +174,9 @@ void DockerList::drawAll()
 
 Docker *DockerList::findById(const ReaDockID id)
 {
+  if(id >= m_dockers.size())
+    return nullptr;
+
   for(Docker &docker : m_dockers) {
     if(docker.id() == id)
       return &docker;
@@ -195,13 +198,9 @@ Docker *DockerList::findByViewport(const ImGuiViewport *viewport)
   return nullptr;
 }
 
-const Docker *DockerList::findByChildHwnd(HWND window) const
+Docker *DockerList::findByChildHwnd(HWND window)
 {
-  const size_t index { static_cast<size_t>(DockIsChildOfDock(window, nullptr)) };
-  if(index < m_dockers.size())
-    return &m_dockers[index];
-
-  return nullptr;
+  return findById(DockIsChildOfDock(window, nullptr));
 }
 
 namespace DockPos {

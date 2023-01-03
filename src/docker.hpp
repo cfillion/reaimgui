@@ -67,7 +67,7 @@ public:
   const Docker *dropTarget() const { return m_dropTarget; }
 
 private:
-  const Docker *findByChildHwnd(HWND) const;
+  Docker *findByChildHwnd(HWND);
   const Docker *findNearby(POINT) const;
   std::array<Docker, DOCKER_COUNT> m_dockers;
   const Docker *m_dropTarget;
