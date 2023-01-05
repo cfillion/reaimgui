@@ -217,8 +217,6 @@ bool Context::beginFrame() try
 {
   assert(!m_inFrame);
 
-  m_inFrame = true;
-
   Platform::updateMonitors(); // TODO only if changed
   m_fonts->update(); // uses the monitor list
 
@@ -232,6 +230,7 @@ bool Context::beginFrame() try
   updateSettings();
 
   ImGui::NewFrame();
+  m_inFrame = true;
 
   dragSources();
   m_dockers->drawAll();
