@@ -48,6 +48,10 @@ private:
 
 static bool isPerMonitorDpiAware()
 {
+  static std::optional<bool> result;
+  if(result)
+    return *result;
+
   // Windows 10 Anniversary Update (1607) and newer
   static FuncImport<decltype(GetThreadDpiAwarenessContext)>
     _GetThreadDpiAwarenessContext
@@ -61,7 +65,8 @@ static bool isPerMonitorDpiAware()
 
   const DPI_AWARENESS_CONTEXT context { _GetThreadDpiAwarenessContext() };
   const DPI_AWARENESS awareness { _GetAwarenessFromDpiAwarenessContext(context) };
-  return awareness == DPI_AWARENESS_PER_MONITOR_AWARE;
+  result = awareness == DPI_AWARENESS_PER_MONITOR_AWARE;
+  return *result;
 }
 
 void Platform::install()
