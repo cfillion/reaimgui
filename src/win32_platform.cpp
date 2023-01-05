@@ -82,32 +82,30 @@ Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 
 static int CALLBACK enumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM)
 {
-  ImGuiPlatformMonitor imguiMonitor;
   MONITORINFO info { .cbSize = sizeof(MONITORINFO) };
+  if(!GetMonitorInfo(monitor, &info))
+    return true;
 
-  {
-    // get full monitor size for imgui's FindPlatformMonitorFor{Pos,Rect}
-    // required for ClampWindowRect to use the correct monitor's work area
-    SetDpiAwareness raii { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
-    if(!GetMonitorInfo(monitor, &info))
-      return true;
-  }
-
+  ImGuiPlatformMonitor imguiMonitor;
   imguiMonitor.MainPos.x  = info.rcMonitor.left;
   imguiMonitor.MainPos.y  = info.rcMonitor.top;
   imguiMonitor.MainSize.x = info.rcMonitor.right - info.rcMonitor.left;
   imguiMonitor.MainSize.y = info.rcMonitor.bottom - info.rcMonitor.top;
-  imguiMonitor.DpiScale   = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
-
-  if(isPerMonitorDpiAware()) {
-    // unscale the work area (used by imgui for clamping)
-    SetDpiAwareness raii { DPI_AWARENESS_CONTEXT_UNAWARE };
-    GetMonitorInfo(monitor, &info);
-  }
   imguiMonitor.WorkPos.x  = info.rcWork.left;
   imguiMonitor.WorkPos.y  = info.rcWork.top;
   imguiMonitor.WorkSize.x = info.rcWork.right - info.rcWork.left;
   imguiMonitor.WorkSize.y = info.rcWork.bottom - info.rcWork.top;
+  {
+    SetDpiAwareness raii { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
+    imguiMonitor.DpiScale   = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
+  }
+
+  const ImVec2 workOffs { imguiMonitor.WorkPos.x  - imguiMonitor.MainPos.x,
+                          imguiMonitor.WorkPos.x  - imguiMonitor.MainPos.x };
+  imguiMonitor.WorkPos.x = imguiMonitor.MainPos.x + (workOffs.x / imguiMonitor.DpiScale);
+  imguiMonitor.WorkPos.y = imguiMonitor.MainPos.y + (workOffs.y / imguiMonitor.DpiScale);
+  imguiMonitor.WorkSize.x /= imguiMonitor.DpiScale;
+  imguiMonitor.WorkSize.y /= imguiMonitor.DpiScale;
 
   ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
   if(info.dwFlags & MONITORINFOF_PRIMARY)
@@ -221,6 +219,7 @@ void Platform::scalePosition(ImVec2 *pos, const bool toNative, const ImGuiViewpo
     scale = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
   }
 
+  SetDpiAwareness aware { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
   MONITORINFO info { .cbSize = sizeof(MONITORINFO) };
   if(!GetMonitorInfo(monitor, &info))
     return;
