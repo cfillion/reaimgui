@@ -131,7 +131,6 @@ void Docker::moveTo(Docker *target)
   // to reuse the same platform window and keep using the same docker instance.
   ImVector<const char *> remap;
   ImGui::DockBuilderCopyDockSpace(nodeId(), target->nodeId(), &remap);
-  reset(); // clear out the previous node to hide it
   std::swap(m_id, target->m_id);
 }
 
@@ -407,13 +406,8 @@ void DockerHost::onChanged()
     // not touching LastRendererSize let Renderer::setSize update textures
   }
 
-  if(m_window) {
-    const int dockIndex { DockIsChildOfDock(m_window->nativeHandle(), nullptr) };
-    if(static_cast<ReaDockID>(dockIndex) != m_docker->id())
-      m_docker->moveTo(m_ctx->dockers().findById(dockIndex));
-
+  if(m_window)
     m_window->onChanged();
-  }
 }
 
 void DockerHost::update()
@@ -432,6 +426,10 @@ void DockerHost::update()
   // the moving window to the foreground over floating dockers on macOS
   if(m_docker->isDropTarget())
     DockWindowActivate2(m_window->nativeHandle(), false);
+
+  const int dockIndex { DockIsChildOfDock(m_window->nativeHandle(), nullptr) };
+  if(static_cast<ReaDockID>(dockIndex) != m_docker->id())
+    m_docker->moveTo(m_ctx->dockers().findById(dockIndex));
 }
 
 void DockerHost::setIME(ImGuiPlatformImeData *data)
