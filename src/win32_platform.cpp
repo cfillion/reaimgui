@@ -169,8 +169,22 @@ HWND Platform::windowFromPoint(const ImVec2 nativePoint)
 
 void Platform::scalePosition(ImVec2 *pos, const bool toNative, const ImGuiViewport *viewport)
 {
-  if(!isPerMonitorDpiAware())
-    return;
+  if(!isPerMonitorDpiAware()) {
+    bool isHiDpi { false };
+    const ImVector<ImGuiPlatformMonitor> &monitors { ImGui::GetPlatformIO().Monitors };
+    for(int i {}; i < monitors.Size; ++i) {
+      if(monitors[i].DpiScale != 1.f) {
+        isHiDpi = true;
+        break;
+      }
+    }
+    if(!isHiDpi)
+      return;
+    throw backend_error {
+      R"(Unsupported HiDPI mode: select "Multimonitor aware v2" in )"
+      "Preferences > General > Adavanced UI/system settings."
+    };
+  }
 
   const POINT point(pos->x, pos->y);
   HMONITOR monitor;
