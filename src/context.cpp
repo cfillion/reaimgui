@@ -85,7 +85,7 @@ Context *Context::current()
 }
 
 Context::Context(const char *label, const int userConfigFlags)
-  : m_inFrame { false }, m_dropFrameCount { DropState_None }, m_cursor {},
+  : m_dropFrameCount { DropState_None }, m_cursor {},
     m_lastFrame       { decltype(m_lastFrame)::clock::now()                },
     m_name            { label, ImGui::FindRenderedTextEnd(label)           },
     m_iniFilename     { generateIniFilename(label)                         },
@@ -129,7 +129,7 @@ Context::~Context()
 {
   setCurrent();
 
-  if(m_inFrame)
+  if(m_imgui->WithinFrameScope)
     endFrame(false);
 
   // destroy windows while this and m_imgui are still valid
@@ -153,7 +153,7 @@ void Context::setUserConfigFlags(const int userFlags)
 
 void Context::assertOutOfFrame()
 {
-  if(m_inFrame)
+  if(m_imgui->WithinFrameScope)
     throw reascript_error { "cannot modify font texture: a frame has already begun" };
 }
 
@@ -189,7 +189,7 @@ void Context::detach(Resource *obj)
 
 bool Context::heartbeat()
 {
-  if(m_inFrame) {
+  if(m_imgui->WithinFrameScope) {
     if(!endFrame(true))
       return false;
 
@@ -215,7 +215,7 @@ void Context::setCurrent()
 
 bool Context::beginFrame() try
 {
-  assert(!m_inFrame);
+  assert(!m_imgui->WithinFrameScope);
 
   Platform::updateMonitors(); // TODO only if changed
   m_fonts->update(); // uses the monitor list
@@ -230,7 +230,6 @@ bool Context::beginFrame() try
   updateSettings();
 
   ImGui::NewFrame();
-  m_inFrame = true;
 
   dragSources();
   m_dockers->drawAll();
@@ -246,7 +245,7 @@ bool Context::enterFrame()
 {
   setCurrent();
 
-  if(m_inFrame)
+  if(m_imgui->WithinFrameScope)
     return true;
   else
     return beginFrame();
@@ -254,8 +253,6 @@ bool Context::enterFrame()
 
 bool Context::endFrame(const bool render) try
 {
-  m_inFrame = false;
-
   setCurrent();
 
   if(render) {
