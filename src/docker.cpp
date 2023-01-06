@@ -232,9 +232,13 @@ const Docker *DockerList::findNearby(POINT point) const
     { &RECT::bottom, &POINT::y, DockPos::Bottom },
   };
 
-  RECT rect;
-  HWND main { GetMainHwnd() };
+  RECT rect, tabBarRect;
+  HWND main { GetMainHwnd() }, tabBar { GetDlgItem(main, 0x3e7) };
   GetClientRect(main, &rect);
+  if(tabBar && IsWindowVisible(tabBar)) {
+    GetClientRect(tabBar, &tabBarRect);
+    rect.top = tabBarRect.bottom;
+  }
   ScreenToClient(main, &point);
 
   DockPos::Pos wantPos { DockPos::Unknown };
