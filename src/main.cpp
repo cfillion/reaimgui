@@ -27,8 +27,6 @@
 
 #include <imgui/imgui.h>
 
-#define IMPORT(name, ...) { reinterpret_cast<void **>(&name), #name, __VA_ARGS__ }
-
 #ifdef MessageBox
 #  undef MessageBox
 #  define MessageBox MessageBoxA
@@ -40,12 +38,21 @@ static void fatalError(const char *message)
   MessageBox(parent, message, "ReaImGui (reaper_imgui)", MB_OK);
 }
 
+struct ApiImport {
+  template<typename T>
+  ApiImport(const char *name, T ptr, bool required = true)
+    : name { name }, ptr { reinterpret_cast<void **>(ptr) }, required { required }
+  {}
+  const char *name; void **ptr; bool required;
+};
+
+#define IMPORT(name, ...) { #name, &name, __VA_ARGS__ }
+
 static bool loadAPI(void *(*getFunc)(const char *))
 {
-  struct ApiImport { void **ptr; const char *name; bool required = true; };
-
   const ApiImport funcs[] {
-    IMPORT(Splash_GetWnd), // v4.7
+    IMPORT(Splash_GetWnd), // v4.7, import first (used by fatalError)
+    { "__localizeFunc", &LocalizeString, }, // LocalizeString added in v6.11
 
     IMPORT(AttachWindowTopmostButton),
     IMPORT(DetachWindowTopmostButton),
@@ -62,7 +69,6 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(GetMainHwnd),
     IMPORT(GetResourcePath),
     IMPORT(GetToggleCommandState),
-    IMPORT(LocalizeString, false), // v6.11
     IMPORT(plugin_getapi),
     IMPORT(plugin_register),
     IMPORT(realloc_cmd_ptr), // v5.26
@@ -82,7 +88,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
   for(const ApiImport &func : funcs) {
     *func.ptr = getFunc(func.name);
 
-    if(*func.ptr == nullptr && func.required) {
+    if(!*func.ptr && func.required) {
       char message[1024];
       snprintf(message, sizeof(message),
         "ReaImGui v%s is incompatible with this version of REAPER.\n\n"
@@ -91,12 +97,6 @@ static bool loadAPI(void *(*getFunc)(const char *))
       fatalError(message);
       return false;
     }
-  }
-
-  // compatibilty with versions prior to v6.11
-  if(!LocalizeString) {
-    LocalizeString =
-      reinterpret_cast<decltype(LocalizeString)>(getFunc("__localizeFunc"));
   }
 
   return true;
