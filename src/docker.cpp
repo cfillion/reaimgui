@@ -321,8 +321,8 @@ static void restoreMovingWindowFocus()
   //   docker drop target is destroyed.
   const ImGuiContext *ctx { ImGui::GetCurrentContext() };
   if(ctx->MovingWindow && ctx->MovingWindow->ViewportOwned) {
-    void *viewport { ctx->MovingWindow->Viewport->PlatformUserData };
-    static_cast<Viewport *>(viewport)->setFocus();
+    if(void *viewport { ctx->MovingWindow->Viewport->PlatformUserData })
+      static_cast<Viewport *>(viewport)->setFocus();
   }
 }
 
