@@ -220,7 +220,64 @@ static int CompatDockGetPosition(const int whichDock) // for REAPER v5
   return mode & 0x8000 ? DockPos::Floating : mode & 3;
 }
 
-const Docker *DockerList::findNearby(POINT point) const
+static bool isDockerOrTransport(HWND window, const bool detectTransport)
+{
+  static const char *localizedTransport
+    { LocalizeString("Transport", "DLG_188", 0) };
+
+  TCHAR titleBuf[32] {};
+  GetWindowText(window, titleBuf, std::size(titleBuf) - 1);
+
+#ifdef _WIN32
+  const std::string &narrowTitle { narrow(titleBuf) };
+  const char *title { narrowTitle.c_str() };
+#else
+  const char *title { titleBuf };
+#endif
+
+  return !strcmp(title, "REAPER_dock") ||
+         (detectTransport && !strcmp(title, localizedTransport));
+}
+
+static RECT closedDockersHitBox()
+{
+  RECT rect, rulerRect;
+  HWND main { GetMainHwnd() }, ruler { GetDlgItem(main, 0x3ed) };
+  GetClientRect(main, &rect); // not including decorations
+  ClientToScreen(main, reinterpret_cast<POINT *>(&rect));
+  ClientToScreen(main, reinterpret_cast<POINT *>(&rect) + 1);
+
+  if(!ruler) // for safety in case the ruler's control ID ever changes
+    return rect;
+
+  GetWindowRect(ruler, &rulerRect);
+
+  // Transport: Show transport docked above ruler
+  const bool skipTransport { GetToggleCommandState(41604) == 1 };
+
+  // Add space taken by the tabbar, transport and toolbar above the ruler
+  // Order of controls (top to bottom) depending on the transport bar position:
+  // Top of main window: <tabbar> <transport> <toolbar> <dock> <ruler>
+  // Above ruler:        <tabbar> <toolbar> <dock> <transport> <ruler>
+  for(HWND child { GetWindow(main, GW_CHILD) };
+      child; child = GetWindow(child, GW_HWNDNEXT)) {
+    if(isDockerOrTransport(child, skipTransport))
+      continue;
+
+    RECT childRect;
+    GetWindowRect(child, &childRect);
+#ifdef __APPLE__
+    if(childRect.bottom > rulerRect.top && childRect.bottom < rect.top)
+#else
+    if(childRect.bottom < rulerRect.top && childRect.bottom > rect.top)
+#endif
+      rect.top = childRect.bottom;
+  }
+
+  return rect;
+}
+
+const Docker *DockerList::findNearby(const POINT point) const
 {
   constexpr int HANDLE_SIZE { 32 }; // * Platform::scaleForWindow(main)?
 
@@ -232,14 +289,7 @@ const Docker *DockerList::findNearby(POINT point) const
     { &RECT::bottom, &POINT::y, DockPos::Bottom },
   };
 
-  RECT rect, tabBarRect;
-  HWND main { GetMainHwnd() }, tabBar { GetDlgItem(main, 0x3e7) };
-  GetClientRect(main, &rect);
-  if(tabBar && IsWindowVisible(tabBar)) {
-    GetClientRect(tabBar, &tabBarRect);
-    rect.top = tabBarRect.bottom;
-  }
-  ScreenToClient(main, &point);
+  const RECT rect { closedDockersHitBox() };
 
   DockPos::Pos wantPos { DockPos::Unknown };
   for(const auto side : sides) {

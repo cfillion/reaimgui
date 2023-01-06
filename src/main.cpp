@@ -61,6 +61,8 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(GetColorThemeStruct),
     IMPORT(GetMainHwnd),
     IMPORT(GetResourcePath),
+    IMPORT(GetToggleCommandState),
+    IMPORT(LocalizeString, false), // v6.11
     IMPORT(plugin_getapi),
     IMPORT(plugin_register),
     IMPORT(realloc_cmd_ptr), // v5.26
@@ -89,6 +91,12 @@ static bool loadAPI(void *(*getFunc)(const char *))
       fatalError(message);
       return false;
     }
+  }
+
+  // compatibilty with versions prior to v6.11
+  if(!LocalizeString) {
+    LocalizeString =
+      reinterpret_cast<decltype(LocalizeString)>(getFunc("__localizeFunc"));
   }
 
   return true;
