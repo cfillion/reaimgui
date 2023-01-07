@@ -20,6 +20,7 @@
 #include <reaper_plugin_secrets.h>
 
 #include "api.hpp"
+#include "docker.hpp"
 #include "resource.hpp"
 #include "settings.hpp"
 #include "version.hpp"
@@ -40,10 +41,11 @@ static void fatalError(const char *message)
 
 struct ApiImport {
   template<typename T>
-  ApiImport(const char *name, T ptr, bool required = true)
-    : name { name }, ptr { reinterpret_cast<void **>(ptr) }, required { required }
+  ApiImport(const char *name, T *ptr, T fallback = nullptr)
+    : name { name }, ptr { reinterpret_cast<void **>(ptr) },
+      fallback { reinterpret_cast<void *>(fallback) }
   {}
-  const char *name; void **ptr; bool required;
+  const char *name; void **ptr; void *fallback;
 };
 
 #define IMPORT(name, ...) { #name, &name, __VA_ARGS__ }
@@ -57,7 +59,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(AttachWindowTopmostButton),
     IMPORT(DetachWindowTopmostButton),
     IMPORT(Dock_UpdateDockID),
-    IMPORT(DockGetPosition, false), // v6.02
+    IMPORT(DockGetPosition, &CompatDockGetPosition), // v6.02
     IMPORT(DockIsChildOfDock),
     IMPORT(DockWindowActivate),
     IMPORT(DockWindowAddEx),
@@ -86,17 +88,16 @@ static bool loadAPI(void *(*getFunc)(const char *))
   };
 
   for(const ApiImport &func : funcs) {
-    *func.ptr = getFunc(func.name);
+    if((*func.ptr = getFunc(func.name)) || (*func.ptr = func.fallback))
+      continue;
 
-    if(!*func.ptr && func.required) {
-      char message[1024];
-      snprintf(message, sizeof(message),
-        "ReaImGui v%s is incompatible with this version of REAPER.\n\n"
-        "Unable to import the following API function: %s.",
-        REAIMGUI_VERSION, func.name);
-      fatalError(message);
-      return false;
-    }
+    char message[1024];
+    snprintf(message, sizeof(message),
+      "ReaImGui v%s is incompatible with this version of REAPER.\n\n"
+      "Unable to import the following API function: %s.",
+      REAIMGUI_VERSION, func.name);
+    fatalError(message);
+    return false;
   }
 
   return true;

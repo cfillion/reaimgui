@@ -207,7 +207,7 @@ namespace DockPos {
   enum Pos { Unknown = -1, Bottom, Left, Top, Right, Floating };
 }
 
-static int CompatDockGetPosition(const int whichDock) // for REAPER v5
+int CompatDockGetPosition(const int whichDock)
 {
   char key[16];
   snprintf(key, sizeof(key), "dockermode%d", whichDock);
@@ -299,14 +299,12 @@ const Docker *DockerList::findNearby(const POINT point) const
       break;
     }
   }
+
   if(wantPos == DockPos::Unknown)
     return nullptr;
 
-  const decltype(DockGetPosition) getPosition
-    { DockGetPosition ? DockGetPosition : &CompatDockGetPosition };
-
   for(const Docker &docker : m_dockers) {
-    if(getPosition(docker.id()) == wantPos)
+    if(DockGetPosition(docker.id()) == wantPos)
       return &docker;
   }
 

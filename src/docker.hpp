@@ -30,6 +30,8 @@ using ImGuiID   = unsigned int;
 class Window;
 struct ImGuiDockNode;
 
+int CompatDockGetPosition(int whichDock); // for REAPER v5
+
 class Docker {
 public:
   Docker(ReaDockID id);
