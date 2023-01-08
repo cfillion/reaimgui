@@ -29,7 +29,8 @@ reaper.ImGui_DetachFont = reaper.ImGui_Detach
 -- obsoleted window boundary extension via SetCursorPos (ocornut/imgui#5548)
 local function shimWindowEnd(func)
   return function(ctx, ...)
-    reaper.ImGui_SetCursorPos(ctx, 0, 0)
+    reaper.ImGui_SameLine(ctx, nil, 0)
+    reaper.ImGui_Spacing(ctx)
     return func(ctx, ...)
   end
 end
