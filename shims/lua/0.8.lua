@@ -30,7 +30,7 @@ reaper.ImGui_DetachFont = reaper.ImGui_Detach
 local function shimWindowEnd(func)
   return function(ctx, ...)
     reaper.ImGui_SetCursorPos(ctx, 0, 0)
-    func(ctx, ...)
+    return func(ctx, ...)
   end
 end
 reaper.ImGui_End           = shimWindowEnd(reaper.ImGui_End)
