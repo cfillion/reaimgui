@@ -36,13 +36,21 @@ Docker::Docker(const ReaDockID id)
 
 void Docker::draw()
 {
+  if(!isActive()) {
+    // 1) Reduce memory usage by not creating unnecessary windows
+    // 2) Prevent the dock space's drop target from remaining active at 0,0 after
+    //    a temporary docker tab got closed while a window is still being moved.
+    ImGui::DockSpace(nodeId(), { 0.f, 0.f }, ImGuiDockNodeFlags_KeepAliveOnly);
+    return;
+  }
+
   constexpr ImGuiWindowFlags windowFlags {
     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
     ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
     ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings
   };
 
-  ImGuiDockNodeFlags dockSpaceFlags {
+  constexpr ImGuiDockNodeFlags dockSpaceFlags {
     ImGuiDockNodeFlags_AutoHideTabBar | ImGuiDockNodeFlags_PassthruCentralNode
   };
 
@@ -51,13 +59,8 @@ void Docker::draw()
   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
   const int visible { ImGui::Begin(m_windowTitle, nullptr, windowFlags) };
   ImGui::PopStyleVar(3);
-  if(visible) { // just in case, altough NoDecoration implies NoCollapse
-    // Prevent the dock space's drop target from remaining active at 0,0 after
-    // a temporary docker tab got closed while a window is still being moved.
-    if(ImGui::GetWindowViewport()->Flags & ImGuiViewportFlags_Minimized)
-      dockSpaceFlags |= ImGuiDockNodeFlags_KeepAliveOnly;
+  if(visible) // just in case, altough NoDecoration implies NoCollapse
     ImGui::DockSpace(nodeId(), { 0.f, 0.f }, dockSpaceFlags);
-  }
   ImGui::End();
 }
 
@@ -88,9 +91,7 @@ void Docker::update(bool deactivate)
     deactivate = false;
 
   const bool active { anyNodeWindow(rootNode(), [](ImGuiWindow *window) {
-    return
-      (window->Active || window->WasActive) &&
-      (window->DockIsActive || window->DockTabIsVisible);
+    return window->Active || window->WasActive;
   }) };
 
   if(active || (!ctx->MovingWindow && deactivate))
@@ -167,8 +168,10 @@ void DockerList::drawAll()
   else
     m_dropTarget = nullptr;
 
-  for(Docker &docker : m_dockers)
+  for(Docker &docker : m_dockers) {
+    docker.update(false);
     docker.draw();
+  }
 }
 
 Docker *DockerList::findById(const ReaDockID id)
@@ -437,11 +440,10 @@ float DockerHost::scaleFactor() const
 
 void DockerHost::onChanged()
 {
-  m_docker->update(false);
-
   if(m_docker->isActive()) {
     if(!m_window)
       activate();
+    m_window->onChanged();
   }
   else if(m_window) {
     m_viewport->PlatformHandle = nullptr;
@@ -457,9 +459,6 @@ void DockerHost::onChanged()
       viewport->Size = viewport->LastPlatformSize = getSize();
     // not touching LastRendererSize let Renderer::setSize update textures
   }
-
-  if(m_window)
-    m_window->onChanged();
 }
 
 void DockerHost::update()
