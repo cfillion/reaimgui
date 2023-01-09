@@ -21,12 +21,9 @@
 #include "optional.hpp"
 #include "plugin_register.hpp"
 #include "viewport.hpp"
+#include "win32_unicode.hpp"
 
 #include <memory>
-
-#ifndef _WIN32
-#  define TEXT(str) str
-#endif
 
 class DockerHost;
 class Renderer;

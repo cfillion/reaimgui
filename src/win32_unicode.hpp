@@ -18,11 +18,12 @@
 #ifndef REAIMGUI_WIN32_UNICODE_HPP
 #define REAIMGUI_WIN32_UNICODE_HPP
 
+#include <string>
+
 #ifdef _WIN32
-#  include <string>
 #  include <windows.h>
-#  define WIDEN(str)  widen(str).c_str()
-#  define NARROW(str) narrow(str).c_str()
+#  define WIDEN(cstr)  widen(cstr).c_str()
+#  define NARROW(cstr) narrow(cstr).c_str()
 
 inline std::string narrow(const std::wstring_view &input,
   const unsigned int codepage = CP_UTF8)
@@ -52,8 +53,10 @@ inline std::wstring widen(const std::string_view &input,
 #else
 #  define TCHAR char
 #  define TEXT(str) str
-#  define WIDEN(str) str
-#  define NARROW(str) str
+#  define WIDEN(cstr) cstr
+#  define NARROW(cstr) cstr
+inline const std::string &narrow(const std::string &input,
+  const unsigned int codepage = 0) { return input; }
 #endif
 
 #endif

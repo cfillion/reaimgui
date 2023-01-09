@@ -18,6 +18,7 @@
 #define SETTINGS_IMPLEMENT
 #include "settings.hpp"
 
+#include "action.hpp"
 #include "dialog.hpp"
 #include "optional.hpp"
 #include "renderer.hpp"
@@ -25,15 +26,21 @@
 #include "win32_unicode.hpp"
 #include "window.hpp"
 
+#include <algorithm>
 #include <reaper_plugin.h>
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h> // WDL_DLGRET
+
+template<typename T>
+struct Setting;
 
 struct Checkbox {
   enum Flags { None = 0, Invert = 1<<0 };
   int box, flags = None;
 
-  void fill(HWND, bool)     const;
+  void setup(const Setting<bool> &) const;
+  void setLabel(HWND, const TCHAR *) const;
+  void setValue(HWND, bool) const;
   void apply(HWND, bool *)  const;
   bool hitTest(HWND, POINT) const;
   std::optional<bool> isChangeEvent(short control, short notification) const;
@@ -42,8 +49,10 @@ struct Checkbox {
 struct Combobox {
   int box, label;
 
-  void fill(HWND, const RendererType *) const;
-  void apply(HWND, const RendererType **) const;
+  void setup(const Setting<const RendererType *> &) const {};
+  void setLabel(HWND, const TCHAR *)        const;
+  void setValue(HWND, const RendererType *) const;
+  void apply(HWND, const RendererType **)   const;
   bool hitTest(HWND, POINT) const;
   std::optional<bool> isChangeEvent(short control, short notification) const;
 };
@@ -55,7 +64,7 @@ template<> struct Control<const RendererType *> { using type = Combobox; };
 template<typename T>
 struct Setting {
   T *value;
-  const TCHAR *key, *help;
+  const TCHAR *key, *label, *help;
   typename Control<T>::type control;
 
   void read(const TCHAR *file)  const;
@@ -79,26 +88,31 @@ struct SettingVariant : std::variant<Setting<Ts>...> {
 
 constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
   { &Settings::NoSavedSettings, TEXT("nosavedsettings"),
+    TEXT("Restore window position, size, dock state and table settings"),
     TEXT("Disable to force ReaImGui scripts to start with "
          "their default first-use state (safe mode)."),
     Checkbox { IDC_SAVEDSETTINGS, Checkbox::Invert },
   },
   { &Settings::DockingNoSplit, TEXT("dockingnosplit"),
+    TEXT("Enable window splitting when docking"),
     TEXT("Disable to limit docking to merging multiple windows together into "
          "tab bars (simplified docking mode)."),
     Checkbox { IDC_DOCKSPLIT, Checkbox::Invert },
   },
   { &Settings::DockingWithShift, TEXT("dockingwithshift"),
+    TEXT("Dock only when holding Shift"),
     TEXT("Press the Shift key to disable or enable docking when dragging "
          "windows using the title bar. This option inverts the behavior."),
     Checkbox { IDC_DOCKWITHSHIFT },
   },
   { &Settings::DockingTransparentPayload, TEXT("dockingtransparentpayload"),
+    TEXT("Make windows transparent when docking"),
     TEXT("Windows become semi-transparent when docking into another window. "
          "Docking boxes are shown only in the target window."),
     Checkbox { IDC_DOCKTRANSPARENT },
   },
   { &Settings::Renderer, TEXT("renderer") PLATFORM_SUFFIX,
+    TEXT("Graphics renderer (advanced):"),
     TEXT("Select a different renderer if you encounter compatibility problems."),
     Combobox { IDC_RENDERER, IDC_RENDERERTXT },
   },
@@ -133,13 +147,23 @@ void Setting<const RendererType *>::write(const TCHAR *file) const
   WritePrivateProfileString(SECTION, key, WIDEN((*value)->id), file);
 }
 
-void Checkbox::fill(HWND window, const bool value) const
+void Checkbox::setLabel(HWND window, const TCHAR *text) const
+{
+  SetDlgItemText(window, box, text);
+}
+
+void Combobox::setLabel(HWND window, const TCHAR *text) const
+{
+  SetDlgItemText(window, label, text);
+}
+
+void Checkbox::setValue(HWND window, const bool value) const
 {
   const bool invert { (flags & Invert) != 0 };
   CheckDlgButton(window, box, value ^ invert);
 }
 
-void Combobox::fill(HWND window, const RendererType *value) const
+void Combobox::setValue(HWND window, const RendererType *value) const
 {
   HWND combo { GetDlgItem(window, box) };
   for(const RendererType *type : RendererType::knownTypes()) {
@@ -200,6 +224,23 @@ std::optional<bool> Combobox::isChangeEvent
   return std::nullopt;
 }
 
+static std::string makeActionName(const TCHAR *key)
+{
+  std::string name { narrow(key) };
+  std::transform(name.begin(), name.end(), name.begin(), toupper);
+  return name;
+}
+
+void Checkbox::setup(const Setting<bool> &setting) const
+{
+  const bool invert { (flags & Invert) != 0 };
+  new Action {
+    makeActionName(setting.key), narrow(setting.label),
+    [value = setting.value        ] { *value = !*value;       },
+    [value = setting.value, invert] { return *value ^ invert; },
+  };
+}
+
 static void updateHelp(HWND hwnd)
 {
   constexpr int IDC_PREFS_HELP { 0x4eb }, IDT_PREFS_HELP_CLEAR { 0x654 };
@@ -255,7 +296,8 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
   case WM_INITDIALOG: {
     for(const auto &setting : SETTINGS) {
       std::visit([hwnd] (const auto &setting) {
-        setting.control.fill(hwnd, *setting.value);
+        setting.control.setLabel(hwnd, setting.label);
+        setting.control.setValue(hwnd, *setting.value);
       }, setting);
     }
     return 1;
@@ -285,6 +327,7 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
       }, setting);
     }
     Settings::save();
+    Action::refreshAll();
     return 0;
   }
 
@@ -322,6 +365,7 @@ void Settings::setup()
   for(const auto &setting : SETTINGS) {
     std::visit([file] (const auto &setting) {
       setting.read(file);
+      setting.control.setup(setting);
 
       // store default settings without waiting for the user to apply
       setting.write(file);

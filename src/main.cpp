@@ -19,6 +19,7 @@
 #include <reaper_plugin_functions.h>
 #include <reaper_plugin_secrets.h>
 
+#include "action.hpp"
 #include "api.hpp"
 #include "docker.hpp"
 #include "resource.hpp"
@@ -76,6 +77,7 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(realloc_cmd_ptr), // v5.26
     IMPORT(ReaScriptError),
     IMPORT(RecursiveCreateDirectory),
+    IMPORT(RefreshToolbar),
     IMPORT(ViewPrefs),
 
     IMPORT(LICE_CreateBitmap),
@@ -121,6 +123,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
     API::announceAll(false);
     Resource::destroyAll(); // save context settings
     Settings::teardown();
+    Action::teardown();
     return 0;
   }
   else if(rec->caller_version != REAPER_PLUGIN_VERSION
@@ -131,6 +134,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
 
   Window::s_instance = instance;
   API::announceAll(true);
+  Action::setup();
   Settings::setup();
 
   return 1;

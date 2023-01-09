@@ -1,6 +1,7 @@
 include(FindPkgConfig)
 
 add_library(src OBJECT
+  action.cpp
   api.cpp
   color.cpp
   context.cpp
