@@ -440,5 +440,12 @@ DEFINE_ENUM(ImGui, Mod_Ctrl,  "");
 DEFINE_ENUM(ImGui, Mod_Shift, "");
 DEFINE_ENUM(ImGui, Mod_Alt,   "");
 DEFINE_ENUM(ImGui, Mod_Super, "");
-DEFINE_ENUM(ImGui, Mod_Shortcut,
+// cannot use dear imgui's runtime redirection of Mod_Shortcut because of
+// user code relying on exact matches via GetKeyMods() == Mod_*
+#ifdef __APPLE__
+constexpr int ReaImGuiMod_Shortcut { ImGuiMod_Super };
+#else
+constexpr int ReaImGuiMod_Shortcut { ImGuiMod_Ctrl };
+#endif
+DEFINE_ENUM(ReaImGui, Mod_Shortcut,
   "Alias for Mod_Ctrl on Linux and Windows and Mod_Super on macOS (Cmd key).");

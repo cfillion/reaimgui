@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.2)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -3803,6 +3803,7 @@ function demo.ShowDemoWindowPopups()
       popups.context = {
         value = 0.5,
         name  = 'Label1',
+        selected = 0,
       }
     end
 
@@ -3822,9 +3823,12 @@ function demo.ShowDemoWindowPopups()
     -- and BeginPopupContextItem() will use the last item ID as the popup ID.
     do
       local names = { 'Label1', 'Label2', 'Label3', 'Label4', 'Label5' }
-      for _, name in ipairs(names) do
-        r.ImGui_Selectable(ctx, name)
+      for n, name in ipairs(names) do
+        if r.ImGui_Selectable(ctx, name, popups.context.selected == n) then
+          popups.context.selected = n
+        end
         if r.ImGui_BeginPopupContextItem(ctx) then -- use last item id as popup id
+          popups.context.selected = n
           r.ImGui_Text(ctx, ('This a popup for "%s"!'):format(name))
           if r.ImGui_Button(ctx, 'Close') then
             r.ImGui_CloseCurrentPopup(ctx)
@@ -5438,22 +5442,29 @@ function demo.ShowDemoWindowTables()
   -- Demonstrate creating multiple tables with the same ID
   DoOpenAction()
   if r.ImGui_TreeNode(ctx, 'Synced instances') then
+    if not tables.synced then
+      tables.synced = {
+        flags = r.ImGui_TableFlags_Resizable()      |
+                r.ImGui_TableFlags_Reorderable()    |
+                r.ImGui_TableFlags_Hideable()       |
+                r.ImGui_TableFlags_Borders()        |
+                r.ImGui_TableFlags_SizingFixedFit() |
+                r.ImGui_TableFlags_NoSavedSettings(),
+      }
+    end
     demo.HelpMarker('Multiple tables with the same identifier will share their settings, width, visibility, order etc.')
-    local flags = r.ImGui_TableFlags_Resizable()      |
-                  r.ImGui_TableFlags_Reorderable()    |
-                  r.ImGui_TableFlags_Hideable()       |
-                  r.ImGui_TableFlags_Borders()        |
-                  r.ImGui_TableFlags_SizingFixedFit() |
-                  r.ImGui_TableFlags_NoSavedSettings()
+    rv,tables.synced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.synced.flags, r.ImGui_TableFlags_ScrollY())
+    rv,tables.synced.flags = r.ImGui_CheckboxFlags(ctx, 'ImGuiTableFlags_SizingFixedFit', tables.synced.flags, r.ImGui_TableFlags_SizingFixedFit())
     for n = 0, 2 do
       local buf = ('Synced Table %d'):format(n)
       local open = r.ImGui_CollapsingHeader(ctx, buf, nil, r.ImGui_TreeNodeFlags_DefaultOpen())
-      if open and r.ImGui_BeginTable(ctx, 'Table', 3, flags) then
+      if open and r.ImGui_BeginTable(ctx, 'Table', 3, tables.synced.flags, 0, reaper.ImGui_GetTextLineHeightWithSpacing(ctx) * 5) then
         r.ImGui_TableSetupColumn(ctx, 'One')
         r.ImGui_TableSetupColumn(ctx, 'Two')
         r.ImGui_TableSetupColumn(ctx, 'Three')
         r.ImGui_TableHeadersRow(ctx)
-        for cell = 0, 9 do
+        local cell_count = n == 1 and 27 or 9 -- Make second table have a scrollbar to verify that additional decoration is not affecting column positions.
+        for cell = 0, cell_count do
           r.ImGui_TableNextColumn(ctx)
           r.ImGui_Text(ctx, ('this cell %d'):format(cell))
         end
@@ -6060,21 +6071,14 @@ end
 function demo.ShowDemoWindowInputs()
   local rv
 
-  if r.ImGui_CollapsingHeader(ctx, 'Inputs, Navigation & Focus') then
-    -- Display ImGuiIO output flags
-    -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once())
-    -- if r.ImGui_TreeNode(ctx, 'Output') then
-    --   r.ImGui_Text('io.WantCaptureMouse: %d', io.WantCaptureMouse);
-    --   r.ImGui_Text('io.WantCaptureMouseUnlessPopupClose: %d', io.WantCaptureMouseUnlessPopupClose);
-    --   r.ImGui_Text('io.WantCaptureKeyboard: %d', io.WantCaptureKeyboard);
-    --   r.ImGui_Text('io.WantTextInput: %d', io.WantTextInput);
-    --   r.ImGui_Text('io.WantSetMousePos: %d', io.WantSetMousePos);
-    --   r.ImGui_Text('io.NavActive: %d, io.NavVisible: %d', io.NavActive, io.NavVisible);
-    --   r.ImGui_TreePop(ctx)
-    -- end
-
-    -- Display mouse state
-    if r.ImGui_TreeNode(ctx, 'Mouse State') then
+  if r.ImGui_CollapsingHeader(ctx, 'Inputs & Focus') then
+    -- Display inputs
+    r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once())
+    if r.ImGui_TreeNode(ctx, 'Inputs') then
+      demo.HelpMarker(
+        "This is a simplified view. See more detailed input state:\n\z
+          - in 'Tools->Metrics/Debugger->Inputs'.\n\z
+          - in 'Tools->Debug Log->IO'.")
       if r.ImGui_IsMousePosValid(ctx) then
         r.ImGui_Text(ctx, ('Mouse pos: (%g, %g)'):format(r.ImGui_GetMousePos(ctx)))
       else
@@ -6091,24 +6095,84 @@ function demo.ShowDemoWindowInputs()
           r.ImGui_Text(ctx, ('b%d (%.02f secs)'):format(button, duration))
         end
       end
-      r.ImGui_Text(ctx, 'Mouse clicked:')
-      for button = 0, buttons do
-        if r.ImGui_IsMouseClicked(ctx, button) then
-          r.ImGui_SameLine(ctx)
-          r.ImGui_Text(ctx, ('b%d (%d)'):format(button, r.ImGui_GetMouseClickedCount(ctx, button)))
-        end
-      end
-      r.ImGui_Text(ctx, 'Mouse released:')
-      for button = 0, buttons do
-        if r.ImGui_IsMouseReleased(ctx, button) then
-          r.ImGui_SameLine(ctx)
-          r.ImGui_Text(ctx, ('b%d'):format(button))
-        end
-      end
+
       r.ImGui_Text(ctx, ('Mouse wheel: %.1f %.1f'):format(r.ImGui_GetMouseWheel(ctx)))
-      -- r.ImGui_Text(cxt, ('Pen Pressure: %.1f'):format(r.ImGui_GetPenPressure(ctx))) -- Note: currently unused
+
+      r.ImGui_Text(ctx, 'Keys down:')
+      for key, name in demo.EachEnum('Key') do
+        if r.ImGui_IsKeyDown(ctx, key) then
+          local duration = r.ImGui_GetKeyDownDuration(ctx, key)
+          r.ImGui_SameLine(ctx)
+          r.ImGui_Text(ctx, ('"%s" %d (%.02f secs)'):format(name, key, duration))
+        end
+      end
+      r.ImGui_Text(ctx, ('Keys mods: %s%s%s%s'):format(
+        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Ctrl())  and 'CTRL '   or '',
+        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Shift()) and 'SHIFT '  or '',
+        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Alt())   and 'ALT '    or '',
+        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Super()) and 'SUPER '  or ''))
+
+      r.ImGui_Text(ctx, 'Chars queue:')
+      local next_id = 0
+      while true do
+        local rv, c = r.ImGui_GetInputQueueCharacter(ctx, next_id)
+        if not rv then break end
+        next_id = next_id + 1
+        r.ImGui_SameLine(ctx)
+        r.ImGui_Text(ctx, ("'%s' (0x%04X)"):format(utf8.char(c), c))
+      end
+
       r.ImGui_TreePop(ctx)
     end
+
+    -- Display ImGuiIO output flags
+    -- r.ImGui_SetNextItemOpen(ctx, true, r.ImGui_Cond_Once())
+    -- if r.ImGui_TreeNode(ctx, 'Outputs') then
+    --   demo.HelpMarker(
+    --    'The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui \z
+    --     to instruct your application of how to route inputs. Typically, when a value is true, it means \z
+    --     Dear ImGui wants the corresponding inputs and we expect the underlying application to ignore them.\n\n\z
+    --     The most typical case is: when hovering a window, Dear ImGui set io.WantCaptureMouse to true, \z
+    --     and underlying application should ignore mouse inputs (in practice there are many and more subtle \z
+    --     rules leading to how those flags are set).');
+    --   r.ImGui_Text('io.WantCaptureMouse: %d', io.WantCaptureMouse);
+    --   r.ImGui_Text('io.WantCaptureMouseUnlessPopupClose: %d', io.WantCaptureMouseUnlessPopupClose);
+    --   r.ImGui_Text('io.WantCaptureKeyboard: %d', io.WantCaptureKeyboard);
+    --   r.ImGui_Text('io.WantTextInput: %d', io.WantTextInput);
+    --   r.ImGui_Text('io.WantSetMousePos: %d', io.WantSetMousePos);
+    --   r.ImGui_Text('io.NavActive: %d, io.NavVisible: %d', io.NavActive, io.NavVisible);
+
+      if r.ImGui_TreeNode(ctx, 'WantCapture override') then
+        if not misc.capture_override then
+          misc.capture_override = { mouse = -1, keyboard = -1 }
+        end
+
+        demo.HelpMarker(
+         -- "Hovering the colored canvas will override io.WantCaptureXXX fields.\n\z
+         --  Notice how normally (when set to none), the value of io.WantCaptureKeyboard would be false when hovering and true when clicking."
+         "SetNextFrameWantCaptureXXX instructs ReaImGui how to route inputs.\n\n\z
+          Capturing the keyboard allows receiving input from REAPER's global scope.\n\n\z
+          Hovering the colored canvas will call SetNextFrameWantCaptureXXX.")
+
+        local capture_override_desc = { 'None', 'Set to false', 'Set to true' }
+        -- r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 15)
+        -- rv,misc.capture_override.mouse = r.ImGui_SliderInt(ctx, 'SetNextFrameWantCaptureMouse() on hover', misc.capture_override.mouse, -1, 1, capture_override_desc[misc.capture_override.mouse + 2], r.ImGui_SliderFlags_AlwaysClamp())
+        r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 15)
+        rv,misc.capture_override.keyboard = r.ImGui_SliderInt(ctx, 'SetNextFrameWantCaptureKeyboard() on hover', misc.capture_override.keyboard, -1, 1, capture_override_desc[misc.capture_override.keyboard + 2], r.ImGui_SliderFlags_AlwaysClamp())
+
+        r.ImGui_ColorButton(ctx, '##panel', 0xb219b2ff, r.ImGui_ColorEditFlags_NoTooltip() | r.ImGui_ColorEditFlags_NoDragDrop(), 128, 96) -- Dummy item
+        -- if r.ImGui_IsItemHovered(ctx) and misc.capture_override.mouse ~= -1 then
+        --   r.ImGui_SetNextFrameWantCaptureMouse(ctx, misc.capture_override.mouse == 1)
+        -- end
+        if r.ImGui_IsItemHovered(ctx) and misc.capture_override.keyboard ~= -1 then
+          r.ImGui_SetNextFrameWantCaptureKeyboard(ctx, misc.capture_override.keyboard == 1)
+        end
+
+        r.ImGui_TreePop(ctx)
+      end
+
+    --   r.ImGui_TreePop(ctx)
+    -- end
 
     -- Display mouse cursors
     if r.ImGui_TreeNode(ctx, 'Mouse Cursors') then
@@ -6131,131 +6195,6 @@ function demo.ShowDemoWindowInputs()
           r.ImGui_SetMouseCursor(ctx, i)
         end
       end
-      r.ImGui_TreePop(ctx)
-    end
-
-    -- Display Keyboard/Mouse state
-    if r.ImGui_TreeNode(ctx, 'Keyboard, Gamepad & Navigation State') then
-      r.ImGui_Text(ctx, 'Keys down:')
-      for key, name in demo.EachEnum('Key') do
-        if r.ImGui_IsKeyDown(ctx, key) then
-          local duration = r.ImGui_GetKeyDownDuration(ctx, key)
-          r.ImGui_SameLine(ctx)
-          r.ImGui_Text(ctx, ('"%s" %d (%.02f secs)'):format(name, key, duration))
-        end
-      end
-      local function KeyboardState(stateFunc)
-        for key, name in demo.EachEnum('Key') do
-          if stateFunc(ctx, key) then
-            r.ImGui_SameLine(ctx)
-            r.ImGui_Text(ctx, ('"%s" %d'):format(name, key))
-          end
-        end
-      end
-      r.ImGui_Text(ctx, 'Keys pressed:'); KeyboardState(r.ImGui_IsKeyPressed)
-      r.ImGui_Text(ctx, 'Keys release:'); KeyboardState(r.ImGui_IsKeyReleased)
-      r.ImGui_Text(ctx, ('Keys mods: %s%s%s%s'):format(
-        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Ctrl())  and 'CTRL '   or '',
-        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Shift()) and 'SHIFT '  or '',
-        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Alt())   and 'ALT '    or '',
-        r.ImGui_IsKeyDown(ctx, r.ImGui_Mod_Super()) and 'SUPER '  or ''))
-
-      r.ImGui_Text(ctx, 'Chars queue:')
-      local next_id = 0
-      while true do
-        local rv, c = r.ImGui_GetInputQueueCharacter(ctx, next_id)
-        if not rv then break end
-        next_id = next_id + 1
-        r.ImGui_SameLine(ctx)
-        r.ImGui_Text(ctx, ("'%s' (0x%04X)"):format(utf8.char(c), c))
-      end
-
-      -- Draw an arbitrary US keyboard layout to visualize translated keys
-      do
-        local key_size = { x=35.0, y=35.0 }
-        local key_rounding = 3.0
-        local key_face_size = { x=25.0, y=25.0 }
-        local key_face_pos = { x=5.0, y=3.0 }
-        local key_face_rounding = 2.0
-        local key_label_pos = { x=7.0, y=4.0 }
-        local key_step = { x=key_size.x - 1.0, y=key_size.y - 1.0 }
-        local key_row_offset = 9.0
-
-        local board_min = {r.ImGui_GetCursorScreenPos(ctx)}
-        local board_max = { x=board_min[1] + 3 * key_step.x + 2 * key_row_offset + 10.0, y=board_min[2] + 3 * key_step.y + 10.0 }
-        local start_pos = { x=board_min[1] + 5.0 - key_step.x, y=board_min[2] }
-
-        -- Row, Col, Label, Key
-        local keys_to_display = {
-          { 0, 0, '', r.ImGui_Key_Tab() },      { 0, 1, 'Q', r.ImGui_Key_Q() }, { 0, 2, 'W', r.ImGui_Key_W() }, { 0, 3, 'E', r.ImGui_Key_E() }, { 0, 4, 'R', r.ImGui_Key_R() },
-          { 1, 0, '', r.ImGui_Key_CapsLock() }, { 1, 1, 'A', r.ImGui_Key_A() }, { 1, 2, 'S', r.ImGui_Key_S() }, { 1, 3, 'D', r.ImGui_Key_D() }, { 1, 4, 'F', r.ImGui_Key_F() },
-          { 2, 0, '', r.ImGui_Key_LeftShift() },{ 2, 1, 'Z', r.ImGui_Key_Z() }, { 2, 2, 'X', r.ImGui_Key_X() }, { 2, 3, 'C', r.ImGui_Key_C() }, { 2, 4, 'V', r.ImGui_Key_V() }
-        }
-
-        -- Elements rendered manually via ImDrawList API are not clipped automatically.
-        -- While not strictly necessary, here IsItemVisible() is used to avoid rendering these shapes when they are out of view.
-        r.ImGui_Dummy(ctx, board_max.x - board_min[1], board_max.y - board_min[2])
-        if r.ImGui_IsItemVisible(ctx) then
-          local draw_list = r.ImGui_GetWindowDrawList(ctx)
-          r.ImGui_DrawList_PushClipRect(draw_list, board_min[1], board_min[2], board_max.x, board_max.y, true)
-          for n, key_data in ipairs(keys_to_display) do
-            local key_min = { x=start_pos.x + key_data[2] * key_step.x + key_data[1] * key_row_offset, y=start_pos.y + key_data[1] * key_step.y }
-            local key_max = { x=key_min.x + key_size.x, y=key_min.y + key_size.y }
-            r.ImGui_DrawList_AddRectFilled(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0xCCCCCCFF, key_rounding)
-            r.ImGui_DrawList_AddRect(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0x181818FF, key_rounding)
-            local face_min = { x=key_min.x + key_face_pos.x, y=key_min.y + key_face_pos.y }
-            local face_max = { x=face_min.x + key_face_size.x, y=face_min.y + key_face_size.y }
-            r.ImGui_DrawList_AddRect(draw_list, face_min.x, face_min.y, face_max.x, face_max.y, 0xC1C1C1FF, key_face_rounding, r.ImGui_DrawFlags_None(), 2.0)
-            r.ImGui_DrawList_AddRectFilled(draw_list, face_min.x, face_min.y, face_max.x, face_max.y, 0xFFFFFFFF, key_face_rounding)
-            local label_min = { x=key_min.x + key_label_pos.x, y=key_min.y + key_label_pos.y }
-            r.ImGui_DrawList_AddText(draw_list, label_min.x, label_min.y, 0x404040FF, key_data[3])
-            if r.ImGui_IsKeyDown(ctx, key_data[4]) then
-              r.ImGui_DrawList_AddRectFilled(draw_list, key_min.x, key_min.y, key_max.x, key_max.y, 0xFF000080, key_rounding)
-            end
-          end
-          r.ImGui_DrawList_PopClipRect(draw_list)
-        end
-      end
-
-      r.ImGui_TreePop(ctx)
-    end
-
-    if r.ImGui_TreeNode(ctx, 'Capture override') then
-      if not misc.capture_override then
-        misc.capture_override = { mouse = -1, keyboard = -1 }
-      end
-
-      -- demo.HelpMarker(
-      --   'The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui \z
-      --    to instruct your application of how to route inputs. Typically, when a value is true, it means \z
-      --    Dear ImGui wants the corresponding inputs and we expect the underlying application to ignore them.\n\n\z
-      --    The most typical case is: when hovering a window, Dear ImGui set io.WantCaptureMouse to true, \z
-      --    and underlying application should ignore mouse inputs (in practice there are many and more subtle \z
-      --    rules leading to how those flags are set).')
-      --
-      -- r.ImGui_Text('io.WantCaptureMouse: %d', io.WantCaptureMouse)
-      -- r.ImGui_Text('io.WantCaptureMouseUnlessPopupClose: %d', io.WantCaptureMouseUnlessPopupClose)
-      -- r.ImGui_Text('io.WantCaptureKeyboard: %d', io.WantCaptureKeyboard)
-
-      demo.HelpMarker(
-        "SetNextFrameWantCaptureXXX instructs ReaImGui how to route inputs.\n\n\z
-         Capturing the keyboard allows receiving input from REAPER's global scope.\n\n\z
-         Hovering the colored canvas will call SetNextFrameWantCaptureXXX.")
-
-      local capture_override_desc = { 'None', 'Set to false', 'Set to true' }
-      -- r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 15)
-      -- rv,misc.capture_override.mouse = r.ImGui_SliderInt(ctx, 'SetNextFrameWantCaptureMouse()', misc.capture_override.mouse, -1, 1, capture_override_desc[misc.capture_override.mouse + 2], r.ImGui_SliderFlags_AlwaysClamp())
-      r.ImGui_SetNextItemWidth(ctx, r.ImGui_GetFontSize(ctx) * 15)
-      rv,misc.capture_override.keyboard = r.ImGui_SliderInt(ctx, 'SetNextFrameWantCaptureKeyboard()', misc.capture_override.keyboard, -1, 1, capture_override_desc[misc.capture_override.keyboard + 2], r.ImGui_SliderFlags_AlwaysClamp())
-
-      r.ImGui_ColorButton(ctx, '##panel', 0xb219b2ff, r.ImGui_ColorEditFlags_NoTooltip() | r.ImGui_ColorEditFlags_NoDragDrop(), 256.0, 192.0) -- Dummy item
-      -- if r.ImGui_IsItemHovered(ctx) and misc.capture_override.mouse ~= -1 then
-      --   r.ImGui_SetNextFrameWantCaptureMouse(ctx, misc.capture_override.mouse == 1)
-      -- end
-      if r.ImGui_IsItemHovered(ctx) and misc.capture_override.keyboard ~= -1 then
-        r.ImGui_SetNextFrameWantCaptureKeyboard(ctx, misc.capture_override.keyboard == 1)
-      end
-
       r.ImGui_TreePop(ctx)
     end
 
@@ -7449,7 +7388,7 @@ function demo.ShowExampleAppLayout()
 
   if r.ImGui_BeginMenuBar(ctx) then
     if r.ImGui_BeginMenu(ctx, 'File') then
-      if r.ImGui_MenuItem(ctx, 'Close') then open = false end
+      if r.ImGui_MenuItem(ctx, 'Close', 'Ctrl+W') then open = false end
       r.ImGui_EndMenu(ctx)
     end
     r.ImGui_EndMenuBar(ctx)
