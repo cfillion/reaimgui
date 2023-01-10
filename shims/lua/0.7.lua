@@ -6,7 +6,7 @@ reaper.ImGui_KeyModFlags_Alt   = reaper.ImGui_ModFlags_Alt
 reaper.ImGui_KeyModFlags_Super = reaper.ImGui_ModFlags_Super
 
 -- Capture*FromApp to SetNextFrameWantCapture* rename
-reaper.ImGui_CaptureKeyboardFromApp = reaper.SetNextFrameWantCaptureKeyboard
+reaper.ImGui_CaptureKeyboardFromApp = reaper.ImGui_SetNextFrameWantCaptureKeyboard
 
 -- non-vanilla HSVtoRGB/RGBtoHSV packing and optional alpha parameter
 local function shimColConv(convFunc)
