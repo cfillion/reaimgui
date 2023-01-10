@@ -7,6 +7,9 @@ color = 0;
 #notes = "";
 
 function frame() (
+  ImGui_TextWrapped(ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ultrices turpis lectus, in semper ligula blandit in. Duis non ipsum varius, pretium magna eu, mattis sapien. Maecenas augue mi, luctus sed leo et, ullamcorper convallis ligula. Nunc vitae porttitor quam. Integer a lorem fermentum, dapibus tortor ut, gravida erat. Quisque ut justo ante. Quisque fringilla a lectus a porta.");
+  ImGui_Spacing(ctx);
+
   track = GetSelectedTrack(0, 0);
 
   track ? (
@@ -17,9 +20,6 @@ function frame() (
     #notes = "";
     ImGui_BeginDisabled(ctx);
   );
-
-  ImGui_TextWrapped(ctx, "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut ultrices turpis lectus, in semper ligula blandit in. Duis non ipsum varius, pretium magna eu, mattis sapien. Maecenas augue mi, luctus sed leo et, ullamcorper convallis ligula. Nunc vitae porttitor quam. Integer a lorem fermentum, dapibus tortor ut, gravida erat. Quisque ut justo ante. Quisque fringilla a lectus a porta.");
-  ImGui_Spacing(ctx);
 
   color = ImGui_ColorConvertNative(GetTrackColor(track));
   ImGui_ColorEdit3(ctx, "track color", color) ?
