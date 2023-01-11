@@ -160,6 +160,9 @@ NATIVE_ONLY = [
   'ImGuiID ImGui::DockSpace(ImGuiID, const ImVec2&, ImGuiDockNodeFlags, const ImGuiWindowClass*)',
   'ImGuiID ImGui::DockSpaceOverViewport(const ImGuiViewport*, ImGuiDockNodeFlags, const ImGuiWindowClass*)',
   'void ImGui::SetNextWindowClass(const ImGuiWindowClass*)',
+
+  # broken since v0.5 migrated to new-style Begin/End before dear imgui did
+  'bool ImGui::IsWindowCollapsed()',
 ]
 
 NATIVE_ONLY_CLASSES = %w[

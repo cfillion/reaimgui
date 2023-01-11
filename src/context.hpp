@@ -36,7 +36,6 @@ class DockerList;
 class FontList;
 class RendererFactory;
 class TextureManager;
-class Window;
 struct ImGuiContext;
 struct ImGuiViewport;
 

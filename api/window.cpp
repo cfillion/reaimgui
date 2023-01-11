@@ -75,12 +75,9 @@ R"(Push window to the stack and start appending to it.
 
   WindowFlags flags { API_RO_GET(flags) };
   DecorationBehavior dec { ctx, *flags };
-
   const bool rv { ImGui::Begin(name, openPtrBehavior(API_RWO(p_open)), flags) };
-
   if(!rv)
     ImGui::End();
-
   return rv;
 });
 
@@ -160,13 +157,6 @@ DEFINE_API(bool, IsWindowAppearing, (ImGui_Context*,ctx),
 {
   FRAME_GUARD;
   return ImGui::IsWindowAppearing();
-});
-
-DEFINE_API(bool, IsWindowCollapsed, (ImGui_Context*,ctx),
-"",
-{
-  FRAME_GUARD;
-  return ImGui::IsWindowCollapsed();
 });
 
 DEFINE_API(bool, IsWindowFocused, (ImGui_Context*,ctx)

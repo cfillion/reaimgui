@@ -26,6 +26,11 @@ end
 reaper.ImGui_AttachFont = reaper.ImGui_Attach
 reaper.ImGui_DetachFont = reaper.ImGui_Detach
 
+-- broken since v0.5
+function reaper.ImGui_IsWindowCollapsed(ctx)
+  return false
+end
+
 -- obsoleted window boundary extension via SetCursorPos (ocornut/imgui#5548)
 local function shimWindowEnd(func)
   return function(ctx, ...)
