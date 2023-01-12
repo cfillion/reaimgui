@@ -20,7 +20,6 @@
 
 #include <array>
 #include <memory>
-#include <vector>
 
 class Renderer;
 class RendererFactory;
@@ -30,15 +29,16 @@ struct ImVec4;
 
 struct RendererType {
   struct Register {
-    Register(const RendererType *);
+    Register(RendererType *);
   };
 
   static const RendererType *bestMatch(const char *id);
-  static const std::vector<const RendererType *> &knownTypes();
+  static const RendererType *head();
 
   char priority;
   const char *id, *name, *displayName;
   std::unique_ptr<Renderer>(*creator)(RendererFactory *, Window *);
+  RendererType *next;
 };
 
 class RendererFactory {

@@ -166,7 +166,7 @@ void Checkbox::setValue(HWND window, const bool value) const
 void Combobox::setValue(HWND window, const RendererType *value) const
 {
   HWND combo { GetDlgItem(window, box) };
-  for(const RendererType *type : RendererType::knownTypes()) {
+  for(const RendererType *type { RendererType::head() }; type; type = type->next) {
     const auto index {
       SendMessage(combo, CB_ADDSTRING, 0,
                   reinterpret_cast<LPARAM>(WIDEN(type->displayName)))

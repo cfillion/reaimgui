@@ -23,38 +23,40 @@
 #include <cassert>
 #include <imgui/imgui.h>
 
-static auto &knownRendererTypes()
+static auto &typeHead()
 {
-  static std::vector<const RendererType *> types;
-  return types;
+  static RendererType *head;
+  return head;
 }
 
-const std::vector<const RendererType *> &RendererType::knownTypes()
+static bool operator<(const RendererType &a, const RendererType &b)
 {
-  return knownRendererTypes(); // const public view
+  if(a.priority != b.priority)
+    return a.priority < b.priority;
+  return strcmp(a.id, b.id) < 0;
 }
 
-static bool operator<(const RendererType *a, const RendererType &b)
+const RendererType *RendererType::head()
 {
-  return a->priority < b.priority || strcmp(a->id, b.id) < 0;
+  return typeHead(); // const public view
 }
 
 const RendererType *RendererType::bestMatch(const char *id)
 {
-  const RendererType *result {};
-  for(auto it { knownTypes().rbegin() }; it < knownTypes().rend(); ++it) {
-    result = *it;
-    if(!strcmp(id, (*it)->id))
-      break;
+  for(const RendererType *type { head() }; type; type = type->next) {
+    if(!strcmp(id, type->id))
+      return type;
   }
-  return result;
+  return head();
 }
 
-RendererType::Register::Register(const RendererType *type)
+RendererType::Register::Register(RendererType *type)
 {
-  auto &types { knownRendererTypes() };
-  const auto it { std::lower_bound(types.begin(), types.end(), *type) };
-  types.insert(it, type);
+  RendererType **insertionPoint { &typeHead() };
+  while(*insertionPoint && **insertionPoint < *type)
+    insertionPoint = &(*insertionPoint)->next;
+  type->next = *insertionPoint;
+  *insertionPoint = type;
 }
 
 RendererFactory::RendererFactory()
