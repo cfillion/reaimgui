@@ -286,7 +286,8 @@ local function updateKeyboard()
   if reaper.ImGui_IsWindowFocused(state.ctx, FOCUSED_FLAGS) then
     state.wnd_flags = state.wnd_flags | 2
   end
-  if not reaper.ImGui_IsWindowCollapsed(state.ctx) then
+  -- if not reaper.ImGui_IsWindowCollapsed(state.ctx) then
+  if state.collapsed then
     state.wnd_flags = state.wnd_flags | 4
   end
 
@@ -925,6 +926,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     ctx         = reaper.ImGui_CreateContext(ctx_name, CTX_FLAGS),
     canary      = reaper.ImGui_CreateContext(ctx_name, CANARY_FLAGS),
     wnd_flags   = 1,
+    collapsed   = false,
     want_close  = false,
     font        = 0,
     fontmap     = {},
@@ -1347,6 +1349,7 @@ function gfx.update()
   reaper.ImGui_PushStyleVar(state.ctx, CHILD_BORDER_SIZE, 0) -- no border when docked
   local wnd_label = ('%s###gfx2imgui'):format(state.name)
   local visible, open = reaper.ImGui_Begin(state.ctx, wnd_label, true, WND_FLAGS)
+  state.collapsed = not visible
   reaper.ImGui_PopStyleVar(state.ctx, 2)
   reaper.ImGui_PopStyleColor(state.ctx)
 
