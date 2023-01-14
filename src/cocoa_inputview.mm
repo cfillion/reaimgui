@@ -203,14 +203,11 @@ static int translateKeyCode(NSEvent *event)
   return YES;
 }
 
+// Only receives mouse events prior to capturing the mouse
+// Susequent events (eg. mouse up) are handled via [EventHandler appMouseEvent]
 - (void)mouseDown:(NSEvent *)event
 {
   m_window->mouseDown(ImGuiMouseButton_Left);
-}
-
-- (void)mouseUp:(NSEvent *)event
-{
-  m_window->mouseUp(ImGuiMouseButton_Left);
 }
 
 - (void)rightMouseDown:(NSEvent *)event
@@ -218,19 +215,9 @@ static int translateKeyCode(NSEvent *event)
   m_window->mouseDown(ImGuiMouseButton_Right);
 }
 
-- (void)rightMouseUp:(NSEvent *)event
-{
-  m_window->mouseUp(ImGuiMouseButton_Right);
-}
-
 - (void)otherMouseDown:(NSEvent *)event
 {
   m_window->mouseDown([event buttonNumber]);
-}
-
-- (void)otherMouseUp:(NSEvent *)event
-{
-  m_window->mouseUp([event buttonNumber]);
 }
 
 - (const char *)getSwellClass

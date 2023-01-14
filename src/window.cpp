@@ -18,6 +18,7 @@
 #include "window.hpp"
 
 #include "context.hpp"
+#include "docker.hpp"
 #include "font.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
@@ -81,8 +82,10 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     // Announce to REAPER the window is no longer going to be valid
     // (DockWindowRemove is safe to call even when not docked)
     DockWindowRemove(handle); // may send messages
+    // Move capture to another window in the same context when being destroyed
+    // to not lose mouse up events
     if(Platform::getCapture() == handle)
-      Platform::releaseCapture();
+      self->transferCapture();
     return 0;
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
@@ -229,6 +232,33 @@ void Window::mouseUp(const ImGuiMouseButton btn)
 
   if(Platform::getCapture() == m_hwnd.get() && m_mouseDown == 0)
     Platform::releaseCapture();
+}
+
+void Window::transferCapture()
+{
+  Platform::releaseCapture();
+
+  const ImGuiPlatformIO &pio { m_ctx->imgui()->PlatformIO };
+  for(int i { 1 }; i < pio.Viewports.Size; ++i) { // skip the main viewport
+    ImGuiViewport *viewport { pio.Viewports[i] };
+    if(viewport == m_viewport || !viewport->PlatformHandle)
+      continue;
+
+    Platform::setCapture(static_cast<HWND>(viewport->PlatformHandle));
+
+    // Transfer knowledge of all down buttons to not release capture
+    // before all buttons are released
+    Window *window;
+    Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) };
+    if(DockerHost *host { dynamic_cast<DockerHost *>(instance) })
+      window = host->window();
+    else
+      window = dynamic_cast<Window *>(instance);
+    if(window)
+      window->m_mouseDown |= m_mouseDown;
+
+    break;
+  }
 }
 
 void Window::updateModifiers()

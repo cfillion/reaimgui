@@ -81,6 +81,7 @@ private:
   static int hwndInfo(HWND, INT_PTR type);
   static int translateAccel(MSG *msg, accelerator_register_t *accel);
   void updateModifiers();
+  void transferCapture();
 
   DockerHost *m_dockerHost;
 

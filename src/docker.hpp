@@ -78,6 +78,7 @@ private:
 class DockerHost : public Viewport {
 public:
   DockerHost(Docker *, ImGuiViewport *);
+  Window *window() const { return m_window.get(); }
 
   void create() override;
   void destroy() override;

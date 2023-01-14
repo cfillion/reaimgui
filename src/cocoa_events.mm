@@ -18,6 +18,7 @@
 #include "cocoa_events.hpp"
 
 #include "context.hpp"
+#include "platform.hpp"
 #include "window.hpp"
 
 #include <objc/runtime.h>
@@ -49,12 +50,25 @@ static Window *getViewportWindow(NSWindow *window)
          selector:@selector(windowDidResignKey:)
              name:NSWindowDidResignKeyNotification
            object:nil];
+
+  constexpr NSEventMask mouseUpMask {
+    NSEventMaskLeftMouseDown  | NSEventMaskLeftMouseUp  |
+    NSEventMaskRightMouseDown | NSEventMaskRightMouseUp |
+    NSEventMaskOtherMouseDown | NSEventMaskOtherMouseUp
+  };
+  __weak EventHandler *weakSelf { self }; // don't prevent dealloc
+  auto mouseUpHandler
+    { ^NSEvent *(NSEvent *event) { return [weakSelf appMouseEvent:event]; } };
+  m_mouseMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:mouseUpMask
+                                                         handler:mouseUpHandler];
+
   return self;
 }
 
 - (void)dealloc
 {
   [[NSNotificationCenter defaultCenter] removeObserver:self];
+  [NSEvent removeMonitor:m_mouseMonitor];
 }
 
 - (void)watchView:(NSView *)view
@@ -78,5 +92,39 @@ static Window *getViewportWindow(NSWindow *window)
     if(Window *viewportWindow { getViewportWindow(window) })
       viewportWindow->context()->updateFocus();
   });
+}
+
+- (NSEvent *)appMouseEvent:(NSEvent *)event
+{
+  // Redirect mouse events to the currently captured window.
+  // This is for receiving mouseUp events after the window that got the
+  // mouseDown was destroyed. See also Window::transferCapture.
+  //
+  // Cannot use [NSEvent mouseEventWithType] to recreate the event with
+  // a different windowNumber, because there is no way to specify the
+  // NSEvent buttonNumber. CGEventCreateMouseEvent can set the buttonNumber
+  // but not the target window.
+
+  HWND capture { Platform::getCapture() }; // only returns our windows
+  if(!capture)
+    return event;
+
+  Window *window
+    { reinterpret_cast<Window *>(GetWindowLongPtr(capture, GWLP_USERDATA)) };
+
+  switch(event.type) {
+  case NSEventTypeLeftMouseDown:
+  case NSEventTypeRightMouseDown:
+  case NSEventTypeOtherMouseDown:
+    window->mouseDown([event buttonNumber]);
+    return nil;
+  case NSEventTypeLeftMouseUp:
+  case NSEventTypeRightMouseUp:
+  case NSEventTypeOtherMouseUp:
+    window->mouseUp([event buttonNumber]);
+    return nil;
+  default:
+    return event;
+  }
 }
 @end

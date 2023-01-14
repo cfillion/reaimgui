@@ -20,12 +20,17 @@
 
 #include <AppKit/AppKit.h>
 
-@interface EventHandler : NSObject
+@interface EventHandler : NSObject {
+@private
+  id m_mouseMonitor;
+}
+
 - (instancetype)init;
 - (void)dealloc;
 
 - (void)watchView:(NSView *)view;
 - (void)windowDidResignKey:(NSNotification *)notification;
+- (NSEvent *)appMouseEvent:(NSEvent *)event;
 @end
 
 #endif

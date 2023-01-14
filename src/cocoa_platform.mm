@@ -140,8 +140,7 @@ HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
 // Preferences > General > Advanced UI tweaks. Otherwise REAPER would skip
 // invoking accelerator callbacks (and not send WM_KEY* either).
 //
-// Real capturing is not necessary to get mouse release events outside of the
-// window on macOS anyway.
+// Capture behavior is implemented by [EventHandler appMouseEvent].
 HWND Platform::getCapture()
 {
   return g_fakeCapture;
