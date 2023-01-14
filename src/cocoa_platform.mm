@@ -108,7 +108,14 @@ float Platform::scaleForWindow(HWND hwnd)
 
 HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
 {
-  if(cur == ImGuiMouseCursor_ResizeAll) {
+  switch(cur) {
+  case ImGuiMouseCursor_None:
+    static NSCursor *blank {
+      [[NSCursor alloc] initWithImage:[[NSImage alloc]initWithSize:NSMakeSize(1, 1)]
+                              hotSpot:NSMakePoint(0, 0)]
+    };
+    return (__bridge HCURSOR)blank;
+  case ImGuiMouseCursor_ResizeAll:
     static HCURSOR bm { LoadCursor(nullptr, IDC_SIZEALL) };
     return bm;
   }

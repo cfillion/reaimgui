@@ -156,12 +156,13 @@ HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
     GdkCursor *m_cur;
   };
 
-  static const Cursor cursors[ImGuiMouseCursor_COUNT] {
+  static const Cursor cursors[ImGuiMouseCursor_COUNT + 1] {
+    GDK_BLANK_CURSOR,
     GDK_ARROW, GDK_XTERM, GDK_FLEUR, GDK_TOP_SIDE, GDK_RIGHT_SIDE,
     GDK_BOTTOM_LEFT_CORNER, GDK_BOTTOM_RIGHT_CORNER, GDK_HAND1, GDK_PIRATE,
   };
 
-  return cursors[cur];
+  return cursors[cur + 1]; // ImGuiMouseCursor_None is -1, shift to 0
 }
 
 HWND Platform::getCapture()

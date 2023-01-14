@@ -181,7 +181,6 @@ NATIVE_ONLY_ENUMS = [
   'Cond_None',          # alias for Cond_Always
   'ColorEditFlags_HDR', # not allowed, would break float[4]<->int conversion
   /\AViewportFlags_/,
-  'MouseCursor_None',   # not implemented under SWELL
   'TreeNodeFlags_NavLeftJumpsBackHere', # marked as WIP
   /\ATableFlags_NoBordersInBody/,       # marked as alpha, to be moved to style
   /\AConfigFlags_(NavEnableGamepad)\z/, # not implemented

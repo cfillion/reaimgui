@@ -215,7 +215,7 @@ DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
 "Set desired mouse cursor shape",
 {
   FRAME_GUARD;
-  IM_ASSERT(cursor_type >= 0 && cursor_type < ImGuiMouseCursor_COUNT);
+  IM_ASSERT(cursor_type >= -1 && cursor_type < ImGuiMouseCursor_COUNT);
   ImGui::SetMouseCursor(cursor_type);
 });
 
@@ -223,7 +223,7 @@ DEFINE_ENUM(ImGui, MouseButton_Left,   "");
 DEFINE_ENUM(ImGui, MouseButton_Right,  "");
 DEFINE_ENUM(ImGui, MouseButton_Middle, "");
 
-// DEFINE_ENUM(ImGui, MouseCursor_None,      ""); // not implemented in ReaImGui
+DEFINE_ENUM(ImGui, MouseCursor_None,      "");
 DEFINE_ENUM(ImGui, MouseCursor_Arrow,     "");
 DEFINE_ENUM(ImGui, MouseCursor_TextInput, "When hovering over InputText, etc.");
 DEFINE_ENUM(ImGui, MouseCursor_ResizeAll, "(Unused by Dear ImGui functions)");

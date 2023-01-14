@@ -307,15 +307,9 @@ void Context::updateCursor()
   if(m_imgui->IO.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
     return;
 
-  // TODO
-  // io.MouseDrawCursor (ImGui-drawn cursor)
-  // SetCursor(nullptr) does not hide the cursor with SWELL
-
   // ImGui::GetMouseCursor is only valid after a frame, before Render
   // (it's reset when a new frame is started)
-  const ImGuiMouseCursor imguiCursor { ImGui::GetMouseCursor() };
-  const bool hidden { imguiCursor == ImGuiMouseCursor_None };
-  HCURSOR nativeCursor { hidden ? nullptr : Platform::getCursor(imguiCursor) };
+  HCURSOR nativeCursor { Platform::getCursor(ImGui::GetMouseCursor()) };
   if(m_cursor != nativeCursor)
     SetCursor(m_cursor = nativeCursor);
 }

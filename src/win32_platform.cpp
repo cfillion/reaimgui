@@ -239,6 +239,9 @@ float Platform::scaleForWindow(HWND hwnd)
 
 HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
 {
+  if(cur == ImGuiMouseCursor_None)
+    return nullptr;
+
   struct Cursor {
     Cursor(const wchar_t *name) : m_cur { LoadCursor(nullptr, name) } {}
     operator HCURSOR() const { return m_cur; }
