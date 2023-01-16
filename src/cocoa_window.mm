@@ -86,7 +86,7 @@ void CocoaWindow::create()
 void CocoaWindow::show()
 {
   Window::show();
-  [m_eventHandler watchView:m_view];
+  [m_eventHandler watchView:m_view context:m_ctx];
 }
 
 void CocoaWindow::setPosition(ImVec2 pos)

@@ -538,11 +538,18 @@ ImGuiViewport *Context::focusedViewport() const
 
 void Context::updateFocus()
 {
-  // don't clear focus before any windows have been opened
-  // (so that the first window can have it)
-  const bool hasOwnedViewport { m_imgui->PlatformIO.Viewports.Size > 1 };
+  // Don't clear focus before any windows have been opened
+  // so that the first window can have it
+  // (only required when polling updateFocus every frame, eg. on Linux)
+  bool hasHiddenWindows { false };
+  for(int i {}; i < m_imgui->Windows.Size; ++i) {
+    if(m_imgui->Windows[i]->Hidden) {
+      hasHiddenWindows = true;
+      break;
+    }
+  }
 
-  if(hasOwnedViewport && !focusedViewport())
+  if(!hasHiddenWindows && !focusedViewport())
     clearFocus();
 }
 
