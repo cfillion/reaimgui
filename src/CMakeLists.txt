@@ -101,6 +101,8 @@ else()
     gdk_window.cpp
   )
 
+  target_compile_definitions(src PRIVATE FOCUS_POLLING)
+
   find_package(Fontconfig REQUIRED)
   target_link_libraries(src Fontconfig::Fontconfig)
 

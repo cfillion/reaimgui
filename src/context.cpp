@@ -264,13 +264,13 @@ bool Context::endFrame(const bool render) try
     ImGui::EndFrame();
 
   ImGui::UpdatePlatformWindows();
-#if !defined(_WIN32) && !defined(__APPLE__)
+  if(render)
+    ImGui::RenderPlatformWindowsDefault();
+
+#ifdef FOCUS_POLLING
   // WM_KILLFOCUS/WM_ACTIVATE+WA_INACTIVE are incomplete or missing in SWELL
   updateFocus();
 #endif
-
-  if(render)
-    ImGui::RenderPlatformWindowsDefault();
 
   return true;
 }
@@ -542,12 +542,14 @@ void Context::updateFocus()
   // so that the first window can have it
   // (only required when polling updateFocus every frame, eg. on Linux)
   bool hasHiddenWindows { false };
+#ifdef FOCUS_POLLING
   for(int i {}; i < m_imgui->Windows.Size; ++i) {
     if(m_imgui->Windows[i]->Hidden) {
       hasHiddenWindows = true;
       break;
     }
   }
+#endif
 
   if(!hasHiddenWindows && !focusedViewport())
     clearFocus();
