@@ -27,91 +27,99 @@
 -- GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE = 8
 -- GFX2IMGUI_NO_BLIT_PREMULTIPLY = false
 
+local ImGui = {}
+for name, func in pairs(reaper) do
+  name = name:match('^ImGui_(.+)$')
+  if name then
+    ImGui[name] = func
+  end
+end
+
 local reaper, ogfx, print = reaper, gfx, print
 local debug, math, string, table, utf8 = debug, math, string, table, utf8
 
-local FLT_MIN, FLT_MAX = reaper.ImGui_NumericLimits_Float()
-local CTX_FLAGS = reaper.ImGui_ConfigFlags_NoSavedSettings() |
-                  reaper.ImGui_ConfigFlags_DockingEnable()
-local CANARY_FLAGS = reaper.ImGui_ConfigFlags_NoSavedSettings()
-local WND_FLAGS = reaper.ImGui_WindowFlags_NoScrollbar() |
-                  reaper.ImGui_WindowFlags_NoScrollWithMouse() |
-                  reaper.ImGui_WindowFlags_NoMove()
-local CHILD_FLAGS = reaper.ImGui_WindowFlags_NoMouseInputs()
-local LOG_WND_FLAGS = reaper.ImGui_WindowFlags_NoDocking()
-local HOVERED_FLAGS = reaper.ImGui_HoveredFlags_ChildWindows()
-local FOCUSED_FLAGS = reaper.ImGui_FocusedFlags_RootAndChildWindows()
+local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
+local CTX_FLAGS = ImGui.ConfigFlags_NoSavedSettings() |
+                  ImGui.ConfigFlags_DockingEnable()
+local CANARY_FLAGS = ImGui.ConfigFlags_NoSavedSettings()
+local WND_FLAGS = ImGui.WindowFlags_NoScrollbar() |
+                  ImGui.WindowFlags_NoScrollWithMouse() |
+                  ImGui.WindowFlags_NoMove()
+local CHILD_FLAGS = ImGui.WindowFlags_NoMouseInputs()
+local LOG_WND_FLAGS = ImGui.WindowFlags_NoDocking()
+local HOVERED_FLAGS = ImGui.HoveredFlags_ChildWindows()
+local FOCUSED_FLAGS = ImGui.FocusedFlags_RootAndChildWindows()
 local WINDOW_PADDING, WINDOW_BG, CHILD_BORDER_SIZE =
-  reaper.ImGui_StyleVar_WindowPadding(), reaper.ImGui_Col_WindowBg(),
-  reaper.ImGui_StyleVar_ChildBorderSize()
-local ROUND_CORNERS = reaper.ImGui_DrawFlags_RoundCornersAll()
-local NO_DECORATION = reaper.ImGui_ConfigVar_ViewportsNoDecoration()
+  ImGui.StyleVar_WindowPadding(), ImGui.Col_WindowBg(),
+  ImGui.StyleVar_ChildBorderSize()
+local ROUND_CORNERS = ImGui.DrawFlags_RoundCornersAll()
+local NO_DECORATION = ImGui.ConfigVar_ViewportsNoDecoration()
 local MACOS, WINDOWS = reaper.GetOS():find('OSX') ~= nil,
                        reaper.GetOS():find('Win') == 1
 local CURSORS = {
-  [0x7f00] = reaper.ImGui_MouseCursor_Arrow(),
-  [0x7f01] = reaper.ImGui_MouseCursor_TextInput(),
-  [0x7f82] = reaper.ImGui_MouseCursor_ResizeNWSE(),
-  [0x7f83] = reaper.ImGui_MouseCursor_ResizeNESW(),
-  [0x7f84] = reaper.ImGui_MouseCursor_ResizeEW(),
-  [0x7f85] = reaper.ImGui_MouseCursor_ResizeNS(),
-  [0x7f86] = reaper.ImGui_MouseCursor_ResizeAll(),
-  [0x7f88] = reaper.ImGui_MouseCursor_NotAllowed(),
-  [0x7f89] = reaper.ImGui_MouseCursor_Hand(),
+  [0x7f00] = ImGui.MouseCursor_Arrow(),
+  [0x7f01] = ImGui.MouseCursor_TextInput(),
+  [0x7f82] = ImGui.MouseCursor_ResizeNWSE(),
+  [0x7f83] = ImGui.MouseCursor_ResizeNESW(),
+  [0x7f84] = ImGui.MouseCursor_ResizeEW(),
+  [0x7f85] = ImGui.MouseCursor_ResizeNS(),
+  [0x7f86] = ImGui.MouseCursor_ResizeAll(),
+  [0x7f88] = ImGui.MouseCursor_NotAllowed(),
+  [0x7f89] = ImGui.MouseCursor_Hand(),
 }
 local MOUSE_BTNS = {
-  [reaper.ImGui_MouseButton_Left()  ] = 1<<0,
-  [reaper.ImGui_MouseButton_Right() ] = 1<<1,
-  [reaper.ImGui_MouseButton_Middle()] = 1<<6,
+  [ImGui.MouseButton_Left()  ] = 1<<0,
+  [ImGui.MouseButton_Right() ] = 1<<1,
+  [ImGui.MouseButton_Middle()] = 1<<6,
 }
 local KEY_MODS = {
-  [reaper.ImGui_Mod_Ctrl() ] = 1<<2,
-  [reaper.ImGui_Mod_Shift()] = 1<<3,
-  [reaper.ImGui_Mod_Alt()  ] = 1<<4,
-  [reaper.ImGui_Mod_Super()] = 1<<5,
+  [ImGui.Mod_Ctrl() ] = 1<<2,
+  [ImGui.Mod_Shift()] = 1<<3,
+  [ImGui.Mod_Alt()  ] = 1<<4,
+  [ImGui.Mod_Super()] = 1<<5,
 }
-local CHAR_MOD_MASK = reaper.ImGui_Mod_Ctrl() |
-                      reaper.ImGui_Mod_Alt()
+local CHAR_MOD_MASK = ImGui.Mod_Ctrl() |
+                      ImGui.Mod_Alt()
 local CHAR_MOD_BASE = {
-  [reaper.ImGui_Mod_Ctrl()] = 0x001,
+  [ImGui.Mod_Ctrl()] = 0x001,
   [CHAR_MOD_MASK          ] = 0x101,
-  [reaper.ImGui_Mod_Alt() ] = 0x141,
+  [ImGui.Mod_Alt() ] = 0x141,
 }
 local MW_TICK = 6 -- gfx.mouse_[h]wheel increments per wheel tick
 local KEYS = {
-  [reaper.ImGui_Key_Backspace()]   = 0x00000008,
-  [reaper.ImGui_Key_Delete()]      = 0x0064656c,
-  [reaper.ImGui_Key_DownArrow()]   = 0x646f776e,
-  [reaper.ImGui_Key_End()]         = 0x00656e64,
-  [reaper.ImGui_Key_Enter()]       = 0x0000000d,
-  [reaper.ImGui_Key_Escape()]      = 0x0000001b,
-  [reaper.ImGui_Key_F1()]          = 0x00006631,
-  [reaper.ImGui_Key_F2()]          = 0x00006632,
-  [reaper.ImGui_Key_F3()]          = 0x00006633,
-  [reaper.ImGui_Key_F4()]          = 0x00006634,
-  [reaper.ImGui_Key_F5()]          = 0x00006635,
-  [reaper.ImGui_Key_F6()]          = 0x00006636,
-  [reaper.ImGui_Key_F7()]          = 0x00006637,
-  [reaper.ImGui_Key_F8()]          = 0x00006638,
-  [reaper.ImGui_Key_F9()]          = 0x00006639,
-  [reaper.ImGui_Key_F10()]         = 0x00663130,
-  [reaper.ImGui_Key_F11()]         = 0x00663131,
-  [reaper.ImGui_Key_F12()]         = 0x00663132,
-  [reaper.ImGui_Key_Home()]        = 0x686f6d65,
-  [reaper.ImGui_Key_Insert()]      = 0x00696e73,
-  [reaper.ImGui_Key_KeypadEnter()] = 0x0000000d,
-  [reaper.ImGui_Key_LeftArrow()]   = 0x6c656674,
-  [reaper.ImGui_Key_PageDown()]    = 0x7067646e,
-  [reaper.ImGui_Key_PageUp()]      = 0x70677570,
-  [reaper.ImGui_Key_RightArrow()]  = 0x72676874,
-  [reaper.ImGui_Key_Tab()]         = 0x00000009,
-  [reaper.ImGui_Key_UpArrow()]     = 0x00007570,
+  [ImGui.Key_Backspace()]   = 0x00000008,
+  [ImGui.Key_Delete()]      = 0x0064656c,
+  [ImGui.Key_DownArrow()]   = 0x646f776e,
+  [ImGui.Key_End()]         = 0x00656e64,
+  [ImGui.Key_Enter()]       = 0x0000000d,
+  [ImGui.Key_Escape()]      = 0x0000001b,
+  [ImGui.Key_F1()]          = 0x00006631,
+  [ImGui.Key_F2()]          = 0x00006632,
+  [ImGui.Key_F3()]          = 0x00006633,
+  [ImGui.Key_F4()]          = 0x00006634,
+  [ImGui.Key_F5()]          = 0x00006635,
+  [ImGui.Key_F6()]          = 0x00006636,
+  [ImGui.Key_F7()]          = 0x00006637,
+  [ImGui.Key_F8()]          = 0x00006638,
+  [ImGui.Key_F9()]          = 0x00006639,
+  [ImGui.Key_F10()]         = 0x00663130,
+  [ImGui.Key_F11()]         = 0x00663131,
+  [ImGui.Key_F12()]         = 0x00663132,
+  [ImGui.Key_Home()]        = 0x686f6d65,
+  [ImGui.Key_Insert()]      = 0x00696e73,
+  [ImGui.Key_KeypadEnter()] = 0x0000000d,
+  [ImGui.Key_LeftArrow()]   = 0x6c656674,
+  [ImGui.Key_PageDown()]    = 0x7067646e,
+  [ImGui.Key_PageUp()]      = 0x70677570,
+  [ImGui.Key_RightArrow()]  = 0x72676874,
+  [ImGui.Key_Tab()]         = 0x00000009,
+  [ImGui.Key_UpArrow()]     = 0x00007570,
 }
-local KEY_A, KEY_Z = reaper.ImGui_Key_A(), reaper.ImGui_Key_Z()
+local KEY_A, KEY_Z = ImGui.Key_A(), ImGui.Key_Z()
 local FONT_FLAGS = {
-  [0]                = reaper.ImGui_FontFlags_None(),
-  [string.byte('b')] = reaper.ImGui_FontFlags_Bold(),
-  [string.byte('i')] = reaper.ImGui_FontFlags_Italic(),
+  [0]                = ImGui.FontFlags_None(),
+  [string.byte('b')] = ImGui.FontFlags_Bold(),
+  [string.byte('i')] = ImGui.FontFlags_Italic(),
 }
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
 local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
@@ -242,24 +250,24 @@ local function mergeBlitOpts(src, dst)
 end
 
 local function updateMouse()
-  if reaper.ImGui_IsWindowHovered(state.ctx, HOVERED_FLAGS) then -- not over Log window
+  if ImGui.IsWindowHovered(state.ctx, HOVERED_FLAGS) then -- not over Log window
     for button, flag in pairs(MOUSE_BTNS) do
-      if reaper.ImGui_IsMouseClicked(state.ctx, button) then
+      if ImGui.IsMouseClicked(state.ctx, button) then
         state.mouse_cap = state.mouse_cap | flag
       end
     end
 
-    local wheel_v, wheel_h = reaper.ImGui_GetMouseWheel(state.ctx)
+    local wheel_v, wheel_h = ImGui.GetMouseWheel(state.ctx)
     gfx.mouse_wheel  = gfx.mouse_wheel  + (wheel_v * MW_TICK)
     gfx.mouse_hwheel = gfx.mouse_hwheel + (wheel_h * MW_TICK)
 
     if state.want_cursor then
-      reaper.ImGui_SetMouseCursor(state.ctx, state.want_cursor)
+      ImGui.SetMouseCursor(state.ctx, state.want_cursor)
     end
   end
 
   for button, flag in pairs(MOUSE_BTNS) do
-    if reaper.ImGui_IsMouseReleased(state.ctx, button) then
+    if ImGui.IsMouseReleased(state.ctx, button) then
       state.mouse_cap = state.mouse_cap & ~flag
     end
   end
@@ -267,41 +275,41 @@ local function updateMouse()
   gfx.mouse_cap = state.mouse_cap
 
   for mod, flag in pairs(KEY_MODS) do
-    if reaper.ImGui_IsKeyDown(state.ctx, mod) then
+    if ImGui.IsKeyDown(state.ctx, mod) then
       gfx.mouse_cap = gfx.mouse_cap | flag
     end
   end
 
-  gfx.mouse_x, gfx.mouse_y = reaper.ImGui_GetMousePos(state.ctx)
+  gfx.mouse_x, gfx.mouse_y = ImGui.GetMousePos(state.ctx)
   gfx.mouse_x, gfx.mouse_y = gfx.mouse_x - state.screen_x,
                              gfx.mouse_y - state.screen_y
 end
 
 local function updateKeyboard()
   -- simulate gfx's behavior of eating shortcut keys in the global scope
-  reaper.ImGui_SetNextFrameWantCaptureKeyboard(state.ctx, true)
+  ImGui.SetNextFrameWantCaptureKeyboard(state.ctx, true)
 
   -- flags for gfx.getchar(65536)
   state.wnd_flags = 1
-  if reaper.ImGui_IsWindowFocused(state.ctx, FOCUSED_FLAGS) then
+  if ImGui.IsWindowFocused(state.ctx, FOCUSED_FLAGS) then
     state.wnd_flags = state.wnd_flags | 2
   end
-  -- if not reaper.ImGui_IsWindowCollapsed(state.ctx) then
+  -- if not ImGui.IsWindowCollapsed(state.ctx) then
   if state.collapsed then
     state.wnd_flags = state.wnd_flags | 4
   end
 
   for k, c in pairs(KEYS) do
-    if reaper.ImGui_IsKeyPressed(state.ctx, k) then
+    if ImGui.IsKeyPressed(state.ctx, k) then
       ringInsert(state.charqueue, c)
     end
   end
 
-  local mods = reaper.ImGui_GetKeyMods(state.ctx) & CHAR_MOD_MASK
+  local mods = ImGui.GetKeyMods(state.ctx) & CHAR_MOD_MASK
   for flags, mod_base in pairs(CHAR_MOD_BASE) do
     if flags == mods then
       for k = KEY_A, KEY_Z do
-        if reaper.ImGui_IsKeyPressed(state.ctx, k) then
+        if ImGui.IsKeyPressed(state.ctx, k) then
           ringInsert(state.charqueue, mod_base + (k - KEY_A))
         end
       end
@@ -311,7 +319,7 @@ local function updateKeyboard()
 
   local i = 0
   while true do
-    local rv, char = reaper.ImGui_GetInputQueueCharacter(state.ctx, i)
+    local rv, char = ImGui.GetInputQueueCharacter(state.ctx, i)
     if not rv then break end
     ringInsert(state.charqueue, char)
     i = i + 1
@@ -320,18 +328,18 @@ end
 
 local function updateDropFiles()
   state.drop_files = {}
-  if reaper.ImGui_BeginChild(state.ctx, 'drop_target', -FLT_MIN, -FLT_MIN, 0, CHILD_FLAGS) then
-    reaper.ImGui_EndChild(state.ctx)
-    if reaper.ImGui_BeginDragDropTarget(state.ctx) then
-      local rv, count = reaper.ImGui_AcceptDragDropPayloadFiles(state.ctx)
+  if ImGui.BeginChild(state.ctx, 'drop_target', -FLT_MIN, -FLT_MIN, 0, CHILD_FLAGS) then
+    ImGui.EndChild(state.ctx)
+    if ImGui.BeginDragDropTarget(state.ctx) then
+      local rv, count = ImGui.AcceptDragDropPayloadFiles(state.ctx)
       if rv then
         for i = 0, count - 1 do
           local filename
-          rv, filename = reaper.ImGui_GetDragDropPayloadFile(state.ctx, i)
+          rv, filename = ImGui.GetDragDropPayloadFile(state.ctx, i)
           state.drop_files[i] = filename
         end
       end
-      reaper.ImGui_EndDragDropTarget(state.ctx)
+      ImGui.EndDragDropTarget(state.ctx)
     end
   end
 end
@@ -371,18 +379,18 @@ local function warn(message, ...)
 end
 
 local function showLog()
-  reaper.ImGui_SetConfigVar(state.ctx, NO_DECORATION, 1)
-  reaper.ImGui_SetNextWindowSize(state.ctx, 800, 300, reaper.ImGui_Cond_Once())
-  local visible, open = reaper.ImGui_Begin(state.ctx, 'gfx2imgui [Log]', true, LOG_WND_FLAGS)
-  reaper.ImGui_SetConfigVar(state.ctx, NO_DECORATION, 0)
+  ImGui.SetConfigVar(state.ctx, NO_DECORATION, 1)
+  ImGui.SetNextWindowSize(state.ctx, 800, 300, ImGui.Cond_Once())
+  local visible, open = ImGui.Begin(state.ctx, 'gfx2imgui [Log]', true, LOG_WND_FLAGS)
+  ImGui.SetConfigVar(state.ctx, NO_DECORATION, 0)
   if not visible then return end
-  local scroll_bottom = reaper.ImGui_GetScrollY(state.ctx) == reaper.ImGui_GetScrollMaxY(state.ctx)
+  local scroll_bottom = ImGui.GetScrollY(state.ctx) == ImGui.GetScrollMaxY(state.ctx)
   for line in ringEnum(global_state.log) do
-    reaper.ImGui_TextWrapped(state.ctx, line)
+    ImGui.TextWrapped(state.ctx, line)
   end
-  if scroll_bottom then reaper.ImGui_SetScrollHereY(state.ctx, 1) end
+  if scroll_bottom then ImGui.SetScrollHereY(state.ctx, 1) end
   if not open then global_state.log.size = 0 end
-  reaper.ImGui_End(state.ctx)
+  ImGui.End(state.ctx)
 end
 
 local function setDock(v)
@@ -489,7 +497,7 @@ local function unloadUnusedFonts()
   for i = UNUSED_FONTS_CACHE_SIZE + 1, #garbage do
     local old_font = garbage[i]
     -- print(('Detach() size=%d'):format(old_font.cache_key))
-    reaper.ImGui_Detach(state.ctx, old_font.cache_val.instance)
+    ImGui.Detach(state.ctx, old_font.cache_val.instance)
     old_font.cache_val.attached = false
     old_font.cache[old_font.cache_key] = nil
   end
@@ -511,9 +519,9 @@ local function loadRequestedFonts()
       end
 
       -- print(('Attach() %s@%d[%d]'):format(font.family, font.size, font.flags))
-      local instance = reaper.ImGui_CreateFont(font.family, font.size, font.flags)
+      local instance = ImGui.CreateFont(font.family, font.size, font.flags)
       local keep_alive = hasValue(global_state.fonts, font)
-      reaper.ImGui_Attach(state.ctx, instance)
+      ImGui.Attach(state.ctx, instance)
       put(state.fontmap, font.family, font.flags, font.size, {
         attached   = true,
         last_use   = state.frame_count,
@@ -533,19 +541,19 @@ local function beginFrame()
   -- is exiting (reaimgui has unloaded at that point)
   if not reaper.EnumProjects(0) then return false end
 
-  assert(reaper.ImGui_ValidatePtr(state.ctx, 'ImGui_Context*'),
+  assert(ImGui.ValidatePtr(state.ctx, 'ImGui_Context*'),
     'reaimgui context got garbage-collected: was gfx.update called every defer cycle?')
 
   -- protect against scripts calling gfx.update more than once per defer cycle
   -- or before the first defer timer tick
-  local this_frame = reaper.ImGui_GetFrameCount(state.canary)
+  local this_frame = ImGui.GetFrameCount(state.canary)
   if state.frame_count == this_frame then return true end
   state.frame_count = this_frame
 
   unloadUnusedFonts()
   loadRequestedFonts()
 
-  -- reaper.ImGui_ShowMetricsWindow(state.ctx)
+  -- ImGui.ShowMetricsWindow(state.ctx)
 
   return true
 end
@@ -587,7 +595,7 @@ local function uniq2D(points)
 end
 
 local function drawPixel(x, y, c)
-  local AddRectFilled = reaper.ImGui_DrawList_AddRectFilled
+  local AddRectFilled = ImGui.DrawList_AddRectFilled
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
     local x, y = transformPoint(x, y, blit_opts)
@@ -598,7 +606,7 @@ local function drawPixel(x, y, c)
 end
 
 local function drawLine(x1, y1, x2, y2, c)
-  local AddLine = reaper.ImGui_DrawList_AddLine
+  local AddLine = ImGui.DrawList_AddLine
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
     local x1, y1 = transformPoint(x1, y1, blit_opts)
@@ -614,8 +622,8 @@ function gfx.arc(x, y, r, ang1, ang2, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   local c, quarter = color(), math.pi / 2
   x, y, ang1, ang2 = toint(x) + 1, toint(y), ang1 - quarter, ang2 - quarter
-  local PathArcTo  = reaper.ImGui_DrawList_PathArcTo
-  local PathStroke = reaper.ImGui_DrawList_PathStroke
+  local PathArcTo  = ImGui.DrawList_PathArcTo
+  local PathStroke = ImGui.DrawList_PathStroke
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
     local r = r * blit_opts.scale_y -- FIXME: scale_x
@@ -687,9 +695,9 @@ function gfx.blit(source, ...)
 
       local x1, y1 = screen_x + destx, screen_y + desty
       local x2, y2 = x1 + destw, y1 + desth
-      reaper.ImGui_DrawList_PushClipRect(draw_list, x1, y1, x2, y2, true)
+      ImGui.DrawList_PushClipRect(draw_list, x1, y1, x2, y2, true)
       render(commands, draw_list, x1 - srcx, y1 - srcy, merged_blit)
-      reaper.ImGui_DrawList_PopClipRect(draw_list)
+      ImGui.DrawList_PopClipRect(draw_list)
     end
 
     sourceCommands.want_clear = true
@@ -713,7 +721,7 @@ function gfx.circle(x, y, r, fill, antialias)
   local c = color()
   x, y, r = toint(x), toint(y), toint(r)
   local AddCircle = tobool(fill, false) and
-    reaper.ImGui_DrawList_AddCircleFilled or reaper.ImGui_DrawList_AddCircle
+    ImGui.DrawList_AddCircleFilled or ImGui.DrawList_AddCircle
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
     local x, y = transformPoint(x, y, blit_opts)
@@ -797,7 +805,7 @@ function gfx.drawstr(str, flags, right, bottom)
 
   gfx.x = gfx.x + w
 
-  local AddTextEx = reaper.ImGui_DrawList_AddTextEx
+  local AddTextEx = ImGui.DrawList_AddTextEx
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     -- search for a new font as the draw call may have been stored for a
     -- long time in an offscreen buffer while the font instance got detached
@@ -843,7 +851,7 @@ function gfx.getchar(char)
   end
 
   if not beginFrame() then return -1 end
-  return reaper.ImGui_IsKeyDown(state.ctx, char)
+  return ImGui.IsKeyDown(state.ctx, char)
 end
 
 function gfx.getdropfile(idx)
@@ -885,7 +893,7 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
   local cbl = color(r + drdy, g + dgdy, b + dbdy, a + dady)
   local cbr = color(r + drdx + drdy, g + dgdx + dgdy,
                     b + dbdx + dbdy, a + dadx + dady)
-  local AddRectFilledMultiColor = reaper.ImGui_DrawList_AddRectFilledMultiColor
+  local AddRectFilledMultiColor = ImGui.DrawList_AddRectFilledMultiColor
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local ctl, ctr, cbr, cbl = transformColor(ctl, blit_opts),
                                transformColor(ctr, blit_opts),
@@ -902,7 +910,7 @@ end
 function gfx.imgui(callback)
   local x, y = toint(gfx.x), toint(gfx.y)
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    reaper.ImGui_SetCursorScreenPos(state.ctx, screen_x + x, screen_y + y)
+    ImGui.SetCursorScreenPos(state.ctx, screen_x + x, screen_y + y)
     callback(state.ctx, draw_list, screen_x, screen_y, blit_opts)
   end)
 end
@@ -923,8 +931,8 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
 
   state = {
     name        = name,
-    ctx         = reaper.ImGui_CreateContext(ctx_name, CTX_FLAGS),
-    canary      = reaper.ImGui_CreateContext(ctx_name, CANARY_FLAGS),
+    ctx         = ImGui.CreateContext(ctx_name, CTX_FLAGS),
+    canary      = ImGui.CreateContext(ctx_name, CANARY_FLAGS),
     wnd_flags   = 1,
     collapsed   = false,
     want_close  = false,
@@ -937,7 +945,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     mouse_cap   = 0,
   }
 
-  reaper.ImGui_SetConfigVar(state.ctx, NO_DECORATION, 0)
+  ImGui.SetConfigVar(state.ctx, NO_DECORATION, 0)
 
   for _, font in ipairs(global_state.fonts) do
     state.fontqueue[#state.fontqueue + 1] = font
@@ -984,22 +992,22 @@ function gfx.loadimg(image, filename)
   image = toint(image)
 
   local bitmap
-  if not pcall(function() bitmap = reaper.ImGui_CreateImage(filename) end) then
+  if not pcall(function() bitmap = ImGui.CreateImage(filename) end) then
     return -1
   end
 
-  local w, h = reaper.ImGui_Image_GetSize(bitmap)
+  local w, h = ImGui.Image_GetSize(bitmap)
   gfx.setimgdim(image, w, h)
 
   local data = global_state.images[image]
   if data.inst and state then
-    reaper.ImGui_Detach(state.ctx, data.inst)
+    ImGui.Detach(state.ctx, data.inst)
   end
 
   local attached = false
   local attach = function()
     data.inst = bitmap
-    reaper.ImGui_Attach(state.ctx, data.inst)
+    ImGui.Attach(state.ctx, data.inst)
     attached = true
   end
   if state then attach() end
@@ -1009,12 +1017,12 @@ function gfx.loadimg(image, filename)
   local commands = global_state.commands[gfx.dest]
   if commands then commands.want_clear = true end
 
-  local AddImage = reaper.ImGui_DrawList_AddImage
+  local AddImage = ImGui.DrawList_AddImage
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     if not attached then
       -- could not attach before in loadimg, as it can be called before gfx.init
-      if not reaper.ImGui_ValidatePtr(bitmap, 'ImGui_Image*') then
-        bitmap = reaper.ImGui_CreateImage(filename)
+      if not ImGui.ValidatePtr(bitmap, 'ImGui_Image*') then
+        bitmap = ImGui.CreateImage(filename)
       end
       attach()
     end
@@ -1023,7 +1031,7 @@ function gfx.loadimg(image, filename)
     local uv0_x, uv0_y = blit_opts.x1 / w, blit_opts.y1 / h
     local uv1_x, uv1_y = blit_opts.x2 / w, blit_opts.y2 / h
 
-    reaper.ImGui_DrawList_AddImage(draw_list, bitmap,
+    ImGui.DrawList_AddImage(draw_list, bitmap,
       screen_x + blit_opts.x1, screen_y + blit_opts.y1,
       screen_x + blit_opts.x2, screen_y + blit_opts.y2,
       uv0_x, uv0_y, uv1_x, uv1_y)
@@ -1046,9 +1054,9 @@ function gfx.measurestr(str)
   local _, font_inst, size_error =
     getNearestCachedFont(global_state.fonts[state.font])
   local correction_factor = gfx.texth / (gfx.texth + size_error)
-  reaper.ImGui_PushFont(state.ctx, font_inst)
-  local w, h = reaper.ImGui_CalcTextSize(state.ctx, str)
-  reaper.ImGui_PopFont(state.ctx)
+  ImGui.PushFont(state.ctx, font_inst)
+  local w, h = ImGui.CalcTextSize(state.ctx, str)
+  ImGui.PopFont(state.ctx)
   return w * correction_factor, h * correction_factor
 end
 
@@ -1065,8 +1073,8 @@ end
 function gfx.quit()
   if not state then return end
   -- context will already have been destroyed when calling quit() from atexit()
-  if reaper.ImGui_ValidatePtr(state.ctx, 'ImGui_Context*') then
-    reaper.ImGui_DestroyContext(state.ctx)
+  if ImGui.ValidatePtr(state.ctx, 'ImGui_Context*') then
+    ImGui.DestroyContext(state.ctx)
   end
   for family, styles in pairs(state.fontmap) do
     for style, sizes in pairs(styles) do
@@ -1082,7 +1090,7 @@ end
 function gfx.rect(x, y, w, h, filled)
   local c = color()
   local AddRect = tobool(filled, true) and
-    reaper.ImGui_DrawList_AddRectFilled or reaper.ImGui_DrawList_AddRect
+    ImGui.DrawList_AddRectFilled or ImGui.DrawList_AddRect
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
@@ -1105,7 +1113,7 @@ function gfx.roundrect(x, y, w, h, radius, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   local c = color()
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  local AddRect = reaper.ImGui_DrawList_AddRect
+  local AddRect = ImGui.DrawList_AddRect
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
     local radius = radius * blit_opts.scale_y -- FIXME: scale_x
@@ -1277,7 +1285,7 @@ function gfx.triangle(...)
     -- gfx.triangle(0,33, 0,0, 0,33, 0,33)
     drawLine(points[1], points[2], points[3], points[4], c)
   elseif n_coords == 6 then
-    local AddTriangleFilled = reaper.ImGui_DrawList_AddTriangleFilled
+    local AddTriangleFilled = ImGui.DrawList_AddTriangleFilled
     drawCall(function(draw_list, screen_x, screen_y, blit_opts)
       local c = transformColor(c, blit_opts)
       local x1, y1 = transformPoint(points[1], points[2], blit_opts)
@@ -1295,7 +1303,7 @@ function gfx.triangle(...)
         screen_x + x3, screen_y + y3, c)
     end)
   else
-    local AddConvexPolyFilled = reaper.ImGui_DrawList_AddConvexPolyFilled
+    local AddConvexPolyFilled = ImGui.DrawList_AddConvexPolyFilled
     local screen_points = reaper.new_array(n_coords)
     drawCall(function(draw_list, screen_x, screen_y, blit_opts)
       local c = transformColor(c, blit_opts)
@@ -1320,7 +1328,7 @@ function gfx.update()
   if global_state.log.size > 0 then showLog() end
 
   if state.want_dock then
-    reaper.ImGui_SetNextWindowDockID(state.ctx, state.want_dock)
+    ImGui.SetNextWindowDockID(state.ctx, state.want_dock)
     -- keep position and size when using gfx.init with dock=0
     if state.want_dock ~= 0 then
       state.want_pos, state.want_size = nil, nil
@@ -1328,13 +1336,13 @@ function gfx.update()
     state.want_dock = nil
   end
   if state.want_pos then
-    local x, y = reaper.ImGui_PointConvertNative(state.ctx, state.want_pos.x, state.want_pos.y)
+    local x, y = ImGui.PointConvertNative(state.ctx, state.want_pos.x, state.want_pos.y)
     if MACOS then y = y - (state.want_size and state.want_size.h or gfx.h) end
-    reaper.ImGui_SetNextWindowPos(state.ctx, x, y)
+    ImGui.SetNextWindowPos(state.ctx, x, y)
     state.want_pos = nil
   end
   if state.want_size then
-    reaper.ImGui_SetNextWindowSize(state.ctx, state.want_size.w, state.want_size.h)
+    ImGui.SetNextWindowSize(state.ctx, state.want_size.w, state.want_size.h)
     state.want_size = nil
   end
 
@@ -1344,14 +1352,14 @@ function gfx.update()
              (col_clear << 8  & 0x00ff0000) |
              (col_clear << 24 & 0xff000000) |
              0xff
-  reaper.ImGui_PushStyleColor(state.ctx, WINDOW_BG, bg)
-  reaper.ImGui_PushStyleVar(state.ctx, WINDOW_PADDING, 0, 0)
-  reaper.ImGui_PushStyleVar(state.ctx, CHILD_BORDER_SIZE, 0) -- no border when docked
+  ImGui.PushStyleColor(state.ctx, WINDOW_BG, bg)
+  ImGui.PushStyleVar(state.ctx, WINDOW_PADDING, 0, 0)
+  ImGui.PushStyleVar(state.ctx, CHILD_BORDER_SIZE, 0) -- no border when docked
   local wnd_label = ('%s###gfx2imgui'):format(state.name)
-  local visible, open = reaper.ImGui_Begin(state.ctx, wnd_label, true, WND_FLAGS)
+  local visible, open = ImGui.Begin(state.ctx, wnd_label, true, WND_FLAGS)
   state.collapsed = not visible
-  reaper.ImGui_PopStyleVar(state.ctx, 2)
-  reaper.ImGui_PopStyleColor(state.ctx)
+  ImGui.PopStyleVar(state.ctx, 2)
+  ImGui.PopStyleColor(state.ctx)
 
   if not visible then
     for _, commands in pairs(global_state.commands) do
@@ -1361,16 +1369,16 @@ function gfx.update()
   end
 
   -- update variables
-  gfx.w, gfx.h = reaper.ImGui_GetWindowSize(state.ctx)
+  gfx.w, gfx.h = ImGui.GetWindowSize(state.ctx)
   state.want_close = state.want_close or not open
-  state.screen_x, state.screen_y = reaper.ImGui_GetWindowPos(state.ctx)
+  state.screen_x, state.screen_y = ImGui.GetWindowPos(state.ctx)
   global_state.pos_x, global_state.pos_y = state.screen_x, state.screen_y
   if MACOS then global_state.pos_y = global_state.pos_y + gfx.h end
-  global_state.pos_x, global_state.pos_y = reaper.ImGui_PointConvertNative(state.ctx,
+  global_state.pos_x, global_state.pos_y = ImGui.PointConvertNative(state.ctx,
     global_state.pos_x, global_state.pos_y, true)
 
-  if reaper.ImGui_IsWindowDocked(state.ctx) then
-    global_state.dock = 1 | (~reaper.ImGui_GetWindowDockID(state.ctx) << 8)
+  if ImGui.IsWindowDocked(state.ctx) then
+    global_state.dock = 1 | (~ImGui.GetWindowDockID(state.ctx) << 8)
   else
     global_state.dock = global_state.dock & ~1 -- preserve previous docker ID
   end
@@ -1382,7 +1390,7 @@ function gfx.update()
   -- draw contents
   local commands = global_state.commands[-1]
   if commands then
-    local draw_list = reaper.ImGui_GetWindowDrawList(state.ctx)
+    local draw_list = ImGui.GetWindowDrawList(state.ctx)
     -- mode=nil tells transformColor it's not outputting to an offscreen buffer
     local blit_opts = {
       alpha=1, mode=nil, scale_x=1, scale_y=1,
@@ -1391,7 +1399,7 @@ function gfx.update()
     render(commands, draw_list, state.screen_x, state.screen_y, blit_opts)
   end
 
-  reaper.ImGui_End(state.ctx)
+  ImGui.End(state.ctx)
   return 0
 end
 
