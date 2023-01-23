@@ -685,7 +685,10 @@ static void humanBinding(std::ostream &stream)
     margin: 0;
     overflow-anchor: none;
   }
-  body, pre, code { font-family: Consolas, monospace; }
+  body, pre, code {
+    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+                 Liberation Mono, monospace;
+  }
   aside {
     background-color: #262626; /* Grey15 */
     border-right: 1px solid #6f6f6f;
