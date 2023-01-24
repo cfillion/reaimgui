@@ -43,6 +43,13 @@ DEFINE_API(void, GetVersion,
     snprintf(API_W(reaimgui_version), API_W_SZ(reaimgui_version), "%s", REAIMGUI_VERSION);
 });
 
+#define RESOURCE_ISVALID(klass)          \
+  if(!strcmp(type, "ImGui_" #klass "*")) \
+    return Resource::isValid(static_cast<klass *>(pointer))
+#define RESOURCEPROXY_ISVALID(klass)     \
+  if(!strcmp(type, "ImGui_" #klass "*")) \
+    return klass.decode<Context>(pointer, &proxyKey);
+
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
 R"(Return whether the pointer of the specified type is valid.
 
@@ -58,29 +65,24 @@ Supported types are:
 - ImGui_TextFilter*
 - ImGui_Viewport*)",
 {
-  ResourceProxy::Key proxyKey;
 
-  if(!strcmp(type, "ImGui_Context*"))
-    return Resource::isValid(static_cast<Context *>(pointer));
-  else if(!strcmp(type, "ImGui_DrawList*"))
-    return DrawList.decode<Context>(pointer, &proxyKey);
-  else if(!strcmp(type, "ImGui_DrawListSplitter*"))
-    return Resource::isValid(static_cast<DrawListSplitter *>(pointer));
-  else if(!strcmp(type, "ImGui_Font*"))
-    return Resource::isValid(static_cast<Font *>(pointer));
-  else if(!strcmp(type, "ImGui_Image*"))
-    return Resource::isValid(static_cast<Image *>(pointer));
-  else if(!strcmp(type, "ImGui_ImageSet*"))
-    return Resource::isValid(static_cast<ImageSet *>(pointer));
-  else if(!strcmp(type, "ImGui_ListClipper*"))
-    return Resource::isValid(static_cast<ListClipper *>(pointer));
-  else if(!strcmp(type, "ImGui_TextFilter*"))
-    return Resource::isValid(static_cast<TextFilter *>(pointer));
-  else if(!strcmp(type, "ImGui_Viewport*"))
-    return Viewport.decode<Context>(pointer, &proxyKey);
-  else
-    return false;
+  RESOURCE_ISVALID(Context);
+  RESOURCE_ISVALID(DrawListSplitter);
+  RESOURCE_ISVALID(Font);
+  RESOURCE_ISVALID(Image);
+  RESOURCE_ISVALID(ImageSet);
+  RESOURCE_ISVALID(ListClipper);
+  RESOURCE_ISVALID(TextFilter);
+
+  ResourceProxy::Key proxyKey;
+  RESOURCEPROXY_ISVALID(DrawList);
+  RESOURCEPROXY_ISVALID(Viewport);
+
+  return false;
 });
+
+#undef RESOURCE_ISVALID
+#undef RESOURCEPROXY_ISVALID
 
 DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
 (double,fraction)
