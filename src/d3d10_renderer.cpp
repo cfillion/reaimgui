@@ -110,7 +110,6 @@ D3D10Renderer::Shared::Shared()
   }
   if(!m_device)
     throw backend_error { "failed to create Direct3D 10 device" };
-  (*m_device).AddRef();
 
   {
     CComPtr<IDXGIDevice> dxgiDevice;
