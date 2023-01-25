@@ -165,20 +165,20 @@ void Win32Window::create()
   if(!m_hwnd)
     throw backend_error { "failed to create native window" };
 
-  m_dpi = dpiForWindow(m_hwnd.get());
+  m_dpi = dpiForWindow(m_hwnd);
   m_viewport->DpiScale = scaleForDpi(m_dpi);
   const RECT &rect { scaledWindowRect(m_viewport->Pos, m_viewport->Size) };
-  SetWindowPos(m_hwnd.get(), nullptr,  rect.left, rect.top,
+  SetWindowPos(m_hwnd, nullptr,  rect.left, rect.top,
     rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER);
 
   m_renderer = m_ctx->rendererFactory()->create(this);
 
   // will be freed upon RevokeDragDrop during destruction
   DropTarget *dropTarget = new DropTarget { m_ctx };
-  RegisterDragDrop(m_hwnd.get(), dropTarget);
+  RegisterDragDrop(m_hwnd, dropTarget);
 
   // disable IME by default
-  ImmAssociateContextEx(m_hwnd.get(), nullptr, 0);
+  ImmAssociateContextEx(m_hwnd, nullptr, 0);
 
   // enable compositing for transparency
   HRGN region { CreateRectRgn(0, 0, -1, -1) };
@@ -187,7 +187,7 @@ void Win32Window::create()
     .fEnable  = true,
     .hRgnBlur = region, // no actual blur/shadow
   };
-  DwmEnableBlurBehindWindow(m_hwnd.get(), &bb);
+  DwmEnableBlurBehindWindow(m_hwnd, &bb);
   DeleteObject(region);
 }
 
@@ -197,7 +197,7 @@ void Win32Window::destroy()
   // windows to our own owner to avoid a broken chain leading to Windows
   // possibly focusing a window from another application.
   EnumThreadWindows(GetCurrentThreadId(),
-    &reparentChildren, reinterpret_cast<LPARAM>(m_hwnd.get()));
+    &reparentChildren, reinterpret_cast<LPARAM>(m_hwnd));
 
   Window::destroy();
 }
@@ -229,21 +229,21 @@ RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
 void Win32Window::show()
 {
   if(!isDocked() && !(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
-    AttachWindowTopmostButton(m_hwnd.get());
+    AttachWindowTopmostButton(m_hwnd);
 
   Window::show();
 
   // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
   // Unsetting it after the window is visible disables the border (+ no icon)
-  const auto exStyle { GetWindowLong(m_hwnd.get(), GWL_EXSTYLE) };
+  const auto exStyle { GetWindowLong(m_hwnd, GWL_EXSTYLE) };
   if(exStyle & WS_EX_DLGMODALFRAME)
-    SetWindowLongPtr(m_hwnd.get(), GWL_EXSTYLE, m_exStyle);
+    SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, m_exStyle);
 }
 
 void Win32Window::setPosition(const ImVec2 pos)
 {
   const RECT &rect { scaledWindowRect(pos, m_viewport->Size) };
-  SetWindowPos(m_hwnd.get(), nullptr,
+  SetWindowPos(m_hwnd, nullptr,
     rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
     SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
 }
@@ -251,14 +251,14 @@ void Win32Window::setPosition(const ImVec2 pos)
 void Win32Window::setSize(const ImVec2 size)
 {
   const RECT &rect { scaledWindowRect(m_viewport->Pos, size) };
-  SetWindowPos(m_hwnd.get(), nullptr,
+  SetWindowPos(m_hwnd, nullptr,
     0, 0, rect.right - rect.left, rect.bottom - rect.top,
     SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
 }
 
 void Win32Window::setTitle(const char *title)
 {
-  SetWindowText(m_hwnd.get(), widen(title).c_str());
+  SetWindowText(m_hwnd, widen(title).c_str());
 }
 
 void Win32Window::setAlpha(const float alpha)
@@ -267,12 +267,12 @@ void Win32Window::setAlpha(const float alpha)
   // unlikely to change while alpha isn't 1
 
   if(alpha == 1.0f) {
-    SetWindowLong(m_hwnd.get(), GWL_EXSTYLE, m_exStyle);
+    SetWindowLong(m_hwnd, GWL_EXSTYLE, m_exStyle);
     return;
   }
 
-  SetWindowLong(m_hwnd.get(), GWL_EXSTYLE, m_exStyle | WS_EX_LAYERED);
-  SetLayeredWindowAttributes(m_hwnd.get(), 0, 255 * alpha, LWA_ALPHA);
+  SetWindowLong(m_hwnd, GWL_EXSTYLE, m_exStyle | WS_EX_LAYERED);
+  SetLayeredWindowAttributes(m_hwnd, 0, 255 * alpha, LWA_ALPHA);
 }
 
 void Win32Window::update()
@@ -286,13 +286,13 @@ void Win32Window::update()
   updateStyles();
 
   if(prevStyle != m_style || prevExStyle != m_exStyle) {
-    SetWindowLong(m_hwnd.get(), GWL_STYLE, m_style);
-    SetWindowLong(m_hwnd.get(), GWL_EXSTYLE, m_exStyle);
+    SetWindowLong(m_hwnd, GWL_STYLE, m_style);
+    SetWindowLong(m_hwnd, GWL_EXSTYLE, m_exStyle);
 
     if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration)
-      DetachWindowTopmostButton(m_hwnd.get(), false);
+      DetachWindowTopmostButton(m_hwnd, false);
     else
-      AttachWindowTopmostButton(m_hwnd.get());
+      AttachWindowTopmostButton(m_hwnd);
 
     HWND insertAfter;
     unsigned int flags { SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW };
@@ -308,7 +308,7 @@ void Win32Window::update()
     }
 
     const RECT rect { scaledWindowRect(m_viewport->Pos, m_viewport->Size) };
-    SetWindowPos(m_hwnd.get(), insertAfter, rect.left, rect.top,
+    SetWindowPos(m_hwnd, insertAfter, rect.left, rect.top,
       rect.right - rect.left, rect.bottom - rect.top, flags);
     m_viewport->PlatformRequestMove = m_viewport->PlatformRequestResize = true;
   }
@@ -321,9 +321,9 @@ float Win32Window::scaleFactor() const
 
 void Win32Window::setIME(ImGuiPlatformImeData *data)
 {
-  ImmAssociateContextEx(m_hwnd.get(), nullptr, data->WantVisible ? IACE_DEFAULT : 0);
+  ImmAssociateContextEx(m_hwnd, nullptr, data->WantVisible ? IACE_DEFAULT : 0);
 
-  if(HIMC ime { ImmGetContext(m_hwnd.get()) }) {
+  if(HIMC ime { ImmGetContext(m_hwnd) }) {
     ImVec2 pos { data->InputPos };
     Platform::scalePosition(&pos, true);
 
@@ -331,7 +331,7 @@ void Win32Window::setIME(ImGuiPlatformImeData *data)
     composition.dwStyle = CFS_FORCE_POSITION;
     composition.ptCurrentPos.x = pos.x;
     composition.ptCurrentPos.y = pos.y;
-    ScreenToClient(m_hwnd.get(), &composition.ptCurrentPos);
+    ScreenToClient(m_hwnd, &composition.ptCurrentPos);
     ImmSetCompositionWindow(ime, &composition);
 
     CANDIDATEFORM candidate;
@@ -339,7 +339,7 @@ void Win32Window::setIME(ImGuiPlatformImeData *data)
     candidate.ptCurrentPos = composition.ptCurrentPos;
     ImmSetCandidateWindow(ime, &candidate);
 
-    ImmReleaseContext(m_hwnd.get(), ime);
+    ImmReleaseContext(m_hwnd, ime);
   }
 }
 
@@ -352,12 +352,12 @@ std::optional<LRESULT> Win32Window::handleMessage
     static FuncImport<decltype(EnableNonClientDpiScaling)>
       _EnableNonClientDpiScaling { L"User32.dll", "EnableNonClientDpiScaling" };
     if(_EnableNonClientDpiScaling)
-      _EnableNonClientDpiScaling(m_hwnd.get());
+      _EnableNonClientDpiScaling(m_hwnd);
     break;
   }
   case WM_ACTIVATEAPP:
     if(m_viewport->Flags & ImGuiViewportFlags_TopMost) {
-      SetWindowPos(m_hwnd.get(), wParam ? HWND_TOPMOST : HWND_NOTOPMOST,
+      SetWindowPos(m_hwnd, wParam ? HWND_TOPMOST : HWND_NOTOPMOST,
         0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
     break;
@@ -366,7 +366,7 @@ std::optional<LRESULT> Win32Window::handleMessage
     m_viewport->DpiScale = scaleForDpi(m_dpi);
 
     const RECT *sugg { reinterpret_cast<RECT *>(lParam) };
-    SetWindowPos(m_hwnd.get(), nullptr,
+    SetWindowPos(m_hwnd, nullptr,
       sugg->left, sugg->top, sugg->right - sugg->left, sugg->bottom - sugg->top,
       SWP_NOACTIVATE | SWP_NOZORDER);
 
@@ -382,7 +382,7 @@ std::optional<LRESULT> Win32Window::handleMessage
   case WM_DPICHANGED_BEFOREPARENT:
     // This message is sent when docked.
     // Only top-level windows receive WM_DPICHANGED.
-    m_dpi = dpiForWindow(m_hwnd.get());
+    m_dpi = dpiForWindow(m_hwnd);
     m_viewport->DpiScale = scaleForDpi(m_dpi);
     m_viewport->Pos = getPosition();
     // WM_SIZE has been sent, no need to set m_viewport->Size here
@@ -421,7 +421,7 @@ std::optional<LRESULT> Win32Window::handleMessage
     m_ctx->updateFocus();
     return 0;
   case WM_DESTROY:
-    RevokeDragDrop(m_hwnd.get());
+    RevokeDragDrop(m_hwnd);
     break;
   }
 

@@ -47,7 +47,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     auto &ptr { lParam };
 #endif
     self = reinterpret_cast<Window *>(ptr);
-    self->m_hwnd.reset(handle);
+    self->m_hwnd = handle;
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
     SetProp(handle, CLASS_NAME, self->m_ctx);
   }
@@ -164,14 +164,8 @@ Window::~Window()
 
 void Window::destroy()
 {
-  m_hwnd.reset();
-}
-
-void Window::WindowDeleter::operator()(HWND window)
-{
-  // window may have been destroyed before us (eg. quitting REAPER)
-  if(IsWindow(window))
-    DestroyWindow(window);
+  DestroyWindow(m_hwnd);
+  m_hwnd = nullptr;
 }
 
 void Window::show()
@@ -184,25 +178,25 @@ void Window::show()
     m_viewport->Flags &= ~ImGuiViewportFlags_NoFocusOnAppearing;
 
   if(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
-    ShowWindow(m_hwnd.get(), SW_SHOWNA);
+    ShowWindow(m_hwnd, SW_SHOWNA);
   else
-    ShowWindow(m_hwnd.get(), SW_SHOW);
+    ShowWindow(m_hwnd, SW_SHOW);
 }
 
 void Window::setFocus()
 {
-  SetFocus(m_hwnd.get());
+  SetFocus(m_hwnd);
 }
 
 bool Window::hasFocus() const
 {
-  return GetFocus() == m_hwnd.get();
+  return GetFocus() == m_hwnd;
 }
 
 bool Window::isMinimized() const
 {
   // IsWindowVisible is false when docked and another tab is active
-  return !IsWindowVisible(m_hwnd.get());
+  return !IsWindowVisible(m_hwnd);
 }
 
 void Window::onChanged()
@@ -215,7 +209,7 @@ void Window::mouseDown(const ImGuiMouseButton btn)
   // Not needed on macOS for receiving mouse up messages outside of the
   // windows's boundaries. It is instead used by Context::updateMouseData.
   if(Platform::getCapture() == nullptr)
-    Platform::setCapture(m_hwnd.get());
+    Platform::setCapture(m_hwnd);
 
   // give keyboard focus when docked (+ focus on right/middle click on macOS)
   setFocus();
@@ -230,7 +224,7 @@ void Window::mouseUp(const ImGuiMouseButton btn)
   m_ctx->mouseInput(btn, false);
   m_mouseDown &= ~(1 << btn);
 
-  if(Platform::getCapture() == m_hwnd.get() && m_mouseDown == 0)
+  if(Platform::getCapture() == m_hwnd && m_mouseDown == 0)
     Platform::releaseCapture();
 }
 
@@ -315,7 +309,7 @@ HWND Window::parentHandle()
 int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
 {
   auto *self { static_cast<Window *>(accel->user) };
-  HWND hwnd { self->m_hwnd.get() };
+  HWND hwnd { self->m_hwnd };
   if(hwnd == msg->hwnd || IsChild(hwnd, msg->hwnd))
     return self->handleAccelerator(msg);
   else

@@ -54,13 +54,13 @@ GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 void GDKWindow::create()
 {
   createSwellDialog();
-  SetProp(m_hwnd.get(), "SWELLGdkAlphaChannel", reinterpret_cast<HANDLE>(1));
-  SetWindowLongPtr(m_hwnd.get(), GWL_EXSTYLE, WS_EX_ACCEPTFILES);
+  SetProp(m_hwnd, "SWELLGdkAlphaChannel", reinterpret_cast<HANDLE>(1));
+  SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, WS_EX_ACCEPTFILES);
 
   // WS_CHILD does gdk_window_set_override_redirect(true)
   // SWELL only supports setting WS_CHILD before ShowWindow
   if(m_viewport->Flags & ImGuiViewportFlags_NoTaskBarIcon)
-    SetWindowLongPtr(m_hwnd.get(), GWL_STYLE, WS_CHILD);
+    SetWindowLongPtr(m_hwnd, GWL_STYLE, WS_CHILD);
 
   m_previousFlags = ~m_viewport->Flags; // update will be called before show
 }
@@ -73,7 +73,7 @@ GDKWindow::~GDKWindow()
 
 GdkWindow *GDKWindow::getOSWindow() const
 {
-  return ::getOSWindow(m_hwnd.get());
+  return ::getOSWindow(m_hwnd);
 }
 
 static void imeCommit(GtkIMContext *, gchar *input, gpointer data)
@@ -115,20 +115,20 @@ void GDKWindow::show()
 void GDKWindow::setPosition(ImVec2 pos)
 {
   Platform::scalePosition(&pos, true);
-  SetWindowPos(m_hwnd.get(), nullptr, pos.x, pos.y, 0, 0,
+  SetWindowPos(m_hwnd, nullptr, pos.x, pos.y, 0, 0,
     SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
 }
 
 void GDKWindow::setSize(const ImVec2 size)
 {
-  SetWindowPos(m_hwnd.get(), nullptr, 0, 0,
+  SetWindowPos(m_hwnd, nullptr, 0, 0,
     size.x * scaleFactor(), size.y * scaleFactor(),
     SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
 }
 
 void GDKWindow::setTitle(const char *title)
 {
-  SetWindowText(m_hwnd.get(), title);
+  SetWindowText(m_hwnd, title);
 }
 
 void GDKWindow::setAlpha(const float alpha)
@@ -138,8 +138,8 @@ void GDKWindow::setAlpha(const float alpha)
 
 void GDKWindow::update()
 {
-  if(GetFocus() == m_hwnd.get())
-    SWELL_SetClassName(m_hwnd.get(), getSwellClass());
+  if(GetFocus() == m_hwnd)
+    SWELL_SetClassName(m_hwnd, getSwellClass());
 
   if(isDocked())
     return;
@@ -148,14 +148,14 @@ void GDKWindow::update()
   m_previousFlags = m_viewport->Flags;
 
   if(diff & ImGuiViewportFlags_NoDecoration) {
-    auto style { GetWindowLongPtr(m_hwnd.get(), GWL_STYLE) };
+    auto style { GetWindowLongPtr(m_hwnd, GWL_STYLE) };
 
     if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration)
       style &= ~WS_CAPTION;
     else
       style |= WS_CAPTION;
 
-    SetWindowLongPtr(m_hwnd.get(), GWL_STYLE, style);
+    SetWindowLongPtr(m_hwnd, GWL_STYLE, style);
 
     // SetWindowLongPtr hides the window
     // it sets an internal "need show" flag that's used by SetWindowPos
@@ -167,9 +167,9 @@ void GDKWindow::update()
 
   if(diff & ImGuiViewportFlags_TopMost) {
     if(m_viewport->Flags & ImGuiViewportFlags_TopMost)
-      SWELL_SetWindowLevel(m_hwnd.get(), 1);
+      SWELL_SetWindowLevel(m_hwnd, 1);
     else
-      SWELL_SetWindowLevel(m_hwnd.get(), 0);
+      SWELL_SetWindowLevel(m_hwnd, 0);
   }
 }
 
@@ -186,7 +186,7 @@ void GDKWindow::setIME(ImGuiPlatformImeData *data)
 
   // cannot use m_viewport->Pos when docked
   // (IME cursor location must be relative to the dock host window)
-  HWND container { m_hwnd.get() };
+  HWND container { m_hwnd };
   while(!::getOSWindow(container))
     container = GetParent(container);
   RECT containerPos;

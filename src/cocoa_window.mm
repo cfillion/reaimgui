@@ -57,7 +57,7 @@ CocoaWindow::~CocoaWindow()
 void CocoaWindow::create()
 {
   createSwellDialog();
-  m_view = (__bridge NSView *)m_hwnd.get(); // SWELL_hwndChild inherits from NSView
+  m_view = (__bridge NSView *)m_hwnd; // SWELL_hwndChild inherits from NSView
   m_inputView = [[InputView alloc] initWithWindow:this];
 
   NSWindow *window { [m_view window] };
@@ -121,12 +121,12 @@ bool CocoaWindow::hasFocus() const
   // Context::updateFocus would misdetect no active windows when it's called
   // from EventHandler::windowDidResignKey
   HWND focus { GetFocus() };
-  return focus == (__bridge HWND)m_inputView || focus == m_hwnd.get();
+  return focus == (__bridge HWND)m_inputView || focus == m_hwnd;
 }
 
 void CocoaWindow::setTitle(const char *title)
 {
-  SetWindowText(m_hwnd.get(), title);
+  SetWindowText(m_hwnd, title);
 }
 
 void CocoaWindow::setAlpha(const float alpha)
@@ -139,7 +139,7 @@ void CocoaWindow::update()
 {
   // restore keyboard focus to the input view when switching to our docker tab
   static bool no_wm_setfocus { atof(GetAppVersion()) < 6.53 };
-  if(no_wm_setfocus && GetFocus() == m_hwnd.get())
+  if(no_wm_setfocus && GetFocus() == m_hwnd)
     setFocus();
 
   if(m_previousScale != m_viewport->DpiScale) {
@@ -159,12 +159,12 @@ void CocoaWindow::update()
 
   if(diff & ImGuiViewportFlags_NoDecoration) {
     if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration) {
-      DetachWindowTopmostButton(m_hwnd.get(), false);
+      DetachWindowTopmostButton(m_hwnd, false);
       [window setStyleMask:NSWindowStyleMaskBorderless];
     }
     else {
       [window setStyleMask:m_defaultStyleMask];
-      AttachWindowTopmostButton(m_hwnd.get());
+      AttachWindowTopmostButton(m_hwnd);
       // ask dear imgui to call setText again
       static_cast<ImGuiViewportP *>(m_viewport)->LastNameHash = 0;
     }
@@ -177,7 +177,7 @@ void CocoaWindow::update()
     // 0=normal/1=topmost as observed via a breakpoint when clicking on
     // AttachWindowTopmostButton's thumbstack button.
     const bool topmost { (m_viewport->Flags & ImGuiViewportFlags_TopMost) != 0 };
-    SWELL_SetWindowWantRaiseAmt(m_hwnd.get(), topmost);
+    SWELL_SetWindowWantRaiseAmt(m_hwnd, topmost);
   }
 
   // disable shadows under the window when WindowFlags_NoBackground is set
@@ -227,7 +227,7 @@ std::optional<LRESULT> CocoaWindow::handleMessage
     // Both makeFirstResponder and making the window key are required
     // for receiving key events right away without a click
     if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing) ||
-        IsWindowVisible(m_hwnd.get()))
+        IsWindowVisible(m_hwnd))
       dispatch_async(dispatch_get_main_queue(), ^{ setFocus(); });
     break;
   }

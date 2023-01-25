@@ -50,7 +50,7 @@ public:
   // platform callbacks
   void destroy() override;
   void show() override;
-  HWND nativeHandle() const override { return m_hwnd.get(); }
+  HWND nativeHandle() const override { return m_hwnd; }
   void setFocus() override;
   bool hasFocus() const override;
   bool isMinimized() const override;
@@ -72,9 +72,7 @@ protected:
   virtual std::optional<LRESULT> handleMessage(unsigned int msg, WPARAM, LPARAM) = 0;
   virtual int handleAccelerator(MSG *);
 
-  struct WindowDeleter { void operator()(HWND); };
-  std::unique_ptr<std::remove_pointer_t<HWND>, WindowDeleter> m_hwnd;
-
+  HWND m_hwnd;
   std::unique_ptr<Renderer> m_renderer;
 
 private:
