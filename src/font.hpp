@@ -75,7 +75,7 @@ public:
   void update();
   void setScale(float scale);
   ImFontAtlas *getAtlas(float scale);
-  void removeAtlas(float scale);
+  bool removeAtlas(float scale);
   Font *get(ImFont *) const;
   ImFont *instanceOf(Font *) const;
 

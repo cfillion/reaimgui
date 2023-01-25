@@ -29,7 +29,7 @@ class Texture {
 public:
   using GetPixelsFunc = const unsigned char *(*)(void *object, float scale,
                                                  int *width, int *height);
-  using CompactFunc   = void(*)(void *object, float scale);
+  using CompactFunc   = bool(*)(void *object, float scale);
   using IsValidFunc   = bool(*)(void *object);
 
   Texture(void *user, float scale, GetPixelsFunc getPixels)
@@ -54,10 +54,10 @@ public:
     return m_isValid ? m_isValid(user) : true;
   }
 
-  void compact() const
+  bool compact() const
   {
-    if(m_compact)
-      m_compact(user, scale);
+    return m_compact ? m_compact(user, scale) : true;
+
   }
 
   operator void*() const { return user;  }

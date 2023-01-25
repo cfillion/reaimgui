@@ -35,10 +35,10 @@ static const unsigned char *getPixels(void *object, const float scale,
   return pixels;
 }
 
-static void removeScale(void *object, const float scale)
+static bool removeScale(void *object, const float scale)
 {
   FontList *list { static_cast<FontList *>(object) };
-  list->removeAtlas(scale);
+  return list->removeAtlas(scale);
 }
 
 Font::Font(const char *family, const int size, const int flags)
@@ -161,15 +161,15 @@ ImFontAtlas *FontList::getAtlas(const float scale)
   return it != m_atlases.end() ? it->second.get() : nullptr;
 }
 
-void FontList::removeAtlas(const float scale)
+bool FontList::removeAtlas(const float scale)
 {
   const float primaryScale { ImGui::GetPlatformIO().Monitors[0].DpiScale };
   if(scale == primaryScale)
-    return;
+    return false;
 
   const auto it { m_atlases.find(scale) };
   if(it == m_atlases.end())
-    return;
+    return true; // let the texture manager free it
 
   ImGuiIO &io { ImGui::GetIO() };
   if(io.Fonts == it->second.get())
@@ -177,6 +177,7 @@ void FontList::removeAtlas(const float scale)
 
   it->second->Locked = false;
   m_atlases.erase(it);
+  return true;
 }
 
 void FontList::build(const float scale)
