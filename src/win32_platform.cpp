@@ -97,11 +97,11 @@ static int CALLBACK enumMonitors(HMONITOR monitor, HDC, LPRECT, LPARAM)
   imguiMonitor.WorkSize.y = info.rcWork.bottom - info.rcWork.top;
   {
     SetDpiAwareness raii { DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE };
-    imguiMonitor.DpiScale   = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
+    imguiMonitor.DpiScale = Win32Window::scaleForDpi(Win32Window::dpiForMonitor(monitor));
   }
 
   const ImVec2 workOffs { imguiMonitor.WorkPos.x  - imguiMonitor.MainPos.x,
-                          imguiMonitor.WorkPos.x  - imguiMonitor.MainPos.x };
+                          imguiMonitor.WorkPos.y  - imguiMonitor.MainPos.y };
   imguiMonitor.WorkPos.x = imguiMonitor.MainPos.x + (workOffs.x / imguiMonitor.DpiScale);
   imguiMonitor.WorkPos.y = imguiMonitor.MainPos.y + (workOffs.y / imguiMonitor.DpiScale);
   imguiMonitor.WorkSize.x /= imguiMonitor.DpiScale;
