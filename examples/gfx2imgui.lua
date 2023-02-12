@@ -1039,7 +1039,7 @@ function gfx.loadimg(image, filename)
 
   gfx.dest = dest_backup
 
-  return rv
+  return image
 end
 
 function gfx.measurechar(char)
