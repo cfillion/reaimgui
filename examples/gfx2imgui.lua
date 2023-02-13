@@ -123,7 +123,10 @@ local FONT_FLAGS = {
   [string.byte('b')] = ImGui.FontFlags_Bold(),
   [string.byte('i')] = ImGui.FontFlags_Italic(),
 }
+local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
+
+-- settings
 local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 local THROTTLE_FONT_LOADING_FRAMES = 16
 local BLIT_NO_PREMULTIPLY = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
@@ -791,7 +794,7 @@ end
 
 function gfx.drawstr(str, flags, right, bottom)
   if not state then return end
-  str = str or '<bad string>'
+  str = str or FALLBACK_STRING
 
   local x, y, c = toint(gfx.x), toint(gfx.y), color()
   local w, h = gfx.measurestr(str) -- calls beginFrame()
@@ -1057,6 +1060,7 @@ function gfx.measurechar(char)
 end
 
 function gfx.measurestr(str)
+  str = str or FALLBACK_STRING
   if not state or not beginFrame() then
     return gfx.texth * utf8.len(str), gfx.texth
   end
