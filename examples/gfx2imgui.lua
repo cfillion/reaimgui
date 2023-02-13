@@ -47,7 +47,8 @@ local WND_FLAGS = ImGui.WindowFlags_NoScrollbar() |
                   ImGui.WindowFlags_NoScrollWithMouse() |
                   ImGui.WindowFlags_NoMove()
 local CHILD_FLAGS = ImGui.WindowFlags_NoMouseInputs()
-local LOG_WND_FLAGS = ImGui.WindowFlags_NoDocking()
+local LOG_WND_FLAGS = ImGui.WindowFlags_NoDocking() |
+                      ImGui.WindowFlags_NoFocusOnAppearing()
 local HOVERED_FLAGS = ImGui.HoveredFlags_ChildWindows()
 local FOCUSED_FLAGS = ImGui.FocusedFlags_RootAndChildWindows()
 local WINDOW_PADDING, WINDOW_BG, CHILD_BORDER_SIZE =
