@@ -956,15 +956,16 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
   end
 
   if width and height then
-    gfx.w, gfx.h = math.floor(width), math.floor(height)
+    gfx.w, gfx.h = toint(tonumber(width)), toint(tonumber(height))
     gfx.w, gfx.h = math.max(16, gfx.w), math.max(16, gfx.h)
     state.want_size = { w=gfx.w, h=gfx.h }
   end
-  if dockstate and (dockstate & 1) == 1 then
+  dockstate = toint(tonumber(dockstate))
+  if (dockstate & 1) == 1 then
     setDock(dockstate)
   end
   if xpos and ypos then
-    state.want_pos = { x=math.floor(xpos), y=math.floor(ypos) }
+    state.want_pos = { x=toint(tonumber(xpos)), y=toint(tonumber(ypos)) }
   end
 
   gfx.ext_retina = 1 -- ReaImGui scales automatically
