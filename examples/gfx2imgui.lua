@@ -252,6 +252,22 @@ local function mergeBlitOpts(src, dst)
   }
 end
 
+local function alignText(flags, pos, size, limit)
+  local offset = 0
+  if flags == 0 then return pos, offset end
+
+  local diff = limit - (pos + size)
+  if flags & 1 ~= 0 then diff = diff / 2 end -- center
+
+  if diff > 0 then
+    pos, limit = pos + diff
+  else
+    offset = diff
+  end
+
+  return pos, offset
+end
+
 local function updateMouse()
   if ImGui.IsWindowHovered(state.ctx, HOVERED_FLAGS) then -- not over Log window
     for button, flag in pairs(MOUSE_BTNS) do
@@ -785,29 +801,14 @@ function gfx.drawstr(str, flags, right, bottom)
   if right  then right  = toint(right) end
   if bottom then bottom = toint(bottom) end
 
-  if flags then
-    if (flags & 1) ~= 0 and right then -- center horizontally
-      local diff = (right - (x + w)) / 2
-      if diff > 0 then
-        x = x + diff
-        right = right - diff
-      end
-    elseif (flags & 2) ~= 0 and right then -- right justify
-      x = right - w
-    end
-    if (flags & 4) ~= 0 and bottom then -- center vertically
-      local diff = (bottom - (y + h)) / 2
-      if diff > 0 then
-        y = y + diff
-        bottom = bottom - diff
-      end
-    elseif (flags & 4) ~= 0 and right then -- bottom justify
-      y = bottom - h
-    end
+  gfx.x = gfx.x + w
+
+  local x_off, y_off = 0, 0
+  if flags and right and bottom then
+    x, x_off = alignText(flags        & 3, x, w, right)
+    y, y_off = alignText((flags >> 2) & 3, y, h, bottom)
     if (flags & 256) ~= 0 then right, bottom = nil, nil end -- disable clipping
   end
-
-  gfx.x = gfx.x + w
 
   local AddTextEx = ImGui.DrawList_AddTextEx
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
@@ -825,10 +826,13 @@ function gfx.drawstr(str, flags, right, bottom)
 
     local c = transformColor(c, blit_opts)
     local x, y = transformPoint(x, y, blit_opts)
+    local x_off, y_off = transformPoint(x_off, y_off, blit_opts)
     local f_sz = f_sz * blit_opts.scale_y -- height only, cannot stretch width
     AddTextEx(draw_list, f_inst, f_sz,
-      screen_x + x, screen_y + y, c, str, 0, 0,
-      right and right - x or nil, bottom and bottom - y or nil)
+              screen_x + x + x_off, screen_y + y + y_off, c, str, 0,
+              screen_x + x, screen_y + y,
+              right and screen_x + (right * blit_opts.scale_x) // 1,
+              bottom and screen_y + (bottom * blit_opts.scale_y) // 1)
   end)
   return 0
 end
