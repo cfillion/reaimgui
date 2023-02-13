@@ -23,9 +23,10 @@
 -- reaper.defer(loop)
 --
 -- Configuration variables (set before including gfx2imgui)
+-- GFX2IMGUI_DEBUG = false
+-- GFX2IMGUI_NO_BLIT_PREMULTIPLY = false
 -- GFX2IMGUI_NO_LOG = false
 -- GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE = 8
--- GFX2IMGUI_NO_BLIT_PREMULTIPLY = false
 
 local ImGui = {}
 for name, func in pairs(reaper) do
@@ -125,6 +126,7 @@ local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
 local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 local THROTTLE_FONT_LOADING_FRAMES = 16
 local BLIT_NO_PREMULTIPLY = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
+local DEBUG = GFX2IMGUI_DEBUG or false
 
 -- gfx.mode bits
 local BLIT_NO_SOURCE_ALPHA = 2
@@ -357,6 +359,7 @@ local function warn(message, ...)
   global_state.log_lines[#global_state.log_lines + 1] = warnLine
 
   local depth, callerInfo = 3, nil
+  if DEBUG then depth = depth + 1 end -- skip xpcall()
   repeat
     callerInfo = debug.getinfo(depth, 'nSl')
     depth = depth + 1
@@ -1401,6 +1404,21 @@ function gfx.update()
 
   ImGui.End(state.ctx)
   return 0
+end
+
+if DEBUG then
+  local function errorHandler(status, err, ...)
+    if not status then error(err) end
+    return err, ...
+  end
+
+  for key, value in pairs(gfx) do
+    if type(value) == 'function' then
+      gfx[key] = function(...)
+        return errorHandler(xpcall(value, debug.traceback, ...))
+      end
+    end
+  end
 end
 
 return gfx
