@@ -131,6 +131,15 @@ local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 local THROTTLE_FONT_LOADING_FRAMES = 16
 local BLIT_NO_PREMULTIPLY = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
 local DEBUG = GFX2IMGUI_DEBUG or false
+local PROFILE = GFX2IMGUI_PROFILE or false
+
+local profiler
+if PROFILE then
+  -- https://github.com/charlesmallah/lua-profiler
+  profiler = dofile(reaper.GetResourcePath() .. '/Scripts/profiler.lua')
+  profiler.attachPrintFunction(reaper.ShowConsoleMsg)
+  profiler.configuration({ fW = 60 })
+end
 
 -- gfx.mode bits
 local BLIT_NO_SOURCE_ALPHA = 2
@@ -1410,6 +1419,22 @@ function gfx.update()
       x1=0, y1=0, x2=gfx.w, y2=gfx.h,
     }
     render(commands, draw_list, state.screen_x, state.screen_y, blit_opts)
+  end
+
+  if PROFILE then
+    ImGui.SetCursorPos(state.ctx, 0, 0)
+    if type(PROFILE) == 'number' then
+      PROFILE = PROFILE - 1
+      local label = ('Profiling (%d)...'):format(PROFILE)
+      if ImGui.Button(state.ctx, label) or PROFILE == 0 then
+        profiler.stop()
+        profiler.report(reaper.GetResourcePath() .. '/Scripts/profiler.log')
+        PROFILE = true
+      end
+    elseif ImGui.Button(state.ctx, 'Start profiler') then
+      PROFILE = 60
+      profiler.start()
+    end
   end
 
   ImGui.End(state.ctx)
