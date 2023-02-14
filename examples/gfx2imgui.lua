@@ -126,14 +126,19 @@ local FONT_FLAGS = {
 }
 local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
+local QUARTER_CIRCLE = math.pi / 2
 
 -- settings
-local BLIT_NO_PREMULTIPLY = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
-local DEBUG = GFX2IMGUI_DEBUG or false
-local MAX_DRAW_CALLS = GFX2IMGUI_MAX_DRAW_CALLS or 1<<12
-local PROFILE = GFX2IMGUI_PROFILE or false
+local BLIT_NO_PREMULTIPLY          = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
+local DEBUG                        = GFX2IMGUI_DEBUG               or false
+local NO_LOG                       = GFX2IMGUI_NO_LOG              or false
+local MAX_DRAW_CALLS               = GFX2IMGUI_MAX_DRAW_CALLS      or 1<<13
+local PROFILE                      = GFX2IMGUI_PROFILE             or false
 local THROTTLE_FONT_LOADING_FRAMES = 16
-local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
+local UNUSED_FONTS_CACHE_SIZE      = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
+
+-- gfx.mode bits
+local BLIT_NO_SOURCE_ALPHA = 2
 
 local profiler
 if PROFILE then
@@ -143,8 +148,18 @@ if PROFILE then
   profiler.configuration({ fW = 60 })
 end
 
--- gfx.mode bits
-local BLIT_NO_SOURCE_ALPHA = 2
+local DL_AddCircle               = ImGui.DrawList_AddCircle
+local DL_AddCircleFilled         = ImGui.DrawList_AddCircleFilled
+local DL_AddConvexPolyFilled     = ImGui.DrawList_AddConvexPolyFilled
+local DL_AddImage                = ImGui.DrawList_AddImage
+local DL_AddLine                 = ImGui.DrawList_AddLine
+local DL_AddRect                 = ImGui.DrawList_AddRect
+local DL_AddRectFilled           = ImGui.DrawList_AddRectFilled
+local DL_AddRectFilledMultiColor = ImGui.DrawList_AddRectFilledMultiColor
+local DL_AddTextEx               = ImGui.DrawList_AddTextEx
+local DL_AddTriangleFilled       = ImGui.DrawList_AddTriangleFilled
+local DL_PathArcTo               = ImGui.DrawList_PathArcTo
+local DL_PathStroke              = ImGui.DrawList_PathStroke
 
 local gfx, global_state, state = {}, {
   commands   = {},
@@ -167,11 +182,16 @@ local function toint(v)
   return v // 1 -- faster than floor
 end
 
-local function ringInsert(buffer, value)
-  buffer[buffer.ptr] = value
-  buffer.ptr = (buffer.ptr + 1) % buffer.max_size
+local function ringReserve(buffer)
+  local ptr = buffer.ptr
+  buffer.ptr = (ptr + 1) % buffer.max_size
   buffer.size = buffer.size + 1
   if buffer.size > buffer.max_size then buffer.size = buffer.max_size end
+  return ptr
+end
+
+local function ringInsert(buffer, value)
+  buffer[ringReserve(buffer)] = value
 end
 
 local function ringEnum(buffer)
@@ -188,7 +208,7 @@ local function ringEnum(buffer)
   end
 end
 
-local function drawCall(command)
+local function drawCall(...)
   local list = global_state.commands[gfx.dest]
   if not list then
     list = { ptr=0, size=0, max_size=MAX_DRAW_CALLS }
@@ -197,12 +217,31 @@ local function drawCall(command)
     list.size, list.ptr, list.want_clear = 0, 0, false
   end
 
-  ringInsert(list, command)
+  local ptr = ringReserve(list)
+  local c = list[ptr]
+
+  if not c then
+    -- pre-allocate the maximum size w/o no nil gaps
+    -- IF SIZE CHANGES: also update copy code in gfx.blit!
+    c = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
+    list[ptr] = c
+  end
+
+  -- faster than looping over select('#', ...) or creating a new table
+  c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11] = ...
+
+  if DEBUG then
+    assert(type((...)) == 'function', 'uncallable draw command')
+    assert(select('#', ...) <= 11)
+  end
+
+  return 0
 end
 
 local function render(commands, draw_list, screen_x, screen_y, blit_opts)
-  for command in ringEnum(commands) do
-    command(draw_list, screen_x, screen_y, blit_opts)
+  for c in ringEnum(commands) do
+    c[1](draw_list, screen_x, screen_y, blit_opts,
+         c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11])
   end
   commands.want_clear = true
 end
@@ -354,7 +393,7 @@ local function updateDropFiles()
 end
 
 local function warn(message, ...)
-  if GFX2IMGUI_NO_LOG then return end
+  if NO_LOG then return end
 
   local funcInfo = debug.getinfo(2, 'nSl')
   local warnLine = funcInfo.currentline
@@ -611,50 +650,48 @@ local function uniq2D(points)
   return j - 1
 end
 
-local function drawPixel(x, y, c)
-  local AddRectFilled = ImGui.DrawList_AddRectFilled
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local c = transformColor(c, blit_opts)
-    local x, y = transformPoint(x, y, blit_opts)
-    x, y = screen_x + x, screen_y + y
-    local w, h = transformPoint(1, 1, blit_opts)
-    AddRectFilled(draw_list, x, y, x + w, y + h, c)
-  end)
-
-  return 0
+local function drawPixel(draw_list, screen_x, screen_y, blit_opts, x, y, c)
+  c = transformColor(c, blit_opts)
+  x, y = transformPoint(x, y, blit_opts)
+  x, y = screen_x + x, screen_y + y
+  w, h = transformPoint(1, 1, blit_opts)
+  DL_AddRectFilled(draw_list, x, y, x + w, y + h, c)
 end
 
-local function drawLine(x1, y1, x2, y2, c)
-  local AddLine = ImGui.DrawList_AddLine
-  local AddRectFilled = ImGui.DrawList_AddRectFilled
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local c = transformColor(c, blit_opts)
+local function addPixel(x, y, c)
+  return drawCall(drawPixel, x, y, c)
+end
 
-    -- workarounds to avoid gaps due to rounding in vertical/horizontal lines
-    local scaled = blit_opts.scale_x ~= 1 and blit_opts.scale_y ~= 1
-    if scaled and (x1 == x2 or y1 == y2) then
-      local x1, y1 = screen_x + (x1 * blit_opts.scale_x),
-                     screen_y + (y1 * blit_opts.scale_y)
-      local x2, y2 = screen_x + (x2 * blit_opts.scale_x),
-                     screen_y + (y2 * blit_opts.scale_y)
-      if x1 == x2 then
-        x2 = x2 + blit_opts.scale_x
-      elseif y1 == y2 then
-        y2 = y2 + blit_opts.scale_y
-      end
+local function drawLine(draw_list, screen_x, screen_y, blit_opts,
+                        x1, y1, x2, y2, c)
+  c = transformColor(c, blit_opts)
 
-      AddRectFilled(draw_list, x1, y1, x2, y2, c)
-      return
+  -- workarounds to avoid gaps due to rounding in vertical/horizontal lines
+  local scaled = blit_opts.scale_x ~= 1 and blit_opts.scale_y ~= 1
+  if scaled and (x1 == x2 or y1 == y2) then
+    x1, y1 = screen_x + (x1 * blit_opts.scale_x),
+                  screen_y + (y1 * blit_opts.scale_y)
+    x2, y2 = screen_x + (x2 * blit_opts.scale_x),
+                  screen_y + (y2 * blit_opts.scale_y)
+    if x1 == x2 then
+      x2 = x2 + blit_opts.scale_x
+    elseif y1 == y2 then
+      y2 = y2 + blit_opts.scale_y
     end
 
-    local x1, y1 = transformPoint(x1, y1, blit_opts)
-    local x2, y2 = transformPoint(x2, y2, blit_opts)
-    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-    AddLine(draw_list, x1, y1, x2, y2, c,
-      (blit_opts.scale_x + blit_opts.scale_y) / 2)
-  end)
+    DL_AddRectFilled(draw_list, x1, y1, x2, y2, c)
+    return
+  end
 
-  return 0
+  local x1, y1 = transformPoint(x1, y1, blit_opts)
+  local x2, y2 = transformPoint(x2, y2, blit_opts)
+  x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
+  DL_AddLine(draw_list, x1, y1, x2, y2, c,
+            (blit_opts.scale_x + blit_opts.scale_y) / 2)
+end
+
+local function addLine(x1, y1, x2, y2, c)
+  return drawCall(drawLine, x1, y1, x2, y2, c)
 end
 
 -- default variables
@@ -722,20 +759,41 @@ setmetatable(gfx, {
   end,
 })
 
+local function drawArc(draw_list, screen_x, screen_y, blit_opts,
+                       x, y, r, c, ang1, ang2)
+  local c = transformColor(c, blit_opts)
+  local r = r * blit_opts.scale_y -- FIXME: scale_x
+  local x, y = transformPoint(x, y, blit_opts)
+  DL_PathArcTo(draw_list, screen_x + x, screen_y + y, r, ang1, ang2)
+  DL_PathStroke(draw_list, c)
+end
+
 function gfx.arc(x, y, r, ang1, ang2, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
-  local c, quarter = color(), math.pi / 2
-  x, y, ang1, ang2 = toint(x) + 1, toint(y), ang1 - quarter, ang2 - quarter
-  local PathArcTo  = ImGui.DrawList_PathArcTo
-  local PathStroke = ImGui.DrawList_PathStroke
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local c = transformColor(c, blit_opts)
-    local r = r * blit_opts.scale_y -- FIXME: scale_x
-    local x, y = transformPoint(x, y, blit_opts)
-    PathArcTo(draw_list, screen_x + x, screen_y + y, r, ang1, ang2)
-    PathStroke(draw_list, c)
-  end)
-  return 0
+  return drawCall(drawArc, toint(x) + 1, toint(y), r, color(),
+                  ang1 - QUARTER_CIRCLE, ang2 - QUARTER_CIRCLE)
+end
+
+local function drawBlit(draw_list, screen_x, screen_y, dst_blit,
+                        srcx, srcy, destx, desty, destw, desth,
+                        src_blit, commands, sourceCommands)
+  destx, desty = transformPoint(destx, desty, dst_blit)
+  destw, desth = transformPoint(destw, desth, dst_blit)
+
+  if not clip(destx, desty, destx + destw, desty + desth, dst_blit) then
+    local merged_blit = mergeBlitOpts(src_blit, dst_blit)
+    srcx, srcy = transformPoint(srcx,  srcy,  src_blit)
+    merged_blit.x1, merged_blit.y1 = srcx, srcy
+    merged_blit.x2, merged_blit.y2 = srcx + destw, srcy + desth
+
+    local x1, y1 = screen_x + destx, screen_y + desty
+    local x2, y2 = x1 + destw, y1 + desth
+    ImGui.DrawList_PushClipRect(draw_list, x1, y1, x2, y2, true)
+    render(commands, draw_list, x1 - srcx, y1 - srcy, merged_blit)
+    ImGui.DrawList_PopClipRect(draw_list)
+  end
+
+  sourceCommands.want_clear = true
 end
 
 function gfx.blit(source, ...)
@@ -777,7 +835,9 @@ function gfx.blit(source, ...)
 
   local commands = { ptr=0, size=0, max_size=sourceCommands.size }
   for c in ringEnum(sourceCommands) do
-    ringInsert(commands, c)
+    -- make an immutable copy
+    ringInsert(commands,
+      { c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11] })
   end
 
   local src_blit = {
@@ -787,25 +847,8 @@ function gfx.blit(source, ...)
     scale_y = srch ~= 0 and desth / srch or 1,
   }
 
-  drawCall(function(draw_list, screen_x, screen_y, dst_blit)
-    local destx, desty = transformPoint(destx, desty, dst_blit)
-    local destw, desth = transformPoint(destw, desth, dst_blit)
-
-    if not clip(destx, desty, destx + destw, desty + desth, dst_blit) then
-      local merged_blit = mergeBlitOpts(src_blit, dst_blit)
-      local srcx, srcy  = transformPoint(srcx,  srcy,  src_blit)
-      merged_blit.x1, merged_blit.y1 = srcx, srcy
-      merged_blit.x2, merged_blit.y2 = srcx + destw, srcy + desth
-
-      local x1, y1 = screen_x + destx, screen_y + desty
-      local x2, y2 = x1 + destw, y1 + desth
-      ImGui.DrawList_PushClipRect(draw_list, x1, y1, x2, y2, true)
-      render(commands, draw_list, x1 - srcx, y1 - srcy, merged_blit)
-      ImGui.DrawList_PopClipRect(draw_list)
-    end
-
-    sourceCommands.want_clear = true
-  end)
+  drawCall(drawBlit, srcx, srcy, destx, desty, destw, desth,
+           src_blit, commands, sourceCommands)
 
   return source
 end
@@ -820,19 +863,18 @@ function gfx.blurto()
   -- return x
 end
 
+local function drawCircle(draw_list, screen_x, screen_y, blit_opts,
+                          circleFunc, x, y, r, c)
+  c = transformColor(c, blit_opts)
+  x, y = transformPoint(x, y, blit_opts)
+  r = r * blit_opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
+  circleFunc(draw_list, screen_x + x + .5, screen_y + y + .5, r + .5, c)
+end
+
 function gfx.circle(x, y, r, fill, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
-  local c = color()
-  x, y, r = toint(x), toint(y), toint(r)
-  local AddCircle = tobool(fill, false) and
-    ImGui.DrawList_AddCircleFilled or ImGui.DrawList_AddCircle
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local c = transformColor(c, blit_opts)
-    local x, y = transformPoint(x, y, blit_opts)
-    local r = r * blit_opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
-    AddCircle(draw_list, screen_x + x + .5, screen_y + y + .5, r + .5, c)
-  end)
-  return 0
+  local circleFunc = tobool(fill, false) and DL_AddCircleFilled or DL_AddCircle
+  return drawCall(drawCircle, circleFunc, toint(x), toint(y), toint(r), color())
 end
 
 function gfx.clienttoscreen(x, y)
@@ -873,6 +915,31 @@ function gfx.drawnumber(n, ndigits)
   return n
 end
 
+local function drawString(draw_list, screen_x, screen_y, blit_opts,
+                          c, str, size, x, x_off, y, y_off, right, bottom, font)
+  -- search for a new font as the draw call may have been stored for a
+  -- long time in an offscreen buffer while the font instance got detached
+  -- or the script may have re-created the context with gfx.quit+gfx.init
+  if font.cache and not font.cache.attached then
+    font.cache, font.inst = getNearestCachedFont(f)
+  end
+
+  -- keep the font alive while the draw call is still in use (eg. from a blit)
+  if font.cache then
+    font.cache.last_use = state.frame_count
+  end
+
+  c = transformColor(c, blit_opts)
+  x, y = transformPoint(x, y, blit_opts)
+  x_off, y_off = transformPoint(x_off, y_off, blit_opts)
+  size = size * blit_opts.scale_y -- height only, cannot stretch width
+  DL_AddTextEx(draw_list, font.inst, size,
+               screen_x + x + x_off, screen_y + y + y_off, c, str, 0,
+               screen_x + x, screen_y + y,
+               right and screen_x + (right * blit_opts.scale_x) // 1,
+               bottom and screen_y + (bottom * blit_opts.scale_y) // 1)
+end
+
 function gfx.drawstr(str, flags, right, bottom)
   if not state then return end
   str = str or FALLBACK_STRING
@@ -894,31 +961,9 @@ function gfx.drawstr(str, flags, right, bottom)
     if (flags & 256) ~= 0 then right, bottom = nil, nil end -- disable clipping
   end
 
-  local AddTextEx = ImGui.DrawList_AddTextEx
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    -- search for a new font as the draw call may have been stored for a
-    -- long time in an offscreen buffer while the font instance got detached
-    -- or the script may have re-created the context with gfx.quit+gfx.init
-    if f_cache and not f_cache.attached then
-      f_cache, f_inst = getNearestCachedFont(f)
-    end
-
-    -- keep the font alive while the draw call is still in use (eg. from a blit)
-    if f_cache then
-      f_cache.last_use = state.frame_count
-    end
-
-    local c = transformColor(c, blit_opts)
-    local x, y = transformPoint(x, y, blit_opts)
-    local x_off, y_off = transformPoint(x_off, y_off, blit_opts)
-    local f_sz = f_sz * blit_opts.scale_y -- height only, cannot stretch width
-    AddTextEx(draw_list, f_inst, f_sz,
-              screen_x + x + x_off, screen_y + y + y_off, c, str, 0,
-              screen_x + x, screen_y + y,
-              right and screen_x + (right * blit_opts.scale_x) // 1,
-              bottom and screen_y + (bottom * blit_opts.scale_y) // 1)
-  end)
-  return 0
+  -- passing f_{cache,inst} as a table to be read/writeable
+  return drawCall(drawString, c, str, f_sz, x, x_off, y, y_off, right, bottom,
+                  { cache = f_cache, inst = f_inst })
 end
 
 function gfx.getchar(char)
@@ -973,6 +1018,18 @@ function gfx.getpixel()
   return 0
 end
 
+local function drawGradRect(draw_list, screen_x, screen_y, blit_opts,
+                            x1, y1, x2, y2, ctl, ctr, cbr, cbl)
+  ctl, ctr, cbr, cbl = transformColor(ctl, blit_opts),
+                       transformColor(ctr, blit_opts),
+                       transformColor(cbr, blit_opts),
+                       transformColor(cbl, blit_opts)
+  x1, y1 = transformPoint(x1,     y1,     blit_opts)
+  x2, y2 = transformPoint(x2, y2, blit_opts)
+  x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
+  DL_AddRectFilledMultiColor(draw_list, x1, y1, x2, y2, ctl, ctr, cbr, cbl)
+end
+
 function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy, dbdy, dady)
   -- FIXME: support colors growing to > 1 or < 0 before the end of the rect
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
@@ -985,26 +1042,16 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
   local cbl = color(r + drdy, g + dgdy, b + dbdy, a + dady)
   local cbr = color(r + drdx + drdy, g + dgdx + dgdy,
                     b + dbdx + dbdy, a + dadx + dady)
-  local AddRectFilledMultiColor = ImGui.DrawList_AddRectFilledMultiColor
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local ctl, ctr, cbr, cbl = transformColor(ctl, blit_opts),
-                               transformColor(ctr, blit_opts),
-                               transformColor(cbr, blit_opts),
-                               transformColor(cbl, blit_opts)
-    local x1, y1 = transformPoint(x,     y,     blit_opts)
-    local x2, y2 = transformPoint(x + w, y + h, blit_opts)
-    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-    AddRectFilledMultiColor(draw_list, x1, y1, x2, y2, ctl, ctr, cbr, cbl)
-  end)
-  return 0
+  return drawCall(drawGradRect, x, y, x + w, y + h, ctl, ctr, cbr, cbl)
+end
+
+local function drawImGui(draw_list, screen_x, screen_y, blit_opts, callback, x, y)
+  ImGui.SetCursorScreenPos(state.ctx, screen_x + x, screen_y + y)
+  callback(state.ctx, draw_list, screen_x, screen_y, blit_opts)
 end
 
 function gfx.imgui(callback)
-  local x, y = toint(gfx.x), toint(gfx.y)
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    ImGui.SetCursorScreenPos(state.ctx, screen_x + x, screen_y + y)
-    callback(state.ctx, draw_list, screen_x, screen_y, blit_opts)
-  end)
+  return drawCall(drawImGui, callback, toint(gfx.x), toint(gfx.y))
 end
 
 function gfx.init(name, width, height, dockstate, xpos, ypos)
@@ -1068,9 +1115,9 @@ function gfx.line(x1, y1, x2, y2, aa)
   -- gfx.line(10, 30, 10, 30)
   if x1 == x2 and y1 == y2 then
     -- faster than 1px lines according to dear imgui
-    return drawPixel(x1, y1, color())
+    return addPixel(x1, y1, color())
   else
-    return drawLine(x1, y1, x2, y2, color())
+    return addLine(x1, y1, x2, y2, color())
   end
 end
 
@@ -1078,6 +1125,27 @@ function gfx.lineto(x, y, aa)
   gfx.line(gfx.x, gfx.y, x, y, aa)
   gfx.x, gfx.y = x, y
   return x
+end
+
+local function drawImage(draw_list, screen_x, screen_y, blit_opts,
+                         filename, imageState, x, y, w, h)
+  if not imageState.attached then
+    -- could not attach before in loadimg, as it can be called before gfx.init
+    if not ImGui.ValidatePtr(imageState.inst, 'ImGui_Image*') then
+      imageState.inst = ImGui.CreateImage(filename)
+    end
+    ImGui.Attach(state.ctx, imageState.inst)
+    imageState.attached = true
+  end
+
+  w, h = transformPoint(w, h, blit_opts)
+  local uv0_x, uv0_y = blit_opts.x1 / w, blit_opts.y1 / h
+  local uv1_x, uv1_y = blit_opts.x2 / w, blit_opts.y2 / h
+
+  DL_AddImage(draw_list, imageState.inst,
+    screen_x + blit_opts.x1, screen_y + blit_opts.y1,
+    screen_x + blit_opts.x2, screen_y + blit_opts.y2,
+    uv0_x, uv0_y, uv1_x, uv1_y)
 end
 
 function gfx.loadimg(image, filename)
@@ -1091,44 +1159,24 @@ function gfx.loadimg(image, filename)
   local w, h = ImGui.Image_GetSize(bitmap)
   gfx.setimgdim(image, w, h)
 
-  local data = global_state.images[image]
-  if data.inst and state then
-    ImGui.Detach(state.ctx, data.inst)
+  local imageState = global_state.images[image] -- initialized by setimgdim
+  if imageState.inst and state then
+    ImGui.Detach(state.ctx, imageState.inst)
   end
 
-  local attached = false
-  local attach = function()
-    data.inst = bitmap
-    ImGui.Attach(state.ctx, data.inst)
-    attached = true
+  imageState.inst = bitmap
+  if state then
+    ImGui.Attach(state.ctx, imageState.inst)
+    imageState.attached = true
+  else
+    imageState.attached = false
   end
-  if state then attach() end
 
   local dest_backup = gfx.dest
   gfx.dest = image
   local commands = global_state.commands[gfx.dest]
   if commands then commands.want_clear = true end
-
-  local AddImage = ImGui.DrawList_AddImage
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    if not attached then
-      -- could not attach before in loadimg, as it can be called before gfx.init
-      if not ImGui.ValidatePtr(bitmap, 'ImGui_Image*') then
-        bitmap = ImGui.CreateImage(filename)
-      end
-      attach()
-    end
-
-    local w, h = transformPoint(w, h, blit_opts)
-    local uv0_x, uv0_y = blit_opts.x1 / w, blit_opts.y1 / h
-    local uv1_x, uv1_y = blit_opts.x2 / w, blit_opts.y2 / h
-
-    ImGui.DrawList_AddImage(draw_list, bitmap,
-      screen_x + blit_opts.x1, screen_y + blit_opts.y1,
-      screen_x + blit_opts.x2, screen_y + blit_opts.y2,
-      uv0_x, uv0_y, uv1_x, uv1_y)
-  end)
-
+  drawCall(drawImage, filename, imageState, x, y, w, h)
   gfx.dest = dest_backup
 
   return image
@@ -1180,20 +1228,20 @@ function gfx.quit()
   return 0
 end
 
+local function drawRect(draw_list, screen_x, screen_y, blit_opts,
+                        rectFunc, x1, y1, x2, y2, c)
+  c = transformColor(c, blit_opts)
+  x1, y1 = transformPoint(x1, y1, blit_opts)
+  x2, y2 = transformPoint(x2, y2, blit_opts)
+  -- FIXME: scale thickness
+  x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
+  rectFunc(draw_list, x1, y1, x2, y2, c)
+end
+
 function gfx.rect(x, y, w, h, filled)
-  local c = color()
-  local AddRect = tobool(filled, true) and
-    ImGui.DrawList_AddRectFilled or ImGui.DrawList_AddRect
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local c = transformColor(c, blit_opts)
-    local x1, y1 = transformPoint(x,     y,     blit_opts)
-    local x2, y2 = transformPoint(x + w, y + h, blit_opts)
-    -- FIXME: scale thickness
-    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-    AddRect(draw_list, x1, y1, x2, y2, c)
-  end)
-  return 0
+  local rectFunc = tobool(filled, true) and DL_AddRectFilled or DL_AddRect
+  return drawCall(drawRect, rectFunc, x, y, x + w, y + h, color())
 end
 
 function gfx.rectto(x, y)
@@ -1202,21 +1250,21 @@ function gfx.rectto(x, y)
   return x
 end
 
+local function drawRoundRect(draw_list, screen_x, screen_y, blit_opts,
+                    x1, y1, x2, y2, c, radius)
+  c = transformColor(c, blit_opts)
+  radius = radius * blit_opts.scale_y -- FIXME: scale_x
+  x1, y1 = transformPoint(x1, y1, blit_opts)
+  x2, y2 = transformPoint(x2, y2, blit_opts)
+  -- FIXME: scale thickness
+  x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
+  DL_AddRect(draw_list, x1, y1, x2 + 1, y2 + 1, c, radius, ROUND_CORNERS)
+end
+
 function gfx.roundrect(x, y, w, h, radius, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
-  local c = color()
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  local AddRect = ImGui.DrawList_AddRect
-  drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-    local c = transformColor(c, blit_opts)
-    local radius = radius * blit_opts.scale_y -- FIXME: scale_x
-    local x1, y1 = transformPoint(x,     y,     blit_opts)
-    local x2, y2 = transformPoint(x + w, y + h, blit_opts)
-    -- FIXME: scale thickness
-    x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-    AddRect(draw_list, x1, y1, x2 + 1, y2 + 1, c, radius, ROUND_CORNERS)
-  end)
-  return 0
+  return drawCall(drawRoundRect, x, y, x + w, y + h, color(), radius)
 end
 
 function gfx.screentoclient(x, y)
@@ -1321,7 +1369,7 @@ function gfx.setimgdim(image, w, h)
 end
 
 function gfx.setpixel(r, g, b)
-  drawPixel(gfx.x, gfx.y, color(r, g, b, 1))
+  addPixel(gfx.x, gfx.y, color(r, g, b, 1))
   return r
 end
 
@@ -1352,6 +1400,39 @@ function gfx.transformblit()
   return 0
 end
 
+local function drawTriangle6(draw_list, screen_x, screen_y, blit_opts,
+                             points, center_x, center_y, c)
+  c = transformColor(c, blit_opts)
+  local x1, y1 = transformPoint(points[1], points[2], blit_opts)
+  local x2, y2 = transformPoint(points[3], points[4], blit_opts)
+  local x3, y3 = transformPoint(points[5], points[6], blit_opts)
+  if points[1] > center_x then x1 = x1 + 1 end
+  if points[2] > center_y then y1 = y1 + 1 end
+  if points[3] > center_x then x2 = x2 + 1 end
+  if points[4] > center_y then y2 = y2 + 1 end
+  if points[5] > center_x then x3 = x3 + 1 end
+  if points[6] > center_y then y3 = y3 + 1 end
+  DL_AddTriangleFilled(draw_list,
+    screen_x + x1, screen_y + y1,
+    screen_x + x2, screen_y + y2,
+    screen_x + x3, screen_y + y3, c)
+end
+
+local function drawTriangleN(draw_list, screen_x, screen_y, blit_opts,
+                             points, screen_points, n_coords,
+                             center_x, center_y, c)
+  c = transformColor(c, blit_opts)
+  for i = 1, n_coords, 2 do
+    screen_points[i], screen_points[i + 1] =
+      transformPoint(points[i], points[i + 1], blit_opts)
+    screen_points[i], screen_points[i + 1] =
+      screen_x + screen_points[i], screen_y + screen_points[i + 1]
+    if points[i]     > center_x then screen_points[i]     = screen_points[i]     + 1 end
+    if points[i + 1] > center_y then screen_points[i + 1] = screen_points[i + 1] + 1 end
+  end
+  DL_AddConvexPolyFilled(draw_list, screen_points, c)
+end
+
 function gfx.triangle(...)
   local c, n_coords = color(), select('#', ...)
   assert(n_coords >= 6, 'gfx.triangle requires 6 or more parameters')
@@ -1373,46 +1454,17 @@ function gfx.triangle(...)
 
   if n_coords == 2 then
     -- gfx.triangle(0,33, 0,33, 0,33, 0,33)
-    return drawPixel(points[1], points[2], c)
+    return addPixel(points[1], points[2], c)
   elseif n_coords == 4 then
     -- gfx.triangle(0,33, 0,0, 0,33, 0,33)
-    return drawLine(points[1], points[2], points[3], points[4], c)
+    return addLine(points[1], points[2], points[3], points[4], c)
   elseif n_coords == 6 then
-    local AddTriangleFilled = ImGui.DrawList_AddTriangleFilled
-    drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-      local c = transformColor(c, blit_opts)
-      local x1, y1 = transformPoint(points[1], points[2], blit_opts)
-      local x2, y2 = transformPoint(points[3], points[4], blit_opts)
-      local x3, y3 = transformPoint(points[5], points[6], blit_opts)
-      if points[1] > center_x then x1 = x1 + 1 end
-      if points[2] > center_y then y1 = y1 + 1 end
-      if points[3] > center_x then x2 = x2 + 1 end
-      if points[4] > center_y then y2 = y2 + 1 end
-      if points[5] > center_x then x3 = x3 + 1 end
-      if points[6] > center_y then y3 = y3 + 1 end
-      AddTriangleFilled(draw_list,
-        screen_x + x1, screen_y + y1,
-        screen_x + x2, screen_y + y2,
-        screen_x + x3, screen_y + y3, c)
-    end)
+    return drawCall(drawTriangle6, points, center_x, center_y, c)
   else
-    local AddConvexPolyFilled = ImGui.DrawList_AddConvexPolyFilled
     local screen_points = reaper.new_array(n_coords)
-    drawCall(function(draw_list, screen_x, screen_y, blit_opts)
-      local c = transformColor(c, blit_opts)
-      for i = 1, n_coords, 2 do
-        screen_points[i], screen_points[i + 1] =
-          transformPoint(points[i], points[i + 1], blit_opts)
-        screen_points[i], screen_points[i + 1] =
-          screen_x + screen_points[i], screen_y + screen_points[i + 1]
-        if points[i]     > center_x then screen_points[i]     = screen_points[i]     + 1 end
-        if points[i + 1] > center_y then screen_points[i + 1] = screen_points[i + 1] + 1 end
-      end
-      AddConvexPolyFilled(draw_list, screen_points, c)
-    end)
+    return drawCall(drawTriangleN, points, screen_points, n_coords,
+                    center_x, center_y, c)
   end
-
-  return 0
 end
 
 function gfx.update()
