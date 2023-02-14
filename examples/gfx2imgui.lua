@@ -127,6 +127,7 @@ local FONT_FLAGS = {
 local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
 local QUARTER_CIRCLE = math.pi / 2
+local INFINITY = math.huge
 
 -- settings
 local BLIT_NO_PREMULTIPLY          = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
@@ -178,7 +179,7 @@ local function tobool(v, default)
 end
 
 local function toint(v)
-  if not v or v ~= v or v == math.huge or -v == math.huge then return 0 end
+  if not v or v ~= v or v == INFINITY or -v == INFINITY then return 0 end
   return v // 1 -- faster than floor
 end
 
@@ -246,9 +247,15 @@ local function render(commands, draw_list, screen_x, screen_y, blit_opts)
   commands.want_clear = true
 end
 
-local function color(r, g, b, a)
-  r, g, b, a = r or gfx.r or 0, g or gfx.g or 0,
-               b or gfx.b or 0, a or gfx.a or 0
+local function makeColor(r, g, b, a)
+  return ((r * 0xFF) // 1) << 24 |
+         ((g * 0xFF) // 1) << 16 |
+         ((b * 0xFF) // 1) << 8  |
+        (((a * 0xFF) // 1) & 0xFF)
+end
+
+local function color()
+  local r, g, b, a = gfx.r, gfx.g, gfx.b, gfx.a
   if r > 1 then r = 1 elseif r < 0 then r = 0 end
   if g > 1 then g = 1 elseif g < 0 then g = 0 end
   if b > 1 then b = 1 elseif b < 0 then b = 0 end
@@ -256,10 +263,7 @@ local function color(r, g, b, a)
     -- gfx does not clamp alpha when blitting (it wraps around)
     if a > 1 then a = 1 elseif a < 0 then a = 0 end
   end
-  return toint(r * 0xFF) << 24 |
-         toint(g * 0xFF) << 16 |
-         toint(b * 0xFF) << 8  |
-        (toint(a * 0xFF) & 0xFF)
+  return makeColor(r, g, b, a)
 end
 
 local function transformColor(c, blit_opts)
@@ -1037,11 +1041,11 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
                            w * (dbdx or 0), w * (dadx or 0)
   drdy, dgdy, dbdy, dady = h * (drdy or 0), h * (dgdy or 0),
                            h * (dbdy or 0), h * (dady or 0)
-  local ctl = color(r, g, b, a)
-  local ctr = color(r + drdx, g + dgdx, b + dbdx, a + dadx)
-  local cbl = color(r + drdy, g + dgdy, b + dbdy, a + dady)
-  local cbr = color(r + drdx + drdy, g + dgdx + dgdy,
-                    b + dbdx + dbdy, a + dadx + dady)
+  local ctl = makeColor(r, g, b, a)
+  local ctr = makeColor(r + drdx, g + dgdx, b + dbdx, a + dadx)
+  local cbl = makeColor(r + drdy, g + dgdy, b + dbdy, a + dady)
+  local cbr = makeColor(r + drdx + drdy, g + dgdx + dgdy,
+                        b + dbdx + dbdy, a + dadx + dady)
   return drawCall(drawGradRect, x, y, x + w, y + h, ctl, ctr, cbr, cbl)
 end
 
@@ -1369,7 +1373,7 @@ function gfx.setimgdim(image, w, h)
 end
 
 function gfx.setpixel(r, g, b)
-  addPixel(gfx.x, gfx.y, color(r, g, b, 1))
+  addPixel(gfx.x, gfx.y, makeColor(r, g, b, 1))
   return r
 end
 
