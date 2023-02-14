@@ -24,6 +24,7 @@
 --
 -- Configuration variables (set before including gfx2imgui)
 -- GFX2IMGUI_DEBUG = false
+-- GFX2IMGUI_MAX_DRAW_CALLS = 4096
 -- GFX2IMGUI_NO_BLIT_PREMULTIPLY = false
 -- GFX2IMGUI_NO_LOG = false
 -- GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE = 8
@@ -127,11 +128,12 @@ local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
 
 -- settings
-local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
-local THROTTLE_FONT_LOADING_FRAMES = 16
 local BLIT_NO_PREMULTIPLY = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
 local DEBUG = GFX2IMGUI_DEBUG or false
+local MAX_DRAW_CALLS = GFX2IMGUI_MAX_DRAW_CALLS or 1<<12
 local PROFILE = GFX2IMGUI_PROFILE or false
+local THROTTLE_FONT_LOADING_FRAMES = 16
+local UNUSED_FONTS_CACHE_SIZE = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 
 local profiler
 if PROFILE then
@@ -189,7 +191,7 @@ end
 local function drawCall(command)
   local list = global_state.commands[gfx.dest]
   if not list then
-    list = { ptr=0, size=0, max_size=1<<12 }
+    list = { ptr=0, size=0, max_size=MAX_DRAW_CALLS }
     global_state.commands[gfx.dest] = list
   elseif list.want_clear then
     list.size, list.ptr, list.want_clear = 0, 0, false
