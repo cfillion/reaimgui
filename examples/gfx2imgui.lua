@@ -172,6 +172,15 @@ local gfx, global_state, state = {}, {
   pos_x = 0, pos_y = 0,
 }
 
+-- default variables (see also gfx_vars_initializers)
+local gfx_vars = {
+  r = 1.0, g = 1.0, b = 1.0,
+  w = 0, h = 0, x = 0, y = 0, mode = 0,
+  ext_retina = 0, dest = -1, texth = DEFAULT_FONT_SIZE,
+  mouse_x = 0, mouse_y = 0, clear = 0,
+  mouse_wheel = 0, mouse_hwheel = 0,
+}
+
 -- internal functions
 local function tobool(v, default)
   if default ~= nil and v == nil then return default end
@@ -200,20 +209,19 @@ local function ringEnum(buffer)
 
   local i = 0
   return function()
+    if i >= buffer.size then return nil end
     local j = (buffer.ptr + i) % buffer.size
-    if i < buffer.size then
-      local value = buffer[j]
-      i = i + 1
-      return value
-    end
+    local value = buffer[j]
+    i = i + 1
+    return value
   end
 end
 
 local function drawCall(...)
-  local list = global_state.commands[gfx.dest]
+  local list = global_state.commands[gfx_vars.dest]
   if not list then
     list = { ptr=0, size=0, max_size=MAX_DRAW_CALLS }
-    global_state.commands[gfx.dest] = list
+    global_state.commands[gfx_vars.dest] = list
   elseif list.want_clear then
     list.size, list.ptr, list.want_clear = 0, 0, false
   end
@@ -255,11 +263,13 @@ local function makeColor(r, g, b, a)
 end
 
 local function color()
-  local r, g, b, a = gfx.r, gfx.g, gfx.b, gfx.a
+  -- gfx.a is reset to nil every frame (initialized to 1 on access)
+  -- this is a hot path, accessing gfx.a (calls __index) is too slow here
+  local r, g, b, a = gfx_vars.r, gfx_vars.g, gfx_vars.b, gfx_vars.a or 1
   if r > 1 then r = 1 elseif r < 0 then r = 0 end
   if g > 1 then g = 1 elseif g < 0 then g = 0 end
   if b > 1 then b = 1 elseif b < 0 then b = 0 end
-  if gfx.dest == -1 then
+  if gfx_vars.dest == -1 then
     -- gfx does not clamp alpha when blitting (it wraps around)
     if a > 1 then a = 1 elseif a < 0 then a = 0 end
   end
@@ -324,17 +334,17 @@ local function updateMouse()
   state.hovered = ImGui.IsWindowHovered(state.ctx, HOVERED_FLAGS)
   if state.hovered then -- not over Log window
     local wheel_v, wheel_h = ImGui.GetMouseWheel(state.ctx)
-    gfx.mouse_wheel  = gfx.mouse_wheel  + (wheel_v * MW_TICK)
-    gfx.mouse_hwheel = gfx.mouse_hwheel + (wheel_h * MW_TICK)
+    gfx_vars.mouse_wheel  = gfx_vars.mouse_wheel  + (wheel_v * MW_TICK)
+    gfx_vars.mouse_hwheel = gfx_vars.mouse_hwheel + (wheel_h * MW_TICK)
 
     if state.want_cursor then
       ImGui.SetMouseCursor(state.ctx, state.want_cursor)
     end
   end
 
-  gfx.mouse_x, gfx.mouse_y = ImGui.GetMousePos(state.ctx)
-  gfx.mouse_x, gfx.mouse_y = gfx.mouse_x - state.screen_x,
-                             gfx.mouse_y - state.screen_y
+  gfx_vars.mouse_x, gfx_vars.mouse_y = ImGui.GetMousePos(state.ctx)
+  gfx_vars.mouse_x, gfx_vars.mouse_y = gfx_vars.mouse_x - state.screen_x,
+                                       gfx_vars.mouse_y - state.screen_y
 end
 
 local function updateKeyboard()
@@ -698,15 +708,8 @@ local function addLine(x1, y1, x2, y2, c)
   return drawCall(drawLine, x1, y1, x2, y2, c)
 end
 
--- default variables
-gfx.r, gfx.g, gfx.b = 1, 1, 1
-gfx.w, gfx.h, gfx.x, gfx.y, gfx.mode = 0, 0, 0, 0, 0
-gfx.ext_retina, gfx.dest, gfx.texth  = 0, -1, DEFAULT_FONT_SIZE
-gfx.mouse_x, gfx.mouse_y, gfx.clear  = 0, 0, 0
-gfx.mouse_wheel, gfx.mouse_hwheel    = 0, 0
-
 -- variables to reset on the first access of every frame via gfx.__index
-local builtin_cache, builtin_initializers = {}, {
+local gfx_vars_initializers = {
   a  = function() return 1.0 end,
   a2 = function() return 1.0 end,
 
@@ -739,30 +742,38 @@ local builtin_cache, builtin_initializers = {}, {
   end,
 }
 
--- translation functions
 setmetatable(gfx, {
   __index = function(gfx, key)
-    local val = builtin_cache[key]
+    local val = gfx_vars[key]
     if val then return val end
 
-    local init = builtin_initializers[key]
+    local init = gfx_vars_initializers[key]
     if init then
       val = init()
-      builtin_cache[key] = val
+      gfx_vars[key] = val
       return val
     end
 
     return rawget(gfx, key)
   end,
   __newindex = function(gfx, key, value)
-    if builtin_initializers[key] then
-      builtin_cache[key] = value
+    local t = type(value)
+    if t == 'function' then
+      return rawset(gfx, key, value)
+    elseif t ~= 'number' then
+      -- same behavior as gfx
+      error(('bad argument: expected number, got %s'):format(t))
+    end
+
+    if value ~= value or value == INFINITY or -value == INFINITY then
+      gfx_vars[key] = 0
     else
-      rawset(gfx, key, value)
+      gfx_vars[key] = value
     end
   end,
 })
 
+-- translation functions
 local function drawArc(draw_list, screen_x, screen_y, blit_opts,
                        x, y, r, c, ang1, ang2)
   local c = transformColor(c, blit_opts)
@@ -818,8 +829,8 @@ function gfx.blit(source, ...)
   if n_args <  1 then scale = 1            end
   if n_args <  5 and dim then srcw = dim.w end
   if n_args <  6 and dim then srch = dim.h end
-  if n_args <  7 then destx = gfx.x        end
-  if n_args <  8 then desty = gfx.y        end
+  if n_args <  7 then destx = gfx_vars.x   end
+  if n_args <  8 then desty = gfx_vars.y   end
   if n_args <  9 then destw = srcw * scale end
   if n_args < 10 then desth = srch * scale end
 
@@ -827,8 +838,8 @@ function gfx.blit(source, ...)
   if rotxoffs ~= 0 then warn('ignoring parameter rotxoffs') end
   if rotyoffs ~= 0 then warn('ignoring parameter rotyoffs') end
 
-  if gfx.mode ~= 0 and (gfx.mode & ~BLIT_NO_SOURCE_ALPHA) ~= 0 then
-    warn('mode %d not implemented', gfx.mode)
+  if gfx_vars.mode ~= 0 and (gfx_vars.mode & ~BLIT_NO_SOURCE_ALPHA) ~= 0 then
+    warn('mode %d not implemented', gfx_vars.mode)
   end
 
   local sourceCommands = global_state.commands[source]
@@ -846,7 +857,7 @@ function gfx.blit(source, ...)
 
   local src_blit = {
     alpha   = gfx.a,
-    mode    = gfx.mode,
+    mode    = gfx_vars.mode,
     scale_x = srcw ~= 0 and destw / srcw or 1,
     scale_y = srch ~= 0 and desth / srch or 1,
   }
@@ -902,8 +913,8 @@ function gfx.dock(v, ...) -- v[,wx,wy,ww,wh]
   local n, rv = select('#', ...), {}
   if n >= 1 then rv[1] = global_state.pos_x end
   if n >= 2 then rv[2] = global_state.pos_y end
-  if n >= 3 then rv[3] = gfx.w              end
-  if n >= 4 then rv[4] = gfx.h              end
+  if n >= 3 then rv[3] = gfx_vars.w              end
+  if n >= 4 then rv[4] = gfx_vars.h              end
 
   return global_state.dock, table.unpack(rv)
 end
@@ -948,7 +959,7 @@ function gfx.drawstr(str, flags, right, bottom)
   if not state then return end
   str = str or FALLBACK_STRING
 
-  local x, y, c = toint(gfx.x), toint(gfx.y), color()
+  local x, y, c = toint(gfx_vars.x), toint(gfx_vars.y), color()
   local w, h = gfx.measurestr(str) -- calls beginFrame()
   local f = global_state.fonts[state.font]
   local f_sz = f and f.size or DEFAULT_FONT_SIZE
@@ -956,7 +967,7 @@ function gfx.drawstr(str, flags, right, bottom)
   if right  then right  = toint(right) end
   if bottom then bottom = toint(bottom) end
 
-  gfx.x = gfx.x + w
+  gfx_vars.x = gfx_vars.x + w
 
   local x_off, y_off = 0, 0
   if flags and right and bottom then
@@ -1055,7 +1066,7 @@ local function drawImGui(draw_list, screen_x, screen_y, blit_opts, callback, x, 
 end
 
 function gfx.imgui(callback)
-  return drawCall(drawImGui, callback, toint(gfx.x), toint(gfx.y))
+  return drawCall(drawImGui, callback, toint(gfx_vars.x), toint(gfx_vars.y))
 end
 
 function gfx.init(name, width, height, dockstate, xpos, ypos)
@@ -1095,9 +1106,9 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
   end
 
   if width and height then
-    gfx.w, gfx.h = toint(tonumber(width)), toint(tonumber(height))
-    gfx.w, gfx.h = math.max(16, gfx.w), math.max(16, gfx.h)
-    state.want_size = { w=gfx.w, h=gfx.h }
+    gfx_vars.w, gfx_vars.h = toint(tonumber(width)), toint(tonumber(height))
+    gfx_vars.w, gfx_vars.h = math.max(16, gfx_vars.w), math.max(16, gfx_vars.h)
+    state.want_size = { w=gfx_vars.w, h=gfx_vars.h }
   end
   dockstate = toint(tonumber(dockstate))
   if (dockstate & 1) == 1 then
@@ -1107,7 +1118,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     state.want_pos = { x=toint(tonumber(xpos)), y=toint(tonumber(ypos)) }
   end
 
-  gfx.ext_retina = 1 -- ReaImGui scales automatically
+  gfx_vars.ext_retina = 1 -- ReaImGui scales automatically
 
   return 1
 end
@@ -1126,8 +1137,8 @@ function gfx.line(x1, y1, x2, y2, aa)
 end
 
 function gfx.lineto(x, y, aa)
-  gfx.line(gfx.x, gfx.y, x, y, aa)
-  gfx.x, gfx.y = x, y
+  gfx.line(gfx_vars.x, gfx_vars.y, x, y, aa)
+  gfx_vars.x, gfx_vars.y = x, y
   return x
 end
 
@@ -1176,29 +1187,29 @@ function gfx.loadimg(image, filename)
     imageState.attached = false
   end
 
-  local dest_backup = gfx.dest
-  gfx.dest = image
-  local commands = global_state.commands[gfx.dest]
+  local dest_backup = gfx_vars.dest
+  gfx_vars.dest = image
+  local commands = global_state.commands[gfx_vars.dest]
   if commands then commands.want_clear = true end
   drawCall(drawImage, filename, imageState, x, y, w, h)
-  gfx.dest = dest_backup
+  gfx_vars.dest = dest_backup
 
   return image
 end
 
 function gfx.measurechar(char)
-  if not state then return gfx.texth, gfx.texth end
+  if not state then return gfx_vars.texth, gfx_vars.texth end
   return gfx.measurestr(utf8.char(char))
 end
 
 function gfx.measurestr(str)
   str = str or FALLBACK_STRING
   if not state or not beginFrame() then
-    return gfx.texth * utf8.len(str), gfx.texth
+    return gfx_vars.texth * utf8.len(str), gfx_vars.texth
   end
   local _, font_inst, size_error =
     getNearestCachedFont(global_state.fonts[state.font])
-  local correction_factor = gfx.texth / (gfx.texth + size_error)
+  local correction_factor = gfx_vars.texth / (gfx_vars.texth + size_error)
   ImGui.PushFont(state.ctx, font_inst)
   local w, h = ImGui.CalcTextSize(state.ctx, str)
   ImGui.PopFont(state.ctx)
@@ -1249,8 +1260,8 @@ function gfx.rect(x, y, w, h, filled)
 end
 
 function gfx.rectto(x, y)
-  gfx.rect(gfx.x, gfx.y, x - gfx.x, y - gfx.y)
-  gfx.x, gfx.y = x, y
+  gfx.rect(gfx_vars.x, gfx_vars.y, x - gfx_vars.x, y - gfx_vars.y)
+  gfx_vars.x, gfx_vars.y = x, y
   return x
 end
 
@@ -1284,11 +1295,12 @@ function gfx.set(...)
   if n < 2 then g = r end
   if n < 3 then b = r end
 
-  gfx.r, gfx.g, gfx.b = r, g, b
-  if n >= 4 then gfx.a    = a    end
-  if n >= 5 then gfx.mode = mode end
-  if n >= 6 then gfx.dest = dest end
-  if n >= 7 then gfx.a2   = a2   end
+  -- write thorough gfx's metadatable for sanitization
+  gfx.r, gfx.g, gfx.b = tonumber(r) or 0, tonumber(g) or 0, tonumber(b) or 0
+  if n >= 4 then gfx.a    = tonumber(a)    or 0 end
+  if n >= 5 then gfx.mode = tonumber(mode) or 0 end
+  if n >= 6 then gfx.dest = tonumber(dest) or 0 end
+  if n >= 7 then gfx.a2   = tonumber(a2)   or 0 end
 
   return 0
 end
@@ -1373,7 +1385,7 @@ function gfx.setimgdim(image, w, h)
 end
 
 function gfx.setpixel(r, g, b)
-  addPixel(gfx.x, gfx.y, makeColor(r, g, b, 1))
+  addPixel(gfx_vars.x, gfx_vars.y, makeColor(r, g, b, 1))
   return r
 end
 
@@ -1493,7 +1505,7 @@ function gfx.update()
   end
   if state.want_pos then
     local x, y = ImGui.PointConvertNative(state.ctx, state.want_pos.x, state.want_pos.y)
-    if MACOS then y = y - (state.want_size and state.want_size.h or gfx.h) end
+    if MACOS then y = y - (state.want_size and state.want_size.h or gfx_vars.h) end
     ImGui.SetNextWindowPos(state.ctx, x, y)
     state.want_pos = nil
   end
@@ -1503,7 +1515,7 @@ function gfx.update()
   end
 
   -- start window
-  local col_clear = math.max(0, gfx.clear)
+  local col_clear = math.max(0, gfx_vars.clear)
   local bg = (col_clear >> 8  & 0x0000ff00) |
              (col_clear << 8  & 0x00ff0000) |
              (col_clear << 24 & 0xff000000) |
@@ -1525,11 +1537,11 @@ function gfx.update()
   end
 
   -- update variables
-  gfx.w, gfx.h = ImGui.GetWindowSize(state.ctx)
+  gfx_vars.w, gfx_vars.h = ImGui.GetWindowSize(state.ctx)
   state.want_close = state.want_close or not open
   state.screen_x, state.screen_y = ImGui.GetWindowPos(state.ctx)
   global_state.pos_x, global_state.pos_y = state.screen_x, state.screen_y
-  if MACOS then global_state.pos_y = global_state.pos_y + gfx.h end
+  if MACOS then global_state.pos_y = global_state.pos_y + gfx_vars.h end
   global_state.pos_x, global_state.pos_y = ImGui.PointConvertNative(state.ctx,
     global_state.pos_x, global_state.pos_y, true)
 
@@ -1539,10 +1551,13 @@ function gfx.update()
     global_state.dock = global_state.dock & ~1 -- preserve previous docker ID
   end
 
-  builtin_cache = {}
   updateMouse()
   updateKeyboard()
   updateDropFiles()
+
+  for key, _ in pairs(gfx_vars_initializers) do
+    gfx_vars[key] = nil -- re-initialize at the next defer cycle (frame)
+  end
 
   -- draw contents
   local commands = global_state.commands[-1]
@@ -1551,7 +1566,7 @@ function gfx.update()
     -- mode=nil tells transformColor it's not outputting to an offscreen buffer
     local blit_opts = {
       alpha=1, mode=nil, scale_x=1, scale_y=1,
-      x1=0, y1=0, x2=gfx.w, y2=gfx.h,
+      x1=0, y1=0, x2=gfx_vars.w, y2=gfx_vars.h,
     }
     render(commands, draw_list, state.screen_x, state.screen_y, blit_opts)
   end
@@ -1582,13 +1597,16 @@ if DEBUG then
     return err, ...
   end
 
-  for key, value in pairs(gfx) do
-    if type(value) == 'function' then
-      gfx[key] = function(...)
+  local function wrapFuncs(list)
+    for key, value in pairs(list) do
+      list[key] = function(...)
         return errorHandler(xpcall(value, debug.traceback, ...))
       end
     end
   end
+
+  wrapFuncs(gfx)
+  wrapFuncs(getmetatable(gfx))
 end
 
 return gfx
