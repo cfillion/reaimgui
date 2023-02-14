@@ -273,33 +273,14 @@ local function alignText(flags, pos, size, limit)
 end
 
 local function updateMouse()
-  if ImGui.IsWindowHovered(state.ctx, HOVERED_FLAGS) then -- not over Log window
-    for button, flag in pairs(MOUSE_BTNS) do
-      if ImGui.IsMouseClicked(state.ctx, button) then
-        state.mouse_cap = state.mouse_cap | flag
-      end
-    end
-
+  state.hovered = ImGui.IsWindowHovered(state.ctx, HOVERED_FLAGS)
+  if state.hovered then -- not over Log window
     local wheel_v, wheel_h = ImGui.GetMouseWheel(state.ctx)
     gfx.mouse_wheel  = gfx.mouse_wheel  + (wheel_v * MW_TICK)
     gfx.mouse_hwheel = gfx.mouse_hwheel + (wheel_h * MW_TICK)
 
     if state.want_cursor then
       ImGui.SetMouseCursor(state.ctx, state.want_cursor)
-    end
-  end
-
-  for button, flag in pairs(MOUSE_BTNS) do
-    if ImGui.IsMouseReleased(state.ctx, button) then
-      state.mouse_cap = state.mouse_cap & ~flag
-    end
-  end
-
-  gfx.mouse_cap = state.mouse_cap
-
-  for mod, flag in pairs(KEY_MODS) do
-    if ImGui.IsKeyDown(state.ctx, mod) then
-      gfx.mouse_cap = gfx.mouse_cap | flag
     end
   end
 
@@ -673,12 +654,39 @@ gfx.w, gfx.h, gfx.x, gfx.y, gfx.mode = 0, 0, 0, 0, 0
 gfx.ext_retina, gfx.dest, gfx.texth  = 0, -1, DEFAULT_FONT_SIZE
 gfx.mouse_x, gfx.mouse_y, gfx.clear  = 0, 0, 0
 gfx.mouse_wheel, gfx.mouse_hwheel    = 0, 0
-gfx.mouse_cap                        = 0
 
 -- variables to reset on the first access of every frame via gfx.__index
 local builtin_cache, builtin_initializers = {}, {
   a  = function() return 1.0 end,
   a2 = function() return 1.0 end,
+
+  mouse_cap = function()
+    if not state or not beginFrame() then return 0 end
+
+    if state.hovered then -- not over Log window
+      for button, flag in pairs(MOUSE_BTNS) do
+        if ImGui.IsMouseClicked(state.ctx, button) then
+          state.mouse_cap = state.mouse_cap | flag
+        end
+      end
+    end
+
+    for button, flag in pairs(MOUSE_BTNS) do
+      if ImGui.IsMouseReleased(state.ctx, button) then
+        state.mouse_cap = state.mouse_cap & ~flag
+      end
+    end
+
+    local mouse_cap = state.mouse_cap
+
+    for mod, flag in pairs(KEY_MODS) do
+      if ImGui.IsKeyDown(state.ctx, mod) then
+        mouse_cap = mouse_cap | flag
+      end
+    end
+
+    return mouse_cap
+  end,
 }
 
 -- translation functions
