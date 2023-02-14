@@ -211,7 +211,10 @@ local function color(r, g, b, a)
   if r > 1 then r = 1 elseif r < 0 then r = 0 end
   if g > 1 then g = 1 elseif g < 0 then g = 0 end
   if b > 1 then b = 1 elseif b < 0 then b = 0 end
-  -- gfx does not clamp alpha (it wraps around)
+  if gfx.dest == -1 then
+    -- gfx does not clamp alpha when blitting (it wraps around)
+    if a > 1 then a = 1 elseif a < 0 then a = 0 end
+  end
   return toint(r * 0xFF) << 24 |
          toint(g * 0xFF) << 16 |
          toint(b * 0xFF) << 8  |
