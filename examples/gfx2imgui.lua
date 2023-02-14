@@ -1373,7 +1373,14 @@ end
 function gfx.update()
   if not state or not beginFrame() then return end
 
-  if global_state.log.size > 0 then showLog() end
+  if state.update_frame == state.frame_count then
+    if state.frame_count > 1 then
+      warn('called more than once per frame')
+    end
+  else
+    state.update_frame = state.frame_count
+    if global_state.log.size > 0 then showLog() end
+  end
 
   if state.want_dock then
     ImGui.SetNextWindowDockID(state.ctx, state.want_dock)
