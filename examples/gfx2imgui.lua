@@ -154,14 +154,6 @@ local gfx, global_state, state = {}, {
   pos_x = 0, pos_y = 0,
 }
 
--- default variables
-gfx.r, gfx.g, gfx.b, gfx.a, gfx.a2   = 1, 1, 1, 1, 1
-gfx.w, gfx.h, gfx.x, gfx.y, gfx.mode = 0, 0, 0, 0, 0
-gfx.ext_retina, gfx.dest, gfx.texth  = 0, -1, DEFAULT_FONT_SIZE
-gfx.mouse_x, gfx.mouse_y, gfx.clear  = 0, 0, 0
-gfx.mouse_wheel, gfx.mouse_hwheel    = 0, 0
-gfx.mouse_cap                        = 0
-
 -- internal functions
 local function tobool(v, default)
   if default ~= nil and v == nil then return default end
@@ -675,7 +667,44 @@ local function drawLine(x1, y1, x2, y2, c)
   end)
 end
 
+-- default variables
+gfx.r, gfx.g, gfx.b = 1, 1, 1
+gfx.w, gfx.h, gfx.x, gfx.y, gfx.mode = 0, 0, 0, 0, 0
+gfx.ext_retina, gfx.dest, gfx.texth  = 0, -1, DEFAULT_FONT_SIZE
+gfx.mouse_x, gfx.mouse_y, gfx.clear  = 0, 0, 0
+gfx.mouse_wheel, gfx.mouse_hwheel    = 0, 0
+gfx.mouse_cap                        = 0
+
+-- variables to reset on the first access of every frame via gfx.__index
+local builtin_cache, builtin_initializers = {}, {
+  a  = function() return 1.0 end,
+  a2 = function() return 1.0 end,
+}
+
 -- translation functions
+setmetatable(gfx, {
+  __index = function(gfx, key)
+    local val = builtin_cache[key]
+    if val then return val end
+
+    local init = builtin_initializers[key]
+    if init then
+      val = init()
+      builtin_cache[key] = val
+      return val
+    end
+
+    return rawget(gfx, key)
+  end,
+  __newindex = function(gfx, key, value)
+    if builtin_initializers[key] then
+      builtin_cache[key] = value
+    else
+      rawset(gfx, key, value)
+    end
+  end,
+})
+
 function gfx.arc(x, y, r, ang1, ang2, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   local c, quarter = color(), math.pi / 2
@@ -1438,6 +1467,7 @@ function gfx.update()
     global_state.dock = global_state.dock & ~1 -- preserve previous docker ID
   end
 
+  builtin_cache = {}
   updateMouse()
   updateKeyboard()
   updateDropFiles()
