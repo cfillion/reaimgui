@@ -639,13 +639,32 @@ end
 
 local function drawLine(x1, y1, x2, y2, c)
   local AddLine = ImGui.DrawList_AddLine
+  local AddRectFilled = ImGui.DrawList_AddRectFilled
   drawCall(function(draw_list, screen_x, screen_y, blit_opts)
     local c = transformColor(c, blit_opts)
+
+    -- workarounds to avoid gaps due to rounding in vertical/horizontal lines
+    local scaled = blit_opts.scale_x ~= 1 and blit_opts.scale_y ~= 1
+    if scaled and (x1 == x2 or y1 == y2) then
+      local x1, y1 = screen_x + (x1 * blit_opts.scale_x),
+                     screen_y + (y1 * blit_opts.scale_y)
+      local x2, y2 = screen_x + (x2 * blit_opts.scale_x),
+                     screen_y + (y2 * blit_opts.scale_y)
+      if x1 == x2 then
+        x2 = x2 + blit_opts.scale_x
+      elseif y1 == y2 then
+        y2 = y2 + blit_opts.scale_y
+      end
+
+      AddRectFilled(draw_list, x1, y1, x2, y2, c)
+      return
+    end
+
     local x1, y1 = transformPoint(x1, y1, blit_opts)
     local x2, y2 = transformPoint(x2, y2, blit_opts)
-    -- FIXME: scale thickness
     x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-    AddLine(draw_list, x1, y1, x2, y2, c)
+    AddLine(draw_list, x1, y1, x2, y2, c,
+      (blit_opts.scale_x + blit_opts.scale_y) / 2)
   end)
 end
 
