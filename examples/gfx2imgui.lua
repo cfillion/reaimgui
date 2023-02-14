@@ -417,9 +417,16 @@ local function showLog()
   ImGui.SetConfigVar(state.ctx, NO_DECORATION, 0)
   if not visible then return end
   local scroll_bottom = ImGui.GetScrollY(state.ctx) == ImGui.GetScrollMaxY(state.ctx)
+  local copy = false
+  if ImGui.BeginPopupContextWindow(state.ctx) then
+    if ImGui.MenuItem(state.ctx, 'Copy') then copy = true end
+    ImGui.EndPopup(state.ctx)
+  end
+  if copy then ImGui.LogToClipboard(state.ctx) end
   for line in ringEnum(global_state.log) do
     ImGui.TextWrapped(state.ctx, line)
   end
+  if copy then ImGui.LogFinish(state.ctx) end
   if scroll_bottom then ImGui.SetScrollHereY(state.ctx, 1) end
   if not open then global_state.log.size = 0 end
   ImGui.End(state.ctx)
