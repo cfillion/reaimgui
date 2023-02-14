@@ -163,7 +163,7 @@ local function tobool(v, default)
 end
 
 local function toint(v)
-  if not v or v ~= v or math.abs(v) == math.huge then return 0 end
+  if not v or v ~= v or v == math.huge or -v == math.huge then return 0 end
   return v // 1 -- faster than floor
 end
 
@@ -620,6 +620,8 @@ local function drawPixel(x, y, c)
     local w, h = transformPoint(1, 1, blit_opts)
     AddRectFilled(draw_list, x, y, x + w, y + h, c)
   end)
+
+  return 0
 end
 
 local function drawLine(x1, y1, x2, y2, c)
@@ -651,6 +653,8 @@ local function drawLine(x1, y1, x2, y2, c)
     AddLine(draw_list, x1, y1, x2, y2, c,
       (blit_opts.scale_x + blit_opts.scale_y) / 2)
   end)
+
+  return 0
 end
 
 -- default variables
@@ -1063,12 +1067,11 @@ function gfx.line(x1, y1, x2, y2, aa)
 
   -- gfx.line(10, 30, 10, 30)
   if x1 == x2 and y1 == y2 then
-    drawPixel(x1, y1, color()) -- faster than 1px lines according to dear imgui
+    -- faster than 1px lines according to dear imgui
+    return drawPixel(x1, y1, color())
   else
-    drawLine(x1, y1, x2, y2, color())
+    return drawLine(x1, y1, x2, y2, color())
   end
-
-  return 0
 end
 
 function gfx.lineto(x, y, aa)
@@ -1370,10 +1373,10 @@ function gfx.triangle(...)
 
   if n_coords == 2 then
     -- gfx.triangle(0,33, 0,33, 0,33, 0,33)
-    drawPixel(points[1], points[2], c)
+    return drawPixel(points[1], points[2], c)
   elseif n_coords == 4 then
     -- gfx.triangle(0,33, 0,0, 0,33, 0,33)
-    drawLine(points[1], points[2], points[3], points[4], c)
+    return drawLine(points[1], points[2], points[3], points[4], c)
   elseif n_coords == 6 then
     local AddTriangleFilled = ImGui.DrawList_AddTriangleFilled
     drawCall(function(draw_list, screen_x, screen_y, blit_opts)
