@@ -224,7 +224,7 @@ local function drawCall(...)
     list = { ptr=0, size=0, max_size=MAX_DRAW_CALLS }
     global_state.commands[gfx_vars.dest] = list
   elseif list.want_clear then
-    list.size, list.ptr, list.want_clear = 0, 0, false
+    list.size, list.ptr, list.rendered_frame, list.want_clear = 0, 0, 0, false
   end
 
   local ptr = ringReserve(list)
@@ -628,6 +628,7 @@ local function beginFrame()
   loadRequestedFonts()
 
   -- ImGui.ShowMetricsWindow(state.ctx)
+  if global_state.log.size > 0 then showLog() end
 
   return true
 end
@@ -1505,15 +1506,6 @@ end
 function gfx.update()
   if not state or not beginFrame() then return end
 
-  if state.update_frame == state.frame_count then
-    if state.frame_count > 1 then
-      warn('called more than once per frame')
-    end
-  else
-    state.update_frame = state.frame_count
-    if global_state.log.size > 0 then showLog() end
-  end
-
   if state.want_dock then
     ImGui.SetNextWindowDockID(state.ctx, state.want_dock)
     -- keep position and size when using gfx.init with dock=0
@@ -1580,7 +1572,7 @@ function gfx.update()
 
   -- draw contents
   local commands = global_state.commands[-1]
-  if commands then
+  if commands and commands.rendered_frame ~= state.frame_count then
     local draw_list = ImGui.GetWindowDrawList(state.ctx)
     -- mode=nil tells transformColor it's not outputting to an offscreen buffer
     local blit_opts = {
@@ -1588,20 +1580,25 @@ function gfx.update()
       x1=0, y1=0, x2=gfx_vars.w, y2=gfx_vars.h,
     }
     render(commands, draw_list, state.screen_x, state.screen_y, blit_opts)
+
+    -- Allow calling gfx.update muliple times per frame without re-rendering
+    -- everything from the top. Keep the existing commands in case they aren't
+    -- re-filled every frame (eg. rtk).
+    -- FIXME: Flickering if some update() calls only happen in some frames.
+    commands.rendered_frame = state.frame_count
   end
 
   if PROFILE then
     ImGui.SetCursorPos(state.ctx, 0, 0)
     if type(PROFILE) == 'number' then
-      PROFILE = PROFILE - 1
-      local label = ('Profiling (%d)...'):format(PROFILE)
-      if ImGui.Button(state.ctx, label) or PROFILE == 0 then
+      local label = ('Profiling (%d)...'):format(PROFILE - state.frame_count)
+      if ImGui.Button(state.ctx, label) or PROFILE == state.frame_count then
         profiler.stop()
         profiler.report(reaper.GetResourcePath() .. '/Scripts/profiler.log')
         PROFILE = true
       end
     elseif ImGui.Button(state.ctx, 'Start profiler') then
-      PROFILE = 60
+      PROFILE = state.frame_count + 60
       profiler.start()
     end
   end
