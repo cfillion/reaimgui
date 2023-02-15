@@ -727,7 +727,9 @@ local gfx_vars_initializers = {
     end
 
     for button, flag in pairs(MOUSE_BTNS) do
-      if ImGui.IsMouseReleased(state.ctx, button) then
+      -- IsMouseReleased is not emitted when buttons are cleared due to focus loss
+      -- also the user might not access mouse_cap every frame
+      if not ImGui.IsMouseDown(state.ctx, button) then
         state.mouse_cap = state.mouse_cap & ~flag
       end
     end
