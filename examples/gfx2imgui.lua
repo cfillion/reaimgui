@@ -161,6 +161,8 @@ local DL_AddTextEx               = ImGui.DrawList_AddTextEx
 local DL_AddTriangleFilled       = ImGui.DrawList_AddTriangleFilled
 local DL_PathArcTo               = ImGui.DrawList_PathArcTo
 local DL_PathStroke              = ImGui.DrawList_PathStroke
+local DL_PopClipRect             = ImGui.DrawList_PopClipRect
+local DL_PushClipRect            = ImGui.DrawList_PushClipRect
 
 local gfx, global_state, state = {}, {
   commands   = {},
@@ -795,20 +797,22 @@ local function drawBlit(draw_list, screen_x, screen_y, dst_blit,
   destx, desty = transformPoint(destx, desty, dst_blit)
   destw, desth = transformPoint(destw, desth, dst_blit)
 
-  if not clip(destx, desty, destx + destw, desty + desth, dst_blit) then
-    local merged_blit = mergeBlitOpts(src_blit, dst_blit)
-    srcx, srcy = transformPoint(srcx,  srcy,  src_blit)
-    merged_blit.x1, merged_blit.y1 = srcx, srcy
-    merged_blit.x2, merged_blit.y2 = srcx + destw, srcy + desth
+  sourceCommands.want_clear = true
 
-    local x1, y1 = screen_x + destx, screen_y + desty
-    local x2, y2 = x1 + destw, y1 + desth
-    ImGui.DrawList_PushClipRect(draw_list, x1, y1, x2, y2, true)
-    render(commands, draw_list, x1 - srcx, y1 - srcy, merged_blit)
-    ImGui.DrawList_PopClipRect(draw_list)
+  if clip(destx, desty, destx + destw, desty + desth, dst_blit) then
+    return
   end
 
-  sourceCommands.want_clear = true
+  local merged_blit = mergeBlitOpts(src_blit, dst_blit)
+  srcx, srcy = transformPoint(srcx,  srcy,  src_blit)
+  merged_blit.x1, merged_blit.y1 = srcx, srcy
+  merged_blit.x2, merged_blit.y2 = srcx + destw, srcy + desth
+
+  local x1, y1 = screen_x + destx, screen_y + desty
+  local x2, y2 = x1 + destw, y1 + desth
+  DL_PushClipRect(draw_list, x1, y1, x2, y2, true)
+  render(commands, draw_list, x1 - srcx, y1 - srcy, merged_blit)
+  DL_PopClipRect(draw_list)
 end
 
 function gfx.blit(source, ...)
