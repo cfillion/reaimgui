@@ -917,8 +917,8 @@ function gfx.dock(v, ...) -- v[,wx,wy,ww,wh]
   local n, rv = select('#', ...), {}
   if n >= 1 then rv[1] = global_state.pos_x end
   if n >= 2 then rv[2] = global_state.pos_y end
-  if n >= 3 then rv[3] = gfx_vars.w              end
-  if n >= 4 then rv[4] = gfx_vars.h              end
+  if n >= 3 then rv[3] = gfx_vars.w         end
+  if n >= 4 then rv[4] = gfx_vars.h         end
 
   return global_state.dock, table.unpack(rv)
 end
@@ -1074,55 +1074,56 @@ function gfx.imgui(callback)
 end
 
 function gfx.init(name, width, height, dockstate, xpos, ypos)
-  if state then
-    if name ~= state.name and
-        not width and not height and not dockstate and not xpos and not ypos then
-      state.name = name
-    else
-      warn('ignoring repeated call to init')
+  local is_new = not state
+
+  if is_new then
+    local ctx_name = name
+    if ctx_name:len() < 1 then ctx_name = 'gfx2imgui' end
+
+    state = {
+      name        = name,
+      ctx         = ImGui.CreateContext(ctx_name, CTX_FLAGS),
+      canary      = ImGui.CreateContext(ctx_name, CANARY_FLAGS),
+      wnd_flags   = 1,
+      collapsed   = false,
+      want_close  = false,
+      font        = 0,
+      fontmap     = {},
+      fontqueue   = {},
+      frame_count = -1,
+      charqueue   = { ptr=0, rptr=0, size=0, max_size=16 },
+      drop_files  = {},
+      mouse_cap   = 0,
+    }
+
+    ImGui.SetConfigVar(state.ctx, NO_DECORATION, 0)
+
+    for _, font in ipairs(global_state.fonts) do
+      state.fontqueue[#state.fontqueue + 1] = font
     end
-    return 0
-  end
 
-  local ctx_name = name
-  if ctx_name:len() < 1 then ctx_name = 'gfx2imgui' end
+    dockstate = toint(tonumber(dockstate))
+    if (dockstate & 1) == 1 then
+      setDock(dockstate)
+    end
 
-  state = {
-    name        = name,
-    ctx         = ImGui.CreateContext(ctx_name, CTX_FLAGS),
-    canary      = ImGui.CreateContext(ctx_name, CANARY_FLAGS),
-    wnd_flags   = 1,
-    collapsed   = false,
-    want_close  = false,
-    font        = 0,
-    fontmap     = {},
-    fontqueue   = {},
-    frame_count = -1,
-    charqueue   = { ptr=0, rptr=0, size=0, max_size=16 },
-    drop_files  = {},
-    mouse_cap   = 0,
-  }
-
-  ImGui.SetConfigVar(state.ctx, NO_DECORATION, 0)
-
-  for _, font in ipairs(global_state.fonts) do
-    state.fontqueue[#state.fontqueue + 1] = font
+    gfx_vars.ext_retina = 1 -- ReaImGui scales automatically
+  elseif name and name:len() > 0 then
+    state.name = name
+    return 1
   end
 
   if width and height then
-    gfx_vars.w, gfx_vars.h = toint(tonumber(width)), toint(tonumber(height))
-    gfx_vars.w, gfx_vars.h = math.max(16, gfx_vars.w), math.max(16, gfx_vars.h)
+    gfx_vars.w, gfx_vars.h = math.max(16, toint(tonumber(width))),
+                             math.max(16, toint(tonumber(height)))
     state.want_size = { w=gfx_vars.w, h=gfx_vars.h }
   end
-  dockstate = toint(tonumber(dockstate))
-  if (dockstate & 1) == 1 then
-    setDock(dockstate)
-  end
-  if xpos and ypos then
-    state.want_pos = { x=toint(tonumber(xpos)), y=toint(tonumber(ypos)) }
-  end
 
-  gfx_vars.ext_retina = 1 -- ReaImGui scales automatically
+  if xpos and ypos then
+    global_state.pos_x, global_state.pos_y =
+      toint(tonumber(xpos)), toint(tonumber(ypos))
+    state.want_pos = { x=global_state.pos_x, y=global_state.pos_y }
+  end
 
   return 1
 end
