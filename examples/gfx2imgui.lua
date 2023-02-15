@@ -199,7 +199,7 @@ local function ringReserve(buffer)
   buffer.ptr = (ptr + 1) % buffer.max_size
   buffer.size = buffer.size + 1
   if buffer.size > buffer.max_size then buffer.size = buffer.max_size end
-  return ptr
+  return ptr + 1
 end
 
 local function ringInsert(buffer, value)
@@ -209,13 +209,12 @@ end
 local function ringEnum(buffer)
   if buffer.size < 1 then return function() end end
 
-  local i = 0
+  local i, ptr, size = 0, buffer.ptr, buffer.size
   return function()
-    if i >= buffer.size then return nil end
-    local j = (buffer.ptr + i) % buffer.size
-    local value = buffer[j]
+    if i >= size then return end
+    local j = (ptr + i) % size
     i = i + 1
-    return value
+    return buffer[j + 1]
   end
 end
 
@@ -250,7 +249,10 @@ local function drawCall(...)
 end
 
 local function render(commands, draw_list, screen_x, screen_y, blit_opts)
-  for c in ringEnum(commands) do
+  local ptr, size = commands.ptr, commands.size
+  for i = 0, size - 1 do
+    local j = (ptr + i) % size
+    local c = commands[j + 1]
     c[1](draw_list, screen_x, screen_y, blit_opts,
          c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11])
   end
@@ -854,11 +856,13 @@ function gfx.blit(source, ...)
     return 0
   end
 
-  local commands = { ptr=0, size=0, max_size=sourceCommands.size }
-  for c in ringEnum(sourceCommands) do
+  local size = sourceCommands.size
+  local commands = { ptr=sourceCommands.ptr, size=size, max_size=size }
+  for i = 1, size do
     -- make an immutable copy
-    ringInsert(commands,
-      { c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11] })
+    local c = sourceCommands[i]
+    commands[i] =
+      { c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11] }
   end
 
   local src_blit = {
