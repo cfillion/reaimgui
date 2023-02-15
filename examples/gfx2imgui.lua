@@ -24,7 +24,7 @@
 --
 -- Configuration variables (set before including gfx2imgui)
 -- GFX2IMGUI_DEBUG = false
--- GFX2IMGUI_MAX_DRAW_CALLS = 4096
+-- GFX2IMGUI_MAX_DRAW_CALLS = 8192
 -- GFX2IMGUI_NO_BLIT_PREMULTIPLY = false
 -- GFX2IMGUI_NO_LOG = false
 -- GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE = 8
@@ -232,7 +232,7 @@ local function drawCall(...)
   local c = list[ptr]
 
   if not c then
-    -- pre-allocate the maximum size w/o no nil gaps
+    -- pre-allocate the maximum size w/o nil gaps
     -- IF SIZE CHANGES: also update copy code in gfx.blit!
     c = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
     list[ptr] = c
@@ -1100,7 +1100,8 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
 
     ImGui.SetConfigVar(state.ctx, NO_DECORATION, 0)
 
-    for _, font in ipairs(global_state.fonts) do
+    -- using pairs (not ipairs) to support gaps in requested font slots
+    for _, font in pairs(global_state.fonts) do
       state.fontqueue[#state.fontqueue + 1] = font
     end
 
