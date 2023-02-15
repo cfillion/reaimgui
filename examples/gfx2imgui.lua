@@ -1400,6 +1400,8 @@ function gfx.showmenu(str)
 
   -- Using hidden gfx window menu code by amagalma
   -- https://forum.cockos.com/showthread.php?t=239556
+  local foreground = reaper.JS_Window_GetForeground and
+                     reaper.JS_Window_GetForeground()
   local title = reaper.genGuid()
   ogfx.init(title, 0, 0, 0, 0, 0)
   ogfx.x, ogfx.y = ogfx.mouse_x, ogfx.mouse_y
@@ -1413,6 +1415,11 @@ function gfx.showmenu(str)
 
   local value = ogfx.showmenu(str)
   ogfx.quit()
+
+  if foreground then
+    reaper.JS_Window_SetForeground(foreground)
+  end
+
   return value
 end
 
