@@ -44,9 +44,10 @@ local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
 local CTX_FLAGS = ImGui.ConfigFlags_NoSavedSettings() |
                   ImGui.ConfigFlags_DockingEnable()
 local CANARY_FLAGS = ImGui.ConfigFlags_NoSavedSettings()
+local WND_FLAG_NOMOVE = ImGui.WindowFlags_NoMove()
 local WND_FLAGS = ImGui.WindowFlags_NoScrollbar() |
                   ImGui.WindowFlags_NoScrollWithMouse() |
-                  ImGui.WindowFlags_NoMove()
+                  WND_FLAG_NOMOVE
 local CHILD_FLAGS = ImGui.WindowFlags_NoMouseInputs()
 local LOG_WND_FLAGS = ImGui.WindowFlags_NoDocking() |
                       ImGui.WindowFlags_NoFocusOnAppearing()
@@ -1531,11 +1532,16 @@ function gfx.update()
              (col_clear << 8  & 0x00ff0000) |
              (col_clear << 24 & 0xff000000) |
              0xff
+  local flags = WND_FLAGS
+  if global_state.dock & 1 == 1 then
+    -- allow undocking by dragging the triangle or tab item
+    flags = flags & ~WND_FLAG_NOMOVE
+  end
   ImGui.PushStyleColor(state.ctx, WINDOW_BG, bg)
   ImGui.PushStyleVar(state.ctx, WINDOW_PADDING, 0, 0)
   ImGui.PushStyleVar(state.ctx, CHILD_BORDER_SIZE, 0) -- no border when docked
   local wnd_label = ('%s###gfx2imgui'):format(state.name)
-  local visible, open = ImGui.Begin(state.ctx, wnd_label, true, WND_FLAGS)
+  local visible, open = ImGui.Begin(state.ctx, wnd_label, true, flags)
   state.collapsed = not visible
   ImGui.PopStyleVar(state.ctx, 2)
   ImGui.PopStyleColor(state.ctx)
