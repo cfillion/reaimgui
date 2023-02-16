@@ -81,11 +81,10 @@ local KEY_MODS = {
   [ImGui.Mod_Alt()  ] = 1<<4,
   [ImGui.Mod_Super()] = 1<<5,
 }
-local CHAR_MOD_MASK = ImGui.Mod_Ctrl() |
-                      ImGui.Mod_Alt()
+local CHAR_MOD_MASK = ImGui.Mod_Ctrl() | ImGui.Mod_Alt()
 local CHAR_MOD_BASE = {
   [ImGui.Mod_Ctrl()] = 0x001,
-  [CHAR_MOD_MASK          ] = 0x101,
+  [CHAR_MOD_MASK   ] = 0x101,
   [ImGui.Mod_Alt() ] = 0x141,
 }
 local MW_TICK = 6 -- gfx.mouse_[h]wheel increments per wheel tick
@@ -126,8 +125,7 @@ local FONT_FLAGS = {
 }
 local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
-local QUARTER_CIRCLE = math.pi / 2
-local INFINITY = math.huge
+local QUARTER_CIRCLE, INFINITY = math.pi / 2, math.huge
 
 -- settings
 local BLIT_NO_PREMULTIPLY          = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
@@ -1110,10 +1108,8 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
       state.fontqueue[#state.fontqueue + 1] = font
     end
 
-    dockstate = toint(tonumber(dockstate))
-    if (dockstate & 1) == 1 then
-      setDock(dockstate)
-    end
+    -- always update global_state.dock with the current value
+    setDock(toint(tonumber(dockstate)))
 
     gfx_vars.ext_retina = 1 -- ReaImGui scales automatically
   elseif name and name:len() > 0 then
