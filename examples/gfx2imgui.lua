@@ -394,6 +394,10 @@ local function updateDropFiles()
   state.drop_files = {}
   if ImGui.BeginChild(state.ctx, 'drop_target', -FLT_MIN, -FLT_MIN, 0, CHILD_FLAGS) then
     ImGui.EndChild(state.ctx)
+
+    -- reset cursor pos for when gfx.update() is run more than once per frame
+    ImGui.SetCursorScreenPos(state.ctx, state.screen_x, state.screen_y)
+
     if ImGui.BeginDragDropTarget(state.ctx) then
       local rv, count = ImGui.AcceptDragDropPayloadFiles(state.ctx)
       if rv then
@@ -1546,11 +1550,16 @@ function gfx.update()
   -- update variables
   gfx_vars.w, gfx_vars.h = ImGui.GetWindowSize(state.ctx)
   state.want_close = state.want_close or not open
-  state.screen_x, state.screen_y = ImGui.GetWindowPos(state.ctx)
+  state.screen_x, state.screen_y = ImGui.GetCursorScreenPos(state.ctx)
   global_state.pos_x, global_state.pos_y = state.screen_x, state.screen_y
   if MACOS then global_state.pos_y = global_state.pos_y + gfx_vars.h end
   global_state.pos_x, global_state.pos_y = ImGui.PointConvertNative(state.ctx,
     global_state.pos_x, global_state.pos_y, true)
+
+  -- remove space taken by the window titlebar or docker tabbar
+  local pos_x, pos_y = ImGui.GetWindowPos(state.ctx)
+  gfx_vars.w, gfx_vars.h = gfx_vars.w - (state.screen_x - pos_x),
+                           gfx_vars.h - (state.screen_y - pos_y)
 
   if ImGui.IsWindowDocked(state.ctx) then
     global_state.dock = 1 | (~ImGui.GetWindowDockID(state.ctx) << 8)
