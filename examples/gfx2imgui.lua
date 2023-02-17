@@ -32,9 +32,7 @@
 local ImGui = {}
 for name, func in pairs(reaper) do
   name = name:match('^ImGui_(.+)$')
-  if name then
-    ImGui[name] = func
-  end
+  if name then ImGui[name] = func end
 end
 
 local reaper, ogfx, print = reaper, gfx, print
