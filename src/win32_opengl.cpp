@@ -20,9 +20,21 @@
 #include "error.hpp"
 #include "window.hpp"
 
-#include <GL/gl3w.h>
-#include <GL/wglext.h>
+#include <glbinding/glbinding.h>
 #include <imgui/imgui.h>
+
+// https://registry.khronos.org/OpenGL/api/GL/wglext.h
+constexpr int WGL_CONTEXT_MAJOR_VERSION_ARB    { 0x2091 },
+              WGL_CONTEXT_MINOR_VERSION_ARB    { 0x2092 },
+              WGL_CONTEXT_PROFILE_MASK_ARB     { 0x9126 },
+              WGL_CONTEXT_CORE_PROFILE_BIT_ARB { 0x0001 };
+typedef HGLRC (WINAPI *PFNWGLCREATECONTEXTATTRIBSARBPROC)
+  (HDC hDC, HGLRC hShareContext, const int *attribList);
+
+static glbinding::ProcAddress getProcAddress(const char *funcName)
+{
+  return reinterpret_cast<glbinding::ProcAddress>(wglGetProcAddress(funcName));
+}
 
 class Win32OpenGL : public OpenGLRenderer {
 public:
@@ -47,6 +59,7 @@ public:
     : m_gl { gl }
   {
     wglMakeCurrent(dc, m_gl);
+    glbinding::useContext(reinterpret_cast<glbinding::ContextHandle>(m_gl));
   }
 
   ~MakeCurrent()
@@ -59,7 +72,11 @@ private:
 };
 
 struct GLDeleter {
-  void operator()(HGLRC gl) { wglDeleteContext(gl); }
+  void operator()(HGLRC gl)
+  {
+    glbinding::releaseContext(reinterpret_cast<glbinding::ContextHandle>(gl));
+    wglDeleteContext(gl);
+  }
 };
 
 decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
@@ -68,19 +85,26 @@ decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
 Win32OpenGL::Win32OpenGL(RendererFactory *factory, Window *window)
   : OpenGLRenderer(factory, window), m_dc { GetDC(window->nativeHandle()) }
 {
-  setPixelFormat();
+  try
+  {
+    setPixelFormat();
 
-  if(m_shared->m_platform) {
-    using GL = std::remove_pointer_t<HGLRC>;
-    m_gl = std::static_pointer_cast<GL>(m_shared->m_platform).get();
-  }
-  else {
-    createContext();
-    m_shared->m_platform = { m_gl, GLDeleter{} };
-  }
+    if(m_shared->m_platform) {
+      using GL = std::remove_pointer_t<HGLRC>;
+      m_gl = std::static_pointer_cast<GL>(m_shared->m_platform).get();
+    }
+    else {
+      createContext();
+      m_shared->m_platform = { m_gl, GLDeleter{} };
+    }
 
-  MakeCurrent cur { m_dc, m_gl };
-  setup();
+    MakeCurrent cur { m_dc, m_gl };
+    setup();
+  }
+  catch(const backend_error &) {
+    ReleaseDC(window->nativeHandle(), m_dc);
+    throw;
+  }
 }
 
 Win32OpenGL::~Win32OpenGL()
@@ -111,31 +135,31 @@ void Win32OpenGL::setPixelFormat()
 void Win32OpenGL::createContext()
 {
   HGLRC dummyGl { wglCreateContext(m_dc) }; // creates a legacy (< 2.1) context
-  wglMakeCurrent(m_dc, m_gl = dummyGl);
+  wglMakeCurrent(m_dc, dummyGl);
 
   PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB
     { reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>
       (wglGetProcAddress("wglCreateContextAttribsARB")) };
 
-  if(wglCreateContextAttribsARB) {
-    // https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
-    constexpr int attrs[] {
-      WGL_CONTEXT_MAJOR_VERSION_ARB, 3, WGL_CONTEXT_MINOR_VERSION_ARB, 2,
-      WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-      0
-    };
+  if(!wglCreateContextAttribsARB)
+    throw backend_error { "OpenGL 3 is not available on this system" };
 
-    if(HGLRC coreGl { wglCreateContextAttribsARB(m_dc, nullptr, attrs) }) {
-      wglMakeCurrent(m_dc, m_gl = coreGl);
-      wglDeleteContext(dummyGl);
-    }
-  }
+  // https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
+  constexpr int attrs[] {
+    WGL_CONTEXT_MAJOR_VERSION_ARB, 3, WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+    WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+    0
+  };
 
-  if(gl3wInit()) {
-    wglDeleteContext(m_gl);
-    ReleaseDC(m_window->nativeHandle(), m_dc);
-    throw backend_error { "failed to initialize OpenGL 3.2 renderer" };
-  }
+  m_gl = wglCreateContextAttribsARB(m_dc, nullptr, attrs);
+  wglMakeCurrent(m_dc, m_gl);
+  wglDeleteContext(dummyGl);
+
+  if(!m_gl)
+    throw backend_error { "failed to initialize OpenGL 3.2 core context" };
+
+  glbinding::useContext(reinterpret_cast<glbinding::ContextHandle>(m_gl));
+  glbinding::initialize(getProcAddress, false);
 }
 
 void Win32OpenGL::render(void *)

@@ -23,7 +23,8 @@
 #ifdef __APPLE__
 #  include <OpenGL/gl3.h>
 #elif _WIN32
-#  include <GL/gl3w.h>
+#  include <glbinding/gl32/gl.h>
+using namespace gl32;
 #else
 #  include <epoxy/gl.h>
 #endif

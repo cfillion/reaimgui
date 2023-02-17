@@ -39,8 +39,8 @@ if(WIN32)
 
   target_link_libraries(src Dwmapi Imm32)
 
-  find_package(gl3w CONFIG REQUIRED)
-  target_link_libraries(src unofficial::gl3w::gl3w)
+  find_package(glbinding REQUIRED)
+  target_link_libraries(src glbinding::glbinding Opengl32)
 
   set(D3D_SHADERS
     "d3d10_pixel.hlsl\;ps_4_0"
