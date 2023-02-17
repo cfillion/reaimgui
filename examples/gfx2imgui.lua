@@ -56,6 +56,7 @@ local WINDOW_PADDING, WINDOW_BG, CHILD_BORDER_SIZE =
   ImGui.StyleVar_ChildBorderSize()
 local ROUND_CORNERS = ImGui.DrawFlags_RoundCornersAll()
 local NO_DECORATION = ImGui.ConfigVar_ViewportsNoDecoration()
+local NO_DOCK_SPLIT = ImGui.ConfigVar_DockingNoSplit()
 local MACOS, WINDOWS = reaper.GetOS():find('OSX') ~= nil,
                        reaper.GetOS():find('Win') == 1
 local CURSORS = {
@@ -1110,6 +1111,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     }
 
     ImGui.SetConfigVar(state.ctx, NO_DECORATION, 0)
+    ImGui.SetConfigVar(state.ctx, NO_DOCK_SPLIT, 1)
 
     -- using pairs (not ipairs) to support gaps in requested font slots
     for _, font in pairs(global_state.fonts) do
