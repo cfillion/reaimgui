@@ -152,7 +152,11 @@ into (helper to avoid user backing that value themselves).)",
 
 DEFINE_API(void, GetMouseWheel, (ImGui_Context*,ctx)
 (double*,API_W(vertical))(double*,API_W(horizontal)),
-"Mouse wheel Vertical: 1 unit scrolls about 5 lines text.",
+R"(Vertical: 1 unit scrolls about 5 lines text. >0 scrolls Up, <0 scrolls Down.
+Hold SHIFT to turn vertical scroll into horizontal scroll
+
+Horizontal: >0 scrolls Left, <0 scrolls Right.
+Most users don't have a mouse with a horizontal wheel.)",
 {
   FRAME_GUARD;
   const ImGuiIO &io { ctx->IO() };

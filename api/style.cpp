@@ -64,6 +64,9 @@ static constexpr StyleFields<float, ImVec2> g_styleVars[] {
   STYLEVAR(TabRounding),
   STYLEVAR(ButtonTextAlign),
   STYLEVAR(SelectableTextAlign),
+  STYLEVAR(SeparatorTextBorderSize),
+  STYLEVAR(SeparatorTextAlign),
+  STYLEVAR(SeparatorTextPadding),
 };
 
 static_assert(std::size(g_styleVars) == ImGuiStyleVar_COUNT);
@@ -184,6 +187,14 @@ DEFINE_ENUM(ImGui, StyleVar_SelectableTextAlign,
 R"(Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned).
    It's generally important to keep this left-aligned if you want to lay
    multiple items on a same line.)");
+DEFINE_ENUM(ImGui, StyleVar_SeparatorTextBorderSize,
+  "Thickness of border in SeparatorText()");
+DEFINE_ENUM(ImGui, StyleVar_SeparatorTextAlign,
+R"(Alignment of text within the separator.
+Defaults to (0.0, 0.5) (left aligned, center).)");
+DEFINE_ENUM(ImGui, StyleVar_SeparatorTextPadding,
+R"(Horizontal offset of text from each edge of the separator + spacing on other
+axis. Generally small values. .y is recommended to be == StyleVar_FramePadding.y.)");
 
 API_SUBSECTION("Colors");
 

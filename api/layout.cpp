@@ -27,6 +27,14 @@ mode, this becomes a vertical separator.)",
   ImGui::Separator();
 });
 
+DEFINE_API(void, SeparatorText, (ImGui_Context*,ctx)
+(const char*,label),
+"Text formatted with an horizontal line",
+{
+  FRAME_GUARD;
+  ImGui::SeparatorText(label);
+});
+
 API_SUBSECTION("Cursor",
 R"(By "cursor" we mean the current output position.
 The typical widget behavior is to output themselves at the current cursor

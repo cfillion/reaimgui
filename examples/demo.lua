@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.2)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.3)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -29,9 +29,8 @@ Index of this file:
 // - sub section: ShowDemoWindowPopups()
 // - sub section: ShowDemoWindowTables()
 // - sub section: ShowDemoWindowInputs()
--- [SECTION] Style Editor / ShowStyleE
+-- [SECTION] Style Editor / ShowStyleEditor()
 -- [SECTION] User Guide / ShowUserGuide()
-tor()
 // [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
 // [SECTION] Example App: Debug Console / ShowExampleAppConsole()
 // [SECTION] Example App: Debug Log / ShowExampleAppLog()
@@ -410,6 +409,7 @@ function demo.ShowDemoWindow(open)
       end
       config.flags = ImGui.GetConfigVar(ctx, ImGui.ConfigVar_Flags())
 
+      ImGui.SeparatorText(ctx, 'General')
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NavEnableKeyboard', config.flags, ImGui.ConfigFlags_NavEnableKeyboard())
       ImGui.SameLine(ctx); demo.HelpMarker('Enable keyboard controls.')
       -- ImGui.CheckboxFlags("io.ConfigFlags: NavEnableGamepad",     &io.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad)
@@ -469,6 +469,10 @@ function demo.ShowDemoWindow(open)
 
       configVarCheckbox('ConfigVar_InputTrickleEventQueue')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
+      -- ImGui.Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
+      -- ImGui.SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
+
+      ImGui.SeparatorText(ctx, 'Widgets')
       configVarCheckbox('ConfigVar_InputTextCursorBlink')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable blinking cursor (optional as some users consider it to be distracting).')
       configVarCheckbox('ConfigVar_InputTextEnterKeepActive')
@@ -479,13 +483,12 @@ function demo.ShowDemoWindow(open)
       ImGui.SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.')
       configVarCheckbox('ConfigVar_WindowsMoveFromTitleBarOnly')
       ImGui.SameLine(ctx); demo.HelpMarker('Does not apply to windows without a title bar.')
-      -- ImGui.Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
-      -- ImGui.SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
+      configVarCheckbox('ConfigVar_MacOSXBehaviors')
       ImGui.Text(ctx, "Also see Style->Rendering for rendering options.")
 
       ImGui.SetConfigVar(ctx, ImGui.ConfigVar_Flags(), config.flags)
       ImGui.TreePop(ctx)
-      ImGui.Separator(ctx)
+      ImGui.Spacing(ctx)
     end
 
 --         if (ImGui.TreeNode("Backend Flags"))
@@ -505,14 +508,14 @@ function demo.ShowDemoWindow(open)
 --             ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset",   &backend_flags, ImGuiBackendFlags_RendererHasVtxOffset);
 --             ImGui::CheckboxFlags("io.BackendFlags: RendererHasViewports",   &backend_flags, ImGuiBackendFlags_RendererHasViewports);
 --             ImGui.TreePop();
---             ImGui.Separator();
+--             ImGui.Spacing();
 --         }
 
     if ImGui.TreeNode(ctx, 'Style') then
       demo.HelpMarker("The same contents can be accessed in 'Tools->Style Editor'.")
       demo.ShowStyleEditor()
       ImGui.TreePop(ctx)
-      ImGui.Separator(ctx)
+      ImGui.Spacing(ctx)
     end
 
     if ImGui.TreeNode(ctx, 'Capture/Logging') then
@@ -658,6 +661,7 @@ function demo.ShowDemoWindowWidgets()
       }
     end
 
+    ImGui.SeparatorText(ctx, 'General')
     if ImGui.Button(ctx, 'Button') then
       widgets.basic.clicked = widgets.basic.clicked + 1
     end
@@ -707,23 +711,45 @@ function demo.ShowDemoWindowWidgets()
     ImGui.SameLine(ctx)
     ImGui.Text(ctx, ('%d'):format(widgets.basic.counter))
 
-    ImGui.Separator(ctx)
+    do
+      -- Tooltips
+      -- ImGui.AlignTextToFramePadding(ctx)
+      ImGui.Text(ctx, 'Tooltips:')
+
+      ImGui.SameLine(ctx)
+      ImGui.Button(ctx, 'Button')
+      if ImGui.IsItemHovered(ctx) then
+        ImGui.SetTooltip(ctx, 'I am a tooltip')
+      end
+
+      ImGui.SameLine(ctx)
+      ImGui.Button(ctx, 'Fancy')
+      if ImGui.IsItemHovered(ctx) then
+        ImGui.BeginTooltip(ctx)
+        ImGui.Text(ctx, 'I am a fancy tooltip')
+        ImGui.PlotLines(ctx, 'Curve', widgets.basic.tooltip)
+        ImGui.Text(ctx, ('Sin(time) = %f'):format(math.sin(ImGui.GetTime(ctx))))
+        ImGui.EndTooltip(ctx)
+      end
+
+      ImGui.SameLine(ctx)
+      ImGui.Button(ctx, 'Delayed')
+      if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNormal()) then -- With a delay
+        ImGui.SetTooltip(ctx, 'I am a tooltip with a delay.')
+      end
+
+      ImGui.SameLine(ctx)
+      demo.HelpMarker('Tooltip are created by using the IsItemHovered() function over any kind of item.')
+    end
+
     ImGui.LabelText(ctx, 'label', 'Value')
 
-    do
-      -- Using the _simplified_ one-liner Combo() api here
-      -- See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
-      local items = 'AAAA\0BBBB\0CCCC\0DDDD\0EEEE\0FFFF\0GGGG\0HHHH\0IIIIIII\0JJJJ\0KKKKKKK\0'
-      rv,widgets.basic.curitem = ImGui.Combo(ctx, 'combo', widgets.basic.curitem, items)
-      ImGui.SameLine(ctx); demo.HelpMarker(
-        'Using the simplified one-liner Combo API here.\n' ..
-        'Refer to the "Combo" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.')
-    end
+    ImGui.SeparatorText(ctx, 'Inputs')
 
     do
       rv,widgets.basic.str0 = ImGui.InputText(ctx, 'input text', widgets.basic.str0)
       ImGui.SameLine(ctx); demo.HelpMarker(
-        'USER:\n\z
+       'USER:\n\z
         Hold SHIFT or use mouse to select text.\n\z
         CTRL+Left/Right to word jump.\n\z
         CTRL+A or double-click to select all.\n\z
@@ -744,6 +770,8 @@ function demo.ShowDemoWindowWidgets()
       ImGui.InputDoubleN(ctx, 'input reaper.array', widgets.basic.vec4a)
     end
 
+    ImGui.SeparatorText(ctx, 'Drags')
+
     do
       rv,widgets.basic.i1 = ImGui.DragInt(ctx, 'drag int', widgets.basic.i1, 1)
       ImGui.SameLine(ctx); demo.HelpMarker(
@@ -756,6 +784,8 @@ function demo.ShowDemoWindowWidgets()
       rv,widgets.basic.d2 = ImGui.DragDouble(ctx, 'drag double', widgets.basic.d2, 0.005)
       rv,widgets.basic.d3 = ImGui.DragDouble(ctx, 'drag small double', widgets.basic.d3, 0.0001, 0.0, 0.0, '%.06f ns')
     end
+
+    ImGui.SeparatorText(ctx, 'Sliders')
 
     do
       rv,widgets.basic.i3 = ImGui.SliderInt(ctx, 'slider int', widgets.basic.i3, -1, 3)
@@ -778,6 +808,8 @@ function demo.ShowDemoWindowWidgets()
         of the underlying integer.')
     end
 
+    ImGui.SeparatorText(ctx, 'Selectors/Pickers')
+
     do
       foo = widgets.basic.col1
       rv,widgets.basic.col1 = ImGui.ColorEdit3(ctx, 'color 1', widgets.basic.col1)
@@ -791,6 +823,16 @@ function demo.ShowDemoWindowWidgets()
     end
 
     do
+      -- Using the _simplified_ one-liner Combo() api here
+      -- See "Combo" section for examples of how to use the more flexible BeginCombo()/EndCombo() api.
+      local items = 'AAAA\0BBBB\0CCCC\0DDDD\0EEEE\0FFFF\0GGGG\0HHHH\0IIIIIII\0JJJJ\0KKKKKKK\0'
+      rv,widgets.basic.curitem = ImGui.Combo(ctx, 'combo', widgets.basic.curitem, items)
+      ImGui.SameLine(ctx); demo.HelpMarker(
+        'Using the simplified one-liner Combo API here.\n' ..
+        'Refer to the "Combo" section below for an explanation of how to use the more flexible and general BeginCombo/EndCombo API.')
+    end
+
+    do
       -- Using the _simplified_ one-liner ListBox() api here
       -- See "List boxes" section for examples of how to use the more flexible BeginListBox()/EndListBox() api.
       local items = 'Apple\0Banana\0Cherry\0Kiwi\0Mango\0Orange\0Pineapple\0Strawberry\0Watermelon\0'
@@ -800,37 +842,6 @@ function demo.ShowDemoWindowWidgets()
         'Using the simplified one-liner ListBox API here.\n\z
         Refer to the "List boxes" section below for an explanation of how to use\z
         the more flexible and general BeginListBox/EndListBox API.')
-    end
-
-    do
-      -- Tooltips
-      ImGui.AlignTextToFramePadding(ctx)
-      ImGui.Text(ctx, 'Tooltips:')
-
-      ImGui.SameLine(ctx)
-      ImGui.Button(ctx, 'Button')
-      if ImGui.IsItemHovered(ctx) then
-        ImGui.SetTooltip(ctx, 'I am a tooltip')
-      end
-
-      ImGui.SameLine(ctx)
-      ImGui.Button(ctx, 'Fancy')
-      if ImGui.IsItemHovered(ctx) then
-        ImGui.BeginTooltip(ctx)
-        ImGui.Text(ctx, 'I am a fancy tooltip')
-        ImGui.PlotLines(ctx, 'Curve', widgets.basic.tooltip)
-        ImGui.Text(ctx, ('Sin(time) = %f'):format(math.sin(ImGui.GetTime(ctx))))
-        ImGui.EndTooltip(ctx)
-      end
-
-      ImGui.SameLine(ctx)
-      ImGui.Button(ctx, 'Delayed')
-      if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNormal()) then -- Delay best used on items that highlight on hover, so this not a great example!
-        ImGui.SetTooltip(ctx, 'I am a tooltip with a delay.')
-      end
-
-      ImGui.SameLine(ctx)
-      demo.HelpMarker('Tooltip are created by using the IsItemHovered() function over any kind of item.')
     end
 
     ImGui.TreePop(ctx)
@@ -1077,6 +1088,7 @@ function demo.ShowDemoWindowWidgets()
     if not widgets.images then
       widgets.images = {
         pressed_count = 0,
+        use_text_color_for_tint = false,
       }
     end
     if not ImGui.ValidatePtr(widgets.images.bitmap, 'ImGui_Image*') then
@@ -1191,12 +1203,14 @@ function demo.ShowDemoWindowWidgets()
     -- Consider using the lower-level Draw List API, via ImGui.DrawList_AddImage(ImGui.GetWindowDrawList()).
     local my_tex_w, my_tex_h = ImGui.Image_GetSize(widgets.images.bitmap)
     do
+      rv,widgets.images.use_text_color_for_tint =
+        ImGui.Checkbox(ctx, 'Use Text Color for Tint', widgets.images.use_text_color_for_tint)
       ImGui.Text(ctx, ('%.0fx%.0f'):format(my_tex_w, my_tex_h))
       local pos_x, pos_y = ImGui.GetCursorScreenPos(ctx)
       local uv_min_x, uv_min_y = 0.0, 0.0 -- Top-left
       local uv_max_x, uv_max_y = 1.0, 1.0 -- Lower-right
-      local tint_col   = 0xFFFFFFFF       -- No tint
-      local border_col = 0xFFFFFF7F       -- 50% opaque white
+      local tint_col   = widgets.images.use_text_color_for_tint and ImGui.GetStyleColor(ctx, ImGui.Col_Text()) or 0xFFFFFFFF -- No tint
+      local border_col = ImGui.GetStyleColor(ctx, ImGui.Col_Border())
       ImGui.Image(ctx, widgets.images.bitmap, my_tex_w, my_tex_h,
         uv_min_x, uv_min_y, uv_max_x, uv_max_y, tint_col, border_col)
       if ImGui.IsItemHovered(ctx) then
@@ -1882,7 +1896,7 @@ label:
       ImGui.PlotLines(ctx, 'Lines', widgets.plots.plot1.data, widgets.plots.plot1.offset - 1, overlay, -1.0, 1.0, 0, 80.0)
     end
 
-    ImGui.Separator(ctx)
+    ImGui.SeparatorText(ctx, 'Functions')
     ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 8)
     rv,widgets.plots.plot2.func = ImGui.Combo(ctx, 'func', widgets.plots.plot2.func, 'Sin\0Saw\0')
     local funcChanged = rv
@@ -1952,6 +1966,7 @@ label:
     end
 
     -- static bool hdr = false;
+    ImGui.SeparatorText(ctx, 'Options')
     rv,widgets.colors.alpha_preview      = ImGui.Checkbox(ctx, 'With Alpha Preview',      widgets.colors.alpha_preview)
     rv,widgets.colors.alpha_half_preview = ImGui.Checkbox(ctx, 'With Half Alpha Preview', widgets.colors.alpha_half_preview)
     rv,widgets.colors.drag_and_drop      = ImGui.Checkbox(ctx, 'With Drag and Drop',      widgets.colors.drag_and_drop)
@@ -1964,6 +1979,7 @@ label:
     or (widgets.colors.alpha_preview and ImGui.ColorEditFlags_AlphaPreview() or 0)) |
     (widgets.colors.options_menu  and 0 or ImGui.ColorEditFlags_NoOptions())
 
+    ImGui.SeparatorText(ctx, 'Inline color editor')
     ImGui.Text(ctx, 'Color widget:')
     ImGui.SameLine(ctx); demo.HelpMarker(
       'Click on the color square to open a color picker.\n\z
@@ -2063,7 +2079,7 @@ label:
       misc_flags | (widgets.colors.no_border and ImGui.ColorEditFlags_NoBorder() or 0),
       80, 80)
 
-    ImGui.Text(ctx, 'Color picker:')
+    ImGui.SeparatorText(ctx, 'Color picker')
     rv,widgets.colors.alpha = ImGui.Checkbox(ctx, 'With Alpha', widgets.colors.alpha)
     rv,widgets.colors.alpha_bar = ImGui.Checkbox(ctx, 'With Alpha Bar', widgets.colors.alpha_bar)
     rv,widgets.colors.side_preview = ImGui.Checkbox(ctx, 'With Side Preview', widgets.colors.side_preview)
@@ -2262,7 +2278,7 @@ label:
 --
 --         const float drag_speed = 0.2f;
 --         static bool drag_clamp = false;
---         ImGui.Text("Drags:");
+--         ImGui.SeparatorText("Drags");
 --         ImGui.Checkbox("Clamp integers to 0..50", &drag_clamp);
 --         ImGui.SameLine(); HelpMarker(
 --             "As with every widget in dear imgui, we never modify values unless there is a user interaction.\n"
@@ -2281,7 +2297,7 @@ label:
 --         ImGui.DragScalar("drag double",    ImGuiDataType_Double, &f64_v, 0.0005f, &f64_zero, NULL,     "%.10f grams");
 --         ImGui.DragScalar("drag double log",ImGuiDataType_Double, &f64_v, 0.0005f, &f64_zero, &f64_one, "0 < %.10f < 1", ImGuiSliderFlags_Logarithmic);
 --
---         ImGui.Text("Sliders");
+--         ImGui.SeparatorText("Sliders");
 --         ImGui.SliderScalar("slider s8 full",       ImGuiDataType_S8,     &s8_v,  &s8_min,   &s8_max,   "%d");
 --         ImGui.SliderScalar("slider u8 full",       ImGuiDataType_U8,     &u8_v,  &u8_min,   &u8_max,   "%u");
 --         ImGui.SliderScalar("slider s16 full",      ImGuiDataType_S16,    &s16_v, &s16_min,  &s16_max,  "%d");
@@ -2306,7 +2322,7 @@ label:
 --         ImGui.SliderScalar("slider double low log",ImGuiDataType_Double, &f64_v, &f64_zero, &f64_one,  "%.10f", ImGuiSliderFlags_Logarithmic);
 --         ImGui.SliderScalar("slider double high",   ImGuiDataType_Double, &f64_v, &f64_lo_a, &f64_hi_a, "%e grams");
 --
---         ImGui.Text("Sliders (reverse)");
+--         ImGui.SeparatorText("Sliders (reverse)");
 --         ImGui.SliderScalar("slider s8 reverse",    ImGuiDataType_S8,   &s8_v,  &s8_max,    &s8_min, "%d");
 --         ImGui.SliderScalar("slider u8 reverse",    ImGuiDataType_U8,   &u8_v,  &u8_max,    &u8_min, "%u");
 --         ImGui.SliderScalar("slider s32 reverse",   ImGuiDataType_S32,  &s32_v, &s32_fifty, &s32_zero, "%d");
@@ -2315,7 +2331,7 @@ label:
 --         ImGui.SliderScalar("slider u64 reverse",   ImGuiDataType_U64,  &u64_v, &u64_fifty, &u64_zero, "%I64u ms");
 --
 --         static bool inputs_step = true;
---         ImGui.Text("Inputs");
+--         ImGui.SeparatorText("Inputs");
 --         ImGui.Checkbox("Show step buttons", &inputs_step);
 --         ImGui.InputScalar("input s8",      ImGuiDataType_S8,     &s8_v,  inputs_step ? &s8_one  : NULL, NULL, "%d");
 --         ImGui.InputScalar("input u8",      ImGuiDataType_U8,     &u8_v,  inputs_step ? &u8_one  : NULL, NULL, "%u");
@@ -2345,22 +2361,23 @@ label:
     local vec4d = widgets.multi_component.vec4d
     local vec4i = widgets.multi_component.vec4i
 
+    ImGui.SeparatorText(ctx, '2-wide')
     rv,vec4d[1],vec4d[2] = ImGui.InputDouble2(ctx, 'input double2', vec4d[1], vec4d[2])
     rv,vec4d[1],vec4d[2] = ImGui.DragDouble2(ctx, 'drag double2', vec4d[1], vec4d[2], 0.01, 0.0, 1.0)
     rv,vec4d[1],vec4d[2] = ImGui.SliderDouble2(ctx, 'slider double2', vec4d[1], vec4d[2], 0.0, 1.0)
     rv,vec4i[1],vec4i[2] = ImGui.InputInt2(ctx, 'input int2', vec4i[1], vec4i[2])
     rv,vec4i[1],vec4i[2] = ImGui.DragInt2(ctx, 'drag int2', vec4i[1], vec4i[2], 1, 0, 255)
     rv,vec4i[1],vec4i[2] = ImGui.SliderInt2(ctx, 'slider int2', vec4i[1], vec4i[2], 0, 255)
-    ImGui.Spacing(ctx)
 
+    ImGui.SeparatorText(ctx, '3-wide')
     rv,vec4d[1],vec4d[2],vec4d[3] = ImGui.InputDouble3(ctx, 'input double3', vec4d[1], vec4d[2], vec4d[3])
     rv,vec4d[1],vec4d[2],vec4d[3] = ImGui.DragDouble3(ctx, 'drag double3', vec4d[1], vec4d[2], vec4d[3], 0.01, 0.0, 1.0)
     rv,vec4d[1],vec4d[2],vec4d[3] = ImGui.SliderDouble3(ctx, 'slider double3', vec4d[1], vec4d[2], vec4d[3], 0.0, 1.0)
     rv,vec4i[1],vec4i[2],vec4i[3] = ImGui.InputInt3(ctx, 'input int3', vec4i[1], vec4i[2], vec4i[3])
     rv,vec4i[1],vec4i[2],vec4i[3] = ImGui.DragInt3(ctx, 'drag int3', vec4i[1], vec4i[2], vec4i[3], 1, 0, 255)
     rv,vec4i[1],vec4i[2],vec4i[3] = ImGui.SliderInt3(ctx, 'slider int3', vec4i[1], vec4i[2], vec4i[3], 0, 255)
-    ImGui.Spacing(ctx)
 
+    ImGui.SeparatorText(ctx, '4-wide')
     rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = ImGui.InputDouble4(ctx, 'input double4', vec4d[1], vec4d[2], vec4d[3], vec4d[4])
     rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = ImGui.DragDouble4(ctx, 'drag double4', vec4d[1], vec4d[2], vec4d[3], vec4d[4], 0.01, 0.0, 1.0)
     rv,vec4d[1],vec4d[2],vec4d[3],vec4d[4] = ImGui.SliderDouble4(ctx, 'slider double4', vec4d[1], vec4d[2], vec4d[3], vec4d[4], 0.0, 1.0)
@@ -2888,6 +2905,7 @@ function demo.ShowDemoWindowLayout()
       }
     end
 
+    ImGui.SeparatorText(ctx, 'Child windows')
     demo.HelpMarker('Use child windows to begin into a self-contained independent scrolling/clipping regions within a host window.')
     rv,layout.child.disable_mouse_wheel = ImGui.Checkbox(ctx, 'Disable Mouse Wheel', layout.child.disable_mouse_wheel)
     rv,layout.child.disable_menu = ImGui.Checkbox(ctx, 'Disable Menu', layout.child.disable_menu)
@@ -2939,7 +2957,7 @@ function demo.ShowDemoWindowLayout()
       ImGui.PopStyleVar(ctx)
     end
 
-    ImGui.Separator(ctx)
+    ImGui.SeparatorText(ctx, 'Misc/Advanced')
 
     -- Demonstrate a few extra things
     -- - Changing ImGuiCol_ChildBg (which is transparent black in default styles)
@@ -3732,8 +3750,7 @@ function demo.ShowDemoWindowPopups()
     ImGui.SameLine(ctx)
     ImGui.Text(ctx, names[popups.popups.selected_fish] or '<None>')
     if ImGui.BeginPopup(ctx, 'my_select_popup') then
-      ImGui.Text(ctx, 'Aquarium')
-      ImGui.Separator(ctx)
+      ImGui.SeparatorText(ctx, 'Aquarium')
       for i,fish in ipairs(names) do
         if ImGui.Selectable(ctx, fish) then
           popups.popups.selected_fish = i
@@ -3918,7 +3935,7 @@ function demo.ShowDemoWindowPopups()
     ImGui.SetNextWindowPos(ctx, center[1], center[2], ImGui.Cond_Appearing(), 0.5, 0.5)
 
     if ImGui.BeginPopupModal(ctx, 'Delete?', nil, ImGui.WindowFlags_AlwaysAutoResize()) then
-      ImGui.Text(ctx, 'All those beautiful files will be deleted.\nThis operation cannot be undone!\n\n')
+      ImGui.Text(ctx, 'All those beautiful files will be deleted.\nThis operation cannot be undone!')
       ImGui.Separator(ctx)
 
       --static int unused_i = 0;
@@ -6366,7 +6383,7 @@ function demo.GetStyleData()
   local vec2 = {
     'ButtonTextAlign', 'SelectableTextAlign', 'CellPadding', 'ItemSpacing',
     'ItemInnerSpacing', 'FramePadding', 'WindowPadding', 'WindowMinSize',
-    'WindowTitleAlign',
+    'WindowTitleAlign', 'SeparatorTextAlign', 'SeparatorTextPadding',
   }
 
   for i, name in demo.EachEnum('StyleVar') do
@@ -6452,7 +6469,7 @@ function demo.ShowStyleEditor()
 
   local borders = { 'WindowBorder', 'FrameBorder', 'PopupBorder' }
   for i, name in ipairs(borders) do
-    local var = r[('ImGui_StyleVar_%sSize'):format(name)]()
+    local var = ImGui[('StyleVar_%sSize'):format(name)]()
     local enable = app.style_editor.style.vars[var] > 0
     if i > 1 then ImGui.SameLine(ctx) end
     rv, enable = ImGui.Checkbox(ctx, name, enable)
@@ -6517,7 +6534,7 @@ function demo.ShowStyleEditor()
   if ImGui.BeginTabBar(ctx, '##tabs', ImGui.TabBarFlags_None()) then
     if ImGui.BeginTabItem(ctx, 'Sizes') then
       local slider = function(varname, min, max, format)
-        local func = r['ImGui_StyleVar_' .. varname]
+        local func = ImGui['StyleVar_' .. varname]
         assert(func, ('%s is not exposed as a StyleVar'):format(varname))
         local var = func()
         if type(app.style_editor.style.vars[var]) == 'table' then
@@ -6529,7 +6546,7 @@ function demo.ShowStyleEditor()
         end
       end
 
-      ImGui.Text(ctx, 'Main')
+      ImGui.SeparatorText(ctx, 'Main')
       slider('WindowPadding',     0.0, 20.0, '%.0f')
       slider('FramePadding',      0.0, 20.0, '%.0f')
       slider('CellPadding',       0.0, 20.0, '%.0f')
@@ -6539,22 +6556,24 @@ function demo.ShowStyleEditor()
       slider('IndentSpacing',     0.0, 30.0, '%.0f')
       slider('ScrollbarSize',     1.0, 20.0, '%.0f')
       slider('GrabMinSize',       1.0, 20.0, '%.0f')
-      ImGui.Text(ctx, 'Borders')
+
+      ImGui.SeparatorText(ctx, 'Borders')
       slider('WindowBorderSize', 0.0, 1.0, '%.0f')
       slider('ChildBorderSize',  0.0, 1.0, '%.0f')
       slider('PopupBorderSize',  0.0, 1.0, '%.0f')
       slider('FrameBorderSize',  0.0, 1.0, '%.0f')
       -- slider('TabBorderSize',    0.0, 1.0, '%.0f')
-      ImGui.Text(ctx, 'Rounding')
+
+      ImGui.SeparatorText(ctx, 'Rounding')
       slider('WindowRounding',    0.0, 12.0, '%.0f')
       slider('ChildRounding',     0.0, 12.0, '%.0f')
       slider('FrameRounding',     0.0, 12.0, '%.0f')
       slider('PopupRounding',     0.0, 12.0, '%.0f')
       slider('ScrollbarRounding', 0.0, 12.0, '%.0f')
       slider('GrabRounding',      0.0, 12.0, '%.0f')
-      -- slider('LogSliderDeadzone', 0.0, 12.0, '%.0f')
       slider('TabRounding',       0.0, 12.0, '%.0f')
-      ImGui.Text(ctx, 'Alignment')
+
+      ImGui.SeparatorText(ctx, 'Widgets')
       slider('WindowTitleAlign', 0.0, 1.0, '%.2f')
       -- int window_menu_button_position = app.style_editor.style.WindowMenuButtonPosition + 1
       -- if (ctx, ImGui.Combo(ctx, 'WindowMenuButtonPosition', (ctx, int*)&window_menu_button_position, "None\0Left\0Right\0"))
@@ -6564,6 +6583,12 @@ function demo.ShowStyleEditor()
       ImGui.SameLine(ctx); demo.HelpMarker('Alignment applies when a button is larger than its text content.')
       slider('SelectableTextAlign', 0.0, 1.0, '%.2f')
       ImGui.SameLine(ctx); demo.HelpMarker('Alignment applies when a selectable is larger than its text content.')
+      slider('SeparatorTextBorderSize', 0.0, 10.0, '%.0f')
+      slider('SeparatorTextAlign',      0.0, 1.0, '%.2f')
+      slider('SeparatorTextPadding',    0.0, 40.0, '%.0f')
+      -- slider('LogSliderDeadzone', 0.0, 12.0, '%.0f')
+
+      -- ImGui.SeparatorText(ctx, 'Misc')
       -- ImGui.Text(ctx, 'Safe Area Padding')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Adjust if you cannot see the edges of your screen (ctx, e.g. on a TV where scaling has not been configured).')
       -- slider('DisplaySafeAreaPadding', 0.0, 30.0, '%.0f')
@@ -6864,6 +6889,7 @@ function demo.ShowExampleMenuFile()
     error('never called')
   end
   if ImGui.MenuItem(ctx, 'Checked', nil, true) then end
+  ImGui.Separator(ctx)
   if ImGui.MenuItem(ctx, 'Quit', 'Alt+F4') then end
 end
 
