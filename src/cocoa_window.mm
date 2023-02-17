@@ -226,9 +226,15 @@ std::optional<LRESULT> CocoaWindow::handleMessage
     //
     // Both makeFirstResponder and making the window key are required
     // for receiving key events right away without a click
-    if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing) ||
-        IsWindowVisible(m_hwnd))
-      dispatch_async(dispatch_get_main_queue(), ^{ setFocus(); });
+    const bool focusOnAppearing
+      { !(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing) };
+    if(focusOnAppearing || IsWindowVisible(m_hwnd)) {
+      HWND hwndCache { m_hwnd };
+      dispatch_async(dispatch_get_main_queue(), ^{
+        if(IsWindow(hwndCache)) // if we didn't get destroyed in the meantime
+          setFocus();
+      });
+    }
     break;
   }
 
