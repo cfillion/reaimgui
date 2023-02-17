@@ -118,27 +118,23 @@ void Win32OpenGL::createContext()
       (wglGetProcAddress("wglCreateContextAttribsARB")) };
 
   if(wglCreateContextAttribsARB) {
-    static int minor { 2 };
-    do {
-      // https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
-      const int attrs[] {
-        WGL_CONTEXT_MAJOR_VERSION_ARB, 3,
-        WGL_CONTEXT_MINOR_VERSION_ARB, minor,
-        0
-      };
+    // https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
+    constexpr int attrs[] {
+      WGL_CONTEXT_MAJOR_VERSION_ARB, 3, WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+      WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+      0
+    };
 
-      if(HGLRC coreGl { wglCreateContextAttribsARB(m_dc, nullptr, attrs) }) {
-        wglMakeCurrent(m_dc, m_gl = coreGl);
-        wglDeleteContext(dummyGl);
-        break;
-      }
-    } while(--minor >= 1);
+    if(HGLRC coreGl { wglCreateContextAttribsARB(m_dc, nullptr, attrs) }) {
+      wglMakeCurrent(m_dc, m_gl = coreGl);
+      wglDeleteContext(dummyGl);
+    }
   }
 
   if(gl3wInit()) {
     wglDeleteContext(m_gl);
     ReleaseDC(m_window->nativeHandle(), m_dc);
-    throw backend_error { "failed to initialize OpenGL 3.1+ context" };
+    throw backend_error { "failed to initialize OpenGL 3.2 renderer" };
   }
 }
 
