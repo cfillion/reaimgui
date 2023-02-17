@@ -91,9 +91,6 @@ private:
 
 D3D10Renderer::Shared::Shared()
 {
-  ImGuiIO &io { ImGui::GetIO() };
-  io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-
   constexpr D3D10_DRIVER_TYPE drivers[] {
     D3D10_DRIVER_TYPE_HARDWARE,
     D3D10_DRIVER_TYPE_WARP, // software rasterizer

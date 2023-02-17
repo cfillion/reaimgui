@@ -190,8 +190,8 @@ void OpenGLRenderer::setup()
       "OpenGL v3.1 or newer required, got v%d.%d", major, minor);
     throw backend_error { msg };
   }
-  else if(major > 3 || minor >= 2) // enable glDrawElementsBaseVertex
-    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
+  else if(major < 3 || (major == 1 && minor < 2)) // disable glDrawElementsBaseVertex
+    io.BackendFlags &= ~ImGuiBackendFlags_RendererHasVtxOffset;
 }
 
 void OpenGLRenderer::teardown()

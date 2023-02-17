@@ -103,10 +103,11 @@ Context::Context(const char *label, const int userConfigFlags)
   ImGuiIO &io { m_imgui->IO };
   io.BackendRendererName = m_rendererFactory->name();
   io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;
+  io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
-  io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
   io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
+  io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
   io.ConfigDockingNoSplit = Settings::DockingNoSplit;
   io.ConfigDockingWithShift = Settings::DockingWithShift;
   io.ConfigDockingTransparentPayload = Settings::DockingTransparentPayload;

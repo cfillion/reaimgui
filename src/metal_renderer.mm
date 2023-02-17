@@ -84,9 +84,6 @@ private:
 
 MetalRenderer::Shared::Shared()
 {
-  ImGuiIO &io { ImGui::GetIO() };
-  io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-
   static FuncImport<decltype(MTLCreateSystemDefaultDevice)>
     _MTLCreateSystemDefaultDevice { METAL, "MTLCreateSystemDefaultDevice" };
   if(!_MTLCreateSystemDefaultDevice)
