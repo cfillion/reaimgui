@@ -27,6 +27,8 @@
 #include "textfilter.hpp"
 #include "version.hpp"
 
+#include <climits>
+
 API_SECTION("Utility");
 
 DEFINE_API(void, GetVersion,
@@ -116,14 +118,19 @@ Windows and Linux.)",
   *API_RW(y) = point.y;
 });
 
-DEFINE_API(void, NumericLimits_Float, (double*,API_W(min))(double*,API_W(max)),
-"Returns FLT_MIN and FLT_MAX for this system.",
-{
-  assertValid(API_W(min));
-  assertValid(API_W(max));
-  *API_W(min) = FLT_MIN;
-  *API_W(max) = FLT_MAX;
-});
+#define NUMERIC_LIMITS(name, type, minVal, maxVal)                             \
+  DEFINE_API(void, NumericLimits_##name, (type*,API_W(min))(type*,API_W(max)), \
+  "Returns " #minVal " and " #maxVal " for this system.",                      \
+  {                                                                            \
+    assertValid(API_W(min));                                                   \
+    assertValid(API_W(max));                                                   \
+    *API_W(min) = minVal;                                                      \
+    *API_W(max) = maxVal;                                                      \
+  })
+
+NUMERIC_LIMITS(Double, double, DBL_MIN, DBL_MAX);
+NUMERIC_LIMITS(Float,  double, FLT_MIN, FLT_MAX);
+NUMERIC_LIMITS(Int,    int,    INT_MIN, INT_MAX);
 
 API_SUBSECTION("ID stack/scope",
 R"(Read the [FAQ](https://dearimgui.org/faq) for more details about how IDs are
