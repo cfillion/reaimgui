@@ -31,6 +31,7 @@ class Context;
 - (void)dealloc;
 
 - (void)watchView:(NSView *)view context:(Context *)ctx;
+- (void)menuDidBeginTracking:(NSNotification *)notification;
 - (void)windowDidResignKey:(NSNotification *)notification;
 - (NSEvent *)appMouseEvent:(NSEvent *)event;
 @end

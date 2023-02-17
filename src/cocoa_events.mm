@@ -48,20 +48,24 @@ static Context *getWindowContext(NSWindow *window)
 {
   NSNotificationCenter *nc { [NSNotificationCenter defaultCenter] };
   [nc addObserver:self
+         selector:@selector(menuDidBeginTracking:)
+             name:NSMenuDidBeginTrackingNotification
+           object:nil];
+  [nc addObserver:self
          selector:@selector(windowDidResignKey:)
              name:NSWindowDidResignKeyNotification
            object:nil];
 
-  constexpr NSEventMask mouseUpMask {
+  constexpr NSEventMask mouseEventMask {
     NSEventMaskLeftMouseDown  | NSEventMaskLeftMouseUp  |
     NSEventMaskRightMouseDown | NSEventMaskRightMouseUp |
     NSEventMaskOtherMouseDown | NSEventMaskOtherMouseUp
   };
   __weak EventHandler *weakSelf { self }; // don't prevent dealloc
-  auto mouseUpHandler
+  auto onMouseEvent
     { ^NSEvent *(NSEvent *event) { return [weakSelf appMouseEvent:event]; } };
-  m_mouseMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:mouseUpMask
-                                                         handler:mouseUpHandler];
+  m_mouseMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:mouseEventMask
+                                                         handler:onMouseEvent];
 
   return self;
 }
@@ -77,6 +81,14 @@ static Context *getWindowContext(NSWindow *window)
   Context *(^getContext)() { ^{ return ctx; } };
   objc_setAssociatedObject([view window], &GET_WND_CTX,
                            getContext, OBJC_ASSOCIATION_COPY);
+}
+
+- (void)menuDidBeginTracking:(NSNotification *)notification
+{
+  if(Context *ctx { Window::contextFromHwnd(GetForegroundWindow()) })
+    ctx->IO().ClearInputKeys();
+  if(Platform::getCapture())
+    Platform::releaseCapture();
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
