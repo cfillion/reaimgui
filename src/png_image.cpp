@@ -93,9 +93,8 @@ PNGImage::PNGImage(std::istream &stream)
     png_infop   info;
   } png;
 
-  // reporting both errors and warnings as errors
   if(!(png.read =
-      png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, error, error)))
+      png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, error, nullptr)))
     throw reascript_error { "failed to create PNG read structure" };
   if(!(png.info = png_create_info_struct(png.read)))
     throw reascript_error { "failed to create PNG info structure" };
