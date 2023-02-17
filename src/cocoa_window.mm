@@ -219,7 +219,7 @@ std::optional<LRESULT> CocoaWindow::handleMessage
   (const unsigned int msg, WPARAM wParam, LPARAM)
 {
   switch(msg) {
-  case WM_SETFOCUS: // REAPER v6.53+
+  case WM_SETFOCUS: { // REAPER v6.53+
     // Redirect focus to the input view after m_view gets it.
     // WM_SETFOCUS is sent from becomeFirstResponder,
     // m_view will gain focus right after this returns.
@@ -235,6 +235,11 @@ std::optional<LRESULT> CocoaWindow::handleMessage
           setFocus();
       });
     }
+    break;
+  }
+  case WM_SIZE:
+    // SWELL does not send WM_MOVE when resizing moves the window origin
+    m_viewport->PlatformRequestMove = true;
     break;
   }
 
