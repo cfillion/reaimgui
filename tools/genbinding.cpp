@@ -148,7 +148,7 @@ Function::Function(const API *api)
   while(argTypes.size() > 0 && argNames.size() > 0) { // argDefvs may be empty
     size_t typeLen { argTypes.find(',') },
            nameLen { argNames.find(',') },
-           defvLen { argDefvs.find(',') };
+           defvLen { argDefvs.find('\31') };
 
     if(argDefvs.substr(0, strlen("ImGui")) == "ImGui") {
       argDefvs.remove_prefix(strlen("ImGui"));

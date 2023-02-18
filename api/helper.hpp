@@ -53,6 +53,8 @@
   BOOST_PP_COMMA_IF(i) _ARG_TYPE(arg) _ARG_NAME(arg)
 #define _STRARG(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
+#define _STRARGUS(r, macro, i, arg) \
+  BOOST_PP_EXPR_IF(i, "\31") BOOST_PP_STRINGIZE(macro(arg))
 
 template<typename T>
 using DefArgVal = std::conditional_t<
@@ -97,7 +99,7 @@ using DefArgVal = std::conditional_t<
     _FOREACH_ARG(_STRARG, _ARG_TYPE, args) "\0"                         \
     _FOREACH_ARG(_STRARG, _ARG_NAME, args) "\0"                         \
     help                                   "\0"                         \
-    _FOREACH_ARG(_STRARG, _ARG_DEFV, args), __LINE__,                   \
+    _FOREACH_ARG(_STRARGUS, _ARG_DEFV, args), __LINE__,                 \
   }
 #define _DEFINE_ENUM(prefix, name, doc) \
   _DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
