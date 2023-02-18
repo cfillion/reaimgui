@@ -82,7 +82,7 @@ DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
     throw reascript_error { "unknown style variable" };
 
   std::visit([var_idx, val1, API_RO(val2)](auto ImGuiStyle::*field) {
-    if constexpr (std::is_same_v<ImVec2,
+    if constexpr(std::is_same_v<ImVec2,
                             std::decay_t<decltype(ImGui::GetStyle().*field)>>) {
       if(!API_RO(val2))
         throw reascript_error { "this variable requires two values (x, y)" };
@@ -114,7 +114,7 @@ DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 
   std::visit([API_W(val1), API_W(val2)](auto ImGuiStyle::*field) {
     const ImGuiStyle &style { ImGui::GetStyle() };
-    if constexpr (std::is_same_v<ImVec2, std::decay_t<decltype(style.*field)>>) {
+    if constexpr(std::is_same_v<ImVec2, std::decay_t<decltype(style.*field)>>) {
       if(API_W(val1)) *API_W(val1) = (style.*field).x;
       if(API_W(val2)) *API_W(val2) = (style.*field).y;
     }

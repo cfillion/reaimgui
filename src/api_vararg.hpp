@@ -33,11 +33,11 @@ struct ReaScriptAPI<R(*)(Args...) noexcept>
 
     const auto &args { makeTuple(argv, std::index_sequence_for<Args...>{}) };
 
-    if constexpr (std::is_void_v<R>) {
+    if constexpr(std::is_void_v<R>) {
       std::apply(fn, args);
       return nullptr;
     }
-    else if constexpr (std::is_floating_point_v<R>) {
+    else if constexpr(std::is_floating_point_v<R>) {
       const auto value { std::apply(fn, args) };
       void *storage { argv[argc - 1] };
       *static_cast<double *>(storage) = value;

@@ -152,7 +152,7 @@ inline void nullIfEmpty(const char *&string)
 template<typename T>
 void assertValid(T *ptr)
 {
-  if constexpr (std::is_base_of_v<Resource, T>) {
+  if constexpr(std::is_base_of_v<Resource, T>) {
     if(Resource::isValid(ptr))
       return;
   }
@@ -160,7 +160,7 @@ void assertValid(T *ptr)
     return;
 
   std::string type;
-  if constexpr (std::is_class_v<T>)
+  if constexpr(std::is_class_v<T>)
     type = T::api_type_name;
   else
     type = boost::typeindex::type_id<T>().pretty_name();

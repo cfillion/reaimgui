@@ -209,8 +209,8 @@ DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
   return std::visit([ctx](auto ImGuiIO::*field) -> double {
     const ImGuiIO &io { ctx->IO() };
 
-    if constexpr (std::is_same_v<decltype(ImGuiIO::ConfigFlags),
-                                 std::decay_t<decltype(io.*field)>>) {
+    if constexpr(std::is_same_v<decltype(ImGuiIO::ConfigFlags),
+                                std::decay_t<decltype(io.*field)>>) {
       if(field == &ImGuiIO::ConfigFlags)
         return ctx->userConfigFlags();
     }
@@ -230,8 +230,8 @@ DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
   std::visit([ctx, value](auto ImGuiIO::*field) {
     ImGuiIO &io { ctx->IO() };
 
-    if constexpr (std::is_same_v<decltype(ImGuiIO::ConfigFlags),
-                                 std::decay_t<decltype(io.*field)>>) {
+    if constexpr(std::is_same_v<decltype(ImGuiIO::ConfigFlags),
+                                std::decay_t<decltype(io.*field)>>) {
       if(field == &ImGuiIO::ConfigFlags) {
         ctx->setUserConfigFlags(value);
         return;
