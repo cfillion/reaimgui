@@ -356,6 +356,7 @@ void DockerHost::activate()
 {
   m_window.reset(Platform::createWindow(m_viewport, this));
   m_window->create();
+  m_window->setTitle(m_ctx->name()); // for p=2649553
 
   HWND hwnd { m_window->nativeHandle() };
   m_viewport->PlatformHandle = hwnd;
