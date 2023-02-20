@@ -39,24 +39,7 @@ local reaper, ogfx, print = reaper, gfx, print
 local debug, math, string, table, utf8 = debug, math, string, table, utf8
 
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
-local CTX_FLAGS = ImGui.ConfigFlags_NoSavedSettings() |
-                  ImGui.ConfigFlags_DockingEnable()
-local CANARY_FLAGS = ImGui.ConfigFlags_NoSavedSettings()
-local WND_FLAG_NOMOVE = ImGui.WindowFlags_NoMove()
-local WND_FLAGS = ImGui.WindowFlags_NoScrollbar() |
-                  ImGui.WindowFlags_NoScrollWithMouse() |
-                  WND_FLAG_NOMOVE
-local CHILD_FLAGS = ImGui.WindowFlags_NoMouseInputs()
-local LOG_WND_FLAGS = ImGui.WindowFlags_NoDocking() |
-                      ImGui.WindowFlags_NoFocusOnAppearing()
-local HOVERED_FLAGS = ImGui.HoveredFlags_ChildWindows()
-local FOCUSED_FLAGS = ImGui.FocusedFlags_RootAndChildWindows()
-local WINDOW_PADDING, WINDOW_BG, CHILD_BORDER_SIZE =
-  ImGui.StyleVar_WindowPadding(), ImGui.Col_WindowBg(),
-  ImGui.StyleVar_ChildBorderSize()
 local ROUND_CORNERS = ImGui.DrawFlags_RoundCornersAll()
-local NO_DECORATION = ImGui.ConfigVar_ViewportsNoDecoration()
-local NO_DOCK_SPLIT = ImGui.ConfigVar_DockingNoSplit()
 local MACOS, WINDOWS = reaper.GetOS():find('OSX') ~= nil,
                        reaper.GetOS():find('Win') == 1
 local CURSORS = {
@@ -117,7 +100,6 @@ local KEYS = {
   [ImGui.Key_Tab()]         = 0x00000009,
   [ImGui.Key_UpArrow()]     = 0x00007570,
 }
-local KEY_A, KEY_Z = ImGui.Key_A(), ImGui.Key_Z()
 local FONT_FLAGS = {
   [0]                = ImGui.FontFlags_None(),
   [string.byte('b')] = ImGui.FontFlags_Bold(),
@@ -331,7 +313,7 @@ local function alignText(flags, pos, size, limit)
 end
 
 local function updateMouse()
-  state.hovered = ImGui.IsWindowHovered(state.ctx, HOVERED_FLAGS)
+  state.hovered = ImGui.IsWindowHovered(state.ctx, ImGui.HoveredFlags_ChildWindows())
   if state.hovered then -- not over Log window
     local wheel_v, wheel_h = ImGui.GetMouseWheel(state.ctx)
     gfx_vars.mouse_wheel  = gfx_vars.mouse_wheel  + (wheel_v * MW_TICK)
@@ -353,7 +335,7 @@ local function updateKeyboard()
 
   -- flags for gfx.getchar(65536)
   state.wnd_flags = 1
-  if ImGui.IsWindowFocused(state.ctx, FOCUSED_FLAGS) then
+  if ImGui.IsWindowFocused(state.ctx, ImGui.FocusedFlags_RootAndChildWindows()) then
     state.wnd_flags = state.wnd_flags | 2
   end
   -- if not ImGui.IsWindowCollapsed(state.ctx) then
@@ -367,12 +349,13 @@ local function updateKeyboard()
     end
   end
 
+  local a, z = ImGui.Key_A(), ImGui.Key_Z()
   local mods = ImGui.GetKeyMods(state.ctx) & CHAR_MOD_MASK
   for flags, mod_base in pairs(CHAR_MOD_BASE) do
     if flags == mods then
-      for k = KEY_A, KEY_Z do
+      for k = a, z do
         if ImGui.IsKeyPressed(state.ctx, k) then
-          ringInsert(state.charqueue, mod_base + (k - KEY_A))
+          ringInsert(state.charqueue, mod_base + (k - a))
         end
       end
       return -- break + bypass the character input queue
@@ -390,7 +373,9 @@ end
 
 local function updateDropFiles()
   state.drop_files = {}
-  if ImGui.BeginChild(state.ctx, 'drop_target', -FLT_MIN, -FLT_MIN, 0, CHILD_FLAGS) then
+
+  local flags = ImGui.WindowFlags_NoMouseInputs()
+  if ImGui.BeginChild(state.ctx, 'drop_target', -FLT_MIN, -FLT_MIN, 0, flags) then
     ImGui.EndChild(state.ctx)
 
     -- reset cursor pos for when gfx.update() is run more than once per frame
@@ -446,10 +431,12 @@ local function warn(message, ...)
 end
 
 local function showLog()
-  ImGui.SetConfigVar(state.ctx, NO_DECORATION, 1)
+  local flags = ImGui.WindowFlags_NoDocking() |
+                ImGui.WindowFlags_NoFocusOnAppearing()
+  ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_ViewportsNoDecoration(), 1)
   ImGui.SetNextWindowSize(state.ctx, 800, 300, ImGui.Cond_Once())
-  local visible, open = ImGui.Begin(state.ctx, 'gfx2imgui [Log]', true, LOG_WND_FLAGS)
-  ImGui.SetConfigVar(state.ctx, NO_DECORATION, 0)
+  local visible, open = ImGui.Begin(state.ctx, 'gfx2imgui [Log]', true, flags)
+  ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_ViewportsNoDecoration(), 0)
   if not visible then return end
   local scroll_bottom = ImGui.GetScrollY(state.ctx) == ImGui.GetScrollMaxY(state.ctx)
   local copy = false
@@ -1093,10 +1080,14 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     local ctx_name = name
     if ctx_name:len() < 1 then ctx_name = 'gfx2imgui' end
 
+    local ctx_flags = ImGui.ConfigFlags_NoSavedSettings() |
+                      ImGui.ConfigFlags_DockingEnable()
+    local canary_flags = ImGui.ConfigFlags_NoSavedSettings()
+
     state = {
       name        = name,
-      ctx         = ImGui.CreateContext(ctx_name, CTX_FLAGS),
-      canary      = ImGui.CreateContext(ctx_name, CANARY_FLAGS),
+      ctx         = ImGui.CreateContext(ctx_name, ctx_flags),
+      canary      = ImGui.CreateContext(ctx_name, canary_flags),
       wnd_flags   = 1,
       collapsed   = false,
       want_close  = false,
@@ -1110,8 +1101,8 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
       pos_x = 0, pos_y = 0,
     }
 
-    ImGui.SetConfigVar(state.ctx, NO_DECORATION, 0)
-    ImGui.SetConfigVar(state.ctx, NO_DOCK_SPLIT, 1)
+    ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_ViewportsNoDecoration(), 0)
+    ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_DockingNoSplit(), 1)
 
     -- using pairs (not ipairs) to support gaps in requested font slots
     for _, font in pairs(global_state.fonts) do
@@ -1536,14 +1527,16 @@ function gfx.update()
              (col_clear << 8  & 0x00ff0000) |
              (col_clear << 24 & 0xff000000) |
              0xff
-  local flags = WND_FLAGS
-  if state.dock & 1 == 1 then
-    -- allow undocking by dragging the triangle or tab item
-    flags = flags & ~WND_FLAG_NOMOVE
+  local flags = ImGui.WindowFlags_NoScrollbar() |
+                ImGui.WindowFlags_NoScrollWithMouse()
+  if state.dock & 1 == 0 then
+    -- unset to allow undocking by dragging the triangle or tab item
+    flags = flags | ImGui.WindowFlags_NoMove()
   end
-  ImGui.PushStyleColor(state.ctx, WINDOW_BG, bg)
-  ImGui.PushStyleVar(state.ctx, WINDOW_PADDING, 0, 0)
-  ImGui.PushStyleVar(state.ctx, CHILD_BORDER_SIZE, 0) -- no border when docked
+  ImGui.PushStyleColor(state.ctx, ImGui.Col_WindowBg(), bg)
+  ImGui.PushStyleVar(state.ctx, ImGui.StyleVar_WindowPadding(), 0, 0)
+  -- no border when docked
+  ImGui.PushStyleVar(state.ctx, ImGui.StyleVar_ChildBorderSize(), 0)
   local wnd_label = ('%s###gfx2imgui'):format(state.name)
   local visible, open = ImGui.Begin(state.ctx, wnd_label, true, flags)
   state.collapsed = not visible
