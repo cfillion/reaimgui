@@ -150,6 +150,8 @@ local gfx, global_state, state = {}, {
   images     = {},
   log        = { ptr=0, size=0, max_size=64 },
   log_lines  = {},
+  dock       = 0,
+  pos_x = 0, pos_y = 0,
 }
 
 -- default variables (see also gfx_vars_initializers)
@@ -455,7 +457,7 @@ local function showLog()
 end
 
 local function setDock(v)
-  state.dock = v & 0xf01
+  global_state.dock = v & 0xf01
   state.want_dock = (v & 1) == 1 and ~(v >> 8 & 0xf) or 0
 end
 
@@ -892,7 +894,7 @@ end
 
 function gfx.clienttoscreen(x, y)
   if not state then return x, y end
-  return state.pos_x + x, state.pos_y + y
+  return global_state.pos_x + x, global_state.pos_y + y
 end
 
 function gfx.deltablit()
@@ -902,25 +904,23 @@ end
 
 function gfx.dock(v, ...) -- v[,wx,wy,ww,wh]
   local n, rv = select('#', ...), {}
-
-  if not state then
-    for i = 1, n + 1 do rv[i] = 0 end
-    return table.unpack(rv)
-  end
-
-  v = toint(tonumber(v))
+  v = tonumber(v)
 
   if v >= 0 then
+    if not state then
+      for i = 1, math.min(n + 1, 5) do rv[i] = 0 end
+      return table.unpack(rv)
+    end
+
     setDock(v)
-    return state.dock
   end
 
-  if n >= 1 then rv[1] = state.pos_x end
-  if n >= 2 then rv[2] = state.pos_y end
-  if n >= 3 then rv[3] = gfx_vars.w  end
-  if n >= 4 then rv[4] = gfx_vars.h  end
+  if n >= 1 then rv[1] = global_state.pos_x end
+  if n >= 2 then rv[2] = global_state.pos_y end
+  if n >= 3 then rv[3] = gfx_vars.w         end
+  if n >= 4 then rv[4] = gfx_vars.h         end
 
-  return state.dock, table.unpack(rv)
+  return global_state.dock, table.unpack(rv)
 end
 
 function gfx.drawchar(char)
@@ -1098,7 +1098,6 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
       charqueue   = { ptr=0, rptr=0, size=0, max_size=16 },
       drop_files  = {},
       mouse_cap   = 0,
-      pos_x = 0, pos_y = 0,
     }
 
     ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_ViewportsNoDecoration(), 0)
@@ -1109,7 +1108,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
       state.fontqueue[#state.fontqueue + 1] = font
     end
 
-    -- always update state.dock with the current value
+    -- always update global_state.dock with the current value
     setDock(toint(tonumber(dockstate)))
 
     gfx_vars.ext_retina = 1 -- ReaImGui scales automatically
@@ -1125,8 +1124,9 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
   end
 
   if xpos and ypos then
-    state.pos_x, state.pos_y = toint(tonumber(xpos)), toint(tonumber(ypos))
-    state.want_pos = { x=state.pos_x, y=state.pos_y }
+    global_state.pos_x, global_state.pos_y =
+      toint(tonumber(xpos)), toint(tonumber(ypos))
+    state.want_pos = { x=global_state.pos_x, y=global_state.pos_y }
   end
 
   return 1
@@ -1293,7 +1293,7 @@ end
 
 function gfx.screentoclient(x, y)
   if not state then return x, y end
-  return x - state.pos_x, y - state.pos_y
+  return x - global_state.pos_x, y - global_state.pos_y
 end
 
 function gfx.set(...)
@@ -1529,7 +1529,7 @@ function gfx.update()
              0xff
   local flags = ImGui.WindowFlags_NoScrollbar() |
                 ImGui.WindowFlags_NoScrollWithMouse()
-  if state.dock & 1 == 0 then
+  if global_state.dock & 1 == 0 then
     -- unset to allow undocking by dragging the triangle or tab item
     flags = flags | ImGui.WindowFlags_NoMove()
   end
@@ -1554,10 +1554,10 @@ function gfx.update()
   gfx_vars.w, gfx_vars.h = ImGui.GetWindowSize(state.ctx)
   state.want_close = state.want_close or not open
   state.screen_x, state.screen_y = ImGui.GetCursorScreenPos(state.ctx)
-  state.pos_x, state.pos_y = state.screen_x, state.screen_y
-  if MACOS then state.pos_y = state.pos_y + gfx_vars.h end
-  state.pos_x, state.pos_y = ImGui.PointConvertNative(state.ctx,
-    state.pos_x, state.pos_y, true)
+  global_state.pos_x, global_state.pos_y = state.screen_x, state.screen_y
+  if MACOS then global_state.pos_y = global_state.pos_y + gfx_vars.h end
+  global_state.pos_x, global_state.pos_y = ImGui.PointConvertNative(state.ctx,
+    global_state.pos_x, global_state.pos_y, true)
 
   -- remove space taken by the window titlebar or docker tabbar
   local pos_x, pos_y = ImGui.GetWindowPos(state.ctx)
@@ -1565,9 +1565,9 @@ function gfx.update()
                            gfx_vars.h - (state.screen_y - pos_y)
 
   if ImGui.IsWindowDocked(state.ctx) then
-    state.dock = 1 | (~ImGui.GetWindowDockID(state.ctx) << 8)
+    global_state.dock = 1 | (~ImGui.GetWindowDockID(state.ctx) << 8)
   else
-    state.dock = state.dock & ~1 -- preserve previous docker ID
+    global_state.dock = global_state.dock & ~1 -- preserve previous docker ID
   end
 
   updateMouse()
