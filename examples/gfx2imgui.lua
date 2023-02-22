@@ -40,8 +40,8 @@ local debug, math, string, table, utf8 = debug, math, string, table, utf8
 
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
 local ROUND_CORNERS = ImGui.DrawFlags_RoundCornersAll()
-local MACOS, WINDOWS = reaper.GetOS():find('OSX') ~= nil,
-                       reaper.GetOS():find('Win') == 1
+local MACOS   = reaper.GetOS():find('OSX') ~= nil
+local WINDOWS = reaper.GetOS():find('Win') == 1
 local CURSORS = {
   [0x7f00] = ImGui.MouseCursor_Arrow(),
   [0x7f01] = ImGui.MouseCursor_TextInput(),
@@ -328,8 +328,8 @@ local function updateMouse()
   end
 
   gfx_vars.mouse_x, gfx_vars.mouse_y = ImGui.GetMousePos(state.ctx)
-  gfx_vars.mouse_x, gfx_vars.mouse_y = gfx_vars.mouse_x - state.screen_x,
-                                       gfx_vars.mouse_y - state.screen_y
+  gfx_vars.mouse_x = gfx_vars.mouse_x - state.screen_x
+  gfx_vars.mouse_y = gfx_vars.mouse_y - state.screen_y
 end
 
 local function updateKeyboard()
@@ -443,8 +443,8 @@ local function warn(message, ...)
 end
 
 local function showLog()
-  local flags = ImGui.WindowFlags_NoDocking() |
-                ImGui.WindowFlags_NoFocusOnAppearing()
+  local flags =
+    ImGui.WindowFlags_NoDocking() | ImGui.WindowFlags_NoFocusOnAppearing()
   ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_ViewportsNoDecoration(), 1)
   ImGui.SetNextWindowSize(state.ctx, 800, 300, ImGui.Cond_Once())
   local visible, open = ImGui.Begin(state.ctx, 'gfx2imgui [Log]', true, flags)
@@ -522,7 +522,8 @@ local function getCachedFont(font)
 end
 
 local function warnUnavailableFont(font)
-  warn("font '%s'@%d[%x] temporarily unavailable: frame already started (falling back to nearest match for up to %d frames)",
+  warn("font '%s'@%d[%x] temporarily unavailable: \z
+    frame already started (falling back to nearest match for up to %d frames)",
     font.family, font.size, font.flags, THROTTLE_FONT_LOADING_FRAMES)
 end
 
@@ -615,7 +616,8 @@ local function beginFrame()
   if not reaper.EnumProjects(0) then return false end
 
   assert(ImGui.ValidatePtr(state.ctx, 'ImGui_Context*'),
-    'reaimgui context got garbage-collected: was gfx.update called every defer cycle?')
+   'reaimgui context got garbage-collected: \z
+    was gfx.update called every defer cycle?')
 
   -- protect against scripts calling gfx.update more than once per defer cycle
   -- or before the first defer timer tick
@@ -688,9 +690,9 @@ local function drawLine(draw_list, screen_x, screen_y, blit_opts,
   local scaled = blit_opts.scale_x ~= 1 and blit_opts.scale_y ~= 1
   if scaled and (x1 == x2 or y1 == y2) then
     x1, y1 = screen_x + (x1 * blit_opts.scale_x),
-                  screen_y + (y1 * blit_opts.scale_y)
+             screen_y + (y1 * blit_opts.scale_y)
     x2, y2 = screen_x + (x2 * blit_opts.scale_x),
-                  screen_y + (y2 * blit_opts.scale_y)
+             screen_y + (y2 * blit_opts.scale_y)
     if x1 == x2 then
       x2 = x2 + blit_opts.scale_x
     elseif y1 == y2 then
@@ -705,7 +707,7 @@ local function drawLine(draw_list, screen_x, screen_y, blit_opts,
   local x2, y2 = transformPoint(x2, y2, blit_opts)
   x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
   DL_AddLine(draw_list, x1, y1, x2, y2, c,
-            (blit_opts.scale_x + blit_opts.scale_y) / 2)
+    (blit_opts.scale_x + blit_opts.scale_y) / 2)
 end
 
 local function addLine(x1, y1, x2, y2, c)
@@ -781,7 +783,7 @@ setmetatable(gfx, {
 
 -- translation functions
 local function drawArc(draw_list, screen_x, screen_y, blit_opts,
-                       x, y, r, c, ang1, ang2)
+    x, y, r, c, ang1, ang2)
   local c = transformColor(c, blit_opts)
   local r = r * blit_opts.scale_y -- FIXME: scale_x
   local x, y = transformPoint(x, y, blit_opts)
@@ -792,12 +794,12 @@ end
 function gfx.arc(x, y, r, ang1, ang2, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   return drawCall(drawArc, toint(x) + 1, toint(y), r, color(),
-                  ang1 - QUARTER_CIRCLE, ang2 - QUARTER_CIRCLE)
+    ang1 - QUARTER_CIRCLE, ang2 - QUARTER_CIRCLE)
 end
 
 local function drawBlit(draw_list, screen_x, screen_y, dst_blit,
-                        srcx, srcy, destx, desty, destw, desth,
-                        src_blit, commands, sourceCommands)
+    srcx, srcy, destx, desty, destw, desth,
+    src_blit, commands, sourceCommands)
   destx, desty = transformPoint(destx, desty, dst_blit)
   destw, desth = transformPoint(destw, desth, dst_blit)
 
@@ -873,7 +875,7 @@ function gfx.blit(source, ...)
   }
 
   drawCall(drawBlit, srcx, srcy, destx, desty, destw, desth,
-           src_blit, commands, sourceCommands)
+    src_blit, commands, sourceCommands)
 
   return source
 end
@@ -889,7 +891,7 @@ function gfx.blurto()
 end
 
 local function drawCircle(draw_list, screen_x, screen_y, blit_opts,
-                          circleFunc, x, y, r, c)
+    circleFunc, x, y, r, c)
   c = transformColor(c, blit_opts)
   x, y = transformPoint(x, y, blit_opts)
   r = r * blit_opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
@@ -945,7 +947,7 @@ function gfx.drawnumber(n, ndigits)
 end
 
 local function drawString(draw_list, screen_x, screen_y, blit_opts,
-                          c, str, size, x, x_off, y, y_off, right, bottom, font)
+    c, str, size, x, x_off, y, y_off, right, bottom, font)
   -- search for a new font as the draw call may have been stored for a
   -- long time in an offscreen buffer while the font instance got detached
   -- or the script may have re-created the context with gfx.quit+gfx.init
@@ -963,10 +965,10 @@ local function drawString(draw_list, screen_x, screen_y, blit_opts,
   x_off, y_off = transformPoint(x_off, y_off, blit_opts)
   size = size * blit_opts.scale_y -- height only, cannot stretch width
   DL_AddTextEx(draw_list, font.inst, size,
-               screen_x + x + x_off, screen_y + y + y_off, c, str, 0,
-               screen_x + x, screen_y + y,
-               right and screen_x + (right * blit_opts.scale_x) // 1,
-               bottom and screen_y + (bottom * blit_opts.scale_y) // 1)
+    screen_x + x + x_off, screen_y + y + y_off, c, str, 0,
+    screen_x + x, screen_y + y,
+    right  and screen_x + (right  * blit_opts.scale_x) // 1,
+    bottom and screen_y + (bottom * blit_opts.scale_y) // 1)
 end
 
 function gfx.drawstr(str, flags, right, bottom)
@@ -992,7 +994,7 @@ function gfx.drawstr(str, flags, right, bottom)
 
   -- passing f_{cache,inst} as a table to be read/writeable
   return drawCall(drawString, c, str, f_sz, x, x_off, y, y_off, right, bottom,
-                  { cache = f_cache, inst = f_inst })
+    { cache = f_cache, inst = f_inst })
 end
 
 function gfx.getchar(char)
@@ -1048,12 +1050,12 @@ function gfx.getpixel()
 end
 
 local function drawGradRect(draw_list, screen_x, screen_y, blit_opts,
-                            x1, y1, x2, y2, ctl, ctr, cbr, cbl)
-  ctl, ctr, cbr, cbl = transformColor(ctl, blit_opts),
-                       transformColor(ctr, blit_opts),
-                       transformColor(cbr, blit_opts),
-                       transformColor(cbl, blit_opts)
-  x1, y1 = transformPoint(x1,     y1,     blit_opts)
+    x1, y1, x2, y2, ctl, ctr, cbr, cbl)
+  ctl = transformColor(ctl, blit_opts)
+  ctr = transformColor(ctr, blit_opts)
+  cbr = transformColor(cbr, blit_opts)
+  cbl = transformColor(cbl, blit_opts)
+  x1, y1 = transformPoint(x1, y1, blit_opts)
   x2, y2 = transformPoint(x2, y2, blit_opts)
   x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
   DL_AddRectFilledMultiColor(draw_list, x1, y1, x2, y2, ctl, ctr, cbr, cbl)
@@ -1062,15 +1064,20 @@ end
 function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy, dbdy, dady)
   -- FIXME: support colors growing to > 1 or < 0 before the end of the rect
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  drdx, dgdx, dbdx, dadx = w * (drdx or 0), w * (dgdx or 0),
-                           w * (dbdx or 0), w * (dadx or 0)
-  drdy, dgdy, dbdy, dady = h * (drdy or 0), h * (dgdy or 0),
-                           h * (dbdy or 0), h * (dady or 0)
+  drdx = w * (drdx or 0)
+  dgdx = w * (dgdx or 0)
+  dbdx = w * (dbdx or 0)
+  dadx = w * (dadx or 0)
+  drdy = h * (drdy or 0)
+  dgdy = h * (dgdy or 0)
+  dbdy = h * (dbdy or 0)
+  dady = h * (dady or 0)
   local ctl = makeColor(r, g, b, a)
   local ctr = makeColor(r + drdx, g + dgdx, b + dbdx, a + dadx)
   local cbl = makeColor(r + drdy, g + dgdy, b + dbdy, a + dady)
-  local cbr = makeColor(r + drdx + drdy, g + dgdx + dgdy,
-                        b + dbdx + dbdy, a + dadx + dady)
+  local cbr = makeColor(
+    r + drdx + drdy, g + dgdx + dgdy,
+    b + dbdx + dbdy, a + dadx + dady)
   return drawCall(drawGradRect, x, y, x + w, y + h, ctl, ctr, cbr, cbl)
 end
 
@@ -1090,8 +1097,8 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     local ctx_name = name
     if ctx_name:len() < 1 then ctx_name = 'gfx2imgui' end
 
-    local ctx_flags = ImGui.ConfigFlags_NoSavedSettings() |
-                      ImGui.ConfigFlags_DockingEnable()
+    local ctx_flags =
+      ImGui.ConfigFlags_NoSavedSettings() | ImGui.ConfigFlags_DockingEnable()
     local canary_flags = ImGui.ConfigFlags_NoSavedSettings()
 
     state = {
@@ -1127,14 +1134,14 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
   end
 
   if width and height then
-    gfx_vars.w, gfx_vars.h = math.max(16, toint(tonumber(width))),
-                             math.max(16, toint(tonumber(height)))
+    gfx_vars.w = math.max(16, toint(tonumber(width)))
+    gfx_vars.h = math.max(16, toint(tonumber(height)))
     state.want_size = { w=gfx_vars.w, h=gfx_vars.h }
   end
 
   if xpos and ypos then
-    global_state.pos_x, global_state.pos_y =
-      toint(tonumber(xpos)), toint(tonumber(ypos))
+    global_state.pos_x = toint(tonumber(xpos))
+    global_state.pos_y = toint(tonumber(ypos))
     state.want_pos = { x=global_state.pos_x, y=global_state.pos_y }
   end
 
@@ -1161,7 +1168,7 @@ function gfx.lineto(x, y, aa)
 end
 
 local function drawImage(draw_list, screen_x, screen_y, blit_opts,
-                         filename, imageState, x, y, w, h)
+    filename, imageState, x, y, w, h)
   if not imageState.attached then
     -- could not attach before in loadimg, as it can be called before gfx.init
     if not ImGui.ValidatePtr(imageState.inst, 'ImGui_Image*') then
@@ -1262,7 +1269,7 @@ function gfx.quit()
 end
 
 local function drawRect(draw_list, screen_x, screen_y, blit_opts,
-                        rectFunc, x1, y1, x2, y2, c)
+    rectFunc, x1, y1, x2, y2, c)
   c = transformColor(c, blit_opts)
   x1, y1 = transformPoint(x1, y1, blit_opts)
   x2, y2 = transformPoint(x2, y2, blit_opts)
@@ -1284,7 +1291,7 @@ function gfx.rectto(x, y)
 end
 
 local function drawRoundRect(draw_list, screen_x, screen_y, blit_opts,
-                    x1, y1, x2, y2, c, radius)
+    x1, y1, x2, y2, c, radius)
   c = transformColor(c, blit_opts)
   radius = radius * blit_opts.scale_y -- FIXME: scale_x
   x1, y1 = transformPoint(x1, y1, blit_opts)
@@ -1411,13 +1418,13 @@ function gfx.showmenu(str)
 
   -- Using hidden gfx window menu code by amagalma
   -- https://forum.cockos.com/showthread.php?t=239556
-  local foreground = reaper.JS_Window_GetForeground and
-                     reaper.JS_Window_GetForeground()
+  local has_js = reaper.JS_Window_Show ~= nil
+  local foreground = has_js and reaper.JS_Window_GetForeground()
   local title = reaper.genGuid()
   ogfx.init(title, 0, 0, 0, 0, 0)
   ogfx.x, ogfx.y = ogfx.mouse_x, ogfx.mouse_y
 
-  if reaper.JS_Window_Show then
+  if has_js then
     local hwnd = reaper.JS_Window_Find(title, true)
     if hwnd then
       reaper.JS_Window_Show(hwnd, 'HIDE')
@@ -1440,7 +1447,7 @@ function gfx.transformblit()
 end
 
 local function drawTriangle6(draw_list, screen_x, screen_y, blit_opts,
-                             points, center_x, center_y, c)
+    points, center_x, center_y, c)
   c = transformColor(c, blit_opts)
   local x1, y1 = transformPoint(points[1], points[2], blit_opts)
   local x2, y2 = transformPoint(points[3], points[4], blit_opts)
@@ -1458,16 +1465,19 @@ local function drawTriangle6(draw_list, screen_x, screen_y, blit_opts,
 end
 
 local function drawTriangleN(draw_list, screen_x, screen_y, blit_opts,
-                             points, screen_points, n_coords,
-                             center_x, center_y, c)
+    points, screen_points, n_coords, center_x, center_y, c)
   c = transformColor(c, blit_opts)
   for i = 1, n_coords, 2 do
     screen_points[i], screen_points[i + 1] =
       transformPoint(points[i], points[i + 1], blit_opts)
     screen_points[i], screen_points[i + 1] =
       screen_x + screen_points[i], screen_y + screen_points[i + 1]
-    if points[i]     > center_x then screen_points[i]     = screen_points[i]     + 1 end
-    if points[i + 1] > center_y then screen_points[i + 1] = screen_points[i + 1] + 1 end
+    if points[i]     > center_x then
+      screen_points[i]     = screen_points[i]     + 1
+    end
+    if points[i + 1] > center_y then
+      screen_points[i + 1] = screen_points[i + 1] + 1
+    end
   end
   DL_AddConvexPolyFilled(draw_list, screen_points, c)
 end
@@ -1502,7 +1512,7 @@ function gfx.triangle(...)
   else
     local screen_points = reaper.new_array(n_coords)
     return drawCall(drawTriangleN, points, screen_points, n_coords,
-                    center_x, center_y, c)
+       center_x, center_y, c)
   end
 end
 
@@ -1518,8 +1528,11 @@ function gfx.update()
     state.want_dock = nil
   end
   if state.want_pos then
-    local x, y = ImGui.PointConvertNative(state.ctx, state.want_pos.x, state.want_pos.y)
-    if MACOS then y = y - (state.want_size and state.want_size.h or gfx_vars.h) end
+    local x, y = ImGui.PointConvertNative(
+      state.ctx, state.want_pos.x, state.want_pos.y)
+    if MACOS then
+      y = y - (state.want_size and state.want_size.h or gfx_vars.h)
+    end
     ImGui.SetNextWindowPos(state.ctx, x, y)
     state.want_pos = nil
   end
@@ -1534,8 +1547,8 @@ function gfx.update()
              (col_clear << 8  & 0x00ff0000) |
              (col_clear << 24 & 0xff000000) |
              0xff
-  local flags = ImGui.WindowFlags_NoScrollbar() |
-                ImGui.WindowFlags_NoScrollWithMouse()
+  local flags =
+    ImGui.WindowFlags_NoScrollbar() | ImGui.WindowFlags_NoScrollWithMouse()
   if global_state.dock & 1 == 0 then
     -- unset to allow undocking by dragging the triangle or tab item
     flags = flags | ImGui.WindowFlags_NoMove()
@@ -1568,8 +1581,8 @@ function gfx.update()
 
   -- remove space taken by the window titlebar or docker tabbar
   local pos_x, pos_y = ImGui.GetWindowPos(state.ctx)
-  gfx_vars.w, gfx_vars.h = gfx_vars.w - (state.screen_x - pos_x),
-                           gfx_vars.h - (state.screen_y - pos_y)
+  gfx_vars.w = gfx_vars.w - (state.screen_x - pos_x)
+  gfx_vars.h = gfx_vars.h - (state.screen_y - pos_y)
 
   if ImGui.IsWindowDocked(state.ctx) then
     global_state.dock = 1 | (~ImGui.GetWindowDockID(state.ctx) << 8)
