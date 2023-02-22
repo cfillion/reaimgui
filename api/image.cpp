@@ -36,35 +36,35 @@ DEFINE_API(ImGui_Image*, CreateImage,
 R"(The returned object is valid as long as it is used in each defer cycle
 unless attached to a context (see Attach).
 
-('flags' currently unused and reserved for future expansion))",
+('flags' currently unused and reserved for future expansion))")
 {
   return Image::fromFile(file);
-});
+}
 
 DEFINE_API(ImGui_Image*, CreateImageFromMem,
 (const char*,data)(int,data_sz),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Load from a file using
-CreateImage or explicitely specify data_sz if supporting older versions.)",
+CreateImage or explicitely specify data_sz if supporting older versions.)")
 {
   // data_sz is inaccurate before REAPER 6.44
   return Image::fromMemory(data, data_sz);
-});
+}
 
 DEFINE_API(void, Image_GetSize, (ImGui_Image*,img)
 (double*,API_W(w))(double*,API_W(h)),
-"",
+"")
 {
   assertValid(img);
   if(API_W(w)) *API_W(w) = img->width();
   if(API_W(h)) *API_W(h) = img->height();
-});
+}
 
 DEFINE_API(void, Image, (ImGui_Context*,ctx)
 (ImGui_Image*,img)(double,size_w)(double,size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
 (int*,API_RO(tint_col_rgba),0xFFFFFFFF)(int*,API_RO(border_col_rgba),0x00000000),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(img);
@@ -74,14 +74,14 @@ DEFINE_API(void, Image, (ImGui_Context*,ctx)
     ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
     ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
     Color(API_RO_GET(tint_col_rgba)), Color(API_RO_GET(border_col_rgba)));
-});
+}
 
 DEFINE_API(bool, ImageButton, (ImGui_Context*,ctx)
 (const char*,str_id)(ImGui_Image*,img)(double,size_w)(double,size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
 (int*,API_RO(bg_col_rgba),0x00000000)(int*,API_RO(tint_col_rgba),0xFFFFFFFF),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(img);
@@ -91,7 +91,7 @@ DEFINE_API(bool, ImageButton, (ImGui_Context*,ctx)
     ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
     ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
     Color(API_RO_GET(bg_col_rgba)), Color(API_RO_GET(tint_col_rgba)));
-});
+}
 
 API_SUBSECTION("Image Set",
 R"(Helper to automatically select and scale an image to the DPI scale of
@@ -112,16 +112,16 @@ Usage:
     end)");
 
 DEFINE_API(ImGui_ImageSet*, CreateImageSet, NO_ARGS,
-"",
+"")
 {
   return new ImageSet;
-});
+}
 
 DEFINE_API(void, ImageSet_Add, (ImGui_ImageSet*,set)
 (double,scale)(ImGui_Image*,img),
-"'img' cannot be another ImageSet.",
+"'img' cannot be another ImageSet.")
 {
   assertValid(set);
   assertValid(img);
   set->add(scale, img);
-});
+}

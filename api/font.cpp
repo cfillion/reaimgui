@@ -44,41 +44,41 @@ sans-serif, serif, monospace, cursive, fantasy.
 
 If 'family_or_file' specifies a path to a font file (contains a / or \):
 - The first byte of 'flags' is used as the font index within the file
-- The font styles in 'flags' are simulated by the font renderer)",
+- The font styles in 'flags' are simulated by the font renderer)")
 {
   return new Font { family_or_file, size, API_RO_GET(flags) };
-});
+}
 
 DEFINE_API(ImGui_Font*, GetFont, (ImGui_Context*,ctx),
-"Get the current font",
+"Get the current font")
 {
   FRAME_GUARD;
   return ctx->fonts().get(ImGui::GetFont());
-});
+}
 
 DEFINE_API(void, PushFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
 R"(Change the current font. Use nil to push the default font.
-The font object must have been registered using Attach. See PopFont.)",
+The font object must have been registered using Attach. See PopFont.)")
 {
   FRAME_GUARD;
   ImGui::PushFont(ctx->fonts().instanceOf(font));
-});
+}
 
 DEFINE_API(void, PopFont, (ImGui_Context*,ctx),
-"See PushFont.",
+"See PushFont.")
 {
   FRAME_GUARD;
   ImGui::PopFont();
-});
+}
 
 DEFINE_API(double, GetFontSize, (ImGui_Context*,ctx),
 R"(Get current font size (= height in pixels) of current font with current scale
-applied.)",
+applied.)")
 {
   FRAME_GUARD;
   return ImGui::GetFontSize();
-});
+}
 
 DEFINE_ENUM(ReaImGui, FontFlags_None,   "");
 DEFINE_ENUM(ReaImGui, FontFlags_Bold,   "");

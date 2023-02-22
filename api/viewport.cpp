@@ -49,69 +49,69 @@ API_SECTION("Viewport");
 
 DEFINE_API(ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
 R"(Currently represents REAPER's main window (arrange view).
-WARNING: This may change or be removed in the future.)",
+WARNING: This may change or be removed in the future.)")
 {
   return ResourceProxy::encode<ImGui_Viewport>(ctx, ImGui_Viewport::Main);
-});
+}
 
 DEFINE_API(ImGui_Viewport*, GetWindowViewport, (ImGui_Context*,ctx),
-"Get viewport currently associated to the current window.",
+"Get viewport currently associated to the current window.")
 {
   return ResourceProxy::encode<ImGui_Viewport>(ctx, ImGui_Viewport::Window);
-});
+}
 
 DEFINE_API(void, Viewport_GetPos, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
-"Main Area: Position of the viewport",
+"Main Area: Position of the viewport")
 {
   const ImVec2 &pos { viewport->get()->Pos };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}
 
 DEFINE_API(void, Viewport_GetSize, (ImGui_Viewport*,viewport)
 (double*,API_W(w))(double*,API_W(h)),
-"Main Area: Size of the viewport.",
+"Main Area: Size of the viewport.")
 {
   const ImVec2 &size { viewport->get()->Size };
   if(API_W(w)) *API_W(w) = size.x;
   if(API_W(h)) *API_W(h) = size.y;
-});
+}
 
 DEFINE_API(void, Viewport_GetCenter, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
-"Center of the viewport.",
+"Center of the viewport.")
 {
   const ImVec2 &pos { viewport->get()->GetCenter() };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}
 
 API_SUBSECTION("Work Area", "Viewport minus task bars, menu bars, status bars");
 
 DEFINE_API(void, Viewport_GetWorkPos, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
-">= Viewport_GetPos",
+">= Viewport_GetPos")
 {
   const ImVec2 &pos { viewport->get()->WorkPos };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}
 
 DEFINE_API(void, Viewport_GetWorkSize, (ImGui_Viewport*,viewport)
 (double*,API_W(w))(double*,API_W(h)),
-"<= Viewport_GetSize",
+"<= Viewport_GetSize")
 {
   const ImVec2 &size { viewport->get()->WorkSize };
   if(API_W(w)) *API_W(w) = size.x;
   if(API_W(h)) *API_W(h) = size.y;
-});
+}
 
 DEFINE_API(void, Viewport_GetWorkCenter, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
-"Center of the viewport's work area.",
+"Center of the viewport's work area.")
 {
   const ImVec2 &pos { viewport->get()->GetWorkCenter() };
   if(API_W(x)) *API_W(x) = pos.x;
   if(API_W(y)) *API_W(y) = pos.y;
-});
+}

@@ -62,7 +62,7 @@ static void copyToBuffer(const std::string &value, char *buf, const size_t bufSi
 DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
@@ -79,13 +79,13 @@ DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
     return true;
   }
   return false;
-});
+}
 
 DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0)
 (int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
@@ -99,13 +99,13 @@ DEFINE_API(bool, InputTextMultiline, (ImGui_Context*,ctx)
     return true;
   }
   return false;
-});
+}
 
 DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
 (const char*,label)(const char*,hint)
 (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(API_RWBIG(buf));
@@ -118,23 +118,23 @@ DEFINE_API(bool, InputTextWithHint, (ImGui_Context*,ctx)
     return true;
   }
   return false;
-});
+}
 
 DEFINE_API(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v))(int*,API_RO(step),1)(int*,API_RO(step_fast),100)
 (int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
 
   const InputTextFlags flags { API_RO_GET(flags) };
   return ImGui::InputInt(label, API_RW(v),
     API_RO_GET(step), API_RO_GET(step_fast), flags);
-});
+}
 
 DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
 
@@ -145,12 +145,12 @@ DEFINE_API(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
 
@@ -161,12 +161,12 @@ DEFINE_API(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RW(v4))(int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
 
@@ -178,12 +178,12 @@ DEFINE_API(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v))(double*,API_RO(step),0.0)(double*,API_RO(step_fast),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -192,7 +192,7 @@ DEFINE_API(bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
 
   return ImGui::InputDouble(label, API_RW(v),
     API_RO_GET(step), API_RO_GET(step_fast), API_RO_GET(format), flags);
-});
+}
 
 static bool inputDoubleN(const char *label, double *data, const size_t size,
   const char *format, const InputTextFlags flags)
@@ -204,7 +204,7 @@ static bool inputDoubleN(const char *label, double *data, const size_t size,
 DEFINE_API(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -216,12 +216,12 @@ DEFINE_API(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -233,12 +233,12 @@ DEFINE_API(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))(double*,API_RW(v4))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -251,12 +251,12 @@ DEFINE_API(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
 (reaper_array*,values)(double*,API_RO(step))(double*,API_RO(step_fast))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(values);
@@ -265,7 +265,7 @@ DEFINE_API(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
   return ImGui::InputScalarN(label, ImGuiDataType_Double,
     values->data, values->size, API_RO(step), API_RO(step_fast),
     API_RO_GET(format), InputTextFlags { API_RO_GET(flags) });
-});
+}
 
 API_SUBSECTION("Flags",
 R"(Most of these are only useful for InputText*() and not for InputDoubleX,

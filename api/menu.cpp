@@ -21,44 +21,44 @@ API_SECTION("Menu");
 
 DEFINE_API(bool, BeginMenuBar, (ImGui_Context*,ctx),
 R"(Append to menu-bar of current window (requires WindowFlags_MenuBar flag set
-on parent window). See EndMenuBar.)",
+on parent window). See EndMenuBar.)")
 {
   FRAME_GUARD;
   return ImGui::BeginMenuBar();
-});
+}
 
 DEFINE_API(void, EndMenuBar, (ImGui_Context*,ctx),
-"Only call EndMenuBar if BeginMenuBar returns true!",
+"Only call EndMenuBar if BeginMenuBar returns true!")
 {
   FRAME_GUARD;
   ImGui::EndMenuBar();
-});
+}
 
 DEFINE_API(bool, BeginMenu, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RO(enabled),true),
-"Create a sub-menu entry. only call EndMenu if this returns true!",
+"Create a sub-menu entry. only call EndMenu if this returns true!")
 {
   FRAME_GUARD;
   return ImGui::BeginMenu(label, API_RO_GET(enabled));
-});
+}
 
 DEFINE_API(void, EndMenu, (ImGui_Context*,ctx),
-R"(Only call EndMenu() if BeginMenu returns true!)",
+R"(Only call EndMenu() if BeginMenu returns true!)")
 {
   FRAME_GUARD;
   ImGui::EndMenu();
-});
+}
 
 DEFINE_API(bool, MenuItem, (ImGui_Context*,ctx)
 (const char*,label)(const char*,API_RO(shortcut))
 (bool*,API_RWO(p_selected))(bool*,API_RO(enabled),true),
 R"(Return true when activated. Shortcuts are displayed for convenience but not
 processed by ImGui at the moment. Toggle state is written to 'selected' when
-provided.)",
+provided.)")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(shortcut));
 
   return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(p_selected),
     API_RO_GET(enabled));
-});
+}

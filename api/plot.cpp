@@ -32,7 +32,7 @@ DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
 (const char*,API_RO(overlay_text))
 (double*,API_RO(scale_min),FLT_MAX)(double*,API_RO(scale_max),FLT_MAX)
 (double*,API_RO(graph_size_w),0.0)(double*,API_RO(graph_size_h),0.0),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(values);
@@ -42,14 +42,14 @@ DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
     API_RO_GET(values_offset), API_RO(overlay_text),
     API_RO_GET(scale_min), API_RO_GET(scale_max),
     ImVec2(API_RO_GET(graph_size_w), API_RO_GET(graph_size_h)));
-});
+}
 
 DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)(int*,API_RO(values_offset),0)
 (const char*,API_RO(overlay_text))
 (double*,API_RO(scale_min),FLT_MAX)(double*,API_RO(scale_max),FLT_MAX)
 (double*,API_RO(graph_size_w),0.0)(double*,API_RO(graph_size_h),0.0),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(values);
@@ -59,4 +59,4 @@ DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
     API_RO_GET(values_offset), API_RO(overlay_text),
     API_RO_GET(scale_min), API_RO_GET(scale_max),
     ImVec2(API_RO_GET(graph_size_w), API_RO_GET(graph_size_h)));
-});
+}

@@ -21,18 +21,18 @@ API_SECTION("Tab Bar");
 
 DEFINE_API(bool, BeginTabBar, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags),ImGuiTabBarFlags_None),
-"Create and append into a TabBar.",
+"Create and append into a TabBar.")
 {
   FRAME_GUARD;
   return ImGui::BeginTabBar(str_id, API_RO_GET(flags));
-});
+}
 
 DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
-"Only call EndTabBar() if BeginTabBar() returns true!",
+"Only call EndTabBar() if BeginTabBar() returns true!")
 {
   FRAME_GUARD;
   ImGui::EndTabBar();
-});
+}
 
 DEFINE_ENUM(ImGui, TabBarFlags_None, "");
 DEFINE_ENUM(ImGui, TabBarFlags_Reorderable,
@@ -62,39 +62,39 @@ DEFINE_API(bool, BeginTabItem, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RWO(p_open))
 (int*,API_RO(flags),ImGuiTabItemFlags_None),
 R"(Create a Tab. Returns true if the Tab is selected.
-Set 'p_open' to true to enable the close button.)",
+Set 'p_open' to true to enable the close button.)")
 {
   FRAME_GUARD;
   return ImGui::BeginTabItem(label,
     openPtrBehavior(API_RWO(p_open)), API_RO_GET(flags));
-});
+}
 
 DEFINE_API(void, EndTabItem, (ImGui_Context*,ctx),
-"Only call EndTabItem() if BeginTabItem() returns true!",
+"Only call EndTabItem() if BeginTabItem() returns true!")
 {
   FRAME_GUARD;
   ImGui::EndTabItem();
-});
+}
 
 DEFINE_API(bool, TabItemButton, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags),ImGuiTabItemFlags_None),
 R"(Create a Tab behaving like a button. Return true when clicked.
-Cannot be selected in the tab bar.)",
+Cannot be selected in the tab bar.)")
 {
   FRAME_GUARD;
   return ImGui::TabItemButton(label, API_RO_GET(flags));
-});
+}
 
 DEFINE_API(void, SetTabItemClosed, (ImGui_Context*,ctx)
 (const char*,tab_or_docked_window_label),
 R"(Notify TabBar or Docking system of a closed tab/window ahead
 (useful to reduce visual flicker on reorderable tab bars).
 For tab-bar: call after BeginTabBar and before Tab submissions.
-Otherwise call with a window name.)",
+Otherwise call with a window name.)")
 {
   FRAME_GUARD;
   ImGui::SetTabItemClosed(tab_or_docked_window_label);
-});
+}
 
 DEFINE_ENUM(ImGui, TabItemFlags_None,                         "");
 DEFINE_ENUM(ImGui, TabItemFlags_UnsavedDocument,

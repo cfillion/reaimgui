@@ -58,7 +58,7 @@ DEFINE_API(bool, DragInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(double*,API_RO(v_speed),1.0)
 (int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -66,14 +66,14 @@ DEFINE_API(bool, DragInt, (ImGui_Context*,ctx)
   return ImGui::DragInt(label, API_RW(v), API_RO_GET(v_speed),
     API_RO_GET(v_min), API_RO_GET(v_max), API_RO_GET(format),
     SliderFlags { API_RO_GET(flags) });
-});
+}
 
 DEFINE_API(bool, DragInt2, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (double*,API_RO(v_speed),1.0)
 (int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -86,14 +86,14 @@ DEFINE_API(bool, DragInt2, (ImGui_Context*,ctx)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, DragInt3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (int*,API_RW(v3))(double*,API_RO(v_speed),1.0)
 (int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -106,14 +106,14 @@ DEFINE_API(bool, DragInt3, (ImGui_Context*,ctx)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, DragInt4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (int*,API_RW(v3))(int*,API_RW(v4))(double*,API_RO(v_speed),1.0)
 (int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -127,14 +127,14 @@ DEFINE_API(bool, DragInt4, (ImGui_Context*,ctx)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, DragIntRange2, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v_current_min))(int*,API_RW(v_current_max))
 (double*,API_RO(v_speed),1.0)(int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
 (const char*,API_RO(format),"%d")(const char*,API_RO(format_max))
 (int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -150,14 +150,14 @@ DEFINE_API(bool, DragIntRange2, (ImGui_Context*,ctx)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, DragFloatRange2, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RW(v_current_min))(double*,API_RW(v_current_max))
 (double*,API_RO(v_speed),1.0)(double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
 (const char*,API_RO(format),"%.3f")(const char*,API_RO(format_max))
 (int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -173,13 +173,13 @@ DEFINE_API(bool, DragFloatRange2, (ImGui_Context*,ctx)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, DragDouble, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RW(v))(double*,API_RO(v_speed),1.0)
 (double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -188,7 +188,7 @@ DEFINE_API(bool, DragDouble, (ImGui_Context*,ctx)
   return ImGui::DragScalar(label, ImGuiDataType_Double,
     API_RW(v), API_RO_GET(v_speed), &v_min, &v_max,
     API_RO_GET(format), SliderFlags { API_RO_GET(flags) });
-});
+}
 
 static bool dragDoubleN(const char *label, double *data, const size_t size,
   const double v_speed, const double v_min, const double v_max,
@@ -202,7 +202,7 @@ DEFINE_API(bool, DragDouble2, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
 (double*,API_RO(v_speed),1.0)(double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -215,13 +215,13 @@ DEFINE_API(bool, DragDouble2, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, DragDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double*,API_RO(v_speed),1.0)(double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -234,14 +234,14 @@ DEFINE_API(bool, DragDouble3, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, DragDouble4, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double*,API_RW(v4))(double*,API_RO(v_speed),1.0)
 (double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -255,13 +255,13 @@ DEFINE_API(bool, DragDouble4, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, DragDoubleN, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)
 (double*,API_RO(speed),1.0)(double*,API_RO(min),0.0)(double*,API_RO(max),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(values);
@@ -270,26 +270,26 @@ DEFINE_API(bool, DragDoubleN, (ImGui_Context*,ctx)
   return dragDoubleN(label, values->data, values->size,
     API_RO_GET(speed), API_RO_GET(min), API_RO_GET(max),
     API_RO_GET(format), API_RO_GET(flags));
-});
+}
 
 API_SUBSECTION("Regular Sliders");
 
 DEFINE_API(bool, SliderInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(int,v_min)(int,v_max)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
   return ImGui::SliderInt(label, API_RW(v), v_min, v_max,
     API_RO_GET(format), SliderFlags { API_RO_GET(flags) });
-});
+}
 
 DEFINE_API(bool, SliderInt2, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))(int,v_min)(int,v_max)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -301,13 +301,13 @@ DEFINE_API(bool, SliderInt2, (ImGui_Context*,ctx)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, SliderInt3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (int*,API_RW(v3))(int,v_min)(int,v_max)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -319,13 +319,13 @@ DEFINE_API(bool, SliderInt3, (ImGui_Context*,ctx)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, SliderInt4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (int*,API_RW(v3))(int*,API_RW(v4))(int,v_min)(int,v_max)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -338,19 +338,19 @@ DEFINE_API(bool, SliderInt4, (ImGui_Context*,ctx)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, SliderDouble, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RW(v))(double,v_min)(double,v_max)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
   return ImGui::SliderScalar(label, ImGuiDataType_Double, API_RW(v),
     &v_min, &v_max, API_RO_GET(format), SliderFlags { API_RO_GET(flags) });
-});
+}
 
 static bool sliderDoubleN(const char *label, double *data, const size_t size,
   const double v_min, const double v_max, const char *format,
@@ -364,7 +364,7 @@ DEFINE_API(bool, SliderDouble2, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
 (double,v_min)(double,v_max)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -376,13 +376,13 @@ DEFINE_API(bool, SliderDouble2, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, SliderDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double,v_min)(double,v_max)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -394,13 +394,13 @@ DEFINE_API(bool, SliderDouble3, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, SliderDouble4, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double*,API_RW(v4))(double,v_min)(double,v_max)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -413,13 +413,13 @@ DEFINE_API(bool, SliderDouble4, (ImGui_Context*,ctx)(const char*,label)
     return values.commit();
   else
     return false;
-});
+}
 
 DEFINE_API(bool, SliderDoubleN, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)
 (double,v_min)(double,v_max)(const char*,API_RO(format),"%.3f")
 (int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(values);
@@ -427,14 +427,14 @@ DEFINE_API(bool, SliderDoubleN, (ImGui_Context*,ctx)
 
   return sliderDoubleN(label, values->data, values->size,
     v_min, v_max, API_RO_GET(format), API_RO_GET(flags));
-});
+}
 
 DEFINE_API(bool, SliderAngle, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RW(v_rad))
 (double*,API_RO(v_degrees_min),-360.0)(double*,API_RO(v_degrees_max),+360.0)
 (const char*,API_RO(format),"%.0f deg")
 (int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   assertValid(API_RW(v_rad));
@@ -449,26 +449,26 @@ DEFINE_API(bool, SliderAngle, (ImGui_Context*,ctx)
     return true;
   }
   return false;
-});
+}
 
 DEFINE_API(bool, VSliderInt, (ImGui_Context*,ctx)
 (const char*,label)(double,size_w)(double,size_h)(int*,API_RW(v))
 (int,v_min)(int,v_max)(const char*,API_RO(format),"%d")
 (int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
 
   return ImGui::VSliderInt(label, ImVec2(size_w, size_h), API_RW(v),
     v_min, v_max, API_RO_GET(format), SliderFlags { API_RO_GET(flags) });
-});
+}
 
 DEFINE_API(bool, VSliderDouble, (ImGui_Context*,ctx)
 (const char*,label)(double,size_w)(double,size_h)(double*,API_RW(v))
 (double,v_min)(double,v_max)(const char*,API_RO(format),"%.3f")
 (int*,API_RO(flags),ImGuiSliderFlags_None),
-"",
+"")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(format));
@@ -476,7 +476,7 @@ DEFINE_API(bool, VSliderDouble, (ImGui_Context*,ctx)
   return ImGui::VSliderScalar(label, ImVec2(size_w, size_h),
     ImGuiDataType_Double, API_RW(v), &v_min, &v_max,
     API_RO_GET(format), SliderFlags { API_RO_GET(flags) });
-});
+}
 
 API_SUBSECTION("Flags",
 R"(For DragDouble, DragInt, SliderDouble, SliderInt etc. (Those are per-item

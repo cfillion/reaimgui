@@ -26,49 +26,49 @@ R"(Create a new ReaImGui context.
 The context will remain valid as long as it is used in each defer cycle.
 
 The label is used for the tab text when windows are docked in REAPER
-and also as a unique identifier for storing settings.)",
+and also as a unique identifier for storing settings.)")
 {
   return new Context { label, API_RO_GET(config_flags) };
-});
+}
 
 DEFINE_API(void, DestroyContext, (ImGui_Context*,ctx),
 R"(Free the resources used by a context.
 
 Calling this function is usually not required as all ReaImGui objects are
-automatically garbage-collected when unused.)",
+automatically garbage-collected when unused.)")
 {
   assertValid(ctx);
   delete ctx;
-});
+}
 
 DEFINE_API(double, GetTime, (ImGui_Context*,ctx),
-"Get global imgui time. Incremented every frame.",
+"Get global imgui time. Incremented every frame.")
 {
   FRAME_GUARD;
   return ImGui::GetTime();
-});
+}
 
 DEFINE_API(double, GetDeltaTime, (ImGui_Context*,ctx),
-"Time elapsed since last frame, in seconds.",
+"Time elapsed since last frame, in seconds.")
 {
   FRAME_GUARD;
   return ctx->IO().DeltaTime;
-});
+}
 
 DEFINE_API(int, GetFrameCount, (ImGui_Context*,ctx),
-"Get global imgui frame count. incremented by 1 every frame.",
+"Get global imgui frame count. incremented by 1 every frame.")
 {
   FRAME_GUARD;
   return ImGui::GetFrameCount();
-});
+}
 
 DEFINE_API(double, GetFramerate, (ImGui_Context*,ctx),
 R"(Estimate of application framerate (rolling average over 60 frames, based on
-GetDeltaTime), in frame per second. Solely for convenience.)",
+GetDeltaTime), in frame per second. Solely for convenience.)")
 {
   FRAME_GUARD;
   return ctx->IO().Framerate;
-});
+}
 
 DEFINE_API(void, Attach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
 R"(Link the object's lifetime to the given context.
@@ -80,22 +80,22 @@ List clipper objects may only be attached to the context they were created for.
 Fonts are (currently) a special case: they must be attached to the context
 before usage. Furthermore, fonts may only be attached or detached immediately
 after the context is created or before any other function calls modifying the
-context per defer cycle. See "limitations" in the font API documentation.)",
+context per defer cycle. See "limitations" in the font API documentation.)")
 {
   assertValid(ctx);
   assertValid(obj);
   ctx->attach(obj);
-});
+}
 
 DEFINE_API(void, Detach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
 R"(Unlink the object's lifetime. Unattached objects are automatically destroyed
 when left unused. You may check whether an object has been destroyed using
-ValidatePtr.)",
+ValidatePtr.)")
 {
   assertValid(ctx);
   assertValid(obj);
   ctx->detach(obj);
-});
+}
 
 API_SUBSECTION("Options");
 
@@ -138,8 +138,8 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
 };
 
 #define DEFINE_CONFIGVAR(name, doc) \
-  DEFINE_API(int, ConfigVar##_##name, NO_ARGS, doc, \
-    { return __COUNTER__ - baseConfigVar - 1; })
+  DEFINE_API(int, ConfigVar##_##name, NO_ARGS, doc) \
+    { return __COUNTER__ - baseConfigVar - 1; }
 
 constexpr int baseConfigVar { __COUNTER__ };
 DEFINE_CONFIGVAR(Flags, "ConfigFlags_*");
@@ -200,7 +200,7 @@ static_assert(__COUNTER__ - baseConfigVar - 1 == std::size(g_configVars),
 
 DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx),
-"",
+"")
 {
   assertValid(ctx);
   if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
@@ -217,11 +217,11 @@ DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
 
     return io.*field;
   }, g_configVars[var_idx]);
-});
+}
 
 DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,value),
-"",
+"")
 {
   assertValid(ctx);
   if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
@@ -240,7 +240,7 @@ DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
 
     io.*field = value;
   }, g_configVars[var_idx]);
-});
+}
 
 API_SUBSECTION("Flags", "For CreateContext and SetConfigVar(ConfigVar_Flags()).");
 DEFINE_ENUM(ImGui, ConfigFlags_None, "");

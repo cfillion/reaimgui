@@ -102,11 +102,11 @@ Generally what happens is:
 
 DEFINE_API(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
 R"(The returned clipper object is only valid for the given context and is valid
-as long as it is used in each defer cycle unless attached (see Attach).)",
+as long as it is used in each defer cycle unless attached (see Attach).)")
 {
   assertValid(ctx);
   return new ListClipper { ctx };
-});
+}
 
 DEFINE_API(void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
 (int,items_count)(double*,API_RO(items_height),-1.0),
@@ -114,32 +114,32 @@ R"(- items_count: Use INT_MAX if you don't know how many items you have
 (in which case the cursor won't be advanced in the final step)
 - items_height: Use -1.0 to be calculated automatically on first step.
   Otherwise pass in the distance between your items, typically
-  GetTextLineHeightWithSpacing or GetFrameHeightWithSpacing.)",
+  GetTextLineHeightWithSpacing or GetFrameHeightWithSpacing.)")
 {
   (*clipper)->Begin(items_count, API_RO_GET(items_height));
-});
+}
 
 DEFINE_API(bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
 R"(Call until it returns false. The display_start/display_end fields from
-ListClipper_GetDisplayRange will be set and you can process/draw those items.)",
+ListClipper_GetDisplayRange will be set and you can process/draw those items.)")
 {
   return (*clipper)->Step();
-});
+}
 
 DEFINE_API(void, ListClipper_End, (ImGui_ListClipper*,clipper),
-"Automatically called on the last call of ListClipper_Step that returns false.",
+"Automatically called on the last call of ListClipper_Step that returns false.")
 {
   (*clipper)->End();
-});
+}
 
 DEFINE_API(void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
 (int*,API_W(display_start))(int*,API_W(display_end)),
-"",
+"")
 {
   ImGuiListClipper *imclipper { (*clipper).operator->() };
   if(API_W(display_start)) *API_W(display_start) = imclipper->DisplayStart;
   if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
-});
+}
 
 DEFINE_API(void, ListClipper_ForceDisplayRangeByIndices, (ImGui_ListClipper*,clipper)
 (int,item_min)(int,item_max),
@@ -149,7 +149,7 @@ visibility.
 
 item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due
 to alignment/padding of certain items it is likely that an extra item may be
-included on either end of the display range.)",
+included on either end of the display range.)")
 {
   (*clipper)->ForceDisplayRangeByIndices(item_min, item_max);
-});
+}

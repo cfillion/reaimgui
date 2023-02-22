@@ -25,71 +25,71 @@ IsItemHovered, etc.) to query widget state.)");
 
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
-"",
+"")
 {
   FRAME_GUARD;
   return ImGui::Button(label, ImVec2(API_RO_GET(size_w), API_RO_GET(size_h)));
-});
+}
 
 DEFINE_API(bool, SmallButton, (ImGui_Context*,ctx)
 (const char*,label),
-"Button with StyleVar_FramePadding=(0,0) to easily embed within text.",
+"Button with StyleVar_FramePadding=(0,0) to easily embed within text.")
 {
   FRAME_GUARD;
   return ImGui::SmallButton(label);
-});
+}
 
 DEFINE_API(bool, InvisibleButton, (ImGui_Context*,ctx)
 (const char*,str_id)(double,size_w)(double,size_h)
 (int*,API_RO(flags),ImGuiButtonFlags_None),
 R"(Flexible button behavior without the visuals, frequently useful to build
-custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).)",
+custom behaviors using the public api (along with IsItemActive, IsItemHovered, etc.).)")
 {
   FRAME_GUARD;
   return ImGui::InvisibleButton(str_id, ImVec2(size_w, size_h), API_RO_GET(flags));
-});
+}
 
 DEFINE_API(bool, ArrowButton, (ImGui_Context*,ctx)
 (const char*,str_id)(int,dir),
-"Square button with an arrow shape. 'dir' is one of the Dir_* values",
+"Square button with an arrow shape. 'dir' is one of the Dir_* values")
 {
   FRAME_GUARD;
   return ImGui::ArrowButton(str_id, dir);
-});
+}
 
 DEFINE_API(bool, Checkbox, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RW(v)),
-"",
+"")
 {
   FRAME_GUARD;
   if(!API_RW(v))
     return false;
   return ImGui::Checkbox(label, API_RW(v));
-});
+}
 
 DEFINE_API(bool, CheckboxFlags, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(flags))(int,flags_value),
-"",
+"")
 {
   FRAME_GUARD;
   return ImGui::CheckboxFlags(label, API_RW(flags), flags_value);
-});
+}
 
 DEFINE_API(bool, RadioButton, (ImGui_Context*,ctx)
 (const char*,label)(bool,active),
-R"(Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })",
+R"(Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })")
 {
   FRAME_GUARD;
   return ImGui::RadioButton(label, active);
-});
+}
 
 DEFINE_API(bool, RadioButtonEx, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(int,v_button),
-"Shortcut to handle RadioButton's example pattern when value is an integer",
+"Shortcut to handle RadioButton's example pattern when value is an integer")
 {
   FRAME_GUARD;
   return ImGui::RadioButton(label, API_RW(v), v_button);
-});
+}
 
 DEFINE_API(void, PushButtonRepeat, (ImGui_Context*,ctx)
 (bool,repeat),
@@ -97,18 +97,18 @@ R"(In 'repeat' mode, Button*() functions return repeated true in a typematic
 manner (using ConfigVar_KeyRepeatDelay/ConfigVar_KeyRepeatRate settings).
 
 Note that you can call IsItemActive after any Button to tell if the button is
-held in the current frame.)",
+held in the current frame.)")
 {
   FRAME_GUARD;
   ImGui::PushButtonRepeat(repeat);
-});
+}
 
 DEFINE_API(void, PopButtonRepeat, (ImGui_Context*,ctx),
-"See PushButtonRepeat",
+"See PushButtonRepeat")
 {
   FRAME_GUARD;
   ImGui::PopButtonRepeat();
-});
+}
 
 API_SUBSECTION("Flags", "For InvisibleButton.");
 DEFINE_ENUM(ImGui, ButtonFlags_None, "");

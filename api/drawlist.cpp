@@ -75,49 +75,49 @@ The Draw List API uses absolute coordinates (0,0 is the top-left corner of the
 rimary monitor, not of your window!). See GetCursorScreenPos.)");
 
 DEFINE_API(ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
-"The draw list associated to the current window, to append your own drawing primitives",
+"The draw list associated to the current window, to append your own drawing primitives")
 {
   return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Window);
-});
+}
 
 DEFINE_API(ImGui_DrawList*, GetBackgroundDrawList, (ImGui_Context*,ctx),
 R"(This draw list will be the first rendering one. Useful to quickly draw
-shapes/text behind dear imgui contents.)",
+shapes/text behind dear imgui contents.)")
 {
   return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Background);
-});
+}
 
 DEFINE_API(ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
 R"(This draw list will be the last rendered one. Useful to quickly draw
-shapes/text over dear imgui contents.)",
+shapes/text over dear imgui contents.)")
 {
   return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Foreground);
-});
+}
 
 DEFINE_API(void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
 (double,clip_rect_max_x)(double,clip_rect_max_y)
 (bool*,API_RO(intersect_with_current_clip_rect),false),
 R"(Render-level scissoring. Prefer using higher-level PushClipRect to affect
-logic (hit-testing and widget culling).)",
+logic (hit-testing and widget culling).)")
 {
   draw_list->get()->PushClipRect(
     ImVec2(clip_rect_min_x, clip_rect_min_y),
     ImVec2(clip_rect_max_x, clip_rect_max_y),
     API_RO_GET(intersect_with_current_clip_rect));
-});
+}
 
 DEFINE_API(void, DrawList_PushClipRectFullScreen, (ImGui_DrawList*,draw_list),
-"",
+"")
 {
   draw_list->get()->PushClipRectFullScreen();
-});
+}
 
 DEFINE_API(void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
-"See DrawList_PushClipRect",
+"See DrawList_PushClipRect")
 {
   draw_list->get()->PopClipRect();
-});
+}
 
 DEFINE_ENUM(Im, DrawFlags_None, "");
 DEFINE_ENUM(Im, DrawFlags_Closed,
@@ -157,131 +157,131 @@ tessellation (preferred).)");
 DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (int,col_rgba)(double*,API_RO(thickness),1.0),
-"",
+"")
 {
   draw_list->get()->AddLine(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
     Color::fromBigEndian(col_rgba), API_RO_GET(thickness));
-});
+}
 
 DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
 (double*,API_RO(rounding),0.0)(int*,API_RO(flags),ImDrawFlags_None)
 (double*,API_RO(thickness),1.0),
-"",
+"")
 {
   draw_list->get()->AddRect(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     Color::fromBigEndian(col_rgba),
     API_RO_GET(rounding), API_RO_GET(flags), API_RO_GET(thickness));
-});
+}
 
 DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
 (double*,API_RO(rounding),0.0)(int*,API_RO(flags),ImDrawFlags_None),
-"",
+"")
 {
   draw_list->get()->AddRectFilled(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     Color::fromBigEndian(col_rgba), API_RO_GET(rounding), API_RO_GET(flags));
-});
+}
 
 DEFINE_API(void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
 (int,col_upr_left)(int,col_upr_right)(int,col_bot_right)(int,col_bot_left),
-"",
+"")
 {
   draw_list->get()->AddRectFilledMultiColor(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     Color::fromBigEndian(col_upr_left),  Color::fromBigEndian(col_upr_right),
     Color::fromBigEndian(col_bot_right), Color::fromBigEndian(col_bot_left));
-});
+}
 
 DEFINE_API(void, DrawList_AddQuad, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (int,col_rgba)(double*,API_RO(thickness),1.0),
-"",
+"")
 {
   draw_list->get()->AddQuad(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba), API_RO_GET(thickness));
-});
+}
 
 DEFINE_API(void, DrawList_AddQuadFilled, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (int,col_rgba),
-"",
+"")
 {
   draw_list->get()->AddQuadFilled(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba));
-});
+}
 
 DEFINE_API(void, DrawList_AddTriangle, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(int,col_rgba)(double*,API_RO(thickness),1.0),
-"",
+"")
 {
   draw_list->get()->AddTriangle(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     Color::fromBigEndian(col_rgba), API_RO_GET(thickness));
-});
+}
 
 DEFINE_API(void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(int,col_rgba),
-"",
+"")
 {
   draw_list->get()->AddTriangleFilled(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     Color::fromBigEndian(col_rgba));
-});
+}
 
 DEFINE_API(void, DrawList_AddCircle, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
 (int*,API_RO(num_segments),0)(double*,API_RO(thickness),1.0),
-R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)",
+R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)")
 {
   draw_list->get()->AddCircle(ImVec2(center_x, center_y), radius,
     Color::fromBigEndian(col_rgba),
     API_RO_GET(num_segments), API_RO_GET(thickness));
-});
+}
 
 DEFINE_API(void, DrawList_AddCircleFilled, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
 (int*,API_RO(num_segments),0),
-R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)",
+R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)")
 {
   draw_list->get()->AddCircleFilled(ImVec2(center_x, center_y), radius,
     Color::fromBigEndian(col_rgba), API_RO_GET(num_segments));
-});
+}
 
 DEFINE_API(void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
 (int,num_segments)(double*,API_RO(thickness),1.0),
-"",
+"")
 {
   draw_list->get()->AddNgon(ImVec2(center_x, center_y), radius,
     Color::fromBigEndian(col_rgba), num_segments, API_RO_GET(thickness));
-});
+}
 
 DEFINE_API(void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
 (int,num_segments),
-"",
+"")
 {
   draw_list->get()->AddNgonFilled(ImVec2(center_x, center_y),
     radius, Color::fromBigEndian(col_rgba), num_segments);
-});
+}
 
 DEFINE_API(void, DrawList_AddText, (ImGui_DrawList*,draw_list)
 (double,x)(double,y)(int,col_rgba)(const char*,text),
-"",
+"")
 {
   draw_list->get()->AddText(ImVec2(x, y), Color::fromBigEndian(col_rgba), text);
-});
+}
 
 DEFINE_API(void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
 (ImGui_Font*,font)(double,font_size)(double,pos_x)(double,pos_y)
@@ -290,7 +290,7 @@ DEFINE_API(void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
 (double*,API_RO(cpu_fine_clip_rect_w))(double*,API_RO(cpu_fine_clip_rect_h)),
 R"(The last pushed font is used if font is nil.
 The size of the last pushed font is used if font_size is 0.
-cpu_fine_clip_rect_* only takes effect if all four are non-nil.)",
+cpu_fine_clip_rect_* only takes effect if all four are non-nil.)")
 {
   col_rgba = Color::fromBigEndian(col_rgba);
 
@@ -314,7 +314,7 @@ cpu_fine_clip_rect_* only takes effect if all four are non-nil.)",
   draw_list->get(&ctx)->AddText(ctx->fonts().instanceOf(font), font_size,
     pos, col_rgba, text, nullptr, API_RO_GET(wrap_width),
     cpu_fine_clip_rect_ptr);
-});
+}
 
 static std::vector<ImVec2> makePointsArray(const reaper_array *points)
 {
@@ -334,44 +334,44 @@ static std::vector<ImVec2> makePointsArray(const reaper_array *points)
 
 DEFINE_API(void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
 (reaper_array*,points)(int,col_rgba)(int,flags)(double,thickness),
-"Points is a list of x,y coordinates.",
+"Points is a list of x,y coordinates.")
 {
   const std::vector<ImVec2> &vec2points { makePointsArray(points) };
   draw_list->get()->AddPolyline(
     vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba),
     flags, thickness);
-});
+}
 
 DEFINE_API(void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
 (reaper_array*,points)(int,col_rgba),
-"Note: Anti-aliased filling requires points to be in clockwise order.",
+"Note: Anti-aliased filling requires points to be in clockwise order.")
 {
   const std::vector<ImVec2> &vec2points { makePointsArray(points) };
   draw_list->get()->AddConvexPolyFilled(
     vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
-});
+}
 
 DEFINE_API(void, DrawList_AddBezierCubic, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (int,col_rgba)(double,thickness)(int*,API_RO(num_segments),0),
-"Cubic Bezier (4 control points)",
+"Cubic Bezier (4 control points)")
 {
   draw_list->get()->AddBezierCubic(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
     ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
     Color::fromBigEndian(col_rgba), thickness, API_RO_GET(num_segments));
-});
+}
 
 DEFINE_API(void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)
 (int,col_rgba)(double,thickness)(int*,API_RO(num_segments),0),
-"Quadratic Bezier (3 control points)",
+"Quadratic Bezier (3 control points)")
 {
   draw_list->get()->AddBezierQuadratic(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     Color::fromBigEndian(col_rgba), thickness, API_RO_GET(num_segments));
-});
+}
 
 DEFINE_API(void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
 (ImGui_Image*,img)
@@ -379,7 +379,7 @@ DEFINE_API(void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
 (double*,API_RO(uv_min_x),0.0)(double*,API_RO(uv_min_y),0.0)
 (double*,API_RO(uv_max_x),1.0)(double*,API_RO(uv_max_y),1.0)
 (int*,API_RO(col_rgba),0xFFFFFFFF),
-"",
+"")
 {
   Context *ctx;
   ImDrawList *dl { draw_list->get(&ctx) };
@@ -389,7 +389,7 @@ DEFINE_API(void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
     ImVec2(API_RO_GET(uv_min_x), API_RO_GET(uv_min_y)),
     ImVec2(API_RO_GET(uv_max_x), API_RO_GET(uv_max_y)),
     Color::fromBigEndian(API_RO_GET(col_rgba)));
-});
+}
 
 DEFINE_API(void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
 (ImGui_Image*,img)(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
@@ -399,7 +399,7 @@ DEFINE_API(void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
 (double*,API_RO(uv3_x),1.0)(double*,API_RO(uv3_y),1.0)
 (double*,API_RO(uv4_x),0.0)(double*,API_RO(uv4_y),1.0)
 (int*,API_RO(col_rgba),0xFFFFFFFF),
-"",
+"")
 {
   Context *ctx;
   ImDrawList *dl { draw_list->get(&ctx) };
@@ -412,13 +412,13 @@ DEFINE_API(void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
     ImVec2(API_RO_GET(uv3_x), API_RO_GET(uv3_y)),
     ImVec2(API_RO_GET(uv4_x), API_RO_GET(uv4_y)),
     Color::fromBigEndian(API_RO_GET(col_rgba)));
-});
+}
 
 DEFINE_API(void, DrawList_AddImageRounded, (ImGui_DrawList*,draw_list)
 (ImGui_Image*,img)(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
 (double,uv_min_x)(double,uv_min_y)(double,uv_max_x)(double,uv_max_y)
 (int,col_rgba)(double,rounding)(int*,API_RO(flags),ImDrawFlags_None),
-"",
+"")
 {
   Context *ctx;
   ImDrawList *dl { draw_list->get(&ctx) };
@@ -427,83 +427,83 @@ DEFINE_API(void, DrawList_AddImageRounded, (ImGui_DrawList*,draw_list)
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     ImVec2(uv_min_x, uv_min_y), ImVec2(uv_max_x, uv_max_y),
     Color::fromBigEndian(col_rgba), rounding, API_RO_GET(flags));
-});
+}
 
 API_SUBSECTION("Stateful Path",
 "Stateful path API, add points then finish with PathFillConvex() or PathStroke().");
 
 DEFINE_API(void, DrawList_PathClear, (ImGui_DrawList*,draw_list),
-"",
+"")
 {
   draw_list->get()->PathClear();
-});
+}
 
 DEFINE_API(void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
 (double,pos_x)(double,pos_y),
-"",
+"")
 {
   draw_list->get()->PathLineToMergeDuplicate(ImVec2(pos_x, pos_y));
-});
+}
 
 DEFINE_API(void, DrawList_PathFillConvex, (ImGui_DrawList*,draw_list)
 (int,col_rgba),
-"Note: Anti-aliased filling requires points to be in clockwise order.",
+"Note: Anti-aliased filling requires points to be in clockwise order.")
 {
   draw_list->get()->PathFillConvex(Color::fromBigEndian(col_rgba));
-});
+}
 
 DEFINE_API(void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
 (int,col_rgba)(int*,API_RO(flags),ImDrawFlags_None)(double*,API_RO(thickness),1.0),
-"",
+"")
 {
   draw_list->get()->PathStroke(
     Color::fromBigEndian(col_rgba), API_RO_GET(flags), API_RO_GET(thickness));
-});
+}
 
 DEFINE_API(void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(double,a_min)(double,a_max)
 (int*,API_RO(num_segments),0),
-"",
+"")
 {
   draw_list->get()->PathArcTo(ImVec2(center_x, center_y),
     radius, a_min, a_max, API_RO_GET(num_segments));
-});
+}
 
 DEFINE_API(void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)
 (int,a_min_of_12)(int,a_max_of_12),
-"Use precomputed angles for a 12 steps circle.",
+"Use precomputed angles for a 12 steps circle.")
 {
   draw_list->get()->PathArcToFast(
     ImVec2(center_x, center_y), radius, a_min_of_12, a_max_of_12);
-});
+}
 
 DEFINE_API(void, DrawList_PathBezierCubicCurveTo, (ImGui_DrawList*,draw_list)
 (double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (int*,API_RO(num_segments),0),
-"Cubic Bezier (4 control points)",
+"Cubic Bezier (4 control points)")
 {
   draw_list->get()->PathBezierCubicCurveTo(
     ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
     API_RO_GET(num_segments));
-});
+}
 
 DEFINE_API(void, DrawList_PathBezierQuadraticCurveTo, (ImGui_DrawList*,draw_list)
 (double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(int*,API_RO(num_segments),0),
-"Quadratic Bezier (3 control points)",
+"Quadratic Bezier (3 control points)")
 {
   draw_list->get()->PathBezierQuadraticCurveTo(
     ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), API_RO_GET(num_segments));
-});
+}
 
 DEFINE_API(void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
 (double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y)
 (double*,API_RO(rounding),0.0)(int*,API_RO(flags),ImDrawFlags_None),
-"",
+"")
 {
   draw_list->get()->PathRect(ImVec2(rect_min_x, rect_min_y),
     ImVec2(rect_max_x, rect_max_y), API_RO_GET(rounding), API_RO_GET(flags));
-});
+}
 
 DrawListSplitter::DrawListSplitter(ImGui_DrawList *draw_list)
   : m_drawlist { draw_list }, m_lastList { draw_list->get() }
@@ -558,33 +558,33 @@ Usage:
 
 DEFINE_API(ImGui_DrawListSplitter*, CreateDrawListSplitter,
 (ImGui_DrawList*,draw_list),
-"",
+"")
 {
   return new DrawListSplitter { draw_list };
-});
+}
 
 DEFINE_API(void, DrawListSplitter_Clear, (ImGui_DrawListSplitter*,splitter),
-"",
+"")
 {
   (*splitter)->Clear();
-});
+}
 
 DEFINE_API(void, DrawListSplitter_Split, (ImGui_DrawListSplitter*,splitter)
 (int,count),
-"",
+"")
 {
   (*splitter)->Split(splitter->drawList(), count);
-});
+}
 
 DEFINE_API(void, DrawListSplitter_Merge, (ImGui_DrawListSplitter*,splitter),
-"",
+"")
 {
   (*splitter)->Merge(splitter->drawList());
-});
+}
 
 DEFINE_API(void, DrawListSplitter_SetCurrentChannel,
 (ImGui_DrawListSplitter*,splitter)(int,channel_idx),
-"",
+"")
 {
   (*splitter)->SetCurrentChannel(splitter->drawList(), channel_idx);
-});
+}

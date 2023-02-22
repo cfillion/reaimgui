@@ -41,30 +41,30 @@ DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
 R"(Query popup state, if open start appending into the window. Call EndPopup
 afterwards. WindowFlags* are forwarded to the window.
 
-Return true if the popup is open, and you can start outputting to it.)",
+Return true if the popup is open, and you can start outputting to it.)")
 {
   FRAME_GUARD;
   return ImGui::BeginPopup(str_id, WindowFlags { API_RO_GET(flags) });
-});
+}
 
 DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RWO(p_open))
 (int*,API_RO(flags),ImGuiWindowFlags_None),
 R"(Block every interaction behind the window, cannot be closed by user, add a
 dimming background, has a title bar. Return true if the modal is open, and you
-can start outputting to it. See BeginPopup.)",
+can start outputting to it. See BeginPopup.)")
 {
   FRAME_GUARD;
   WindowFlags flags { API_RO_GET(flags) };
   return ImGui::BeginPopupModal(name, openPtrBehavior(API_RWO(p_open)), flags);
-});
+}
 
 DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
-"Only call EndPopup() if BeginPopupXXX() returns true!",
+"Only call EndPopup() if BeginPopupXXX() returns true!")
 {
   FRAME_GUARD;
   ImGui::EndPopup();
-});
+}
 
 DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(popup_flags),ImGuiPopupFlags_None),
@@ -75,34 +75,34 @@ If not modal: they can be closed by clicking anywhere outside them, or by
 pressing ESCAPE.
 
 Use PopupFlags_NoOpenOverExistingPopup to avoid opening a popup if there's
-already one at the same level.)",
+already one at the same level.)")
 {
   FRAME_GUARD;
   ImGui::OpenPopup(str_id, API_RO_GET(popup_flags));
-});
+}
 
 DEFINE_API(void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))
 (int*,API_RO(popup_flags),ImGuiPopupFlags_MouseButtonRight),
 R"(Helper to open popup when clicked on last item. return true when just opened.
 (Note: actually triggers on the mouse _released_ event to be consistent with
-popup behaviors.))",
+popup behaviors.))")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
   ImGui::OpenPopupOnItemClick(API_RO(str_id), API_RO_GET(popup_flags));
-});
+}
 
 DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
 R"(Manually close the popup we have begin-ed into.
 Use inside the BeginPopup/EndPopup scope to close manually.
 
-CloseCurrentPopup() is called by default by Selectable/MenuItem when activated.)",
+CloseCurrentPopup() is called by default by Selectable/MenuItem when activated.)")
 {
   FRAME_GUARD;
   ImGui::CloseCurrentPopup();
-});
+}
 
 DEFINE_API(bool, IsPopupOpen, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags),ImGuiPopupFlags_None),
@@ -112,11 +112,11 @@ popup stack.
 - With PopupFlags_AnyPopupId: return true if any popup is open at the current
   BeginPopup() level of the popup stack.
 - With PopupFlags_AnyPopupId + PopupFlags_AnyPopupLevel: return true if any
-  popup is open.)",
+  popup is open.)")
 {
   FRAME_GUARD;
   return ImGui::IsPopupOpen(str_id, API_RO_GET(flags));
-});
+}
 
 DEFINE_SECTION(flags, ROOT_SECTION, "Flags",
   "For OpenPopup*(), BeginPopupContext*() and IsPopupOpen.");
@@ -169,47 +169,47 @@ but written to avoid computing the ID twice because BeginPopupContextXXX
 functions may be called very frequently.
 
 If you want to use that on a non-interactive item such as Text you need to pass
-in an explicit ID here.)",
+in an explicit ID here.)")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
   return ImGui::BeginPopupContextItem(API_RO(str_id), API_RO_GET(popup_flags));
-});
+}
 
 DEFINE_API(bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))
 (int*,API_RO(popup_flags),ImGuiPopupFlags_MouseButtonRight),
-"Open+begin popup when clicked on current window.",
+"Open+begin popup when clicked on current window.")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(str_id));
 
   return ImGui::BeginPopupContextWindow(API_RO(str_id), API_RO_GET(popup_flags));
-});
+}
 
 API_SUBSECTION("Tooltips",
   "Tooltip are windows following the mouse. They do not take focus away.");
 
 DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
 R"(Begin/append a tooltip window.
-To create full-featured tooltip (with any kind of items).)",
+To create full-featured tooltip (with any kind of items).)")
 {
   FRAME_GUARD;
   ImGui::BeginTooltip();
-});
+}
 
 DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
-"",
+"")
 {
   FRAME_GUARD;
   ImGui::EndTooltip();
-});
+}
 
 DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
 R"(Set a text-only tooltip, typically use with IsItemHovered. override any
-previous call to SetTooltip.)",
+previous call to SetTooltip.)")
 {
   FRAME_GUARD;
   ImGui::SetTooltip("%s", text);
-});
+}

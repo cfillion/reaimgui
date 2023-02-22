@@ -45,32 +45,32 @@ API_SUBSECTION("Combo Box (Dropdown)");
 DEFINE_API(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
 (const char*,preview_value)(int*,API_RO(flags),ImGuiComboFlags_None),
 R"(The BeginCombo/EndCombo API allows you to manage your contents and selection
-state however you want it, by creating e.g. Selectable items.)",
+state however you want it, by creating e.g. Selectable items.)")
 {
   FRAME_GUARD;
 
   return ImGui::BeginCombo(label, preview_value, API_RO_GET(flags));
-});
+}
 
 DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
-"Only call EndCombo() if BeginCombo returns true!",
+"Only call EndCombo() if BeginCombo returns true!")
 {
   FRAME_GUARD;
   ImGui::EndCombo();
-});
+}
 
 DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(popup_max_height_in_items),-1),
 R"(Helper over BeginCombo/EndCombo for convenience purpose. Each item must be
-null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)",
+null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)")
 {
   FRAME_GUARD;
 
   const auto &strings { splitList(items, items_sz) };
   return ImGui::Combo(label, API_RW(current_item),
     strings.data(), strings.size(), API_RO_GET(popup_max_height_in_items));
-});
+}
 
 DEFINE_ENUM(ImGui, ComboFlags_None,           "");
 DEFINE_ENUM(ImGui, ComboFlags_PopupAlignLeft,
@@ -94,14 +94,14 @@ DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RO(height_in_items),-1),
 R"(This is an helper over BeginListBox/EndListBox for convenience purpose.
 
-Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)",
+Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)")
 {
   FRAME_GUARD;
 
   const auto &strings { splitList(items, items_sz) };
   return ImGui::ListBox(label, API_RW(current_item),
     strings.data(), strings.size(), API_RO_GET(height_in_items));
-});
+}
 
 DEFINE_API(bool, BeginListBox, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
@@ -120,19 +120,19 @@ state however you want it, by creating e.g. Selectable or any items.
   - height < 0.0 or -FLT_MIN: bottom-align
   - height = 0.0 (default): arbitrary default height which can fit ~7 items
 
-See EndListBox.)",
+See EndListBox.)")
 {
   FRAME_GUARD;
   const ImVec2 size(API_RO_GET(size_w), API_RO_GET(size_h));
   return ImGui::BeginListBox(label, size);
-});
+}
 
 DEFINE_API(void, EndListBox, (ImGui_Context*,ctx),
-"Only call EndListBox() if BeginListBox returned true!",
+"Only call EndListBox() if BeginListBox returned true!")
 {
   FRAME_GUARD;
   ImGui::EndListBox();
-});
+}
 
 API_SUBSECTION("Selectables",
 R"(A selectable highlights when hovered, and can display another color when
@@ -144,14 +144,14 @@ DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RW(p_selected))
 (int*,API_RO(flags),ImGuiSelectableFlags_None)
 (double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
-"",
+"")
 {
   FRAME_GUARD;
   bool selectedOmitted {};
   bool *selected { API_RW(p_selected) ? API_RW(p_selected) : &selectedOmitted };
   const ImVec2 size (API_RO_GET(size_w), API_RO_GET(size_h));
   return ImGui::Selectable(label, selected, API_RO_GET(flags), size);
-});
+}
 
 DEFINE_ENUM(ImGui, SelectableFlags_None, "");
 DEFINE_ENUM(ImGui, SelectableFlags_DontClosePopups,

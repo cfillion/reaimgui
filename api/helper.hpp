@@ -51,6 +51,7 @@
   BOOST_PP_SEQ_FOR_EACH_I(macro, data, BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))
 #define _SIGARG(r, data, i, arg) \
   BOOST_PP_COMMA_IF(i) _ARG_TYPE(arg) _ARG_NAME(arg)
+#define _RAWARG(r, macro, i, arg) BOOST_PP_COMMA_IF(i) macro(arg)
 #define _STRARG(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
 #define _STRARGUS(r, macro, i, arg) \
@@ -85,8 +86,11 @@ using DefArgVal = std::conditional_t<
   namespace API_##name {                                                \
     _FOREACH_ARG(_DEFARG, name, args) /* constexprs of default args */  \
                                                                         \
+    static type invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args));          \
     static type invoke(_FOREACH_ARG(_SIGARG, _, args)) noexcept         \
-    try __VA_ARGS__                                                     \
+    try {                                                               \
+      return invoke_unsafe(_FOREACH_ARG(_RAWARG, _ARG_NAME, args));     \
+    }                                                                   \
     _API_CATCH(name, type, reascript_error)                             \
     _API_CATCH(name, type, imgui_error)                                 \
   }                                                                     \
@@ -100,9 +104,11 @@ using DefArgVal = std::conditional_t<
     _FOREACH_ARG(_STRARG, _ARG_NAME, args) "\0"                         \
     help                                   "\0"                         \
     _FOREACH_ARG(_STRARGUS, _ARG_DEFV, args), __LINE__,                 \
-  }
+  };                                                                    \
+                                                                        \
+  type API_##name::invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args))
 #define _DEFINE_ENUM(prefix, name, doc) \
-  _DEFINE_API(int, name, NO_ARGS, doc, { return prefix##name; })
+  _DEFINE_API(int, name, NO_ARGS, doc) { return prefix##name; }
 
 #define DEFINE_SECTION(id, parent, ...) static const API::Section id \
   { &parent, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ };

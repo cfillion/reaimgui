@@ -75,7 +75,7 @@ API_SUBSECTION("Variables");
 
 DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,val1)(double*,API_RO(val2)),
-"See StyleVar_* for possible values of 'var_idx'.",
+"See StyleVar_* for possible values of 'var_idx'.")
 {
   FRAME_GUARD;
   if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
@@ -94,19 +94,19 @@ DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
       ImGui::PushStyleVar(var_idx, val1);
     }
   }, g_styleVars[var_idx]);
-});
+}
 
 DEFINE_API(void, PopStyleVar, (ImGui_Context*,ctx)
 (int*,API_RO(count),1),
-"Reset a style variable.",
+"Reset a style variable.")
 {
   FRAME_GUARD;
   ImGui::PopStyleVar(API_RO_GET(count));
-});
+}
 
 DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double*,API_W(val1))(double*,API_W(val2)),
-"",
+"")
 {
   FRAME_GUARD;
   if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
@@ -121,7 +121,7 @@ DEFINE_API(void, GetStyleVar, (ImGui_Context*,ctx)
     else
       if(API_W(val1)) *API_W(val1) = style.*field;
   }, g_styleVars[var_idx]);
-});
+}
 
 DEFINE_ENUM(ImGui, StyleVar_Alpha,
   "Global alpha applies to everything in Dear ImGui.");
@@ -201,50 +201,50 @@ API_SUBSECTION("Colors");
 DEFINE_API(int, GetColor, (ImGui_Context*,ctx)
 (int,idx)(double*,API_RO(alpha_mul),1.0),
 R"(Retrieve given style color with style alpha applied and optional extra alpha
-multiplier, packed as a 32-bit value (RGBA). See Col_* for available style colors.)",
+multiplier, packed as a 32-bit value (RGBA). See Col_* for available style colors.)")
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
   return Color::toBigEndian(ImGui::GetColorU32(idx, API_RO_GET(alpha_mul)));
-});
+}
 
 DEFINE_API(int, GetColorEx, (ImGui_Context*,ctx)
 (int,col_rgba),
-"Retrieve given color with style alpha applied, packed as a 32-bit value (RGBA).",
+"Retrieve given color with style alpha applied, packed as a 32-bit value (RGBA).")
 {
   FRAME_GUARD;
   return Color::toBigEndian(ImGui::GetColorU32(Color::fromBigEndian(col_rgba)));
-});
+}
 
 DEFINE_API(int, GetStyleColor, (ImGui_Context*,ctx)
 (int,idx),
 R"(Retrieve style color as stored in ImGuiStyle structure.
 Use to feed back into PushStyleColor, Otherwise use GetColor to get style color
-with style alpha baked in. See Col_* for available style colors.)",
+with style alpha baked in. See Col_* for available style colors.)")
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
   return Color { ImGui::GetStyleColorVec4(idx) }.pack(true);
-});
+}
 
 DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
 (int,idx)(int,col_rgba),
 R"(Modify a style color.
 Call PopStyleColor to undo after use (before the end of the frame).
-See Col_* for available style colors.)",
+See Col_* for available style colors.)")
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
   ImGui::PushStyleColor(idx, Color(col_rgba));
-});
+}
 
 DEFINE_API(void, PopStyleColor, (ImGui_Context*,ctx)
 (int*,API_RO(count),1),
-"",
+"")
 {
   FRAME_GUARD;
   ImGui::PopStyleColor(API_RO_GET(count));
-});
+}
 
 DEFINE_ENUM(ImGui, Col_Text,                  "");
 DEFINE_ENUM(ImGui, Col_TextDisabled,          "");
