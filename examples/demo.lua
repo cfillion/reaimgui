@@ -4014,11 +4014,9 @@ local MyItemColumnID_Quantity    = 6
 local MyItemColumnID_Description = 7
 
 function demo.CompareTableItems(a, b)
-  local next_id = 0
-  while true do
+  for next_id = 0, math.huge do
     local ok, col_user_id, col_idx, sort_order, sort_direction = ImGui.TableGetColumnSortSpecs(ctx, next_id)
     if not ok then break end
-    next_id = next_id + 1
 
     -- Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
     -- We could also choose to identify columns based on their index (col_idx), which is simpler!
@@ -6140,11 +6138,9 @@ function demo.ShowDemoWindowInputs()
         ImGui.IsKeyDown(ctx, ImGui.Mod_Super()) and 'SUPER '  or ''))
 
       ImGui.Text(ctx, 'Chars queue:')
-      local next_id = 0
-      while true do
+      for next_id = 0, math.huge do
         local rv, c = ImGui.GetInputQueueCharacter(ctx, next_id)
         if not rv then break end
-        next_id = next_id + 1
         ImGui.SameLine(ctx)
         ImGui.Text(ctx, ("'%s' (0x%04X)"):format(utf8.char(c), c))
       end

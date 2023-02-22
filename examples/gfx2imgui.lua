@@ -107,7 +107,7 @@ local FONT_FLAGS = {
 }
 local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
-local QUARTER_CIRCLE, INFINITY = math.pi / 2, math.huge
+local QUARTER_CIRCLE = math.pi / 2
 
 -- settings
 local BLIT_NO_PREMULTIPLY          = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
@@ -170,7 +170,7 @@ local function tobool(v, default)
 end
 
 local function toint(v)
-  if not v or v ~= v or v == INFINITY or -v == INFINITY then return 0 end
+  if not v or v ~= v or v == 1/0 or v == -1/0 then return 0 end
   return v // 1 -- faster than floor
 end
 
@@ -345,31 +345,40 @@ local function updateKeyboard()
     state.wnd_flags = state.wnd_flags | 4
   end
 
+  local uni_mark = string.byte('u') << 24
+  for i = 0, math.huge do
+    local rv, char = ImGui.GetInputQueueCharacter(state.ctx, i)
+    if not rv then break end
+    local legacy_char = char
+    if legacy_char > 255 then
+      legacy_char = legacy_char | uni_mark
+    end
+    ringInsert(state.charqueue, legacy_char | (char << 32))
+  end
+
+  if ImGui.GetInputQueueCharacter(state.ctx, 0) then
+    return
+  end
+
   for k, c in pairs(KEYS) do
     if ImGui.IsKeyPressed(state.ctx, k) then
       ringInsert(state.charqueue, c)
     end
   end
 
-  local a, z = ImGui.Key_A(), ImGui.Key_Z()
-  local mods = ImGui.GetKeyMods(state.ctx) & CHAR_MOD_MASK
-  for flags, mod_base in pairs(CHAR_MOD_BASE) do
-    if flags == mods then
-      for k = a, z do
-        if ImGui.IsKeyPressed(state.ctx, k) then
-          ringInsert(state.charqueue, mod_base + (k - a))
-        end
-      end
-      return -- break + bypass the character input queue
-    end
+  local mods = ImGui.GetKeyMods(state.ctx)
+  if MACOS and mods & ImGui.Mod_Super() ~= 0 then
+    mods = mods | ImGui.Mod_Ctrl()
   end
-
-  local i = 0
-  while true do
-    local rv, char = ImGui.GetInputQueueCharacter(state.ctx, i)
-    if not rv then break end
-    ringInsert(state.charqueue, char)
-    i = i + 1
+  local mod_base = CHAR_MOD_BASE[mods & CHAR_MOD_MASK]
+  if mod_base then
+    local a, z = ImGui.Key_A(), ImGui.Key_Z()
+    for k = a, z do
+      if ImGui.IsKeyPressed(state.ctx, k) then
+        local char = mod_base + (k - a)
+        ringInsert(state.charqueue, char)
+      end
+    end
   end
 end
 
@@ -761,7 +770,7 @@ setmetatable(gfx, {
       error(('bad argument: expected number, got %s'):format(t))
     end
 
-    if value ~= value or value == INFINITY or -value == INFINITY then
+    if value ~= value or value == 1/0 or -value == 1/0 then
       gfx_vars[key] = 0
     else
       gfx_vars[key] = value
@@ -986,7 +995,7 @@ function gfx.drawstr(str, flags, right, bottom)
 end
 
 function gfx.getchar(char)
-  if not state then return -1 end
+  if not state then return -1, 0 end
   if not char or char <= 0 then
     if state.want_close then
       return -1
@@ -994,20 +1003,20 @@ function gfx.getchar(char)
 
     local wptr
     wptr, state.charqueue.ptr = state.charqueue.ptr, state.charqueue.rptr
-    if wptr == state.charqueue.rptr then return 0 end
+    if wptr == state.charqueue.rptr then return 0, 0 end
 
     local char = ringEnum(state.charqueue)()
     state.charqueue.rptr = (state.charqueue.rptr + 1) % state.charqueue.max_size
     state.charqueue.ptr = wptr
-    return char
-  elseif char == 65536 then
+    return char & (2^32-1), char >> 32
+  elseif char == 2^16 then
     return state.wnd_flags
   elseif type(char) == 'string' then
     char = string.byte(char)
   end
 
-  if not beginFrame() then return -1 end
-  return ImGui.IsKeyDown(state.ctx, char)
+  if not beginFrame() then return -1, 0 end
+  return ImGui.IsKeyDown(state.ctx, char), 0
 end
 
 function gfx.getdropfile(idx)
