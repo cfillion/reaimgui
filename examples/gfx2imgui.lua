@@ -146,6 +146,7 @@ local DL_PushClipRect            = ImGui.DrawList_PushClipRect
 
 local gfx, global_state, state = {}, {
   commands   = {},
+  font       = 0,
   fonts      = {},
   images     = {},
   log        = { ptr=0, size=0, max_size=64 },
@@ -974,7 +975,7 @@ function gfx.drawstr(str, flags, right, bottom)
 
   local x, y, c = toint(gfx_vars.x), toint(gfx_vars.y), color()
   local w, h = gfx.measurestr(str) -- calls beginFrame()
-  local f = global_state.fonts[state.font]
+  local f = global_state.fonts[global_state.font]
   local f_sz = f and f.size or DEFAULT_FONT_SIZE
   local f_cache, f_inst = getNearestCachedFont(f)
   if right  then right  = toint(right) end
@@ -1031,8 +1032,8 @@ end
 
 function gfx.getfont()
   if not state then return -1 end
-  local font = global_state.fonts[state.font]
-  return state.font - 1, font and font.family
+  local font = global_state.fonts[global_state.font]
+  return global_state.font - 1, font and font.family
 end
 
 function gfx.getimgdim(image)
@@ -1100,7 +1101,6 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
       wnd_flags   = 1,
       collapsed   = false,
       want_close  = false,
-      font        = 0,
       fontmap     = {},
       fontqueue   = {},
       frame_count = -1,
@@ -1226,7 +1226,7 @@ function gfx.measurestr(str)
     return gfx_vars.texth * utf8.len(str), gfx_vars.texth
   end
   local _, font_inst, size_error =
-    getNearestCachedFont(global_state.fonts[state.font])
+    getNearestCachedFont(global_state.fonts[global_state.font])
   local correction_factor = gfx_vars.texth / (gfx_vars.texth + size_error)
   ImGui.PushFont(state.ctx, font_inst)
   local w, h = ImGui.CalcTextSize(state.ctx, str)
@@ -1374,9 +1374,7 @@ function gfx.setfont(idx, fontface, sz, flag)
     end
   end
 
-  if state then
-    state.font = font and idx or 0
-  end
+  global_state.font = font and idx or 0
 
   gfx.texth = idx ~= 0 and ((font and font.size) or sz) or DEFAULT_FONT_SIZE
 
