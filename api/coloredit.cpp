@@ -56,13 +56,10 @@ DEFINE_API(bool, ColorEdit3, (ImGui_Context*,ctx)
 (int*,API_RO(flags),ImGuiColorEditFlags_None),
 "Color is in 0xXXRRGGBB. XX is ignored and will not be modified.")
 {
-  // unneeded, only to show Edit3 in the error message instead of Edit4
-  FRAME_GUARD;
-  assertValid(API_RW(col_rgb));
-
+  // Edit4 will take care of starting the frame and validating col_rgb
   ImGuiColorEditFlags flags { API_RO_GET(flags) };
   flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorEdit4::invoke(ctx, label, API_RW(col_rgb), &flags);
+  return API_ColorEdit4::invoke_unsafe(ctx, label, API_RW(col_rgb), &flags);
 }
 
 DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
@@ -96,13 +93,11 @@ DEFINE_API(bool, ColorPicker3, (ImGui_Context*,ctx)
 (int*,API_RO(flags),ImGuiColorEditFlags_None),
 R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.)")
 {
-  // unneeded, only to show Picker3 in the error message instead of Picker4
-  FRAME_GUARD;
-  assertValid(API_RW(col_rgb));
-
+  // Picker4 will take care of starting the frame and validating col_rgb
   ImGuiColorEditFlags flags { API_RO_GET(flags) };
   flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorPicker4::invoke(ctx, label, API_RW(col_rgb), &flags, nullptr);
+  return API_ColorPicker4::invoke_unsafe(
+    ctx, label, API_RW(col_rgb), &flags, nullptr);
 }
 
 DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)
