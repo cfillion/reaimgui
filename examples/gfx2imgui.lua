@@ -823,7 +823,7 @@ local function drawBlit(draw_list, cmd, dst_blit)
   end
 
   local merged_blit = mergeBlitOpts(src_blit, dst_blit)
-  srcx, srcy = transformPoint(srcx, srcy, src_blit, TP_NO_ORIGIN)
+  srcx, srcy = transformPoint(srcx, srcy, merged_blit, TP_NO_ORIGIN)
   merged_blit.x1, merged_blit.y1 = srcx, srcy
   merged_blit.x2, merged_blit.y2 = srcx + destw, srcy + desth
 
