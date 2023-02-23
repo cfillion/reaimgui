@@ -218,16 +218,17 @@ local function drawCall(...)
   if not c then
     -- pre-allocate the maximum size w/o nil gaps
     -- IF SIZE CHANGES: also update copy code in gfx.blit!
-    c = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
+    c = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 }
     list[ptr] = c
   end
 
   -- faster than looping over select('#', ...) or creating a new table
-  c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11] = ...
+  c[ 1], c[ 2], c[ 3], c[ 4], c[5], c[6], c[7], c[8], c[9],
+  c[10], c[11], c[12], c[13] = ...
 
   if DEBUG then
     assert(type((...)) == 'function', 'uncallable draw command')
-    assert(select('#', ...) <= 11)
+    assert(select('#', ...) <= 13)
   end
 
   return 0
@@ -298,20 +299,6 @@ local function transformPoint(x, y, opts, flags)
   end
 
   return x, y
-end
-
-local function clip(x1, y1, x2, y2, opts)
-  return (x1 < opts.x2 and x2 > opts.x1) or
-         (y1 < opts.y2 and y2 > opts.y1)
-end
-
-local function mergeBlitOpts(src, dst)
-  return {
-    alpha   = src.alpha * dst.alpha,
-    mode    = src.mode,
-    scale_x = src.scale_x * dst.scale_x,
-    scale_y = src.scale_y * dst.scale_y,
-  }
 end
 
 local function alignText(flags, pos, size, limit)
@@ -808,31 +795,44 @@ function gfx.arc(x, y, r, ang1, ang2, antialias)
     ang1 - QUARTER_CIRCLE, ang2 - QUARTER_CIRCLE)
 end
 
-local function drawBlit(draw_list, cmd, dst_blit)
-  local srcx, srcy, srcw, srch, destx, desty,
-        src_blit, commands, sourceCommands =
-    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8], cmd[9], cmd[10]
+local function drawBlit(draw_list, cmd, opts)
+  local commands, sourceCommands,
+        srcx, srcy, srcw, srch, dstx, dsty,
+        alpha, mode, scale_x, scale_y =
+    cmd[ 2], cmd[ 3], cmd[ 4], cmd[ 5], cmd[6], cmd[7], cmd[8], cmd[9],
+    cmd[10], cmd[11], cmd[12], cmd[13]
 
-  destx, desty = transformPoint(destx, desty, dst_blit, TP_NO_ORIGIN)
-  srcw, srch = transformPoint(srcw, srch, src_blit, TP_NO_ORIGIN)
+  dstx, dsty = transformPoint(dstx, dsty, opts)
 
   sourceCommands.want_clear = true
 
-  if not clip(srcx, srcy, srcx + srcw, srcy + srch, dst_blit) then
-    return
+  local old_alpha,    old_mode     = opts.alpha,    opts.mode
+  local old_scale_x,  old_scale_y  = opts.scale_x,  opts.scale_y
+  local old_screen_x, old_screen_y = opts.screen_x, opts.screen_y
+  local old_x1, old_y1, old_x2, old_y2 = opts.x1, opts.y1, opts.x2, opts.y2
+
+  opts.alpha,   opts.mode    = opts.alpha * alpha, mode
+  opts.scale_x, opts.scale_y = opts.scale_x * scale_x, opts.scale_y * scale_y
+
+  -- after the new scale is set in opts
+  srcx, srcy = transformPoint(srcx, srcy, opts, TP_NO_ORIGIN)
+  srcw, srch = transformPoint(srcw, srch, opts, TP_NO_ORIGIN)
+  opts.screen_x, opts.screen_y = dstx - srcx, dsty - srcy
+
+  opts.x1, opts.y1 = srcx, srcy
+  opts.x2, opts.y2 = srcx + srcw, srcy + srch
+
+  if (opts.x1 < old_x2 and opts.x2 > old_x1) or
+     (opts.y1 < old_y2 and opts.y2 > old_y1) then
+    DL_PushClipRect(draw_list, dstx, dsty, dstx + srcw, dsty + srch, true)
+    render(draw_list, commands, opts)
+    DL_PopClipRect(draw_list)
   end
 
-  local merged_blit = mergeBlitOpts(src_blit, dst_blit)
-  srcx, srcy = transformPoint(srcx, srcy, merged_blit, TP_NO_ORIGIN)
-  merged_blit.x1, merged_blit.y1 = srcx, srcy
-  merged_blit.x2, merged_blit.y2 = srcx + srcw, srcy + srch
-
-  local x1, y1 = dst_blit.screen_x + destx, dst_blit.screen_y + desty
-  local x2, y2 = x1 + srcw, y1 + srch
-  merged_blit.screen_x, merged_blit.screen_y = x1 - srcx, y1 - srcy
-  DL_PushClipRect(draw_list, x1, y1, x2, y2, true)
-  render(draw_list, commands, merged_blit)
-  DL_PopClipRect(draw_list)
+  opts.alpha,    opts.mode     = old_alpha,    old_mode
+  opts.scale_x,  opts.scale_y  = old_scale_x,  old_scale_y
+  opts.screen_x, opts.screen_y = old_screen_x, old_screen_y
+  opts.x1, opts.y1, opts.x2, opts.y2 = old_x1, old_y1, old_x2, old_y2
 end
 
 function gfx.blit(source, ...)
@@ -879,16 +879,14 @@ function gfx.blit(source, ...)
   for i = 1, size do
     -- make an immutable copy
     local c = sourceCommands[i]
-    commands[i] =
-      { c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11] }
+    commands[i] = {
+      c[ 1], c[ 2], c[ 3], c[ 4], c[5], c[6], c[7], c[8], c[9],
+      c[10], c[11], c[12], c[13]
+    }
   end
 
-  local src_blit = {
-    alpha   = gfx.a,
-    mode    = gfx_vars.mode,
-    scale_x = srcw ~= 0 and destw / srcw or 1,
-    scale_y = srch ~= 0 and desth / srch or 1,
-  }
+  local scale_x, scale_y = srcw ~= 0 and destw / srcw or 1,
+                           srch ~= 0 and desth / srch or 1
 
   if dim then -- after scale_[xy] are computed
     local maxw, maxh = dim.w - srcx, dim.h - srcy
@@ -896,8 +894,9 @@ function gfx.blit(source, ...)
     if srch > maxh then srch = maxh end
   end
 
-  drawCall(drawBlit, srcx, srcy, srcw, srch, destx, desty,
-    src_blit, commands, sourceCommands)
+  drawCall(drawBlit, commands, sourceCommands,
+    srcx, srcy, srcw, srch, destx, desty,
+    gfx.a, gfx_vars.mode, scale_x, scale_y)
 
   return source
 end
