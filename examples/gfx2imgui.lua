@@ -1008,7 +1008,7 @@ function gfx.drawstr(str, flags, right, bottom)
   if right  then right  = toint(right) end
   if bottom then bottom = toint(bottom) end
 
-  gfx_vars.x = gfx_vars.x + w
+  gfx_vars.x, gfx_vars.y = gfx_vars.x + w, gfx_vars.y + h - gfx_vars.texth
 
   local x_off, y_off = 0, 0
   if flags and right and bottom then
