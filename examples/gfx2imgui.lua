@@ -9,7 +9,7 @@
 --   gfx.drawstr('Hello World!')
 --   gfx.set(1, 0, 0, 1)
 --   gfx.rect(30, 30, 50, 50)
---   gfx.imgui(function(ctx, draw_list, screen_x, screen_y)
+--   gfx.imgui(function(ctx, draw_list)
 --     reaper.ImGui_Button(ctx, 'Brown fox')
 --     reaper.ImGui_Button(ctx, 'Lazy dog')
 --   end)
@@ -121,6 +121,10 @@ local UNUSED_FONTS_CACHE_SIZE      = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 -- gfx.mode bits
 local BLIT_NO_SOURCE_ALPHA = 2
 
+-- transformPoint flags
+local TP_NO_ORIGIN = 1<<0
+local TP_NO_FLOOR  = 1<<1
+
 local profiler
 if PROFILE then
   -- https://github.com/charlesmallah/lua-profiler
@@ -229,13 +233,12 @@ local function drawCall(...)
   return 0
 end
 
-local function render(commands, draw_list, screen_x, screen_y, blit_opts)
+local function render(draw_list, commands, opts)
   local ptr, size = commands.ptr, commands.size
   for i = 0, size - 1 do
     local j = (ptr + i) % size
-    local c = commands[j + 1]
-    c[1](draw_list, screen_x, screen_y, blit_opts,
-         c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10], c[11])
+    local command = commands[j + 1]
+    command[1](draw_list, command, opts)
   end
   commands.want_clear = true
 end
@@ -261,17 +264,17 @@ local function color()
   return makeColor(r, g, b, a)
 end
 
-local function transformColor(c, blit_opts)
-  if not blit_opts.mode or BLIT_NO_PREMULTIPLY then
-    return (c & ~0xff) | ((c & 0xff) * blit_opts.alpha // 1 & 0xFF)
+local function transformColor(c, opts)
+  if not opts.mode or BLIT_NO_PREMULTIPLY then
+    return (c & ~0xff) | ((c & 0xff) * opts.alpha // 1 & 0xFF)
   end
 
   -- premultiply alpha when rendering from an offscreen buffer
   local a, a_blend = (c & 0xFF) / 0xFF
-  if (blit_opts.mode & BLIT_NO_SOURCE_ALPHA) ~= 0 then
-    a, a_blend = a * blit_opts.alpha, blit_opts.alpha
+  if (opts.mode & BLIT_NO_SOURCE_ALPHA) ~= 0 then
+    a, a_blend = a * opts.alpha, opts.alpha
   else
-    a_blend = a * blit_opts.alpha
+    a_blend = a * opts.alpha
   end
 
   local mask_r, mask_g, mask_b = 0xFF000000, 0x00FF0000, 0x0000FF00
@@ -281,13 +284,25 @@ local function transformColor(c, blit_opts)
          ((0xFF * a_blend) // 1 & 0xFF)
 end
 
-local function transformPoint(x, y, blit_opts)
-  return x * blit_opts.scale_x // 1, y * blit_opts.scale_y // 1
+local function transformPoint(x, y, opts, flags)
+  flags = flags or 0
+
+  x, y = x * opts.scale_x, y * opts.scale_y
+
+  if flags & TP_NO_ORIGIN == 0 then
+    x, y = opts.screen_x + x, opts.screen_y + y
+  end
+
+  if flags & TP_NO_FLOOR == 0 then
+    x, y = x // 1, y // 1
+  end
+
+  return x, y
 end
 
-local function clip(x1, y1, x2, y2, blit_opts)
-  return x1 > blit_opts.x2 or y1 > blit_opts.y2 or
-         x2 < blit_opts.x1 or y2 < blit_opts.y1
+local function clip(x1, y1, x2, y2, opts)
+  return x1 > opts.x2 or y1 > opts.y2 or
+         x2 < opts.x1 or y2 < opts.y1
 end
 
 local function mergeBlitOpts(src, dst)
@@ -670,11 +685,11 @@ local function uniq2D(points)
   return j - 1
 end
 
-local function drawPixel(draw_list, screen_x, screen_y, blit_opts, x, y, c)
-  c = transformColor(c, blit_opts)
-  x, y = transformPoint(x, y, blit_opts)
-  x, y = screen_x + x, screen_y + y
-  w, h = transformPoint(1, 1, blit_opts)
+local function drawPixel(draw_list, cmd, opts)
+  local x, y, c = cmd[2], cmd[3], cmd[4]
+  c = transformColor(c, opts)
+  x, y = transformPoint(x, y, opts)
+  w, h = transformPoint(1, 1, opts, TP_NO_ORIGIN)
   DL_AddRectFilled(draw_list, x, y, x + w, y + h, c)
 end
 
@@ -682,32 +697,28 @@ local function addPixel(x, y, c)
   return drawCall(drawPixel, x, y, c)
 end
 
-local function drawLine(draw_list, screen_x, screen_y, blit_opts,
-                        x1, y1, x2, y2, c)
-  c = transformColor(c, blit_opts)
+local function drawLine(draw_list, cmd, opts)
+  local x1, y1, x2, y2, c = cmd[2], cmd[3], cmd[4], cmd[5], cmd[6]
+  c = transformColor(c, opts)
 
   -- workarounds to avoid gaps due to rounding in vertical/horizontal lines
-  local scaled = blit_opts.scale_x ~= 1 and blit_opts.scale_y ~= 1
+  local scaled = opts.scale_x ~= 1 and opts.scale_y ~= 1
   if scaled and (x1 == x2 or y1 == y2) then
-    x1, y1 = screen_x + (x1 * blit_opts.scale_x),
-             screen_y + (y1 * blit_opts.scale_y)
-    x2, y2 = screen_x + (x2 * blit_opts.scale_x),
-             screen_y + (y2 * blit_opts.scale_y)
+    x1, y1 = transformPoint(x1, y1, opts, TP_NO_FLOOR)
+    x2, y2 = transformPoint(x2, y2, opts, TP_NO_FLOOR)
     if x1 == x2 then
-      x2 = x2 + blit_opts.scale_x
+      x2 = x2 + opts.scale_x
     elseif y1 == y2 then
-      y2 = y2 + blit_opts.scale_y
+      y2 = y2 + opts.scale_y
     end
 
     DL_AddRectFilled(draw_list, x1, y1, x2, y2, c)
     return
   end
 
-  local x1, y1 = transformPoint(x1, y1, blit_opts)
-  local x2, y2 = transformPoint(x2, y2, blit_opts)
-  x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
-  DL_AddLine(draw_list, x1, y1, x2, y2, c,
-    (blit_opts.scale_x + blit_opts.scale_y) / 2)
+  local x1, y1 = transformPoint(x1, y1, opts)
+  local x2, y2 = transformPoint(x2, y2, opts)
+  DL_AddLine(draw_list, x1, y1, x2, y2, c, (opts.scale_x + opts.scale_y) / 2)
 end
 
 local function addLine(x1, y1, x2, y2, c)
@@ -782,12 +793,12 @@ setmetatable(gfx, {
 })
 
 -- translation functions
-local function drawArc(draw_list, screen_x, screen_y, blit_opts,
-    x, y, r, c, ang1, ang2)
-  local c = transformColor(c, blit_opts)
-  local r = r * blit_opts.scale_y -- FIXME: scale_x
-  local x, y = transformPoint(x, y, blit_opts)
-  DL_PathArcTo(draw_list, screen_x + x, screen_y + y, r, ang1, ang2)
+local function drawArc(draw_list, cmd, opts)
+  local x, y, r, c, ang1, ang2 = cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+  x, y = transformPoint(x, y, opts)
+  r = r * opts.scale_y -- FIXME: scale_x
+  c = transformColor(c, opts)
+  DL_PathArcTo(draw_list, x, y, r, ang1, ang2)
   DL_PathStroke(draw_list, c)
 end
 
@@ -797,11 +808,13 @@ function gfx.arc(x, y, r, ang1, ang2, antialias)
     ang1 - QUARTER_CIRCLE, ang2 - QUARTER_CIRCLE)
 end
 
-local function drawBlit(draw_list, screen_x, screen_y, dst_blit,
-    srcx, srcy, destx, desty, destw, desth,
-    src_blit, commands, sourceCommands)
-  destx, desty = transformPoint(destx, desty, dst_blit)
-  destw, desth = transformPoint(destw, desth, dst_blit)
+local function drawBlit(draw_list, cmd, dst_blit)
+  local srcx, srcy, destx, desty, destw, desth,
+        src_blit, commands, sourceCommands =
+    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8], cmd[9], cmd[10]
+
+  destx, desty = transformPoint(destx, desty, dst_blit, TP_NO_ORIGIN)
+  destw, desth = transformPoint(destw, desth, dst_blit, TP_NO_ORIGIN)
 
   sourceCommands.want_clear = true
 
@@ -810,14 +823,15 @@ local function drawBlit(draw_list, screen_x, screen_y, dst_blit,
   end
 
   local merged_blit = mergeBlitOpts(src_blit, dst_blit)
-  srcx, srcy = transformPoint(srcx,  srcy,  src_blit)
+  srcx, srcy = transformPoint(srcx, srcy, src_blit, TP_NO_ORIGIN)
   merged_blit.x1, merged_blit.y1 = srcx, srcy
   merged_blit.x2, merged_blit.y2 = srcx + destw, srcy + desth
 
-  local x1, y1 = screen_x + destx, screen_y + desty
+  local x1, y1 = dst_blit.screen_x + destx, dst_blit.screen_y + desty
   local x2, y2 = x1 + destw, y1 + desth
+  merged_blit.screen_x, merged_blit.screen_y = x1 - srcx, y1 - srcy
   DL_PushClipRect(draw_list, x1, y1, x2, y2, true)
-  render(commands, draw_list, x1 - srcx, y1 - srcy, merged_blit)
+  render(draw_list, commands, merged_blit)
   DL_PopClipRect(draw_list)
 end
 
@@ -890,12 +904,12 @@ function gfx.blurto()
   -- return x
 end
 
-local function drawCircle(draw_list, screen_x, screen_y, blit_opts,
-    circleFunc, x, y, r, c)
-  c = transformColor(c, blit_opts)
-  x, y = transformPoint(x, y, blit_opts)
-  r = r * blit_opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
-  circleFunc(draw_list, screen_x + x + .5, screen_y + y + .5, r + .5, c)
+local function drawCircle(draw_list, cmd, opts)
+  local circleFunc, x, y, r, c = cmd[2], cmd[3], cmd[4], cmd[5], cmd[6]
+  c = transformColor(c, opts)
+  x, y = transformPoint(x, y, opts)
+  r = r * opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
+  circleFunc(draw_list, x + .5, y + .5, r + .5, c)
 end
 
 function gfx.circle(x, y, r, fill, antialias)
@@ -946,8 +960,11 @@ function gfx.drawnumber(n, ndigits)
   return n
 end
 
-local function drawString(draw_list, screen_x, screen_y, blit_opts,
-    c, str, size, x, x_off, y, y_off, right, bottom, font)
+local function drawString(draw_list, cmd, opts)
+  local c, str, size, x, x_off, y, y_off, right, bottom, font =
+    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8], cmd[9], cmd[10],
+    cmd[11]
+
   -- search for a new font as the draw call may have been stored for a
   -- long time in an offscreen buffer while the font instance got detached
   -- or the script may have re-created the context with gfx.quit+gfx.init
@@ -960,15 +977,15 @@ local function drawString(draw_list, screen_x, screen_y, blit_opts,
     font.cache.last_use = state.frame_count
   end
 
-  c = transformColor(c, blit_opts)
-  x, y = transformPoint(x, y, blit_opts)
-  x_off, y_off = transformPoint(x_off, y_off, blit_opts)
-  size = size * blit_opts.scale_y -- height only, cannot stretch width
-  DL_AddTextEx(draw_list, font.inst, size,
-    screen_x + x + x_off, screen_y + y + y_off, c, str, 0,
-    screen_x + x, screen_y + y,
-    right  and screen_x + (right  * blit_opts.scale_x) // 1,
-    bottom and screen_y + (bottom * blit_opts.scale_y) // 1)
+  c = transformColor(c, opts)
+  x, y = transformPoint(x, y, opts)
+  x_off, y_off = transformPoint(x_off, y_off, opts, TP_NO_ORIGIN)
+  size = size * opts.scale_y -- height only, cannot stretch width
+  if right and bottom then
+    right, bottom = transformPoint(right, bottom, opts)
+  end
+  DL_AddTextEx(
+    draw_list, font.inst, size, x + x_off, y + y_off, c, str, 0, x, y, right, bottom)
 end
 
 function gfx.drawstr(str, flags, right, bottom)
@@ -1049,15 +1066,15 @@ function gfx.getpixel()
   return 0
 end
 
-local function drawGradRect(draw_list, screen_x, screen_y, blit_opts,
-    x1, y1, x2, y2, ctl, ctr, cbr, cbl)
-  ctl = transformColor(ctl, blit_opts)
-  ctr = transformColor(ctr, blit_opts)
-  cbr = transformColor(cbr, blit_opts)
-  cbl = transformColor(cbl, blit_opts)
-  x1, y1 = transformPoint(x1, y1, blit_opts)
-  x2, y2 = transformPoint(x2, y2, blit_opts)
-  x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
+local function drawGradRect(draw_list, cmd, opts)
+  local x1, y1, x2, y2, ctl, ctr, cbr, cbl =
+    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8], cmd[9]
+  ctl = transformColor(ctl, opts)
+  ctr = transformColor(ctr, opts)
+  cbr = transformColor(cbr, opts)
+  cbl = transformColor(cbl, opts)
+  x1, y1 = transformPoint(x1, y1, opts)
+  x2, y2 = transformPoint(x2, y2, opts)
   DL_AddRectFilledMultiColor(draw_list, x1, y1, x2, y2, ctl, ctr, cbr, cbl)
 end
 
@@ -1081,9 +1098,10 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
   return drawCall(drawGradRect, x, y, x + w, y + h, ctl, ctr, cbr, cbl)
 end
 
-local function drawImGui(draw_list, screen_x, screen_y, blit_opts, callback, x, y)
-  ImGui.SetCursorScreenPos(state.ctx, screen_x + x, screen_y + y)
-  callback(state.ctx, draw_list, screen_x, screen_y, blit_opts)
+local function drawImGui(draw_list, cmd, opts)
+  local callback, x, y = cmd[2], cmd[3], cmd[4]
+  ImGui.SetCursorScreenPos(state.ctx, opts.screen_x + x, opts.screen_y + y)
+  callback(state.ctx, draw_list, opts)
 end
 
 function gfx.imgui(callback)
@@ -1167,8 +1185,10 @@ function gfx.lineto(x, y, aa)
   return x
 end
 
-local function drawImage(draw_list, screen_x, screen_y, blit_opts,
-    filename, imageState, x, y, w, h)
+local function drawImage(draw_list, cmd, opts)
+  local filename, imageState, x, y, w, h =
+    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+
   if not imageState.attached then
     -- could not attach before in loadimg, as it can be called before gfx.init
     if not ImGui.ValidatePtr(imageState.inst, 'ImGui_Image*') then
@@ -1178,13 +1198,13 @@ local function drawImage(draw_list, screen_x, screen_y, blit_opts,
     imageState.attached = true
   end
 
-  w, h = transformPoint(w, h, blit_opts)
-  local uv0_x, uv0_y = blit_opts.x1 / w, blit_opts.y1 / h
-  local uv1_x, uv1_y = blit_opts.x2 / w, blit_opts.y2 / h
+  w, h = transformPoint(w, h, opts, TP_NO_ORIGIN)
+  local uv0_x, uv0_y = opts.x1 / w, opts.y1 / h
+  local uv1_x, uv1_y = opts.x2 / w, opts.y2 / h
 
   DL_AddImage(draw_list, imageState.inst,
-    screen_x + blit_opts.x1, screen_y + blit_opts.y1,
-    screen_x + blit_opts.x2, screen_y + blit_opts.y2,
+    opts.screen_x + opts.x1, opts.screen_y + opts.y1,
+    opts.screen_x + opts.x2, opts.screen_y + opts.y2,
     uv0_x, uv0_y, uv1_x, uv1_y)
 end
 
@@ -1268,13 +1288,13 @@ function gfx.quit()
   return 0
 end
 
-local function drawRect(draw_list, screen_x, screen_y, blit_opts,
-    rectFunc, x1, y1, x2, y2, c)
-  c = transformColor(c, blit_opts)
-  x1, y1 = transformPoint(x1, y1, blit_opts)
-  x2, y2 = transformPoint(x2, y2, blit_opts)
+local function drawRect(draw_list, cmd, opts)
+  local rectFunc, x1, y1, x2, y2, c =
+    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+  c = transformColor(c, opts)
+  x1, y1 = transformPoint(x1, y1, opts)
+  x2, y2 = transformPoint(x2, y2, opts)
   -- FIXME: scale thickness
-  x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
   rectFunc(draw_list, x1, y1, x2, y2, c)
 end
 
@@ -1290,14 +1310,14 @@ function gfx.rectto(x, y)
   return x
 end
 
-local function drawRoundRect(draw_list, screen_x, screen_y, blit_opts,
-    x1, y1, x2, y2, c, radius)
-  c = transformColor(c, blit_opts)
-  radius = radius * blit_opts.scale_y -- FIXME: scale_x
-  x1, y1 = transformPoint(x1, y1, blit_opts)
-  x2, y2 = transformPoint(x2, y2, blit_opts)
+local function drawRoundRect(draw_list, cmd, opts)
+  local x1, y1, x2, y2, c, radius =
+    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+  c = transformColor(c, opts)
+  radius = radius * opts.scale_y -- FIXME: scale_x
+  x1, y1 = transformPoint(x1, y1, opts)
+  x2, y2 = transformPoint(x2, y2, opts)
   -- FIXME: scale thickness
-  x1, y1, x2, y2 = screen_x + x1, screen_y + y1, screen_x + x2, screen_y + y2
   DL_AddRect(draw_list, x1, y1, x2 + 1, y2 + 1, c, radius, ROUND_CORNERS)
 end
 
@@ -1446,32 +1466,28 @@ function gfx.transformblit()
   return 0
 end
 
-local function drawTriangle6(draw_list, screen_x, screen_y, blit_opts,
-    points, center_x, center_y, c)
-  c = transformColor(c, blit_opts)
-  local x1, y1 = transformPoint(points[1], points[2], blit_opts)
-  local x2, y2 = transformPoint(points[3], points[4], blit_opts)
-  local x3, y3 = transformPoint(points[5], points[6], blit_opts)
+local function drawTriangle6(draw_list, cmd, opts)
+  local points, center_x, center_y, c = cmd[2], cmd[3], cmd[4], cmd[5]
+  c = transformColor(c, opts)
+  local x1, y1 = transformPoint(points[1], points[2], opts)
+  local x2, y2 = transformPoint(points[3], points[4], opts)
+  local x3, y3 = transformPoint(points[5], points[6], opts)
   if points[1] > center_x then x1 = x1 + 1 end
   if points[2] > center_y then y1 = y1 + 1 end
   if points[3] > center_x then x2 = x2 + 1 end
   if points[4] > center_y then y2 = y2 + 1 end
   if points[5] > center_x then x3 = x3 + 1 end
   if points[6] > center_y then y3 = y3 + 1 end
-  DL_AddTriangleFilled(draw_list,
-    screen_x + x1, screen_y + y1,
-    screen_x + x2, screen_y + y2,
-    screen_x + x3, screen_y + y3, c)
+  DL_AddTriangleFilled(draw_list, x1, y1, x2, y2, x3, y3, c)
 end
 
-local function drawTriangleN(draw_list, screen_x, screen_y, blit_opts,
-    points, screen_points, n_coords, center_x, center_y, c)
-  c = transformColor(c, blit_opts)
+local function drawTriangleN(draw_list, cmd, opts)
+  local points, screen_points, n_coords, center_x, center_y, c =
+    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+  c = transformColor(c, opts)
   for i = 1, n_coords, 2 do
     screen_points[i], screen_points[i + 1] =
-      transformPoint(points[i], points[i + 1], blit_opts)
-    screen_points[i], screen_points[i + 1] =
-      screen_x + screen_points[i], screen_y + screen_points[i + 1]
+      transformPoint(points[i], points[i + 1], opts)
     if points[i]     > center_x then
       screen_points[i]     = screen_points[i]     + 1
     end
@@ -1603,11 +1619,11 @@ function gfx.update()
   if commands and commands.rendered_frame ~= state.frame_count then
     local draw_list = ImGui.GetWindowDrawList(state.ctx)
     -- mode=nil tells transformColor it's not outputting to an offscreen buffer
-    local blit_opts = {
+    render(draw_list, commands, {
+      screen_x=state.screen_x, screen_y=state.screen_y,
       alpha=1, mode=nil, scale_x=1, scale_y=1,
       x1=0, y1=0, x2=gfx_vars.w, y2=gfx_vars.h,
-    }
-    render(commands, draw_list, state.screen_x, state.screen_y, blit_opts)
+    })
 
     -- Allow calling gfx.update muliple times per frame without re-rendering
     -- everything from the top. Keep the existing commands in case they aren't
