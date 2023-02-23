@@ -34,8 +34,8 @@
 
 class API {
 public:
-  using LineRange = std::pair<unsigned int, unsigned int>;
-  struct FirstLine { FirstLine(unsigned int); };
+  using LineNumber = unsigned short;
+  struct StoreLineNumber { StoreLineNumber(LineNumber val); };
   struct RegKeys { const char *impl, *vararg, *defdoc; };
   struct Section {
     Section(const Section *parent, const char *file,
@@ -49,8 +49,7 @@ public:
   static void handleError(const char *fnName, const reascript_error &);
   static void handleError(const char *fnName, const imgui_error &);
 
-  API(const RegKeys &, void *impl, void *vararg,
-      const char *definition, unsigned int lastLine);
+  API(const RegKeys &, void *impl, void *vararg, const char *definition);
 
   // internal helpers for genbindings
   GENBINDINGS_API static const API *head();
@@ -59,8 +58,8 @@ public:
   inline const char *definition() const {
     return static_cast<const char *>(m_regs[2].value); }
   const Section * const m_section;
-  const LineRange m_lines;
   const API *m_next;
+  const LineNumber m_line;
 
 private:
   struct RegDesc {

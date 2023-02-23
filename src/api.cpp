@@ -28,9 +28,9 @@ static const API *&lastFunc()
   return head;
 }
 
-static auto &firstLine()
+static auto &lastLine()
 {
-  static unsigned int storedLine;
+  static API::LineNumber storedLine;
   return storedLine;
 }
 
@@ -45,9 +45,9 @@ const API *API::head() // immutable public accessor
   return lastFunc();
 }
 
-API::FirstLine::FirstLine(unsigned int line)
+API::StoreLineNumber::StoreLineNumber(LineNumber line)
 {
-  firstLine() = line;
+  lastLine() = line;
 }
 
 API::Section::Section(const Section *parent, const char *file,
@@ -57,10 +57,8 @@ API::Section::Section(const Section *parent, const char *file,
   lastSection() = this;
 }
 
-API::API(const RegKeys &keys, void *impl, void *vararg,
-         const char *defdoc, const unsigned int lastLine)
-  : m_section { lastSection() }, m_lines { firstLine(), lastLine },
-    m_next { lastFunc() },
+API::API(const RegKeys &keys, void *impl, void *vararg, const char *defdoc)
+  : m_section { lastSection() }, m_next { lastFunc() }, m_line { lastLine() },
     m_regs {
       { keys.impl,   impl   },
       { keys.vararg, vararg },
