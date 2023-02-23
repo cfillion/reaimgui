@@ -843,12 +843,14 @@ function gfx.blit(source, ...)
         destx, desty, destw, desth, rotxoffs, rotyoffs = ...
 
   source = toint(source)
+  scale, rotation = scale or 0, rotation or 0
   srcx, srcy, srcw, srch, destx, desty, destw, desth =
     toint(srcx),  toint(srcy),  toint(srcw),  toint(srch),
     toint(destx), toint(desty), toint(destw), toint(desth)
-  rotxoffs, rotyoffs = rotxoffs or 0.0, rotyoffs or 0.0
+  rotxoffs, rotyoffs = rotxoffs or 0, rotyoffs or 0
 
   local dim = global_state.images[source]
+  if not dim and source ~= -1 then return end
 
   if n_args <  1 then scale = 1            end
   if n_args <  5 and dim then srcw = dim.w end
