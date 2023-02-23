@@ -301,8 +301,8 @@ local function transformPoint(x, y, opts, flags)
 end
 
 local function clip(x1, y1, x2, y2, opts)
-  return x1 > opts.x2 or y1 > opts.y2 or
-         x2 < opts.x1 or y2 < opts.y1
+  return (x1 < opts.x2 and x2 > opts.x1) or
+         (y1 < opts.y2 and y2 > opts.y1)
 end
 
 local function mergeBlitOpts(src, dst)
@@ -818,7 +818,7 @@ local function drawBlit(draw_list, cmd, dst_blit)
 
   sourceCommands.want_clear = true
 
-  if clip(destx, desty, destx + srcw, desty + srch, dst_blit) then
+  if not clip(srcx, srcy, srcx + srcw, srcy + srch, dst_blit) then
     return
   end
 
