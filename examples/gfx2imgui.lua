@@ -809,26 +809,26 @@ function gfx.arc(x, y, r, ang1, ang2, antialias)
 end
 
 local function drawBlit(draw_list, cmd, dst_blit)
-  local srcx, srcy, destx, desty, destw, desth,
+  local srcx, srcy, srcw, srch, destx, desty,
         src_blit, commands, sourceCommands =
     cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8], cmd[9], cmd[10]
 
   destx, desty = transformPoint(destx, desty, dst_blit, TP_NO_ORIGIN)
-  destw, desth = transformPoint(destw, desth, dst_blit, TP_NO_ORIGIN)
+  srcw, srch = transformPoint(srcw, srch, src_blit, TP_NO_ORIGIN)
 
   sourceCommands.want_clear = true
 
-  if clip(destx, desty, destx + destw, desty + desth, dst_blit) then
+  if clip(destx, desty, destx + srcw, desty + srch, dst_blit) then
     return
   end
 
   local merged_blit = mergeBlitOpts(src_blit, dst_blit)
   srcx, srcy = transformPoint(srcx, srcy, merged_blit, TP_NO_ORIGIN)
   merged_blit.x1, merged_blit.y1 = srcx, srcy
-  merged_blit.x2, merged_blit.y2 = srcx + destw, srcy + desth
+  merged_blit.x2, merged_blit.y2 = srcx + srcw, srcy + srch
 
   local x1, y1 = dst_blit.screen_x + destx, dst_blit.screen_y + desty
-  local x2, y2 = x1 + destw, y1 + desth
+  local x2, y2 = x1 + srcw, y1 + srch
   merged_blit.screen_x, merged_blit.screen_y = x1 - srcx, y1 - srcy
   DL_PushClipRect(draw_list, x1, y1, x2, y2, true)
   render(draw_list, commands, merged_blit)
@@ -890,7 +890,13 @@ function gfx.blit(source, ...)
     scale_y = srch ~= 0 and desth / srch or 1,
   }
 
-  drawCall(drawBlit, srcx, srcy, destx, desty, destw, desth,
+  if dim then -- after scale_[xy] are computed
+    local maxw, maxh = dim.w - srcx, dim.h - srcy
+    if srcw > maxw then srcw = maxw end
+    if srch > maxh then srch = maxh end
+  end
+
+  drawCall(drawBlit, srcx, srcy, srcw, srch, destx, desty,
     src_blit, commands, sourceCommands)
 
   return source
