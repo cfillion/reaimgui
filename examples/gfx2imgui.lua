@@ -1208,11 +1208,12 @@ local function drawImage(draw_list, cmd, opts)
   w, h = transformPoint(w, h, opts, TP_NO_ORIGIN)
   local uv0_x, uv0_y = opts.x1 / w, opts.y1 / h
   local uv1_x, uv1_y = opts.x2 / w, opts.y2 / h
+  local tint = transformColor(0xFFFFFFFF, opts)
 
   DL_AddImage(draw_list, imageState.inst,
     opts.screen_x + opts.x1, opts.screen_y + opts.y1,
     opts.screen_x + opts.x2, opts.screen_y + opts.y2,
-    uv0_x, uv0_y, uv1_x, uv1_y)
+    uv0_x, uv0_y, uv1_x, uv1_y, tint)
 end
 
 function gfx.loadimg(image, filename)
