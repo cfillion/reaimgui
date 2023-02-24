@@ -75,7 +75,9 @@ API_SUBSECTION("Variables");
 
 DEFINE_API(void, PushStyleVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,val1)(double*,API_RO(val2)),
-"See StyleVar_* for possible values of 'var_idx'.")
+R"(Temporarily modify a style variable.
+Call PopStyleVar to undo after use (before the end of the frame).
+See StyleVar_* for possible values of 'var_idx'.)")
 {
   FRAME_GUARD;
   if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
@@ -229,7 +231,7 @@ with style alpha baked in. See Col_* for available style colors.)")
 
 DEFINE_API(void, PushStyleColor, (ImGui_Context*,ctx)
 (int,idx)(int,col_rgba),
-R"(Modify a style color.
+R"(Temporarily modify a style color.
 Call PopStyleColor to undo after use (before the end of the frame).
 See Col_* for available style colors.)")
 {
