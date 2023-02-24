@@ -187,7 +187,7 @@ DEFINE_CONFIGVAR(InputTextCursorBlink,
 DEFINE_CONFIGVAR(InputTextEnterKeepActive,
   "Pressing Enter will keep item active and select contents (single-line only).");
 DEFINE_CONFIGVAR(DragClickToInputText,
-R"(Enable turning DragXXX widgets into text input with a simple mouse
+R"(Enable turning Drag* widgets into text input with a simple mouse
    click-release (without moving). Not desirable on devices without a keyboard.)");
 DEFINE_CONFIGVAR(WindowsResizeFromEdges,
   "Enable resizing of windows from their edges and from the lower-left corner.");

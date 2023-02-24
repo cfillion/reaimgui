@@ -60,7 +60,7 @@ can start outputting to it. See BeginPopup.)")
 }
 
 DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
-"Only call EndPopup() if BeginPopupXXX() returns true!")
+"Only call EndPopup() if BeginPopup*() returns true!")
 {
   FRAME_GUARD;
   ImGui::EndPopup();
@@ -152,7 +152,7 @@ Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.g.
 hovering an item and right-clicking. They are convenient to easily create
 context menus, hence the name.
 
-Notice that BeginPopupContextXXX takes PopupFlags just like OpenPopup and
+Notice that BeginPopupContext* takes PopupFlags_* just like OpenPopup and
 unlike BeginPopup.
 
 We exceptionally default their flags to 1 (== PopupFlags_MouseButtonRight) for
@@ -165,7 +165,7 @@ DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
 R"(This is a helper to handle the simplest case of associating one named popup
 to one given widget. You can pass a nil str_id to use the identifier of the last
 item. This is essentially the same as calling OpenPopupOnItemClick + BeginPopup
-but written to avoid computing the ID twice because BeginPopupContextXXX
+but written to avoid computing the ID twice because BeginPopupContext*
 functions may be called very frequently.
 
 If you want to use that on a non-interactive item such as Text you need to pass

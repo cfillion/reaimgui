@@ -24,11 +24,13 @@
 #include <cstring>
 #include <deque>
 #include <iostream>
+#include <map>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 
-constexpr const char *GENERATED_FOR { "Generated for ReaImGui v" REAIMGUI_VERSION };
+constexpr const char *GENERATED_FOR
+  { "Generated for ReaImGui v" REAIMGUI_VERSION };
 
 struct Type {
   Type(const char *val)             : m_value { val } {}
@@ -583,9 +585,10 @@ static std::vector<Reference> parseReferences(const std::string_view &input)
 {
   // build a map of known references for fast lookup
   enum CharInfo { InitialChar = 1<<0, ValidChar = 1<<1 };
-  static std::unordered_map<std::string_view, const Function *> funcs;
+  static std::map<std::string_view, const Function *> funcs;
   static char charmap[0x100];
   if(funcs.empty()) {
+    charmap[static_cast<size_t>('*')] |= ValidChar;
     for(const Function &func : g_funcs) {
       funcs.emplace(func.displayName, &func);
       funcs.emplace(func.name, &func);
@@ -610,7 +613,16 @@ static std::vector<Reference> parseReferences(const std::string_view &input)
       [&](const unsigned char c) { return charmap[c] & ValidChar; }) };
     // constructor taking (first, last) iterators is C++20
     const std::string_view word { &*start, static_cast<size_t>(end - start) };
-    const auto it { funcs.find(word) };
+    decltype(funcs)::const_iterator it;
+    if(*word.rbegin() == '*') {
+      const std::string_view prefix { word.substr(0, word.size() - 1) };
+      it = funcs.lower_bound(prefix);
+      // starts_with is C++20
+      if(it->first.substr(0, prefix.size()) != prefix)
+        it = funcs.end();
+    }
+    else
+      it = funcs.find(word);
     if(it != funcs.end())
       links.push_back({ it->second, word });
     start += word.size();

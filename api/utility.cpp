@@ -283,7 +283,8 @@ or easily output text data to the clipboard.)")
   return ImGui::SetClipboardText(text);
 }
 
-API_SUBSECTION("Conditions", "Used for many Set*() functions.");
+API_SUBSECTION("Conditions",
+  "Used for many SetNextWindow*() and SetWindow*() functions.");
 DEFINE_ENUM(ImGui, Cond_Always,
   "No condition (always set the variable).");
 DEFINE_ENUM(ImGui, Cond_Once,

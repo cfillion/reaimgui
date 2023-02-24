@@ -20,7 +20,7 @@
 API_SECTION("Button",
 R"(Most widgets return true when the value has been changed or when pressed/selected.
 
-You may also use one of the many IsItemXXX functions (e.g. IsItemActive,
+You may also use one of the many IsItem* functions (e.g. IsItemActive,
 IsItemHovered, etc.) to query widget state.)");
 
 DEFINE_API(bool, Button, (ImGui_Context*,ctx)

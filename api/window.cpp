@@ -146,7 +146,7 @@ DEFINE_API(void, EndChildFrame, (ImGui_Context*,ctx),
 }
 
 DEFINE_SECTION(properties, ROOT_SECTION, "Properties",
-R"(Prefer using SetNextXXX functions (before Begin) rather that SetXXX functions
+R"(Prefer using SetNextWindow* functions (before Begin) rather that SetWindow* functions
 (after Begin).
 
 'Current window' = the window we are appending into while inside a Begin()/End()
