@@ -124,6 +124,8 @@ local BLIT_NO_SOURCE_ALPHA = 2
 -- transformPoint flags
 local TP_NO_ORIGIN = 1<<0
 local TP_NO_FLOOR  = 1<<1
+local TP_NO_SCALE  = 1<<2
+local TP_NO_ROTATE = 1<<3
 
 local profiler
 if PROFILE then
@@ -137,7 +139,10 @@ local DL_AddCircle               = ImGui.DrawList_AddCircle
 local DL_AddCircleFilled         = ImGui.DrawList_AddCircleFilled
 local DL_AddConvexPolyFilled     = ImGui.DrawList_AddConvexPolyFilled
 local DL_AddImage                = ImGui.DrawList_AddImage
+local DL_AddImageQuad            = ImGui.DrawList_AddImageQuad
 local DL_AddLine                 = ImGui.DrawList_AddLine
+local DL_AddQuad                 = ImGui.DrawList_AddQuad
+local DL_AddQuadFilled           = ImGui.DrawList_AddQuadFilled
 local DL_AddRect                 = ImGui.DrawList_AddRect
 local DL_AddRectFilled           = ImGui.DrawList_AddRectFilled
 local DL_AddRectFilledMultiColor = ImGui.DrawList_AddRectFilledMultiColor
@@ -218,17 +223,18 @@ local function drawCall(...)
   if not c then
     -- pre-allocate the maximum size w/o nil gaps
     -- IF SIZE CHANGES: also update copy code in gfx.blit!
-    c = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 }
+    c = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 }
     list[ptr] = c
   end
 
   -- faster than looping over select('#', ...) or creating a new table
-  c[ 1], c[ 2], c[ 3], c[ 4], c[5], c[6], c[7], c[8], c[9],
-  c[10], c[11], c[12], c[13] = ...
+  c[ 1], c[ 2], c[ 3], c[ 4], c[ 5], c[ 6], c[ 7], c[ 8], c[ 9],
+  c[10], c[11], c[12], c[13], c[14], c[15], c[16], c[17], c[18],
+  c[19] = ...
 
   if DEBUG then
     assert(type((...)) == 'function', 'uncallable draw command')
-    assert(select('#', ...) <= 13)
+    assert(select('#', ...) <= 19)
   end
 
   return 0
@@ -288,14 +294,29 @@ end
 local function transformPoint(x, y, opts, flags)
   flags = flags or 0
 
-  x, y = x * opts.scale_x, y * opts.scale_y
+  if flags & TP_NO_SCALE == 0 then
+    x, y = x * opts.scale_x, y * opts.scale_y
+  end
 
   if flags & TP_NO_ORIGIN == 0 then
-    x, y = opts.screen_x + x, opts.screen_y + y
+    x, y = x + opts.screen_x, y + opts.screen_y
   end
 
   if flags & TP_NO_FLOOR == 0 then
     x, y = x // 1, y // 1
+  end
+
+  if flags & TP_NO_ROTATE == 0 and opts.is_rotated then
+    if flags & TP_NO_ORIGIN ~= 0 then
+      x, y = opts.screen_x + x, opts.screen_y + y
+    end
+    local matrix = opts.rotation
+    local m1, m2, m3 = matrix[1], matrix[2], matrix[3]
+    x, y = m1[1]*x + m1[2]*y + m1[3],
+           m2[1]*x + m2[2]*y + m2[3]
+    if flags & TP_NO_ORIGIN ~= 0 then
+      x, y = x - opts.screen_x, y - opts.screen_y
+    end
   end
 
   return x, y
@@ -672,16 +693,51 @@ local function uniq2D(points)
   return j - 1
 end
 
+local function combineMatrix(matrix,
+    b11, b12, b13,
+    b21, b22, b23,
+    b31, b32, b33,
+    swap_ab)
+  local a11, a12, a13,
+        a21, a22, a23,
+        a31, a32, a33
+  local m1, m2, m3 = matrix[1], matrix[2], matrix[3]
+  if swap_ab then
+    -- A = params, B = matrix
+    a11, a12, a13 = b11, b12, b13
+    a21, a22, a23 = b21, b22, b23
+    a31, a32, a33 = b31, b32, b33
+
+    b11, b12, b13 = m1[1], m1[2], m1[3]
+    b21, b22, b23 = m2[1], m2[2], m2[3]
+    b31, b32, b33 = m3[1], m3[2], m3[3]
+  else
+    -- A = matrix, B = params
+    a11, a12, a13 = m1[1], m1[2], m1[3]
+    a21, a22, a23 = m2[1], m2[2], m2[3]
+    a31, a32, a33 = m3[1], m3[2], m3[3]
+  end
+
+  -- matrix = A * B
+  m1[1] = a11*b11 + a12*b21 + a13*b31
+  m1[2] = a11*b12 + a12*b22 + a13*b32
+  m1[3] = a11*b13 + a12*b23 + a13*b33
+
+  m2[1] = a21*b11 + a22*b21 + a23*b31
+  m2[2] = a21*b12 + a22*b22 + a23*b32
+  m2[3] = a21*b13 + a22*b23 + a23*b33
+
+  m3[1] = a31*b11 + a32*b21 + a33*b31
+  m3[2] = a31*b12 + a32*b22 + a33*b32
+  m3[3] = a31*b13 + a32*b23 + a33*b33
+end
+
 local function drawPixel(draw_list, cmd, opts)
   local x, y, c = cmd[2], cmd[3], cmd[4]
   c = transformColor(c, opts)
   x, y = transformPoint(x, y, opts)
-  w, h = transformPoint(1, 1, opts, TP_NO_ORIGIN)
+  w, h = transformPoint(1, 1, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
   DL_AddRectFilled(draw_list, x, y, x + w, y + h, c)
-end
-
-local function addPixel(x, y, c)
-  return drawCall(drawPixel, x, y, c)
 end
 
 local function drawLine(draw_list, cmd, opts)
@@ -706,10 +762,6 @@ local function drawLine(draw_list, cmd, opts)
   local x1, y1 = transformPoint(x1, y1, opts)
   local x2, y2 = transformPoint(x2, y2, opts)
   DL_AddLine(draw_list, x1, y1, x2, y2, c, (opts.scale_x + opts.scale_y) / 2)
-end
-
-local function addLine(x1, y1, x2, y2, c)
-  return drawCall(drawLine, x1, y1, x2, y2, c)
 end
 
 -- variables to reset on the first access of every frame via gfx.__index
@@ -796,26 +848,28 @@ function gfx.arc(x, y, r, ang1, ang2, antialias)
 end
 
 local function drawBlit(draw_list, cmd, opts)
-  local commands, sourceCommands,
-        srcx, srcy, srcw, srch, dstx, dsty,
-        alpha, mode, scale_x, scale_y =
-    cmd[ 2], cmd[ 3], cmd[ 4], cmd[ 5], cmd[6], cmd[7], cmd[8], cmd[9],
-    cmd[10], cmd[11], cmd[12], cmd[13]
+  local commands, sourceCommands, alpha, mode, scale_x, scale_y,
+        srcx, srcy, srcw, srch, dstx, dsty, dstw, dsth,
+        angle_sin, angle_cos, rotxoffs, rotyoffs =
+    cmd[ 2], cmd[ 3], cmd[ 4], cmd[ 5], cmd[ 6], cmd[ 7], cmd[ 8], cmd[ 9],
+    cmd[10], cmd[11], cmd[12], cmd[13], cmd[14], cmd[15], cmd[16], cmd[17],
+    cmd[18], cmd[19]
 
   dstx, dsty = transformPoint(dstx, dsty, opts)
+  dstw, dsth = transformPoint(dstw, dsth, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
 
   sourceCommands.want_clear = true
 
   local old_alpha, old_mode, old_scale_x, old_scale_y,
         old_screen_x, old_screen_y, old_x1, old_y1, old_x2, old_y2
-
+  -- save & replace general blit state
   old_alpha,   opts.alpha   = opts.alpha,   opts.alpha   * alpha
   old_mode,    opts.mode    = opts.mode,    mode
   old_scale_x, opts.scale_x = opts.scale_x, opts.scale_x * scale_x
   old_scale_y, opts.scale_y = opts.scale_y, opts.scale_y * scale_y
   -- after the new scale is set in opts
-  srcx, srcy = transformPoint(srcx, srcy, opts, TP_NO_ORIGIN)
-  srcw, srch = transformPoint(srcw, srch, opts, TP_NO_ORIGIN)
+  srcx, srcy = transformPoint(srcx, srcy, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
+  srcw, srch = transformPoint(srcw, srch, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
   old_screen_x, opts.screen_x = opts.screen_x, dstx - srcx
   old_screen_y, opts.screen_y = opts.screen_y, dsty - srcy
   old_x1, opts.x1, old_y1, opts.y1 = opts.x1, srcx,        opts.y1, srcy
@@ -823,12 +877,58 @@ local function drawBlit(draw_list, cmd, opts)
 
   if (opts.x1 < old_x2 and opts.x2 > old_x1) or
      (opts.y1 < old_y2 and opts.y2 > old_y1) then
-    DL_PushClipRect(draw_list, dstx, dsty, dstx + srcw, dsty + srch, true)
+    -- always save previous rotation state
+    local rotmtx, old_is_rotated = opts.rotation, opts.is_rotated
+    local rotmtx1,  rotmtx2,  rotmtx3  = rotmtx [1], rotmtx [2], rotmtx [3]
+    local old_rm11, old_rm12, old_rm13 = rotmtx1[1], rotmtx1[2], rotmtx1[3]
+    local old_rm21, old_rm22, old_rm23 = rotmtx2[1], rotmtx2[2], rotmtx2[3]
+    local old_rm31, old_rm32, old_rm33 = rotmtx3[1], rotmtx3[2], rotmtx3[3]
+
+    if old_is_rotated then
+      local diffx, diffy =
+        transformPoint(srcx, srcy, opts, TP_NO_ORIGIN | TP_NO_SCALE)
+      combineMatrix(rotmtx,
+        1, 0, -diffx + srcx,
+        0, 1, -diffy + srcy,
+        0, 0, 1,
+        true)
+    end
+
+    if angle_cos then
+      -- rotation uses the full dstw/dsth
+      -- scaled srcw/srch may be smaller if the source image is smaller than
+      -- the requested blit size.
+      local cx, cy = dstx + (dstw / 2), dsty + (dsth / 2)
+      rotxoffs, rotyoffs =
+        transformPoint(rotxoffs, rotyoffs, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
+      combineMatrix(rotmtx,
+        angle_cos, -angle_sin, cx,
+        angle_sin,  angle_cos, cy,
+        0,    0,   1)
+      combineMatrix(rotmtx,
+        1, 0, -cx - rotxoffs,
+        0, 1, -cy - rotyoffs,
+        0, 0,  1)
+      opts.is_rotated = true
+    end
+
+    -- FIXME: clip rect does not support rotation
+    local clip_rect = not old_is_rotated
+    if clip_rect then
+      DL_PushClipRect(draw_list, dstx, dsty, dstx + srcw, dsty + srch, true)
+    end
     render(draw_list, commands, opts)
-    DL_PopClipRect(draw_list)
+    if clip_rect then
+      DL_PopClipRect(draw_list)
+    end
+
+    opts.is_rotated = old_is_rotated
+    rotmtx1[1], rotmtx1[2], rotmtx1[3] = old_rm11, old_rm12, old_rm13
+    rotmtx2[1], rotmtx2[2], rotmtx2[3] = old_rm21, old_rm22, old_rm23
+    rotmtx3[1], rotmtx3[2], rotmtx3[3] = old_rm31, old_rm32, old_rm33
   end
 
-  opts.alpha,    opts.mode     = old_alpha,    old_mode
+  opts.alpha, opts.mode = old_alpha, old_mode
   opts.scale_x,  opts.scale_y  = old_scale_x,  old_scale_y
   opts.screen_x, opts.screen_y = old_screen_x, old_screen_y
   opts.x1, opts.y1, opts.x2, opts.y2 = old_x1, old_y1, old_x2, old_y2
@@ -859,9 +959,11 @@ function gfx.blit(source, ...)
   if n_args <  9 then destw = srcw * scale end
   if n_args < 10 then desth = srch * scale end
 
-  if rotation ~= 0 then warn('ignoring parameter rotation') end
-  if rotxoffs ~= 0 then warn('ignoring parameter rotxoffs') end
-  if rotyoffs ~= 0 then warn('ignoring parameter rotyoffs') end
+  local min_angle, rotation_sin, rotation_cos = 0.000000001 -- same as EEL
+  if rotation > min_angle or -rotation > min_angle then
+    warn('rotation partially implemented')
+    rotation_sin, rotation_cos = math.sin(rotation), math.cos(rotation)
+  end
 
   if gfx_vars.mode ~= 0 and (gfx_vars.mode & ~BLIT_NO_SOURCE_ALPHA) ~= 0 then
     warn('mode %d not implemented', gfx_vars.mode)
@@ -879,8 +981,9 @@ function gfx.blit(source, ...)
     -- make an immutable copy
     local c = sourceCommands[i]
     commands[i] = {
-      c[ 1], c[ 2], c[ 3], c[ 4], c[5], c[6], c[7], c[8], c[9],
-      c[10], c[11], c[12], c[13]
+      c[ 1], c[ 2], c[ 3], c[ 4], c[ 5], c[ 6], c[ 7], c[ 8], c[ 9],
+      c[10], c[11], c[12], c[13], c[14], c[15], c[16], c[17], c[18],
+      c[19]
     }
   end
 
@@ -894,8 +997,9 @@ function gfx.blit(source, ...)
   end
 
   drawCall(drawBlit, commands, sourceCommands,
-    srcx, srcy, srcw, srch, destx, desty,
-    gfx.a, gfx_vars.mode, scale_x, scale_y)
+    gfx.a, gfx_vars.mode, scale_x, scale_y,
+    srcx, srcy, srcw, srch, destx, desty, destw, desth,
+    rotation_sin, rotation_cos, rotxoffs, rotyoffs)
 
   return source
 end
@@ -985,7 +1089,7 @@ local function drawString(draw_list, cmd, opts)
 
   c = transformColor(c, opts)
   x, y = transformPoint(x, y, opts)
-  x_off, y_off = transformPoint(x_off, y_off, opts, TP_NO_ORIGIN)
+  x_off, y_off = transformPoint(x_off, y_off, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
   size = size * opts.scale_y -- height only, cannot stretch width
   if right and bottom then
     right, bottom = transformPoint(right, bottom, opts)
@@ -1079,8 +1183,9 @@ local function drawGradRect(draw_list, cmd, opts)
   ctr = transformColor(ctr, opts)
   cbr = transformColor(cbr, opts)
   cbl = transformColor(cbl, opts)
-  x1, y1 = transformPoint(x1, y1, opts)
-  x2, y2 = transformPoint(x2, y2, opts)
+  -- FIXME: no AddQuadFilledMultiColor for rotation (ocornut/imgui#4495)
+  x1, y1 = transformPoint(x1, y1, opts, TP_NO_ROTATE)
+  x2, y2 = transformPoint(x2, y2, opts, TP_NO_ROTATE)
   DL_AddRectFilledMultiColor(draw_list, x1, y1, x2, y2, ctl, ctr, cbr, cbl)
 end
 
@@ -1106,8 +1211,11 @@ end
 
 local function drawImGui(draw_list, cmd, opts)
   local callback, x, y = cmd[2], cmd[3], cmd[4]
-  ImGui.SetCursorScreenPos(state.ctx, opts.screen_x + x, opts.screen_y + y)
+  x, y = transformPoint(x, y, opts)
+  ImGui.SetCursorScreenPos(state.ctx, x, y)
+  ImGui.BeginGroup(state.ctx)
   callback(state.ctx, draw_list, opts)
+  ImGui.EndGroup(state.ctx)
 end
 
 function gfx.imgui(callback)
@@ -1179,9 +1287,9 @@ function gfx.line(x1, y1, x2, y2, aa)
   -- gfx.line(10, 30, 10, 30)
   if x1 == x2 and y1 == y2 then
     -- faster than 1px lines according to dear imgui
-    return addPixel(x1, y1, color())
+    return drawCall(drawPixel, x1, y1, color())
   else
-    return addLine(x1, y1, x2, y2, color())
+    return drawCall(drawLine, x1, y1, x2, y2, color())
   end
 end
 
@@ -1204,10 +1312,25 @@ local function drawImage(draw_list, cmd, opts)
     imageState.attached = true
   end
 
-  w, h = transformPoint(w, h, opts, TP_NO_ORIGIN)
+  w, h = transformPoint(w, h, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
   local uv0_x, uv0_y = opts.x1 / w, opts.y1 / h
   local uv1_x, uv1_y = opts.x2 / w, opts.y2 / h
   local tint = transformColor(0xFFFFFFFF, opts)
+
+  if opts.is_rotated then
+    local x1, y1 =
+      transformPoint(opts.x1, opts.y1, opts, TP_NO_SCALE)
+    local x2, y2 =
+      transformPoint(opts.x2, opts.y1, opts, TP_NO_SCALE)
+    local x3, y3 =
+      transformPoint(opts.x2, opts.y2, opts, TP_NO_SCALE)
+    local x4, y4 =
+      transformPoint(opts.x1, opts.y2, opts, TP_NO_SCALE)
+    DL_AddImageQuad(draw_list, imageState.inst,
+      x1, y1, x2, y2, x3, y3, x4, y4,
+      uv0_x, uv0_y, uv1_x, uv0_y, uv1_x, uv1_y, uv0_x, uv1_y, tint)
+    return
+  end
 
   DL_AddImage(draw_list, imageState.inst,
     opts.screen_x + opts.x1, opts.screen_y + opts.y1,
@@ -1296,19 +1419,31 @@ function gfx.quit()
 end
 
 local function drawRect(draw_list, cmd, opts)
-  local rectFunc, x1, y1, x2, y2, c =
-    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+  local rectFunc, quadFunc, x1, y1, x2, y2, c =
+    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8]
   c = transformColor(c, opts)
+  -- FIXME: scale thickness
+
+  if opts.is_rotated then
+    local x4, y4 = transformPoint(x1, y2, opts)
+    local x3, y3 = transformPoint(x2, y2, opts)
+          x2, y2 = transformPoint(x2, y1, opts)
+          x1, y1 = transformPoint(x1, y1, opts)
+    quadFunc(draw_list, x1, y1, x2, y2, x3, y3, x4, y4, c)
+    return
+  end
+
   x1, y1 = transformPoint(x1, y1, opts)
   x2, y2 = transformPoint(x2, y2, opts)
-  -- FIXME: scale thickness
   rectFunc(draw_list, x1, y1, x2, y2, c)
 end
 
 function gfx.rect(x, y, w, h, filled)
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  local rectFunc = tobool(filled, true) and DL_AddRectFilled or DL_AddRect
-  return drawCall(drawRect, rectFunc, x, y, x + w, y + h, color())
+  filled = tobool(filled, true)
+  local rectFunc = filled and DL_AddRectFilled or DL_AddRect
+  local quadFunc = filled and DL_AddQuadFilled or DL_AddQuad
+  return drawCall(drawRect, rectFunc, quadFunc, x, y, x+w, y+h, color())
 end
 
 function gfx.rectto(x, y)
@@ -1322,8 +1457,9 @@ local function drawRoundRect(draw_list, cmd, opts)
     cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
   c = transformColor(c, opts)
   radius = radius * opts.scale_y -- FIXME: scale_x
-  x1, y1 = transformPoint(x1, y1, opts)
-  x2, y2 = transformPoint(x2, y2, opts)
+  -- FIXME: no AddQuad with rounding for rotation
+  x1, y1 = transformPoint(x1, y1, opts, TP_NO_ROTATE)
+  x2, y2 = transformPoint(x2, y2, opts, TP_NO_ROTATE)
   -- FIXME: scale thickness
   DL_AddRect(draw_list, x1, y1, x2 + 1, y2 + 1, c, radius, ROUND_CORNERS)
 end
@@ -1347,7 +1483,7 @@ function gfx.set(...)
   if n < 2 then g = r end
   if n < 3 then b = r end
 
-  -- write thorough gfx's metadatable for sanitization
+  -- write through gfx's metadatable for sanitization
   gfx.r, gfx.g, gfx.b = tonumber(r) or 0, tonumber(g) or 0, tonumber(b) or 0
   if n >= 4 then gfx.a    = tonumber(a)    or 0 end
   if n >= 5 then gfx.mode = tonumber(mode) or 0 end
@@ -1410,7 +1546,7 @@ function gfx.setfont(idx, fontface, sz, flag)
 
   global_state.font = font and idx or 0
 
-  gfx.texth = idx ~= 0 and ((font and font.size) or sz) or DEFAULT_FONT_SIZE
+  gfx_vars.texth = idx ~= 0 and ((font and font.size) or sz) or DEFAULT_FONT_SIZE
 
   return 1
 end
@@ -1435,7 +1571,7 @@ function gfx.setimgdim(image, w, h)
 end
 
 function gfx.setpixel(r, g, b)
-  addPixel(gfx_vars.x, gfx_vars.y, makeColor(r, g, b, 1))
+  drawCall(drawPixel, gfx_vars.x, gfx_vars.y, makeColor(r, g, b, 1))
   return r
 end
 
@@ -1526,10 +1662,10 @@ function gfx.triangle(...)
 
   if n_coords == 2 then
     -- gfx.triangle(0,33, 0,33, 0,33, 0,33)
-    return addPixel(points[1], points[2], c)
+    return drawCall(drawPixel, points[1], points[2], c)
   elseif n_coords == 4 then
     -- gfx.triangle(0,33, 0,0, 0,33, 0,33)
-    return addLine(points[1], points[2], points[3], points[4], c)
+    return drawCall(drawLine, points[1], points[2], points[3], points[4], c)
   elseif n_coords == 6 then
     return drawCall(drawTriangle6, points, center_x, center_y, c)
   else
@@ -1627,9 +1763,14 @@ function gfx.update()
     local draw_list = ImGui.GetWindowDrawList(state.ctx)
     -- mode=nil tells transformColor it's not outputting to an offscreen buffer
     render(draw_list, commands, {
+      alpha=1, mode=nil,  scale_x=1, scale_y=1,
       screen_x=state.screen_x, screen_y=state.screen_y,
-      alpha=1, mode=nil, scale_x=1, scale_y=1,
       x1=0, y1=0, x2=gfx_vars.w, y2=gfx_vars.h,
+      rotation = {
+        { 1, 0, 0 },
+        { 0, 1, 0 },
+        { 0, 0, 1 },
+      },
     })
 
     -- Allow calling gfx.update muliple times per frame without re-rendering
