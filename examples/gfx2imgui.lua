@@ -451,21 +451,23 @@ local function showLog()
   ImGui.SetNextWindowSize(state.ctx, 800, 300, ImGui.Cond_Once())
   local visible, open = ImGui.Begin(state.ctx, 'gfx2imgui [Log]', true, flags)
   ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_ViewportsNoDecoration(), 0)
-  if not visible then return end
-  local scroll_bottom = ImGui.GetScrollY(state.ctx) == ImGui.GetScrollMaxY(state.ctx)
-  local copy = false
-  if ImGui.BeginPopupContextWindow(state.ctx) then
-    if ImGui.MenuItem(state.ctx, 'Copy') then copy = true end
-    ImGui.EndPopup(state.ctx)
+  if visible then
+    local scroll_bottom =
+      ImGui.GetScrollY(state.ctx) == ImGui.GetScrollMaxY(state.ctx)
+    local copy = false
+    if ImGui.BeginPopupContextWindow(state.ctx) then
+      if ImGui.MenuItem(state.ctx, 'Copy') then copy = true end
+      ImGui.EndPopup(state.ctx)
+    end
+    if copy then ImGui.LogToClipboard(state.ctx) end
+    for line in ringEnum(global_state.log) do
+      ImGui.TextWrapped(state.ctx, line)
+    end
+    if copy then ImGui.LogFinish(state.ctx) end
+    if scroll_bottom then ImGui.SetScrollHereY(state.ctx, 1) end
+    ImGui.End(state.ctx)
   end
-  if copy then ImGui.LogToClipboard(state.ctx) end
-  for line in ringEnum(global_state.log) do
-    ImGui.TextWrapped(state.ctx, line)
-  end
-  if copy then ImGui.LogFinish(state.ctx) end
-  if scroll_bottom then ImGui.SetScrollHereY(state.ctx, 1) end
   if not open then global_state.log.size = 0 end
-  ImGui.End(state.ctx)
 end
 
 local function setDock(v)
