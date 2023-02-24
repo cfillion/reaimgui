@@ -34,5 +34,7 @@
 #define IDC_MESSAGE  200
 #define IDC_REPORT   201
 #define IDC_SETTINGS 202
+#define IDC_PREV     203
+#define IDC_NEXT     204
 
 #endif
