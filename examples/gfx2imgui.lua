@@ -808,21 +808,20 @@ local function drawBlit(draw_list, cmd, opts)
 
   sourceCommands.want_clear = true
 
-  local old_alpha,    old_mode     = opts.alpha,    opts.mode
-  local old_scale_x,  old_scale_y  = opts.scale_x,  opts.scale_y
-  local old_screen_x, old_screen_y = opts.screen_x, opts.screen_y
-  local old_x1, old_y1, old_x2, old_y2 = opts.x1, opts.y1, opts.x2, opts.y2
+  local old_alpha, old_mode, old_scale_x, old_scale_y,
+        old_screen_x, old_screen_y, old_x1, old_y1, old_x2, old_y2
 
-  opts.alpha,   opts.mode    = opts.alpha * alpha, mode
-  opts.scale_x, opts.scale_y = opts.scale_x * scale_x, opts.scale_y * scale_y
-
+  old_alpha,   opts.alpha   = opts.alpha,   opts.alpha   * alpha
+  old_mode,    opts.mode    = opts.mode,    mode
+  old_scale_x, opts.scale_x = opts.scale_x, opts.scale_x * scale_x
+  old_scale_y, opts.scale_y = opts.scale_y, opts.scale_y * scale_y
   -- after the new scale is set in opts
   srcx, srcy = transformPoint(srcx, srcy, opts, TP_NO_ORIGIN)
   srcw, srch = transformPoint(srcw, srch, opts, TP_NO_ORIGIN)
-  opts.screen_x, opts.screen_y = dstx - srcx, dsty - srcy
-
-  opts.x1, opts.y1 = srcx, srcy
-  opts.x2, opts.y2 = srcx + srcw, srcy + srch
+  old_screen_x, opts.screen_x = opts.screen_x, dstx - srcx
+  old_screen_y, opts.screen_y = opts.screen_y, dsty - srcy
+  old_x1, opts.x1, old_y1, opts.y1 = opts.x1, srcx,        opts.y1, srcy
+  old_x2, opts.x2, old_y2, opts.y2 = opts.x2, srcx + srcw, opts.y2, srcy + srch
 
   if (opts.x1 < old_x2 and opts.x2 > old_x1) or
      (opts.y1 < old_y2 and opts.y2 > old_y1) then
