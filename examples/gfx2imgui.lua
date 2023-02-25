@@ -416,10 +416,8 @@ local function warn(message, ...)
   local warnLine = funcInfo.currentline
 
   -- don't print duplicate messages
-  for _, line in ipairs(global_state.log_lines) do
-    if line == warnLine then return end
-  end
-  global_state.log_lines[#global_state.log_lines + 1] = warnLine
+  if global_state.log_lines[warnLine] then return end
+  global_state.log_lines[warnLine] = true
 
   local depth, callerInfo = 3, nil
   if DEBUG then depth = depth + 1 end -- skip xpcall()
