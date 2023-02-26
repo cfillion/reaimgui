@@ -107,7 +107,6 @@ local FONT_FLAGS = {
 }
 local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
-local QUARTER_CIRCLE = math.pi / 2
 
 -- settings
 local BLIT_NO_PREMULTIPLY          = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
@@ -223,18 +222,18 @@ local function drawCall(...)
   if not c then
     -- pre-allocate the maximum size w/o nil gaps
     -- IF SIZE CHANGES: also update copy code in gfx.blit!
-    c = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 }
+    c = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 }
     list[ptr] = c
   end
 
   -- faster than looping over select('#', ...) or creating a new table
   c[ 1], c[ 2], c[ 3], c[ 4], c[ 5], c[ 6], c[ 7], c[ 8], c[ 9],
   c[10], c[11], c[12], c[13], c[14], c[15], c[16], c[17], c[18],
-  c[19] = ...
+  c[19], c[20] = ...
 
   if DEBUG then
     assert(type((...)) == 'function', 'uncallable draw command')
-    assert(select('#', ...) <= 19)
+    assert(select('#', ...) <= 20)
   end
 
   return 0
@@ -306,7 +305,7 @@ local function transformPoint(x, y, opts, flags)
     x, y = x // 1, y // 1
   end
 
-  if flags & TP_NO_ROTATE == 0 and opts.is_rotated then
+  if flags & TP_NO_ROTATE == 0 and opts.angle then
     if flags & TP_NO_ORIGIN ~= 0 then
       x, y = opts.screen_x + x, opts.screen_y + y
     end
@@ -322,12 +321,20 @@ local function transformPoint(x, y, opts, flags)
   return x, y
 end
 
+local function transformRectToQuad(x1, y1, x2, y2, opts)
+  local x4, y4 = transformPoint(x1, y2, opts)
+  local x3, y3 = transformPoint(x2, y2, opts)
+        x2, y2 = transformPoint(x2, y1, opts)
+        x1, y1 = transformPoint(x1, y1, opts)
+  return x1, y1, x2, y2, x3, y3, x4, y4
+end
+
 local function alignText(flags, pos, size, limit)
   local offset = 0
   if flags == 0 then return pos, offset end
 
   local diff = limit - (pos + size)
-  if flags & 1 ~= 0 then diff = diff / 2 end -- center
+  if flags & 1 ~= 0 then diff = diff * .5 end -- center
 
   if diff > 0 then
     pos, limit = pos + diff
@@ -659,7 +666,7 @@ end
 
 local function center2D(points)
   local n_coords = #points
-  local center_x, center_y, n_points = 0, 0, n_coords / 2
+  local center_x, center_y, n_points = 0, 0, n_coords * .5
   for i = 1, n_coords, 2 do
     center_x, center_y = center_x + points[i], center_y + points[i + 1]
   end
@@ -761,7 +768,7 @@ local function drawLine(draw_list, cmd, opts)
 
   local x1, y1 = transformPoint(x1, y1, opts)
   local x2, y2 = transformPoint(x2, y2, opts)
-  DL_AddLine(draw_list, x1, y1, x2, y2, c, (opts.scale_x + opts.scale_y) / 2)
+  DL_AddLine(draw_list, x1, y1, x2, y2, c, (opts.scale_x + opts.scale_y) * .5)
 end
 
 -- variables to reset on the first access of every frame via gfx.__index
@@ -843,17 +850,18 @@ end
 
 function gfx.arc(x, y, r, ang1, ang2, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
+  local quarter = math.pi * .5
   return drawCall(drawArc, toint(x) + 1, toint(y), r, color(),
-    ang1 - QUARTER_CIRCLE, ang2 - QUARTER_CIRCLE)
+    ang1 - quarter, ang2 - quarter)
 end
 
 local function drawBlit(draw_list, cmd, opts)
   local commands, sourceCommands, alpha, mode, scale_x, scale_y,
         srcx, srcy, srcw, srch, dstx, dsty, dstw, dsth,
-        angle_sin, angle_cos, rotxoffs, rotyoffs =
+        angle, angle_sin, angle_cos, rotxoffs, rotyoffs =
     cmd[ 2], cmd[ 3], cmd[ 4], cmd[ 5], cmd[ 6], cmd[ 7], cmd[ 8], cmd[ 9],
     cmd[10], cmd[11], cmd[12], cmd[13], cmd[14], cmd[15], cmd[16], cmd[17],
-    cmd[18], cmd[19]
+    cmd[18], cmd[19], cmd[20]
 
   dstx, dsty = transformPoint(dstx, dsty, opts)
   dstw, dsth = transformPoint(dstw, dsth, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
@@ -878,13 +886,13 @@ local function drawBlit(draw_list, cmd, opts)
   if (opts.x1 < old_x2 and opts.x2 > old_x1) or
      (opts.y1 < old_y2 and opts.y2 > old_y1) then
     -- always save previous rotation state
-    local rotmtx, old_is_rotated = opts.rotation, opts.is_rotated
+    local rotmtx, old_angle = opts.rotation, opts.angle
     local rotmtx1,  rotmtx2,  rotmtx3  = rotmtx [1], rotmtx [2], rotmtx [3]
     local old_rm11, old_rm12, old_rm13 = rotmtx1[1], rotmtx1[2], rotmtx1[3]
     local old_rm21, old_rm22, old_rm23 = rotmtx2[1], rotmtx2[2], rotmtx2[3]
     local old_rm31, old_rm32, old_rm33 = rotmtx3[1], rotmtx3[2], rotmtx3[3]
 
-    if old_is_rotated then
+    if old_angle then
       local diffx, diffy =
         transformPoint(srcx, srcy, opts, TP_NO_ORIGIN | TP_NO_SCALE)
       combineMatrix(rotmtx,
@@ -894,11 +902,11 @@ local function drawBlit(draw_list, cmd, opts)
         true)
     end
 
-    if angle_cos then
+    if angle then
       -- rotation uses the full dstw/dsth
       -- scaled srcw/srch may be smaller if the source image is smaller than
       -- the requested blit size.
-      local cx, cy = dstx + (dstw / 2), dsty + (dsth / 2)
+      local cx, cy = dstx + (dstw * .5), dsty + (dsth * .5)
       rotxoffs, rotyoffs =
         transformPoint(rotxoffs, rotyoffs, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
       combineMatrix(rotmtx,
@@ -909,11 +917,11 @@ local function drawBlit(draw_list, cmd, opts)
         1, 0, -cx - rotxoffs,
         0, 1, -cy - rotyoffs,
         0, 0,  1)
-      opts.is_rotated = true
+      opts.angle = (opts.angle or 0) + angle
     end
 
     -- FIXME: clip rect does not support rotation
-    local clip_rect = not old_is_rotated
+    local clip_rect = not old_angle
     if clip_rect then
       DL_PushClipRect(draw_list, dstx, dsty, dstx + srcw, dsty + srch, true)
     end
@@ -922,7 +930,7 @@ local function drawBlit(draw_list, cmd, opts)
       DL_PopClipRect(draw_list)
     end
 
-    opts.is_rotated = old_is_rotated
+    opts.angle = old_angle
     rotmtx1[1], rotmtx1[2], rotmtx1[3] = old_rm11, old_rm12, old_rm13
     rotmtx2[1], rotmtx2[2], rotmtx2[3] = old_rm21, old_rm22, old_rm23
     rotmtx3[1], rotmtx3[2], rotmtx3[3] = old_rm31, old_rm32, old_rm33
@@ -963,6 +971,8 @@ function gfx.blit(source, ...)
   if rotation > min_angle or -rotation > min_angle then
     warn('rotation partially implemented')
     rotation_sin, rotation_cos = math.sin(rotation), math.cos(rotation)
+  else
+    rotation = nil
   end
 
   if gfx_vars.mode ~= 0 and (gfx_vars.mode & ~BLIT_NO_SOURCE_ALPHA) ~= 0 then
@@ -983,7 +993,7 @@ function gfx.blit(source, ...)
     commands[i] = {
       c[ 1], c[ 2], c[ 3], c[ 4], c[ 5], c[ 6], c[ 7], c[ 8], c[ 9],
       c[10], c[11], c[12], c[13], c[14], c[15], c[16], c[17], c[18],
-      c[19]
+      c[19], c[20]
     }
   end
 
@@ -999,7 +1009,7 @@ function gfx.blit(source, ...)
   drawCall(drawBlit, commands, sourceCommands,
     gfx.a, gfx_vars.mode, scale_x, scale_y,
     srcx, srcy, srcw, srch, destx, desty, destw, desth,
-    rotation_sin, rotation_cos, rotxoffs, rotyoffs)
+    rotation, rotation_sin, rotation_cos, rotxoffs, rotyoffs)
 
   return source
 end
@@ -1183,9 +1193,17 @@ local function drawGradRect(draw_list, cmd, opts)
   ctr = transformColor(ctr, opts)
   cbr = transformColor(cbr, opts)
   cbl = transformColor(cbl, opts)
+
   -- FIXME: no AddQuadFilledMultiColor for rotation (ocornut/imgui#4495)
-  x1, y1 = transformPoint(x1, y1, opts, TP_NO_ROTATE)
-  x2, y2 = transformPoint(x2, y2, opts, TP_NO_ROTATE)
+  if opts.angle then
+    local x3, y3, x4, y4
+    x1, y1, x2, y2, x3, y3, x4, y4 = transformRectToQuad(x1, y1, x2, y2, opts)
+    DL_AddQuadFilled(draw_list, x1, y1, x2, y2, x3, y3, x4, y4, ctl)
+    return
+  end
+
+  x1, y1 = transformPoint(x1, y1, opts)
+  x2, y2 = transformPoint(x2, y2, opts)
   DL_AddRectFilledMultiColor(draw_list, x1, y1, x2, y2, ctl, ctr, cbr, cbl)
 end
 
@@ -1317,7 +1335,7 @@ local function drawImage(draw_list, cmd, opts)
   local uv1_x, uv1_y = opts.x2 / w, opts.y2 / h
   local tint = transformColor(0xFFFFFFFF, opts)
 
-  if opts.is_rotated then
+  if opts.angle then
     local x1, y1 =
       transformPoint(opts.x1, opts.y1, opts, TP_NO_SCALE)
     local x2, y2 =
@@ -1424,11 +1442,9 @@ local function drawRect(draw_list, cmd, opts)
   c = transformColor(c, opts)
   -- FIXME: scale thickness
 
-  if opts.is_rotated then
-    local x4, y4 = transformPoint(x1, y2, opts)
-    local x3, y3 = transformPoint(x2, y2, opts)
-          x2, y2 = transformPoint(x2, y1, opts)
-          x1, y1 = transformPoint(x1, y1, opts)
+  if opts.angle then
+    local x3, y3, x4, y4
+    x1, y1, x2, y2, x3, y3, x4, y4 = transformRectToQuad(x1, y1, x2, y2, opts)
     quadFunc(draw_list, x1, y1, x2, y2, x3, y3, x4, y4, c)
     return
   end
@@ -1456,11 +1472,25 @@ local function drawRoundRect(draw_list, cmd, opts)
   local x1, y1, x2, y2, c, radius =
     cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
   c = transformColor(c, opts)
-  radius = radius * opts.scale_y -- FIXME: scale_x
-  -- FIXME: no AddQuad with rounding for rotation
-  x1, y1 = transformPoint(x1, y1, opts, TP_NO_ROTATE)
-  x2, y2 = transformPoint(x2, y2, opts, TP_NO_ROTATE)
   -- FIXME: scale thickness
+
+  local a = opts.angle
+  if a then
+    local quarter, x3, y3, x4, y4 = math.pi * .5
+    x1, y1, x2, y2 = x1 + radius, y1 + radius, x2 - radius, y2 - radius
+    x1, y1, x2, y2, x3, y3, x4, y4 = transformRectToQuad(x1, y1, x2, y2, opts)
+    radius = radius * opts.scale_y -- FIXME: scale_x
+    DL_PathArcTo(draw_list, x1, y1, radius, a + math.pi, a + quarter*3)
+    DL_PathArcTo(draw_list, x2, y2, radius, a - quarter, a          )
+    DL_PathArcTo(draw_list, x3, y3, radius, a          , a + quarter)
+    DL_PathArcTo(draw_list, x4, y4, radius, a + quarter, a + math.pi)
+    DL_PathStroke(draw_list, c, 1) -- 1 = always DrawFlags_Closed
+    return
+  end
+
+  x1, y1 = transformPoint(x1, y1, opts)
+  x2, y2 = transformPoint(x2, y2, opts)
+  radius = radius * opts.scale_y -- FIXME: scale_x
   DL_AddRect(draw_list, x1, y1, x2 + 1, y2 + 1, c, radius, ROUND_CORNERS)
 end
 
