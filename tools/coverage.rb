@@ -172,7 +172,7 @@ NATIVE_ONLY_CLASSES = %w[
 ]
 
 NATIVE_ONLY_ENUMS = [
-  /\AInputTextFlags_Callback/,
+  /\AInputTextFlags_Callback(Resize|Edit)/,
   /\ADataType_/,
   'Key_None',
   /\AKey_(NamedKey|KeysData|Reserved)/,
@@ -240,12 +240,6 @@ OVERRIDES = {
   'void ImGui::PlotHistogram(const char*, const float*, int, int, const char*, float, float, ImVec2, int)' => 'void PlotHistogram(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
   'void ImDrawList::AddPolyline(const ImVec2*, int, ImU32, ImDrawFlags, float)' => 'void DrawList_AddPolyline(reaper_array*, int, int, double)',
   'void ImDrawList::AddConvexPolyFilled(const ImVec2*, int, ImU32)'      => 'void DrawList_AddConvexPolyFilled(reaper_array*, int)',
-
-  # no callbacks
-  'bool ImGui::InputText(const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)'                         => 'bool InputText(const char*, char*, int, int*)',
-  'bool ImGui::InputTextMultiline(const char*, char*, size_t, const ImVec2&, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)' => 'bool InputTextMultiline(const char*, char*, int, double*, double*, int*)',
-  'bool ImGui::InputTextWithHint(const char*, const char*, char*, size_t, ImGuiInputTextFlags, ImGuiInputTextCallback, void*)'    => 'bool InputTextWithHint(const char*, const char*, char*, int, int*)',
-  'void ImGui::SetNextWindowSizeConstraints(const ImVec2&, const ImVec2&, ImGuiSizeCallback, void*)' => 'void SetNextWindowSizeConstraints(double, double, double, double)',
 
   # additional string buffer size argument
   'bool ImGui::Combo(const char*, int*, const char*, int)' => 'bool Combo(const char*, int*, const char*, int, int*)',
@@ -367,6 +361,8 @@ private
       "int#{$~[1]}"
     when 'ImTextureID'
       'ImGui_Image*'
+    when /Callback\z/
+      "ImGui_Function*"
     when /\AIm(?:Gui|Draw)[^\*]+(?:Flags\*)?\z/, 'ImU32'
       'int'
     when 'const char* const'
@@ -438,6 +434,10 @@ private
       arg.name += '_rgb'
       arg.name += 'a' if arg.size == 4
       arg.size = 0
+    elsif arg.type == 'void*' && arg.name == 'user_data' # callbacks
+      return []
+    elsif arg.name == 'buf_size'
+      arg.name = 'buf' # API_RWBIG_SZ?
     end
 
     if (matches = arg.default.to_s.scan(/(?:ImVec2\(|\G(?!\A))\s*([^f,\)]+)f?\s*,?/)) && !matches.empty?
@@ -595,12 +595,12 @@ reaimgui_funcs.each do |func|
     if RESOURCES.has_key?(arg.type)
       if i == 0
         first_arg_is_resource = true
+
+        unless arg.name == RESOURCES[arg.type]
+          warn "#{func.name}: argument of type '#{arg.type}' should be named '#{RESOURCES[arg.type]}', got '#{arg.name}'"
+        end
       elsif !first_arg_is_resource
         warn "#{func.name}: argument of type '#{arg.type}' should come first"
-      end
-
-      unless arg.name == RESOURCES[arg.type]
-        warn "#{func.name}: argument of type '#{arg.type}' should be named '#{RESOURCES[arg.type]}', got '#{arg.name}'"
       end
     end
   end

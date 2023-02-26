@@ -55,6 +55,8 @@ namespace API {
     const char *definition() const override { return m_definition; }
     unsigned int flags() const override { return TargetEEL | Variable; }
 
+    operator const char *() const { return m_name; }
+
   private:
     const char *m_name, *m_definition;
   };

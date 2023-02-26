@@ -48,6 +48,7 @@ struct Type {
   bool isNumber()    const { return isInt() || isDouble(); };
   bool isScalar()    const { return isBool() || isNumber(); }
   bool isScalarPtr() const { return isPointer() && removePtr().isScalar(); }
+  bool isImVec2()    const { return m_value == "ImVec2"; }
 
   Type removePtr() const
   {
@@ -475,8 +476,13 @@ void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
   if(isVar()) {
     if(type.isString())
       stream << hl(Highlight::Reference) << '#' << name << hl();
+    else if(type.isImVec2()) {
+      stream << hl(Highlight::Type) << "double" << hl() << ' ';
+      stream << name << ".x, " << name << ".y";
+    }
     else
       stream << hl(Highlight::Type) << type << hl() << ' ' << name;
+
     return;
   }
 
@@ -675,7 +681,9 @@ static void outputHtmlBlock(std::ostream &stream, std::string_view html,
 
 static void outputMarkdown(std::ostream &stream, const std::string_view &text)
 {
-  if(char *html { cmark_markdown_to_html(text.data(), text.size(), 0) }) {
+  // FIXME: switch to md4c for markdown table support
+  constexpr int opts { CMARK_OPT_UNSAFE }; // allow <table>
+  if(char *html { cmark_markdown_to_html(text.data(), text.size(), opts) }) {
     outputHtmlBlock(stream, html, false);
     free(html);
   }
@@ -754,7 +762,7 @@ static void humanBinding(std::ostream &stream)
     box-shadow: 0 0 10px #080808;
   }
   aside p, aside li a, main { padding-left: 1em; }
-  h1, h2, h3, h4, h5, h6, hr, pre { margin: 1rem 0 1rem 0; }
+  h1, h2, h3, h4, h5, h6, hr, pre, table { margin: 1rem 0 1rem 0; }
   h1 { font-size: 2.3em;  }
   h2 { font-size: 1.8em;  }
   h3 { font-size: 1.4em;  }
@@ -791,6 +799,7 @@ static void humanBinding(std::ostream &stream)
     list-style-type: none;
   }
   summary::before { content: '+ '; margin-left: -20px; }
+  summary + table, summary + p { margin-top: 0; }
   details[open] summary::before { content: '- '; }
   summary::-webkit-details-marker { display: none; }
   pre { white-space: pre-wrap; }

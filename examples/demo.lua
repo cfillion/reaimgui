@@ -1545,7 +1545,7 @@ label:
 ]],
         },
         flags = ImGui.InputTextFlags_AllowTabInput(),
-        buf = { '', '', '', '', '' },
+        buf = { '', '', '', '', '', '', '', '', '' },
         password = 'hunter2',
       }
     end
@@ -1559,24 +1559,26 @@ label:
     end
 
     if ImGui.TreeNode(ctx, 'Filtered Text Input') then
-      -- TODO
-      -- struct TextFilters
-      -- {
-      --     // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
-      --     static int FilterImGuiLetters(ImGuiInputTextCallbackData* data)
-      --     {
-      --         if (data->EventChar < 256 && strchr("imgui", (char)data->EventChar))
-      --             return 0;
-      --         return 1;
-      --     }
-      -- };
+      if not ImGui.ValidatePtr(widgets.input.filterImGuiLetters, 'ImGui_Function*') then
+        -- Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
+        widgets.input.filterImGuiLetters = ImGui.CreateFunctionFromEEL([[
+        eat = 1; i = strlen(#allowed);
+        while(
+          i -= 1;
+          str_getchar(#allowed, i) == EventChar ? eat = 0;
+          eat && i;
+        );
+        eat ? EventChar = 0;
+        ]])
+        ImGui.Function_SetValue_String(widgets.input.filterImGuiLetters, 'allowed', 'imgui')
+      end
 
       rv,widgets.input.buf[1] = ImGui.InputText(ctx, 'default',     widgets.input.buf[1])
       rv,widgets.input.buf[2] = ImGui.InputText(ctx, 'decimal',     widgets.input.buf[2], ImGui.InputTextFlags_CharsDecimal())
       rv,widgets.input.buf[3] = ImGui.InputText(ctx, 'hexadecimal', widgets.input.buf[3], ImGui.InputTextFlags_CharsHexadecimal() | ImGui.InputTextFlags_CharsUppercase())
       rv,widgets.input.buf[4] = ImGui.InputText(ctx, 'uppercase',   widgets.input.buf[4], ImGui.InputTextFlags_CharsUppercase())
       rv,widgets.input.buf[5] = ImGui.InputText(ctx, 'no blank',    widgets.input.buf[5], ImGui.InputTextFlags_CharsNoBlank())
-      -- static char buf6[64] = ""; ImGui.InputText("\"imgui\" letters", buf6, 64, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters)
+      rv,widgets.input.buf[6] = ImGui.InputText(ctx, '"imgui" letters', widgets.input.buf[6], ImGui.InputTextFlags_CallbackCharFilter(), widgets.input.filterImGuiLetters)
       ImGui.TreePop(ctx)
     end
 
@@ -1588,104 +1590,60 @@ label:
       ImGui.TreePop(ctx)
     end
 
--- TODO
---         if (ImGui.TreeNode("Completion, History, Edit Callbacks"))
---         {
---             struct Funcs
---             {
---                 static int MyCallback(ImGuiInputTextCallbackData* data)
---                 {
---                     if (data->EventFlag == ImGuiInputTextFlags_CallbackCompletion)
---                     {
---                         data->InsertChars(data->CursorPos, "..");
---                     }
---                     else if (data->EventFlag == ImGuiInputTextFlags_CallbackHistory)
---                     {
---                         if (data->EventKey == ImGuiKey_UpArrow)
---                         {
---                             data->DeleteChars(0, data->BufTextLen);
---                             data->InsertChars(0, "Pressed Up!");
---                             data->SelectAll();
---                         }
---                         else if (data->EventKey == ImGuiKey_DownArrow)
---                         {
---                             data->DeleteChars(0, data->BufTextLen);
---                             data->InsertChars(0, "Pressed Down!");
---                             data->SelectAll();
---                         }
---                     }
---                     else if (data->EventFlag == ImGuiInputTextFlags_CallbackEdit)
---                     {
---                         // Toggle casing of first character
---                         char c = data->Buf[0];
---                         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) data->Buf[0] ^= 32;
---                         data->BufDirty = true;
---
---                         // Increment a counter
---                         int* p_int = (int*)data->UserData;
---                         *p_int = *p_int + 1;
---                     }
---                     return 0;
---                 }
---             };
---             static char buf1[64];
---             ImGui.InputText("Completion", buf1, 64, ImGuiInputTextFlags_CallbackCompletion, Funcs::MyCallback);
---             ImGui.SameLine(); HelpMarker("Here we append \"..\" each time Tab is pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.");
---
---             static char buf2[64];
---             ImGui.InputText("History", buf2, 64, ImGuiInputTextFlags_CallbackHistory, Funcs::MyCallback);
---             ImGui.SameLine(); HelpMarker("Here we replace and select text each time Up/Down are pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.");
---
---             static char buf3[64];
---             static int edit_count = 0;
---             ImGui.InputText("Edit", buf3, 64, ImGuiInputTextFlags_CallbackEdit, Funcs::MyCallback, (void*)&edit_count);
---             ImGui.SameLine(); HelpMarker("Here we toggle the casing of the first character on every edit + count edits.");
---             ImGui.SameLine(); ImGui.Text("(%d)", edit_count);
---
---             ImGui.TreePop();
---         }
---
---         if (ImGui.TreeNode("Resize Callback"))
---         {
---             // To wire InputText() with std::string or any other custom string type,
---             // you can use the ImGuiInputTextFlags_CallbackResize flag + create a custom ImGui_InputText() wrapper
---             // using your preferred type. See misc/cpp/imgui_stdlib.h for an implementation of this using std::string.
---             HelpMarker(
---                 "Using ImGuiInputTextFlags_CallbackResize to wire your custom string type to InputText().\n\n"
---                 "See misc/cpp/imgui_stdlib.h for an implementation of this for std::string.");
---             struct Funcs
---             {
---                 static int MyResizeCallback(ImGuiInputTextCallbackData* data)
---                 {
---                     if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
---                     {
---                         ImVector<char>* my_str = (ImVector<char>*)data->UserData;
---                         IM_ASSERT(my_str->begin() == data->Buf);
---                         my_str->resize(data->BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
---                         data->Buf = my_str->begin();
---                     }
---                     return 0;
---                 }
---
---                 // Note: Because ImGui_ is a namespace you would typically add your own function into the namespace.
---                 // For example, you code may declare a function 'ImGui_InputText(const char* label, MyString* my_str)'
---                 static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0)
---                 {
---                     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
---                     return ImGui.InputTextMultiline(label, my_str->begin(), (size_t)my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (void*)my_str);
---                 }
---             };
---
---             // For this demo we are using ImVector as a string container.
---             // Note that because we need to store a terminating zero character, our size/capacity are 1 more
---             // than usually reported by a typical string class.
---             static ImVector<char> my_str;
---             if (my_str.empty())
---                 my_str.push_back(0);
---             Funcs::MyInputTextMultiline("##MyStr", &my_str, ImVec2(-FLT_MIN, ImGui.GetTextLineHeight() * 16));
---             ImGui.Text("Data: %p\nSize: %d\nCapacity: %d", (void*)my_str.begin(), my_str.size(), my_str.capacity());
---             ImGui.TreePop();
---         }
+    if ImGui.TreeNode(ctx, 'Completion, History, Edit Callbacks') then
+      if not ImGui.ValidatePtr(widgets.input.callback, 'ImGui_Function*') then
+        widgets.input.callback = ImGui.CreateFunctionFromEEL([[
+        EventFlag == InputTextFlags_CallbackCompletion ?
+          InputTextCallback_InsertChars(CursorPos, "..");
+        EventFlag == InputTextFlags_CallbackHistory ? (
+          EventKey == Key_UpArrow ? (
+            InputTextCallback_DeleteChars(0, strlen(#Buf));
+            InputTextCallback_InsertChars(0, "Pressed Up!");
+            InputTextCallback_SelectAll();
+          ) : EventKey == Key_DownArrow ? (
+            InputTextCallback_DeleteChars(0, strlen(#Buf));
+            InputTextCallback_InsertChars(0, "Pressed Down!");
+            InputTextCallback_SelectAll();
+          );
+        );
+        EventFlag == InputTextFlags_CallbackEdit ? (
+          // Toggle casing of first character
+          c = str_getchar(#Buf, 0);
+          (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ? (
+            str_setchar(#first, 0, c ~ 32);
+            InputTextCallback_DeleteChars(0, 1);
+            InputTextCallback_InsertChars(0, #first);
+          );
+
+          // Increment a counter
+          edit_count += 1;
+        );
+        ]])
+        local consts = {
+          'InputTextFlags_CallbackCompletion',
+          'InputTextFlags_CallbackEdit',
+          'InputTextFlags_CallbackHistory',
+          'Key_UpArrow',
+          'Key_DownArrow',
+        }
+        for _, const in ipairs(consts) do
+          ImGui.Function_SetValue(widgets.input.callback, const, ImGui[const]())
+        end
+      end
+
+      rv,widgets.input.buf[7] = ImGui.InputText(ctx, 'Completion', widgets.input.buf[7], ImGui.InputTextFlags_CallbackCompletion(), widgets.input.callback)
+      ImGui.SameLine(ctx); demo.HelpMarker("Here we append \"..\" each time Tab is pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.")
+
+      rv,widgets.input.buf[8] = ImGui.InputText(ctx, 'History', widgets.input.buf[8], ImGui.InputTextFlags_CallbackHistory(), widgets.input.callback)
+      ImGui.SameLine(ctx); demo.HelpMarker("Here we replace and select text each time Up/Down are pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.")
+
+      rv,widgets.input.buf[9] = ImGui.InputText(ctx, 'Edit', widgets.input.buf[9], ImGui.InputTextFlags_CallbackEdit(), widgets.input.callback)
+      ImGui.SameLine(ctx); demo.HelpMarker('Here we toggle the casing of the first character on every edit + count edits.')
+      local edit_count = ImGui.Function_GetValue(widgets.input.callback, 'edit_count')
+      ImGui.SameLine(ctx); ImGui.Text(ctx, ('(%d)'):format(edit_count))
+
+      ImGui.TreePop(ctx)
+    end
 
     ImGui.TreePop(ctx)
   end
