@@ -1,5 +1,6 @@
 #include "../src/function.hpp"
 
+#include "../src/api_eel.hpp"
 #include "../src/error.hpp"
 
 #include <eel2/ns-eel.h> // NSEEL_RAM_ITEMSPERBLOCK
@@ -146,4 +147,33 @@ TEST(FunctionTest, WriteArray) {
   EXPECT_TRUE(func.setArray("a", values));
   func.execute();
   EXPECT_EQ(*func.getDouble("r"), slot + 1 + 8);
+}
+
+static double customFunc1() noexcept // testing handling of 0 arguments
+{
+  return 16;
+}
+
+static double customFunc2(const double rh, const double lh,
+                         std::string_view str) noexcept
+{
+  return (rh * lh) + str.size();
+}
+
+TEST(FunctionTest, CustomFunction) {
+  const API::EELFunc funcs[] {
+    { "MyFunc1", "double\0\0\0",
+      &InvokeEELAPI<&customFunc1>, EELAPI<decltype(&customFunc1)>::ARGC,
+    },
+    { "MyFunc2", "double\0double,double\0rh,lh\0",
+      &InvokeEELAPI<&customFunc2>, EELAPI<decltype(&customFunc2)>::ARGC,
+    },
+  };
+
+  for(const auto &func : funcs)
+    func.announce(true);
+
+  Function func { R"(rv = MyFunc2(2, MyFunc1(), "chunky\0bacon");)" };
+  func.execute();
+  EXPECT_EQ(*func.getDouble("rv"), 44);
 }

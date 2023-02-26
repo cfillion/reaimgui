@@ -85,10 +85,7 @@ using DefArgVal = std::conditional_t<
 #define _STORE_LINE \
   static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) { __LINE__ };
 
-#define DEFINE_API _STORE_LINE _DEFINE_API
-#define _DEFINE_API(type, name, args, help, ...)                          \
-  _API_CHECKROOTSECTION                                                   \
-                                                                          \
+#define _DECLARE_FUNC(type, name, args) \
   namespace API_##name {                                                  \
     _FOREACH_ARG(_DEFARG, name, args) /* constexprs of default args */    \
                                                                           \
@@ -99,11 +96,17 @@ using DefArgVal = std::conditional_t<
     }                                                                     \
     _API_CATCH(name, type, reascript_error)                               \
     _API_CATCH(name, type, imgui_error)                                   \
-  }                                                                       \
+  }
+#define _DEFINE_FUNC(type, name, args) \
+  type API_##name::invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args))
+
+#define DEFINE_API _STORE_LINE _DEFINE_API
+#define _DEFINE_API(type, name, args, help, ...)                          \
+  _API_CHECKROOTSECTION                                                   \
+  _DECLARE_FUNC(type, name, args)                                         \
                                                                           \
   /* link-time duplicate check */                                         \
   extern const API::ReaScriptFunc API_EXPORT_##name;                      \
-                                                                          \
   const API::ReaScriptFunc API_EXPORT_##name {                            \
     { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
       reinterpret_cast<void *>(&API_##name::invoke),                      \
@@ -116,12 +119,29 @@ using DefArgVal = std::conditional_t<
         _API_DEF(type, args, help))),                                     \
     },                                                                    \
   };                                                                      \
-                                                                          \
-  type API_##name::invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args))
+  _DEFINE_FUNC(type, name, args)
 
 #define DEFINE_ENUM _STORE_LINE _DEFINE_ENUM
 #define _DEFINE_ENUM(prefix, name, doc) \
   _DEFINE_API(int, name, NO_ARGS, doc) { return prefix##name; }
+
+#define DEFINE_EELAPI _STORE_LINE _DEFINE_EELAPI
+#define _DEFINE_EELAPI(type, name, args, help)                     \
+  _API_CHECKROOTSECTION                                            \
+  _DECLARE_FUNC(type, name, args)                                  \
+                                                                   \
+  extern const API::EELFunc API_EXPORT_##name;                     \
+  const API::EELFunc API_EXPORT_##name {                           \
+    #name, _API_DEF(type, args, help),                             \
+    &InvokeEELAPI<&API_##name::invoke>,                            \
+    EELAPI<decltype(&API_##name::invoke)>::ARGC,                   \
+  };                                                               \
+  _DEFINE_FUNC(type, name, args)
+
+#define DEFINE_EELVAR _STORE_LINE _DEFINE_EELVAR
+#define _DEFINE_EELVAR(type, name, help)                           \
+  _API_CHECKROOTSECTION                                            \
+  const API::EELVar EELVar_##name { #name, #type "\0\0\0" help "\0" }
 
 #define DEFINE_SECTION(id, parent, ...) static const API::Section id \
   { &parent, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ };

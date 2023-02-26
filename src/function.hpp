@@ -48,7 +48,11 @@ public:
 
   bool attachable(const Context *) const override { return true; }
 
+  // string access by index
+  std::optional<std::string_view> getString(double) const;
+
 private:
+  friend eel_string_context_state *EEL_STRING_GET_CONTEXT_POINTER(void *);
   std::unique_ptr<eel_string_context_state> m_strings;
 
   using NSEEL_VMCTX_REF      = std::remove_pointer_t<NSEEL_VMCTX>;

@@ -24,6 +24,7 @@
 #include <cmark.h>
 #include <cstring>
 #include <deque>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <string_view>
@@ -100,9 +101,11 @@ struct Function {
   std::string_view doc;
   std::string_view displayName;
   std::deque<const API::Section *> sections;
+  unsigned int flags;
 
   bool operator<(const Function &) const;
 
+  bool isVar() const { return flags & API::Symbol::Variable; }
   bool isEnum() const { return type.isInt() && args.empty(); }
   bool hasOutputArgs() const;
   bool hasOptionalArgs() const;
@@ -136,7 +139,8 @@ static const char *nextString(const char *&str)
 
 Function::Function(const API::Symbol *api)
   : section { api->m_section }, name { api->name() },
-    type { api->definition() }, line { api->m_line }
+    type { api->definition() }, line { api->m_line },
+    flags { api->flags() }
 {
   const API::Section *curSection { section };
   do { sections.push_front(curSection); }
@@ -166,8 +170,13 @@ Function::Function(const API::Symbol *api)
       defvLen -= strlen("Im");
     }
 
+    std::string_view type { argTypes.substr(0, typeLen) };
+    // special case for EEL strings
+    if(type == "std::string_view")
+      type = "const char*";
+
     args.emplace_back(Argument {
-      argTypes.substr(0, typeLen),
+      type,
       argNames.substr(0, nameLen),
       argDefvs.substr(0, defvLen),
     });
@@ -288,6 +297,9 @@ private:
 )";
 
   for(const Function &func : g_funcs) {
+    if(!(func.flags & API::Symbol::TargetNative))
+      continue;
+
     stream << "REAIMGUIAPI_EXTERN ";
 
     if(func.isEnum())
@@ -460,6 +472,14 @@ void Function::luaSignature(std::ostream &stream) const
 
 void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
 {
+  if(isVar()) {
+    if(type.isString())
+      stream << hl(Highlight::Reference) << '#' << name << hl();
+    else
+      stream << hl(Highlight::Type) << type << hl() << ' ' << name;
+    return;
+  }
+
   CommaSep cs { stream };
   if(!type.isVoid())
     stream << hl(Highlight::Type) << type << hl() << ' ';
@@ -884,16 +904,36 @@ static void humanBinding(std::ostream &stream)
     }
 
     stream << "<details id=\"" << func.displayName << "\"><summary>";
-    stream << (func.isEnum() ? "Constant: " : "Function: ");
+    if(func.isVar())
+      stream << "Variable: ";
+    else if(func.isEnum())
+      stream << "Constant: ";
+    else
+      stream << "Function: ";
     stream << func.displayName << "</summary>";
 
-    stream << "<table>"
-           << "<tr><th>C++</th><td><code>";        func.cppSignature(stream);        stream << "</code></td></tr>"
-           << "<tr><th>EEL</th><td><code>";        func.eelSignature(stream, false); stream << "</code></td></tr>"
-           << "<tr><th>Legacy EEL</th><td><code>"; func.eelSignature(stream, true);  stream << "</code></td></tr>"
-           << "<tr><th>Lua</th><td><code>";        func.luaSignature(stream);        stream << "</code></td></tr>"
-           << "<tr><th>Python</th><td><code>";     func.pythonSignature(stream);     stream << "</code></td></tr>"
-           << "</table>";
+    struct Target {
+      const char *name;
+      int flag;
+      std::function<void(const Function *, std::ostream &)> formatter;
+    };
+    using namespace std::placeholders;
+    static const Target targets[] {
+      { "C++",        API::Symbol::TargetNative, std::mem_fn(&Function::cppSignature)              },
+      { "EEL",        API::Symbol::TargetEEL,    std::bind(&Function::eelSignature, _1, _2, false) },
+      { "Legacy EEL", API::Symbol::TargetEELOld, std::bind(&Function::eelSignature, _1, _2, true)  },
+      { "Lua",        API::Symbol::TargetLua,    std::mem_fn(&Function::luaSignature)              },
+      { "Python",     API::Symbol::TargetPython, std::mem_fn(&Function::pythonSignature)           },
+    };
+    stream << "<table>";
+    for(const Target &target : targets) {
+      if(!(func.flags & target.flag))
+        continue;
+      stream << "<tr><th>" << target.name << "</th><td><code>";
+      target.formatter(&func, stream);
+      stream << "</code></td></tr>";
+    }
+    stream << "</table>";
 
     if(!func.doc.empty())
       outputMarkdown(stream, func.doc);
@@ -977,6 +1017,9 @@ static void pythonBinding(std::ostream &stream)
             "from reaper_python import *\n";
 
   for(const Function &func : g_funcs) {
+    if(!(func.flags & API::Symbol::TargetPython))
+      continue;
+
     stream << "\ndef " << func.name << '(';
     {
       CommaSep cs { stream };

@@ -16,6 +16,7 @@
  */
 
 #include "api.hpp"
+#include "api_eel.hpp"
 
 #include "context.hpp"
 
@@ -23,6 +24,8 @@
 #include <reaper_plugin_functions.h>
 
 using namespace API;
+
+static eel_function_table g_eelFuncs;
 
 static const Symbol *&lastSymbol()
 {
@@ -86,9 +89,44 @@ void ReaScriptFunc::announce(const bool init) const
     reg.announce(init);
 }
 
+EELFunc::EELFunc(const char *name, const char *definition,
+                 VarArgFunc impl, const int argc)
+  : m_name { name }, m_definition { definition },
+    m_impl { impl }, m_argc { std::max(1, argc) }
+{
+  // std::max as workaround for EEL needing argc >= 1 because it does
+  // nseel_resolve_named_symbol(..., np<1 ? 1 : np, ...)
+  //
+  // As a side effect it will only error out if giving >1 args and the message
+  // will say "needs 1 parms". REAPER's EEL scripts behave like this too:
+  // ImGui_WindowFlags_None()     -> OK
+  // ImGui_WindowFlags_None(1)    -> OK
+  // ImGui_WindowFlags_None(1, 2) -> ERROR "'funcname' needs 1 parms"
+}
+
+void EELFunc::announce(const bool init) const
+{
+  if(!init)
+    return;
+
+  constexpr int ExactArgCount { 1 };
+  NSEEL_addfunc_varparm_ex(m_name, m_argc, ExactArgCount,
+                         NSEEL_PProc_THIS, m_impl, &g_eelFuncs);
+}
+
+EELVar::EELVar(const char *name, const char *definition)
+  : m_name { name }, m_definition { definition }
+{
+}
+
 const Symbol *API::head() // immutable public accessor
 {
   return lastSymbol();
+}
+
+eel_function_table *API::eelFunctionTable()
+{
+  return &g_eelFuncs;
 }
 
 void API::announceAll(const bool add)

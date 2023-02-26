@@ -34,6 +34,7 @@ This API currently has multiple limitations (v1.0 blockers):
   (Attaching a font is a heavy operation and should ideally be done outside
   of the defer loop.))");
 
+#undef CreateFont // from windows.h...
 DEFINE_API(ImGui_Font*, CreateFont,
 (const char*,family_or_file)(int,size)(int*,API_RO(flags),ReaImGuiFontFlags_None),
 R"(Load a font matching a font family name or from a font file.

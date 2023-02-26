@@ -17,15 +17,11 @@
 
 #include "function.hpp"
 
+#include "api_eel.hpp"
 #include "error.hpp"
 
 #include <reaper_plugin_secrets.h> // reaper_array
 #include <string>
-
-#define NSEEL_ADDFUNC_DESTINATION (&g_eel_function_table)
-#include <eel2_import.hpp>
-
-static eel_function_table g_eel_function_table;
 
 // WDL_FastString is missing a copy constructor/assignment operator
 #ifdef HAS_DEPRECATED_COPY // GCC 12
@@ -36,9 +32,9 @@ static eel_function_table g_eel_function_table;
 #include <cstring>
 #include <WDL/assocarray.h>
 #include <WDL/ptrlist.h>
-static eel_string_context_state *EEL_STRING_GET_CONTEXT_POINTER(void *self)
+eel_string_context_state *EEL_STRING_GET_CONTEXT_POINTER(void *self)
 {
-  return static_cast<eel_string_context_state *>(self);
+  return static_cast<Function *>(self)->m_strings.get();
 }
 static void EEL_STRING_DEBUGOUT(const char *fmt, ...) noexcept
 {
@@ -69,7 +65,7 @@ Function::Function(const char *eel2Code)
   : m_strings { std::make_unique<eel_string_context_state>() },
     m_vm { NSEEL_VM_alloc() }
 {
-  NSEEL_VM_SetCustomFuncThis(m_vm.get(), m_strings.get());
+  NSEEL_VM_SetCustomFuncThis(m_vm.get(), this);
   NSEEL_VM_SetFunctionTable(m_vm.get(), NSEEL_ADDFUNC_DESTINATION);
   eel_string_initvm(m_vm.get());
 
@@ -129,8 +125,12 @@ bool Function::setDouble(const char *name, const double value)
 
 std::optional<std::string_view> Function::getString(const char *name) const
 {
+  return getString(m_strings->m_named_strings_names.Get(name));
+}
+
+std::optional<std::string_view> Function::getString(const double index) const
+{
   WDL_FastString *storage {};
-  const int index { m_strings->m_named_strings_names.Get(name) };
   if(!index || !m_strings->GetStringForIndex(index, &storage, false) || !storage)
     return std::nullopt;
   return std::string_view

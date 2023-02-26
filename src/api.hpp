@@ -56,6 +56,16 @@ namespace API {
 
   class Symbol {
   public:
+    enum Flags {
+      TargetNative = 1<<0,
+      TargetLua    = 1<<1,
+      TargetEEL    = 1<<2,
+      TargetEELOld = 1<<3,
+      TargetPython = 1<<4,
+
+      Variable = 1<<10,
+    };
+
     Symbol();
     Symbol(const Symbol &) = delete;
 
@@ -66,6 +76,7 @@ namespace API {
     virtual void announce(bool)      const = 0;
     virtual const char *name()       const = 0;
     virtual const char *definition() const = 0;
+    virtual unsigned int flags()     const = 0;
   };
 
   class ReaScriptFunc : public Symbol {
@@ -79,6 +90,9 @@ namespace API {
       return &m_regs[0].key[5]; /* strlen("-API_") */ }
     const char *definition() const override {
       return static_cast<const char *>(m_regs[2].value); }
+    unsigned int flags() const override {
+      return TargetNative | TargetLua | TargetEEL | TargetEELOld | TargetPython;
+    }
 
   private:
     PluginRegister m_regs[3]; // native, reascript, definition
