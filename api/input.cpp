@@ -60,23 +60,8 @@ static void copyToBuffer(const std::string &value, char *buf, const size_t bufSi
   }
 }
 
-static int runCallback(ImGuiInputTextCallbackData *data)
-{
-  InputTextCallback::invoke(data);
-  return 0;
-}
-
-static ImGuiInputTextCallback useCallback(Function *func)
-{
-  if(!func)
-    return nullptr;
-
-  assertValid(func);
-  func->keepAlive();
-  return &runCallback;
-}
-
-#define CALLBACK_ARGS useCallback(API_RO(callback)), API_RO(callback)
+#define CALLBACK_ARGS \
+  InputTextCallback::use<int>(API_RO(callback)), API_RO(callback)
 
 DEFINE_API(bool, InputText, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))

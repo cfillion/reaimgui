@@ -7605,35 +7605,42 @@ end
 -- Demonstrate creating a window with custom resize constraints.
 -- Note that size constraints currently don't work on a docked window.
 function demo.ShowExampleAppConstrainedResize()
-  -- struct CustomConstraints
-  -- {
-  --   // Helper functions to demonstrate programmatic constraints
-  --   // FIXME: This doesn't take account of decoration size (e.g. title bar), library should make this easier.
-  --   static void AspectRatio(ImGuiSizeCallbackData* data)    { float aspect_ratio = *(float*)data->UserData; data->DesiredSize.x = IM_MAX(data->CurrentSize.x, data->CurrentSize.y); data->DesiredSize.y = (float)(int)(data->DesiredSize.x / aspect_ratio); }
-  --   static void Square(ImGuiSizeCallbackData* data)         { data->DesiredSize.x = data->DesiredSize.y = IM_MAX(data->CurrentSize.x, data->CurrentSize.y); }
-  --   static void Step(ImGuiSizeCallbackData* data)           { float step = *(float*)data->UserData; data->DesiredSize = ImVec2((int)(data->CurrentSize.x / step + 0.5f) * step, (int)(data->CurrentSize.y / step + 0.5f) * step); }
-  -- };
-
   if not app.constrained_resize then
     app.constrained_resize = {
       auto_resize    = false,
       window_padding = true,
-      type           = 0, -- imgui's demo defaults to 5 (aspect ratio)
+      type           = 5,
       display_lines  = 10,
     }
+    -- Helper functions to demonstrate programmatic constraints
+    -- FIXME: This doesn't take account of decoration size (e.g. title bar), library should make this easier.
+    app.constrained_resize.aspect_ratio = ImGui.CreateFunctionFromEEL([[
+      DesiredSize.x = max(DesiredSize.x, DesiredSize.y);
+      DesiredSize.y = floor(DesiredSize.x / aspect_ratio);
+    ]])
+    app.constrained_resize.square       = ImGui.CreateFunctionFromEEL([[
+      DesiredSize.x = DesiredSize.y = max(DesiredSize.x, DesiredSize.y);
+    ]])
+    app.constrained_resize.step         = ImGui.CreateFunctionFromEEL([[
+      DesiredSize.x = floor(DesiredSize.x / fixed_step + 0.5) * fixed_step;
+      DesiredSize.y = floor(DesiredSize.y / fixed_step + 0.5) * fixed_step;
+    ]])
+    ImGui.Attach(ctx, app.constrained_resize.aspect_ratio)
+    ImGui.Attach(ctx, app.constrained_resize.square)
+    ImGui.Attach(ctx, app.constrained_resize.step)
   end
 
   -- Submit constraint
-  -- float aspect_ratio = 16.0f / 9.0f;
-  -- float fixed_step = 100.0f;
+  ImGui.Function_SetValue(app.constrained_resize.aspect_ratio, 'aspect_ratio', 16 / 9)
+  ImGui.Function_SetValue(app.constrained_resize.step,         'fixed_step',   100)
   if app.constrained_resize.type == 0 then ImGui.SetNextWindowSizeConstraints(ctx, 100, 100,     500, 500)     end -- Between 100x100 and 500x500
   if app.constrained_resize.type == 1 then ImGui.SetNextWindowSizeConstraints(ctx, 100, 100, FLT_MAX, FLT_MAX) end -- Width > 100, Height > 100
   if app.constrained_resize.type == 2 then ImGui.SetNextWindowSizeConstraints(ctx,  -1,   0,      -1, FLT_MAX) end -- Vertical only
   if app.constrained_resize.type == 3 then ImGui.SetNextWindowSizeConstraints(ctx,   0,  -1, FLT_MAX, -1)      end -- Horizontal only
   if app.constrained_resize.type == 4 then ImGui.SetNextWindowSizeConstraints(ctx, 400,  -1,     500, -1)      end -- Width Between and 400 and 500
-  -- if app.constrained_resize.type == 5 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, CustomConstraints::AspectRatio, (void*)&aspect_ratio);   // Aspect ratio
-  -- if app.constrained_resize.type == 6 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, CustomConstraints::Square);                              // Always Square
-  -- if app.constrained_resize.type == 7 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, CustomConstraints::Step, (void*)&fixed_step);            // Fixed Step
+  if app.constrained_resize.type == 5 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, app.constrained_resize.aspect_ratio) end -- Aspect ratio
+  if app.constrained_resize.type == 6 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, app.constrained_resize.square)       end -- Always Square
+  if app.constrained_resize.type == 7 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, app.constrained_resize.step)         end -- Fixed Step
 
   -- Submit window
   if not app.constrained_resize.window_padding then
@@ -7667,10 +7674,10 @@ function demo.ShowExampleAppConstrainedResize()
       At least 100x100\0\z
       Resize vertical only\0\z
       Resize horizontal only\0\z
-      Width Between 400 and 500\0')
-      --Custom: Aspect Ratio 16:9\0\z
-      --Custom: Always Square\0\z
-      --Custom: Fixed Steps (100)\0')
+      Width Between 400 and 500\0\z
+      Custom: Aspect Ratio 16:9\0\z
+      Custom: Always Square\0\z
+      Custom: Fixed Steps (100)\0')
     ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 20)
     rv,app.constrained_resize.display_lines = ImGui.DragInt(ctx, 'Lines', app.constrained_resize.display_lines, 0.2, 1, 100)
     rv,app.constrained_resize.auto_resize = ImGui.Checkbox(ctx, 'Auto-resize', app.constrained_resize.auto_resize)

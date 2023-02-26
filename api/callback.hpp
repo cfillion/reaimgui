@@ -18,6 +18,8 @@
 #ifndef REAIMGUI_CALLBACK_HPP
 #define REAIMGUI_CALLBACK_HPP
 
+#include "helper.hpp"
+
 #include "../src/context.hpp"
 #include "../src/error.hpp"
 #include "../src/function.hpp"
@@ -33,7 +35,19 @@ public:
     Data *operator->() const { return Callback<Data>::s_data; }
   };
 
-  static void invoke(Data *data)
+  template<typename T = void>
+  static T(*use(Function *func))(Data *)
+  {
+    if(!func)
+      return nullptr;
+
+    assertValid(func);
+    func->keepAlive();
+    return &invoke<T>;
+  }
+
+  template<typename T = void>
+  static T invoke(Data *data)
   {
     s_data = data;
     storeVars(function());
@@ -46,6 +60,9 @@ public:
     // (exceptions cannot cross EEL's boundary so they're handled earlier)
     if(!Resource::isValid(Context::current()))
       throw reascript_error { "an error occurred during callback execution" };
+
+    if constexpr(!std::is_void_v<T>)
+      return {};
   }
 
 private:
