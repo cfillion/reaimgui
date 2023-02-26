@@ -217,6 +217,7 @@ class ImGui_Context;
 class ImGui_DrawList;
 class ImGui_DrawListSplitter;
 class ImGui_Font;
+class ImGui_Function;
 class ImGui_Image;
 class ImGui_ImageSet;
 class ImGui_ListClipper;
@@ -294,9 +295,8 @@ private:
     else {
       stream << "ReaImGuiFunc<" << func.type << '(';
       CommaSep cs { stream };
-      for(const Argument &arg : func.args) {
+      for(const Argument &arg : func.args)
         cs << arg.type << ' ' << arg.name;
-      }
       stream << ")> ";
     }
 

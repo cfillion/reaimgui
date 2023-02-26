@@ -280,6 +280,7 @@ RESOURCES = {
   'ImGui_DrawList*'         => 'draw_list',
   'ImGui_DrawListSplitter*' => 'splitter',
   'ImGui_Font*'             => 'font',
+  'ImGui_Function*'         => 'func',
   'ImGui_Image*'            => 'img',
   'ImGui_ImageSet*'         => 'set',
   'ImGui_ListClipper*'      => 'clipper',

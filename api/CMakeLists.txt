@@ -5,6 +5,7 @@ add_library(api OBJECT
   dragndrop.cpp
   drawlist.cpp
   font.cpp
+  function.cpp
   image.cpp
   indev.cpp
   input.cpp
@@ -39,6 +40,9 @@ endforeach()
 
 find_package(Boost REQUIRED)
 target_link_libraries(api Boost::headers)
+
+find_package(EEL REQUIRED)
+target_link_libraries(api EEL::eel2_import)
 
 find_package(ImGui REQUIRED)
 target_link_libraries(api ImGui::ImGui)

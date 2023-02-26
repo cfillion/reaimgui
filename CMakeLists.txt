@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(reaimgui LANGUAGES CXX)
+project(reaimgui LANGUAGES C CXX)
 
 include(CheckCompilerFlag)
 include(CheckCXXSymbolExists)
@@ -110,6 +110,11 @@ else()
     -Wall -Wextra -Werror -Wno-multichar
     -Wno-unused-parameter -Wno-missing-field-initializers -Wno-missing-braces
   )
+
+  check_compiler_flag(CXX -Wdeprecated-copy HAS_DEPRECATED_COPY)
+  if(HAS_DEPRECATED_COPY)
+    target_compile_definitions(common INTERFACE HAS_DEPRECATED_COPY)
+  endif()
 endif()
 
 check_include_file_cxx(optional HAVE_STD_OPTIONAL)

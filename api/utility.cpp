@@ -25,6 +25,7 @@
 
 #include "../src/color.hpp"
 #include "../src/font.hpp"
+#include "../src/function.hpp"
 #include "../src/image.hpp"
 #include "../src/platform.hpp"
 
@@ -62,6 +63,7 @@ Supported types are:
 - ImGui_DrawList*
 - ImGui_DrawListSplitter*
 - ImGui_Font*
+- ImGui_Function*
 - ImGui_Image*
 - ImGui_ImageSet*
 - ImGui_ListClipper*
@@ -72,6 +74,7 @@ Supported types are:
   RESOURCE_ISVALID(Context);
   RESOURCE_ISVALID(DrawListSplitter);
   RESOURCE_ISVALID(Font);
+  RESOURCE_ISVALID(Function);
   RESOURCE_ISVALID(Image);
   RESOURCE_ISVALID(ImageSet);
   RESOURCE_ISVALID(ListClipper);

@@ -10,6 +10,7 @@ find_path(WDL_INCLUDE_DIR
 mark_as_advanced(WDL_INCLUDE_DIR)
 
 set(WDL_DIR "${WDL_INCLUDE_DIR}/WDL")
+set(WDL_DIR "${WDL_INCLUDE_DIR}/WDL" PARENT_SCOPE)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(WDL REQUIRED_VARS WDL_DIR WDL_INCLUDE_DIR)
