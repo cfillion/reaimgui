@@ -36,11 +36,6 @@
 #include <type_traits>
 
 #define API_PREFIX ImGui_
-#define API_KEYS(name) { \
-  "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) name, \
-  "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) name, \
-  "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) name, \
-}
 
 #define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
 #define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
@@ -71,49 +66,65 @@ using DefArgVal = std::conditional_t<
       _DEFARG_ID(_ARG_NAME(arg))(_ARG_DEFV(arg));        \
   )
 
+// error out if API_SECTION() was not used in the file
+#define _API_CHECKROOTSECTION static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);
+
 #define _API_CATCH(name, type, except) \
   catch(const except &e) {             \
     API::handleError(#name, e);        \
     return static_cast<type>(0);       \
   }
 
-#define _STORE_LINE static const API::StoreLineNumber \
-  BOOST_PP_CAT(line, __LINE__) { __LINE__ };
-#define _DEFINE_API(type, name, args, help)                             \
-  /* error out if API_SECTION() was not used in the file */             \
-  static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);                     \
-                                                                        \
-  namespace API_##name {                                                \
-    _FOREACH_ARG(_DEFARG, name, args) /* constexprs of default args */  \
-                                                                        \
-    static type invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args));          \
-    static type invoke(_FOREACH_ARG(_SIGARG, _, args)) noexcept         \
-    try {                                                               \
-      return invoke_unsafe(_FOREACH_ARG(_RAWARG, _ARG_NAME, args));     \
-    }                                                                   \
-    _API_CATCH(name, type, reascript_error)                             \
-    _API_CATCH(name, type, imgui_error)                                 \
-  }                                                                     \
-                                                                        \
-  extern const API API_EXPORT_##name; /* link-time duplicate check */   \
-  const API API_EXPORT_##name { API_KEYS(#name),                        \
-    reinterpret_cast<void *>(&API_##name::invoke),                      \
-    reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name::invoke>), \
-    #type                                  "\0"                         \
-    _FOREACH_ARG(_STRARG, _ARG_TYPE, args) "\0"                         \
-    _FOREACH_ARG(_STRARG, _ARG_NAME, args) "\0"                         \
-    help                                   "\0"                         \
-    _FOREACH_ARG(_STRARGUS, _ARG_DEFV, args),                           \
-  };                                                                    \
-                                                                        \
+#define _API_DEF(type, args, help)            \
+  #type                                  "\0" \
+  _FOREACH_ARG(_STRARG, _ARG_TYPE, args) "\0" \
+  _FOREACH_ARG(_STRARG, _ARG_NAME, args) "\0" \
+  help                                   "\0" \
+  _FOREACH_ARG(_STRARGUS, _ARG_DEFV, args)
+
+#define _STORE_LINE \
+  static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) { __LINE__ };
+
+#define DEFINE_API _STORE_LINE _DEFINE_API
+#define _DEFINE_API(type, name, args, help, ...)                          \
+  _API_CHECKROOTSECTION                                                   \
+                                                                          \
+  namespace API_##name {                                                  \
+    _FOREACH_ARG(_DEFARG, name, args) /* constexprs of default args */    \
+                                                                          \
+    static type invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args));            \
+    static type invoke(_FOREACH_ARG(_SIGARG, _, args)) noexcept           \
+    try {                                                                 \
+      return invoke_unsafe(_FOREACH_ARG(_RAWARG, _ARG_NAME, args));       \
+    }                                                                     \
+    _API_CATCH(name, type, reascript_error)                               \
+    _API_CATCH(name, type, imgui_error)                                   \
+  }                                                                       \
+                                                                          \
+  /* link-time duplicate check */                                         \
+  extern const API::ReaScriptFunc API_EXPORT_##name;                      \
+                                                                          \
+  const API::ReaScriptFunc API_EXPORT_##name {                            \
+    { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
+      reinterpret_cast<void *>(&API_##name::invoke),                      \
+    },                                                                    \
+    { "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
+      reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name::invoke>), \
+    },                                                                    \
+    { "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
+      reinterpret_cast<void *>(const_cast<char *>(                        \
+        _API_DEF(type, args, help))),                                     \
+    },                                                                    \
+  };                                                                      \
+                                                                          \
   type API_##name::invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args))
+
+#define DEFINE_ENUM _STORE_LINE _DEFINE_ENUM
 #define _DEFINE_ENUM(prefix, name, doc) \
   _DEFINE_API(int, name, NO_ARGS, doc) { return prefix##name; }
 
 #define DEFINE_SECTION(id, parent, ...) static const API::Section id \
   { &parent, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ };
-#define DEFINE_API _STORE_LINE _DEFINE_API
-#define DEFINE_ENUM _STORE_LINE _DEFINE_ENUM
 
 // shortcuts with auto-generated identifier name for the section object
 // #define ROOT_SECTION BOOST_PP_CAT(API_FILE, Section)

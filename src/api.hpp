@@ -20,8 +20,6 @@
 
 #include "error.hpp"
 
-#include <utility>
-
 #ifdef _WIN32
 #  ifdef IMPORT_GENBINDINGS_API
 #    define GENBINDINGS_API __declspec(dllimport)
@@ -32,41 +30,59 @@
 #  define GENBINDINGS_API __attribute__((visibility("default")))
 #endif
 
-class API {
-public:
+namespace API {
+  void announceAll(bool add);
+  void handleError(const char *fnName, const reascript_error &);
+  void handleError(const char *fnName, const imgui_error &);
+
+  // internal helpers for genbindings
+  class Symbol;
+  GENBINDINGS_API const Symbol *head();
+
   using LineNumber = unsigned short;
   struct StoreLineNumber { StoreLineNumber(LineNumber val); };
-  struct RegKeys { const char *impl, *vararg, *defdoc; };
+
   struct Section {
     Section(const Section *parent, const char *file,
       const char *title, const char *help = nullptr);
-
     const Section *parent;
     const char *file, *title, *help;
   };
 
-  static void announceAll(bool add);
-  static void handleError(const char *fnName, const reascript_error &);
-  static void handleError(const char *fnName, const imgui_error &);
+  struct PluginRegister {
+    const char *key; void *value;
+    void announce(bool) const;
+  };
 
-  API(const RegKeys &, void *impl, void *vararg, const char *definition);
+  class Symbol {
+  public:
+    Symbol();
+    Symbol(const Symbol &) = delete;
 
-  // internal helpers for genbindings
-  GENBINDINGS_API static const API *head();
-  inline const char *name() const {
-    return &m_regs[0].key[5]; /* strlen("-API_") */ }
-  inline const char *definition() const {
-    return static_cast<const char *>(m_regs[2].value); }
-  const Section * const m_section;
-  const API *m_next;
-  const LineNumber m_line;
+    const Section *m_section;
+    const Symbol  *m_next;
+    LineNumber     m_line;
 
-private:
-  struct RegDesc {
-    const char *key;
-    void *value;
-    void announce(bool add) const;
-  } m_regs[3];
-};
+    virtual void announce(bool)      const = 0;
+    virtual const char *name()       const = 0;
+    virtual const char *definition() const = 0;
+  };
+
+  class ReaScriptFunc : public Symbol {
+  public:
+    ReaScriptFunc(const PluginRegister &native,
+                  const PluginRegister &reascript,
+                  const PluginRegister &desc);
+    void announce(bool) const override;
+
+    const char *name() const override {
+      return &m_regs[0].key[5]; /* strlen("-API_") */ }
+    const char *definition() const override {
+      return static_cast<const char *>(m_regs[2].value); }
+
+  private:
+    PluginRegister m_regs[3]; // native, reascript, definition
+  };
+}
 
 #endif

@@ -22,27 +22,24 @@
 #include <cassert>
 #include <reaper_plugin_functions.h>
 
-static const API *&lastFunc()
+using namespace API;
+
+static const Symbol *&lastSymbol()
 {
-  static const API *head;
+  static const Symbol *head;
   return head;
 }
 
 static auto &lastLine()
 {
-  static API::LineNumber storedLine;
+  static LineNumber storedLine;
   return storedLine;
 }
 
-static const API::Section *&lastSection()
+static const Section *&lastSection()
 {
-  static const API::Section *section;
+  static const Section *section;
   return section;
-}
-
-const API *API::head() // immutable public accessor
-{
-  return lastFunc();
 }
 
 API::StoreLineNumber::StoreLineNumber(LineNumber line)
@@ -50,43 +47,54 @@ API::StoreLineNumber::StoreLineNumber(LineNumber line)
   lastLine() = line;
 }
 
-API::Section::Section(const Section *parent, const char *file,
+Section::Section(const Section *parent, const char *file,
     const char *title, const char *help)
   : parent { parent }, file { file }, title { title }, help { help }
 {
   lastSection() = this;
 }
 
-API::API(const RegKeys &keys, void *impl, void *vararg, const char *defdoc)
-  : m_section { lastSection() }, m_next { lastFunc() }, m_line { lastLine() },
-    m_regs {
-      { keys.impl,   impl   },
-      { keys.vararg, vararg },
-      { keys.defdoc, reinterpret_cast<void *>(const_cast<char *>(defdoc)) },
-    }
+Symbol::Symbol()
+  : m_section { lastSection() }, m_next { lastSymbol() }, m_line { lastLine() }
 {
-  lastFunc() = this;
+  lastSymbol() = this;
 }
 
-// API::~API()
+// Symbol::~Symbol()
 // {
-//   assert(lastFunc() == this);
-//   lastFunc() = const_cast<API *>(m_next);
+//   assert(lastSymbol() == this);
+//   lastSymbol() = const_cast<Symbol *>(m_next);
 // }
 
-void API::RegDesc::announce(const bool add) const
+void PluginRegister::announce(const bool init) const
 {
   // the original key string must remain valid even when unregistering
   // in REAPER < 6.67 (see reapack#56)
-  plugin_register(add ? key + 1 : key, value);
+  plugin_register(key + init, value);
+}
+
+ReaScriptFunc::ReaScriptFunc(const PluginRegister &native,
+                             const PluginRegister &reascript,
+                             const PluginRegister &desc)
+  : m_regs { native, reascript, desc }
+{
+}
+
+void ReaScriptFunc::announce(const bool init) const
+{
+  for(const PluginRegister &reg : m_regs)
+    reg.announce(init);
+}
+
+const Symbol *API::head() // immutable public accessor
+{
+  return lastSymbol();
 }
 
 void API::announceAll(const bool add)
 {
-  for(const API *func { head() }; func; func = func->m_next) {
-    for(const RegDesc &reg : func->m_regs)
-      reg.announce(add);
-  }
+  for(const Symbol *sym { lastSymbol() }; sym; sym = sym->m_next)
+    sym->announce(add);
 }
 
 // REAPER 6.29+ uses the '!' prefix to abort the calling Lua script's execution

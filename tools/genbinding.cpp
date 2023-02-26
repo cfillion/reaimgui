@@ -90,7 +90,7 @@ struct Argument {
 };
 
 struct Function {
-  Function(const API *);
+  Function(const API::Symbol *);
 
   const API::Section *section;
   std::string_view name;
@@ -134,19 +134,23 @@ static const char *nextString(const char *&str)
   return str += strlen(str) + 1;
 }
 
-Function::Function(const API *api)
+Function::Function(const API::Symbol *api)
   : section { api->m_section }, name { api->name() },
     type { api->definition() }, line { api->m_line }
 {
+  const API::Section *curSection { section };
+  do { sections.push_front(curSection); }
+  while((curSection = curSection->parent));
+
+  // C++20's starts_with isn't available when building for old macOS
+  displayName = name.substr(0, strlen("ImGui_")) == "ImGui_"
+              ? name.substr(   strlen("ImGui_")) : name;
+
   const char *def { api->definition() };
   std::string_view argTypes { nextString(def) };
   std::string_view argNames { nextString(def) };
   doc = nextString(def);
   std::string_view argDefvs { nextString(def) }; // non-standard field
-
-  // C++20's starts_with isn't available when building for old macOS
-  displayName = name.substr(0, strlen("ImGui_")) == "ImGui_"
-              ? name.substr(   strlen("ImGui_")) : name;
 
   while(argTypes.size() > 0 && argNames.size() > 0) { // argDefvs may be empty
     size_t typeLen { argTypes.find(',') },
@@ -177,10 +181,6 @@ Function::Function(const API *api)
     argNames.remove_prefix(nameLen + 1);
     argDefvs.remove_prefix(defvLen + 1);
   }
-
-  const API::Section *curSection { section };
-  do { sections.push_front(curSection); }
-  while((curSection = curSection->parent));
 }
 
 struct CommaSep {
@@ -1096,7 +1096,7 @@ static void pythonBinding(std::ostream &stream)
 
 int main(int argc, const char *argv[])
 {
-  for(const API *func { API::head() }; func; func = func->m_next)
+  for(const API::Symbol *func { API::head() }; func; func = func->m_next)
     g_funcs.push_back(func);
   std::sort(g_funcs.begin(), g_funcs.end());
 
