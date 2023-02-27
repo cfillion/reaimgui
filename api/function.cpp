@@ -47,30 +47,27 @@ DEFINE_API(void, Function_Execute, (ImGui_Function*,func),
   func->execute();
 }
 
-DEFINE_API(bool, Function_GetValue, (ImGui_Function*,func)
-(const char*,name)(double*,API_W(value)),
+DEFINE_API(double, Function_GetValue, (ImGui_Function*,func)(const char*,name),
 "")
 {
   assertValid(func);
-  assertValid(API_W(value));
   func->keepAlive();
-  if(const auto &value { func->getDouble(name) }) {
-    *API_W(value) = *value;
-    return true;
-  }
-  return false;
+  if(const auto &value { func->getDouble(name) })
+    return *value;
+  throw reascript_error { "could not read number value" };
 }
 
-DEFINE_API(bool, Function_SetValue, (ImGui_Function*,func)
+DEFINE_API(void, Function_SetValue, (ImGui_Function*,func)
 (const char*,name)(double,value),
 "")
 {
   assertValid(func);
   func->keepAlive();
-  return func->setDouble(name, value);
+  if(!func->setDouble(name, value))
+    throw reascript_error { "could not write number value" };
 }
 
-DEFINE_API(bool, Function_GetValue_Array, (ImGui_Function*,func)
+DEFINE_API(void, Function_GetValue_Array, (ImGui_Function*,func)
 (const char*,name)(reaper_array*,values),
 R"(Copy the values in the function's memory starting at the address stored
 in the given variable into the array.)")
@@ -78,10 +75,11 @@ in the given variable into the array.)")
   assertValid(func);
   assertValid(values);
   func->keepAlive();
-  return func->getArray(name, values);
+  if(!func->getArray(name, values))
+    throw reascript_error { "could not read array values" };
 }
 
-DEFINE_API(bool, Function_SetValue_Array, (ImGui_Function*,func)
+DEFINE_API(void, Function_SetValue_Array, (ImGui_Function*,func)
 (const char*,name)(reaper_array*,values),
 R"(Copy the values in the array to the function's memory at the address stored
 in the given variable.)")
@@ -89,10 +87,11 @@ in the given variable.)")
   assertValid(func);
   assertValid(values);
   func->keepAlive();
-  return func->setArray(name, values);
+  if(!func->setArray(name, values))
+    throw reascript_error { "could not write array values" };
 }
 
-DEFINE_API(bool, Function_GetValue_String, (ImGui_Function*,func)
+DEFINE_API(void, Function_GetValue_String, (ImGui_Function*,func)
 (const char*,name)(char*,API_WBIG(value))(int,API_WBIG_SZ(value)),
 "Read a named string.")
 {
@@ -102,14 +101,12 @@ DEFINE_API(bool, Function_GetValue_String, (ImGui_Function*,func)
 
   const auto &value { func->getString(name) };
   if(!value)
-    return false;
-  if(!realloc_cmd_ptr(&API_WBIG(value), &API_WBIG_SZ(value), value->size()))
-    return false;
+    throw reascript_error { "could not read string value" };
+  realloc_cmd_ptr(&API_WBIG(value), &API_WBIG_SZ(value), value->size());
   memcpy(API_WBIG(value), value->data(), API_WBIG_SZ(value));
-  return true;
 }
 
-DEFINE_API(bool, Function_SetValue_String, (ImGui_Function*,func)
+DEFINE_API(void, Function_SetValue_String, (ImGui_Function*,func)
 (const char*,name)(const char*,value)(int,value_sz),
 "Write to a named string.")
 {
@@ -122,5 +119,6 @@ DEFINE_API(bool, Function_SetValue_String, (ImGui_Function*,func)
   else if(value_sz > 0)
     --value_sz; // don't include the null terminator
 
-  return func->setString(name, { value, static_cast<size_t>(value_sz) });
+  if(!func->setString(name, { value, static_cast<size_t>(value_sz) }))
+    throw reascript_error { "could not write string value" };
 }
