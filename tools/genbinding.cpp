@@ -680,6 +680,16 @@ static void outputHtmlSlug(std::ostream &stream, const std::string_view &text)
   }
 }
 
+static void outputSectionSlug(std::ostream &stream,
+  const Function &func, std::deque<const API::Section *>::const_iterator section)
+{
+  for(auto it { func.sections.begin() }; it <= section; ++it) {
+    if(it != func.sections.begin())
+      stream << '-';
+    outputHtmlSlug(stream, (*it)->title);
+  }
+}
+
 static void humanBinding(std::ostream &stream)
 {
   stream << R"(<!DOCTYPE html>
@@ -710,10 +720,8 @@ static void humanBinding(std::ostream &stream)
     top: 0;
     width: 200px;
   }
-  aside ol {
-    list-style-type: none;
-    padding-left: 0;
-  }
+  aside ol li { display: block; }
+  aside ol li::before { display: none; }
   aside li a {
     display: block;
     overflow: hidden;
@@ -734,11 +742,26 @@ static void humanBinding(std::ostream &stream)
   h5 { font-size: 1.0em; }
   h6 { font-size: 0.9em; }
   h2:before { content: '〉'; color: #6f6f6f; }
-  ol { padding-left: 2em; }
+  ol {
+    padding: 0;
+    list-style-type: none;
+    counter-reset: item;
+  }
+  ol > li { display: table; }
+  ol > li::before {
+    content: counters(item, ".") ".";
+    counter-increment: item;
+    display: table-cell;
+    padding-right: 0.5em;
+  }
+  ol ol > li::before { content: counters(item, "."); }
   ul { padding-left: 1em; }
   li ul { list-style-type: square; }
   a { text-decoration: none; }
   a, summary { color: #00ff87; /* SpringGreen1 */ }
+  .toc { columns: 24em 6; }
+  .toc ol { margin:  0; }
+  .toc > ol > li > a { font-weight: bold; }
   a:hover, summary:hover { text-decoration: underline; }
   details { margin-left: 20px; }
   summary {
@@ -749,6 +772,15 @@ static void humanBinding(std::ostream &stream)
   summary::before { content: '+ '; margin-left: -20px; }
   details[open] summary::before { content: '- '; }
   summary::-webkit-details-marker { display: none; }
+  pre { white-space: pre-wrap; }
+  pre code {
+    background-color: black;
+    border-radius: 5px;
+    border: 1px solid #6f6f6f;
+    display: inline-block;
+    padding: 0.5em;
+  }
+  code, code a { color: white; }
   table { border-collapse: collapse; }
   th {
     padding-left: 0;
@@ -757,19 +789,9 @@ static void humanBinding(std::ostream &stream)
     vertical-align: top;
     white-space: nowrap;
   }
-  table { white-space: pre-wrap; }
-  code, code a { color: white; }
   table code:hover { text-decoration: underline; cursor: copy; }
   table code:active, aside a:hover { background-color: #3a3a3a; }
   tr + tr td { border-top: 1px solid #555; }
-  pre { overflow: auto; }
-  pre code {
-    background-color: black;
-    border-radius: 5px;
-    border: 1px solid #6f6f6f;
-    display: inline-block;
-    padding: 0.5em;
-  }
   .st { color: #87afff; /* SkyBlue2 */ }
   .ss, .string   { color: #5faf5f; /* DarkSeaGreen4 */ }
   .sn, .number   { color: #5f87d7; /* SteelBlue3    */ }
@@ -781,7 +803,8 @@ static void humanBinding(std::ostream &stream)
 </head>
 <body>
   <aside>
-    <p><strong>Table of Contents</strong></p>
+    <p><strong>Quick Jump</strong></p>
+    <ol><li><a href="#toc">Table of Contents</a></li></ol>
     <ol>)";
 
   const API::Section *section {};
@@ -805,6 +828,37 @@ static void humanBinding(std::ostream &stream)
     <p>)" << GENERATED_FOR << "</p>\n\n";
 
   std::vector<const API::Section *> sections;
+  stream << "<h2 id=\"toc\">Table of Contents</h2>";
+  stream << "<div class=\"toc\">";
+  long long level { -1 };
+  for(const Function &func : g_funcs) {
+    for(auto it { findNewSection(func, sections) };
+        it != func.sections.end(); ++it) {
+      const API::Section *section { *it };
+      const auto thisLevel { std::distance(func.sections.begin(), it) + 1 };
+
+      if(thisLevel == level)
+        stream << "</li>";
+      if(thisLevel > level) {
+        stream << "<ol>";
+        level = thisLevel;
+      }
+      while(thisLevel < level) {
+        stream << "</li></ol>";
+        --level;
+      }
+
+      stream << "<li><a href=\"#";
+      outputSectionSlug(stream, func, it);
+      stream << "\">";
+      outputHtmlText(stream, section->title);
+      stream << "</a>";
+    }
+  }
+  while(level--)
+    stream << "</li></ol>";
+  stream << "</div>\n\n";
+
   for(const Function &func : g_funcs) {
     for(auto it { findNewSection(func, sections) };
         it != func.sections.end(); ++it) {
@@ -812,11 +866,7 @@ static void humanBinding(std::ostream &stream)
       const auto level { std::distance(func.sections.begin(), it) + 2 };
 
       stream << "<h" << level << " id=\"";
-      for(auto slugIt { func.sections.begin() }; slugIt <= it; ++slugIt) {
-        if(slugIt != func.sections.begin())
-          stream << '_';
-        outputHtmlSlug(stream, (*slugIt)->title);
-      }
+      outputSectionSlug(stream, func, it);
       stream << "\">";
       outputHtmlText(stream, section->title);
       stream << "</h" << level << '>';
@@ -845,7 +895,7 @@ static void humanBinding(std::ostream &stream)
               REAIMGUI_VERSION "/api/" << func.section->file << ".cpp#L"
            << func.line << "\">View source</a></p>";
 
-    stream << "</details>";
+    stream << "</details>\n";
   }
 
   stream << R"(<p>EOF</p>
