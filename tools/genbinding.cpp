@@ -734,14 +734,15 @@ static void humanBinding(std::ostream &stream)
     box-shadow: 0 0 10px #080808;
   }
   aside p, aside li a, main { padding-left: 1em; }
-  h2, h3, h4, h5, h6, pre { margin: 1em 0 1rem 0; }
-  h1 { font-size: 2.3em; }
-  h2 { font-size: 1.8em; }
-  h3 { font-size: 1.4em; }
-  h4 { font-size: 1.15em; }
-  h5 { font-size: 1.0em; }
-  h6 { font-size: 0.9em; }
-  h2:before { content: '〉'; color: #6f6f6f; }
+  h2, h3, h4, h5, h6, pre, hr { margin: 1em 0 1rem 0; }
+  h1     { font-size: 2.3em;  }
+  h2, hr { font-size: 1.8em;  }
+  h3     { font-size: 1.4em;  }
+  h4     { font-size: 1.15em; }
+  h5     { font-size: 1.0em;  }
+  h6     { font-size: 0.9em;  }
+  h2::before { content: '〉'; color: #6f6f6f; }
+  hr { border: none; border-top: 1px solid #6f6f6f; }
   ol {
     padding: 0;
     list-style-type: none;
@@ -827,6 +828,11 @@ static void humanBinding(std::ostream &stream)
     <h1>ReaImGui Documentation</h1>
     <p>)" << GENERATED_FOR << "</p>\n\n";
 
+  stream << R"(<p>
+  <a href="https://forum.cockos.com/showthread.php?t=250419">Forum thread</a>
+  · <a href="https://github.com/cfillion/reaimgui">Source repository</a>
+  </p><hr/>)";
+
   std::vector<const API::Section *> sections;
   stream << "<h2 id=\"toc\">Table of Contents</h2>";
   stream << "<div class=\"toc\">";
@@ -865,6 +871,8 @@ static void humanBinding(std::ostream &stream)
       const API::Section *section { *it };
       const auto level { std::distance(func.sections.begin(), it) + 2 };
 
+      if(level == 2)
+        stream << "<hr/>";
       stream << "<h" << level << " id=\"";
       outputSectionSlug(stream, func, it);
       stream << "\">";
