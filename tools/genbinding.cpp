@@ -698,12 +698,11 @@ static void humanBinding(std::ostream &stream)
   <meta charset="utf-8"/>
   <title>ReaImGui Documentation</title>
   <style>
-  html { scroll-padding-top: 1em; }
   body {
     background-color: #0D0D0D;
     color: #d9d3d3;
     font-size: 15px;
-    line-height: 20px;
+    line-height: 1.33;
     margin: 0;
     overflow-anchor: none;
   }
@@ -734,13 +733,13 @@ static void humanBinding(std::ostream &stream)
     box-shadow: 0 0 10px #080808;
   }
   aside p, aside li a, main { padding-left: 1em; }
-  h2, h3, h4, h5, h6, pre, hr { margin: 1em 0 1rem 0; }
-  h1     { font-size: 2.3em;  }
-  h2, hr { font-size: 1.8em;  }
-  h3     { font-size: 1.4em;  }
-  h4     { font-size: 1.15em; }
-  h5     { font-size: 1.0em;  }
-  h6     { font-size: 0.9em;  }
+  h1, h2, h3, h4, h5, h6, hr, pre { margin: 1rem 0 1rem 0; }
+  h1 { font-size: 2.3em;  }
+  h2 { font-size: 1.8em;  }
+  h3 { font-size: 1.4em;  }
+  h4 { font-size: 1.15em; }
+  h5 { font-size: 1.0em;  }
+  h6 { font-size: 0.9em;  }
   h2::before { content: '〉'; color: #6f6f6f; }
   hr { border: none; border-top: 1px solid #6f6f6f; }
   ol {
