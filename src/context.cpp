@@ -277,6 +277,8 @@ bool Context::endFrame(const bool render) try
 }
 catch(const imgui_error &e) {
   Error::report(this, e);
+  // don't retry EndFrame and error out again during destruction
+  m_imgui->WithinFrameScope = false;
   return false;
 }
 catch(const backend_error &e) {
