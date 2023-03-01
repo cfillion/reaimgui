@@ -21,7 +21,7 @@
 
 API_SECTION("Keyboard & Mouse");
 
-API_SUBSECTION("Mouse",
+DEFINE_SECTION(mouse, ROOT_SECTION, "Mouse",
 R"(To refer to a mouse button, you may use named enums in your code e.g.
 MouseButton_Left, MouseButton_Right.
 
@@ -207,6 +207,12 @@ DEFINE_API(void, ResetMouseDragDelta, (ImGui_Context*,ctx)
   ImGui::ResetMouseDragDelta(API_RO_GET(button));
 }
 
+DEFINE_ENUM(ImGui, MouseButton_Left,   "");
+DEFINE_ENUM(ImGui, MouseButton_Right,  "");
+DEFINE_ENUM(ImGui, MouseButton_Middle, "");
+
+DEFINE_SECTION(cursor, mouse, "Mouse Cursor");
+
 DEFINE_API(int, GetMouseCursor, (ImGui_Context*,ctx),
 "Get desired mouse cursor shape, reset every frame. This is updated during the frame.")
 {
@@ -222,10 +228,6 @@ DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
   IM_ASSERT(cursor_type >= -1 && cursor_type < ImGuiMouseCursor_COUNT);
   ImGui::SetMouseCursor(cursor_type);
 }
-
-DEFINE_ENUM(ImGui, MouseButton_Left,   "");
-DEFINE_ENUM(ImGui, MouseButton_Right,  "");
-DEFINE_ENUM(ImGui, MouseButton_Middle, "");
 
 DEFINE_ENUM(ImGui, MouseCursor_None,      "");
 DEFINE_ENUM(ImGui, MouseCursor_Arrow,     "");
