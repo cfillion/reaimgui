@@ -216,7 +216,7 @@ DEFINE_API(int, GetMouseCursor, (ImGui_Context*,ctx),
 
 DEFINE_API(void, SetMouseCursor, (ImGui_Context*,ctx)
 (int,cursor_type),
-"Set desired mouse cursor shape")
+"Set desired mouse cursor shape. See MouseCursor_* for possible values.")
 {
   FRAME_GUARD;
   IM_ASSERT(cursor_type >= -1 && cursor_type < ImGuiMouseCursor_COUNT);
