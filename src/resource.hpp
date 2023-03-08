@@ -39,9 +39,10 @@ public:
   {
     static_assert(!std::is_same_v<Resource, T>);
 
-    // static_cast needed for dynamic_cast to check whether it's really a T
+    // short-circuiting dynamic_cast for faster exact type match
     Resource *resource { static_cast<Resource *>(userData) };
-    return isValid(resource) && dynamic_cast<T *>(resource);
+    return isValid(resource) &&
+      (typeid(*resource) == typeid(T) || dynamic_cast<T *>(resource));
   }
 
   static void destroyAll();
