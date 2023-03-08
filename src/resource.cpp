@@ -177,7 +177,7 @@ bool Resource::isValid() const
 template<>
 bool Resource::isValid<Resource>(Resource *rs)
 {
-  return rs && g_rsx.contains(rs);
+  return rs && g_rsx.contains(rs) && rs->isValid();
 }
 
 void Resource::destroyAll()

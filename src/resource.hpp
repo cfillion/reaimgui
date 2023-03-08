@@ -41,7 +41,7 @@ public:
 
     // static_cast needed for dynamic_cast to check whether it's really a T
     Resource *resource { static_cast<Resource *>(userData) };
-    return isValid(resource) && dynamic_cast<T *>(resource) && resource->isValid();
+    return isValid(resource) && dynamic_cast<T *>(resource);
   }
 
   static void destroyAll();
