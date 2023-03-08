@@ -1,7 +1,8 @@
 #include "dialog.hpp"
 
 #ifdef _WIN32
-#  include <winres.h>
+  #include <winres.h>
+  #pragma code_page(65001) // UTF-8
 #endif
 
 IDD_SETTINGS DIALOGEX 0, 0, 100, 100
