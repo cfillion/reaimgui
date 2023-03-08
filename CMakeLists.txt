@@ -101,11 +101,12 @@ add_library(common INTERFACE)
 target_include_directories(common INTERFACE
   ${CMAKE_SOURCE_DIR}/vendor ${CMAKE_SOURCE_DIR}/vendor/reaper-sdk/sdk)
 if(WIN32)
-  target_compile_options(common INTERFACE /W3 /WX /wd4244 /wd4267 /wd4312 /wd4996)
+  target_compile_options(common INTERFACE /W3 /WX
+    /wd4244 /wd4267 /wd4312 /wd4624 /wd4996)
   target_compile_definitions(common INTERFACE NOMINMAX UNICODE)
 else()
   target_compile_options(common INTERFACE
-    -Wall -Wextra -Werror
+    -Wall -Wextra -Werror -Wno-multichar
     -Wno-unused-parameter -Wno-missing-field-initializers -Wno-missing-braces
   )
 endif()

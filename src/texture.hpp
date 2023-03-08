@@ -57,7 +57,6 @@ public:
   bool compact() const
   {
     return m_compact ? m_compact(user, scale) : true;
-
   }
 
   operator void*() const { return user;  }

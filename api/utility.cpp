@@ -23,9 +23,9 @@
 #include "image.hpp"
 #include "listclipper.hpp"
 #include "platform.hpp"
-#include "resource_proxy.hpp"
 #include "textfilter.hpp"
 #include "version.hpp"
+#include "viewport.hpp"
 
 #include <climits>
 
@@ -50,7 +50,7 @@ DEFINE_API(void, GetVersion,
     return Resource::isValid(static_cast<klass *>(pointer))
 #define RESOURCEPROXY_ISVALID(klass)     \
   if(!strcmp(type, "ImGui_" #klass "*")) \
-    return klass.decode<Context>(pointer, &proxyKey);
+    return klass::isValid(static_cast<klass *>(pointer));
 
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
 R"(Return whether the pointer of the specified type is valid.
@@ -76,9 +76,8 @@ Supported types are:
   RESOURCE_ISVALID(ListClipper);
   RESOURCE_ISVALID(TextFilter);
 
-  ResourceProxy::Key proxyKey;
-  RESOURCEPROXY_ISVALID(DrawList);
-  RESOURCEPROXY_ISVALID(Viewport);
+  RESOURCEPROXY_ISVALID(DrawListProxy);
+  RESOURCEPROXY_ISVALID(ViewportProxy);
 
   return false;
 }

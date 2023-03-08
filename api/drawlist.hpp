@@ -18,9 +18,33 @@
 #ifndef REAIMGUI_DRAWLIST_HPP
 #define REAIMGUI_DRAWLIST_HPP
 
-#include "resource.hpp"
+#include "resource_proxy.hpp"
 
-struct ImGui_DrawList;
+#include "context.hpp"
+
+struct DrawListProxy
+    : public ResourceProxy<DrawListProxy, Context, ImDrawList> {
+  static constexpr const char *api_type_name { "ImGui_DrawList" };
+
+  using GetterFuncType = ImDrawList*(*)();
+  template<Key KeyValue, GetterFuncType GetterFunc>
+  struct Getter {
+    static constexpr Key key { KeyValue };
+    static auto get(Context *ctx)
+    {
+      assertFrame(ctx);
+      return GetterFunc();
+    }
+  };
+
+  using Window     = Getter<'WNDL', ImGui::GetWindowDrawList>;
+  using Foreground = Getter<'FGDL', ImGui::GetForegroundDrawList>;
+  using Background = Getter<'BGDL', ImGui::GetBackgroundDrawList>;
+
+  using Decoder = MakeDecoder<Window, Foreground, Background>;
+};
+
+using ImGui_DrawList = DrawListProxy;
 
 class DrawListSplitter : public Resource {
 public:

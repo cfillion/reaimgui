@@ -15,35 +15,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "viewport.hpp"
+
 #include "helper.hpp"
-
-#include "resource_proxy.hpp"
-
-struct ImGui_Viewport {
-  enum Key {
-    Main   = 0x4d4e5650, // MNVP
-    Window = 0x474e5650, // WNVP
-  };
-
-  ImGuiViewport *get()
-  {
-    ResourceProxy::Key viewport {};
-    Context *ctx { Viewport.decode<Context>(this, &viewport) };
-
-    switch(viewport) {
-    case Main:
-      ctx->setCurrent();
-      return ImGui::GetMainViewport();
-    case Window:
-      ctx->setCurrent();
-      return ImGui::GetWindowViewport();
-    }
-
-    throw reascript_error { "expected a valid ImGui_Viewport*" };
-  }
-};
-
-ResourceProxy Viewport { ImGui_Viewport::Main, ImGui_Viewport::Window };
 
 API_SECTION("Viewport");
 
@@ -51,13 +25,13 @@ DEFINE_API(ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
 R"(Currently represents REAPER's main window (arrange view).
 WARNING: This may change or be removed in the future.)")
 {
-  return ResourceProxy::encode<ImGui_Viewport>(ctx, ImGui_Viewport::Main);
+  return ViewportProxy::encode<ViewportProxy::Main>(ctx);
 }
 
 DEFINE_API(ImGui_Viewport*, GetWindowViewport, (ImGui_Context*,ctx),
 "Get viewport currently associated to the current window.")
 {
-  return ResourceProxy::encode<ImGui_Viewport>(ctx, ImGui_Viewport::Window);
+  return ViewportProxy::encode<ViewportProxy::Window>(ctx);
 }
 
 DEFINE_API(void, Viewport_GetPos, (ImGui_Viewport*,viewport)

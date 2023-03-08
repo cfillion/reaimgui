@@ -21,47 +21,9 @@
 #include "drawlist.hpp"
 #include "font.hpp"
 #include "image.hpp"
-#include "resource_proxy.hpp"
 
 #include <reaper_plugin_secrets.h> // reaper_array
 #include <vector>
-
-struct ImGui_DrawList {
-  enum Key {
-    Window     = 0x574e444c, // WNDL
-    Background = 0x6267646c, // BGDL
-    Foreground = 0x6667646c, // FGDL
-  };
-
-  ImDrawList *get(Context **p_ctx = nullptr)
-  {
-    ResourceProxy::Key drawList {};
-    Context *ctx { DrawList.decode<Context>(this, &drawList) };
-
-    if(p_ctx)
-      *p_ctx = ctx;
-
-    switch(drawList) {
-    case Window:
-      assertFrame(ctx);
-      return ImGui::GetWindowDrawList();
-    case Background:
-      assertFrame(ctx);
-      return ImGui::GetBackgroundDrawList();
-    case Foreground:
-      assertFrame(ctx);
-      return ImGui::GetForegroundDrawList();
-    default:
-      throw reascript_error { "expected a valid ImGui_DrawList*" };
-    }
-  }
-};
-
-ResourceProxy DrawList {
-  ImGui_DrawList::Window,
-  ImGui_DrawList::Background,
-  ImGui_DrawList::Foreground
-};
 
 API_SECTION("Draw List",
 R"(This is the low-level list of polygons that ImGui functions are filling.
@@ -77,21 +39,21 @@ rimary monitor, not of your window!). See GetCursorScreenPos.)");
 DEFINE_API(ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
 "The draw list associated to the current window, to append your own drawing primitives")
 {
-  return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Window);
+  return DrawListProxy::encode<DrawListProxy::Window>(ctx);
 }
 
 DEFINE_API(ImGui_DrawList*, GetBackgroundDrawList, (ImGui_Context*,ctx),
 R"(This draw list will be the first rendering one. Useful to quickly draw
 shapes/text behind dear imgui contents.)")
 {
-  return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Background);
+  return DrawListProxy::encode<DrawListProxy::Background>(ctx);
 }
 
 DEFINE_API(ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
 R"(This draw list will be the last rendered one. Useful to quickly draw
 shapes/text over dear imgui contents.)")
 {
-  return ResourceProxy::encode<ImGui_DrawList>(ctx, ImGui_DrawList::Foreground);
+  return DrawListProxy::encode<DrawListProxy::Foreground>(ctx);
 }
 
 DEFINE_API(void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
@@ -512,8 +474,7 @@ DrawListSplitter::DrawListSplitter(ImGui_DrawList *draw_list)
 
 bool DrawListSplitter::isValid() const
 {
-  ResourceProxy::Key proxyKey;
-  return !!DrawList.decode<Context>(m_drawlist, &proxyKey);
+  return !!DrawListProxy::isValid(m_drawlist);
 }
 
 ImDrawListSplitter *DrawListSplitter::operator->()
@@ -532,7 +493,8 @@ ImDrawList *DrawListSplitter::drawList() const
   if(m_drawlist->get() == m_lastList)
     return m_lastList;
   else
-    throw reascript_error { "cannot use ImGui_DrawListSplitter over multiple windows" };
+    throw reascript_error
+      { "cannot use ImGui_DrawListSplitter over multiple windows" };
 }
 
 API_SUBSECTION("Splitter",
