@@ -160,6 +160,8 @@ void Context::assertOutOfFrame()
 
 void Context::attach(Resource *obj)
 {
+  if(m_attachments.size() >= 0x1000)
+    throw reascript_error { "exceeded maximum object attachment limit" };
   if(std::find(m_attachments.begin(), m_attachments.end(), obj)
       != m_attachments.end())
     throw reascript_error { "the object is already attached to this context" };

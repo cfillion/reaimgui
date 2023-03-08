@@ -25,9 +25,6 @@
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h>
 
-// sizeof(ImGuiContext) = ~30 KB, not including windows and other dynamic allocs
-constexpr size_t MAX_INSTANCES { 1'000 };
-
 // Splash_GetWnd may be NULL for a brief moment after _s_splash_thread_running
 // is set internally. The misc timer may fire during this time, skipping
 // deferred scripts while still running extension callbacks (seen on Windows).
@@ -137,9 +134,6 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
 Resource::Resource()
   : m_keepAlive { KEEP_ALIVE_FRAMES }
 {
-  if(g_rsx.size() >= MAX_INSTANCES)
-    throw reascript_error { "exceeded maximum object allocation limit" };
-
   static std::weak_ptr<Timer> g_timer;
 
   if(g_timer.expired())
