@@ -18,14 +18,14 @@
 #include "opengl_renderer.hpp"
 
 #include "error.hpp"
-#include "fast_set.hpp"
+#include "flat_set.hpp"
 #include "window.hpp"
 
 #include <AppKit/AppKit.h>
 #include <imgui/imgui.h>
 #include <swell/swell-types.h>
 
-using GLPool = FastSet<NSOpenGLContext *>;
+using GLPool = FlatSet<NSOpenGLContext *>;
 
 class CocoaOpenGL : public OpenGLRenderer {
 public:

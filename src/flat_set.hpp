@@ -15,8 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_FAST_SET_HPP
-#define REAIMGUI_FAST_SET_HPP
+#ifndef REAIMGUI_FLAT_SET_HPP
+#define REAIMGUI_FLAT_SET_HPP
 
 #include <algorithm>
 #include <vector>
@@ -24,7 +24,7 @@
 // meant to store sorted pointers (or other numbers) in contiguous memory
 // caller is responsible for not inserting the same value more than once
 template<typename T>
-class FastSet {
+class FlatSet {
 public:
   auto begin() { return m_data.begin(); }
   auto end()   { return m_data.end();   }

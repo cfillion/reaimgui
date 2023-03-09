@@ -19,7 +19,7 @@
 
 #include "context.hpp"
 #include "error.hpp"
-#include "fast_set.hpp"
+#include "flat_set.hpp"
 
 #include <cassert>
 #include <reaper_plugin_functions.h>
@@ -35,7 +35,7 @@ constexpr size_t MAX_INSTANCES { 1'000 };
 // [p=2450259]
 constexpr unsigned int KEEP_ALIVE_FRAMES { 2 };
 
-static FastSet<Resource *> g_rsx;
+static FlatSet<Resource *> g_rsx;
 static unsigned int g_reentrant;
 static WNDPROC g_mainProc;
 static bool g_disableProcOverride;
