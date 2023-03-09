@@ -36,7 +36,7 @@ for:
         local target=(libgtk-3-dev)
 
         sudo dpkg --add-architecture $arch
-        sudo apt-get update -qq
+        sudo apt-get update -qq --allow-releaseinfo-change
         sudo apt-get install -qq aptitude > /dev/null
         sudo aptitude install -yR ${native[@]} ${target[@]/%/:$arch} > /dev/null
       }
