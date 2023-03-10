@@ -100,7 +100,7 @@ static WDL_DLGRET errorProc(HWND hwnd, const unsigned int msg,
 
     // update the bold header text
     RECT headerRect { calcHeaderRect(hwnd) };
-    InvalidateRect(hwnd, &headerRect, false);
+    InvalidateRect(hwnd, &headerRect, true);
 
     EnableWindow(GetDlgItem(hwnd, IDC_PREV), g_reporter->index() > 0);
     EnableWindow(GetDlgItem(hwnd, IDC_NEXT),
