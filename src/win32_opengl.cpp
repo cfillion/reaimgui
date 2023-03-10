@@ -20,8 +20,9 @@
 #include "error.hpp"
 #include "window.hpp"
 
-#include <glbinding/glbinding.h>
+#define IMGL3W_IMPL
 #include <imgui/imgui.h>
+#include <imgui/backends/imgui_impl_opengl3_loader.h>
 
 // https://registry.khronos.org/OpenGL/api/GL/wglext.h
 constexpr int WGL_CONTEXT_MAJOR_VERSION_ARB    { 0x2091 },
@@ -30,11 +31,6 @@ constexpr int WGL_CONTEXT_MAJOR_VERSION_ARB    { 0x2091 },
               WGL_CONTEXT_CORE_PROFILE_BIT_ARB { 0x0001 };
 typedef HGLRC (WINAPI *PFNWGLCREATECONTEXTATTRIBSARBPROC)
   (HDC hDC, HGLRC hShareContext, const int *attribList);
-
-static glbinding::ProcAddress getProcAddress(const char *funcName)
-{
-  return reinterpret_cast<glbinding::ProcAddress>(wglGetProcAddress(funcName));
-}
 
 class Win32OpenGL : public OpenGLRenderer {
 public:
@@ -59,7 +55,6 @@ public:
     : m_gl { gl }
   {
     wglMakeCurrent(dc, m_gl);
-    glbinding::useContext(reinterpret_cast<glbinding::ContextHandle>(m_gl));
   }
 
   ~MakeCurrent()
@@ -74,7 +69,6 @@ private:
 struct GLDeleter {
   void operator()(HGLRC gl)
   {
-    glbinding::releaseContext(reinterpret_cast<glbinding::ContextHandle>(gl));
     wglDeleteContext(gl);
   }
 };
@@ -135,31 +129,30 @@ void Win32OpenGL::setPixelFormat()
 void Win32OpenGL::createContext()
 {
   HGLRC dummyGl { wglCreateContext(m_dc) }; // creates a legacy (< 2.1) context
-  wglMakeCurrent(m_dc, dummyGl);
+  wglMakeCurrent(m_dc, m_gl = dummyGl);
 
   PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB
     { reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>
       (wglGetProcAddress("wglCreateContextAttribsARB")) };
 
-  if(!wglCreateContextAttribsARB)
-    throw backend_error { "OpenGL 3 is not available on this system" };
+  if(wglCreateContextAttribsARB) {
+    // https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
+    constexpr int attrs[] {
+      WGL_CONTEXT_MAJOR_VERSION_ARB, 3, WGL_CONTEXT_MINOR_VERSION_ARB, 2,
+      WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+      0
+    };
 
-  // https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
-  constexpr int attrs[] {
-    WGL_CONTEXT_MAJOR_VERSION_ARB, 3, WGL_CONTEXT_MINOR_VERSION_ARB, 2,
-    WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-    0
-  };
+    if(HGLRC coreGl { wglCreateContextAttribsARB(m_dc, nullptr, attrs) }) {
+      wglMakeCurrent(m_dc, m_gl = coreGl);
+      wglDeleteContext(dummyGl);
+    }
+  }
 
-  m_gl = wglCreateContextAttribsARB(m_dc, nullptr, attrs);
-  wglMakeCurrent(m_dc, m_gl);
-  wglDeleteContext(dummyGl);
-
-  if(!m_gl)
-    throw backend_error { "failed to initialize OpenGL 3.2 core context" };
-
-  glbinding::useContext(reinterpret_cast<glbinding::ContextHandle>(m_gl));
-  glbinding::initialize(getProcAddress, false);
+  if(imgl3wInit()) {
+    wglDeleteContext(m_gl);
+    throw backend_error { "OpenGL 3.2 is not available on this system" };
+  }
 }
 
 void Win32OpenGL::render(void *)

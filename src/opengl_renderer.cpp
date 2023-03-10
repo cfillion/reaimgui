@@ -23,8 +23,10 @@
 #ifdef __APPLE__
 #  include <OpenGL/gl3.h>
 #elif _WIN32
-#  include <glbinding/gl32/gl.h>
-using namespace gl32;
+#  include <imgui/backends/imgui_impl_opengl3_loader.h>
+constexpr int GL_TEXTURE_WRAP_S { 0x2802 },
+              GL_TEXTURE_WRAP_T { 0x2803 },
+              GL_REPEAT         { 0x2901 };
 #else
 #  include <epoxy/gl.h>
 #endif

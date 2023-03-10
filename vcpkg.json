@@ -9,7 +9,6 @@
     { "name": "boost-variant2", "platform": "!windows" },
     { "name": "freetype", "default-features": false,
       "features": ["png", "zlib"], "platform": "!linux" },
-    { "name": "glbinding", "platform": "windows" },
     { "name": "libjpeg-turbo" },
     { "name": "libpng", "platform": "!linux" },
     "cmark",
