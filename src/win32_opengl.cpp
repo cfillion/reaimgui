@@ -79,34 +79,25 @@ decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
 Win32OpenGL::Win32OpenGL(RendererFactory *factory, Window *window)
   : OpenGLRenderer(factory, window), m_dc { GetDC(window->nativeHandle()) }
 {
-  try
-  {
-    setPixelFormat();
+  setPixelFormat();
 
-    if(m_shared->m_platform) {
-      using GL = std::remove_pointer_t<HGLRC>;
-      m_gl = std::static_pointer_cast<GL>(m_shared->m_platform).get();
-    }
-    else {
-      createContext();
-      m_shared->m_platform = { m_gl, GLDeleter{} };
-    }
+  if(m_shared->m_platform) {
+    using GL = std::remove_pointer_t<HGLRC>;
+    m_gl = std::static_pointer_cast<GL>(m_shared->m_platform).get();
+  }
+  else {
+    createContext();
+    m_shared->m_platform = { m_gl, GLDeleter{} };
+  }
 
-    MakeCurrent cur { m_dc, m_gl };
-    setup();
-  }
-  catch(const backend_error &) {
-    ReleaseDC(window->nativeHandle(), m_dc);
-    throw;
-  }
+  MakeCurrent cur { m_dc, m_gl };
+  setup();
 }
 
 Win32OpenGL::~Win32OpenGL()
 {
   MakeCurrent cur { m_dc, m_gl };
   teardown();
-
-  ReleaseDC(m_window->nativeHandle(), m_dc);
 }
 
 void Win32OpenGL::setPixelFormat()
@@ -120,10 +111,8 @@ void Win32OpenGL::setPixelFormat()
     .cRedBits   = 8, .cGreenBits = 8, .cBlueBits = 8, .cAlphaBits = 8,
   };
 
-  if(!SetPixelFormat(m_dc, ChoosePixelFormat(m_dc, &pfd), &pfd)) {
-    ReleaseDC(m_window->nativeHandle(), m_dc);
+  if(!SetPixelFormat(m_dc, ChoosePixelFormat(m_dc, &pfd), &pfd))
     throw backend_error { "failed to set a suitable pixel format" };
-  }
 }
 
 void Win32OpenGL::createContext()
