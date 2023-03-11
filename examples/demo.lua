@@ -3647,7 +3647,7 @@ function demo.ShowDemoWindowLayout()
 
     rv,layout.clipping.size[1],layout.clipping.size[2] =
       ImGui.DragDouble2(ctx, 'size', layout.clipping.size[1], layout.clipping.size[2],
-      0.5, 1.0, 200.0, "%.0f")
+      0.5, 1.0, 200.0, '%.0f')
     ImGui.TextWrapped(ctx, '(Click and drag to scroll)')
 
     demo.HelpMarker(
@@ -7956,7 +7956,7 @@ function demo.ShowExampleAppCustomRendering()
       local sz = app.rendering.sz
       local rounding = sz / 5.0
       local circle_segments = app.rendering.circle_segments_override and app.rendering.circle_segments_override_v or 0
-      local curve_segments = app.rendering.curve_segments_override and app.rendering.curve_segments_override_v or 0
+      local curve_segments  = app.rendering.curve_segments_override  and app.rendering.curve_segments_override_v  or 0
       local x = p[1] + 4.0
       local y = p[2] + 4.0
       for n = 1, 2 do
@@ -7964,8 +7964,8 @@ function demo.ShowExampleAppCustomRendering()
         local th = n == 1 and 1.0 or app.rendering.thickness
         ImGui.DrawList_AddNgon(draw_list, x + sz*0.5, y + sz*0.5, sz*0.5, col, app.rendering.ngon_sides, th); x = x + sz + spacing  -- N-gon
         ImGui.DrawList_AddCircle(draw_list, x + sz*0.5, y + sz*0.5, sz*0.5, col, circle_segments, th);        x = x + sz + spacing  -- Circle
-        ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, 0.0, ImGui.DrawFlags_None(), th);      x = x + sz + spacing  -- Square
-        ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, rounding, ImGui.DrawFlags_None(), th); x = x + sz + spacing  -- Square with all rounded corners
+        ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, 0.0, ImGui.DrawFlags_None(), th);      x = x + sz + spacing    -- Square
+        ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, rounding, ImGui.DrawFlags_None(), th); x = x + sz + spacing    -- Square with all rounded corners
         ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, rounding, corners_tl_br, th);            x = x + sz + spacing  -- Square with two rounded corners
         ImGui.DrawList_AddTriangle(draw_list, x+sz*0.5, y, x+sz, y+sz-0.5, x, y+sz-0.5, col, th);             x = x + sz + spacing  -- Triangle
         -- ImGui.DrawList_AddTriangle(draw_list, x+sz*0.2, y, x, y+sz-0.5, x+sz*0.4, y+sz-0.5, col, th);      x = x + sz*0.4 + spacing -- Thin triangle
@@ -8091,24 +8091,18 @@ function demo.ShowExampleAppCustomRendering()
       ImGui.DrawList_PushClipRect(draw_list, canvas_p0[1], canvas_p0[2], canvas_p1[1], canvas_p1[2], true)
       if app.rendering.opt_enable_grid then
         local GRID_STEP = 64.0
-        local x = math.fmod(app.rendering.scrolling[1], GRID_STEP)
-        while x < canvas_sz[1] do
+        for x = math.fmod(app.rendering.scrolling[1], GRID_STEP), canvas_sz[1], GRID_STEP do
           ImGui.DrawList_AddLine(draw_list, canvas_p0[1] + x, canvas_p0[2], canvas_p0[1] + x, canvas_p1[2], 0xc8c8c828)
-          x = x + GRID_STEP
         end
-        local y = math.fmod(app.rendering.scrolling[2], GRID_STEP)
-        while y < canvas_sz[2] do
+        for y = math.fmod(app.rendering.scrolling[2], GRID_STEP), canvas_sz[2], GRID_STEP do
           ImGui.DrawList_AddLine(draw_list, canvas_p0[1], canvas_p0[2] + y, canvas_p1[1], canvas_p0[2] + y, 0xc8c8c828)
-          y = y + GRID_STEP
         end
       end
-      local n = 1
-      while n < #app.rendering.points do
+      for n = 1, #app.rendering.points, 2 do
         ImGui.DrawList_AddLine(draw_list,
-          origin[1] + app.rendering.points[n][1], origin[2] + app.rendering.points[n][2],
-          origin[1] + app.rendering.points[n + 1][1], origin[2] + app.rendering.points[n + 1][2],
+          origin[1] + app.rendering.points[n  ][1], origin[2] + app.rendering.points[n  ][2],
+          origin[1] + app.rendering.points[n+1][1], origin[2] + app.rendering.points[n+1][2],
           0xffff00ff, 2.0)
-        n = n + 2
       end
       ImGui.DrawList_PopClipRect(draw_list)
 
