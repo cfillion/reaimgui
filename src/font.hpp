@@ -39,7 +39,7 @@ enum FontFlags {
 struct ImFont;
 struct ImFontAtlas;
 
-class Font : public Resource {
+class Font final : public Resource {
 public:
   static constexpr const char *api_type_name { "ImGui_Font" };
 

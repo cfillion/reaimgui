@@ -40,7 +40,7 @@ constexpr uint8_t PIXEL_SHADER[] {
 
 enum Buffers { ConstantBuf, VertexBuf, IndexBuf, };
 
-class D3D10Renderer : public Renderer {
+class D3D10Renderer final : public Renderer {
 public:
   D3D10Renderer(RendererFactory *, Window *);
   ~D3D10Renderer();

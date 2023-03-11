@@ -47,7 +47,7 @@ constexpr uint8_t SHADER_LIBRARY[] {
 
 enum Bufers { VertexBuf, IndexBuf };
 
-class MetalRenderer : public Renderer {
+class MetalRenderer final : public Renderer {
 public:
   MetalRenderer(RendererFactory *, Window *);
   ~MetalRenderer();

@@ -29,7 +29,7 @@ struct LICEDeleter {
   void operator()(LICE_IBitmap *bm) { LICE__Destroy(bm); }
 };
 
-class GDKOpenGL : public OpenGLRenderer {
+class GDKOpenGL final : public OpenGLRenderer {
 public:
   GDKOpenGL(RendererFactory *, Window *);
   ~GDKOpenGL();

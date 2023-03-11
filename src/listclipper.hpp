@@ -20,7 +20,7 @@
 
 #include "resource.hpp"
 
-class ListClipper : public Resource {
+class ListClipper final : public Resource {
 public:
   static constexpr const char *api_type_name { "ImGui_ListClipper" };
 

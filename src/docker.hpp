@@ -75,7 +75,7 @@ private:
   const Docker *m_dropTarget;
 };
 
-class DockerHost : public Viewport {
+class DockerHost final : public Viewport {
 public:
   DockerHost(Docker *, ImGuiViewport *);
   Window *window() const { return m_window.get(); }

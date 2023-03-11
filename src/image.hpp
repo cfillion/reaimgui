@@ -72,7 +72,7 @@ private:
   size_t m_width, m_height;
 };
 
-class ImageSet : public Image {
+class ImageSet final : public Image {
 public:
   static constexpr const char *api_type_name { "ImGui_ImageSet" };
 

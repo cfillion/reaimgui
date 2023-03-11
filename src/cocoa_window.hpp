@@ -26,7 +26,7 @@
 
 using ImGuiViewportFlags = int;
 
-class CocoaWindow : public Window {
+class CocoaWindow final : public Window {
 public:
   CocoaWindow(ImGuiViewport *, DockerHost *);
   ~CocoaWindow() override;

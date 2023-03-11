@@ -27,7 +27,7 @@
 #include <jpeglib.h>
 #include <jerror.h>
 
-class JPEGImage : public Bitmap {
+class JPEGImage final : public Bitmap {
 public:
   JPEGImage(std::istream &);
 };

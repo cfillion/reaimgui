@@ -27,7 +27,7 @@ typedef struct _GtkIMContext GtkIMContext;
 
 using ImGuiViewportFlags = int;
 
-class GDKWindow : public Window {
+class GDKWindow final : public Window {
 public:
   static float globalScaleFactor();
 

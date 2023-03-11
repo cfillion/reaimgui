@@ -24,7 +24,7 @@
 
 #include <imgui/imgui.h>
 
-class MainViewport : public Viewport {
+class MainViewport final : public Viewport {
 public:
   MainViewport();
 

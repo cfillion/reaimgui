@@ -20,7 +20,7 @@
 
 #include "window.hpp"
 
-class Win32Window : public Window {
+class Win32Window final : public Window {
 public:
   static float scaleForDpi(unsigned int);
   static unsigned int dpiForMonitor(HMONITOR);

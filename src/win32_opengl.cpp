@@ -32,7 +32,7 @@ constexpr int WGL_CONTEXT_MAJOR_VERSION_ARB    { 0x2091 },
 typedef HGLRC (WINAPI *PFNWGLCREATECONTEXTATTRIBSARBPROC)
   (HDC hDC, HGLRC hShareContext, const int *attribList);
 
-class Win32OpenGL : public OpenGLRenderer {
+class Win32OpenGL final : public OpenGLRenderer {
 public:
   Win32OpenGL(RendererFactory *, Window *);
   ~Win32OpenGL();

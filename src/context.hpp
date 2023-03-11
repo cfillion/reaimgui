@@ -45,7 +45,7 @@ enum ConfigFlags {
 
 constexpr const char *REAIMGUI_PAYLOAD_TYPE_FILES { "_FILES" };
 
-class Context : public Resource {
+class Context final : public Resource {
 public:
   static constexpr const char *api_type_name { "ImGui_Context" };
   static Context *current();

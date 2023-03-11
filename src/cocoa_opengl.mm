@@ -27,7 +27,7 @@
 
 using GLPool = FlatSet<NSOpenGLContext *>;
 
-class CocoaOpenGL : public OpenGLRenderer {
+class CocoaOpenGL final : public OpenGLRenderer {
 public:
   CocoaOpenGL(RendererFactory *, Window *);
   ~CocoaOpenGL();

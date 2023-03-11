@@ -22,7 +22,7 @@
 
 class Context;
 
-class DropTarget : public IDropTarget {
+class DropTarget final : public IDropTarget {
 public:
   DropTarget(Context *);
 

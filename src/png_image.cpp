@@ -24,7 +24,7 @@
 
 constexpr size_t HEADER_SIZE { 8 }; // must not be > 8
 
-class PNGImage : public Bitmap {
+class PNGImage final : public Bitmap {
 public:
   PNGImage(std::istream &);
 };
