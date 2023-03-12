@@ -16,7 +16,8 @@
  */
 
 #include "helper.hpp"
-#include "variant.hpp"
+
+#include "../src/variant.hpp"
 
 API_SECTION("Context");
 

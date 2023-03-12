@@ -18,7 +18,8 @@
 #include "helper.hpp"
 
 #include "flags.hpp"
-#include "version.hpp"
+
+#include "../src/version.hpp"
 #include <imgui/imgui.h>
 
 API_SECTION("Window",

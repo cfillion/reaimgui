@@ -17,7 +17,7 @@
 
 #include "helper.hpp"
 
-#include "color.hpp"
+#include "../src/color.hpp"
 
 #include <cassert>
 #include <cstring> // strlen

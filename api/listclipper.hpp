@@ -18,7 +18,7 @@
 #ifndef REAIMGUI_LISTCLIPPER_HPP
 #define REAIMGUI_LISTCLIPPER_HPP
 
-#include "resource.hpp"
+#include "../src/resource.hpp"
 
 class ListClipper final : public Resource {
 public:

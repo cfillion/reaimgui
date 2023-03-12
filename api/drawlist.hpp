@@ -18,9 +18,10 @@
 #ifndef REAIMGUI_DRAWLIST_HPP
 #define REAIMGUI_DRAWLIST_HPP
 
-#include "resource_proxy.hpp"
+#include "helper.hpp"
 
-#include "context.hpp"
+#include "../src/resource_proxy.hpp"
+#include "../src/context.hpp"
 
 struct DrawListProxy
     : public ResourceProxy<DrawListProxy, Context, ImDrawList> {

@@ -17,15 +17,16 @@
 
 #include "helper.hpp"
 
-#include "color.hpp"
 #include "drawlist.hpp"
-#include "font.hpp"
-#include "image.hpp"
 #include "listclipper.hpp"
-#include "platform.hpp"
 #include "textfilter.hpp"
-#include "version.hpp"
 #include "viewport.hpp"
+
+#include "../src/color.hpp"
+#include "../src/font.hpp"
+#include "../src/image.hpp"
+#include "../src/platform.hpp"
+#include "../src/version.hpp"
 
 #include <climits>
 

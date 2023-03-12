@@ -17,7 +17,7 @@
 
 #include "helper.hpp"
 
-#include "color.hpp"
+#include "../src/color.hpp"
 
 API_SECTION("Text");
 

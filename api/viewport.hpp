@@ -18,9 +18,9 @@
 #ifndef REAIMGUI_VIEWPORT_HPP
 #define REAIMGUI_VIEWPORT_HPP
 
-#include "resource_proxy.hpp"
+#include "../src/resource_proxy.hpp"
 
-#include "context.hpp"
+#include "../src/context.hpp"
 
 struct ViewportProxy
     : public ResourceProxy<ViewportProxy, Context, ImGuiViewport> {

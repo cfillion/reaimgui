@@ -17,7 +17,7 @@
 
 #include "helper.hpp"
 
-#include "color.hpp"
+#include "../src/color.hpp"
 
 API_SECTION("Color Edit",
 R"(Tip: the ColorEdit* functions have a little color square that can be

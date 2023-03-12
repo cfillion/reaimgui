@@ -17,7 +17,7 @@
 
 #include "helper.hpp"
 
-#include "font.hpp"
+#include "../src/font.hpp"
 
 API_SECTION("Font",
 R"(Supports loading fonts from the system by family name or from a file.

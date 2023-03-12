@@ -18,9 +18,9 @@
 #ifndef REAIMGUI_API_HELPER_HPP
 #define REAIMGUI_API_HELPER_HPP
 
-#include "api.hpp"
-#include "api_vararg.hpp"
-#include "context.hpp"
+#include "../src/api.hpp"
+#include "../src/api_vararg.hpp"
+#include "../src/context.hpp"
 
 #include <array>
 #include <boost/preprocessor/cat.hpp>

@@ -17,7 +17,7 @@
 
 #include "helper.hpp"
 
-#include "color.hpp"
+#include "../src/color.hpp"
 
 API_SECTION("Table",
 R"(See top of [imgui_tables.cpp](https://github.com/ocornut/imgui/blob/master/imgui_tables.cpp)

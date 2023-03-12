@@ -18,7 +18,7 @@
 #ifndef REAIMGUI_TEXTFILTER_HPP
 #define REAIMGUI_TEXTFILTER_HPP
 
-#include "resource.hpp"
+#include "../src/resource.hpp"
 
 class TextFilter : public Resource {
 public:

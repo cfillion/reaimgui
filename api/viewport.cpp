@@ -16,7 +16,6 @@
  */
 
 #include "viewport.hpp"
-
 #include "helper.hpp"
 
 API_SECTION("Viewport");

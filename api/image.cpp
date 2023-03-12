@@ -17,8 +17,8 @@
 
 #include "helper.hpp"
 
-#include "color.hpp"
-#include "image.hpp"
+#include "../src/color.hpp"
+#include "../src/image.hpp"
 
 API_SECTION("Image",
 R"(ReaImGui currently supports loading PNG and JPEG bitmap images.

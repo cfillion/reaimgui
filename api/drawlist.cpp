@@ -16,11 +16,11 @@
  */
 
 #include "helper.hpp"
-
-#include "color.hpp"
 #include "drawlist.hpp"
-#include "font.hpp"
-#include "image.hpp"
+
+#include "../src/color.hpp"
+#include "../src/font.hpp"
+#include "../src/image.hpp"
 
 #include <reaper_plugin_secrets.h> // reaper_array
 #include <vector>
