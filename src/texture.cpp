@@ -18,7 +18,7 @@
 #include "texture.hpp"
 
 #include <algorithm>
-#include <imgui/imgui.cpp>
+#include <imgui/imgui.h>
 #include <iterator>
 
 TextureManager::TextureManager()
