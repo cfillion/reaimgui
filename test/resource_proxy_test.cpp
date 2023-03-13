@@ -9,7 +9,7 @@ struct MyResource : Resource {
   bool valid { true };
 };
 
-struct MyValue { Resource *res; int val; };
+struct MyValue { Resource *res; unsigned int val; };
 
 struct MyProxy : ResourceProxy<MyProxy, MyResource, MyValue> {
   static constexpr const char *api_type_name { "MyProxy" };

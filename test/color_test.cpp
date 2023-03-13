@@ -22,18 +22,18 @@ static std::ostream &operator<<(std::ostream &stream, const ImVec4 &color)
 }
 
 TEST(ColorTest, FromBigEndian) {
-  EXPECT_EQ(Color::fromBigEndian(0x1a2b3c4d), 0x4d3c2b1a);
+  EXPECT_EQ(Color::fromBigEndian(0x1a2b3c4d), 0x4d3c2b1aU);
 }
 
 TEST(ColorTest, ToBigEndian) {
-  EXPECT_EQ(Color::toBigEndian(0x4d3c2b1a), 0x1a2b3c4d);
+  EXPECT_EQ(Color::toBigEndian(0x4d3c2b1a), 0x1a2b3c4dU);
 }
 
 TEST(ColorTest, ConvertNative) {
 #ifdef _WIN32
-  EXPECT_EQ(Color::convertNative(0xdd112233), 0xdd332211);
+  EXPECT_EQ(Color::convertNative(0xdd112233), 0xdd332211u);
 #else
-  EXPECT_EQ(Color::convertNative(0xdd112233), 0xdd112233);
+  EXPECT_EQ(Color::convertNative(0xdd112233), 0xdd112233u);
 #endif
 }
 
@@ -70,17 +70,17 @@ TEST(ColorTest, ToFloatArray) {
 TEST_P(ColorTest, ToInteger) {
   const Color color { 0x11223344 };
   if(GetParam()) // with alpha
-    EXPECT_EQ(color.pack(true), 0x11223344);
+    EXPECT_EQ(color.pack(true), 0x11223344U);
   else
-    EXPECT_EQ(color.pack(false), 0x00112233);
+    EXPECT_EQ(color.pack(false), 0x00112233U);
 }
 
 TEST_P(ColorTest, ToIntegerWithMSB) {
   const Color color { 0x11223344 };
   if(GetParam()) // with alpha
-    EXPECT_EQ(color.pack(true, 0xaabbccdd), 0x11223344);
+    EXPECT_EQ(color.pack(true, 0xaabbccdd), 0x11223344u);
   else
-    EXPECT_EQ(color.pack(false, 0xaabbccdd), 0xaa112233);
+    EXPECT_EQ(color.pack(false, 0xaabbccdd), 0xaa112233u);
 }
 
 TEST(ColorTest, ApplyToFunction) {

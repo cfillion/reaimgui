@@ -41,10 +41,10 @@ TEST(TextureTest, TouchOutOfOrder) {
     { ImGui::CreateContext(), &ImGui::DestroyContext };
 
   TextureManager manager;
-  EXPECT_EQ(manager.touch((void *)0x10, 2.f, nullptr), 0);
-  EXPECT_EQ(manager.touch((void *)0x10, 1.f, nullptr), 1);
-  EXPECT_EQ(manager.touch((void *)0x10, 2.f, nullptr), 0);
-  EXPECT_EQ(manager.touch((void *)0x20, 1.f, nullptr), 2);
+  EXPECT_EQ(manager.touch((void *)0x10, 2.f, nullptr), 0u);
+  EXPECT_EQ(manager.touch((void *)0x10, 1.f, nullptr), 1u);
+  EXPECT_EQ(manager.touch((void *)0x10, 2.f, nullptr), 0u);
+  EXPECT_EQ(manager.touch((void *)0x20, 1.f, nullptr), 2u);
 }
 
 TEST(TextureTest, InsertTail) {
@@ -233,20 +233,20 @@ TEST(TextureTest, CleanupRecomputeIndices) {
   TextureManager manager;
 
   // out of order to test whether indices are resorted
-  EXPECT_EQ(manager.touch((void *)0x40, 1.f, nullptr), 0);
-  EXPECT_EQ(manager.touch((void *)0x30, 1.f, nullptr), 1);
-  EXPECT_EQ(manager.touch((void *)0x20, 1.f, nullptr), 2);
-  EXPECT_EQ(manager.touch((void *)0x10, 1.f, nullptr), 3);
+  EXPECT_EQ(manager.touch((void *)0x40, 1.f, nullptr), 0u);
+  EXPECT_EQ(manager.touch((void *)0x30, 1.f, nullptr), 1u);
+  EXPECT_EQ(manager.touch((void *)0x20, 1.f, nullptr), 2u);
+  EXPECT_EQ(manager.touch((void *)0x10, 1.f, nullptr), 3u);
 
   ctx->Time += io.ConfigMemoryCompactTimer;
   manager.touch((void *)0x30, 1.f, nullptr);
   manager.touch((void *)0x40, 1.f, nullptr);
   manager.cleanup();
 
-  EXPECT_EQ(manager.touch((void *)0x10, 1.f, nullptr), 2);
-  EXPECT_EQ(manager.touch((void *)0x20, 1.f, nullptr), 3);
-  EXPECT_EQ(manager.touch((void *)0x30, 1.f, nullptr), 1);
-  EXPECT_EQ(manager.touch((void *)0x40, 1.f, nullptr), 0);
+  EXPECT_EQ(manager.touch((void *)0x10, 1.f, nullptr), 2u);
+  EXPECT_EQ(manager.touch((void *)0x20, 1.f, nullptr), 3u);
+  EXPECT_EQ(manager.touch((void *)0x30, 1.f, nullptr), 1u);
+  EXPECT_EQ(manager.touch((void *)0x40, 1.f, nullptr), 0u);
 }
 
 TEST(TextureTest, Update) {
