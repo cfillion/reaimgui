@@ -860,7 +860,7 @@ static void humanBinding(std::ostream &stream)
       stream << "</a>";
     }
   }
-  while(level--)
+  while(level-- > 0)
     stream << "</li></ol>";
   stream << "</div>\n\n";
 
