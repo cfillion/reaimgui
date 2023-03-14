@@ -2661,7 +2661,7 @@ label:
       rv,widgets.query_item.color = ImGui.ColorEdit4(ctx, 'ITEM: ColorEdit', widgets.query_item.color)
     end
     if item_type == 10 then -- Testing selectable item
-      rv = ImGui_Selectable(ctx, 'ITEM: Selectable')
+      rv = ImGui.Selectable(ctx, 'ITEM: Selectable')
     end
     if item_type == 11  then -- Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
       rv = ImGui.MenuItem(ctx, 'ITEM: MenuItem')
