@@ -15,9 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <version.hpp>
+
 #define IMPORT_GENBINDINGS_API
 #include "../src/api.hpp"
-#include "version.hpp"
 
 #include <algorithm>
 #include <cmark.h>

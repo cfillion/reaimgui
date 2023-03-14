@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "version.hpp"
+#include <version.hpp>
 
 #include <algorithm>
 #include <boost/preprocessor/stringize.hpp>

@@ -15,11 +15,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "helper.hpp"
+#include <version.hpp>
 
 #include "flags.hpp"
+#include "helper.hpp"
 
-#include "../src/version.hpp"
 #include <imgui/imgui.h>
 
 API_SECTION("Window",

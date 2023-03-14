@@ -99,7 +99,8 @@ endif()
 
 add_library(common INTERFACE)
 target_include_directories(common INTERFACE
-  ${CMAKE_SOURCE_DIR}/vendor ${CMAKE_SOURCE_DIR}/vendor/reaper-sdk/sdk)
+  ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/vendor
+  ${CMAKE_SOURCE_DIR}/vendor/reaper-sdk/sdk)
 if(WIN32)
   target_compile_options(common INTERFACE /W3 /WX
     /wd4244 /wd4267 /wd4312 /wd4624 /wd4996)
@@ -168,3 +169,7 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE api src)
+
+get_target_property(REAIMGUI_BASENAME ${PROJECT_NAME} OUTPUT_NAME)
+set(REAIMGUI_FILENAME "${REAIMGUI_BASENAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+configure_file(version.hpp.in version.hpp)

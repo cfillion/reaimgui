@@ -15,9 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "helper.hpp"
+#include <version.hpp>
 
 #include "drawlist.hpp"
+#include "helper.hpp"
 #include "listclipper.hpp"
 #include "textfilter.hpp"
 #include "viewport.hpp"
@@ -26,7 +27,6 @@
 #include "../src/font.hpp"
 #include "../src/image.hpp"
 #include "../src/platform.hpp"
-#include "../src/version.hpp"
 
 #include <climits>
 

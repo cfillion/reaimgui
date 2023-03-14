@@ -27,7 +27,6 @@ add_library(api OBJECT
   window.cpp
 )
 
-target_include_directories(api PRIVATE ${CMAKE_BINARY_DIR}/src)
 target_link_libraries(api common)
 
 get_target_property(API_FILES api SOURCES)

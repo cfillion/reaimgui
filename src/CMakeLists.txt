@@ -145,7 +145,3 @@ if(NOT WIN32)
     DEPENDS ${SWELL_RESGEN}
   )
 endif()
-
-get_target_property(REAIMGUI_BASENAME ${PROJECT_NAME} OUTPUT_NAME)
-set(REAIMGUI_FILENAME "${REAIMGUI_BASENAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
-configure_file(version.hpp.in version.hpp)

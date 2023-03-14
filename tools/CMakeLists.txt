@@ -1,7 +1,5 @@
 add_executable(genbinding EXCLUDE_FROM_ALL genbinding.cpp)
-target_link_libraries(genbinding common)
-target_include_directories(genbinding PRIVATE ${CMAKE_BINARY_DIR}/src)
-target_link_libraries(genbinding ${PROJECT_NAME})
+target_link_libraries(genbinding common ${PROJECT_NAME})
 
 if(NOT WIN32)
   find_package(SWELL REQUIRED)
@@ -29,10 +27,8 @@ function(add_binding lang output)
 endfunction()
 
 add_executable(genshim EXCLUDE_FROM_ALL genshim.cpp)
-target_link_libraries(genshim common)
-target_include_directories(genshim PRIVATE ${CMAKE_BINARY_DIR}/src)
 find_package(Boost REQUIRED)
-target_link_libraries(genshim Boost::headers)
+target_link_libraries(genshim Boost::headers common)
 # checking for header's presence is not enough
 # it exists on Xcode 11 but is only available on macOS 10.15+
 check_cxx_source_compiles("#include <filesystem>
