@@ -18,6 +18,7 @@
 #include "renderer.hpp"
 
 #include "settings.hpp"
+#include "viewport_forwarder.hpp"
 #include "window.hpp"
 
 #include <cassert>
@@ -70,32 +71,18 @@ std::unique_ptr<Renderer> RendererFactory::create(Window *window)
   return m_type->creator(this, window);
 }
 
-template<auto fn, typename... Args>
-static auto instanceProxy(ImGuiViewport *viewport, Args... args)
-{
-#ifdef HAS_CPP_20
-  using R = std::invoke_result_t<decltype(fn), Renderer *, Args...>;
-#else
-  using R = std::result_of_t<decltype(fn)(Renderer *, Args...)>;
-#endif
-
-  if(Renderer *instance { static_cast<Renderer *>(viewport->RendererUserData) })
-    return (instance->*fn)(args...);
-
-  if constexpr(!std::is_void_v<R>)
-    return R{};
-}
-
 void Renderer::install()
 {
+  using Forwarder = ViewportForwarder<&ImGuiViewport::RendererUserData>;
+
   // cannot use Renderer_{Create,Destroy}Window because it would
   // create renderers for inactive dockers
   ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
   // pio.Renderer_CreateWindow  = &createViewport;
   // pio.Renderer_DestroyWindow = &destroyViewport;
-  pio.Renderer_SetWindowSize = &instanceProxy<&Renderer::setSize>;
-  pio.Renderer_RenderWindow  = &instanceProxy<&Renderer::render>;
-  pio.Renderer_SwapBuffers   = &instanceProxy<&Renderer::swapBuffers>;
+  pio.Renderer_SetWindowSize = &Forwarder::wrap<&Renderer::setSize>;
+  pio.Renderer_RenderWindow  = &Forwarder::wrap<&Renderer::render>;
+  pio.Renderer_SwapBuffers   = &Forwarder::wrap<&Renderer::swapBuffers>;
 }
 
 Renderer::Renderer(Window *window)

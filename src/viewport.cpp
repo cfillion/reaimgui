@@ -20,6 +20,7 @@
 #include "context.hpp"
 #include "docker.hpp"
 #include "platform.hpp"
+#include "viewport_forwarder.hpp"
 #include "window.hpp"
 
 #include <imgui/imgui.h>
@@ -76,22 +77,6 @@ static void destroyViewport(ImGuiViewport *viewport)
   viewport->PlatformUserData = viewport->PlatformHandle = nullptr;
 }
 
-template<auto fn, typename... Args>
-static auto instanceProxy(ImGuiViewport *viewport, Args... args)
-{
-#ifdef HAS_CPP_20
-  using R = std::invoke_result_t<decltype(fn), Viewport *, Args...>;
-#else
-  using R = std::result_of_t<decltype(fn)(Viewport *, Args...)>;
-#endif
-
-  if(Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) })
-    return (instance->*fn)(args...);
-
-  if constexpr(!std::is_void_v<R>)
-    return R{};
-}
-
 Viewport::Viewport(ImGuiViewport *viewport)
   : m_ctx { Context::current() }, m_viewport { viewport }
 {
@@ -103,25 +88,27 @@ Viewport::~Viewport()
 
 void Viewport::install()
 {
+  using Forwarder = ViewportForwarder<&ImGuiViewport::PlatformUserData>;
+
   ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
   pio.Platform_CreateWindow       = &createViewport;
   pio.Platform_DestroyWindow      = &destroyViewport;
-  pio.Platform_ShowWindow         = &instanceProxy<&Viewport::show>;
-  pio.Platform_SetWindowPos       = &instanceProxy<&Viewport::setPosition>;
-  pio.Platform_GetWindowPos       = &instanceProxy<&Viewport::getPosition>;
-  pio.Platform_SetWindowSize      = &instanceProxy<&Viewport::setSize>;
-  pio.Platform_GetWindowSize      = &instanceProxy<&Viewport::getSize>;
-  pio.Platform_SetWindowFocus     = &instanceProxy<&Viewport::setFocus>;
-  pio.Platform_GetWindowFocus     = &instanceProxy<&Viewport::hasFocus>;
-  pio.Platform_GetWindowMinimized = &instanceProxy<&Viewport::isMinimized>;
-  pio.Platform_SetWindowTitle     = &instanceProxy<&Viewport::setTitle>;
-  pio.Platform_SetWindowAlpha     = &instanceProxy<&Viewport::setAlpha>;
-  pio.Platform_UpdateWindow       = &instanceProxy<&Viewport::update>;
-  pio.Platform_GetWindowDpiScale  = &instanceProxy<&Viewport::scaleFactor>;
-  pio.Platform_OnChangedViewport  = &instanceProxy<&Viewport::onChanged>;
+  pio.Platform_ShowWindow         = &Forwarder::wrap<&Viewport::show>;
+  pio.Platform_SetWindowPos       = &Forwarder::wrap<&Viewport::setPosition>;
+  pio.Platform_GetWindowPos       = &Forwarder::wrap<&Viewport::getPosition>;
+  pio.Platform_SetWindowSize      = &Forwarder::wrap<&Viewport::setSize>;
+  pio.Platform_GetWindowSize      = &Forwarder::wrap<&Viewport::getSize>;
+  pio.Platform_SetWindowFocus     = &Forwarder::wrap<&Viewport::setFocus>;
+  pio.Platform_GetWindowFocus     = &Forwarder::wrap<&Viewport::hasFocus>;
+  pio.Platform_GetWindowMinimized = &Forwarder::wrap<&Viewport::isMinimized>;
+  pio.Platform_SetWindowTitle     = &Forwarder::wrap<&Viewport::setTitle>;
+  pio.Platform_SetWindowAlpha     = &Forwarder::wrap<&Viewport::setAlpha>;
+  pio.Platform_UpdateWindow       = &Forwarder::wrap<&Viewport::update>;
+  pio.Platform_GetWindowDpiScale  = &Forwarder::wrap<&Viewport::scaleFactor>;
+  pio.Platform_OnChangedViewport  = &Forwarder::wrap<&Viewport::onChanged>;
 
   ImGuiIO &io { ImGui::GetIO() };
-  io.SetPlatformImeDataFn = &instanceProxy<&Viewport::setIME>;
+  io.SetPlatformImeDataFn = &Forwarder::wrap<&Viewport::setIME>;
 
   new MainViewport; // lifetime managed by Dear ImGui
 }

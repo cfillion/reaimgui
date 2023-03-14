@@ -122,10 +122,6 @@ if(HAS_STD_VARIANT)
   target_compile_definitions(common INTERFACE HAS_STD_VARIANT)
 endif()
 
-if(CMAKE_CXX_STANDARD GREATER_EQUAL 20)
-  target_compile_definitions(common INTERFACE HAS_CPP_20)
-endif()
-
 find_package(Git)
 if(GIT_FOUND)
   execute_process(
