@@ -20,24 +20,10 @@
 
 #include "error.hpp"
 
-#ifdef _WIN32
-#  ifdef IMPORT_GENBINDINGS_API
-#    define GENBINDINGS_API __declspec(dllimport)
-#  else
-#    define GENBINDINGS_API __declspec(dllexport)
-#  endif
-#else
-#  define GENBINDINGS_API __attribute__((visibility("default")))
-#endif
-
 namespace API {
   void announceAll(bool add);
   void handleError(const char *fnName, const reascript_error &);
   void handleError(const char *fnName, const imgui_error &);
-
-  // internal helpers for genbindings
-  class Symbol;
-  GENBINDINGS_API const Symbol *head();
 
   using LineNumber = unsigned short;
   struct StoreLineNumber { StoreLineNumber(LineNumber val); };
@@ -98,5 +84,13 @@ namespace API {
     PluginRegister m_regs[3]; // native, reascript, definition
   };
 }
+
+#ifdef _WIN32
+#  define GENBINDINGS_API __declspec(dllexport)
+#else
+#  define GENBINDINGS_API __attribute__((visibility("default")))
+#endif
+
+extern "C" GENBINDINGS_API const API::Symbol *API_head();
 
 #endif

@@ -17,8 +17,9 @@
 
 #include <version.hpp>
 
-#define IMPORT_GENBINDINGS_API
 #include "../src/api.hpp"
+#include "../src/import.hpp"
+#include "../src/win32_unicode.hpp"
 
 #include <algorithm>
 #include <boost/preprocessor/stringize.hpp>
@@ -1178,11 +1179,22 @@ static void pythonBinding(std::ostream &stream)
 
 int main(int argc, const char *argv[])
 {
-  for(const API::Symbol *func { API::head() }; func; func = func->m_next)
+  if(argc < 2) {
+    std::cerr << "usage: reaper_extension.so [language]\n";
+    return 1;
+  }
+
+  FuncImport<decltype(API_head)> _API_head { WIDEN(argv[1]), "API_head" };
+  if(!_API_head) {
+    std::cerr << "failed to find API head of '" << argv[1] << "'\n";
+    return 2;
+  }
+
+  for(const API::Symbol *func { _API_head() }; func; func = func->m_next)
     g_funcs.push_back(func);
   std::sort(g_funcs.begin(), g_funcs.end());
 
-  const std::string_view lang { argc >= 2 ? argv[1] : "cpp" };
+  const std::string_view lang { argc >= 3 ? argv[2] : "cpp" };
 
   if(lang == "cpp")
     cppBinding(std::cout);
@@ -1191,8 +1203,7 @@ int main(int argc, const char *argv[])
   else if(lang == "python")
     pythonBinding(std::cout);
   else {
-    std::cerr << "don't know how to generate a binding for '"
-              << lang << "'" << std::endl;
+    std::cerr << "don't know how to generate a binding for '" << lang << "'\n";
     return 1;
   }
 

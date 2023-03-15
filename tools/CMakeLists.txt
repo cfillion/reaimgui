@@ -1,7 +1,7 @@
 find_package(Boost REQUIRED)
 
 add_executable(genbinding EXCLUDE_FROM_ALL genbinding.cpp)
-target_link_libraries(genbinding Boost::headers common ${PROJECT_NAME})
+target_link_libraries(genbinding Boost::headers common ${CMAKE_DL_LIBS})
 
 if(NOT WIN32)
   find_package(SWELL REQUIRED)
@@ -14,7 +14,8 @@ target_link_libraries(genbinding MD4C::MD4C)
 function(add_binding lang output)
   add_custom_command(
     OUTPUT ${output}
-    COMMAND $<TARGET_FILE:genbinding> ${lang} > ${output}
+    COMMAND $<TARGET_FILE:genbinding> $<TARGET_FILE:${PROJECT_NAME}>
+            ${lang} > ${output}
     WORKING_DIRECTORY $<TARGET_FILE_DIR:${PROJECT_NAME}>
     DEPENDS $<TARGET_FILE:genbinding>
   )
