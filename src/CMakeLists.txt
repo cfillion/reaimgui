@@ -74,10 +74,8 @@ elseif(APPLE)
     target_sources(src PRIVATE ${library}.ipp)
     add_custom_command(
       OUTPUT ${library}.ipp
-      COMMAND set -o pipefail &&
-              xcrun -sdk macosx metal -c ${library} -o - |
-              xcrun -sdk macosx metallib - -o - |
-              xxd -i > ${CMAKE_CURRENT_BINARY_DIR}/${library}.ipp
+      COMMAND ../tools/genmetalshader.sh "${library}"
+        "${CMAKE_CURRENT_BINARY_DIR}/${library}.ipp"
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       MAIN_DEPENDENCY ${library}
     )
