@@ -83,7 +83,6 @@ elseif(APPLE)
     )
   endforeach()
 
-  target_compile_definitions(src PRIVATE GL_SILENCE_DEPRECATION)
   target_compile_options(src PRIVATE -fobjc-arc -Wno-error=deprecated-declarations)
 
   find_library(CARBON_LIB Carbon)
