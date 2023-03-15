@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.19)
 project(reaimgui LANGUAGES CXX)
 
 include(CheckCompilerFlag)
-include(CheckCXXSourceCompiles)
+include(CheckCXXSymbolExists)
 include(CheckIncludeFileCXX)
 include(CheckLinkerFlag)
 include(CTest)
@@ -112,15 +112,13 @@ else()
   )
 endif()
 
-check_include_file_cxx(optional HAS_STD_OPTIONAL)
-if(HAS_STD_OPTIONAL)
-  target_compile_definitions(common INTERFACE HAS_STD_OPTIONAL)
-endif()
-
-check_include_file_cxx(variant HAS_STD_VARIANT)
-if(HAS_STD_VARIANT)
-  target_compile_definitions(common INTERFACE HAS_STD_VARIANT)
-endif()
+check_include_file_cxx(optional HAVE_STD_OPTIONAL)
+check_include_file_cxx(variant HAVE_STD_VARIANT)
+# checking for <filesystem>'s presence is not enough
+# it exists on Xcode 11 but is only usable on macOS 10.15+
+check_cxx_symbol_exists(std::filesystem::path::preferred_separator
+  filesystem HAVE_STD_FILESYSTEM)
+configure_file(config.hpp.in config.hpp)
 
 find_package(Git)
 if(GIT_FOUND)
@@ -153,11 +151,17 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
   PREFIX "" # disable the "lib" prefix
   OUTPUT_NAME "reaper_imgui-${ARCH_NAME}"
 )
+
+get_target_property(REAIMGUI_BASENAME ${PROJECT_NAME} OUTPUT_NAME)
+set(REAIMGUI_FILENAME "${REAIMGUI_BASENAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+configure_file(version.hpp.in version.hpp)
+
 set(REAPER_USER_PLUGINS "UserPlugins")
 install(TARGETS ${PROJECT_NAME}
   RUNTIME DESTINATION "${REAPER_USER_PLUGINS}" # Windows .dll
   LIBRARY DESTINATION "${REAPER_USER_PLUGINS}" # Linux .so/macOS .dylib
 )
+
 add_subdirectory(tools)
 add_subdirectory(api)
 add_subdirectory(src)
@@ -165,7 +169,3 @@ if(BUILD_TESTING)
   add_subdirectory(test)
 endif()
 target_link_libraries(${PROJECT_NAME} PRIVATE api src)
-
-get_target_property(REAIMGUI_BASENAME ${PROJECT_NAME} OUTPUT_NAME)
-set(REAIMGUI_FILENAME "${REAIMGUI_BASENAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
-configure_file(version.hpp.in version.hpp)

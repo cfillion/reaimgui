@@ -18,15 +18,17 @@
 #ifndef REAIMGUI_VARIANT_HPP
 #define REAIMGUI_VARIANT_HPP
 
+#include <config.hpp>
+
 // Workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90943
 // Fixed in GCC 11.3
 #ifdef __GLIBCXX__ // Clang also defines __GNUC__
 #  if __GNUC__ < 11 || (__GNUC__ == 11 && __GNUC_MINOR__ < 3)
-#    undef HAS_STD_VARIANT
+#    undef HAVE_STD_VARIANT
 #  endif
 #endif
 
-#ifdef HAS_STD_VARIANT
+#ifdef HAVE_STD_VARIANT
 #  include <variant>
 #else
   // Xcode 9 for macOS 32-bit builds

@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <config.hpp>
 #include <version.hpp>
 
 #include <algorithm>
@@ -25,7 +26,7 @@
 #include <string_view>
 #include <vector>
 
-#ifdef HAS_STD_FILESYSTEM
+#ifdef HAVE_STD_FILESYSTEM
 #  include <filesystem>
 #  include <fstream>
   namespace fs {

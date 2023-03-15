@@ -18,7 +18,9 @@
 #ifndef REAIMGUI_OPTIONAL_HPP
 #define REAIMGUI_OPTIONAL_HPP
 
-#ifdef HAS_STD_OPTIONAL
+#include <config.hpp>
+
+#ifdef HAVE_STD_OPTIONAL
 #  include <optional>
 #else
   // Xcode 9 for macOS 32-bit builds
