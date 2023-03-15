@@ -98,7 +98,7 @@ DEFINE_API(bool, BeginChild, (ImGui_Context*,ctx)
 (const char*,str_id)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0)
 (bool*,API_RO(border),false)(int*,API_RO(flags),ImGuiWindowFlags_None),
 R"(For each independent axis of 'size':
-- > 0.0: fixed size
+- \> 0.0: fixed size
 - = 0.0: use remaining host window size
 - < 0.0: use remaining window size minus abs(size)
 (Each axis can use a different mode, e.g. size = 0x400.)
