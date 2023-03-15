@@ -7809,7 +7809,7 @@ function demo.ShowExampleAppFullscreen()
   end
 
   -- We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
-  -- Based on your use case you may want one of the other.
+  -- Based on your use case you may want one or the other.
   local viewport = ImGui.GetMainViewport(ctx)
   local getViewportPos  = app.fullscreen.use_work_area and ImGui.Viewport_GetWorkPos or ImGui.Viewport_GetPos
   local getViewportSize = app.fullscreen.use_work_area and ImGui.Viewport_GetWorkSize or ImGui.Viewport_GetSize
