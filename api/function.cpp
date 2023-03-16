@@ -93,7 +93,7 @@ in the given variable.)")
 
 DEFINE_API(void, Function_GetValue_String, (ImGui_Function*,func)
 (const char*,name)(char*,API_WBIG(value))(int,API_WBIG_SZ(value)),
-"Read a named string.")
+"Read from a string slot or a named string (when name starts with a `#`).")
 {
   assertValid(func);
   assertValid(API_WBIG(value));
@@ -108,7 +108,7 @@ DEFINE_API(void, Function_GetValue_String, (ImGui_Function*,func)
 
 DEFINE_API(void, Function_SetValue_String, (ImGui_Function*,func)
 (const char*,name)(const char*,value)(int,value_sz),
-"Write to a named string.")
+"Write to a string slot or a named string (when name starts with a `#`).")
 {
   assertValid(func);
   func->keepAlive();

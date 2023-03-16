@@ -1570,7 +1570,7 @@ label:
         );
         eat ? EventChar = 0;
         ]])
-        ImGui.Function_SetValue_String(widgets.input.filterImGuiLetters, 'allowed', 'imgui')
+        ImGui.Function_SetValue_String(widgets.input.filterImGuiLetters, '#allowed', 'imgui')
       end
 
       rv,widgets.input.buf[1] = ImGui.InputText(ctx, 'default',     widgets.input.buf[1])

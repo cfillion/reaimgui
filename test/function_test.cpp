@@ -61,22 +61,23 @@ TEST(FunctionTest, DoubleLeadingHash) {
 TEST(FunctionTest, String404) {
   Function func { NO_CODE };
   EXPECT_FALSE(func.getString("output"));
+  EXPECT_FALSE(func.getString("#output"));
 }
 
 TEST(FunctionTest, StringOperator) {
   Function func { R"(#output = "hello "; #output += #input;)" };
-  EXPECT_TRUE(func.setString("input", "world"));
+  EXPECT_TRUE(func.setString("#input", "world"));
   func.execute();
-  const auto &output { func.getString("output") };
+  const auto &output { func.getString("#output") };
   ASSERT_TRUE(output);
   EXPECT_EQ(*output, "hello world"sv);
 }
 
 TEST(FunctionTest, StringFunc) {
-  Function func { R"(x = #output; strcpy(x, "hello "); strcat(x, #input);)" };
-  EXPECT_TRUE(func.setString("input", "world"));
+  Function func { R"(strcpy(#output, "hello "); strcat(#output, #input);)" };
+  EXPECT_TRUE(func.setString("#input", "world"));
   func.execute();
-  const auto &output { func.getString("output") };
+  const auto &output { func.getString("#output") };
   ASSERT_TRUE(output);
   EXPECT_EQ(*output, "hello world"sv);
 }
@@ -84,10 +85,48 @@ TEST(FunctionTest, StringFunc) {
 TEST(FunctionTest, StringBinarySafe) {
   const std::string_view input { "lorem\0ipsum"sv };
   Function func { R"(inputlen = strlen(#input); #output = "chunky\0bacon";)" };
-  func.setString("input", input);
+  func.setString("#input", input);
   func.execute();
   EXPECT_EQ(*func.getDouble("inputlen"), input.size());
-  EXPECT_EQ(*func.getString("output"), "chunky\0bacon"sv);
+  EXPECT_EQ(*func.getString("#output"), "chunky\0bacon"sv);
+}
+
+TEST(FunctionTest, UnnamedString) {
+  Function func { R"(inputlen = strlen(input); output = "foobar";)" };
+  func.setDouble("input", 123);
+  EXPECT_TRUE(func.setString("input", "chunky bacon"));
+  func.execute();
+  EXPECT_EQ(*func.getDouble("inputlen"), 12);
+
+  const auto &output { func.getString("output") };
+  ASSERT_TRUE(output);
+  EXPECT_EQ(*output, "foobar"sv);
+}
+
+TEST(FunctionTest, UnnamedStringOperation) {
+  Function func { R"(strcpy(output, "hello "); strcat(output, input);)" };
+  func.setDouble("output", 0);
+  func.setDouble("input",  1);
+  EXPECT_TRUE(func.setString("input", "world"));
+  func.execute();
+
+  const auto &output { func.getString("output") };
+  ASSERT_TRUE(output);
+  EXPECT_EQ(*output, "hello world"sv);
+}
+
+TEST(FunctionTest, StringSlot) {
+  Function func { R"(unnamed = "foo"; #named = "bar";)" };
+  const auto &unnamed { func.getDouble("unnamed") };
+  ASSERT_TRUE(unnamed);
+  EXPECT_EQ(*unnamed, 0);
+
+  const auto &named { func.getDouble("#named") };
+  ASSERT_TRUE(named);
+  EXPECT_EQ(*named, 90'000);
+
+  EXPECT_FALSE(func.setDouble("#named", 42));
+  EXPECT_FALSE(func.setDouble("#other", 23));
 }
 
 TEST(FunctionTest, ErrorHandling) {

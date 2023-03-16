@@ -107,7 +107,8 @@ std::optional<double> Function::getDouble(const char *name) const
   // isReg=0 and NSEEL_VM_set_var_resolver is used
   // GetNamedVar lookups from a cache of all registered variables
   // (built using NSEEL_VM_enumallvars)
-  if(EEL_F *variable { m_strings->GetNamedVar(name, false, nullptr) })
+  EEL_F allowNamedString;
+  if(EEL_F *variable { m_strings->GetNamedVar(name, false, &allowNamedString) })
     return *variable;
 
   return std::nullopt;
@@ -125,13 +126,16 @@ bool Function::setDouble(const char *name, const double value)
 
 std::optional<std::string_view> Function::getString(const char *name) const
 {
-  return getString(m_strings->m_named_strings_names.Get(name));
+  if(const auto &index { getDouble(name) })
+    return getString(*index);
+
+  return std::nullopt;
 }
 
 std::optional<std::string_view> Function::getString(const double index) const
 {
   WDL_FastString *storage {};
-  if(!index || !m_strings->GetStringForIndex(index, &storage, false) || !storage)
+  if(!m_strings->GetStringForIndex(index, &storage, false) || !storage)
     return std::nullopt;
   return std::string_view
     { storage->Get(), static_cast<size_t>(storage->GetLength()) };
@@ -139,14 +143,12 @@ std::optional<std::string_view> Function::getString(const double index) const
 
 bool Function::setString(const char *name, const std::string_view &value)
 {
-  char stringName[255];
-  snprintf(stringName, sizeof(stringName), "#%s", name);
-
-  EEL_F index;
-  if(!m_strings->GetNamedVar(stringName, true, &index))
+  EEL_F allowNamedString;
+  const EEL_F *index { m_strings->GetNamedVar(name, true, &allowNamedString) };
+  if(!index)
     return false;
   WDL_FastString *storage {};
-  if(!m_strings->GetStringForIndex(index, &storage, true) || !storage)
+  if(!m_strings->GetStringForIndex(*index, &storage, true) || !storage)
     return false;
   storage->SetRaw(value.data(), value.size());
   return true;
@@ -154,9 +156,7 @@ bool Function::setString(const char *name, const std::string_view &value)
 
 template<bool WriteToEEL>
 static bool copyArray(NSEEL_VMCTX vm, std::optional<double> slot,
-                      std::conditional_t<WriteToEEL,
-                                         const reaper_array *,
-                                         reaper_array *> values)
+  std::conditional_t<WriteToEEL, const reaper_array *, reaper_array *> values)
 {
   if(!slot)
     return false;

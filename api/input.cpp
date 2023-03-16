@@ -389,7 +389,7 @@ void InputTextCallback::storeVars(Function *func)
                           ImGuiInputTextFlags_CallbackEdit       |
                           ImGuiInputTextFlags_CallbackCompletion |
                           ImGuiInputTextFlags_CallbackHistory)) {
-    func->setString(EELVar_Buf,
+    func->setString("#Buf",
       { s_data->Buf, static_cast<size_t>(s_data->BufTextLen) });
 
     func->setDouble(EELVar_CursorPos,      s_data->CursorPos);
