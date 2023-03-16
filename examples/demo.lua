@@ -4041,7 +4041,7 @@ function demo.CompareTableItems(a, b)
     end
   end
 
-  -- table.sort is instable so always return a way to differenciate items.
+  -- table.sort is unstable so always return a way to differentiate items.
   -- Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
   return a.id < b.id
 end
@@ -4489,7 +4489,7 @@ function demo.ShowDemoWindowTables()
     demo.PopStyleCompact()
 
     if ImGui.BeginTable(ctx, 'table1', 3, tables.reorder.flags) then
-      -- Submit columns name with TableSetupColumn() and call TableHeadersRow() to create a row with a header in each column.
+      -- Submit column names with TableSetupColumn() and call TableHeadersRow() to create a row with a header in each column.
       -- (Later we will show how TableSetupColumn() has other uses, optional flags, sizing weight etc.)
       ImGui.TableSetupColumn(ctx, 'One')
       ImGui.TableSetupColumn(ctx, 'Two')
