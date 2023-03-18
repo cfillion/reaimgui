@@ -68,20 +68,20 @@ components of a multiple component widget. Use -1 to access previous widget.)")
   ImGui::SetKeyboardFocusHere(API_RO_GET(offset));
 }
 
-DEFINE_API(void, PushAllowKeyboardFocus, (ImGui_Context*,ctx)
-(bool,allow_keyboard_focus),
+DEFINE_API(void, PushTabStop, (ImGui_Context*,ctx)
+(bool,tab_stop),
 R"(Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it
 for certain widgets)")
 {
   FRAME_GUARD;
-  ImGui::PushAllowKeyboardFocus(allow_keyboard_focus);
+  ImGui::PushTabStop(tab_stop);
 }
 
-DEFINE_API(void, PopAllowKeyboardFocus, (ImGui_Context*,ctx),
-"See PushAllowKeyboardFocus")
+DEFINE_API(void, PopTabStop, (ImGui_Context*,ctx),
+"See PushTabStop")
 {
   FRAME_GUARD;
-  ImGui::PopAllowKeyboardFocus();
+  ImGui::PopTabStop();
 }
 
 API_SUBSECTION("Dimensions");

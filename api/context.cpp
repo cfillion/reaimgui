@@ -136,6 +136,9 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   &ImGuiIO::ConfigDragClickToInputText,
   &ImGuiIO::ConfigWindowsResizeFromEdges,
   &ImGuiIO::ConfigWindowsMoveFromTitleBarOnly,
+
+  &ImGuiIO::ConfigDebugBeginReturnValueOnce,
+  &ImGuiIO::ConfigDebugBeginReturnValueLoop,
 };
 
 #define DEFINE_CONFIGVAR(name, doc) \
@@ -196,6 +199,16 @@ DEFINE_CONFIGVAR(WindowsMoveFromTitleBarOnly,
 R"(Enable allowing to move windows only when clicking on their title bar.
    Does not apply to windows without a title bar.)");
 
+DEFINE_CONFIGVAR(DebugBeginReturnValueOnce,
+R"(First-time calls to Begin()/BeginChild() will return false.
+**Needs to be set at context startup time** if you don't want to miss windows.)");
+DEFINE_CONFIGVAR(DebugBeginReturnValueLoop,
+R"(Some calls to Begin()/BeginChild() will return false.
+Will cycle through window depths then repeat. Suggested use: add
+"SetConfigVar(ConfigVar_DebugBeginReturnValueLoop(), GetKeyMods() == Mod_Shift"
+in your main loop then occasionally press SHIFT.
+Windows should be flickering while running.)");
+
 static_assert(__COUNTER__ - baseConfigVar - 1 == std::size(g_configVars),
   "forgot to DEFINE_CONFIGVAR() a config var?");
 
@@ -246,7 +259,8 @@ DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
 API_SUBSECTION("Flags", "For CreateContext and SetConfigVar(ConfigVar_Flags()).");
 DEFINE_ENUM(ImGui, ConfigFlags_None, "");
 DEFINE_ENUM(ImGui, ConfigFlags_NavEnableKeyboard,
-  "Master keyboard navigation enable flag.");
+R"(Master keyboard navigation enable flag.
+Enable full Tabbing + directional arrows + space/enter to activate.)");
 // DEFINE_ENUM(ImGui, ConfigFlags_NavEnableGamepad,
 //"Master gamepad navigation enable flag.");
 DEFINE_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos,

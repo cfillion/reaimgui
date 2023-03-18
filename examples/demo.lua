@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.3)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.4)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -147,8 +147,7 @@ end
 -- In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
 function demo.HelpMarker(desc)
   ImGui.TextDisabled(ctx, '(?)')
-  if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayShort()) then
-    ImGui.BeginTooltip(ctx)
+  if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayShort()) and ImGui.BeginTooltip(ctx) then
     ImGui.PushTextWrapPos(ctx, ImGui.GetFontSize(ctx) * 35.0)
     ImGui.Text(ctx, desc)
     ImGui.PopTextWrapPos(ctx)
@@ -486,6 +485,14 @@ function demo.ShowDemoWindow(open)
       configVarCheckbox('ConfigVar_MacOSXBehaviors')
       ImGui.Text(ctx, "Also see Style->Rendering for rendering options.")
 
+      ImGui.SeparatorText(ctx, 'Debug')
+      ImGui.BeginDisabled(ctx)
+      configVarCheckbox('ConfigVar_DebugBeginReturnValueOnce')
+      ImGui.EndDisabled(ctx)
+      ImGui.SameLine(ctx); demo.HelpMarker('First calls to Begin()/BeginChild() will return false.\n\nTHIS OPTION IS DISABLED because it needs to be set at application boot-time to make sense. Showing the disabled option is a way to make this feature easier to discover')
+      configVarCheckbox('ConfigVar_DebugBeginReturnValueLoop')
+      ImGui.SameLine(ctx); demo.HelpMarker('Some calls to Begin()/BeginChild() will return false.\n\nWill cycle through window depths then repeat. Windows should be flickering while running.')
+
       ImGui.SetConfigVar(ctx, ImGui.ConfigVar_Flags(), config.flags)
       ImGui.TreePop(ctx)
       ImGui.Spacing(ctx)
@@ -533,11 +540,11 @@ function demo.ShowDemoWindow(open)
       local log_to_tty = ImGui.Button(ctx, 'Log To TTY'); ImGui.SameLine(ctx)
       local log_to_file = ImGui.Button(ctx, 'Log To File'); ImGui.SameLine(ctx)
       local log_to_clipboard = ImGui.Button(ctx, 'Log To Clipboard'); ImGui.SameLine(ctx)
-      ImGui.PushAllowKeyboardFocus(ctx, false)
+      ImGui.PushTabStop(ctx, false)
       ImGui.SetNextItemWidth(ctx, 80.0)
       rv,config.logging.auto_open_depth =
         ImGui.SliderInt(ctx, 'Open Depth', config.logging.auto_open_depth, 0, 9)
-      ImGui.PopAllowKeyboardFocus(ctx)
+      ImGui.PopTabStop(ctx)
       ImGui.PopID(ctx)
 
       -- Start logging at the end of the function so that the buttons don't appear in the log
@@ -724,8 +731,7 @@ function demo.ShowDemoWindowWidgets()
 
       ImGui.SameLine(ctx)
       ImGui.Button(ctx, 'Fancy')
-      if ImGui.IsItemHovered(ctx) then
-        ImGui.BeginTooltip(ctx)
+      if ImGui.IsItemHovered(ctx) and ImGui.BeginTooltip(ctx) then
         ImGui.Text(ctx, 'I am a fancy tooltip')
         ImGui.PlotLines(ctx, 'Curve', widgets.basic.tooltip)
         ImGui.Text(ctx, ('Sin(time) = %f'):format(math.sin(ImGui.GetTime(ctx))))
@@ -1213,8 +1219,7 @@ function demo.ShowDemoWindowWidgets()
       local border_col = ImGui.GetStyleColor(ctx, ImGui.Col_Border())
       ImGui.Image(ctx, widgets.images.bitmap, my_tex_w, my_tex_h,
         uv_min_x, uv_min_y, uv_max_x, uv_max_y, tint_col, border_col)
-      if ImGui.IsItemHovered(ctx) then
-        ImGui.BeginTooltip(ctx)
+      if ImGui.IsItemHovered(ctx) and ImGui.BeginTooltip(ctx) then
         local region_sz = 32.0
         local mouse_x, mouse_y = ImGui.GetMousePos(ctx)
         local region_x = mouse_x - pos_x - region_sz * 0.5
@@ -4111,8 +4116,7 @@ function demo.EditTableSizingFlags(flags)
   end
   ImGui.SameLine(ctx)
   ImGui.TextDisabled(ctx, '(?)')
-  if ImGui.IsItemHovered(ctx) then
-    ImGui.BeginTooltip(ctx)
+  if ImGui.IsItemHovered(ctx) and ImGui.BeginTooltip(ctx) then
     ImGui.PushTextWrapPos(ctx, ImGui.GetFontSize(ctx) * 50.0)
     for m,policy in ipairs(policies) do
       ImGui.Separator(ctx)
@@ -6227,10 +6231,10 @@ function demo.ShowDemoWindowInputs()
       rv,misc.tabbing.buf = ImGui.InputText(ctx, '1', misc.tabbing.buf)
       rv,misc.tabbing.buf = ImGui.InputText(ctx, '2', misc.tabbing.buf)
       rv,misc.tabbing.buf = ImGui.InputText(ctx, '3', misc.tabbing.buf)
-      ImGui.PushAllowKeyboardFocus(ctx, false)
+      ImGui.PushTabStop(ctx, false)
       rv,misc.tabbing.buf = ImGui.InputText(ctx, '4 (tab skip)', misc.tabbing.buf)
       ImGui.SameLine(ctx); demo.HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.")
-      ImGui.PopAllowKeyboardFocus(ctx)
+      ImGui.PopTabStop(ctx)
       rv,misc.tabbing.buf = ImGui.InputText(ctx, '5', misc.tabbing.buf)
       ImGui.TreePop(ctx)
     end
@@ -6256,12 +6260,12 @@ function demo.ShowDemoWindowInputs()
       rv,misc.focus.buf = ImGui.InputText(ctx, '2', misc.focus.buf)
       if ImGui.IsItemActive(ctx) then has_focus = 2 end
 
-      ImGui.PushAllowKeyboardFocus(ctx, false)
+      ImGui.PushTabStop(ctx, false)
       if focus_3 then ImGui.SetKeyboardFocusHere(ctx) end
       rv,misc.focus.buf = ImGui.InputText(ctx, '3 (tab skip)', misc.focus.buf)
       if ImGui.IsItemActive(ctx) then has_focus = 3 end
       ImGui.SameLine(ctx); demo.HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.")
-      ImGui.PopAllowKeyboardFocus(ctx)
+      ImGui.PopTabStop(ctx)
 
       if has_focus > 0 then
         ImGui.Text(ctx, ('Item with focus: %d'):format(has_focus))
@@ -6692,10 +6696,11 @@ function demo.ShowStyleEditor()
 --
 --             // When editing the "Circle Segment Max Error" value, draw a preview of its effect on auto-tessellated circles.
 --             ImGui.DragFloat("Circle Tessellation Max Error", &style.CircleTessellationMaxError , 0.005f, 0.10f, 5.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
---             if (ImGui.IsItemActive())
---             {
+--             const bool show_samples = ImGui::IsItemActive();
+--             if (show_samples)
 --                 ImGui.SetNextWindowPos(ImGui.GetCursorScreenPos());
---                 ImGui.BeginTooltip();
+--             if (show_samples && ImGui::BeginTooltip())
+--             {
 --                 ImGui.TextUnformatted("(R = radius, N = number of segments)");
 --                 ImGui.Spacing();
 --                 ImDrawList* draw_list = ImGui.GetWindowDrawList();

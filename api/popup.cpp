@@ -191,16 +191,16 @@ DEFINE_API(bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
 API_SUBSECTION("Tooltips",
   "Tooltip are windows following the mouse. They do not take focus away.");
 
-DEFINE_API(void, BeginTooltip, (ImGui_Context*,ctx),
+DEFINE_API(bool, BeginTooltip, (ImGui_Context*,ctx),
 R"(Begin/append a tooltip window.
 To create full-featured tooltip (with any kind of items).)")
 {
   FRAME_GUARD;
-  ImGui::BeginTooltip();
+  return ImGui::BeginTooltip();
 }
 
 DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
-"")
+"Only call EndTooltip() if BeginTooltip() returns true.")
 {
   FRAME_GUARD;
   ImGui::EndTooltip();
