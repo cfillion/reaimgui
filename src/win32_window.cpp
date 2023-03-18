@@ -17,6 +17,7 @@
 
 #include "win32_window.hpp"
 
+#include "configvar.hpp"
 #include "context.hpp"
 #include "import.hpp"
 #include "platform.hpp"
@@ -76,16 +77,8 @@ float Win32Window::scaleForDpi(const unsigned int dpi)
 // Use large (non-tool) window frames for windows
 static bool useBigFrame()
 {
-  static int *bigwndframes;
-
-  if(!bigwndframes) {
-    int size;
-    bigwndframes = static_cast<int *>(get_config_var("bigwndframes", &size));
-    if(size != sizeof(*bigwndframes))
-      bigwndframes = nullptr;
-  }
-
-  return bigwndframes ? *bigwndframes : false;
+  static const ConfigVar<int> bigwndframes { "bigwndframes" };
+  return bigwndframes.value_or(false);
 }
 
 void Win32Window::updateStyles()
