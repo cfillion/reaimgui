@@ -2860,13 +2860,10 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
   if ImGui.TreeNode(ctx, 'Text Filter') then
     -- Helper class to easy setup a text filter.
     -- You may want to implement a more feature-full filtering scheme in your own application.
-    if not widgets.filtering then
-      widgets.filtering = { inst = nil, text = '' }
-    end
-
-    -- the filter object is destroyed once unused for one or more frames
-    if not ImGui.ValidatePtr(widgets.filtering.inst, 'ImGui_TextFilter*') then
-      widgets.filtering.inst = ImGui.CreateTextFilter(widgets.filtering.text)
+    if not widgets.filter then
+      widgets.filter = ImGui.CreateTextFilter()
+      -- prevent the filter object from being destroyed once unused for one or more frames
+      ImGui.Attach(ctx, widgets.filter)
     end
 
     demo.HelpMarker('Not a widget per-se, but ImGui_TextFilter is a helper to perform simple filtering on text strings.')
@@ -2875,12 +2872,10 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
   "xxx"      display lines containing "xxx"
   "xxx,yyy"  display lines containing "xxx" or "yyy"
   "-xxx"     hide lines containing "xxx"]])
-    if ImGui.TextFilter_Draw(widgets.filtering.inst, ctx) then
-      widgets.filtering.text = ImGui.TextFilter_Get(widgets.filtering.inst)
-    end
+    ImGui.TextFilter_Draw(widgets.filter, ctx)
     local lines = { 'aaa1.c', 'bbb1.c', 'ccc1.c', 'aaa2.cpp', 'bbb2.cpp', 'ccc2.cpp', 'abc.h', 'hello, world' }
     for i, line in ipairs(lines) do
-      if ImGui.TextFilter_PassFilter(widgets.filtering.inst, line) then
+      if ImGui.TextFilter_PassFilter(widgets.filter, line) then
         ImGui.BulletText(ctx, line)
       end
     end
@@ -6594,18 +6589,13 @@ function demo.ShowStyleEditor()
     if ImGui.BeginTabItem(ctx, 'Colors') then
       if not app.style_editor.colors then
         app.style_editor.colors = {
-          filter = { inst=nil, text = '' },
+          filter = ImGui.CreateTextFilter(),
           alpha_flags = ImGui.ColorEditFlags_None(),
         }
-      end
-      -- the filter object is destroyed once unused for one or more frames
-      if not ImGui.ValidatePtr(app.style_editor.colors.filter.inst, 'ImGui_TextFilter*') then
-        app.style_editor.colors.filter.inst = ImGui.CreateTextFilter(app.style_editor.colors.filter.text)
+        ImGui.Attach(ctx, app.style_editor.colors.filter)
       end
 
-      if ImGui.TextFilter_Draw(app.style_editor.colors.filter.inst, ctx, 'Filter colors', ImGui.GetFontSize(ctx) * 16) then
-        app.style_editor.colors.filter.text = ImGui.TextFilter_Get(app.style_editor.colors.filter.inst)
-      end
+      ImGui.TextFilter_Draw(app.style_editor.colors.filter, ctx, 'Filter colors', ImGui.GetFontSize(ctx) * 16)
 
       if ImGui.RadioButton(ctx, 'Opaque', app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_None()) then
         app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_None()
@@ -6632,7 +6622,7 @@ function demo.ShowStyleEditor()
         ImGui.PushItemWidth(ctx, -160)
         local inner_spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing())
         for i, name in demo.EachEnum('Col') do
-          if ImGui.TextFilter_PassFilter(app.style_editor.colors.filter.inst, name) then
+          if ImGui.TextFilter_PassFilter(app.style_editor.colors.filter, name) then
             ImGui.PushID(ctx, i)
             rv, app.style_editor.style.colors[i] = ImGui.ColorEdit4(ctx, '##color', app.style_editor.style.colors[i], ImGui.ColorEditFlags_AlphaBar() | app.style_editor.colors.alpha_flags)
             if app.style_editor.style.colors[i] ~= app.style_editor.ref.colors[i] then
@@ -7262,31 +7252,28 @@ function ExampleAppLog:new(ctx)
   local instance = {
     ctx          = ctx,
     lines        = {},
-    filter       = { inst=nil, text='' },
+    filter       = ImGui.CreateTextFilter(),
     auto_scroll  = true, -- Keep scrolling if already at the bottom.
   }
+  ImGui.Attach(ctx, instance.filter)
   self.__index = self
   return setmetatable(instance, self)
 end
 
-function ExampleAppLog.clear(self)
+function ExampleAppLog.Clear(self)
   self.lines = {}
 end
 
-function ExampleAppLog.add_log(self, fmt, ...)
+function ExampleAppLog.AddLog(self, fmt, ...)
   local text = fmt:format(...)
   for line in text:gmatch("[^\r\n]+") do
     table.insert(self.lines, line)
   end
 end
 
-function ExampleAppLog.draw(self, title, p_open)
+function ExampleAppLog.Draw(self, title, p_open)
   local rv,p_open = ImGui.Begin(self.ctx, title, p_open)
   if not rv then return p_open end
-
-  if not ImGui.ValidatePtr(self.filter.inst, 'ImGui_TextFilter*') then
-    self.filter.inst = ImGui.CreateTextFilter(self.filter.text)
-  end
 
   -- Options menu
   if ImGui.BeginPopup(self.ctx, 'Options') then
@@ -7303,28 +7290,26 @@ function ExampleAppLog.draw(self, title, p_open)
   ImGui.SameLine(self.ctx)
   local copy = ImGui.Button(self.ctx, 'Copy')
   ImGui.SameLine(self.ctx)
-  if ImGui.TextFilter_Draw(self.filter.inst, ctx, 'Filter', -100.0) then
-    self.filter.text = ImGui.TextFilter_Get(self.filter.inst)
-  end
+  ImGui.TextFilter_Draw(self.filter, ctx, 'Filter', -100.0)
 
   ImGui.Separator(self.ctx)
   if ImGui.BeginChild(self.ctx, 'scrolling', 0, 0, false, ImGui.WindowFlags_HorizontalScrollbar()) then
     if clear then
-      self:clear()
+      self:Clear()
     end
     if copy then
       ImGui.LogToClipboard(self.ctx)
     end
 
     ImGui.PushStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing(), 0, 0)
-    if ImGui.TextFilter_IsActive(self.filter.inst) then
+    if ImGui.TextFilter_IsActive(self.filter) then
       -- In this example we don't use the clipper when Filter is enabled.
       -- This is because we don't have a random access on the result on our filter.
       -- A real application processing logs with ten of thousands of entries may want to store the result of
       -- search/filter.. especially if the filtering function is not trivial (e.g. reg-exp).
       for line_no, line in ipairs(self.lines) do
-        if ImGui.TextFilter_PassFilter(self.filter.inst, line) then
-          ImGui.Text(ctx, line)
+        if ImGui.TextFilter_PassFilter(self.filter, line) then
+          ImGui.Text(self.ctx, line)
         end
       end
     else
@@ -7389,7 +7374,7 @@ function demo.ShowExampleAppLog()
     for n = 0, 5 - 1 do
       local category = categories[(app.log.counter % #categories) + 1]
       local word = words[(app.log.counter % #words) + 1]
-      app.log:add_log("[%05d] [%s] Hello, current time is %.1f, here's a word: '%s'\n",
+      app.log:AddLog("[%05d] [%s] Hello, current time is %.1f, here's a word: '%s'\n",
           ImGui.GetFrameCount(ctx), category, ImGui.GetTime(ctx), word)
       app.log.counter = app.log.counter + 1
     end
@@ -7397,7 +7382,7 @@ function demo.ShowExampleAppLog()
   ImGui.End(ctx)
 
   -- Actually call in the regular Log helper (which will Begin() into the same window as we just did)
-  app.log:draw('Example: Log')
+  app.log:Draw('Example: Log')
 
   return open
 end
