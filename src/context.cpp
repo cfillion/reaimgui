@@ -17,6 +17,7 @@
 
 #include "context.hpp"
 
+#include "configvar.hpp"
 #include "docker.hpp"
 #include "font.hpp"
 #include "keymap.hpp"
@@ -38,6 +39,9 @@
 #endif
 
 enum DropState { DropState_None = -2, DropState_Drop = -1 };
+enum RightClickEmulationBits {
+  RightClickEmulation_Armed, RightClickEmulation_Active,
+};
 
 constexpr ImGuiMouseButton DND_MouseButton { ImGuiMouseButton_Left };
 constexpr ImGuiConfigFlags PRIVATE_CONFIG_FLAGS
@@ -262,6 +266,12 @@ bool Context::endFrame(const bool render) try
   if(render) {
     updateCursor();
     updateDragDrop();
+#ifdef __APPLE__
+    if(m_rightClickEmulation.test(RightClickEmulation_Active)) {
+      m_imgui->IO.AddMouseButtonEvent(ImGuiMouseButton_Right, false);
+      m_rightClickEmulation.reset(RightClickEmulation_Active);
+    }
+#endif
     ImGui::Render();
   }
   else
@@ -363,6 +373,14 @@ void Context::mouseInput(const int button, const bool down)
 {
   TempCurrent cur { this };
   m_imgui->IO.AddMouseButtonEvent(button, down);
+
+#ifdef __APPLE__
+  if(down && button == ImGuiMouseButton_Left &&
+      m_rightClickEmulation.test(RightClickEmulation_Armed)) {
+    m_imgui->IO.AddMouseButtonEvent(ImGuiMouseButton_Right, true);
+    m_rightClickEmulation.set(RightClickEmulation_Active);
+  }
+#endif
 }
 
 void Context::mouseWheel(const bool horizontal, float delta)
@@ -388,6 +406,24 @@ void Context::mouseWheel(const bool horizontal, float delta)
 
 void Context::keyInput(const ImGuiKey key, const bool down)
 {
+#ifdef __APPLE__
+  // Preferences > Editing Behavior > Mouse >
+  // Control+left-click emulates right-click
+  static ConfigVar<int> rightclickemulate { "rightclickemulate" };
+  if(rightclickemulate.value_or(false)) {
+    switch(key) {
+    case ImGuiMod_Ctrl:
+      m_rightClickEmulation.set(RightClickEmulation_Armed, down);
+      [[fallthrough]];
+    case ImGuiKey_LeftCtrl:
+    case ImGuiKey_RightCtrl:
+      return;
+    default:
+      break;
+    }
+  }
+#endif
+
   TempCurrent cur { this };
 
   if(ImGui::IsLegacyKey(key)) {
