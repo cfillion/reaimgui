@@ -342,20 +342,17 @@ end
 Variable access table (R = updated for reading,
                        W = writes are applied,
                        - = unmodified):
-<table>
-<tr>
-  <th></th>
-  <th>Always</th><th>CharFilter</th><th>Completion</th><th>Edit</th><th>History</th>
-</tr>
-<tr><th>EventFlag</th>     <td>R/-</td><td>R/-</td><td>R/-</td><td>R/-</td><td>R/-</td></tr>
-<tr><th>Flags</th>         <td>R/-</td><td>R/-</td><td>R/-</td><td>R/-</td><td>R/-</td></tr>
-<tr><th>EventChar</th>     <td>-/-</td><td>R/W</td><td>-/-</td><td>-/-</td><td>-/-</td></tr>
-<tr><th>EventKey</th>      <td>-/-</td><td>-/-</td><td>R/-</td><td>-/-</td><td>R/-</td></tr>
-<tr><th>Buf</th>           <td>R/-</td><td>-/-</td><td>R/-</td><td>R/-</td><td>R/-</td></tr>
-<tr><th>CursorPos</th>     <td>R/W</td><td>-/-</td><td>R/W</td><td>R/W</td><td>R/W</td></tr>
-<tr><th>SelectionStart</th><td>R/W</td><td>-/-</td><td>R/W</td><td>R/W</td><td>R/W</td></tr>
-<tr><th>SelectionEnd</th>  <td>R/W</td><td>-/-</td><td>R/W</td><td>R/W</td><td>R/W</td></tr>
-</table>
+
+|                | Always | CharFilter | Completion | Edit | History |
+| -------------- | ------ | ---------- | ---------- | ---- | ------- |
+| EventFlag      | R/-    | R/-        | R/-        | R/-  | R/-     |
+| Flags          | R/-    | R/-        | R/-        | R/-  | R/-     |
+| EventChar      | -/-    | R/W        | -/-        | -/-  | -/-     |
+| EventKey       | -/-    | -/-        | R/-        | -/-  | R/-     |
+| Buf            | R/-    | -/-        | R/-        | R/-  | R/-     |
+| CursorPos      | R/W    | -/-        | R/W        | R/W  | R/W     |
+| SelectionStart | R/W    | -/-        | R/W        | R/W  | R/W     |
+| SelectionEnd   | R/W    | -/-        | R/W        | R/W  | R/W     |
 
 The InputTextCallback_* functions should only be used when EventFlag is one of
 InputTextFlags_CallbackAlways/Completion/Edit/History.)");

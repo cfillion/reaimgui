@@ -21,7 +21,6 @@
 #include "../src/api.hpp"
 
 #include <algorithm>
-#include <cmark.h>
 #include <cstring>
 #include <deque>
 #include <functional>
@@ -30,6 +29,8 @@
 #include <string_view>
 #include <unordered_map>
 #include <vector>
+
+#include <md4c-html.h>
 
 constexpr const char *GENERATED_FOR
   { "Generated for ReaImGui v" REAIMGUI_VERSION };
@@ -679,15 +680,17 @@ static void outputHtmlBlock(std::ostream &stream, std::string_view html,
     stream << html;
 }
 
+static void outputMarkdown(const char *data, MD_SIZE size, void *userData)
+{
+  std::ostream &stream { *static_cast<std::ostream *>(userData) };
+  outputHtmlBlock(stream, { data, size }, false);
+}
+
 static void outputMarkdown(std::ostream &stream, const std::string_view &text)
 {
-  // FIXME: switch to md4c for markdown table support
-  constexpr int opts { CMARK_OPT_UNSAFE }; // allow <table>
-  if(char *html { cmark_markdown_to_html(text.data(), text.size(), opts) }) {
-    outputHtmlBlock(stream, html, false);
-    free(html);
-  }
-  else {
+  constexpr auto parserFlags
+    { MD_FLAG_NOHTML | MD_FLAG_PERMISSIVEURLAUTOLINKS | MD_FLAG_TABLES };
+  if(md_html(text.data(), text.size(), &outputMarkdown, &stream, parserFlags, 0)) {
     stream << "<pre>";
     outputHtmlBlock(stream, text);
     stream << "</pre>";
