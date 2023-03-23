@@ -6949,7 +6949,7 @@ function ExampleAppConsole:new(ctx)
 
       // A better implementation would preserve the data on the current input line along with cursor position.
       prev_history_pos != HistoryPos ? (
-        InputTextCallback_DeleteChars(0, strlen(Buf));
+        InputTextCallback_DeleteChars(0, strlen(#Buf));
         InputTextCallback_InsertChars(0, history_line);
       );
     );
