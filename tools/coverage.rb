@@ -434,7 +434,7 @@ private
       arg.name += '_rgb'
       arg.name += 'a' if arg.size == 4
       arg.size = 0
-    elsif arg.type == 'void*' && arg.name == 'user_data' # callbacks
+    elsif arg.type == 'void*' && ['user_data', 'custom_callback_data'].include?(arg.name) # callbacks
       return []
     elsif arg.name == 'buf_size'
       arg.name = 'buf' # API_RWBIG_SZ?
