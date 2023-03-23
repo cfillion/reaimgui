@@ -26,14 +26,13 @@ TextFilter::TextFilter(const char *filter)
 
 void TextFilter::set(const char *filter)
 {
-  keepAlive();
   m_filter = filter;
   m_filter.Build();
 }
 
 ImGuiTextFilter *TextFilter::operator->()
 {
-  keepAlive();
+  assertValid(this);
   return &m_filter;
 }
 
@@ -65,7 +64,6 @@ DEFINE_API(void, TextFilter_Set, (ImGui_TextFilter*,filter)
 DEFINE_API(const char*, TextFilter_Get, (ImGui_TextFilter*,filter),
 "")
 {
-  assertValid(filter);
   return (*filter)->InputBuf;
 }
 
@@ -74,7 +72,6 @@ DEFINE_API(bool, TextFilter_Draw, (ImGui_TextFilter*,filter)
 (double*,API_RO(width),0.0),
 "Helper calling InputText+TextFilter_Set")
 {
-  assertValid(filter);
   FRAME_GUARD;
 
   return (*filter)->Draw(API_RO_GET(label), API_RO_GET(width));
@@ -84,20 +81,17 @@ DEFINE_API(bool, TextFilter_PassFilter, (ImGui_TextFilter*,filter)
 (const char*,text),
 "")
 {
-  assertValid(filter);
   return (*filter)->PassFilter(text);
 }
 
 DEFINE_API(void, TextFilter_Clear, (ImGui_TextFilter*,filter),
 "")
 {
-  assertValid(filter);
   return (*filter)->Clear();
 }
 
 DEFINE_API(bool, TextFilter_IsActive, (ImGui_TextFilter*,filter),
 "")
 {
-  assertValid(filter);
   return (*filter)->IsActive();
 }

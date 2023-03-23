@@ -99,7 +99,6 @@ std::vector<unsigned char *> Bitmap::makeScanlines()
 
 size_t Bitmap::makeTexture(TextureManager *textureManager)
 {
-  keepAlive();
   Texture tex { this, 1.f, &getPixels };
   tex.m_isValid = &Resource::isValid;
   return textureManager->touch(tex);
@@ -151,7 +150,6 @@ size_t ImageSet::height() const
 
 size_t ImageSet::makeTexture(TextureManager *textureManager)
 {
-  keepAlive();
   return select().image->makeTexture(textureManager);
 }
 

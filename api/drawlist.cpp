@@ -480,7 +480,6 @@ bool DrawListSplitter::isValid() const
 ImDrawListSplitter *DrawListSplitter::operator->()
 {
   assertValid(this);
-  keepAlive();
   return &m_splitter;
 }
 

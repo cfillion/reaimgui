@@ -43,7 +43,6 @@ DEFINE_API(void, Function_Execute, (ImGui_Function*,func),
 "")
 {
   assertValid(func);
-  func->keepAlive();
   func->execute();
 }
 
@@ -51,7 +50,6 @@ DEFINE_API(double, Function_GetValue, (ImGui_Function*,func)(const char*,name),
 "")
 {
   assertValid(func);
-  func->keepAlive();
   if(const auto &value { func->getDouble(name) })
     return *value;
   throw reascript_error { "could not read number value" };
@@ -62,7 +60,6 @@ DEFINE_API(void, Function_SetValue, (ImGui_Function*,func)
 "")
 {
   assertValid(func);
-  func->keepAlive();
   if(!func->setDouble(name, value))
     throw reascript_error { "could not write number value" };
 }
@@ -74,7 +71,6 @@ in the given variable into the array.)")
 {
   assertValid(func);
   assertValid(values);
-  func->keepAlive();
   if(!func->getArray(name, values))
     throw reascript_error { "could not read array values" };
 }
@@ -86,7 +82,6 @@ in the given variable.)")
 {
   assertValid(func);
   assertValid(values);
-  func->keepAlive();
   if(!func->setArray(name, values))
     throw reascript_error { "could not write array values" };
 }
@@ -97,7 +92,6 @@ DEFINE_API(void, Function_GetValue_String, (ImGui_Function*,func)
 {
   assertValid(func);
   assertValid(API_WBIG(value));
-  func->keepAlive();
 
   const auto &value { func->getString(name) };
   if(!value)
@@ -111,7 +105,6 @@ DEFINE_API(void, Function_SetValue_String, (ImGui_Function*,func)
 "Write to a string slot or a named string (when name starts with a `#`).")
 {
   assertValid(func);
-  func->keepAlive();
 
   static bool hasAccurateSize { atof(GetAppVersion()) >= 6.44 };
   if(!hasAccurateSize)

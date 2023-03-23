@@ -42,7 +42,6 @@ public:
       return nullptr;
 
     assertValid(func);
-    func->keepAlive();
     return &invoke<T>;
   }
 
