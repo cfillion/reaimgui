@@ -334,7 +334,7 @@ local reverseAlphabet = reaper.ImGui_CreateFunctionFromEEL([[
 ]])
 
 local function frame()
-  rv, text = reaper.ImGui_InputText(ctx, 'No lowercase', text,
+  rv, text = reaper.ImGui_InputText(ctx, 'Lowercase reversed', text,
     reaper.ImGui_InputTextFlags_CallbackCharFilter(), reverseAlphabet)
 end
 ```
