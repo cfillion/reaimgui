@@ -327,7 +327,7 @@ function demo.ShowDemoWindow(open)
       -- rv,show_app.main_menu_bar =
       --   ImGui.MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
       rv,show_app.console =
-        ImGui.MenuItem(ctx, 'Console', nil, show_app.console, false)
+        ImGui.MenuItem(ctx, 'Console', nil, show_app.console)
       rv,show_app.log =
         ImGui.MenuItem(ctx, 'Log', nil, show_app.log)
       rv,show_app.layout =
@@ -1550,7 +1550,7 @@ label:
 ]],
         },
         flags = ImGui.InputTextFlags_AllowTabInput(),
-        buf = { '', '', '', '', '' },
+        buf = { '', '', '', '', '', '', '', '', '' },
         password = 'hunter2',
       }
     end
@@ -1564,24 +1564,26 @@ label:
     end
 
     if ImGui.TreeNode(ctx, 'Filtered Text Input') then
-      -- TODO
-      -- struct TextFilters
-      -- {
-      --     // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
-      --     static int FilterImGuiLetters(ImGuiInputTextCallbackData* data)
-      --     {
-      --         if (data->EventChar < 256 && strchr("imgui", (char)data->EventChar))
-      --             return 0;
-      --         return 1;
-      --     }
-      -- };
+      if not ImGui.ValidatePtr(widgets.input.filterImGuiLetters, 'ImGui_Function*') then
+        -- Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
+        widgets.input.filterImGuiLetters = ImGui.CreateFunctionFromEEL([[
+        eat = 1; i = strlen(#allowed);
+        while(
+          i -= 1;
+          str_getchar(#allowed, i) == EventChar ? eat = 0;
+          eat && i;
+        );
+        eat ? EventChar = 0;
+        ]])
+        ImGui.Function_SetValue_String(widgets.input.filterImGuiLetters, '#allowed', 'imgui')
+      end
 
       rv,widgets.input.buf[1] = ImGui.InputText(ctx, 'default',     widgets.input.buf[1])
       rv,widgets.input.buf[2] = ImGui.InputText(ctx, 'decimal',     widgets.input.buf[2], ImGui.InputTextFlags_CharsDecimal())
       rv,widgets.input.buf[3] = ImGui.InputText(ctx, 'hexadecimal', widgets.input.buf[3], ImGui.InputTextFlags_CharsHexadecimal() | ImGui.InputTextFlags_CharsUppercase())
       rv,widgets.input.buf[4] = ImGui.InputText(ctx, 'uppercase',   widgets.input.buf[4], ImGui.InputTextFlags_CharsUppercase())
       rv,widgets.input.buf[5] = ImGui.InputText(ctx, 'no blank',    widgets.input.buf[5], ImGui.InputTextFlags_CharsNoBlank())
-      -- static char buf6[64] = ""; ImGui.InputText("\"imgui\" letters", buf6, 64, ImGuiInputTextFlags_CallbackCharFilter, TextFilters::FilterImGuiLetters)
+      rv,widgets.input.buf[6] = ImGui.InputText(ctx, '"imgui" letters', widgets.input.buf[6], ImGui.InputTextFlags_CallbackCharFilter(), widgets.input.filterImGuiLetters)
       ImGui.TreePop(ctx)
     end
 
@@ -1593,104 +1595,60 @@ label:
       ImGui.TreePop(ctx)
     end
 
--- TODO
---         if (ImGui.TreeNode("Completion, History, Edit Callbacks"))
---         {
---             struct Funcs
---             {
---                 static int MyCallback(ImGuiInputTextCallbackData* data)
---                 {
---                     if (data->EventFlag == ImGuiInputTextFlags_CallbackCompletion)
---                     {
---                         data->InsertChars(data->CursorPos, "..");
---                     }
---                     else if (data->EventFlag == ImGuiInputTextFlags_CallbackHistory)
---                     {
---                         if (data->EventKey == ImGuiKey_UpArrow)
---                         {
---                             data->DeleteChars(0, data->BufTextLen);
---                             data->InsertChars(0, "Pressed Up!");
---                             data->SelectAll();
---                         }
---                         else if (data->EventKey == ImGuiKey_DownArrow)
---                         {
---                             data->DeleteChars(0, data->BufTextLen);
---                             data->InsertChars(0, "Pressed Down!");
---                             data->SelectAll();
---                         }
---                     }
---                     else if (data->EventFlag == ImGuiInputTextFlags_CallbackEdit)
---                     {
---                         // Toggle casing of first character
---                         char c = data->Buf[0];
---                         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) data->Buf[0] ^= 32;
---                         data->BufDirty = true;
---
---                         // Increment a counter
---                         int* p_int = (int*)data->UserData;
---                         *p_int = *p_int + 1;
---                     }
---                     return 0;
---                 }
---             };
---             static char buf1[64];
---             ImGui.InputText("Completion", buf1, 64, ImGuiInputTextFlags_CallbackCompletion, Funcs::MyCallback);
---             ImGui.SameLine(); HelpMarker("Here we append \"..\" each time Tab is pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.");
---
---             static char buf2[64];
---             ImGui.InputText("History", buf2, 64, ImGuiInputTextFlags_CallbackHistory, Funcs::MyCallback);
---             ImGui.SameLine(); HelpMarker("Here we replace and select text each time Up/Down are pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.");
---
---             static char buf3[64];
---             static int edit_count = 0;
---             ImGui.InputText("Edit", buf3, 64, ImGuiInputTextFlags_CallbackEdit, Funcs::MyCallback, (void*)&edit_count);
---             ImGui.SameLine(); HelpMarker("Here we toggle the casing of the first character on every edit + count edits.");
---             ImGui.SameLine(); ImGui.Text("(%d)", edit_count);
---
---             ImGui.TreePop();
---         }
---
---         if (ImGui.TreeNode("Resize Callback"))
---         {
---             // To wire InputText() with std::string or any other custom string type,
---             // you can use the ImGuiInputTextFlags_CallbackResize flag + create a custom ImGui_InputText() wrapper
---             // using your preferred type. See misc/cpp/imgui_stdlib.h for an implementation of this using std::string.
---             HelpMarker(
---                 "Using ImGuiInputTextFlags_CallbackResize to wire your custom string type to InputText().\n\n"
---                 "See misc/cpp/imgui_stdlib.h for an implementation of this for std::string.");
---             struct Funcs
---             {
---                 static int MyResizeCallback(ImGuiInputTextCallbackData* data)
---                 {
---                     if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
---                     {
---                         ImVector<char>* my_str = (ImVector<char>*)data->UserData;
---                         IM_ASSERT(my_str->begin() == data->Buf);
---                         my_str->resize(data->BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
---                         data->Buf = my_str->begin();
---                     }
---                     return 0;
---                 }
---
---                 // Note: Because ImGui_ is a namespace you would typically add your own function into the namespace.
---                 // For example, you code may declare a function 'ImGui_InputText(const char* label, MyString* my_str)'
---                 static bool MyInputTextMultiline(const char* label, ImVector<char>* my_str, const ImVec2& size = ImVec2(0, 0), ImGuiInputTextFlags flags = 0)
---                 {
---                     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
---                     return ImGui.InputTextMultiline(label, my_str->begin(), (size_t)my_str->size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, (void*)my_str);
---                 }
---             };
---
---             // For this demo we are using ImVector as a string container.
---             // Note that because we need to store a terminating zero character, our size/capacity are 1 more
---             // than usually reported by a typical string class.
---             static ImVector<char> my_str;
---             if (my_str.empty())
---                 my_str.push_back(0);
---             Funcs::MyInputTextMultiline("##MyStr", &my_str, ImVec2(-FLT_MIN, ImGui.GetTextLineHeight() * 16));
---             ImGui.Text("Data: %p\nSize: %d\nCapacity: %d", (void*)my_str.begin(), my_str.size(), my_str.capacity());
---             ImGui.TreePop();
---         }
+    if ImGui.TreeNode(ctx, 'Completion, History, Edit Callbacks') then
+      if not ImGui.ValidatePtr(widgets.input.callback, 'ImGui_Function*') then
+        widgets.input.callback = ImGui.CreateFunctionFromEEL([[
+        EventFlag == InputTextFlags_CallbackCompletion ?
+          InputTextCallback_InsertChars(CursorPos, "..");
+        EventFlag == InputTextFlags_CallbackHistory ? (
+          EventKey == Key_UpArrow ? (
+            InputTextCallback_DeleteChars(0, strlen(#Buf));
+            InputTextCallback_InsertChars(0, "Pressed Up!");
+            InputTextCallback_SelectAll();
+          ) : EventKey == Key_DownArrow ? (
+            InputTextCallback_DeleteChars(0, strlen(#Buf));
+            InputTextCallback_InsertChars(0, "Pressed Down!");
+            InputTextCallback_SelectAll();
+          );
+        );
+        EventFlag == InputTextFlags_CallbackEdit ? (
+          // Toggle casing of first character
+          c = str_getchar(#Buf, 0);
+          (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ? (
+            str_setchar(#first, 0, c ~ 32);
+            InputTextCallback_DeleteChars(0, 1);
+            InputTextCallback_InsertChars(0, #first);
+          );
+
+          // Increment a counter
+          edit_count += 1;
+        );
+        ]])
+        local consts = {
+          'InputTextFlags_CallbackCompletion',
+          'InputTextFlags_CallbackEdit',
+          'InputTextFlags_CallbackHistory',
+          'Key_UpArrow',
+          'Key_DownArrow',
+        }
+        for _, const in ipairs(consts) do
+          ImGui.Function_SetValue(widgets.input.callback, const, ImGui[const]())
+        end
+      end
+
+      rv,widgets.input.buf[7] = ImGui.InputText(ctx, 'Completion', widgets.input.buf[7], ImGui.InputTextFlags_CallbackCompletion(), widgets.input.callback)
+      ImGui.SameLine(ctx); demo.HelpMarker("Here we append \"..\" each time Tab is pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.")
+
+      rv,widgets.input.buf[8] = ImGui.InputText(ctx, 'History', widgets.input.buf[8], ImGui.InputTextFlags_CallbackHistory(), widgets.input.callback)
+      ImGui.SameLine(ctx); demo.HelpMarker("Here we replace and select text each time Up/Down are pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.")
+
+      rv,widgets.input.buf[9] = ImGui.InputText(ctx, 'Edit', widgets.input.buf[9], ImGui.InputTextFlags_CallbackEdit(), widgets.input.callback)
+      ImGui.SameLine(ctx); demo.HelpMarker('Here we toggle the casing of the first character on every edit + count edits.')
+      local edit_count = ImGui.Function_GetValue(widgets.input.callback, 'edit_count')
+      ImGui.SameLine(ctx); ImGui.Text(ctx, ('(%d)'):format(edit_count))
+
+      ImGui.TreePop(ctx)
+    end
 
     ImGui.TreePop(ctx)
   end
@@ -6884,364 +6842,392 @@ function demo.ShowExampleMenuFile()
   if ImGui.MenuItem(ctx, 'Quit', 'Alt+F4') then end
 end
 
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Debug Console / ShowExampleAppConsole()
--- //-----------------------------------------------------------------------------
---
--- // Demonstrate creating a simple console window, with scrolling, filtering, completion and history.
--- // For the console example, we are using a more C++ like approach of declaring a class to hold both data and functions.
--- struct ExampleAppConsole
--- {
---     char                  InputBuf[256];
---     ImVector<char*>       Items;
---     ImVector<const char*> Commands;
---     ImVector<char*>       History;
---     int                   HistoryPos;    // -1: new line, 0..History.Size-1 browsing history.
---     ImGuiTextFilter       Filter;
---     bool                  AutoScroll;
---     bool                  ScrollToBottom;
---
---     ExampleAppConsole()
---     {
---         ClearLog();
---         memset(InputBuf, 0, sizeof(InputBuf));
---         HistoryPos = -1;
---
---         // "CLASSIFY" is here to provide the test case where "C"+[tab] completes to "CL" and display multiple matches.
---         Commands.push_back("HELP");
---         Commands.push_back("HISTORY");
---         Commands.push_back("CLEAR");
---         Commands.push_back("CLASSIFY");
---         AutoScroll = true;
---         ScrollToBottom = false;
---         AddLog("Welcome to Dear ImGui!");
---     }
---     ~ExampleAppConsole()
---     {
---         ClearLog();
---         for (int i = 0; i < History.Size; i++)
---             free(History[i]);
---     }
---
---     // Portable helpers
---     static int   Stricmp(const char* s1, const char* s2)         { int d; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1++; s2++; } return d; }
---     static int   Strnicmp(const char* s1, const char* s2, int n) { int d = 0; while (n > 0 && (d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1++; s2++; n--; } return d; }
---     static char* Strdup(const char* s)                           { IM_ASSERT(s); size_t len = strlen(s) + 1; void* buf = malloc(len); IM_ASSERT(buf); return (char*)memcpy(buf, (const void*)s, len); }
---     static void  Strtrim(char* s)                                { char* str_end = s + strlen(s); while (str_end > s && str_end[-1] == ' ') str_end--; *str_end = 0; }
---
---     void    ClearLog()
---     {
---         for (int i = 0; i < Items.Size; i++)
---             free(Items[i]);
---         Items.clear();
---     }
---
---     void    AddLog(const char* fmt, ...) IM_FMTARGS(2)
---     {
---         // FIXME-OPT
---         char buf[1024];
---         va_list args;
---         va_start(args, fmt);
---         vsnprintf(buf, IM_ARRAYSIZE(buf), fmt, args);
---         buf[IM_ARRAYSIZE(buf)-1] = 0;
---         va_end(args);
---         Items.push_back(Strdup(buf));
---     }
---
---     void    Draw(const char* title, bool* p_open)
---     {
---         ImGui.SetNextWindowSize(ImVec2(520, 600), ImGuiCond_FirstUseEver);
---         if (!ImGui.Begin(title, p_open))
---             return;
---
---         // As a specific feature guaranteed by the library, after calling Begin() the last Item represent the title bar.
---         // So e.g. IsItemHovered() will return true when hovering the title bar.
---         // Here we create a context menu only available from the title bar.
---         if (ImGui.BeginPopupContextItem())
---         {
---             if (ImGui.MenuItem("Close Console"))
---                 *p_open = false;
---             ImGui.EndPopup();
---         }
---
---         ImGui.TextWrapped(
---             "This example implements a console with basic coloring, completion (TAB key) and history (Up/Down keys). A more elaborate "
---             "implementation may want to store entries along with extra data such as timestamp, emitter, etc.");
---         ImGui.TextWrapped("Enter 'HELP' for help.");
---
---         // TODO: display items starting from the bottom
---
---         if (ImGui.SmallButton("Add Debug Text"))  { AddLog("%d some text", Items.Size); AddLog("some more text"); AddLog("display very important message here!"); }
---         ImGui.SameLine();
---         if (ImGui.SmallButton("Add Debug Error")) { AddLog("[error] something went wrong"); }
---         ImGui.SameLine();
---         if (ImGui.SmallButton("Clear"))           { ClearLog(); }
---         ImGui.SameLine();
---         bool copy_to_clipboard = ImGui.SmallButton("Copy");
---         //static float t = 0.0f; if (ImGui.GetTime() - t > 0.02f) { t = ImGui.GetTime(); AddLog("Spam %f", t); }
---
---         ImGui.Separator();
---
---         // Options menu
---         if (ImGui.BeginPopup("Options"))
---         {
---             ImGui.Checkbox("Auto-scroll", &AutoScroll);
---             ImGui.EndPopup();
---         }
---
---         // Options, Filter
---         if (ImGui.Button("Options"))
---             ImGui.OpenPopup("Options");
---         ImGui.SameLine();
---         Filter.Draw("Filter (\"incl,-excl\") (\"error\")", 180);
---         ImGui.Separator();
---
---         // Reserve enough left-over height for 1 separator + 1 input text
---         const float footer_height_to_reserve = ImGui.GetStyle().ItemSpacing.y + ImGui.GetFrameHeightWithSpacing();
---         if (ImGui.BeginChild("ScrollingRegion", ImVec2(0, -footer_height_to_reserve), false, ImGuiWindowFlags_HorizontalScrollbar))
---         {
---             if (ImGui.BeginPopupContextWindow())
---             {
---                 if (ImGui.Selectable("Clear")) ClearLog();
---                 ImGui.EndPopup();
---             }
---
---             // Display every line as a separate entry so we can change their color or add custom widgets.
---             // If you only want raw text you can use ImGui.TextUnformatted(log.begin(), log.end());
---             // NB- if you have thousands of entries this approach may be too inefficient and may require user-side clipping
---             // to only process visible items. The clipper will automatically measure the height of your first item and then
---             // "seek" to display only items in the visible area.
---             // To use the clipper we can replace your standard loop:
---             //      for (int i = 0; i < Items.Size; i++)
---             //   With:
---             //      ImGuiListClipper clipper;
---             //      clipper.Begin(Items.Size);
---             //      while (clipper.Step())
---             //         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
---             // - That your items are evenly spaced (same height)
---             // - That you have cheap random access to your elements (you can access them given their index,
---             //   without processing all the ones before)
---             // You cannot this code as-is if a filter is active because it breaks the 'cheap random-access' property.
---             // We would need random-access on the post-filtered list.
---             // A typical application wanting coarse clipping and filtering may want to pre-compute an array of indices
---             // or offsets of items that passed the filtering test, recomputing this array when user changes the filter,
---             // and appending newly elements as they are inserted. This is left as a task to the user until we can manage
---             // to improve this example code!
---             // If your items are of variable height:
---             // - Split them into same height items would be simpler and facilitate random-seeking into your list.
---             // - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
---             ImGui.PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
---             if (copy_to_clipboard)
---                 ImGui.LogToClipboard();
---             for (int i = 0; i < Items.Size; i++)
---             {
---                 const char* item = Items[i];
---                 if (!Filter.PassFilter(item))
---                     continue;
---
---                 // Normally you would store more information in your item than just a string.
---                 // (e.g. make Items[] an array of structure, store color/type etc.)
---                 ImVec4 color;
---                 bool has_color = false;
---                 if (strstr(item, "[error]"))          { color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); has_color = true; }
---                 else if (strncmp(item, "# ", 2) == 0) { color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f); has_color = true; }
---                 if (has_color)
---                     ImGui.PushStyleColor(ImGuiCol_Text, color);
---                 ImGui.TextUnformatted(item);
---                 if (has_color)
---                     ImGui.PopStyleColor();
---             }
---             if (copy_to_clipboard)
---                 ImGui.LogFinish();
---
---             // Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.
---             // Using a scrollbar or mouse-wheel will take away from the bottom edge.
---             if (ScrollToBottom || (AutoScroll && ImGui.GetScrollY() >= ImGui.GetScrollMaxY()))
---                 ImGui.SetScrollHereY(1.0f);
---             ScrollToBottom = false;
---
---             ImGui.PopStyleVar();
---             ImGui.EndChild();
---         }
---         ImGui.Separator();
---
---         // Command-line
---         bool reclaim_focus = false;
---         ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
---         if (ImGui.InputText("Input", InputBuf, IM_ARRAYSIZE(InputBuf), input_text_flags, &TextEditCallbackStub, (void*)this))
---         {
---             char* s = InputBuf;
---             Strtrim(s);
---             if (s[0])
---                 ExecCommand(s);
---             strcpy(s, "");
---             reclaim_focus = true;
---         }
---
---         // Auto-focus on window apparition
---         ImGui.SetItemDefaultFocus();
---         if (reclaim_focus)
---             ImGui.SetKeyboardFocusHere(-1); // Auto focus previous widget
---
---         ImGui.End();
---     }
---
---     void    ExecCommand(const char* command_line)
---     {
---         AddLog("# %s\n", command_line);
---
---         // Insert into history. First find match and delete it so it can be pushed to the back.
---         // This isn't trying to be smart or optimal.
---         HistoryPos = -1;
---         for (int i = History.Size - 1; i >= 0; i--)
---             if (Stricmp(History[i], command_line) == 0)
---             {
---                 free(History[i]);
---                 History.erase(History.begin() + i);
---                 break;
---             }
---         History.push_back(Strdup(command_line));
---
---         // Process command
---         if (Stricmp(command_line, "CLEAR") == 0)
---         {
---             ClearLog();
---         }
---         else if (Stricmp(command_line, "HELP") == 0)
---         {
---             AddLog("Commands:");
---             for (int i = 0; i < Commands.Size; i++)
---                 AddLog("- %s", Commands[i]);
---         }
---         else if (Stricmp(command_line, "HISTORY") == 0)
---         {
---             int first = History.Size - 10;
---             for (int i = first > 0 ? first : 0; i < History.Size; i++)
---                 AddLog("%3d: %s\n", i, History[i]);
---         }
---         else
---         {
---             AddLog("Unknown command: '%s'\n", command_line);
---         }
---
---         // On command input, we scroll to bottom even if AutoScroll==false
---         ScrollToBottom = true;
---     }
---
---     // In C++11 you'd be better off using lambdas for this sort of forwarding callbacks
---     static int TextEditCallbackStub(ImGuiInputTextCallbackData* data)
---     {
---         ExampleAppConsole* console = (ExampleAppConsole*)data->UserData;
---         return console->TextEditCallback(data);
---     }
---
---     int     TextEditCallback(ImGuiInputTextCallbackData* data)
---     {
---         //AddLog("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
---         switch (data->EventFlag)
---         {
---         case ImGuiInputTextFlags_CallbackCompletion:
---             {
---                 // Example of TEXT COMPLETION
---
---                 // Locate beginning of current word
---                 const char* word_end = data->Buf + data->CursorPos;
---                 const char* word_start = word_end;
---                 while (word_start > data->Buf)
---                 {
---                     const char c = word_start[-1];
---                     if (c == ' ' || c == '\t' || c == ',' || c == ';')
---                         break;
---                     word_start--;
---                 }
---
---                 // Build a list of candidates
---                 ImVector<const char*> candidates;
---                 for (int i = 0; i < Commands.Size; i++)
---                     if (Strnicmp(Commands[i], word_start, (int)(word_end - word_start)) == 0)
---                         candidates.push_back(Commands[i]);
---
---                 if (candidates.Size == 0)
---                 {
---                     // No match
---                     AddLog("No match for \"%.*s\"!\n", (int)(word_end - word_start), word_start);
---                 }
---                 else if (candidates.Size == 1)
---                 {
---                     // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
---                     data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
---                     data->InsertChars(data->CursorPos, candidates[0]);
---                     data->InsertChars(data->CursorPos, " ");
---                 }
---                 else
---                 {
---                     // Multiple matches. Complete as much as we can..
---                     // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
---                     int match_len = (int)(word_end - word_start);
---                     for (;;)
---                     {
---                         int c = 0;
---                         bool all_candidates_matches = true;
---                         for (int i = 0; i < candidates.Size && all_candidates_matches; i++)
---                             if (i == 0)
---                                 c = toupper(candidates[i][match_len]);
---                             else if (c == 0 || c != toupper(candidates[i][match_len]))
---                                 all_candidates_matches = false;
---                         if (!all_candidates_matches)
---                             break;
---                         match_len++;
---                     }
---
---                     if (match_len > 0)
---                     {
---                         data->DeleteChars((int)(word_start - data->Buf), (int)(word_end - word_start));
---                         data->InsertChars(data->CursorPos, candidates[0], candidates[0] + match_len);
---                     }
---
---                     // List matches
---                     AddLog("Possible matches:\n");
---                     for (int i = 0; i < candidates.Size; i++)
---                         AddLog("- %s\n", candidates[i]);
---                 }
---
---                 break;
---             }
---         case ImGuiInputTextFlags_CallbackHistory:
---             {
---                 // Example of HISTORY
---                 const int prev_history_pos = HistoryPos;
---                 if (data->EventKey == ImGuiKey_UpArrow)
---                 {
---                     if (HistoryPos == -1)
---                         HistoryPos = History.Size - 1;
---                     else if (HistoryPos > 0)
---                         HistoryPos--;
---                 }
---                 else if (data->EventKey == ImGuiKey_DownArrow)
---                 {
---                     if (HistoryPos != -1)
---                         if (++HistoryPos >= History.Size)
---                             HistoryPos = -1;
---                 }
---
---                 // A better implementation would preserve the data on the current input line along with cursor position.
---                 if (prev_history_pos != HistoryPos)
---                 {
---                     const char* history_str = (HistoryPos >= 0) ? History[HistoryPos] : "";
---                     data->DeleteChars(0, data->BufTextLen);
---                     data->InsertChars(0, history_str);
---                 }
---             }
---         }
---         return 0;
---     }
--- };
---
--- static void ShowExampleAppConsole(bool* p_open)
--- {
---     static ExampleAppConsole console;
---     console.Draw("Example: Console", p_open);
--- }
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Debug Console / ShowExampleAppConsole()
+-------------------------------------------------------------------------------
+
+-- Demonstrate creating a simple console window, with scrolling, filtering, completion and history.
+-- For the console example, we are using a more C++ like approach of declaring a class to hold both data and functions.
+local ExampleAppConsole = {}
+function ExampleAppConsole:new(ctx)
+  local instance = {
+    ctx          = ctx,
+    inputbuf     = '',
+    commands     = {},
+    history      = {},
+    history_pos  = 0, -- 0: new line, 1..#history: browsing history
+    filter       = ImGui.CreateTextFilter(),
+    auto_scroll      = true,
+    scroll_to_bottom = false,
+    callback     = ImGui.CreateFunctionFromEEL([[
+    function toupper(c)
+    (
+      c >= 'a' && c <= 'z' ? c - 32 : c;
+    );
+
+    EventFlag == InputTextFlags_CallbackCompletion ? (
+      // Example of TEXT COMPLETION
+
+      // Locate beginning of current word
+      word_end   = CursorPos;
+      word_start = word_end;
+      while(
+        c = str_getchar(#Buf, word_start - 1);
+        (c == ' ' || c == '\t' || c == ',' || c == ';') ? 0 : (
+          word_start > 0 ? (word_start -= 1; 1) : 0;
+        );
+      );
+      word = #;
+      strcpy_substr(word, #Buf, word_start, word_end - word_start);
+
+      // Build a list of candidates
+      Candidates = CommandsCount + 1; // Place the array after commands
+      CandidatesCount = 0;
+      i = 0;
+      loop(CommandsCount, (
+        strnicmp(Commands + i, word, strlen(word)) == 0 ? (
+          strcpy(Candidates + CandidatesCount, Commands + i);
+          CandidatesCount += 1;
+        );
+        i += 1;
+      ));
+
+      CandidatesCount == 0 ? (
+        // No match (Lua will log a message in CallbackPost())
+        0;
+      ) : CandidatesCount == 1 ? (
+        // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
+        InputTextCallback_DeleteChars(word_start, word_end - word_start);
+        InputTextCallback_InsertChars(CursorPos, Candidates);
+        InputTextCallback_InsertChars(CursorPos, " ");
+      ) : (
+        // Multiple matches. Complete as much as we can...
+        // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
+        match_len = strlen(word);
+        while(
+          c = 0;
+          all_candidates_matches = 1;
+          i = 0;
+          while(i < CandidatesCount && all_candidates_matches) (
+            i == 0 ? (
+              c = toupper(str_getchar(Candidates, match_len));
+            ) : (c == 0 || c != toupper(str_getchar(Candidates + i, match_len))) ?
+              all_candidates_matches = 0;
+            i += 1;
+          );
+          all_candidates_matches ? match_len += 1 : 0;
+        );
+
+        match_len > 0 ? (
+          candidate = #;
+          strncpy(candidate, Candidates, match_len);
+          InputTextCallback_DeleteChars(word_start, word_end - word_start);
+          InputTextCallback_InsertChars(CursorPos, candidate);
+        );
+
+        // Lua will print the list of possible matches in CallbackPost()
+      );
+    );
+
+    EventFlag == InputTextFlags_CallbackHistory ? (
+      // Example of HISTORY
+      prev_history_pos = HistoryPos;
+      history_line = #;
+      EventKey == Key_UpArrow ? (
+        HistoryPos == 0
+          ? HistoryPos = HistorySize
+          : HistoryPos > 1 ? HistoryPos -= 1;
+        strcpy(history_line, #HistoryPrev);
+      );
+      EventKey == Key_DownArrow ? (
+        HistoryPos != 0 ? (
+          HistoryPos += 1;
+          HistoryPos > HistorySize ? HistoryPos = 0;
+        );
+        strcpy(history_line, #HistoryNext);
+      );
+
+      // A better implementation would preserve the data on the current input line along with cursor position.
+      prev_history_pos != HistoryPos ? (
+        InputTextCallback_DeleteChars(0, strlen(Buf));
+        InputTextCallback_InsertChars(0, history_line);
+      );
+    );
+    ]]),
+  }
+  ImGui.Attach(ctx, instance.callback)
+  ImGui.Attach(ctx, instance.filter)
+  self.__index = self
+
+  local use_flags = {
+    'InputTextFlags_CallbackCompletion',
+    'InputTextFlags_CallbackHistory',
+    'Key_UpArrow', 'Key_DownArrow',
+  }
+  for i, flag in ipairs(use_flags) do
+    ImGui.Function_SetValue(instance.callback, flag, ImGui[flag]())
+  end
+  ImGui.Function_SetValue(instance.callback, 'CommandsCount', 0)
+
+  setmetatable(instance, self)
+
+  instance:ClearLog()
+  instance:AddLog('Welcome to Dear ImGui!')
+
+  -- "CLASSIFY" is here to provide the test case where "C"+[tab] completes to "CL" and display multiple matches.
+  instance:AddCommand('HELP')
+  instance:AddCommand('HISTORY')
+  instance:AddCommand('CLEAR')
+  instance:AddCommand('CLASSIFY')
+
+  return instance
+end
+
+function ExampleAppConsole:ClearLog()
+  self.items = {}
+end
+
+function ExampleAppConsole:AddLog(fmt, ...)
+  self.items[#self.items + 1] = fmt:format(...)
+end
+
+function ExampleAppConsole:Draw(title)
+  ImGui.SetNextWindowSize(self.ctx, 520, 600, ImGui.Cond_FirstUseEver())
+  local rv, open = ImGui.Begin(self.ctx, title, true)
+  if not rv then return open end
+
+  -- As a specific feature guaranteed by the library, after calling Begin() the last Item represent the title bar.
+  -- So e.g. IsItemHovered() will return true when hovering the title bar.
+  -- Here we create a context menu only available from the title bar.
+  if ImGui.BeginPopupContextItem(self.ctx) then
+    if ImGui.MenuItem(self.ctx, 'Close Console') then
+      open = false
+    end
+    ImGui.EndPopup(self.ctx)
+  end
+
+  ImGui.TextWrapped(self.ctx,
+    'This example implements a console with basic coloring, completion (TAB key) and history (Up/Down keys). A more elaborate \z
+     implementation may want to store entries along with extra data such as timestamp, emitter, etc.')
+  ImGui.TextWrapped(self.ctx, "Enter 'HELP' for help.")
+
+  -- TODO: display items starting from the bottom
+
+  if ImGui.SmallButton(self.ctx, 'Add Debug Text') then
+    self:AddLog('%d some text', #self.items)
+    self:AddLog("some more text")
+    self:AddLog("display very important message here!")
+  end
+  ImGui.SameLine(self.ctx)
+  if ImGui.SmallButton(self.ctx, 'Add Debug Error') then self:AddLog("[error] something went wrong") end
+  ImGui.SameLine(self.ctx)
+  if ImGui.SmallButton(self.ctx, 'Clear') then self:ClearLog() end
+  ImGui.SameLine(self.ctx)
+  local copy_to_clipboard = ImGui.SmallButton(self.ctx, 'Copy')
+  --static float t = 0.0f; if (ImGui.GetTime() - t > 0.02f) { t = ImGui.GetTime(); AddLog("Spam %f", t); }
+
+  ImGui.Separator(self.ctx)
+
+  -- Options menu
+  if ImGui.BeginPopup(self.ctx, 'Options') then
+    rv, self.auto_scroll = ImGui.Checkbox(self.ctx, 'Auto-scroll', self.auto_scroll)
+    ImGui.EndPopup(self.ctx)
+  end
+
+  -- Options, Filter
+  if ImGui.Button(self.ctx, 'Options') then
+    ImGui.OpenPopup(self.ctx, 'Options')
+  end
+  ImGui.SameLine(self.ctx)
+  ImGui.TextFilter_Draw(self.filter, ctx, 'Filter ("incl,-excl") ("error")', 180)
+  ImGui.Separator(self.ctx)
+
+  -- Reserve enough left-over height for 1 separator + 1 input text
+  local footer_height_to_reserve = select(2, ImGui.GetStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing())) + ImGui.GetFrameHeightWithSpacing(self.ctx)
+  if ImGui.BeginChild(self.ctx, 'ScrollingRegion', 0, -footer_height_to_reserve, false, ImGui.WindowFlags_HorizontalScrollbar()) then
+    if ImGui.BeginPopupContextWindow(self.ctx) then
+      if ImGui.Selectable(self.ctx, 'Clear') then self:ClearLog() end
+      ImGui.EndPopup(self.ctx)
+    end
+
+    -- Display every line as a separate entry so we can change their color or add custom widgets.
+    -- If you only want raw text you can use ImGui.TextUnformatted(log.begin(), log.end());
+    -- NB- if you have thousands of entries this approach may be too inefficient and may require user-side clipping
+    -- to only process visible items. The clipper will automatically measure the height of your first item and then
+    -- "seek" to display only items in the visible area.
+    -- To use the clipper we can replace your standard loop:
+    --      for (int i = 0; i < Items.Size; i++)
+    --   With:
+    --      ImGuiListClipper clipper;
+    --      clipper.Begin(Items.Size);
+    --      while (clipper.Step())
+    --         for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+    -- - That your items are evenly spaced (same height)
+    -- - That you have cheap random access to your elements (you can access them given their index,
+    --   without processing all the ones before)
+    -- You cannot this code as-is if a filter is active because it breaks the 'cheap random-access' property.
+    -- We would need random-access on the post-filtered list.
+    -- A typical application wanting coarse clipping and filtering may want to pre-compute an array of indices
+    -- or offsets of items that passed the filtering test, recomputing this array when user changes the filter,
+    -- and appending newly elements as they are inserted. This is left as a task to the user until we can manage
+    -- to improve this example code!
+    -- If your items are of variable height:
+    -- - Split them into same height items would be simpler and facilitate random-seeking into your list.
+    -- - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
+    ImGui.PushStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing(), 4, 1) -- Tighten spacing
+    if copy_to_clipboard then
+      ImGui.LogToClipboard(self.ctx)
+    end
+    for i, item in ipairs(self.items) do
+      if ImGui.TextFilter_PassFilter(self.filter, item) then
+        -- Normally you would store more information in your item than just a string.
+        -- (e.g. make Items[] an array of structure, store color/type etc.)
+        local color
+        if item:find("[error]", 1, true) then color = 0xFF6666FF
+        elseif item:sub(1, 2) == '# '   then color = 0xFFCC99FF end
+        if color then
+          ImGui.PushStyleColor(self.ctx, ImGui.Col_Text(), color)
+        end
+        ImGui.Text(self.ctx, item)
+        if color then
+          ImGui.PopStyleColor(self.ctx)
+        end
+      end
+    end
+    if copy_to_clipboard then
+      ImGui.LogFinish(self.ctx)
+    end
+
+    -- Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.
+    -- Using a scrollbar or mouse-wheel will take away from the bottom edge.
+    if self.scroll_to_bottom or (self.auto_scroll and ImGui.GetScrollY(self.ctx) >= ImGui.GetScrollMaxY(self.ctx)) then
+      ImGui.SetScrollHereY(self.ctx, 1.0)
+    end
+    self.scroll_to_bottom = false
+
+    ImGui.PopStyleVar(self.ctx)
+    ImGui.EndChild(self.ctx)
+  end
+  ImGui.Separator(self.ctx)
+
+  -- Command-line
+  local reclaim_focus = false
+  local input_text_flags = ImGui.InputTextFlags_EnterReturnsTrue()   |
+                           ImGui.InputTextFlags_EscapeClearsAll()    |
+                           ImGui.InputTextFlags_CallbackCompletion() |
+                           ImGui.InputTextFlags_CallbackHistory()
+  local rv
+  self:CallbackPre()
+  rv, self.input_buf = ImGui.InputText(self.ctx, 'Input', self.input_buf, input_text_flags, self.callback)
+  self:CallbackPost()
+  if rv then
+    local s = self.input_buf:match('^ *(.-) *$')
+    if #s > 0 then
+      self:ExecCommand(s)
+      self.input_buf = ''
+    end
+    reclaim_focus = true
+  end
+  -- self:AddLog('cursor: %d, selection: %d-%d',
+  --   ImGui.Function_GetValue(self.callback, 'CursorPos'),
+  --   ImGui.Function_GetValue(self.callback, 'SelectionStart'),
+  --   ImGui.Function_GetValue(self.callback, 'SelectionEnd'))
+
+  -- Auto-focus on window apparition
+  ImGui.SetItemDefaultFocus(self.ctx)
+  if reclaim_focus then
+    ImGui.SetKeyboardFocusHere(self.ctx, -1) -- Auto focus previous widget
+  end
+
+  ImGui.End(self.ctx)
+  return open
+end
+
+function ExampleAppConsole:stricmp(a, b)
+  return a:upper() == b:upper()
+end
+
+function ExampleAppConsole:ExecCommand(command_line)
+  self:AddLog('# %s\n', command_line)
+
+  -- Insert into history. First find match and delete it so it can be pushed to the back.
+  -- This isn't trying to be smart or optimal.
+  self.history_pos = 0
+  for i = #self.history, 1, -1 do
+    if self:stricmp(self.history[i], command_line) then
+      table.remove(self.history, i)
+      break
+    end
+  end
+  self.history[#self.history + 1] = command_line
+
+  -- Process command
+  if self:stricmp(command_line, 'CLEAR') then
+    self:ClearLog()
+  elseif self:stricmp(command_line, 'HELP') then
+    self:AddLog('Commands:')
+    local CommandsCount = ImGui.Function_GetValue(self.callback, 'CommandsCount')
+    for i = 0, CommandsCount - 1 do
+      ImGui.Function_SetValue(self.callback, 'command', i)
+      self:AddLog('- %s\n', ImGui.Function_GetValue_String(self.callback, 'command'))
+    end
+  elseif self:stricmp(command_line, 'HISTORY') then
+    local first = math.max(1, #self.history - 10)
+    for i = first, #self.history do
+      self:AddLog("%3d: %s\n", i, self.history[i])
+    end
+  else
+    self:AddLog("Unknown command: '%s'\n", command_line)
+  end
+
+  -- On command input, we scroll to bottom even if AutoScroll==false
+  self.scroll_to_bottom = true
+end
+
+function ExampleAppConsole:AddCommand(name)
+  ImGui.Function_SetValue_String(self.callback, 'CommandsCount', name)
+  local CommandsCount = ImGui.Function_GetValue(self.callback, 'CommandsCount')
+  ImGui.Function_SetValue(self.callback, 'CommandsCount', CommandsCount + 1)
+end
+
+function ExampleAppConsole:CallbackPre()
+  -- Prepare callback data
+  ImGui.Function_SetValue(self.callback, 'HistoryPos',  self.history_pos)
+  ImGui.Function_SetValue(self.callback, 'HistorySize', #self.history)
+  ImGui.Function_SetValue_String(self.callback, '#HistoryPrev',
+    self.history[self.history_pos == 0 and #self.history or self.history_pos - 1])
+  ImGui.Function_SetValue_String(self.callback, '#HistoryNext',
+    self.history[self.history_pos + 1])
+end
+
+function ExampleAppConsole:CallbackPost()
+  -- Callback post-processing
+  self.history_pos = ImGui.Function_GetValue(self.callback, 'HistoryPos')
+
+  if ImGui.Function_GetValue(self.callback, 'EventFlag') == ImGui.InputTextFlags_CallbackCompletion() then
+    local CandidatesCount = ImGui.Function_GetValue(self.callback, 'CandidatesCount')
+    if CandidatesCount == 0 then
+      self:AddLog('No match for "%s"!\n', ImGui.Function_GetValue_String(self.callback, 'word'))
+    elseif CandidatesCount > 1 then
+      -- List matches
+      local Candidates = ImGui.Function_GetValue(self.callback, 'Candidates')
+      self:AddLog('Possible matches:\n')
+      for i = 0, CandidatesCount - 1 do
+        ImGui.Function_SetValue(self.callback, 'candidate', Candidates + i)
+        self:AddLog('- %s\n', ImGui.Function_GetValue_String(self.callback, 'candidate'))
+      end
+    end
+    ImGui.Function_SetValue(self.callback, 'EventFlag', 0)
+  end
+end
+
+function demo.ShowExampleAppConsole()
+  if not app.console then
+    app.console = ExampleAppConsole:new(ctx)
+  end
+
+  return app.console:Draw('Example: Console')
+end
 
 -------------------------------------------------------------------------------
 -- [SECTION] Example App: Debug Log / ShowExampleAppLog()
@@ -7637,35 +7623,42 @@ end
 -- Demonstrate creating a window with custom resize constraints.
 -- Note that size constraints currently don't work on a docked window.
 function demo.ShowExampleAppConstrainedResize()
-  -- struct CustomConstraints
-  -- {
-  --   // Helper functions to demonstrate programmatic constraints
-  --   // FIXME: This doesn't take account of decoration size (e.g. title bar), library should make this easier.
-  --   static void AspectRatio(ImGuiSizeCallbackData* data)    { float aspect_ratio = *(float*)data->UserData; data->DesiredSize.x = IM_MAX(data->CurrentSize.x, data->CurrentSize.y); data->DesiredSize.y = (float)(int)(data->DesiredSize.x / aspect_ratio); }
-  --   static void Square(ImGuiSizeCallbackData* data)         { data->DesiredSize.x = data->DesiredSize.y = IM_MAX(data->CurrentSize.x, data->CurrentSize.y); }
-  --   static void Step(ImGuiSizeCallbackData* data)           { float step = *(float*)data->UserData; data->DesiredSize = ImVec2((int)(data->CurrentSize.x / step + 0.5f) * step, (int)(data->CurrentSize.y / step + 0.5f) * step); }
-  -- };
-
   if not app.constrained_resize then
     app.constrained_resize = {
       auto_resize    = false,
       window_padding = true,
-      type           = 0, -- imgui's demo defaults to 5 (aspect ratio)
+      type           = 5,
       display_lines  = 10,
     }
+    -- Helper functions to demonstrate programmatic constraints
+    -- FIXME: This doesn't take account of decoration size (e.g. title bar), library should make this easier.
+    app.constrained_resize.aspect_ratio = ImGui.CreateFunctionFromEEL([[
+      DesiredSize.x = max(DesiredSize.x, DesiredSize.y);
+      DesiredSize.y = floor(DesiredSize.x / aspect_ratio);
+    ]])
+    app.constrained_resize.square       = ImGui.CreateFunctionFromEEL([[
+      DesiredSize.x = DesiredSize.y = max(DesiredSize.x, DesiredSize.y);
+    ]])
+    app.constrained_resize.step         = ImGui.CreateFunctionFromEEL([[
+      DesiredSize.x = floor(DesiredSize.x / fixed_step + 0.5) * fixed_step;
+      DesiredSize.y = floor(DesiredSize.y / fixed_step + 0.5) * fixed_step;
+    ]])
+    ImGui.Attach(ctx, app.constrained_resize.aspect_ratio)
+    ImGui.Attach(ctx, app.constrained_resize.square)
+    ImGui.Attach(ctx, app.constrained_resize.step)
   end
 
   -- Submit constraint
-  -- float aspect_ratio = 16.0f / 9.0f;
-  -- float fixed_step = 100.0f;
+  ImGui.Function_SetValue(app.constrained_resize.aspect_ratio, 'aspect_ratio', 16 / 9)
+  ImGui.Function_SetValue(app.constrained_resize.step,         'fixed_step',   100)
   if app.constrained_resize.type == 0 then ImGui.SetNextWindowSizeConstraints(ctx, 100, 100,     500, 500)     end -- Between 100x100 and 500x500
   if app.constrained_resize.type == 1 then ImGui.SetNextWindowSizeConstraints(ctx, 100, 100, FLT_MAX, FLT_MAX) end -- Width > 100, Height > 100
   if app.constrained_resize.type == 2 then ImGui.SetNextWindowSizeConstraints(ctx,  -1,   0,      -1, FLT_MAX) end -- Vertical only
   if app.constrained_resize.type == 3 then ImGui.SetNextWindowSizeConstraints(ctx,   0,  -1, FLT_MAX, -1)      end -- Horizontal only
   if app.constrained_resize.type == 4 then ImGui.SetNextWindowSizeConstraints(ctx, 400,  -1,     500, -1)      end -- Width Between and 400 and 500
-  -- if app.constrained_resize.type == 5 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, CustomConstraints::AspectRatio, (void*)&aspect_ratio);   // Aspect ratio
-  -- if app.constrained_resize.type == 6 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, CustomConstraints::Square);                              // Always Square
-  -- if app.constrained_resize.type == 7 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, CustomConstraints::Step, (void*)&fixed_step);            // Fixed Step
+  if app.constrained_resize.type == 5 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, app.constrained_resize.aspect_ratio) end -- Aspect ratio
+  if app.constrained_resize.type == 6 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, app.constrained_resize.square)       end -- Always Square
+  if app.constrained_resize.type == 7 then ImGui.SetNextWindowSizeConstraints(ctx,   0,   0, FLT_MAX, FLT_MAX, app.constrained_resize.step)         end -- Fixed Step
 
   -- Submit window
   if not app.constrained_resize.window_padding then
@@ -7699,10 +7692,10 @@ function demo.ShowExampleAppConstrainedResize()
       At least 100x100\0\z
       Resize vertical only\0\z
       Resize horizontal only\0\z
-      Width Between 400 and 500\0')
-      --Custom: Aspect Ratio 16:9\0\z
-      --Custom: Always Square\0\z
-      --Custom: Fixed Steps (100)\0')
+      Width Between 400 and 500\0\z
+      Custom: Aspect Ratio 16:9\0\z
+      Custom: Always Square\0\z
+      Custom: Fixed Steps (100)\0')
     ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 20)
     rv,app.constrained_resize.display_lines = ImGui.DragInt(ctx, 'Lines', app.constrained_resize.display_lines, 0.2, 1, 100)
     rv,app.constrained_resize.auto_resize = ImGui.Checkbox(ctx, 'Auto-resize', app.constrained_resize.auto_resize)

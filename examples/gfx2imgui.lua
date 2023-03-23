@@ -156,6 +156,7 @@ local gfx, global_state, state = {}, {
   commands   = {},
   font       = 0,
   fonts      = {},
+  funcs      = {},
   images     = {},
   log        = { ptr=0, size=0, max_size=64 },
   log_lines  = {},
@@ -665,39 +666,88 @@ local function beginFrame()
 end
 
 local function center2D(points)
-  local n_coords = #points
-  local center_x, center_y, n_points = 0, 0, n_coords * .5
-  for i = 1, n_coords, 2 do
-    center_x, center_y = center_x + points[i], center_y + points[i + 1]
+  local impl = global_state.funcs.center2D
+  if not ImGui.ValidatePtr(impl, 'ImGui_Function*') then
+   impl = ImGui.CreateFunctionFromEEL([[
+    i = 0; center.x = 0; center.y = 0; n_points = n_coords * .5;
+    while(i < n_coords) (
+      center.x += points[i]; center.y += points[i + 1];
+      i += 2;
+    );
+    center.x /= n_points; center.y /= n_points;
+    ]])
+    global_state.funcs.center2D = impl
+    if state and ImGui.ValidatePtr(state.ctx, 'ImGui_Context*') then
+      ImGui.Attach(state.ctx, impl)
+    end
   end
-  return center_x / n_points, center_y / n_points
+
+  ImGui.Function_SetValue(impl, 'n_coords',  #points)
+  ImGui.Function_SetValue_Array(impl, 'points', points)
+  ImGui.Function_Execute(impl)
+  return
+    ImGui.Function_GetValue(impl, 'center.x'),
+    ImGui.Function_GetValue(impl, 'center.y')
 end
 
 local function sort2D(points, center_x, center_y)
-  local atan2 = math.atan
-  for i = 1, #points, 2 do
-    local x, y, j = points[i], points[i + 1], i - 2
-    local angle = atan2(y - center_y, x - center_x)
-    while j >= 1 and
-        atan2(points[j + 1] - center_y, points[j + 0] - center_x) > angle do
-      points[j + 2], points[j + 3] = points[j + 0], points[j + 1]
-      j = j - 2
+  local impl = global_state.funcs.sort2D
+  if not ImGui.ValidatePtr(impl, 'ImGui_Function*') then
+    impl = ImGui.CreateFunctionFromEEL([[
+    i = 0;
+    while(i < n_points) (
+      x = points[i]; y = points[i + 1]; j = i - 2;
+      angle = atan2(y - center.y, x - center.x);
+      while(j >= 0 &&
+            atan2(points[j + 1] - center.y, points[j] - center.x) > angle) (
+        points[j + 2] = points[j]; points[j + 3] = points[j + 1];
+        j = j - 2;
+      );
+      points[j + 2] = x; points[j + 3] = y;
+      i += 2;
+    );
+    ]])
+    global_state.funcs.sort2D = impl
+    if state and ImGui.ValidatePtr(state.ctx, 'ImGui_Context*') then
+      ImGui.Attach(state.ctx, impl)
     end
-    points[j + 2], points[j + 3] = x, y
   end
+
+  ImGui.Function_SetValue(impl, 'center.x', center_x)
+  ImGui.Function_SetValue(impl, 'center.y', center_y)
+  ImGui.Function_SetValue(impl, 'n_points',  #points)
+  ImGui.Function_SetValue_Array(impl, 'points', points)
+  ImGui.Function_Execute(impl)
+  ImGui.Function_GetValue_Array(impl, 'points', points)
 end
 
 local function uniq2D(points)
-  local j, n_points = 3, #points
-  for i = j, n_points, 2 do
-    local x, y = points[i], points[i + 1]
-    if x ~= points[j - 2] or y ~= points[j - 1] then
-      points[j], points[j + 1] = x, y
-      j = j + 2
+  local impl = global_state.funcs.uniq2D
+  if not ImGui.ValidatePtr(impl, 'ImGui_Function*') then
+    impl = ImGui.CreateFunctionFromEEL([[
+    j = i = 2;
+    while(i < n_points) (
+      x = points[i]; y = points[i + 1];
+      x != points[j - 2] || y != points[j - 1] ? (
+        points[j] = x; points[j + 1] = y;
+        j += 2;
+      );
+      i += 2;
+    );
+    ]])
+    global_state.funcs.uniq2D = impl
+    if state and ImGui.ValidatePtr(state.ctx, 'ImGui_Context*') then
+      ImGui.Attach(state.ctx, impl)
     end
   end
-  points.resize(j - 1)
-  return j - 1
+
+  ImGui.Function_SetValue(impl, 'n_points',  #points)
+  ImGui.Function_SetValue_Array(impl, 'points', points)
+  ImGui.Function_Execute(impl)
+  local j = ImGui.Function_GetValue(impl, 'j')
+  points.resize(j)
+  ImGui.Function_GetValue_Array(impl, 'points', points)
+  return j
 end
 
 local function combineMatrix(matrix,
@@ -1272,6 +1322,12 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     -- using pairs (not ipairs) to support gaps in requested font slots
     for _, font in pairs(global_state.fonts) do
       state.fontqueue[#state.fontqueue + 1] = font
+    end
+
+    for _, func in pairs(global_state.funcs) do
+      if ImGui.ValidatePtr(func, 'ImGui_Function*') then
+        ImGui.Attach(state.ctx, func)
+      end
     end
 
     -- always update global_state.dock with the current value

@@ -18,12 +18,14 @@
 #include <version.hpp>
 
 #define REAPERAPI_IMPLEMENT
+#include <eel2_import.hpp>
 #include <reaper_plugin_functions.h>
 #include <reaper_plugin_secrets.h>
 
 #include "action.hpp"
 #include "api.hpp"
 #include "docker.hpp"
+#include "function.hpp"
 #include "resource.hpp"
 #include "settings.hpp"
 #include "window.hpp"
@@ -88,6 +90,23 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(LICE__GetRowSpan),
     IMPORT(LICE__GetWidth),
     IMPORT(LICE__resize),
+
+    IMPORT(NSEEL_addfunc_ret_type),
+    IMPORT(NSEEL_addfunc_varparm_ex),
+    IMPORT(NSEEL_code_compile_ex),
+    IMPORT(NSEEL_code_execute),
+    IMPORT(NSEEL_code_free),
+    IMPORT(NSEEL_code_getcodeerror),
+    IMPORT(nseel_int_register_var),
+    IMPORT(NSEEL_PProc_THIS),
+    IMPORT(nseel_stringsegments_tobuf),
+    IMPORT(NSEEL_VM_alloc),
+    IMPORT(NSEEL_VM_enumallvars),
+    IMPORT(NSEEL_VM_free),
+    IMPORT(NSEEL_VM_SetCustomFuncThis),
+    IMPORT(NSEEL_VM_SetFunctionTable),
+    IMPORT(NSEEL_VM_getramptr),
+    IMPORT(NSEEL_VM_SetStringFunc),
   };
 
   for(const ApiImport &func : funcs) {
@@ -137,6 +156,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
   API::announceAll(true);
   Action::setup();
   Settings::setup();
+  Function::setup();
 
   return 1;
 }

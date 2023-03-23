@@ -201,7 +201,6 @@ bool Context::heartbeat()
     if(!endFrame(true))
       return false;
 
-    keepAlive();
     for(Resource *obj : m_attachments)
       obj->keepAlive();
   }

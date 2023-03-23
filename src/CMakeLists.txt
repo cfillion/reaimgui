@@ -9,6 +9,7 @@ add_library(src OBJECT
   docker.cpp
   error.cpp
   font.cpp
+  function.cpp
   image.cpp
   jpeg_image.cpp
   keymap.cpp
@@ -126,6 +127,9 @@ target_link_libraries(src PNG::PNG)
 
 find_package(WDL REQUIRED)
 target_link_libraries(src WDL::WDL)
+
+find_package(EEL REQUIRED)
+target_link_libraries(src EEL::eel2_import)
 
 if(NOT WIN32)
   find_package(SWELL REQUIRED)

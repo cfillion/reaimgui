@@ -58,7 +58,6 @@ ImGuiListClipper *ListClipper::operator->()
 {
   assertValid(this);
   assertFrame(m_ctx);
-  keepAlive();
   return &m_imlc;
 }
 
