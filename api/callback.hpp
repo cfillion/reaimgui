@@ -28,10 +28,16 @@ template<typename Data>
 class Callback {
 public:
   struct DataAccess {
-    DataAccess()  { if(s_data) loadVars(function());  }
-    ~DataAccess() { if(s_data) storeVars(function()); }
+    DataAccess()  { if(*this) loadVars(function());  }
+    ~DataAccess() { if(*this) storeVars(function()); }
 
-    operator bool()    const { return !!s_data; }
+    operator bool() const
+    {
+      // prevent use-after-free if the context got destroyed during
+      // this or a previous data access
+      return !!s_data && Resource::isValid(Context::current());
+    }
+
     Data *operator->() const { return Callback<Data>::s_data; }
   };
 
