@@ -373,7 +373,7 @@ static std::string hl(const Highlight type = Highlight::End)
 void Argument::defaultValue(std::ostream &stream, const char *null) const
 {
   if(defv.empty())
-    stream << hl(Highlight::Constant) << "nullptr";
+    stream << hl(Highlight::Constant) << null;
   else if(defv[0] == '"')
     stream << hl(Highlight::String) << defv;
   else
