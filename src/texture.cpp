@@ -20,49 +20,107 @@
 #include <algorithm>
 #include <imgui/imgui.h>
 #include <iterator>
+#include <numeric>
+
+class Comparator {
+public:
+  Comparator(const TextureManager *manager) : m_manager { manager } {}
+
+  bool operator()(const size_t ida, const size_t idb) const
+  {
+    const Texture &a { m_manager->get(ida) }, &b { m_manager->get(idb) };
+    if(a.object() == b.object())
+      return a.scale() < b.scale();
+    return a.object() < b.object();
+  }
+
+  bool operator()(const size_t index, void *user) const
+  {
+    return m_manager->get(index).object() < user;
+  }
+
+  bool operator()(void *user, const size_t index) const
+  {
+    return user < m_manager->get(index).object();
+  }
+
+  bool operator()(const size_t index, const float scale) const
+  {
+    return m_manager->get(index).scale() < scale;
+  }
+
+  bool operator()(const float scale, const size_t index) const
+  {
+    return scale < m_manager->get(index).scale();
+  }
+
+private:
+  const TextureManager *m_manager;
+};
 
 TextureManager::TextureManager()
   : m_version {}
 {
 }
 
-size_t TextureManager::touch(const Texture &tex)
+size_t TextureManager::touch(Texture &&tex)
 {
+  const Comparator comparator { this };
   const auto [begin, end]
-    { std::equal_range(m_textures.begin(), m_textures.end(), tex.user) };
-  auto it { std::lower_bound(begin, end, tex.scale) };
+    { std::equal_range(m_sorted.begin(), m_sorted.end(), tex.m_user, comparator) };
+  auto it { std::lower_bound(begin, end, tex.m_scale, comparator) };
 
-  const auto now { static_cast<float>(ImGui::GetTime()) };
-
-  if(it == end || it->user != tex.user || it->scale != tex.scale) {
-    it = m_textures.insert(it, tex);
+  if(it == end || !m_textures[*it].isSame(tex.m_user, tex.m_scale)) {
+    tex.m_version = m_version;
+    const Texture &inserted { m_textures.emplace_back(std::move(tex)) };
+    it = m_sorted.emplace(it, &inserted - &m_textures.front());
     ++m_version;
   }
 
-  it->lastTimeActive = now;
+  m_textures[*it].m_lastTimeActive = ImGui::GetTime();
 
-  return std::distance(m_textures.begin(), it);
-}
-
-void TextureManager::remove(void *object)
-{
-  const auto [begin, end]
-    { std::equal_range(m_textures.begin(), m_textures.end(), object) };
-
-  if(begin != end) {
-    m_textures.erase(begin, end);
-    ++m_version;
-  }
+  return *it;
 }
 
 void TextureManager::invalidate(void *object)
 {
+  const Comparator comparator { this };
   const auto [begin, end]
-    { equal_range(m_textures.begin(), m_textures.end(), object) };
+    { equal_range(m_sorted.begin(), m_sorted.end(), object, comparator) };
 
   for(auto it { begin }; it < end; ++it)
-    ++(it->version);
+    ++(m_textures[*it].m_version);
 
+  ++m_version;
+}
+
+void TextureManager::remove(void *object)
+{
+  const Comparator comparator { this };
+  const auto [begin, end]
+    { std::equal_range(m_sorted.begin(), m_sorted.end(), object, comparator) };
+
+  if(begin == end)
+    return;
+
+  std::sort(begin, end);
+  const size_t first { *begin }, last { *std::prev(end) };
+
+  size_t i {};
+  m_textures.erase(std::remove_if(m_textures.begin(), m_textures.end(),
+  [&](const Texture &) {
+    const bool rm { i >= first && i <= last };
+    ++i;
+    return rm;
+  }), m_textures.end());
+
+  const auto rangeSize { end - begin };
+  for(size_t &i : m_sorted) {
+    if(i >= *begin)
+      i -= rangeSize;
+  }
+
+  m_sorted.erase(begin, end);
   ++m_version;
 }
 
@@ -70,27 +128,20 @@ void TextureManager::cleanup()
 {
   const float ttl { ImGui::GetIO().ConfigMemoryCompactTimer };
   const auto cutoff { static_cast<float>(ImGui::GetTime()) - ttl };
-  const auto versionIfChange { m_version + 1 };
+  const auto isExpired { [cutoff](const Texture &tex) {
+    return !tex.isValid() || (tex.m_lastTimeActive <= cutoff && tex.compact());
+  }};
+  const auto newEnd
+    { std::remove_if(m_textures.begin(), m_textures.end(), isExpired) };
 
-  auto it { m_textures.begin() };
-  while(it != m_textures.end()) {
-    if(!it->isValid()) {
-      auto nextObjIt { it };
-      do { ++nextObjIt; }
-      while(nextObjIt != m_textures.end() && nextObjIt->user == it->user);
+  if(newEnd == m_textures.end())
+    return;
 
-      it = m_textures.erase(it, nextObjIt);
-      m_version = versionIfChange;
-      continue;
-    }
-
-    if(it->lastTimeActive >= cutoff || !it->compact())
-      ++it;
-    else {
-      it = m_textures.erase(it);
-      m_version = versionIfChange;
-    }
-  }
+  ++m_version;
+  m_textures.erase(newEnd, m_textures.end());
+  m_sorted.resize(m_textures.size());
+  std::iota(m_sorted.begin(), m_sorted.end(), 0);
+  std::sort(m_sorted.begin(), m_sorted.end(), Comparator { this });
 }
 
 void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) const
@@ -116,16 +167,11 @@ void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) 
 
     TextureCmd::Type wantCmd;
 
-    if(tex.user < crumb.user ||
-        (tex.user == crumb.user && tex.scale < crumb.scale)) {
-      --j;
-      wantCmd = TextureCmd::Insert;
-    }
-    else if(tex.user > crumb.user || tex.scale > crumb.scale) {
+    if(!tex.isSame(crumb.user, crumb.scale)) {
       --i;
       wantCmd = TextureCmd::Remove;
     }
-    else if(crumb.version != tex.version)
+    else if(crumb.version != tex.m_version)
       wantCmd = TextureCmd::Update;
     else
       wantCmd = NullCmd;
@@ -157,8 +203,14 @@ void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) 
 
   if(const auto diff { static_cast<long long>(cookie->m_crumbs.size()) -
                        static_cast<long long>(m_textures.size()) }) {
-    cmd.type = diff < 0 ? TextureCmd::Insert : TextureCmd::Remove;
-    cmd.offset += cmd.size;
+    if(diff < 0) {
+      cmd.type = TextureCmd::Insert;
+      cmd.offset = cookie->m_crumbs.size();
+    }
+    else {
+      cmd.type = TextureCmd::Remove;
+      cmd.offset = m_textures.size();
+    }
     cmd.size = std::abs(diff);
 
     runner(cmd);
@@ -176,7 +228,7 @@ void TextureCookie::doCommand(const TextureCmd &cmd)
   struct MakeCrumb {
     Crumb operator()(const Texture &tex)
     {
-      return { tex.user, tex.scale, tex.version };
+      return { tex.m_user, tex.m_scale, tex.m_version };
     };
   };
 
@@ -194,7 +246,7 @@ void TextureCookie::doCommand(const TextureCmd &cmd)
     auto texture { &cmd.manager->get(cmd.offset) };
     const auto end { crumb + cmd.size };
     while(crumb < end)
-      (crumb++)->version = (texture++)->version;
+      (crumb++)->version = (texture++)->m_version;
     break;
   }
   case TextureCmd::Remove: {

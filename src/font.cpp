@@ -150,8 +150,7 @@ void FontList::setScale(const float scale)
 
   // after build() because it clears the texture ID!
   // (via ImFontAtlasBuildWithFreeTypeEx)
-  Texture tex { this, scale, &getPixels };
-  tex.m_compact = &removeScale;
+  const Texture tex { this, scale, &getPixels, nullptr, &removeScale };
   atlas->SetTexID(m_textureManager->touch(tex));
 }
 

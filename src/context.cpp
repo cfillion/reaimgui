@@ -227,8 +227,7 @@ bool Context::beginFrame() try
   Platform::updateMonitors(); // TODO only if changed
   m_fonts->update(); // uses the monitor list
 
-  // before the manager begins giving texture IDs
-  // used in the frame to avoid flicker
+  // remove unused textures before texture IDs are given out for this frame
   m_textureManager->cleanup();
 
   updateFrameInfo();

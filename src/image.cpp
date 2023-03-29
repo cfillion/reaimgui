@@ -99,9 +99,8 @@ std::vector<unsigned char *> Bitmap::makeScanlines()
 
 size_t Bitmap::makeTexture(TextureManager *textureManager)
 {
-  Texture tex { this, 1.f, &getPixels };
-  tex.m_isValid = &Resource::isValid;
-  return textureManager->touch(tex);
+  const Texture tex { this, 1.f, &getPixels, &Resource::isValid };
+  return textureManager->touch(std::move(tex));
 }
 
 void ImageSet::add(const float scale, Image *img)

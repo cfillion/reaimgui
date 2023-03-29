@@ -25,6 +25,8 @@ class TextureCookie;
 class TextureManager;
 struct TextureCmd;
 
+using TextureVersion = unsigned int;
+
 class Texture {
 public:
   using GetPixelsFunc = const unsigned char *(*)(void *object, float scale,
@@ -32,42 +34,47 @@ public:
   using CompactFunc   = bool(*)(void *object, float scale);
   using IsValidFunc   = bool(*)(void *object);
 
-  Texture(void *user, float scale, GetPixelsFunc getPixels)
-    : user { user }, scale { scale }, m_getPixels { getPixels },
-      m_compact { nullptr }, m_isValid { nullptr },
-      version { 0u }, lastTimeActive { 0.f }
+  Texture(void *user, float scale, GetPixelsFunc getPixels,
+    IsValidFunc isValid = nullptr, CompactFunc compact = nullptr)
+    : m_user { user }, m_scale { scale }, m_getPixels { getPixels },
+      m_compact { compact }, m_isValid { isValid },
+      m_version { 0u }, m_lastTimeActive { 0.f }
   {}
 
-  void *user;
-  float scale;
-  GetPixelsFunc m_getPixels;
-  CompactFunc   m_compact;
-  IsValidFunc   m_isValid;
+  void *object() const { return m_user; }
+  float scale()  const { return m_scale; }
+
+  bool isSame(void *user, const float scale) const
+  {
+    return m_user == user && m_scale == scale;
+  }
 
   const unsigned char *getPixels(int *width, int *height) const
   {
-    return m_getPixels(user, scale, width, height);
+    return m_getPixels(m_user, m_scale, width, height);
   }
 
   bool isValid() const
   {
-    return m_isValid ? m_isValid(user) : true;
+    return m_isValid ? m_isValid(m_user) : true;
   }
 
   bool compact() const
   {
-    return m_compact ? m_compact(user, scale) : true;
+    return m_compact ? m_compact(m_user, m_scale) : true;
   }
-
-  operator void*() const { return user;  }
-  operator float() const { return scale; }
 
 private:
   friend TextureManager;
   friend TextureCookie;
 
-  unsigned int version;
-  float lastTimeActive;
+  void *m_user;
+  float m_scale;
+  GetPixelsFunc m_getPixels;
+  CompactFunc   m_compact;
+  IsValidFunc   m_isValid;
+  TextureVersion m_version;
+  float m_lastTimeActive;
 };
 
 class TextureManager {
@@ -76,19 +83,22 @@ public:
 
   TextureManager();
 
-  size_t touch(const Texture &);
+  size_t touch(Texture &&);
   template<typename... Args>
-  size_t touch(Args &&...args) { return touch({ args... }); }
+  size_t touch(Args &&...args) { return touch(Texture { args... }); }
   const Texture &get(size_t i) const { return m_textures[i]; }
-  void remove(void *object);
   void invalidate(void *object);
 
+  // invalidates all indices given by touch()
   void cleanup();
+  void remove(void *object);
+
   void update(TextureCookie *, const CommandRunner &) const;
 
 private:
   std::vector<Texture> m_textures;
-  unsigned int m_version;
+  std::vector<size_t> m_sorted;
+  TextureVersion m_version;
 };
 
 class TextureCookie {
@@ -101,12 +111,12 @@ private:
   struct Crumb {
     void *user;
     float scale;
-    unsigned int version;
+    TextureVersion version;
   };
 
   void doCommand(const TextureCmd &);
 
-  unsigned int m_version;
+  TextureVersion m_version;
   std::vector<Crumb> m_crumbs;
 };
 

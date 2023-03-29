@@ -3,7 +3,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include <memory>
 
 using CmdVector = std::vector<TextureCmd>;
@@ -36,20 +36,22 @@ static std::ostream &operator<<(std::ostream &os, const TextureCmd &cmd)
   return os;
 }
 
-TEST(TextureTest, OutOfOrderInsertion) {
+TEST(TextureTest, TouchOutOfOrder) {
   std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
     { ImGui::CreateContext(), &ImGui::DestroyContext };
 
   TextureManager manager;
-  manager.touch((void *)0x10, 1.75f, nullptr);
-  EXPECT_EQ(manager.touch((void *)0x10, 1.f,   nullptr), 0);
-  EXPECT_EQ(manager.touch((void *)0x10, 1.75f, nullptr), 1);
+  EXPECT_EQ(manager.touch((void *)0x10, 2.f, nullptr), 0);
+  EXPECT_EQ(manager.touch((void *)0x10, 1.f, nullptr), 1);
+  EXPECT_EQ(manager.touch((void *)0x10, 2.f, nullptr), 0);
+  EXPECT_EQ(manager.touch((void *)0x20, 1.f, nullptr), 2);
 }
 
-TEST(TextureTest, UpdateCommands) {
+TEST(TextureTest, InsertTail) {
   std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
     { ImGui::CreateContext(), &ImGui::DestroyContext };
 
+  CmdVector      cmds;
   TextureManager manager;
   TextureCookie  cookie;
 
@@ -58,67 +60,279 @@ TEST(TextureTest, UpdateCommands) {
   manager.touch((void *)0x30, 1.f, nullptr);
   manager.touch((void *)0x40, 1.f, nullptr);
   manager.touch((void *)0x50, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Insert, 0, 5 },
+  }));
+}
 
-  {
-    SCOPED_TRACE("insert all");
-    CmdVector cmds;
-    manager.update(&cookie, LogCmds { cmds });
-    ASSERT_THAT(cmds, testing::ElementsAreArray(CmdVector {
-      { &manager, TextureCmd::Insert, 0, 5 }
-    }));
-  }
+TEST(TextureTest, InsertMiddle) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
 
-  {
-    SCOPED_TRACE("insert anywhere");
-    manager.touch((void *)0x12, 1.f, nullptr);
-    manager.touch((void *)0x15, 1.f, nullptr);
-    manager.touch((void *)0x30, 2.f, nullptr);
-    manager.touch((void *)0xff, 1.f, nullptr);
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
 
-    CmdVector cmds;
-    manager.update(&cookie, LogCmds { cmds });
-    ASSERT_THAT(cmds, testing::ElementsAreArray(CmdVector {
-      { &manager, TextureCmd::Insert, 1, 2 }, // 0x12 and 0x14
-      { &manager, TextureCmd::Insert, 5, 1 }, // 0x35
-      { &manager, TextureCmd::Insert, 8, 1 }, // 0xff
-    }));
-  }
+  manager.touch((void *)0x10, 1.f, nullptr);
+  manager.touch((void *)0x20, 1.f, nullptr);
+  manager.touch((void *)0x30, 1.f, nullptr);
+  manager.touch((void *)0x40, 1.f, nullptr);
+  manager.touch((void *)0x50, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
 
-  {
-    SCOPED_TRACE("update");
-    manager.invalidate((void *)0x12);
-    manager.invalidate((void *)0x30);
+  manager.touch((void *)0x12, 1.f, nullptr);
+  manager.touch((void *)0x15, 1.f, nullptr);
+  manager.touch((void *)0x30, 2.f, nullptr);
+  manager.touch((void *)0xff, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Insert, 5, 4 }, // 0x12 and 0x14
+  }));
+}
 
-    CmdVector cmds;
-    manager.update(&cookie, LogCmds { cmds });
-    ASSERT_THAT(cmds, testing::ElementsAreArray(CmdVector {
-      { &manager, TextureCmd::Update, 1, 1 }, // 0x12
-      { &manager, TextureCmd::Update, 4, 2 }, // 0x30 (scale=1 and 2)
-    }));
-  }
+TEST(TextureTest, RemoveTail) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
 
-  {
-    SCOPED_TRACE("remove anywhere");
-    manager.remove((void *)0x12);
-    manager.remove((void *)0x15);
-    manager.remove((void *)0x30);
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
 
-    CmdVector cmds;
-    manager.update(&cookie, LogCmds { cmds });
-    ASSERT_THAT(cmds, testing::ElementsAreArray(CmdVector {
-      { &manager, TextureCmd::Remove, 1, 2 }, // 0x12 and 0x15
-      { &manager, TextureCmd::Remove, 2, 2 }, // 0x30 (scale=1 and 2)
-    }));
-  }
+  manager.touch((void *)0x10, 1.f, nullptr);
+  manager.touch((void *)0x20, 1.f, nullptr);
+  manager.touch((void *)0x30, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
 
-  {
-    SCOPED_TRACE("remove at the end");
-    manager.remove((void *)0xff);
+  manager.remove((void *)0x20);
+  manager.remove((void *)0x30);
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Remove, 1, 2 },
+  }));
+}
 
-    CmdVector cmds;
-    manager.update(&cookie, LogCmds { cmds });
-    ASSERT_THAT(cmds, testing::ElementsAreArray(CmdVector {
-      { &manager, TextureCmd::Remove, 4, 1 },
-    }));
-  }
+TEST(TextureTest, RemoveMiddle) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
+
+  manager.touch((void *)0x10, 1.f, nullptr);
+  manager.touch((void *)0x20, 1.f, nullptr);
+  manager.touch((void *)0x30, 1.f, nullptr);
+  manager.touch((void *)0x40, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
+
+  manager.remove((void *)0x20);
+  manager.remove((void *)0x30);
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Remove, 1, 2 },
+  }));
+}
+
+TEST(TextureTest, CleanupInactive) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+  const ImGuiIO &io { ImGui::GetIO() };
+
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
+
+  manager.touch((void *)0x10, 1.f, nullptr);
+  manager.touch((void *)0x20, 1.f, nullptr);
+  manager.touch((void *)0x30, 1.f, nullptr);
+  manager.touch((void *)0x40, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
+
+  manager.cleanup();
+  manager.update(&cookie, LogCmds { cmds });
+  ASSERT_THAT(cmds, testing::IsEmpty());
+
+  ctx->Time += io.ConfigMemoryCompactTimer;
+  manager.touch((void *)0x30, 1.f, nullptr);
+  manager.cleanup();
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Remove, 0, 2 }, // 0x10, 0x20
+    { &manager, TextureCmd::Remove, 1, 1 }, // 0x40
+  }));
+}
+
+TEST(TextureTest, CleanupInvalid) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
+
+  manager.touch((void *)0x10, 1.f, nullptr, [](void *object) {
+    EXPECT_EQ(object, (void *)0x10);
+    return false;
+  });
+  manager.touch((void *)0x20, 1.f, nullptr, [](void *object) {
+    EXPECT_EQ(object, (void *)0x20);
+    return true;
+  });
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
+
+  manager.cleanup();
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Remove, 0, 1 },
+  }));
+}
+
+TEST(TextureTest, CleanupForceNoCompact) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+  const ImGuiIO &io { ImGui::GetIO() };
+
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
+
+  manager.touch((void *)0x10, 1.f, nullptr, nullptr,
+  [](void *object, const float scale) {
+    EXPECT_EQ(object, (void *)0x10);
+    EXPECT_EQ(scale, 1.f);
+    return false; // prevent the texture from being removed
+  });
+  manager.touch((void *)0x20, 1.5f, nullptr, nullptr,
+  [](void *object, const float scale) {
+    EXPECT_EQ(object, (void *)0x20);
+    EXPECT_EQ(scale, 1.5f);
+    return true; // accept compact request
+  });
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
+
+  ctx->Time += io.ConfigMemoryCompactTimer;
+  manager.cleanup();
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Remove, 1, 1 },
+  }));
+}
+
+TEST(TextureTest, CleanupRecomputeIndices) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+  const ImGuiIO &io { ImGui::GetIO() };
+
+  TextureManager manager;
+
+  // out of order to test whether indices are resorted
+  EXPECT_EQ(manager.touch((void *)0x40, 1.f, nullptr), 0);
+  EXPECT_EQ(manager.touch((void *)0x30, 1.f, nullptr), 1);
+  EXPECT_EQ(manager.touch((void *)0x20, 1.f, nullptr), 2);
+  EXPECT_EQ(manager.touch((void *)0x10, 1.f, nullptr), 3);
+
+  ctx->Time += io.ConfigMemoryCompactTimer;
+  manager.touch((void *)0x30, 1.f, nullptr);
+  manager.touch((void *)0x40, 1.f, nullptr);
+  manager.cleanup();
+
+  EXPECT_EQ(manager.touch((void *)0x10, 1.f, nullptr), 2);
+  EXPECT_EQ(manager.touch((void *)0x20, 1.f, nullptr), 3);
+  EXPECT_EQ(manager.touch((void *)0x30, 1.f, nullptr), 1);
+  EXPECT_EQ(manager.touch((void *)0x40, 1.f, nullptr), 0);
+}
+
+TEST(TextureTest, Update) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
+
+  manager.touch((void *)0x10, 1.f, nullptr);
+  manager.touch((void *)0x20, 1.f, nullptr);
+  manager.touch((void *)0x30, 1.f, nullptr);
+  manager.touch((void *)0x30, 2.f, nullptr);
+  manager.touch((void *)0x40, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
+
+  manager.invalidate((void *)0x10);
+  manager.invalidate((void *)0x30);
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Update, 0, 1 },
+    { &manager, TextureCmd::Update, 2, 2 }, // scale=1.f and 2.f
+  }));
+}
+
+TEST(TextureTest, InsertAfterRemove) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
+
+  manager.touch((void *)0x1, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
+
+  manager.remove((void *)0x1);
+  manager.touch((void *)0x2, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Remove, 0, 1 },
+    { &manager, TextureCmd::Insert, 0, 1 },
+  }));
+}
+
+TEST(TextureTest, InsertRemoveInsert) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
+
+  manager.touch((void *)0x20, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
+
+  manager.touch((void *)0x10, 1.f, nullptr);
+  manager.remove((void *)0x20);
+  manager.touch((void *)0x40, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Remove, 0, 1 },
+    { &manager, TextureCmd::Insert, 0, 2 },
+  }));
+}
+
+TEST(TextureTest, UpdateOnReinsertion) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
+
+  manager.touch((void *)0x1, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
+
+  manager.remove((void *)0x1);
+  manager.touch((void *)0x1, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Update, 0, 1 },
+  }));
 }
