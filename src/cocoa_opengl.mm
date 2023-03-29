@@ -21,6 +21,7 @@
 #include "flat_set.hpp"
 #include "window.hpp"
 
+#define GL_SILENCE_DEPRECATION
 #include <AppKit/AppKit.h>
 #include <imgui/imgui.h>
 #include <swell/swell-types.h>
