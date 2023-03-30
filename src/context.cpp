@@ -121,6 +121,8 @@ Context::Context(const char *label, const int userConfigFlags)
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
+  m_imgui->TestEngineHookItems = Settings::Accessibility;
+
   setUserConfigFlags(userConfigFlags);
   if(Settings::DockingEnable)
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -613,4 +615,9 @@ void Context::invalidateViewportsPos()
   const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
   for(int i {}; i < pio.Viewports.Size; ++i)
     pio.Viewports[i]->PlatformRequestMove = true;
+}
+
+bool Context::accessibilityEnabled() const
+{
+  return m_imgui->TestEngineHookItems;
 }

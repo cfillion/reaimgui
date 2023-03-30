@@ -77,6 +77,7 @@ public:
   void updateFocus();
   void enableViewports(bool enable);
   void invalidateViewportsPos();
+  bool accessibilityEnabled() const;
 
   ImGuiIO &IO();
   ImGuiStyle &style();

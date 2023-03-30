@@ -119,6 +119,12 @@ constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
          "Docking boxes are shown only in the target window."),
     Checkbox { IDC_DOCKTRANSPARENT },
   },
+  { &Settings::Accessibility, false, TEXT("accessibility"),
+    TEXT("Enable accessibility features"),
+    TEXT("Make the contents of ReaImGui windows available to external "
+         "accessibility software (eg. screen readers)."),
+    Checkbox { IDC_ACCESSIBILITY },
+  },
   { &Settings::Renderer, nullptr, TEXT("renderer") PLATFORM_SUFFIX,
     TEXT("Graphics renderer (advanced):"),
     TEXT("Select a different renderer if you encounter compatibility problems."),

@@ -35,6 +35,7 @@ namespace Settings {
   SETTING bool NoSavedSettings;
   SETTING bool DockingEnable,
                DockingNoSplit, DockingWithShift, DockingTransparentPayload;
+  SETTING bool Accessibility;
   SETTING const RendererType *Renderer;
 }
 

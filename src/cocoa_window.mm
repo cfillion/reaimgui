@@ -17,6 +17,7 @@
 
 #include "cocoa_window.hpp"
 
+#include "accessibility.hpp"
 #include "cocoa_events.hpp"
 #include "cocoa_inject.hpp"
 #include "cocoa_inputview.hpp"
@@ -49,6 +50,8 @@ static_assert(__has_feature(objc_arc),
 CocoaWindow::CocoaWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
   : Window { viewport, dockerHost }
 {
+  if(m_ctx->accessibilityEnabled())
+    m_accessibility = std::make_unique<Accessibility>();
 }
 
 CocoaWindow::~CocoaWindow()
@@ -144,6 +147,9 @@ void CocoaWindow::setAlpha(const float alpha)
 
 void CocoaWindow::update()
 {
+  if(m_accessibility)
+    m_accessibility->update();
+
   // restore keyboard focus to the input view when switching to our docker tab
   static bool no_wm_setfocus { atof(GetAppVersion()) < 6.53 };
   if(no_wm_setfocus && GetFocus() == m_hwnd)

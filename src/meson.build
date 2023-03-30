@@ -1,4 +1,5 @@
 src_sources = files([
+  'accessibility.cpp',
   'action.cpp',
   'api.cpp',
   'color.cpp',
@@ -40,6 +41,7 @@ endif
 
 if host_machine.system() == 'darwin'
   src_sources += files([
+    'cocoa_accessibility.mm',
     'cocoa_events.mm',
     'cocoa_font.mm',
     'cocoa_inject.mm',

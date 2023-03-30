@@ -42,6 +42,7 @@ public:
   void update() override;
   float scaleFactor() const override;
   void setIME(ImGuiPlatformImeData *) override;
+  Accessibility *accessibility() const override { return m_accessibility.get(); }
 
   std::optional<LRESULT> handleMessage
     (const unsigned int msg, WPARAM wParam, LPARAM) override;
@@ -51,6 +52,7 @@ private:
   NSView *m_view;
   InputView *m_inputView;
   EventHandler *m_eventHandler;
+  std::unique_ptr<Accessibility> m_accessibility;
   unsigned int m_defaultStyleMask;
   float m_previousScale;
   ImGuiViewportFlags m_previousFlags;

@@ -24,10 +24,11 @@
 #  include <swell/swell-types.h>
 #endif
 
+class Accessibility;
 class Context;
 class Docker;
-struct ImGuiPlatformImeData;
 struct ImGuiViewport;
+struct ImGuiPlatformImeData;
 struct ImVec2;
 
 class Viewport {
@@ -59,6 +60,7 @@ public:
   virtual float scaleFactor() const = 0;
   virtual void onChanged() = 0;
   virtual void setIME(ImGuiPlatformImeData *) = 0;
+  virtual Accessibility *accessibility() const = 0;
 
 protected:
   Context *m_ctx;
