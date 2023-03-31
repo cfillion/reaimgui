@@ -112,10 +112,9 @@ Context::Context(const char *label, const int userConfigFlags)
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
   io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
   io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-  io.ConfigInputTrickleEventQueue = false;
   io.ConfigDockingNoSplit = Settings::DockingNoSplit;
-  io.ConfigDockingTransparentPayload = Settings::DockingTransparentPayload;
   io.ConfigDockingWithShift = Settings::DockingWithShift;
+  io.ConfigDockingTransparentPayload = Settings::DockingTransparentPayload;
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
