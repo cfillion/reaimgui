@@ -39,32 +39,32 @@ static void frame()
   static int click_count;
   static char text[255] { "The quick brown fox jumps over the lazy dog" };
 
-  if(ImGui_Button(g_ctx, "Click me!"))
+  if(ImGui::Button(g_ctx, "Click me!"))
     ++click_count;
 
   if(click_count % 2 == 1) {
-    ImGui_SameLine(g_ctx);
-    ImGui_Text(g_ctx, R"(\o/)");
+    ImGui::SameLine(g_ctx);
+    ImGui::Text(g_ctx, R"(\o/)");
   }
 
-  ImGui_InputText(g_ctx, "text input", text, sizeof(text));
+  ImGui::InputText(g_ctx, "text input", text, sizeof(text));
 }
 
 static void loop()
 {
   if(!g_ctx)
-    g_ctx = ImGui_CreateContext("My extension");
+    g_ctx = ImGui::CreateContext("My extension");
 
-  int cond { ImGui_Cond_FirstUseEver };
-  ImGui_SetNextWindowSize(g_ctx, 400, 80, &cond);
+  int cond { ImGui::Cond_FirstUseEver };
+  ImGui::SetNextWindowSize(g_ctx, 400, 80, &cond);
 
   bool open { true };
-  if(ImGui_Begin(g_ctx, "ReaImGui C++ example", &open)) {
+  if(ImGui::Begin(g_ctx, "ReaImGui C++ example", &open)) {
     frame();
-    ImGui_End(g_ctx);
+    ImGui::End(g_ctx);
   }
 
-  if(!open || !ImGui_ValidatePtr(g_ctx, "ImGui_Context*")) {
+  if(!open || !ImGui::ValidatePtr(g_ctx, "ImGui_Context*")) {
     plugin_register("-timer", reinterpret_cast<void *>(&loop));
     g_ctx = nullptr;
   }

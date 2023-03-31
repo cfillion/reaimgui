@@ -296,13 +296,14 @@ private:
 #  define REAIMGUIAPI_INIT(n)
 #endif
 
+namespace ImGui {
 )";
 
   for(const Function &func : g_funcs) {
     if(!(func.flags & API::Symbol::TargetNative))
       continue;
 
-    stream << "REAIMGUIAPI_EXTERN ";
+    stream << "  REAIMGUIAPI_EXTERN ";
 
     if(func.isEnum())
       stream << "ReaImGuiEnum ";
@@ -314,10 +315,11 @@ private:
       stream << ")> ";
     }
 
-    stream << func.name << " REAIMGUIAPI_INIT(\"" << func.name << "\");\n";
+    stream << func.displayName << " REAIMGUIAPI_INIT(\"" << func.name << "\");\n";
   }
 
-  stream << R"(
+  stream << R"(}
+
 #undef REAIMGUIAPI_EXTERN
 #undef REAIMGUIAPI_INIT
 
@@ -403,7 +405,7 @@ bool Function::hasOptionalArgs() const
 
 void Function::cppSignature(std::ostream &stream) const
 {
-  stream << hl(Highlight::Type) << type << hl() << ' ' << name;
+  stream << hl(Highlight::Type) << type << hl() << " ImGui::" << displayName;
   if(isEnum())
     return;
   stream << '(';
