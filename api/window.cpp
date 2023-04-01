@@ -246,7 +246,7 @@ DEFINE_API(void, SetNextWindowSize, (ImGui_Context*,ctx)
 
 DEFINE_API(void, SetNextWindowSizeConstraints, (ImGui_Context*,ctx)
 (double,size_min_w)(double,size_min_h)(double,size_max_w)(double,size_max_h)
-(ImGui_Function*,API_RO(callback)),
+(ImGui_Function*,API_RO(custom_callback)),
 R"(Set next window size limits. Use -1,-1 on either X/Y axis to preserve the
 current size. Use FLT_MAX (second return value of NumericLimits_Float) for no
 maximum size. Sizes will be rounded down.)")
@@ -254,7 +254,7 @@ maximum size. Sizes will be rounded down.)")
   FRAME_GUARD;
   ImGui::SetNextWindowSizeConstraints(
     ImVec2(size_min_w, size_min_h), ImVec2(size_max_w, size_max_h),
-    SizeCallback::use(API_RO(callback)), API_RO(callback));
+    SizeCallback::use(API_RO(custom_callback)), API_RO(custom_callback));
 }
 
 DEFINE_API(void, SetNextWindowContentSize, (ImGui_Context*,ctx)
