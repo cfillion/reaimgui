@@ -300,7 +300,7 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
         setting.control.setValue(hwnd, *setting.value);
       }, setting);
     }
-    return 1;
+    return 0; // don't focus the first control
   }
   case WM_SIZE: {
     RECT pageRect;
