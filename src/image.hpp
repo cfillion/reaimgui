@@ -23,6 +23,7 @@
 #include <vector>
 #include <istream>
 
+class Texture;
 class TextureManager;
 
 class Image : public Resource {
@@ -65,8 +66,7 @@ protected:
   std::vector<unsigned char *> makeScanlines();
 
 private:
-  static const unsigned char *getPixels(void *object, float scale,
-    int *width, int *height);
+  static const unsigned char *getPixels(const Texture &, int *width, int *height);
 
   std::vector<unsigned char> m_pixels;
   size_t m_width, m_height;

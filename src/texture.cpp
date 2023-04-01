@@ -225,13 +225,6 @@ TextureCookie::TextureCookie()
 
 void TextureCookie::doCommand(const TextureCmd &cmd)
 {
-  struct MakeCrumb {
-    Crumb operator()(const Texture &tex)
-    {
-      return { tex.m_user, tex.m_scale, tex.m_version };
-    };
-  };
-
   auto crumb { m_crumbs.begin() + cmd.offset };
 
   switch(cmd.type) {
@@ -239,7 +232,9 @@ void TextureCookie::doCommand(const TextureCmd &cmd)
     // assumes the manager stores textures contiguously!
     const Texture *tex { &cmd.manager->get(cmd.offset) };
     std::transform(tex, tex + cmd.size, std::inserter(m_crumbs, crumb),
-                   MakeCrumb {});
+      [](const Texture &tex) {
+        return Crumb { tex.m_user, tex.m_scale, tex.m_version };
+      });
     break;
   }
   case TextureCmd::Update: {
@@ -249,8 +244,8 @@ void TextureCookie::doCommand(const TextureCmd &cmd)
       (crumb++)->version = (texture++)->m_version;
     break;
   }
-  case TextureCmd::Remove: {
+  case TextureCmd::Remove:
     m_crumbs.erase(crumb, crumb + cmd.size);
     break;
-  }}
+  }
 }

@@ -66,10 +66,10 @@ Image *Image::fromMemory(const char *data, const int size)
   return create(stream);
 }
 
-const unsigned char *Bitmap::getPixels(void *object, const float,
-  int *width, int *height)
+const unsigned char *Bitmap::getPixels(
+  const Texture &texture, int *width, int *height)
 {
-  const Bitmap *image { static_cast<Bitmap *>(object) };
+  const Bitmap *image { static_cast<Bitmap *>(texture.object()) };
   *width = image->m_width, *height = image->m_height;
   return image->m_pixels.data();
 }
@@ -99,8 +99,7 @@ std::vector<unsigned char *> Bitmap::makeScanlines()
 
 size_t Bitmap::makeTexture(TextureManager *textureManager)
 {
-  const Texture tex { this, 1.f, &getPixels, &Resource::isValid };
-  return textureManager->touch(std::move(tex));
+  return textureManager->touch(this, 1.f, &getPixels, &Resource::isValid<void>);
 }
 
 void ImageSet::add(const float scale, Image *img)

@@ -25,20 +25,20 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
 
-static const unsigned char *getPixels(void *object, const float scale,
-  int *width, int *height)
+static const unsigned char *getPixels(
+  const Texture &texture, int *width, int *height)
 {
-  FontList *list { static_cast<FontList *>(object) };
-  ImFontAtlas *atlas { list->getAtlas(scale) };
+  FontList *list { static_cast<FontList *>(texture.object()) };
+  ImFontAtlas *atlas { list->getAtlas(texture.scale()) };
   unsigned char *pixels {};
   atlas->GetTexDataAsRGBA32(&pixels, width, height);
   return pixels;
 }
 
-static bool removeScale(void *object, const float scale)
+static bool removeScale(const Texture &texture)
 {
-  FontList *list { static_cast<FontList *>(object) };
-  return list->removeAtlas(scale);
+  FontList *list { static_cast<FontList *>(texture.object()) };
+  return list->removeAtlas(texture.scale());
 }
 
 Font::Font(const char *family, const int size, const int flags)
@@ -148,10 +148,9 @@ void FontList::setScale(const float scale)
   if(atlasChanged)
     migrateActiveFonts();
 
-  // after build() because it clears the texture ID!
-  // (via ImFontAtlasBuildWithFreeTypeEx)
-  const Texture tex { this, scale, &getPixels, nullptr, &removeScale };
-  atlas->SetTexID(m_textureManager->touch(tex));
+  // after build() because ImFontAtlasBuildWithFreeTypeEx clears atlas->TexId
+  atlas->SetTexID(m_textureManager->touch(
+    this, scale, &getPixels, nullptr, &removeScale));
 }
 
 ImFontAtlas *FontList::getAtlas(const float scale)

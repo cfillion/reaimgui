@@ -203,17 +203,17 @@ TEST(TextureTest, CleanupForceNoCompact) {
   TextureCookie  cookie;
 
   manager.touch((void *)0x10, 1.f, nullptr, nullptr,
-  [](void *object, const float scale) {
-    EXPECT_EQ(object, (void *)0x10);
-    EXPECT_EQ(scale, 1.f);
-    return false; // prevent the texture from being removed
-  });
+    [](const Texture &tex) {
+      EXPECT_EQ(tex.object(), (void *)0x10);
+      EXPECT_EQ(tex.scale(), 1.f);
+      return false; // prevent the texture from being removed
+    });
   manager.touch((void *)0x20, 1.5f, nullptr, nullptr,
-  [](void *object, const float scale) {
-    EXPECT_EQ(object, (void *)0x20);
-    EXPECT_EQ(scale, 1.5f);
-    return true; // accept compact request
-  });
+    [](const Texture &tex) {
+      EXPECT_EQ(tex.object(), (void *)0x20);
+      EXPECT_EQ(tex.scale(), 1.5f);
+      return true; // accept compact request
+    });
   manager.update(&cookie, LogCmds { cmds });
   cmds.clear();
 

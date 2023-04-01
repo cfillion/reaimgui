@@ -29,9 +29,9 @@ using TextureVersion = unsigned int;
 
 class Texture {
 public:
-  using GetPixelsFunc = const unsigned char *(*)(void *object, float scale,
+  using GetPixelsFunc = const unsigned char *(*)(const Texture &,
                                                  int *width, int *height);
-  using CompactFunc   = bool(*)(void *object, float scale);
+  using CompactFunc   = bool(*)(const Texture &);
   using IsValidFunc   = bool(*)(void *object);
 
   Texture(void *user, float scale, GetPixelsFunc getPixels,
@@ -51,7 +51,7 @@ public:
 
   const unsigned char *getPixels(int *width, int *height) const
   {
-    return m_getPixels(m_user, m_scale, width, height);
+    return m_getPixels(*this, width, height);
   }
 
   bool isValid() const
@@ -61,7 +61,7 @@ public:
 
   bool compact() const
   {
-    return m_compact ? m_compact(m_user, m_scale) : true;
+    return m_compact ? m_compact(*this) : true;
   }
 
 private:
