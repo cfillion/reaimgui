@@ -136,7 +136,7 @@ NUMERIC_LIMITS(Float,  double, FLT_MIN, FLT_MAX);
 NUMERIC_LIMITS(Int,    int,    INT_MIN, INT_MAX);
 
 API_SUBSECTION("ID stack/scope",
-R"(Read the [FAQ](https://dearimgui.org/faq) for more details about how IDs are
+R"(Read the [FAQ](https://dearimgui.com/faq) for more details about how IDs are
 handled in dear imgui.
 
 - Those questions are answered and impacted by understanding of the ID stack system:

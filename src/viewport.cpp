@@ -156,7 +156,7 @@ bool MainViewport::isMinimized() const
   // Disable hosting windows in the non-rendered main viewport.
   // ConfigViewportsNoAutoMerge doesn't apply to popups/tooltips/menus.
   // CanHostOtherWindows applies to everything but it's reset at every NewFrame.
-  // ViewportFlags_Minimized bypasses UpdateTryMergeWindowIntoHostViewport.
+  // ViewportFlags_IsMinimized bypasses UpdateTryMergeWindowIntoHostViewport.
   return true;
 }
 

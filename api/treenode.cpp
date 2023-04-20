@@ -32,7 +32,7 @@ DEFINE_API(bool, TreeNodeEx, (ImGui_Context*,ctx)
 (const char*,str_id)(const char*,label)
 (int*,API_RO(flags),ImGuiTreeNodeFlags_None),
 R"(Helper variation to easily decorelate the id from the displayed string.
-Read the [FAQ](https://dearimgui.org/faq) about why and how to use ID.
+Read the [FAQ](https://dearimgui.com/faq) about why and how to use ID.
 To align arbitrary text at the same level as a TreeNode you can use Bullet.)")
 {
   FRAME_GUARD;

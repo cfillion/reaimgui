@@ -172,7 +172,7 @@ NATIVE_ONLY_CLASSES = %w[
 ]
 
 NATIVE_ONLY_ENUMS = [
-  /\AInputTextFlags_Callback(Resize|Edit)/,
+  'InputTextFlags_CallbackResize',
   /\ADataType_/,
   'Key_None',
   /\AKey_(NamedKey|KeysData|Reserved)/,
@@ -186,6 +186,7 @@ NATIVE_ONLY_ENUMS = [
   /\AConfigFlags_(NavEnableGamepad)\z/, # not implemented
   /\AConfigFlags_(IsSRGB|IsTouchScreen|ViewportsEnable|DpiEnableScale(Viewports|Fonts))\z/, # backend internal flags
   'WindowFlags_NoBringToFrontOnFocus', # not supported with per-window viewports
+  /\AMouseSource_/, # for backends (io.AddMouseSoruceEvent)
 
   # only for dear imgui's internal use
   /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu|DockNodeHost)\z/,

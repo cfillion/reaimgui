@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.4)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.5)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -390,7 +390,7 @@ function demo.ShowDemoWindow(open)
     -- ImGui.BulletText(ctx, 'See comments in imgui.cpp.')
     ImGui.BulletText(ctx, 'See example scripts in the examples/ folder.')
     ImGui.Indent(ctx); demo.Link('https://github.com/cfillion/reaimgui/tree/master/examples'); ImGui.Unindent(ctx)
-    ImGui.BulletText(ctx, 'Read the FAQ at '); ImGui.SameLine(ctx, 0, 0); demo.Link('https://www.dearimgui.org/faq/')
+    ImGui.BulletText(ctx, 'Read the FAQ at '); ImGui.SameLine(ctx, 0, 0); demo.Link('https://www.dearimgui.com/faq/')
     -- ImGui.BulletText(ctx, "Set 'io.ConfigFlags |= NavEnableKeyboard' for keyboard controls.")
     -- ImGui.BulletText(ctx, "Set 'io.ConfigFlags |= NavEnableGamepad' for gamepad controls.")
     ImGui.Separator(ctx)
@@ -505,15 +505,16 @@ function demo.ShowDemoWindow(open)
 --                 "Here we expose then as read-only fields to avoid breaking interactions with your backend.");
 --
 --             // Make a local copy to avoid modifying actual backend flags.
---             // FIXME: We don't use BeginDisabled() to keep label bright, maybe we need a BeginReadonly() equivalent..
---             ImGuiBackendFlags backend_flags = io.BackendFlags;
---             ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",             &backend_flags, ImGuiBackendFlags_HasGamepad);
---             ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",        &backend_flags, ImGuiBackendFlags_HasMouseCursors);
---             ImGui::CheckboxFlags("io.BackendFlags: HasSetMousePos",         &backend_flags, ImGuiBackendFlags_HasSetMousePos);
---             ImGui::CheckboxFlags("io.BackendFlags: PlatformHasViewports",   &backend_flags, ImGuiBackendFlags_PlatformHasViewports);
---             ImGui::CheckboxFlags("io.BackendFlags: HasMouseHoveredViewport",&backend_flags, ImGuiBackendFlags_HasMouseHoveredViewport);
---             ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset",   &backend_flags, ImGuiBackendFlags_RendererHasVtxOffset);
---             ImGui::CheckboxFlags("io.BackendFlags: RendererHasViewports",   &backend_flags, ImGuiBackendFlags_RendererHasViewports);
+--             // FIXME: Maybe we need a BeginReadonly() equivalent to keep label bright?
+--             ImGui::BeginDisabled();
+--             ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",             &io.BackendFlags, ImGuiBackendFlags_HasGamepad);
+--             ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",        &io.BackendFlags, ImGuiBackendFlags_HasMouseCursors);
+--             ImGui::CheckboxFlags("io.BackendFlags: HasSetMousePos",         &io.BackendFlags, ImGuiBackendFlags_HasSetMousePos);
+--             ImGui::CheckboxFlags("io.BackendFlags: PlatformHasViewports",   &io.BackendFlags, ImGuiBackendFlags_PlatformHasViewports);
+--             ImGui::CheckboxFlags("io.BackendFlags: HasMouseHoveredViewport",&io.BackendFlags, ImGuiBackendFlags_HasMouseHoveredViewport);
+--             ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset",   &io.BackendFlags, ImGuiBackendFlags_RendererHasVtxOffset);
+--             ImGui::CheckboxFlags("io.BackendFlags: RendererHasViewports",   &io.BackendFlags, ImGuiBackendFlags_RendererHasViewports);
+--             ImGui::EndDisabled();
 --             ImGui.TreePop();
 --             ImGui.Spacing();
 --         }
