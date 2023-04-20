@@ -1,5 +1,7 @@
+find_package(Boost REQUIRED)
+
 add_executable(genbinding EXCLUDE_FROM_ALL genbinding.cpp)
-target_link_libraries(genbinding common ${PROJECT_NAME})
+target_link_libraries(genbinding Boost::headers common ${PROJECT_NAME})
 
 if(NOT WIN32)
   find_package(SWELL REQUIRED)
@@ -23,7 +25,6 @@ function(add_binding lang output)
 endfunction()
 
 add_executable(genshim EXCLUDE_FROM_ALL genshim.cpp)
-find_package(Boost REQUIRED)
 target_link_libraries(genshim Boost::headers common)
 if(NOT HAVE_STD_FILESYSTEM)
   find_package(Boost REQUIRED COMPONENTS filesystem)

@@ -21,6 +21,9 @@
 #include "../src/api.hpp"
 
 #include <algorithm>
+#include <boost/preprocessor/stringize.hpp>
+#include <cassert>
+#include <cfloat> // FLT_{MIN,MAX}
 #include <cstring>
 #include <deque>
 #include <functional>
@@ -139,6 +142,33 @@ static const char *nextString(const char *&str)
   return str += strlen(str) + 1;
 }
 
+static std::string_view typeName(const std::string_view type)
+{
+  // special case for EEL strings
+  if(type == "std::string_view")
+    return "const char*";
+  return type;
+}
+
+static std::string_view defaultValue(const std::string_view value)
+{
+  struct Macro { std::string_view name, value; };
+  constexpr Macro macros[] {
+#define MACRO(m) { #m, BOOST_PP_STRINGIZE(m) }
+    MACRO(FLT_MIN), MACRO(FLT_MAX)
+#undef MACRO
+  };
+
+  for(const Macro &macro : macros) {
+    assert(macro.name != macro.value); // ensure the macro is defined
+    if(value == macro.value) {
+      return macro.name;
+    }
+  }
+
+  return value;
+}
+
 Function::Function(const API::Symbol *api)
   : section { api->m_section }, name { api->name() },
     type { api->definition() }, line { api->m_line },
@@ -172,15 +202,10 @@ Function::Function(const API::Symbol *api)
       defvLen -= strlen("Im");
     }
 
-    std::string_view type { argTypes.substr(0, typeLen) };
-    // special case for EEL strings
-    if(type == "std::string_view")
-      type = "const char*";
-
     args.emplace_back(Argument {
-      type,
+      typeName(argTypes.substr(0, typeLen)),
       argNames.substr(0, nameLen),
-      argDefvs.substr(0, defvLen),
+      defaultValue(argDefvs.substr(0, defvLen)),
     });
 
     if(typeLen == std::string_view::npos ||
