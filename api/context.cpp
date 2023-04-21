@@ -185,7 +185,11 @@ R"(OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts
 DEFINE_CONFIGVAR(InputTrickleEventQueue,
 R"(Enable input queue trickling: some types of events submitted during the same
    frame (e.g. button down + up) will be spread over multiple frames, improving
-   interactions with low framerates.)");
+   interactions with low framerates.
+
+   Warning: when this option is disabled mouse clicks and key presses faster
+   than a frame will be lost.
+   This affects accessiblity features and some input devices.)");
 DEFINE_CONFIGVAR(InputTextCursorBlink,
   "Enable blinking cursor (optional as some users consider it to be distracting).");
 DEFINE_CONFIGVAR(InputTextEnterKeepActive,

@@ -20,7 +20,6 @@
 
 #include "resource.hpp"
 
-#include <bitset>
 #include <chrono>
 #include <string>
 #include <vector>
@@ -109,10 +108,10 @@ private:
   void clearFocus();
 
   int m_dropFrameCount;
-#ifdef __APPLE__
-  std::bitset<2> m_rightClickEmulation;
-#endif
   HCURSOR m_cursor;
+#ifdef __APPLE__
+  bool m_emulateRightClick;
+#endif
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
   std::vector<std::string> m_draggedFiles;
   std::vector<Resource *> m_attachments;
