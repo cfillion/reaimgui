@@ -64,6 +64,7 @@ template<> struct Control<const RendererType *> { using type = Combobox; };
 template<typename T>
 struct Setting {
   T *value;
+  T defaultValue;
   const TCHAR *key, *label, *help;
   typename Control<T>::type control;
 
@@ -87,31 +88,31 @@ struct SettingVariant : std::variant<Setting<Ts>...> {
 #endif
 
 constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
-  { &Settings::NoSavedSettings, TEXT("nosavedsettings"),
+  { &Settings::NoSavedSettings, false, TEXT("nosavedsettings"),
     TEXT("Restore window position, size, dock state and table settings"),
     TEXT("Disable to force ReaImGui scripts to start with "
          "their default first-use state (safe mode)."),
     Checkbox { IDC_SAVEDSETTINGS, Checkbox::Invert },
   },
-  { &Settings::DockingNoSplit, TEXT("dockingnosplit"),
+  { &Settings::DockingNoSplit, false, TEXT("dockingnosplit"),
     TEXT("Enable window splitting when docking"),
     TEXT("Disable to limit docking to merging multiple windows together into "
          "tab bars (simplified docking mode)."),
     Checkbox { IDC_DOCKSPLIT, Checkbox::Invert },
   },
-  { &Settings::DockingWithShift, TEXT("dockingwithshift"),
+  { &Settings::DockingWithShift, false, TEXT("dockingwithshift"),
     TEXT("Dock only when holding Shift"),
     TEXT("Press the Shift key to disable or enable docking when dragging "
          "windows using the title bar. This option inverts the behavior."),
     Checkbox { IDC_DOCKWITHSHIFT },
   },
-  { &Settings::DockingTransparentPayload, TEXT("dockingtransparentpayload"),
+  { &Settings::DockingTransparentPayload, false, TEXT("dockingtransparentpayload"),
     TEXT("Make windows transparent when docking"),
     TEXT("Windows become semi-transparent when docking into another window. "
          "Docking boxes are shown only in the target window."),
     Checkbox { IDC_DOCKTRANSPARENT },
   },
-  { &Settings::Renderer, TEXT("renderer") PLATFORM_SUFFIX,
+  { &Settings::Renderer, nullptr, TEXT("renderer") PLATFORM_SUFFIX,
     TEXT("Graphics renderer (advanced):"),
     TEXT("Select a different renderer if you encounter compatibility problems."),
     Combobox { IDC_RENDERER, IDC_RENDERERTXT },
@@ -123,7 +124,7 @@ constexpr const TCHAR *SECTION { TEXT("reaimgui") };
 template<>
 void Setting<bool>::read(const TCHAR *file) const
 {
-  *value = GetPrivateProfileInt(SECTION, key, *value, file);
+  *value = GetPrivateProfileInt(SECTION, key, defaultValue, file);
 }
 
 template<>
