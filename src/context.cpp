@@ -314,9 +314,6 @@ void Context::updateFrameInfo()
 
 void Context::updateCursor()
 {
-  // this is only called from endFrame, the context is already set
-  // setCurrent();
-
   if(m_imgui->IO.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
     return;
 
@@ -368,7 +365,6 @@ void Context::updateMouseData()
 
 void Context::mouseInput(const int button, const bool down)
 {
-  TempCurrent cur { this };
   m_imgui->IO.AddMouseButtonEvent(button, down);
 
 #ifdef __APPLE__
@@ -394,7 +390,6 @@ void Context::mouseWheel(const bool horizontal, float delta)
 
   delta /= WHEEL_DELTA;
 
-  TempCurrent cur { this };
   if(horizontal)
     m_imgui->IO.AddMouseWheelEvent(delta, 0.0f);
   else
@@ -421,8 +416,6 @@ void Context::keyInput(const ImGuiKey key, const bool down)
   }
 #endif
 
-  TempCurrent cur { this };
-
   if(ImGui::IsLegacyKey(key)) {
     // AddKeyEvent must be called before SetKeyEventNativeData
     const ImGuiKey imKey { KeyMap::translateVirtualKey(key) };
@@ -440,13 +433,11 @@ void Context::charInput(const unsigned int codepoint)
       (codepoint >= 0xf700 && codepoint <= 0xf7ff)) // unicode private range
     return;
 
-  TempCurrent cur { this };
   m_imgui->IO.AddInputCharacter(codepoint);
 }
 
 void Context::charInputUTF16(const ImWchar16 unit)
 {
-  TempCurrent cur { this };
   m_imgui->IO.AddInputCharacterUTF16(unit);
 }
 
@@ -484,9 +475,6 @@ void Context::updateDragDrop()
 
 void Context::dragSources()
 {
-  // this is only called from beginFrame, the context is already set
-  // setCurrent();
-
   const int flags { ImGuiDragDropFlags_SourceExtern |
                     ImGuiDragDropFlags_SourceAutoExpirePayload };
 
@@ -510,7 +498,6 @@ void Context::beginDrag(std::vector<std::string> &&files)
 {
   m_draggedFiles = std::move(files);
 
-  TempCurrent cur { this };
   m_imgui->IO.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
   m_imgui->IO.AddMouseButtonEvent(DND_MouseButton, true);
 }
@@ -537,7 +524,6 @@ void Context::beginDrag(HDROP drop)
 
 void Context::endDrag(const bool drop)
 {
-  TempCurrent cur { this };
   if(drop)
     m_dropFrameCount = DropState_Drop;
   else {
@@ -620,9 +606,6 @@ void Context::enableViewports(const bool enable)
 
 void Context::updateTheme()
 {
-  // this is only called from beginFrame, the context is already set
-  // setCurrent();
-
   int themeSize;
   const ColorTheme *theme { static_cast<ColorTheme *>(GetColorThemeStruct(&themeSize)) };
   if(static_cast<size_t>(themeSize) < sizeof(ColorTheme))
