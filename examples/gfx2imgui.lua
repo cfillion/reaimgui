@@ -498,6 +498,12 @@ local function showLog()
 end
 
 local function setDock(v)
+  if ImGui.GetConfigVar(state.ctx, ImGui.ConfigVar_Flags()) &
+       ImGui.ConfigFlags_DockingEnable() == 0 then
+    if v & 1 == 1 then warn('docking disabled via user settings') end
+    return
+  end
+
   global_state.dock = v & 0xf01
   state.want_dock = (v & 1) == 1 and ~(v >> 8 & 0xf) or 0
 end
@@ -1297,8 +1303,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     local ctx_name = name
     if ctx_name:len() < 1 then ctx_name = 'gfx2imgui' end
 
-    local ctx_flags =
-      ImGui.ConfigFlags_NoSavedSettings() | ImGui.ConfigFlags_DockingEnable()
+    local ctx_flags    = ImGui.ConfigFlags_NoSavedSettings()
     local canary_flags = ImGui.ConfigFlags_NoSavedSettings()
 
     state = {

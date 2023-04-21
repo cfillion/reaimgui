@@ -94,6 +94,12 @@ constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
          "their default first-use state (safe mode)."),
     Checkbox { IDC_SAVEDSETTINGS, Checkbox::Invert },
   },
+  { &Settings::DockingEnable, true, TEXT("dockingenable"),
+    TEXT("Enable docking"),
+    TEXT("Enable docking windows into REAPER dockers or into other windows "
+         "belonging to the same script."),
+    Checkbox { IDC_DOCKINGENABLE },
+  },
   { &Settings::DockingNoSplit, false, TEXT("dockingnosplit"),
     TEXT("Enable window splitting when docking"),
     TEXT("Disable to limit docking to merging multiple windows together into "

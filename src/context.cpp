@@ -119,6 +119,8 @@ Context::Context(const char *label, const int userConfigFlags)
   io.UserData = this;
 
   setUserConfigFlags(userConfigFlags);
+  if(Settings::DockingEnable)
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
   Platform::install();
   Renderer::install();

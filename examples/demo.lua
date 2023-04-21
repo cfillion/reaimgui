@@ -135,7 +135,7 @@ if select(2, reaper.get_action_context()) == debug.getinfo(1, 'S').source:sub(2)
   _G.app     = app
 
   -- hajime!
-  ctx = ImGui.CreateContext('ReaImGui Demo', ImGui.ConfigFlags_DockingEnable())
+  ctx = ImGui.CreateContext('ReaImGui Demo')
   reaper.defer(demo.loop)
 end
 
