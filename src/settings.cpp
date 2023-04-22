@@ -70,6 +70,7 @@ struct Setting {
 
   void read(const TCHAR *file)  const;
   void write(const TCHAR *file) const;
+  void reset() const { *value = defaultValue; }
 };
 
 template<typename... Ts>
@@ -154,6 +155,12 @@ void Setting<const RendererType *>::write(const TCHAR *file) const
   WritePrivateProfileString(SECTION, key, WIDEN((*value)->id), file);
 }
 
+template<>
+void Setting<const RendererType *>::reset() const
+{
+  *value = RendererType::bestMatch("");
+}
+
 void Checkbox::setLabel(HWND window, const TCHAR *text) const
 {
   SetDlgItemText(window, box, text);
@@ -173,6 +180,7 @@ void Checkbox::setValue(HWND window, const bool value) const
 void Combobox::setValue(HWND window, const RendererType *value) const
 {
   HWND combo { GetDlgItem(window, box) };
+  SendMessage(combo, CB_RESETCONTENT, 0, 0);
   for(const RendererType *type { RendererType::head() }; type; type = type->next) {
     const auto index {
       SendMessage(combo, CB_ADDSTRING, 0,
@@ -294,10 +302,45 @@ static bool isChangeEvent(const short control, const short notification)
   return false;
 }
 
+static void resetDefaults(HWND hwnd)
+{
+  if(IDOK != MessageBox(hwnd,
+      TEXT("Are you sure you want to restore the default settings?"),
+      TEXT("ReaImGui settings"),
+      MB_OKCANCEL | MB_ICONWARNING))
+    return;
+
+  for(const auto &setting : SETTINGS) {
+    std::visit([hwnd] (const auto &setting) {
+      setting.reset();
+      setting.control.setValue(hwnd, *setting.value);
+    }, setting);
+  }
+
+  Settings::save();
+  Action::refreshAll();
+}
+
+static void processCommand(HWND hwnd,
+  const short control, const short notification)
+{
+  if(isChangeEvent(control, notification)) {
+    constexpr int IDC_PREFS_APPLY { 0x478 };
+    EnableWindow(GetDlgItem(GetParent(hwnd), IDC_PREFS_APPLY), true);
+    return;
+  }
+
+  switch(control) {
+  case IDC_RESETDEFAULTS:
+    resetDefaults(hwnd);
+    break;
+  }
+}
+
 static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
   const WPARAM wParam, const LPARAM lParam)
 {
-  constexpr int WM_PREFS_APPLY { WM_USER * 2 }, IDC_PREFS_APPLY { 0x478 };
+  constexpr int WM_PREFS_APPLY { WM_USER * 2 };
 
   switch(message) {
   case WM_INITDIALOG: {
@@ -324,8 +367,7 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
     updateHelp(hwnd);
     return 0;
   case WM_COMMAND:
-    if(isChangeEvent(LOWORD(wParam), HIWORD(wParam)))
-      EnableWindow(GetDlgItem(GetParent(hwnd), IDC_PREFS_APPLY), true);
+    processCommand(hwnd, LOWORD(wParam), HIWORD(wParam));
     return 0;
   case WM_PREFS_APPLY:
     for(const auto &setting : SETTINGS) {
