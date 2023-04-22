@@ -97,8 +97,8 @@ constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
   },
   { &Settings::DockingEnable, true, TEXT("dockingenable"),
     TEXT("Enable docking"),
-    TEXT("Enable docking windows into REAPER dockers or into other windows "
-         "belonging to the same script."),
+    TEXT("Drag the titlebar to dock windows into REAPER dockers or into other "
+         "windows of the same script instance."),
     Checkbox { IDC_DOCKINGENABLE },
   },
   { &Settings::DockingNoSplit, false, TEXT("dockingnosplit"),
