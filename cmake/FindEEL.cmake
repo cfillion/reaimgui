@@ -27,6 +27,10 @@ set_property(TARGET eel2 PROPERTY C_STANDARD 90)
 target_compile_definitions(eel2 PRIVATE EEL_TARGET_PORTABLE)
 add_library(EEL::eel2 ALIAS eel2)
 
+if(NOT WIN32)
+  target_compile_options(eel2 PRIVATE -Wno-implicit-function-declaration)
+endif()
+
 add_library(eel2_import INTERFACE)
 target_include_directories(eel2_import INTERFACE ${EEL_INCLUDE_DIR})
 add_library(EEL::eel2_import ALIAS eel2_import)
