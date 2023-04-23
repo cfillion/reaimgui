@@ -762,7 +762,7 @@ function demo.ShowDemoWindowWidgets()
         CTRL+A or double-click to select all.\n\z
         CTRL+X,CTRL+C,CTRL+V clipboard.\n\z
         CTRL+Z,CTRL+Y undo/redo.\n\z
-        ESCAPE to revert.\n\n')
+        ESCAPE to revert.')
 
       rv,widgets.basic.str1 = ImGui.InputTextWithHint(ctx, 'input text (w/ hint)', 'enter text here', widgets.basic.str1)
 
