@@ -12,6 +12,7 @@ inline void ReaImGui_Assert(const bool ok, const char *message)
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
 #define IMGUI_ENABLE_FREETYPE
+#define IMGUI_ENABLE_OSX_DEFAULT_CLIPBOARD_FUNCTIONS
 #define IMGUI_USE_WCHAR32
 
 #define ImTextureID size_t
