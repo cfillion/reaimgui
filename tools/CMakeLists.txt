@@ -26,16 +26,12 @@ endfunction()
 
 add_executable(genshim EXCLUDE_FROM_ALL genshim.cpp)
 target_link_libraries(genshim Boost::headers common)
-if(NOT HAVE_STD_FILESYSTEM)
-  find_package(Boost REQUIRED COMPONENTS filesystem)
-  target_link_libraries(genshim Boost::filesystem)
-endif()
 
 function(add_shim lang output)
   file(GLOB shims CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/shims/${lang}/*")
   add_custom_command(
     OUTPUT ${output}
-    COMMAND $<TARGET_FILE:genshim> ${lang} "shims/${lang}" > ${output}
+    COMMAND $<TARGET_FILE:genshim> ${lang} ${shims} > ${output}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     DEPENDS $<TARGET_FILE:genshim> ${shims}
   )

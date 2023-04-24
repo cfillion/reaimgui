@@ -119,10 +119,6 @@ endif()
 
 check_include_file_cxx(optional HAVE_STD_OPTIONAL)
 check_include_file_cxx(variant HAVE_STD_VARIANT)
-# checking for <filesystem>'s presence is not enough
-# it exists on Xcode 11 but is only usable on macOS 10.15+
-check_cxx_symbol_exists(std::filesystem::path::preferred_separator
-  filesystem HAVE_STD_FILESYSTEM)
 configure_file(config.hpp.in config.hpp)
 
 find_package(Git)

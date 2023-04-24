@@ -2,7 +2,6 @@
   "name": "reaimgui",
   "version-string": "current",
   "dependencies": [
-    { "name": "boost-filesystem", "platform": "!windows" },
     { "name": "boost-iostreams"    },
     { "name": "boost-preprocessor" },
     { "name": "boost-type-index"   },
