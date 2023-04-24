@@ -1,12 +1,9 @@
-[submodule "vendor/imgui"]
-	path = vendor/imgui
+[submodule "imgui"]
+	path = subprojects/imgui/imgui
 	url = https://github.com/cfillion/imgui.git
-[submodule "vendor/reaper-sdk"]
-	path = vendor/reaper-sdk
+[submodule "reaper-sdk"]
+	path = subprojects/reaper-sdk/reaper-sdk
 	url = https://github.com/justinfrankel/reaper-sdk.git
-[submodule "vendor/WDL"]
-	path = vendor/WDL
+[submodule "WDL"]
+	path = subprojects/WDL/WDL
 	url = https://github.com/justinfrankel/WDL.git
-[submodule "vendor/md4c"]
-	path = vendor/md4c
-	url = https://github.com/mity/md4c

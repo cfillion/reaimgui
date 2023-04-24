@@ -6,7 +6,7 @@
 #include "config.hpp"
 
 #ifdef HAVE_STD_CHARCONV
-#  ifdef __GNUC__
+#  ifdef HAVE_INCLUDE_NEXT
 #    include_next <charconv>
 #  else
 #    include <../include/charconv>

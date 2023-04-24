@@ -6,7 +6,7 @@
 #include "config.hpp"
 
 #ifdef HAVE_STD_OPTIONAL
-#  ifdef __GNUC__
+#  ifdef HAVE_INCLUDE_NEXT
 #    include_next <optional>
 #  else
 #    include <../include/optional>
@@ -16,7 +16,8 @@
 #  include <experimental/optional>
   namespace std {
     template<typename T>
-    using optional = experimental::optional<T>;
+    using optional  = experimental::optional<T>;
+    using nullopt_t = experimental::nullopt_t;
     constexpr auto nullopt { experimental::nullopt };
   }
 #endif

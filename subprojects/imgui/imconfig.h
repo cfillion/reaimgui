@@ -1,7 +1,7 @@
 #ifndef REAIMGUI_IMCONFIG_H
 #define REAIMGUI_IMCONFIG_H
 
-#include "src/error.hpp"
+#include "../../src/error.hpp"
 
 inline void ReaImGui_AssertFailure(const char *message)
 {

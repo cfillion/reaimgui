@@ -19,7 +19,6 @@
 
 #define REAPERAPI_IMPLEMENT
 #include <eel2_import.hpp>
-#include <reaper_plugin_functions.h>
 #include <reaper_plugin_secrets.h>
 
 #include "action.hpp"

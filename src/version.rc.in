@@ -21,8 +21,8 @@ BEGIN
       VALUE "FileDescription", "REAPER plug-in extension"
       VALUE "FileVersion",      REAIMGUI_VERSION
       VALUE "ProductVersion",   REAIMGUI_VERSION
-      VALUE "OriginalFilename", REAIMGUI_FILENAME
-      VALUE "InternalName",     REAIMGUI_BASENAME
+      VALUE "OriginalFilename", "reaper_imgui-@REAIMGUI_ARCH@.dll"
+      VALUE "InternalName",     "reaper_imgui-@REAIMGUI_ARCH@"
       VALUE "LegalCopyright",   "Copyright (C) Christian Fillion"
     END
   END

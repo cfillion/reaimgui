@@ -1,3 +1,0 @@
-#cmakedefine HAVE_STD_CHARCONV
-#cmakedefine HAVE_STD_OPTIONAL
-#cmakedefine HAVE_STD_VARIANT

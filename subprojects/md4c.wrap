@@ -1,0 +1,8 @@
+[wrap-git]
+url      = https://github.com/mity/md4c.git
+revision = release-0.4.8
+depth    = 1
+patch_directory = md4c
+
+[provide]
+dependency_names = md4c, md4c-html

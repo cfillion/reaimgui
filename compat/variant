@@ -14,7 +14,7 @@
 #endif
 
 #ifdef HAVE_STD_VARIANT
-#  ifdef __GNUC__
+#  ifdef HAVE_INCLUDE_NEXT
 #    include_next <variant>
 #  else
 #    include <../include/variant>

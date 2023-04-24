@@ -1,0 +1,65 @@
+/* ReaImGui: ReaScript binding for Dear ImGui
+ * Copyright (C) 2021-2023  Christian Fillion
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <algorithm>
+#include <array>
+#include <iostream>
+#include <string_view>
+
+using Segments = std::array<std::string_view, 4>;
+
+static Segments explode(std::string_view version)
+{
+  Segments segments;
+  for(std::string_view &segment : segments) {
+    const auto sep { std::find_if_not(version.begin(), version.end(),
+      [](char c) { return std::isdigit(c); }) };
+
+    // reached the end (version is empty) or segment is empty (consecutive dots)
+    if(sep == version.begin()) {
+      segment = "0";
+      continue;
+    }
+
+    // FIXME: C++20
+    // segment = { version.begin(), segEnd };
+    segment = { version.data(), static_cast<size_t>(sep - version.begin()) };
+
+    if(*sep == '.')
+      version.remove_prefix(segment.size() + 1);
+    else
+      version = {};
+  }
+
+  return segments;
+}
+
+int main()
+{
+  // replaced by the output of `git describe`, eg. "v0.8.6.1-8-g19dcefc"
+  std::string_view version { "@VCS_TAG@" };
+
+  if(!version.empty() && version.front() == 'v')
+    version.remove_prefix(1);
+
+  const Segments segments { explode(version) };
+  std::cout << "#define REAIMGUI_VERSION \""     << version   << "\"\n"
+            << "#define REAIMGUI_VERSION_MAJOR " << segments[0] << '\n'
+            << "#define REAIMGUI_VERSION_MINOR " << segments[1] << '\n'
+            << "#define REAIMGUI_VERSION_PATCH " << segments[2] << '\n'
+            << "#define REAIMGUI_VERSION_TWEAK " << segments[3] << '\n';
+}
