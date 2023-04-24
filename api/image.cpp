@@ -38,6 +38,7 @@ unless attached to a context (see Attach).
 
 ('flags' currently unused and reserved for future expansion))")
 {
+  (void)API_RO(flags);
   return Image::fromFile(file);
 }
 

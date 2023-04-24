@@ -81,7 +81,7 @@ static RECT calcHeaderRect(HWND hwnd)
 }
 
 static WDL_DLGRET errorProc(HWND hwnd, const unsigned int msg,
-  const WPARAM wParam, const LPARAM lParam)
+  const WPARAM wParam, const LPARAM)
 {
   switch(msg) {
   case WM_INITDIALOG:

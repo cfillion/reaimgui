@@ -338,7 +338,7 @@ static void processCommand(HWND hwnd,
 }
 
 static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
-  const WPARAM wParam, const LPARAM lParam)
+  const WPARAM wParam, const LPARAM)
 {
   constexpr int WM_PREFS_APPLY { WM_USER * 2 };
 
