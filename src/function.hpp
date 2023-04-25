@@ -18,9 +18,9 @@
 #ifndef REAIMGUI_FUNCTION_HPP
 #define REAIMGUI_FUNCTION_HPP
 
-#include "optional.hpp"
 #include "resource.hpp"
 
+#include <optional>
 #include <string_view>
 
 using NSEEL_VMCTX      = void *;

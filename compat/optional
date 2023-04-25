@@ -1,0 +1,24 @@
+// -*- C++ -*-
+
+#ifndef REAIMGUI_OPTIONAL
+#define REAIMGUI_OPTIONAL
+
+#include "config.hpp"
+
+#ifdef HAVE_STD_OPTIONAL
+#  ifdef __GNUC__
+#    include_next <optional>
+#  else
+#    include <../include/optional>
+#  endif
+#else
+  // Xcode 9 for macOS 32-bit builds
+#  include <experimental/optional>
+  namespace std {
+    template<typename T>
+    using optional = experimental::optional<T>;
+    constexpr auto nullopt { experimental::nullopt };
+  }
+#endif
+
+#endif

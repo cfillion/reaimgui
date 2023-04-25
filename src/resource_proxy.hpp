@@ -19,10 +19,10 @@
 #define REAIMGUI_RESOURCE_PROXY_HPP
 
 #include "error.hpp"
-#include "optional.hpp"
 #include "resource.hpp"
 
 #include <cassert>
+#include <optional>
 
 template<typename ProxyT, typename ResT, typename ObjT>
 class ResourceProxy {

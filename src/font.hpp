@@ -18,13 +18,13 @@
 #ifndef REAIMGUI_FONT_HPP
 #define REAIMGUI_FONT_HPP
 
+#include "resource.hpp"
+
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <variant>
 #include <vector>
-
-#include "resource.hpp"
-#include "variant.hpp"
 
 class TextureManager;
 

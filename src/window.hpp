@@ -18,12 +18,12 @@
 #ifndef REAIMGUI_WINDOW_HPP
 #define REAIMGUI_WINDOW_HPP
 
-#include "optional.hpp"
 #include "plugin_register.hpp"
 #include "viewport.hpp"
 #include "win32_unicode.hpp"
 
 #include <memory>
+#include <optional>
 
 class DockerHost;
 class Renderer;

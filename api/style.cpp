@@ -18,7 +18,8 @@
 #include "helper.hpp"
 
 #include "../src/color.hpp"
-#include "../src/variant.hpp"
+
+#include <variant>
 
 API_SECTION("Style");
 

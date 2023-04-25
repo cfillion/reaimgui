@@ -99,7 +99,7 @@ endif()
 
 add_library(common INTERFACE)
 target_include_directories(common INTERFACE
-  ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/vendor
+  ${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/compat ${CMAKE_SOURCE_DIR}/vendor
   ${CMAKE_SOURCE_DIR}/vendor/reaper-sdk/sdk)
 if(WIN32)
   target_compile_options(common INTERFACE /W3 /WX
@@ -117,8 +117,9 @@ else()
   endif()
 endif()
 
+check_include_file_cxx(charconv HAVE_STD_CHARCONV)
 check_include_file_cxx(optional HAVE_STD_OPTIONAL)
-check_include_file_cxx(variant HAVE_STD_VARIANT)
+check_include_file_cxx(variant  HAVE_STD_VARIANT)
 configure_file(config.hpp.in config.hpp)
 
 find_package(Git)
