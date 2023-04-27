@@ -41,7 +41,9 @@ public:
       ImGuiInputTextFlags_CallbackResize |
 
       // reserved for ImGui's internal use
-      ImGuiInputTextFlags_Multiline | ImGuiInputTextFlags_NoMarkEdited
+      static_cast<ImGuiInputTextFlags>(
+        ImGuiInputTextFlags_Multiline | ImGuiInputTextFlags_NoMarkEdited
+      )
     );
   }
 };

@@ -30,7 +30,7 @@ public:
   T operator &(T op) const { return m_flags & op; }
 
 protected:
-  Flags(int flags) : m_flags { flags } {}
+  Flags(T flags) : m_flags { flags } {}
 
 private:
   T m_flags;
