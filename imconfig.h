@@ -3,10 +3,9 @@
 
 #include "src/error.hpp"
 
-inline void ReaImGui_Assert(const bool ok, const char *message)
+inline void ReaImGui_AssertFailure(const char *message)
 {
-  if(!ok)
-    throw imgui_error { message };
+  throw imgui_error { message };
 }
 
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
@@ -17,7 +16,7 @@ inline void ReaImGui_Assert(const bool ok, const char *message)
 
 #define ImTextureID size_t
 
-#define IM_ASSERT(_EXPR) ReaImGui_Assert(_EXPR, #_EXPR)
+#define IM_ASSERT(_EXPR) (_EXPR ? (void)0 : ReaImGui_AssertFailure(#_EXPR))
 #define IM_DEBUG_BREAK() throw reascript_error { "debug break" }
 
 #endif
