@@ -134,12 +134,10 @@ libpng_dep     = dependency('libpng')
 reaper_sdk_dep = dependency('reaper-sdk')
 wdl_dep        = dependency('WDL')
 
-common_deps = [boost_dep, imgui_dep, reaper_sdk_dep, wdl_dep]
-
-if host_machine.system() != 'windows'
+if host_machine.system() == 'windows'
+  swell_dep = dependency('', required: false)
+else
   swell_dep = dependency('SWELL')
-  swell_resgen = wdl.get_variable('swell_resgen')
-  common_deps += swell_dep
 endif
 
 arch_suffix = host_machine.cpu()
@@ -170,22 +168,26 @@ data_dir    = resource_path / 'Data'
 subdir('compat')
 subdir('tools')
 
-common_deps += compat_dep
-common_dep = declare_dependency(dependencies: common_deps, sources: [version])
+common_dep = declare_dependency(
+  dependencies: [
+    boost_dep, compat_dep, imgui_dep, reaper_sdk_dep, swell_dep, wdl_dep,
+  ],
+  sources: [version])
 win32_resources = []
 
 subdir('api')
 subdir('shims')
 subdir('src')
-if get_option('tests').enabled()
-  subdir('tests')
-endif
 
 reaimgui = shared_library('reaper_imgui-' + arch_suffix, win32_resources,
   link_whole: [api, src],
   name_prefix: '',
   install: true,
   install_dir: resource_path / 'UserPlugins')
+
+if get_option('tests').enabled()
+  subdir('tests')
+endif
 
 bindings = get_option('bindings')
 if bindings.length() > 0 and not meson.can_run_host_binaries()

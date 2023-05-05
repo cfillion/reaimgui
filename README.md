@@ -16,7 +16,6 @@ Software requirements:
 
 - [Meson](https://mesonbuild.com/) (1.1 or newer)
 - C++20 compiler* (C++17 supported for Linux and macOS builds)
-- PHP (Linux and macOS only)
 
 (* Compiler must be ABI-compatible with MSVC on Windows)
 

@@ -47,11 +47,4 @@ if host_machine.system() != 'windows'
     dependencies: [wdl_dep],
     link_with: swell)
   meson.override_dependency('SWELL', swell_dep)
-
-  swell_resgen = generator(find_program('php'),
-    output: ['@BASENAME@.rc_mac_dlg', '@BASENAME@.rc_mac_menu'],
-    arguments: [
-      meson.current_source_dir() / swell_dir / 'swell_resgen.php',
-      '--quiet', '@INPUT@'
-    ])
 endif

@@ -24,15 +24,17 @@ src_sources = files([
 src_args = []
 src_dependencies = [common_dep, libjpeg_dep, libpng_dep]
 
+dialog = custom_target('dialog.rc',
+  command: [gendialog], capture: true, output: 'dialog.rc')
 if host_machine.system() == 'windows'
-  win32_resources += windows.compile_resources('dialog.rc')
+  win32_resources += windows.compile_resources(dialog)
 
   version_info = configure_file(configuration: configuration_data({
     'REAIMGUI_ARCH': arch_suffix
   }), input: 'version.rc.in', output: 'version.rc')
   win32_resources += windows.compile_resources(version_info, depends: [version])
 else
-  src_sources += swell_resgen.process(fs.copyfile('dialog.rc', 'dialog.rc'))
+  src_sources += dialog
 endif
 
 if host_machine.system() == 'darwin'
