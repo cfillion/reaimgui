@@ -178,7 +178,7 @@ subdir('api')
 subdir('shims')
 subdir('src')
 if get_option('tests').enabled()
-  subdir('test')
+  subdir('tests')
 endif
 
 reaimgui = shared_library('reaper_imgui-' + arch_suffix, win32_resources,
