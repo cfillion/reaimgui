@@ -1,0 +1,33 @@
+// -*- C++ -*-
+
+#ifndef REAIMGUI_CHARCONV
+#define REAIMGUI_CHARCONV
+
+#include "config.hpp"
+
+#ifdef HAVE_STD_CHARCONV
+#  ifdef HAVE_INCLUDE_NEXT
+#    include_next <charconv>
+#  else
+#    include <../include/charconv>
+#  endif
+#else
+#  include <boost/lexical_cast/try_lexical_convert.hpp>
+#  include <system_error>
+  namespace std {
+    // Minimal implementaton required for our usage
+    struct from_chars_result {
+      std::errc ec;
+    };
+    template<typename T>
+    from_chars_result from_chars(const char *start, const char *end, T &out)
+    {
+      if(boost::conversion::try_lexical_convert(start, end - start, out))
+        return {};
+      else
+        return { std::errc::invalid_argument };
+    }
+  }
+#endif
+
+#endif

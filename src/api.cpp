@@ -119,7 +119,7 @@ EELVar::EELVar(const char *name, const char *definition)
 {
 }
 
-const Symbol *API::head() // immutable public accessor
+const API::Symbol *API_head() // immutable public accessor
 {
   return lastSymbol();
 }

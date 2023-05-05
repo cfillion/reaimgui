@@ -65,10 +65,10 @@ struct StreamSource : public jpeg_source_mgr {
   std::istream &stream;
   std::array<char, 4096> buffer;
 
-  static void init(j_decompress_ptr jpeg);
-  static void term(j_decompress_ptr jpeg) {}
-  static boolean fill(j_decompress_ptr jpeg);
-  static void skip(j_decompress_ptr jpeg, long bytes);
+  static void init(j_decompress_ptr);
+  static void term(j_decompress_ptr) {}
+  static boolean fill(j_decompress_ptr);
+  static void skip(j_decompress_ptr, long bytes);
 };
 
 void StreamSource::init(j_decompress_ptr jpeg)

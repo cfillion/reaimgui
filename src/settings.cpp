@@ -20,15 +20,15 @@
 
 #include "action.hpp"
 #include "dialog.hpp"
-#include "optional.hpp"
 #include "renderer.hpp"
-#include "variant.hpp"
 #include "win32_unicode.hpp"
 #include "window.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <reaper_plugin.h>
 #include <reaper_plugin_functions.h>
+#include <variant>
 #include <WDL/wdltypes.h> // WDL_DLGRET
 
 template<typename T>
@@ -338,7 +338,7 @@ static void processCommand(HWND hwnd,
 }
 
 static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
-  const WPARAM wParam, const LPARAM lParam)
+  const WPARAM wParam, const LPARAM)
 {
   constexpr int WM_PREFS_APPLY { WM_USER * 2 };
 

@@ -344,6 +344,8 @@ static void DockWindowActivate2(HWND window, const bool allowStealFocus)
 #ifdef _WIN32
   if(!allowStealFocus)
     EnableWindow(dockerWindow, wasEnabled);
+#else
+  (void)allowStealFocus;
 #endif
 }
 

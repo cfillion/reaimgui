@@ -1,1 +1,10 @@
 /build/
+
+/subprojects/*
+!/subprojects/*.wrap
+!/subprojects/packagefiles/
+
+# submodules
+!/subprojects/imgui
+!/subprojects/reaper-sdk
+!/subprojects/WDL

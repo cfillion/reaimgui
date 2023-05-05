@@ -15,123 +15,128 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <config.hpp>
 #include <version.hpp>
+
+#include "../src/win32_unicode.hpp"
 
 #include <algorithm>
 #include <boost/preprocessor/stringize.hpp>
+#include <charconv>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string>
 #include <string_view>
 #include <vector>
 
-#ifdef HAVE_STD_FILESYSTEM
-#  include <filesystem>
-#  include <fstream>
-  namespace fs {
-    using namespace std::filesystem;
-    using error_code = std::error_code;
-    using ifstream = std::ifstream;
-  }
-#else
-#  include <boost/filesystem.hpp>
-#  include <boost/filesystem/fstream.hpp>
-  namespace fs {
-    using namespace boost::filesystem;
-    using error_code = boost::system::error_code;
-  }
-#endif
+constexpr const char *GENERATED_FOR
+  { "Generated for ReaImGui v" REAIMGUI_VERSION };
 
-using Version = uint32_t;
+class Version {
+public:
+  Version(const std::string_view &);
+  bool operator>(const Version &o) const { return m_value > o.m_value; }
 
-constexpr const char *GENERATED_FOR { "Generated for ReaImGui v" REAIMGUI_VERSION };
+  auto value() const { return m_value; }
+  std::string_view string() const { return m_string; }
 
-struct Shim {
-  Version ver;
-  fs::path path;
-  bool operator<(const Shim &o) const { return ver > o.ver; }
+private:
+  std::string_view m_string;
+  uint32_t m_value;
 };
 
-static bool packVersion(const std::string &ver, Version *packed)
+struct Shim {
+  Version version;
+  std::string_view path;
+  bool operator<(const Shim &o) const { return version > o.version; }
+};
+
+Version::Version(const std::string_view &ver)
+  : m_string { ver }, m_value {}
 {
-  constexpr int segs { sizeof(Version) };
+  constexpr int segs { sizeof(m_value) };
   size_t pos {};
-  *packed = 0;
   for(int i { 1 }; i <= segs; ++i) {
     size_t sepPos { ver.find('.', pos) };
     if(sepPos == std::string::npos)
       sepPos = ver.size();
-    int seg;
-    try {
-      seg = std::stoi(ver.substr(pos, sepPos - pos));
+    unsigned char seg;
+    const std::string_view segStr { ver.substr(pos, sepPos - pos) };
+    const auto result
+      { std::from_chars(segStr.data(), segStr.data() + segStr.size(), seg) };
+    switch(result.ec) {
+    case std::errc::invalid_argument:
+      throw std::runtime_error
+        { "segment " + std::string { segStr } + " is not a number" };
+    case std::errc::result_out_of_range:
+      throw std::runtime_error
+        { "segment " + std::string { segStr } + " does not fit in a byte" };
+    default:
+      break;
     }
-    catch(const std::invalid_argument &) {
-      std::cerr << ver << " has an non-numerical segment" << std::endl;
-      return false;
-    }
-    if(seg & ~0xff) {
-      std::cerr << ver << " has version segment " << seg
-                << "doesn't fit in a byte" << std::endl;
-      return false;
-    }
-    *packed |= seg << 8 * (segs - i);
+    m_value |= seg << 8 * (segs - i);
     if(sepPos == ver.size())
-      return true;
+      return;
     else
       pos = sepPos + 1;
   }
-  std::cerr << ver << " has more than " << segs << " segments" << std::endl;
-  return false;
+  throw std::runtime_error
+    { "version has more than " + std::to_string(segs) + " segments" };
+}
+
+static std::string_view basename(const std::string_view &fn)
+{
+  size_t start { fn.rfind('/') }, end { fn.rfind('.') };
+  start = start == std::string_view::npos ? 0 : start + 1;
+  return fn.substr(start, end - start);
 }
 
 static void hexVersion(std::ostream &stream, const Version ver)
 {
   stream << "0x"
-         << std::setfill('0') << std::setw(sizeof(Version) * 2) << std::hex
-         << ver;
+         << std::setfill('0') << std::setw(sizeof(decltype(ver.value())) * 2)
+         << std::hex << ver.value();
 }
 
-static bool loadShims(const fs::path &dir, std::vector<Shim> &shims)
+// FIXME: std::expected and std::span
+static std::vector<Shim> loadShims(const char *files[], const int size)
 {
-  fs::error_code ec;
-  for(const auto &entry : fs::directory_iterator { dir, ec }) {
-    const auto &fn { entry.path() };
-    if(fs::is_directory(fn))
-      continue;
-    Version version;
-    if(!packVersion(fn.stem().string(), &version)) {
-      std::cerr << fn.string() << ": failed to load shim file" << std::endl;
-      return false;
+  std::vector<Shim> shims;
+
+  for(int i {}; i < size; ++i) {
+    const std::string_view fn { files[i] };
+    try {
+      shims.push_back({ basename(fn), fn });
     }
-    shims.push_back({ version, fn });
+    catch(const std::runtime_error &e) {
+      throw std::runtime_error { std::string { fn } + ": " + e.what() };
+    }
   }
-  if(ec) {
-    std::cerr << dir.string() << ": " << ec.message() << std::endl;
-    return false;
-  }
+
   std::sort(shims.begin(), shims.end());
-  return true;
+
+  return shims;
 }
 
 static int luaShims(std::ostream &stream, const std::vector<Shim> &shims)
 {
-  Version version;
-  packVersion(BOOST_PP_STRINGIZE(REAIMGUI_VERSION_MAJOR) "."
-              BOOST_PP_STRINGIZE(REAIMGUI_VERSION_MINOR) "."
-              BOOST_PP_STRINGIZE(REAIMGUI_VERSION_PATCH) "."
-              BOOST_PP_STRINGIZE(REAIMGUI_VERSION_TWEAK), &version);
+  Version version {
+    BOOST_PP_STRINGIZE(REAIMGUI_VERSION_MAJOR) "."
+    BOOST_PP_STRINGIZE(REAIMGUI_VERSION_MINOR) "."
+    BOOST_PP_STRINGIZE(REAIMGUI_VERSION_PATCH) "."
+    BOOST_PP_STRINGIZE(REAIMGUI_VERSION_TWEAK)
+  };
 
   stream << "-- " << GENERATED_FOR << "\n\n"
          << "local shims = {\n";
 
   for(const Shim &shim : shims) {
     stream << "  { version=";
-    hexVersion(stream, shim.ver);
-    stream << ", apply=function() -- v" << shim.path.stem().string() << '\n';
-    fs::ifstream file { shim.path };
+    hexVersion(stream, shim.version);
+    stream << ", apply=function() -- v" << shim.version.string() << '\n';
+    std::ifstream file { WIDEN(shim.path.data()) };
     if(!file) {
-      std::cerr << "failed to open shim file " << shim.path.string() << std::endl;
+      std::cerr << "failed to open shim file " << shim.version.string() << std::endl;
       return 1;
     }
     std::string line;
@@ -173,25 +178,26 @@ end
 
 int main(int argc, const char *argv[])
 {
+  using namespace std::literals::string_literals;
+
   if(argc < 3) {
-    std::cerr << "Usage: " << argv[0] << " LANG SHIMS_DIR" << std::endl;
+    std::cerr << "Usage: " << argv[0] << " LANG SHIM_FILE...\n";
     return 1;
   }
 
-  const std::string_view lang { argv[1] }, dir { argv[2] };
-  std::vector<Shim> shims;
-  if(!loadShims(dir.data(), shims))
-    return 1;
-  else if(shims.empty()) {
-    std::cerr << "no shims found in '" << dir << "'" << std::endl;
-    return 1;
-  }
+  try {
+    std::vector<Shim> shims { loadShims(argv + 2, argc - 2) };
 
-  if(lang == "lua")
-    return luaShims(std::cout, shims);
-  else {
-    std::cerr << "don't know how to generate shims for '"
-              << lang << "'" << std::endl;
+    const std::string_view lang { argv[1] };
+    if(lang == "lua")
+      return luaShims(std::cout, shims);
+    else {
+      throw std::runtime_error
+        { "don't know how to generate shims for '"s + lang.data() + "'" };
+    }
+  }
+  catch(std::runtime_error &e) {
+    std::cerr << e.what() << "\n";
     return 1;
   }
 }

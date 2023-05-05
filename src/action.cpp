@@ -45,6 +45,8 @@ static Action *findAction(const int id)
 
 static bool commandHook(const int id, const int flag)
 {
+  (void)flag;
+
   if(Action *action { findAction(id) }) {
     action->run();
     return true;

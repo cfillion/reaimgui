@@ -1,3 +1,0 @@
-#cmakedefine HAVE_STD_FILESYSTEM
-#cmakedefine HAVE_STD_OPTIONAL
-#cmakedefine HAVE_STD_VARIANT

@@ -20,6 +20,7 @@
 
 #include "../src/api.hpp"
 #include "../src/api_vararg.hpp"
+#include "../src/basename.hpp"
 #include "../src/context.hpp"
 
 #include <array>
@@ -144,14 +145,15 @@ using DefArgVal = std::conditional_t<
   const API::EELVar EELVar_##name { #name, #type "\0\0\0" help "\0" }
 
 #define DEFINE_SECTION(id, parent, ...) static const API::Section id \
-  { &parent, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ };
+  { &parent, ROOT_FILE, __VA_ARGS__ };
 
 // shortcuts with auto-generated identifier name for the section object
-// #define ROOT_SECTION BOOST_PP_CAT(API_FILE, Section)
 #define _UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
-#define API_SECTION(...)                                   \
-  static const API::Section ROOT_SECTION                   \
-    { nullptr, BOOST_PP_STRINGIZE(API_FILE), __VA_ARGS__ }
+#define API_SECTION(...)                             \
+  constexpr const char FILE_PATH[] { __FILE__ };     \
+  constexpr auto ROOT_FILE { Basename<&FILE_PATH> }; \
+  static const API::Section ROOT_SECTION             \
+    { nullptr, ROOT_FILE, __VA_ARGS__ }
 #define API_SUBSECTION(...) \
   DEFINE_SECTION(_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
 #define API_SECTION_P(parent, ...) \

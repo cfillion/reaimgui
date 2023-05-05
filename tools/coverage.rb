@@ -3,7 +3,7 @@
 # Use to identify differences between dear imgui's API and ReaImGui's API
 # This tool also performs various sanity checks on the exported API
 
-IMGUI_H = File.join __dir__, '..', 'vendor', 'imgui', 'imgui.h'
+IMGUI_H = File.join __dir__, '..', 'subprojects', 'imgui', 'imgui', 'imgui.h'
 REAIMGUI_API_CPP = File.join __dir__, '..', 'api', '*.cpp'
 
 # these functions we cannot port

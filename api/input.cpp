@@ -24,8 +24,7 @@
 #include "../src/function.hpp"
 
 #include <imgui/misc/cpp/imgui_stdlib.h>
-#include <reaper_plugin_functions.h> // realloc_cmd_ptr
-#include <reaper_plugin_secrets.h>   // reaper_array
+#include <reaper_plugin_secrets.h> // reaper_array
 #include <vector>
 
 API_SECTION("Text & Scalar Input");

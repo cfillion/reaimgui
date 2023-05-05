@@ -69,7 +69,7 @@ private:
   Proc *m_proc;
 };
 
-#ifdef __APPLE__
+#ifdef __OBJC__
 #  include <objc/runtime.h>
 
 class ClassImport {

@@ -1,0 +1,35 @@
+#include <version.hpp>
+
+#include <winver.h>
+
+#define VERSION_ARRAY \
+  REAIMGUI_VERSION_MAJOR, REAIMGUI_VERSION_MINOR, \
+  REAIMGUI_VERSION_PATCH, REAIMGUI_VERSION_TWEAK
+
+// https://docs.microsoft.com/en-us/windows/win32/menurc/versioninfo-resource
+
+VS_VERSION_INFO VERSIONINFO
+  FILEVERSION    VERSION_ARRAY
+  PRODUCTVERSION VERSION_ARRAY
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904B0"
+    BEGIN
+      VALUE "ProductName",     "ReaImGui"
+      VALUE "CompanyName",     "https://cfillion.ca"
+      VALUE "FileDescription", "REAPER plug-in extension"
+      VALUE "FileVersion",      REAIMGUI_VERSION
+      VALUE "ProductVersion",   REAIMGUI_VERSION
+      VALUE "OriginalFilename", "reaper_imgui-@REAIMGUI_ARCH@.dll"
+      VALUE "InternalName",     "reaper_imgui-@REAIMGUI_ARCH@"
+      VALUE "LegalCopyright",   "Copyright (C) Christian Fillion"
+    END
+  END
+
+  BLOCK "VarFileInfo"
+  BEGIN
+    // Links to the block in the StringFileInfo structure above
+    VALUE "Translation", 0x0409, 0x04B0
+  END
+END

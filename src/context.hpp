@@ -96,7 +96,6 @@ private:
   void assertOutOfFrame();
 
   void updateFrameInfo();
-  void updateTheme();
   void updateCursor();
   void updateMouseData();
   void updateSettings();
