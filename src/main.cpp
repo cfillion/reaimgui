@@ -70,7 +70,6 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(get_config_var),
     IMPORT(get_ini_file),
     IMPORT(GetAppVersion),
-    IMPORT(GetColorThemeStruct),
     IMPORT(GetMainHwnd),
     IMPORT(GetResourcePath),
     IMPORT(GetToggleCommandState),
@@ -161,6 +160,5 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
 }
 
 #ifndef _WIN32
-#  include "dialog.hpp"
 #  include <dialog.rc>
 #endif
