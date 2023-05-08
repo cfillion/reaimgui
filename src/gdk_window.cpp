@@ -57,11 +57,6 @@ void GDKWindow::create()
   SetProp(m_hwnd, "SWELLGdkAlphaChannel", reinterpret_cast<HANDLE>(1));
   SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, WS_EX_ACCEPTFILES);
 
-  // WS_CHILD does gdk_window_set_override_redirect(true)
-  // SWELL only supports setting WS_CHILD before ShowWindow
-  if(m_viewport->Flags & ImGuiViewportFlags_NoTaskBarIcon)
-    SetWindowLongPtr(m_hwnd, GWL_STYLE, WS_CHILD);
-
   m_previousFlags = ~m_viewport->Flags; // update will be called before show
 }
 
@@ -148,21 +143,34 @@ void GDKWindow::update()
   m_previousFlags = m_viewport->Flags;
 
   if(diff & ImGuiViewportFlags_NoDecoration) {
-    auto style { GetWindowLongPtr(m_hwnd, GWL_STYLE) };
+    // SetWindowLongPtr hides the window and sets an internal "NeedShow" flag
+    // if WS_CAPTION changed. SetWindowPos re-shows the window when that flag
+    // is set. Override redirect is required to move windows past the edges
+    // of the desktop area and must be enabled while the window is unmapped.
+    //
+    // SWELL enables override redirect by itself only if the user has set
+    // gdk_borderless_window_mode=2 in reaper.ini.
+    //
+    // Unconditionally setting WS_CAPTION first for forcing SetWindowLongPtr
+    // to hide the window and allow override redirect to be set after the
+    // initial window creation (nativeWindow was null at that time).
 
-    if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration)
-      style &= ~WS_CAPTION;
-    else
-      style |= WS_CAPTION;
+    const bool noDecoration { !!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration) };
+    const auto style { GetWindowLongPtr(m_hwnd, GWL_STYLE) };
+    SetWindowLongPtr(m_hwnd, GWL_STYLE, style | WS_CAPTION);
+    if(noDecoration)
+      SetWindowLongPtr(m_hwnd, GWL_STYLE, style & ~WS_CAPTION);
 
-    SetWindowLongPtr(m_hwnd, GWL_STYLE, style);
+    if(GdkWindow *nativeWindow { getOSWindow() }) {
+     if(noDecoration)
+       gdk_window_set_override_redirect(nativeWindow, true);
 
-    // SetWindowLongPtr hides the window
-    // it sets an internal "need show" flag that's used by SetWindowPos
-    if(getOSWindow()) {
+      // show the window again after updating WS_CAPTION and override redirect
       setPosition(m_viewport->Pos);
       setSize(m_viewport->Size);
     }
+    else if(noDecoration)
+      m_previousFlags ^= ImGuiViewportFlags_NoDecoration;
   }
 
   if(diff & ImGuiViewportFlags_TopMost) {
