@@ -153,18 +153,21 @@ static std::string_view typeName(const std::string_view type)
 
 static std::string_view defaultValue(const std::string_view value)
 {
+  if(value.empty())
+    return value;
+
   struct Macro { std::string_view name, value; };
   constexpr Macro macros[] {
-#define MACRO(m) { #m, BOOST_PP_STRINGIZE(m) }
+#define MACRO(m) { "-" #m, BOOST_PP_STRINGIZE(m) }
     MACRO(FLT_MIN), MACRO(FLT_MAX)
 #undef MACRO
   };
 
   for(const Macro &macro : macros) {
     assert(macro.name != macro.value); // ensure the macro is defined
-    if(value == macro.value) {
-      return macro.name;
-    }
+    const bool isNeg { value[0] == '-' };
+    if(value.substr(isNeg) == macro.value)
+      return macro.name.substr(!isNeg);
   }
 
   return value;
