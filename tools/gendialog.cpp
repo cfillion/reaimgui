@@ -27,6 +27,7 @@
 //
 // Recommended sizing and spacing
 // https://learn.microsoft.com/en-us/windows/win32/uxguide/vis-layout#recommended-sizing-and-spacing
+// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/bb226818(v=vs.85)
 
 #ifdef _WIN32
 #  include <windows.h>
@@ -393,7 +394,7 @@ void ComboBox::output(const Box &box) const
 }
 
 CheckBox::CheckBox(const int id, const char *label)
-  : NamedWidget { id, label, { 0, 8 } }
+  : NamedWidget { id, label, { { 0, 2 }, { 10, 2 } } }
 {
 }
 
@@ -433,13 +434,14 @@ void GroupBox::output(const Box &box) const
 Indent::Indent(const Widget &widget)
   : m_size { WidgetVisitor { widget }.size() }, m_widget { widget }
 {
-  m_size.width.base += 12;
 }
 
 void Indent::output(const Box &box) const
 {
   Box contentBox { box };
   contentBox.x += 12;
+  contentBox.w -= 12;
+
   g_rc->out << "  // -->\n";
   WidgetVisitor { m_widget }.output(contentBox);
   g_rc->out << "  // <--\n";
