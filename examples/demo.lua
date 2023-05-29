@@ -323,6 +323,20 @@ function demo.ShowDemoWindow(open)
       demo.ShowExampleMenuFile()
       ImGui.EndMenu(ctx)
     end
+    if ImGui.BeginMenu(ctx, 'ReaImGui') then
+      if ImGui.MenuItem(ctx, 'Documentation') then
+        local doc = ('%s/Data/reaper_imgui_doc.html'):format(reaper.GetResourcePath())
+        if reaper.CF_ShellExecute then
+          reaper.CF_ShellExecute(doc)
+        else
+          reaper.MB(doc, 'ReaImGui Documentation', 0)
+        end
+      end
+      if ImGui.MenuItem(ctx, 'Preferences...') then
+        reaper.ViewPrefs(0, 'reaimgui')
+      end
+      ImGui.EndMenu(ctx)
+    end
     if ImGui.BeginMenu(ctx, 'Examples') then
       -- rv,show_app.main_menu_bar =
       --   ImGui.MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
@@ -362,14 +376,6 @@ function demo.ShowDemoWindow(open)
       rv,show_app.style_editor = ImGui.MenuItem(ctx, 'Style Editor',     nil, show_app.style_editor)
       rv,show_app.about        = ImGui.MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
       ImGui.EndMenu(ctx)
-    end
-    if ImGui.SmallButton(ctx, 'Documentation') then
-      local doc = ('%s/Data/reaper_imgui_doc.html'):format(reaper.GetResourcePath())
-      if reaper.CF_ShellExecute then
-        reaper.CF_ShellExecute(doc)
-      else
-        reaper.MB(doc, 'ReaImGui Documentation', 0)
-      end
     end
     ImGui.EndMenuBar(ctx)
   end
@@ -6797,7 +6803,7 @@ function demo.ShowExampleMenuFile()
     ImGui.EndMenu(ctx)
   end
   if ImGui.MenuItem(ctx, 'Save', 'Ctrl+S') then end
-  if ImGui.MenuItem(ctx, 'Save As..') then end
+  if ImGui.MenuItem(ctx, 'Save As...') then end
 
   ImGui.Separator(ctx)
   if ImGui.BeginMenu(ctx, 'Options') then
