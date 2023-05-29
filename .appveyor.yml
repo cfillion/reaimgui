@@ -8,8 +8,8 @@ install:
   - git submodule update --init --depth 1
 build_script:
   - sh:  meson setup build --buildtype=release ${meson_options[@]}
-           -Dcpp_std=c++17 -Dbuild.cpp_std=c++17
-  - cmd: meson setup build --buildtype=debugoptimized
+           -Dcpp_std=c++17 -Dbuild.cpp_std=c++17 -Dexamples=enabled
+  - cmd: meson setup build --buildtype=debugoptimized -Dexamples=enabled
   - ninja -C build
 test_script:
   - meson test -vC build reaimgui

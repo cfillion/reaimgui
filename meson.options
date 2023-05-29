@@ -3,6 +3,8 @@ option('resource_path', type: 'string', value: 'auto',
 
 option('bindings', type: 'array', choices: ['cpp', 'human', 'python'],
   description: 'Generate language bindings')
+option('examples', type: 'feature', value: 'disabled',
+  description: 'Build example plugins')
 option('shims', type: 'array', choices: ['lua'],
   description: 'Generate backward compatibility shims')
 option('tests', type: 'feature', value: 'enabled',

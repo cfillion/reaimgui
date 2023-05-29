@@ -162,8 +162,9 @@ elif not fs.is_absolute(resource_path)
 elif not fs.is_file(resource_path / 'reaper.ini')
   warning(f'resource_path=@resource_path@ does not contain a reaper.ini file')
 endif
-scripts_dir = resource_path / 'Scripts/ReaTeam Extensions/API'
 data_dir    = resource_path / 'Data'
+plugins_dir = resource_path / 'UserPlugins'
+scripts_dir = resource_path / 'Scripts/ReaTeam Extensions/API'
 
 subdir('compat')
 subdir('tools')
@@ -183,7 +184,7 @@ reaimgui = shared_library('reaper_imgui-' + arch_suffix, win32_resources,
   link_whole: [api, src],
   name_prefix: '',
   install: true,
-  install_dir: resource_path / 'UserPlugins')
+  install_dir: plugins_dir)
 
 if get_option('tests').enabled()
   subdir('tests')
@@ -201,7 +202,7 @@ binding_targets = {
 }
 foreach name : bindings
   binding = binding_targets[name]
-  custom_target(name + '_binding',
+  binding_file = custom_target(name + '_binding',
     build_by_default: true,
     capture: true,
     command: [genbinding, reaimgui.full_path(), name],
@@ -209,7 +210,12 @@ foreach name : bindings
     install: binding.has_key('install_dir'),
     install_tag: 'runtime',
     kwargs: binding)
+  set_variable(name + '_binding', binding_file)
 endforeach
+
+if get_option('examples').enabled()
+  subdir('examples')
+endif
 
 summary({
   'Bindings': meson.can_run_host_binaries() ? bindings : '<unavailable>',
