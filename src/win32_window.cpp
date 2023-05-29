@@ -354,6 +354,10 @@ std::optional<LRESULT> Win32Window::handleMessage
         0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
     }
     break;
+  case WM_MOUSEACTIVATE:
+    if(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnClick)
+      return MA_NOACTIVATE;
+    break;
   case WM_DPICHANGED: {
     m_dpi = LOWORD(wParam);
     m_viewport->DpiScale = scaleForDpi(m_dpi);

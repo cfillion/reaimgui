@@ -207,10 +207,19 @@ static int translateKeyCode(NSEvent *event)
   return YES;
 }
 
+- (BOOL)shouldDelayWindowOrderingForEvent:(NSEvent *)event
+{
+  // Give focus to the window on mouseUp rather than mouseDown
+  // to let mouseDown cancel it by calling preventWindowOrdering
+  return m_window->viewport()->Flags & ImGuiViewportFlags_NoFocusOnClick;
+}
+
 // Only receives mouse events prior to capturing the mouse
 // Susequent events (eg. mouse up) are handled via [EventHandler appMouseEvent]
 - (void)mouseDown:(NSEvent *)event
 {
+  if(m_window->viewport()->Flags & ImGuiViewportFlags_NoFocusOnClick)
+    [NSApp preventWindowOrdering];
   m_window->mouseDown(ImGuiMouseButton_Left);
 }
 

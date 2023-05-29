@@ -36,6 +36,7 @@ class Window;
 - (BOOL)resignFirstResponder;
 
 - (BOOL)acceptsFirstMouse:(NSEvent *)event;
+- (BOOL)shouldDelayWindowOrderingForEvent:(NSEvent *)event;
 - (void)mouseDown:(NSEvent *)event;
 - (void)rightMouseDown:(NSEvent *)event;
 - (void)otherMouseDown:(NSEvent *)event;

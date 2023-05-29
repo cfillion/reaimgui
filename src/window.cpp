@@ -212,7 +212,8 @@ void Window::mouseDown(const ImGuiMouseButton btn)
     Platform::setCapture(m_hwnd);
 
   // give keyboard focus when docked (+ focus on right/middle click on macOS)
-  setFocus();
+  if(!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnClick))
+    setFocus();
 
   updateModifiers();
   m_ctx->mouseInput(btn, true);

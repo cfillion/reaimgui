@@ -171,6 +171,16 @@ void GDKWindow::update()
     else
       SWELL_SetWindowLevel(m_hwnd, 0);
   }
+
+  if(diff & ImGuiViewportFlags_NoFocusOnClick) {
+    if(GdkWindow *native { getOSWindow() }) {
+      const bool focusOnClick
+        { !(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnClick) };
+      gdk_window_set_accept_focus(native, focusOnClick);
+    }
+    else
+      m_previousFlags ^= ImGuiViewportFlags_NoFocusOnClick;
+  }
 }
 
 float GDKWindow::globalScaleFactor()
