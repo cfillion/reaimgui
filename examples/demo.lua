@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.5)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.6)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -384,14 +384,13 @@ function demo.ShowDemoWindow(open)
   ImGui.Spacing(ctx)
 
   if ImGui.CollapsingHeader(ctx, 'Help') then
-    ImGui.Text(ctx, 'ABOUT THIS DEMO:')
+    ImGui.SeparatorText(ctx, 'ABOUT THIS DEMO:')
     ImGui.BulletText(ctx, 'Sections below are demonstrating many aspects of the library.')
     ImGui.BulletText(ctx, 'The "Examples" menu above leads to more demo contents.')
     ImGui.BulletText(ctx, 'The "Tools" menu above gives access to: About Box, Style Editor,\n' ..
                             'and Metrics/Debugger (general purpose Dear ImGui debugging tool).')
-    ImGui.Separator(ctx)
 
-    ImGui.Text(ctx, 'PROGRAMMER GUIDE:')
+    ImGui.SeparatorText(ctx, 'PROGRAMMER GUIDE:')
     ImGui.BulletText(ctx, 'See the ShowDemoWindow() code in ReaImGui_Demo.lua. <- you are here!')
     -- ImGui.BulletText(ctx, 'See comments in imgui.cpp.')
     ImGui.BulletText(ctx, 'See example scripts in the examples/ folder.')
@@ -399,9 +398,8 @@ function demo.ShowDemoWindow(open)
     ImGui.BulletText(ctx, 'Read the FAQ at '); ImGui.SameLine(ctx, 0, 0); demo.Link('https://www.dearimgui.com/faq/')
     -- ImGui.BulletText(ctx, "Set 'io.ConfigFlags |= NavEnableKeyboard' for keyboard controls.")
     -- ImGui.BulletText(ctx, "Set 'io.ConfigFlags |= NavEnableGamepad' for gamepad controls.")
-    ImGui.Separator(ctx)
 
-    ImGui.Text(ctx, 'USER GUIDE:')
+    ImGui.SeparatorText(ctx, 'USER GUIDE:')
     demo.ShowUserGuide()
   end
 
@@ -498,6 +496,8 @@ function demo.ShowDemoWindow(open)
       ImGui.SameLine(ctx); demo.HelpMarker('First calls to Begin()/BeginChild() will return false.\n\nTHIS OPTION IS DISABLED because it needs to be set at application boot-time to make sense. Showing the disabled option is a way to make this feature easier to discover')
       configVarCheckbox('ConfigVar_DebugBeginReturnValueLoop')
       ImGui.SameLine(ctx); demo.HelpMarker('Some calls to Begin()/BeginChild() will return false.\n\nWill cycle through window depths then repeat. Windows should be flickering while running.')
+      -- configVarCheckbox('ConfigVar_DebugIgnoreFocusLoss')
+      -- ImGui.SameLine(ctx); demo.HelpMarker('Option to deactivate io.AddFocusEvent(false) handling. May facilitate interactions with a debugger when focus loss leads to clearing inputs data.')
 
       ImGui.SetConfigVar(ctx, ImGui.ConfigVar_Flags(), config.flags)
       ImGui.TreePop(ctx)
@@ -731,7 +731,7 @@ function demo.ShowDemoWindowWidgets()
       ImGui.Text(ctx, 'Tooltips:')
 
       ImGui.SameLine(ctx)
-      ImGui.Button(ctx, 'Button')
+      ImGui.Button(ctx, 'Basic')
       if ImGui.IsItemHovered(ctx) then
         ImGui.SetTooltip(ctx, 'I am a tooltip')
       end
@@ -814,7 +814,7 @@ function demo.ShowDemoWindowWidgets()
       -- This technique can also be used with DragInt().
       local elements = { 'Fire', 'Earth', 'Air', 'Water' }
       local current_elem = elements[widgets.basic.elem] or 'Unknown'
-      rv,widgets.basic.elem = ImGui.SliderInt(ctx, 'slider enum', widgets.basic.elem, 1, #elements, current_elem)
+      rv,widgets.basic.elem = ImGui.SliderInt(ctx, 'slider enum', widgets.basic.elem, 1, #elements, current_elem) -- Use ImGuiSliderFlags_NoInput flag to disable CTRL+Click here.
       ImGui.SameLine(ctx)
       demo.HelpMarker(
         'Using the format string parameter to display a name instead \z
@@ -1557,7 +1557,7 @@ label:
 ]],
         },
         flags = ImGui.InputTextFlags_AllowTabInput(),
-        buf = { '', '', '', '', '', '', '', '', '' },
+        buf = { '', '', '', '', '', '', '', '', '', '' },
         password = 'hunter2',
       }
     end
@@ -1571,8 +1571,16 @@ label:
     end
 
     if ImGui.TreeNode(ctx, 'Filtered Text Input') then
+      if not ImGui.ValidatePtr(widgets.input.filterCasingSwap, 'ImGui_Function*') then
+        -- Modify character input by altering 'data->Eventchar' (ImGuiInputTextFlags_CallbackCharFilter callback)
+        widgets.input.filterCasingSwap = ImGui.CreateFunctionFromEEL([[
+        diff = 'a' - 'A';
+        EventChar >= 'a' && EventChar <= 'z' ? EventChar = EventChar - diff : // Lowercase becomes uppercase
+        EventChar >= 'A' && EventChar <= 'Z' ? EventChar = EventChar + diff ; // Uppercase becomes lowercase
+        ]])
+      end
       if not ImGui.ValidatePtr(widgets.input.filterImGuiLetters, 'ImGui_Function*') then
-        -- Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
+        -- Only allow 'i' or 'm' or 'g' or 'u' or 'i' letters, filter out anything else
         widgets.input.filterImGuiLetters = ImGui.CreateFunctionFromEEL([[
         eat = 1; i = strlen(#allowed);
         while(
@@ -1590,7 +1598,8 @@ label:
       rv,widgets.input.buf[3] = ImGui.InputText(ctx, 'hexadecimal', widgets.input.buf[3], ImGui.InputTextFlags_CharsHexadecimal() | ImGui.InputTextFlags_CharsUppercase())
       rv,widgets.input.buf[4] = ImGui.InputText(ctx, 'uppercase',   widgets.input.buf[4], ImGui.InputTextFlags_CharsUppercase())
       rv,widgets.input.buf[5] = ImGui.InputText(ctx, 'no blank',    widgets.input.buf[5], ImGui.InputTextFlags_CharsNoBlank())
-      rv,widgets.input.buf[6] = ImGui.InputText(ctx, '"imgui" letters', widgets.input.buf[6], ImGui.InputTextFlags_CallbackCharFilter(), widgets.input.filterImGuiLetters)
+      rv,widgets.input.buf[6] = ImGui.InputText(ctx, 'casing swap', widgets.input.buf[6], ImGui.InputTextFlags_CallbackCharFilter(), widgets.input.filterCasingSwap)
+      rv,widgets.input.buf[7] = ImGui.InputText(ctx, '"imgui"',     widgets.input.buf[7], ImGui.InputTextFlags_CallbackCharFilter(), widgets.input.filterImGuiLetters)
       ImGui.TreePop(ctx)
     end
 
@@ -1643,13 +1652,13 @@ label:
         end
       end
 
-      rv,widgets.input.buf[7] = ImGui.InputText(ctx, 'Completion', widgets.input.buf[7], ImGui.InputTextFlags_CallbackCompletion(), widgets.input.callback)
+      rv,widgets.input.buf[8] = ImGui.InputText(ctx, 'Completion', widgets.input.buf[8], ImGui.InputTextFlags_CallbackCompletion(), widgets.input.callback)
       ImGui.SameLine(ctx); demo.HelpMarker("Here we append \"..\" each time Tab is pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.")
 
-      rv,widgets.input.buf[8] = ImGui.InputText(ctx, 'History', widgets.input.buf[8], ImGui.InputTextFlags_CallbackHistory(), widgets.input.callback)
+      rv,widgets.input.buf[9] = ImGui.InputText(ctx, 'History', widgets.input.buf[9], ImGui.InputTextFlags_CallbackHistory(), widgets.input.callback)
       ImGui.SameLine(ctx); demo.HelpMarker("Here we replace and select text each time Up/Down are pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.")
 
-      rv,widgets.input.buf[9] = ImGui.InputText(ctx, 'Edit', widgets.input.buf[9], ImGui.InputTextFlags_CallbackEdit(), widgets.input.callback)
+      rv,widgets.input.buf[10] = ImGui.InputText(ctx, 'Edit', widgets.input.buf[10], ImGui.InputTextFlags_CallbackEdit(), widgets.input.callback)
       ImGui.SameLine(ctx); demo.HelpMarker('Here we toggle the casing of the first character on every edit + count edits.')
       local edit_count = ImGui.Function_GetValue(widgets.input.callback, 'edit_count')
       ImGui.SameLine(ctx); ImGui.Text(ctx, ('(%d)'):format(edit_count))

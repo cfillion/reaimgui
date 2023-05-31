@@ -140,15 +140,15 @@ DEFINE_API(void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
   if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
 }
 
-DEFINE_API(void, ListClipper_ForceDisplayRangeByIndices, (ImGui_ListClipper*,clipper)
-(int,item_min)(int,item_max),
-R"(Call ListClipper_ForceDisplayRangeByIndices before first call to
+DEFINE_API(void, ListClipper_IncludeRangeByIndices, (ImGui_ListClipper*,clipper)
+(int,item_begin)(int,item_end),
+R"(Call ListClipper_IncludeRangeByIndices before first call to
 ListClipper_Step if you need a range of items to be displayed regardless of
 visibility.
 
-item_max is exclusive e.g. use (42, 42+1) to make item 42 always visible BUT due
-to alignment/padding of certain items it is likely that an extra item may be
-included on either end of the display range.)")
+(Due to alignment / padding of certain items it is possible that an extra item may be included on either end of the display range).
+
+item_end is exclusive e.g. use (42, 42+1) to make item 42 never clipped.)")
 {
-  (*clipper)->ForceDisplayRangeByIndices(item_min, item_max);
+  (*clipper)->IncludeRangeByIndices(item_begin, item_end);
 }
