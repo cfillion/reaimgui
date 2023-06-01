@@ -812,7 +812,7 @@ static void humanBinding(std::ostream &stream)
   }
   ol > li { display: table; }
   ol > li::before {
-    content: counters(item, ".") ".";
+    content: counter(item) ".";
     counter-increment: item;
     display: table-cell;
     padding-right: 0.5em;
