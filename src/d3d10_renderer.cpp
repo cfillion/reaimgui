@@ -277,6 +277,10 @@ D3D10Renderer::D3D10Renderer(RendererFactory *factory, Window *window)
   if(FAILED(m_shared->m_factory->CreateSwapChain(m_shared->m_device, &swapChainDesc, &m_swapChain)))
     throw backend_error { "failed to create DXGI swap chain" };
 
+  // disable Alt+Enter enabling fullscreen mode
+  m_shared->m_factory->MakeWindowAssociation(window->nativeHandle(),
+    DXGI_MWA_NO_WINDOW_CHANGES | DXGI_MWA_NO_ALT_ENTER);
+
   createRenderTarget();
 
   if(!setupBuffer(m_buffers[ConstantBuf], 1, 0, sizeof(ProjMtx),
