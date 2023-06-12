@@ -350,8 +350,8 @@ std::optional<LRESULT> Win32Window::handleMessage
   }
   case WM_ACTIVATEAPP:
     if(m_viewport->Flags & ImGuiViewportFlags_TopMost) {
-      SetWindowPos(m_hwnd, wParam ? HWND_TOPMOST : HWND_NOTOPMOST,
-        0, 0, 0, 0, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+      SetWindowPos(m_hwnd, wParam ? HWND_TOPMOST : HWND_NOTOPMOST, 0, 0, 0, 0,
+        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOSIZE);
     }
     break;
   case WM_MOUSEACTIVATE:
