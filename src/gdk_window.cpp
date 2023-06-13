@@ -141,11 +141,13 @@ void GDKWindow::update()
   if(GetFocus() == m_hwnd)
     SWELL_SetClassName(m_hwnd, getSwellClass());
 
-  if(isDocked())
-    return;
-
   const ImGuiViewportFlags diff { m_previousFlags ^ m_viewport->Flags };
   m_previousFlags = m_viewport->Flags;
+
+  if(!diff || isDocked())
+    return;
+
+  GdkWindow *native { getOSWindow() };
 
   if(diff & ImGuiViewportFlags_NoDecoration) {
     auto style { GetWindowLongPtr(m_hwnd, GWL_STYLE) };
@@ -159,7 +161,7 @@ void GDKWindow::update()
 
     // SetWindowLongPtr hides the window
     // it sets an internal "need show" flag that's used by SetWindowPos
-    if(getOSWindow()) {
+    if(native) {
       setPosition(m_viewport->Pos);
       setSize(m_viewport->Size);
     }
@@ -172,14 +174,30 @@ void GDKWindow::update()
       SWELL_SetWindowLevel(m_hwnd, 0);
   }
 
+  if(!native) {
+    constexpr ImGuiViewportFlags needNative {
+      ImGuiViewportFlags_NoFocusOnClick |
+      ImGuiViewportFlags_NoInputs
+    };
+    m_previousFlags ^= diff & needNative;
+    return;
+  }
+
   if(diff & ImGuiViewportFlags_NoFocusOnClick) {
-    if(GdkWindow *native { getOSWindow() }) {
-      const bool focusOnClick
-        { !(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnClick) };
-      gdk_window_set_accept_focus(native, focusOnClick);
-    }
+    const bool focusOnClick
+      { !(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnClick) };
+    gdk_window_set_accept_focus(native, focusOnClick);
+  }
+
+  if(diff & ImGuiViewportFlags_NoInputs) {
+    cairo_region_t *region;
+    if(m_viewport->Flags & ImGuiViewportFlags_NoInputs)
+      region = cairo_region_create();
     else
-      m_previousFlags ^= ImGuiViewportFlags_NoFocusOnClick;
+      region = nullptr;
+    gdk_window_input_shape_combine_region(native, region, 0, 0);
+    if(region)
+      cairo_region_destroy(region);
   }
 }
 
