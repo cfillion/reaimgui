@@ -18,6 +18,7 @@
 #ifndef REAIMGUI_API_VARARG_HPP
 #define REAIMGUI_API_VARARG_HPP
 
+#include <cstdint>
 #include <tuple>
 
 template<typename T>

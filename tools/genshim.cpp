@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <boost/preprocessor/stringize.hpp>
 #include <charconv>
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
