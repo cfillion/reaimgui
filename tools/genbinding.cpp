@@ -1090,32 +1090,25 @@ static void pythonBinding(std::ostream &stream)
       stream << "  args = (";
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
-        bool packed { false };
         if(arg.type.isScalarPtr())
           cs << pythonCType(arg.type.removePtr());
         else if(arg.type.isString())
           cs << (arg.type.isConst() ? "rpr_packsc" : "rpr_packs");
-        else if(arg.type.isPointer()) {
-          packed = true;
-          cs << "rpr_packp('" << arg.type << "', " << arg.name << ')';
-        }
         else
           cs << pythonCType(arg.type);
 
-        if(!packed) {
-          stream << '(';
-          if(arg.isBufSize()) {
-            if(arg.isOutput())
-              stream << (arg.isBigBuf() ? "4096" : "1024");
-            else
-              stream << "len(" << arg.bufName() << ")+1";
-          }
-          else if(arg.isInput())
-            stream << arg.name;
+        stream << '(';
+        if(arg.isBufSize()) {
+          if(arg.isOutput())
+            stream << (arg.isBigBuf() ? "4096" : "1024");
           else
-            stream << '0';
-          stream << ')';
+            stream << "len(" << arg.bufName() << ")+1";
         }
+        else if(arg.isInput())
+          stream << arg.name;
+        else
+          stream << '0';
+        stream << ')';
         if(arg.isOptional())
           stream << " if " << arg.name << " != None else None";
       }
@@ -1156,8 +1149,6 @@ static void pythonBinding(std::ostream &stream)
       if(!func.type.isVoid()) {
         if(func.type.isString())
           cs << "str(rval.decode())";
-        else if(func.type.isPointer())
-          cs << "rpr_unpackp('" << func.type << "', rval)";
         else
           cs << "rval";
       }
