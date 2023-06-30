@@ -423,8 +423,9 @@ Dock IDs are:
 - -1 to -16 = REAPER docker index
 - \> 0 = Dear ImGui dockspace ID (when the user docked the window into another one).
 
-Set ConfigFlags_DockingEnable when creating your context or with
-SetConfigVar(ConfigVar_Flags) to enable docking (disabled by default).)");
+Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking/undocking.
+Drag from window menu button (upper-left button) to undock an entire node (all windows).
+DockingWithShift == true, you instead need to hold SHIFT to _enable_ docking/undocking.)");
 
 DEFINE_API(bool, IsWindowDocked, (ImGui_Context*,ctx),
 "Is current window docked into another window or a REAPER docker?")
