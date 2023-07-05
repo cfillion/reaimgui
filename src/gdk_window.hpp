@@ -36,6 +36,7 @@ public:
 
   void create() override;
   void show() override;
+  ImVec2 getPosition() const override;
   void setPosition(ImVec2) override;
   void setSize(ImVec2) override;
   void setTitle(const char *) override;
@@ -59,7 +60,7 @@ private:
   ImGuiViewportFlags m_previousFlags;
   int m_defaultDecorations;
   GtkIMContext *m_ime;
-  bool m_imeOpen;
+  bool m_imeOpen, m_eatNextMove;
 };
 
 #endif
