@@ -215,6 +215,11 @@ ImGuiIO &Context::IO()
   return m_imgui->IO;
 }
 
+ImGuiStyle &Context::style()
+{
+  return m_imgui->Style;
+}
+
 void Context::setCurrent()
 {
   ImGui::SetCurrentContext(m_imgui.get());

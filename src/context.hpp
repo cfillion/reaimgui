@@ -76,6 +76,7 @@ public:
   void enableViewports(bool enable);
 
   ImGuiIO &IO();
+  ImGuiStyle &style();
   DockerList &dockers() { return *m_dockers; }
   FontList &fonts() { return *m_fonts; }
   HCURSOR cursor() const { return m_cursor; }

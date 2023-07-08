@@ -75,6 +75,13 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   case WM_SIZE:
     self->m_viewport->PlatformRequestResize = true;
     return 0;
+  case WM_GETMINMAXINFO: {
+    const ImVec2 minSize { self->m_ctx->style().WindowMinSize };
+    MINMAXINFO *mmi { reinterpret_cast<MINMAXINFO *>(lParam) };
+    mmi->ptMinTrackSize.x = minSize.x;
+    mmi->ptMinTrackSize.y = minSize.y;
+    break;
+  }
   case WM_DESTROY:
     RemoveProp(handle, CLASS_NAME);
     // Disable message passing to the derived class (not available at this point)
