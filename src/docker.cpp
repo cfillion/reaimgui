@@ -46,6 +46,7 @@ void Docker::draw()
 
   constexpr ImGuiWindowFlags windowFlags {
     ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove |
+    ImGuiWindowFlags_NoFocusOnAppearing |
     ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus |
     ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings
   };
