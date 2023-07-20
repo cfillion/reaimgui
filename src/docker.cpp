@@ -120,7 +120,7 @@ bool Docker::isNoFocus() const
   });
 }
 
-void Docker::moveTo(Docker *target)
+void Docker::moveTo(Docker *target, const bool reuseHost)
 {
   assert(target && target != this);
 
@@ -133,7 +133,21 @@ void Docker::moveTo(Docker *target)
   // to reuse the same platform window and keep using the same docker instance.
   ImVector<const char *> remap;
   ImGui::DockBuilderCopyDockSpace(nodeId(), target->nodeId(), &remap);
-  std::swap(m_id, target->m_id);
+  if(reuseHost)
+    std::swap(m_id, target->m_id);
+}
+
+void Docker::hostViewport(ImGuiViewport *viewport)
+{
+  assert(!isActive());
+
+  ImGuiWindow *window { static_cast<ImGuiViewportP *>(viewport)->Window };
+  if(window->DockNodeAsHost) {
+    ImVector<const char *> remap;
+    ImGui::DockBuilderCopyDockSpace(window->DockNodeAsHost->ID, nodeId(), &remap);
+  }
+  else
+    ImGui::SetWindowDock(window, nodeId(), ImGuiCond_Always);
 }
 
 void Docker::reset()
@@ -211,15 +225,29 @@ namespace DockPos {
   enum Pos { Unknown = -1, Bottom, Left, Top, Right, Floating };
 }
 
+const char *DockGetPositionName(const int pos)
+{
+  switch(static_cast<DockPos::Pos>(pos)) {
+  case DockPos::Bottom:   return "bottom";
+  case DockPos::Left:     return "left";
+  case DockPos::Top:      return "top";
+  case DockPos::Right:    return "right";
+  case DockPos::Floating: return "floating";
+  case DockPos::Unknown:  break;
+  }
+
+  return "unknown";
+}
+
 int CompatDockGetPosition(const int whichDock)
 {
   char key[16];
   snprintf(key, sizeof(key), "dockermode%d", whichDock);
-  const int mode { static_cast<int>(
-    GetPrivateProfileInt(TEXT("REAPER"), WIDEN(key),
-                         DockPos::Unknown, WIDEN(get_ini_file()))) };
+  const int mode { static_cast<int>(GetPrivateProfileInt(
+    TEXT("REAPER"), WIDEN(key), DockPos::Unknown, WIDEN(get_ini_file()))) };
+
   if(mode == DockPos::Unknown)
-    return DockPos::Unknown;
+    return mode;
 
   return mode & 0x8000 ? DockPos::Floating : mode & 3;
 }
@@ -484,7 +512,7 @@ void DockerHost::update()
 
   const int dockIndex { DockIsChildOfDock(m_window->nativeHandle(), nullptr) };
   if(static_cast<ReaDockID>(dockIndex) != m_docker->id())
-    m_docker->moveTo(m_ctx->dockers().findById(dockIndex));
+    m_docker->moveTo(m_ctx->dockers().findById(dockIndex), true);
 }
 
 void DockerHost::setIME(ImGuiPlatformImeData *data)

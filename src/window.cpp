@@ -20,6 +20,7 @@
 #include "context.hpp"
 #include "docker.hpp"
 #include "font.hpp"
+#include "menu.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
 
@@ -27,7 +28,9 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 
-#ifndef _WIN32
+#ifdef _WIN32
+#  include <windowsx.h> // GET_[XY]_LPARAM
+#else
 #  include <swell/swell.h>
 #  include <WDL/wdltypes.h>
 #endif
@@ -82,6 +85,9 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     mmi->ptMinTrackSize.y = minSize.y;
     break;
   }
+  case WM_CONTEXTMENU:
+    self->contextMenu(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+    break;
   case WM_DESTROY:
     RemoveProp(handle, CLASS_NAME);
     // Disable message passing to the derived class (not available at this point)
@@ -358,4 +364,58 @@ int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
   }
 
   return Unknown;
+}
+
+void Window::contextMenu(const short x, const short y)
+{
+  enum Action { NoOp = 0, Close, Undock, SetDock };
+  Menu menu;
+
+  if(m_ctx->IO().ConfigFlags & ImGuiConfigFlags_DockingEnable) {
+    const ReaDockID currentDockId
+      { m_dockerHost ? m_dockerHost->docker()->id() : -1 };
+
+    Menu setDockMenu { menu.addMenu("Move to docker") };
+    for(size_t id {}; id < DockerList::DOCKER_COUNT; ++id) {
+      char label[64];
+      const char *pos { DockGetPositionName(DockGetPosition(id)) };
+      snprintf(label, sizeof(label), "Docker %zu (%s)", id + 1, pos);
+
+      int cmd { NoOp }, flags {};
+      if(currentDockId == id)
+        flags |= Menu::Checked | Menu::Radio;
+      else if(m_ctx->dockers().findById(id)->isActive())
+        flags |= Menu::Disabled;
+      else
+        cmd = SetDock + id;
+
+      setDockMenu.addItem(label, cmd, flags);
+    }
+
+    if(m_dockerHost)
+      menu.addItem("Undock", Undock);
+  }
+
+  menu.addItem("Close", Close);
+
+  const Action cmd { static_cast<Action>(menu.show(nativeHandle(), x, y)) };
+  switch(cmd) {
+  case NoOp:
+    break;
+  case Close:
+    m_viewport->PlatformRequestClose = true;
+    break;
+  case Undock:
+    m_ctx->setCurrent();
+    m_dockerHost->docker()->reset();
+    break;
+  default:
+    m_ctx->setCurrent();
+    Docker *target { m_ctx->dockers().findById(cmd - SetDock) };
+    if(m_dockerHost)
+      m_dockerHost->docker()->moveTo(target);
+    else
+      target->hostViewport(m_viewport);
+    break;
+  }
 }

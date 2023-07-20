@@ -80,6 +80,7 @@ private:
   static int translateAccel(MSG *msg, accelerator_register_t *accel);
   void updateModifiers();
   void transferCapture();
+  void contextMenu(short x, short y);
 
   DockerHost *m_dockerHost;
 

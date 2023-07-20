@@ -31,6 +31,7 @@ class Window;
 struct ImGuiDockNode;
 
 int CompatDockGetPosition(int whichDock); // for REAPER v5
+const char *DockGetPositionName(int pos);
 
 class Docker {
 public:
@@ -46,10 +47,11 @@ public:
   bool isActive() const;
   bool isDropTarget() const;
   bool isNoFocus() const;
-  void moveTo(Docker *other);
+  void moveTo(Docker *other, bool reuseHost = false);
+  void hostViewport(ImGuiViewport *);
+  void reset();
 
 private:
-  void reset();
   ImGuiDockNode *rootNode() const;
 
   ReaDockID m_id;
@@ -64,7 +66,7 @@ public:
 
   DockerList();
   void drawAll();
-  Docker *findById(unsigned int);
+  Docker *findById(ReaDockID);
   Docker *findByViewport(const ImGuiViewport *);
   const Docker *dropTarget() const { return m_dropTarget; }
 
@@ -78,6 +80,7 @@ private:
 class DockerHost final : public Viewport {
 public:
   DockerHost(Docker *, ImGuiViewport *);
+  Docker *docker() const { return m_docker; }
   Window *window() const { return m_window.get(); }
 
   void create() override;
