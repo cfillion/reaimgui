@@ -61,7 +61,7 @@ Version::Version(const std::string_view &ver)
     size_t sepPos { ver.find('.', pos) };
     if(sepPos == std::string::npos)
       sepPos = ver.size();
-    unsigned char seg;
+    uint8_t seg;
     const std::string_view segStr { ver.substr(pos, sepPos - pos) };
     const auto result
       { std::from_chars(segStr.data(), segStr.data() + segStr.size(), seg) };
@@ -75,6 +75,9 @@ Version::Version(const std::string_view &ver)
     default:
       break;
     }
+    if(result.ptr != segStr.data() + segStr.size())
+      throw std::runtime_error
+        { "segment " + std::string { segStr } + " contains non-digit characters" };
     m_value |= seg << 8 * (segs - i);
     if(sepPos == ver.size())
       return;
