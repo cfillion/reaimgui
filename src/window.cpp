@@ -96,9 +96,9 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     // (DockWindowRemove is safe to call even when not docked)
     DockWindowRemove(handle); // may send messages
     // Move capture to another window in the same context when being destroyed
-    // to not lose mouse up events
+    // to not miss mouse up events
     if(Platform::getCapture() == handle)
-      self->transferCapture();
+      self->transferCapture(); // relies on GWLP_USERDATA being cleared above
     return 0;
   case WM_MOUSEWHEEL:
   case WM_MOUSEHWHEEL:
@@ -252,7 +252,14 @@ void Window::transferCapture()
     if(viewport == m_viewport || !viewport->PlatformHandle)
       continue;
 
-    Platform::setCapture(static_cast<HWND>(viewport->PlatformHandle));
+    // Don't transfer capture to a parent window that is being destroyed.
+    // This can happen when DestroyWindow is called on one of the captured
+    // window's parents (user data is cleared via our WM_DESTROY handler)
+    HWND handle { static_cast<HWND>(viewport->PlatformHandle) };
+    if(!GetWindowLongPtr(handle, GWLP_USERDATA))
+      continue;
+
+    Platform::setCapture(handle);
 
     // Transfer knowledge of all down buttons to not release capture
     // before all buttons are released
