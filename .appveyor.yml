@@ -95,8 +95,8 @@ for:
           meson_options+=(--cross-file "$crossfile")
         fi
 
-      # don't use libpng from /Library/Frameworks/Mono.framework
-      - force_fallback=(libpng)
+      # don't use libraries from /Library/Frameworks/Mono.framework
+      - force_fallback=(freetype2 libpng)
       # libpng >= 1.6.26 needs zlib >= 1.2.8.1's inflateValidate
       # (shipped only since macOS 10.13)
       - if [ "$ARCH" != 'arm64' ]; then force_fallback+=(zlib); fi
