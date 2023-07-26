@@ -100,6 +100,8 @@ static Context *getWindowContext(NSWindow *window)
     if(Context *context { getWindowContext(window) })
       context->updateFocus();
   });
+  if(Platform::getCapture())
+    Platform::releaseCapture();
 }
 
 - (NSEvent *)appMouseEvent:(NSEvent *)event
