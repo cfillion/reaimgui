@@ -242,6 +242,14 @@ void Window::mouseUp(const ImGuiMouseButton btn)
     Platform::releaseCapture();
 }
 
+void Window::releaseMouse()
+{
+  // Caller is responsible of clearing buttons on imgui's side (ClearInputKeys)
+  m_mouseDown = 0;
+  if(Platform::getCapture() == m_hwnd)
+    Platform::releaseCapture();
+}
+
 void Window::transferCapture()
 {
   Platform::releaseCapture();

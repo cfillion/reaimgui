@@ -58,6 +58,7 @@ public:
 
   void mouseDown(ImGuiMouseButton);
   void mouseUp(ImGuiMouseButton);
+  void releaseMouse();
   bool isDocked() const { return !!m_dockerHost; }
 
   const char *getSwellClass() const;

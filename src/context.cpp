@@ -586,9 +586,18 @@ void Context::clearFocus()
   else
     ImGui::FocusWindow(nullptr); // also calls ClearActiveID
 
+  // ClearInputKeys resets MousePos to -FLT_MAX
+  // Restoring it to gain focus on first click on Linux
   const ImVec2 mousePos { m_imgui->IO.MousePos };
-  m_imgui->IO.ClearInputKeys();
+  m_imgui->IO.ClearInputKeys(); // clears keyboard and mouse
   m_imgui->IO.MousePos = mousePos;
+
+  HWND capture { Platform::getCapture() };
+  if(capture && Window::contextFromHwnd(capture) == this) {
+    Window *window
+      { reinterpret_cast<Window *>(GetWindowLongPtr(capture, GWLP_USERDATA)) };
+    window->releaseMouse();
+  }
 }
 
 void Context::enableViewports(const bool enable)

@@ -85,10 +85,15 @@ static Context *getWindowContext(NSWindow *window)
 
 - (void)menuDidBeginTracking:(NSNotification *)notification
 {
+  // Not using Context::updateFocus: the window under the menu still has focus
   if(Context *ctx { Window::contextFromHwnd(GetForegroundWindow()) })
     ctx->IO().ClearInputKeys();
-  if(Platform::getCapture())
-    Platform::releaseCapture();
+
+  if(HWND capture { Platform::getCapture() }) {
+    Window *window
+      { reinterpret_cast<Window *>(GetWindowLongPtr(capture, GWLP_USERDATA)) };
+    window->releaseMouse();
+  }
 }
 
 - (void)windowDidResignKey:(NSNotification *)notification
@@ -100,8 +105,6 @@ static Context *getWindowContext(NSWindow *window)
     if(Context *context { getWindowContext(window) })
       context->updateFocus();
   });
-  if(Platform::getCapture())
-    Platform::releaseCapture();
 }
 
 - (NSEvent *)appMouseEvent:(NSEvent *)event
