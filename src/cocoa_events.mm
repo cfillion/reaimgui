@@ -119,6 +119,10 @@ static Context *getWindowContext(NSWindow *window)
   if(!capture)
     return event;
 
+  const auto button { [event buttonNumber] }; // 0-32
+  if(button >= ImGuiMouseButton_COUNT)
+    return nil;
+
   Window *window
     { reinterpret_cast<Window *>(GetWindowLongPtr(capture, GWLP_USERDATA)) };
 
@@ -126,12 +130,12 @@ static Context *getWindowContext(NSWindow *window)
   case NSEventTypeLeftMouseDown:
   case NSEventTypeRightMouseDown:
   case NSEventTypeOtherMouseDown:
-    window->mouseDown([event buttonNumber]);
+    window->mouseDown(button);
     return nil;
   case NSEventTypeLeftMouseUp:
   case NSEventTypeRightMouseUp:
   case NSEventTypeOtherMouseUp:
-    window->mouseUp([event buttonNumber]);
+    window->mouseUp(button);
     return nil;
   default:
     return event;

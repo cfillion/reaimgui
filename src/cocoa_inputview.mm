@@ -230,7 +230,9 @@ static int translateKeyCode(NSEvent *event)
 
 - (void)otherMouseDown:(NSEvent *)event
 {
-  m_window->mouseDown([event buttonNumber]);
+  const auto button { [event buttonNumber] }; // 0-32
+  if(button < ImGuiMouseButton_COUNT)
+    m_window->mouseDown(button);
 }
 
 - (const char *)getSwellClass
