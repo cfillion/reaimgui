@@ -84,7 +84,7 @@ Usage:
     while reaper.ImGui_ListClipper_Step(clipper) do
       local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
       for row = display_start, display_end - 1 do
-        reaper.ImGui_Text(ctx, ("line number %d"):format(i))
+        reaper.ImGui_Text(ctx, ("line number %d"):format(row))
       end
     end
 
