@@ -146,6 +146,11 @@ void TextureManager::cleanup()
 
 void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) const
 {
+  // Every window's renderer must call this function every frame to stay in sync.
+  // Failure to do so may cause an insertion request for a resource that has
+  // been deleted between cleanup() at the beginning of the frame and
+  // rendering at the end of the frame.
+
   // There is no need for it now, but we might eventually want to have this
   // allow selecting only textures of a given scale (eg. if the GDK backend
   // ever gain multi-DPI capability.)

@@ -259,6 +259,10 @@ void MetalRenderer::setSize(const ImVec2 size)
 
 void MetalRenderer::render(void *)
 {
+  using namespace std::placeholders;
+  m_window->context()->textureManager()->update(&m_shared->m_cookie,
+    std::bind(&Shared::textureCommand, m_shared.get(), _1));
+
   const ImGuiViewport *viewport { m_window->viewport() };
   const ImDrawData *drawData { viewport->DrawData };
   const ImVec2 position { drawData->DisplayPos },
@@ -281,10 +285,6 @@ void MetalRenderer::render(void *)
   id<CAMetalDrawable> drawable { [m_layer nextDrawable] };
   if(!drawable)
     return;
-
-  using namespace std::placeholders;
-  m_window->context()->textureManager()->update(&m_shared->m_cookie,
-    std::bind(&Shared::textureCommand, m_shared.get(), _1));
 
   resizeBuffer(VertexBuf, drawData->TotalVtxCount, 5000, sizeof(ImDrawVert));
   resizeBuffer(IndexBuf, drawData->TotalIdxCount, 10000, sizeof(ImDrawIdx));
