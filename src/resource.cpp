@@ -35,7 +35,7 @@ constexpr unsigned int KEEP_ALIVE_FRAMES { 2 };
 
 FlatSet<Resource *> Resource::g_rsx;
 
-static unsigned int g_reentrant;
+static unsigned int g_reentrant, g_consecutiveGcFrames;
 static WNDPROC g_mainProc;
 static bool g_disableProcOverride;
 #ifndef __APPLE__
@@ -74,6 +74,7 @@ Resource::Timer::Timer()
 Resource::Timer::~Timer()
 {
   plugin_register("-timer", reinterpret_cast<void *>(&Timer::tick));
+  g_consecutiveGcFrames = 0;
 
   HWND mainWnd { GetMainHwnd() };
   LONG_PTR expectedProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
@@ -101,16 +102,23 @@ void Resource::Timer::tick()
     return;
 
   auto it { g_rsx.begin() };
+  bool didGc { false };
 
   while(it != g_rsx.end()) {
     Resource *rs { *it };
     if(rs->heartbeat())
       ++it;
     else {
+      didGc = true;
       delete rs; // invalidates the iterator
       it = g_rsx.lowerBound(rs);
     }
   }
+
+  if(didGc)
+    ++g_consecutiveGcFrames;
+  else
+    g_consecutiveGcFrames = 0;
 }
 
 LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
@@ -136,6 +144,9 @@ Resource::Resource()
   : m_keepAlive { KEEP_ALIVE_FRAMES }
 {
   static std::weak_ptr<Timer> g_timer;
+
+  if(g_consecutiveGcFrames >= 120)
+    throw reascript_error { "excessive creation of short-lived resources" };
 
   if(g_timer.expired())
     g_timer = m_timer = std::make_shared<Timer>();

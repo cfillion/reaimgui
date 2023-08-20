@@ -53,9 +53,10 @@ for name, func in pairs(reaper) do
   if name then ImGui[name] = func end
 end
 
-local ctx
+local ctx, clipper
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
 local IMGUI_VERSION, IMGUI_VERSION_NUM, REAIMGUI_VERSION = ImGui.GetVersion()
+
 local demo = {
   open = true,
 
@@ -136,6 +137,8 @@ if select(2, reaper.get_action_context()) == debug.getinfo(1, 'S').source:sub(2)
 
   -- hajime!
   ctx = ImGui.CreateContext('ReaImGui Demo')
+  clipper = ImGui.CreateListClipper(ctx)
+  ImGui.Attach(ctx, clipper)
   reaper.defer(demo.loop)
 end
 
@@ -4747,7 +4750,6 @@ function demo.ShowDemoWindowTables()
       ImGui.TableHeadersRow(ctx)
 
       -- Demonstrate using clipper for large vertical lists
-      local clipper = ImGui.CreateListClipper(ctx)
       ImGui.ListClipper_Begin(clipper, 1000)
       while ImGui.ListClipper_Step(clipper) do
         local display_start, display_end = ImGui.ListClipper_GetDisplayRange(clipper)
@@ -5537,7 +5539,6 @@ function demo.ShowDemoWindowTables()
       end
 
       -- Demonstrate using clipper for large vertical lists
-      local clipper = ImGui.CreateListClipper(ctx)
       ImGui.ListClipper_Begin(clipper, #tables.sorting.items)
       while ImGui.ListClipper_Step(clipper) do
         local display_start, display_end = ImGui.ListClipper_GetDisplayRange(clipper)
@@ -5761,7 +5762,6 @@ function demo.ShowDemoWindowTables()
       ImGui.PushButtonRepeat(ctx, true)
 
       -- Demonstrate using clipper for large vertical lists
-      local clipper = ImGui.CreateListClipper(ctx)
       ImGui.ListClipper_Begin(clipper, #tables.advanced.items)
       while ImGui.ListClipper_Step(clipper) do
         local display_start, display_end = ImGui.ListClipper_GetDisplayRange(clipper)
@@ -7333,7 +7333,6 @@ function ExampleAppLog.Draw(self, title, p_open)
       -- When using the filter (in the block of code above) we don't have random access into the data to display
       -- anymore, which is why we don't use the clipper. Storing or skimming through the search result would make
       -- it possible (and would be recommended if you want to search through tens of thousands of entries).
-      local clipper = ImGui.CreateListClipper(self.ctx)
       ImGui.ListClipper_Begin(clipper, #self.lines)
       while ImGui.ListClipper_Step(clipper) do
         local display_start, display_end = ImGui.ListClipper_GetDisplayRange(clipper)
@@ -7580,7 +7579,6 @@ function demo.ShowExampleAppLongText()
     elseif app.long_text.test_type == 1 then
       -- Multiple calls to Text(), manually coarsely clipped - demonstrate how to use the ImGui_ListClipper helper.
       ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing(), 0, 0)
-      local clipper = ImGui.CreateListClipper(ctx)
       ImGui.ListClipper_Begin(clipper, app.long_text.lines)
       while ImGui.ListClipper_Step(clipper) do
         local display_start, display_end = ImGui.ListClipper_GetDisplayRange(clipper)

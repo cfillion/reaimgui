@@ -3,6 +3,7 @@ lua_shims = files([
   '0.8.lua',
   '0.8.5.lua',
   '0.8.7.lua',
+  '0.9.lua',
 ])
 
 custom_target('lua_shims',
