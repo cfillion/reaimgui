@@ -268,23 +268,27 @@ void MetalRenderer::render(void *)
   const ImVec2 position { drawData->DisplayPos },
                scale    { viewport->DpiScale, viewport->DpiScale };
 
+  id<CAMetalDrawable> drawable {};
   if(m_firstFrame) {
     if(m_layer.contentsScale != scale.x)
       setSize(drawData->DisplaySize);
     m_firstFrame = false;
+    drawable = [m_layer nextDrawable];
   }
   else {
     // [CAMetalLayer nextDrawable] waits up 1 second when a window becomes
     // completely hidden. NSWindowOcclusionStateVisible is always unset for the
     // first frame.
     NSWindow *window { [(__bridge NSView *)m_window->nativeHandle() window] };
-    if(!(window.occlusionState & NSWindowOcclusionStateVisible))
-      return;
+    if(window.occlusionState & NSWindowOcclusionStateVisible)
+      drawable = [m_layer nextDrawable];
   }
 
-  id<CAMetalDrawable> drawable { [m_layer nextDrawable] };
-  if(!drawable)
+  if(!drawable) {
+    // execute queued texture operations even when the window is occluded
+    [[m_shared->m_commandQueue commandBuffer] commit];
     return;
+  }
 
   resizeBuffer(VertexBuf, drawData->TotalVtxCount, 5000, sizeof(ImDrawVert));
   resizeBuffer(IndexBuf, drawData->TotalIdxCount, 10000, sizeof(ImDrawIdx));
