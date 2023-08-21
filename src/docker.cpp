@@ -55,10 +55,15 @@ void Docker::draw()
     ImGuiDockNodeFlags_AutoHideTabBar | ImGuiDockNodeFlags_PassthruCentralNode
   };
 
+  // Prevent user windows from reporting a 32x32 default size for a few frames
+  // when opening docked until the viewport is created.
+  // This uses the size persisted from the settings.
+  ImGui::SetNextWindowSize(rootNode()->Size, ImGuiCond_Once);
+
   ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, { 0.f, 0.f });
   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
-  const int visible { ImGui::Begin(m_windowTitle, nullptr, windowFlags) };
+  const bool visible { ImGui::Begin(m_windowTitle, nullptr, windowFlags) };
   ImGui::PopStyleVar(3);
   if(visible) // just in case, altough NoDecoration implies NoCollapse
     ImGui::DockSpace(nodeId(), { 0.f, 0.f }, dockSpaceFlags);
