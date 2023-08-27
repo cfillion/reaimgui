@@ -164,7 +164,13 @@ void Win32Window::create()
   SetWindowPos(m_hwnd, nullptr,  rect.left, rect.top,
     rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER);
 
-  m_renderer = m_ctx->rendererFactory()->create(this);
+  try {
+    m_renderer = m_ctx->rendererFactory()->create(this);
+  }
+  catch(const backend_error &) {
+    destroy();
+    throw;
+  }
 
   // will be freed upon RevokeDragDrop during destruction
   DropTarget *dropTarget = new DropTarget { m_ctx };

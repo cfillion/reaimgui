@@ -66,7 +66,13 @@ void CocoaWindow::create()
   m_previousFlags = ~m_viewport->Flags; // mark all as modified
   // imgui calls update() before show(), it will apply the flags
 
-  m_renderer = m_ctx->rendererFactory()->create(this);
+  try {
+    m_renderer = m_ctx->rendererFactory()->create(this);
+  }
+  catch(const backend_error &) {
+    destroy();
+    throw;
+  }
 
   if(!isDocked()) {
     CocoaInject::inject([SWELLWindowOverride class], window);

@@ -58,7 +58,13 @@ static void createViewport(ImGuiViewport *viewport)
   else
     instance = Platform::createWindow(viewport);
 
-  instance->create();
+  try {
+    instance->create();
+  }
+  catch(const backend_error &) {
+    delete instance;
+    throw;
+  }
 
   // PlatformUserData must not be set if create throws a backend_error
   // Otherwise dear imgui will complain during the destruction of the context
