@@ -45,7 +45,7 @@ constexpr uint8_t SHADER_LIBRARY[] {
 #  include "metal_shader.metal.ipp"
 };
 
-enum Bufers { VertexBuf, IndexBuf };
+enum Buffers { VertexBuf, IndexBuf };
 
 class MetalRenderer final : public Renderer {
 public:
@@ -82,6 +82,25 @@ private:
   id<MTLBuffer> m_buffers[2]; 
 };
 
+static id<MTLFunction> getShaderFunc(id<MTLLibrary> library, NSString *name)
+{
+  id<MTLFunction> func;
+  if(@available(macOS 10.12, *)) {
+    NSError *error {};
+    MTLFunctionConstantValues *cv {};
+    func = [library newFunctionWithName:name constantValues:cv error:&error];
+    if(error)
+      throw backend_error { [[error localizedDescription] UTF8String] };
+  }
+  else
+    func = [library newFunctionWithName:name];
+
+  if(!func)
+    throw backend_error { "failed to load shader library functions" };
+
+  return func;
+}
+
 MetalRenderer::Shared::Shared()
 {
   static FuncImport<decltype(MTLCreateSystemDefaultDevice)>
@@ -107,10 +126,8 @@ MetalRenderer::Shared::Shared()
   id<MTLLibrary> library { [m_device newLibraryWithData:shaderData error:&error] };
   if(error)
     throw backend_error { [[error localizedDescription] UTF8String] };
-  id<MTLFunction> vertexFunc   { [library newFunctionWithName:@"vertex_main"] },
-                  fragmentFunc { [library newFunctionWithName:@"fragment_main"] };
-  if(!vertexFunc || !fragmentFunc)
-    throw backend_error { "failed to find shader library functions" };
+  id<MTLFunction> vertexFunc   { getShaderFunc(library, @"vertex_main") },
+                  fragmentFunc { getShaderFunc(library, @"fragment_main") };
 
   static ClassImport _MTLVertexDescriptor { METAL, "MTLVertexDescriptor" };
   if(!_MTLVertexDescriptor)
