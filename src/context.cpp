@@ -37,7 +37,7 @@
 #  include "win32_unicode.hpp"
 #endif
 
-enum DropState { DropState_None = -2, DropState_Drop = -1 };
+enum DropState { None = -2, Drop = -1 };
 
 constexpr ImGuiMouseButton DND_MouseButton { ImGuiMouseButton_Left };
 constexpr ImGuiConfigFlags PRIVATE_CONFIG_FLAGS
@@ -85,7 +85,7 @@ Context *Context::current()
 }
 
 Context::Context(const char *label, const int userConfigFlags)
-  : m_dropFrameCount { DropState_None }, m_cursor {},
+  : m_dropFrameCount { DropState::None }, m_cursor {},
 #ifdef __APPLE__
     m_emulateRightClick { false },
 #endif
@@ -449,9 +449,9 @@ void Context::updateSettings()
 
 void Context::updateDragDrop()
 {
-  if(m_dropFrameCount == DropState_None)
+  if(m_dropFrameCount == DropState::None)
     return;
-  else if(m_dropFrameCount == DropState_Drop &&
+  else if(m_dropFrameCount == DropState::Drop &&
       ImGui::IsMouseReleased(DND_MouseButton))
     m_dropFrameCount = ImGui::GetFrameCount();
 
@@ -466,7 +466,7 @@ void Context::updateDragDrop()
   const ImGuiPayload *payload { ImGui::GetDragDropPayload() };
   if(payload && (payload->Delivery || (!payload->Preview && previewReady))) {
     m_draggedFiles.clear();
-    m_dropFrameCount = DropState_None;
+    m_dropFrameCount = DropState::None;
   }
 }
 
@@ -522,7 +522,7 @@ void Context::beginDrag(HDROP drop)
 void Context::endDrag(const bool drop)
 {
   if(drop)
-    m_dropFrameCount = DropState_Drop;
+    m_dropFrameCount = DropState::Drop;
   else {
     m_imgui->IO.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
     m_draggedFiles.clear();
