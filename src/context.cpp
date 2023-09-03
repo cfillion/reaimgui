@@ -38,6 +38,7 @@
 #endif
 
 enum DropState { None = -2, Drop = -1 };
+enum RightClickEmulation { Armed, Active };
 
 constexpr ImGuiMouseButton DND_MouseButton { ImGuiMouseButton_Left };
 constexpr ImGuiConfigFlags PRIVATE_CONFIG_FLAGS
@@ -86,9 +87,6 @@ Context *Context::current()
 
 Context::Context(const char *label, const int userConfigFlags)
   : m_dropFrameCount { DropState::None }, m_cursor {},
-#ifdef __APPLE__
-    m_emulateRightClick { false },
-#endif
     m_lastFrame       { decltype(m_lastFrame)::clock::now()                },
     m_name            { label, ImGui::FindRenderedTextEnd(label)           },
     m_iniFilename     { generateIniFilename(label)                         },
@@ -362,12 +360,12 @@ void Context::updateMouseData()
     io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
 }
 
-void Context::mouseInput(const int button, const bool down)
+void Context::mouseInput(int button, const bool down)
 {
 #ifdef __APPLE__
-  if(down && button == ImGuiMouseButton_Left && m_emulateRightClick) {
-    m_imgui->IO.AddMouseButtonEvent(ImGuiMouseButton_Right, true);
-    m_imgui->IO.AddMouseButtonEvent(ImGuiMouseButton_Right, false);
+  if(button == ImGuiMouseButton_Left && m_rightClickEmulation.any()) {
+    button = ImGuiMouseButton_Right;
+    m_rightClickEmulation.set(RightClickEmulation::Active, down);
   }
 #endif
 
@@ -405,7 +403,7 @@ void Context::keyInput(const ImGuiKey key, const bool down)
     case ImGuiMod_Ctrl:
     case ImGuiKey_LeftCtrl:
     case ImGuiKey_RightCtrl:
-      m_emulateRightClick = down;
+      m_rightClickEmulation.set(RightClickEmulation::Armed, down);
       return;
     default:
       break;
