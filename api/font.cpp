@@ -43,7 +43,7 @@ The font will remain valid while it's attached to a context. See Attach.
 The family name can be an installed font or one of the generic fonts:
 sans-serif, serif, monospace, cursive, fantasy.
 
-If 'family_or_file' specifies a path to a font file (contains a / or \):
+If 'family_or_file' specifies a path to a font file (contains a / or \\):
 - The first byte of 'flags' is used as the font index within the file
 - The font styles in 'flags' are simulated by the font renderer)")
 {
