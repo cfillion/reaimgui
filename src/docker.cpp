@@ -55,8 +55,8 @@ void Docker::draw()
     ImGuiDockNodeFlags_AutoHideTabBar | ImGuiDockNodeFlags_PassthruCentralNode
   };
 
-  // Prevent user windows from reporting a 32x32 default size for a few frames
-  // when opening docked until the viewport is created.
+  // Prevent user windows from reporting a StyleVar_WindowMinSize default size
+  // for a few frames when opening docked until the viewport is created.
   // This uses the size persisted from the settings.
   ImGui::SetNextWindowSize(rootNode()->Size, ImGuiCond_Once);
 
@@ -159,6 +159,7 @@ void Docker::reset()
 {
   // the node will be re-created next frame in draw()
   ImGui::DockBuilderRemoveNode(nodeId());
+  m_active.reset(0);
 }
 
 template <ImGuiID... IDs>
