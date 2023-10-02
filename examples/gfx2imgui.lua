@@ -1429,7 +1429,7 @@ function gfx.loadimg(image, filename)
   gfx.setimgdim(image, w, h)
 
   local imageState = global_state.images[image] -- initialized by setimgdim
-  if imageState.inst and state then
+  if imageState.attached then
     ImGui.Detach(state.ctx, imageState.inst)
   end
 
@@ -1492,6 +1492,9 @@ function gfx.quit()
         cache.attached = false
       end
     end
+  end
+  for i, image in pairs(global_state.images) do
+    image.attached = false
   end
   state = nil
   return 0
