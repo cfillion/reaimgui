@@ -37,7 +37,6 @@
 #  include "win32_unicode.hpp"
 #endif
 
-enum DropState { None = -2, Drop = -1 };
 enum RightClickEmulation { Armed, Active };
 
 constexpr ImGuiMouseButton DND_MouseButton { ImGuiMouseButton_Left };
@@ -86,7 +85,7 @@ Context *Context::current()
 }
 
 Context::Context(const char *label, const int userConfigFlags)
-  : m_dropFrameCount { DropState::None }, m_cursor {},
+  : m_dndWasActive { false }, m_cursor {},
     m_lastFrame       { decltype(m_lastFrame)::clock::now()                },
     m_name            { label, ImGui::FindRenderedTextEnd(label)           },
     m_iniFilename     { generateIniFilename(label)                         },
@@ -447,46 +446,50 @@ void Context::updateSettings()
 
 void Context::updateDragDrop()
 {
-  if(m_dropFrameCount == DropState::None)
-    return;
-  else if(m_dropFrameCount == DropState::Drop &&
-      ImGui::IsMouseReleased(DND_MouseButton))
-    m_dropFrameCount = ImGui::GetFrameCount();
-
-  // Checking payload state is required in case the event queue is clogged
-  // (very next frame after m_drop = true not processing the mouse release event)
-  //
-  // Delivery is true once the mouse release event is processed and the script
-  // accepted the files via AcceptDragDropPayload.
-  // Preview is false if the script isn't interested in the files
-  const bool previewReady
-    { m_dropFrameCount >= 0 && m_dropFrameCount + 1 < ImGui::GetFrameCount() };
-  const ImGuiPayload *payload { ImGui::GetDragDropPayload() };
-  if(payload && (payload->Delivery || (!payload->Preview && previewReady))) {
+  // Ensuring drag and drop was active for at least one frame is required for
+  // allowing beginDrag+endDrag to be called on the same frame on systems
+  // that only notify on drop (SWELL-GDK)
+  const bool active_now { ImGui::IsDragDropActive() };
+  if(m_dndWasActive && !active_now) {
     m_draggedFiles.clear();
-    m_dropFrameCount = DropState::None;
+    m_dndWasActive = false;
   }
+  else if(active_now)
+    m_dndWasActive = true;
 }
 
 void Context::dragSources()
 {
-  const int flags { ImGuiDragDropFlags_SourceExtern |
-                    ImGuiDragDropFlags_SourceAutoExpirePayload };
+  constexpr ImGuiDragDropFlags flags {
+    ImGuiDragDropFlags_SourceExtern |
+    ImGuiDragDropFlags_SourceAutoExpirePayload
+  };
 
-  if(!m_draggedFiles.empty() && ImGui::BeginDragDropSource(flags)) {
-    ImGui::SetDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, nullptr, 0);
-    for(const std::string &file : m_draggedFiles) {
-      size_t fnPos { file.rfind(WDL_DIRCHAR_STR) };
-      if(fnPos == std::string::npos)
-        fnPos = 0;
-      else
-        ++fnPos;
-      if(m_draggedFiles.size() > 1)
-        ImGui::Bullet();
-      ImGui::TextUnformatted(&file[fnPos]);
-    }
-    ImGui::EndDragDropSource();
+  if(m_draggedFiles.empty())
+    return;
+
+  // Checking m_dndWasActive is required to support single-frame drag/drop
+  // when input queue tickling is disabled
+  if(m_dndWasActive &&
+      !ImGui::IsMouseDown(DND_MouseButton) &&
+      !ImGui::IsMouseReleased(DND_MouseButton))
+    return;
+
+  if(!ImGui::BeginDragDropSource(flags))
+    return;
+
+  ImGui::SetDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, nullptr, 0);
+  for(const std::string &file : m_draggedFiles) {
+    size_t fnPos { file.rfind(WDL_DIRCHAR_STR) };
+    if(fnPos == std::string::npos)
+      fnPos = 0;
+    else
+      ++fnPos;
+    if(m_draggedFiles.size() > 1)
+      ImGui::Bullet();
+    ImGui::TextUnformatted(&file[fnPos]);
   }
+  ImGui::EndDragDropSource();
 }
 
 void Context::beginDrag(std::vector<std::string> &&files)
@@ -519,12 +522,8 @@ void Context::beginDrag(HDROP drop)
 
 void Context::endDrag(const bool drop)
 {
-  if(drop)
-    m_dropFrameCount = DropState::Drop;
-  else {
+  if(!drop)
     m_imgui->IO.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
-    m_draggedFiles.clear();
-  }
   m_imgui->IO.AddMouseButtonEvent(DND_MouseButton, false);
 }
 

@@ -108,7 +108,7 @@ private:
   void dragSources();
   void clearFocus();
 
-  int m_dropFrameCount;
+  bool m_dndWasActive;
   HCURSOR m_cursor;
 #ifdef __APPLE__
   std::bitset<2> m_rightClickEmulation;
