@@ -581,7 +581,7 @@ void Function::pythonSignature(std::ostream &stream) const
   else if(!type.isVoid())
     stream << hl(Highlight::Type) << pythonType(type) << hl() << " retval = ";
 
-  stream << name << '(';
+  stream << "ImGui." << displayName << '(';
   {
     CommaSep cs { stream };
     for(const Argument &arg : args) {
@@ -1063,7 +1063,7 @@ static void pythonBinding(std::ostream &stream)
     if(!(func.flags & API::Symbol::TargetPython))
       continue;
 
-    stream << "\ndef " << func.name << '(';
+    stream << "\ndef " << func.displayName << '(';
     {
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
@@ -1075,9 +1075,9 @@ static void pythonBinding(std::ostream &stream)
       }
     }
     stream << "):\n"
-              "  if not hasattr(" << func.name << ", 'func'):\n"
+              "  if not hasattr(" << func.displayName << ", 'func'):\n"
               "    proc = rpr_getfp('" << func.name << "')\n"
-              "    " << func.name << ".func = CFUNCTYPE(";
+              "    " << func.displayName << ".func = CFUNCTYPE(";
     {
       CommaSep cs { stream };
       cs << pythonCType(func.type);
@@ -1118,9 +1118,9 @@ static void pythonBinding(std::ostream &stream)
     }
 
     if(func.isEnum()) {
-      stream << "  if not hasattr(" << func.name << ", 'cache'):\n"
-                "    " << func.name << ".cache = " << func.name << ".func()\n"
-                "  return " << func.name << ".cache\n";
+      stream << "  if not hasattr(" << func.displayName << ", 'cache'):\n"
+                "    " << func.displayName << ".cache = " << func.displayName << ".func()\n"
+                "  return " << func.displayName << ".cache\n";
       continue;
     }
 
@@ -1128,7 +1128,7 @@ static void pythonBinding(std::ostream &stream)
       stream << "  ";
       if(!func.type.isVoid())
         stream << "rval = ";
-      stream << func.name << ".func(";
+      stream << func.displayName << ".func(";
       CommaSep cs { stream };
       for(size_t i { 0 }; i < func.args.size(); ++i) {
         const Argument &arg { func.args[i] };
