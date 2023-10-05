@@ -184,6 +184,11 @@ local function toint(v)
   return v // 1 -- faster than floor
 end
 
+local function tofloat(v)
+  if not v or v ~= v or v == 1/0 or v == -1/0 then return 0 end
+  return v
+end
+
 local function ringReserve(buffer)
   local ptr = buffer.ptr
   buffer.ptr = (ptr + 1) % buffer.max_size
@@ -1266,14 +1271,14 @@ end
 function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy, dbdy, dady)
   -- FIXME: support colors growing to > 1 or < 0 before the end of the rect
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  drdx = w * (drdx or 0)
-  dgdx = w * (dgdx or 0)
-  dbdx = w * (dbdx or 0)
-  dadx = w * (dadx or 0)
-  drdy = h * (drdy or 0)
-  dgdy = h * (dgdy or 0)
-  dbdy = h * (dbdy or 0)
-  dady = h * (dady or 0)
+  drdx = w * tofloat(drdx)
+  dgdx = w * tofloat(dgdx)
+  dbdx = w * tofloat(dbdx)
+  dadx = w * tofloat(dadx)
+  drdy = h * tofloat(drdy)
+  dgdy = h * tofloat(dgdy)
+  dbdy = h * tofloat(dbdy)
+  dady = h * tofloat(dady) -- some scripts pass Infinity...
   local ctl = makeColor(r, g, b, a)
   local ctr = makeColor(r + drdx, g + dgdx, b + dbdx, a + dadx)
   local cbl = makeColor(r + drdy, g + dgdy, b + dbdy, a + dady)
