@@ -27,6 +27,8 @@ Flat vector images may be loaded as fonts, see CreateFont.
 UV parameters are texture coordinates in a scale of 0.0 (top/left) to 1.0
 (bottom/right). Use values below 0.0 or above 1.0 to tile the image.
 
+Width/height are limited to 8192 pixels.
+
 There are also image functions in the DrawList API such as
 DrawList_AddImageQuad and DrawList_AddImageRounded.)");
 

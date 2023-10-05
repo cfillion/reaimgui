@@ -77,8 +77,12 @@ const unsigned char *Bitmap::getPixels(
 void Bitmap::resize(const int width, const int height, const int format)
 try
 {
+  constexpr int MAX_SIZE { 0x2000 }; // Direct3D10 Texture2D limit
+
   if(format != 4)
     throw reascript_error { "BUG: unexpected pixel format, missing transform?" };
+  if(height > MAX_SIZE || width > MAX_SIZE)
+    throw reascript_error { "image is too big" };
   m_width = width, m_height = height;
   m_pixels.resize(m_width * m_height * format);
 }
