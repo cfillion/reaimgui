@@ -1750,20 +1750,42 @@ function gfx.triangle(...)
   for i = 1, n_coords, 2 do
     points[i], points[i + 1] = toint(select(i, ...)), toint(select(i + 1, ...))
   end
+  local first, second = points[1], points[2]
   if not has_even then
     n_coords = n_coords + 1
-    points[n_coords] = points[2]
+    points[n_coords] = second
   end
 
   local center_x, center_y = center2D(points)
+
+  -- pixel and line triangle abuse heuristic
+  local is_vline, is_hline = center_x == first, center_y == second
+  if is_vline and is_hline then
+    -- gfx.triangle(0,10, 0,10, 0,10, 0,10)
+    return drawCall(drawPixel, center_x, center_y, c)
+  elseif is_vline then
+    -- gfx.triangle(0,0, 0,10, 0,20)
+    local min_y, max_y = 1/0, -1/0
+    for i = 2, n_coords, 2 do
+      min_y, max_y = math.min(min_y, points[i]), math.max(max_y, points[i])
+    end
+    return drawCall(drawLine, center_x, min_y, center_x, max_y, c)
+  elseif is_hline then
+    -- gfx.triangle(0,0, 10,0, 20,0)
+    local min_x, max_x = 1/0, -1/0
+    for i = 1, n_coords, 2 do
+      min_x, max_x = math.min(min_x, points[i]), math.max(max_x, points[i])
+    end
+    return drawCall(drawLine, min_x, center_y, max_x, center_y, c)
+  end
+
   sort2D(points, center_x, center_y) -- sort clockwise for antialiasing
   n_coords = uniq2D(points)
 
-  if n_coords == 2 then
-    -- gfx.triangle(0,33, 0,33, 0,33, 0,33)
-    return drawCall(drawPixel, points[1], points[2], c)
-  elseif n_coords == 4 then
-    -- gfx.triangle(0,33, 0,0, 0,33, 0,33)
+  if DEBUG then assert(n_coords >= 4) end
+
+  if n_coords == 4 then
+    -- diagonal line gfx.triangle(0,0, 0,0, 10,10, 10,10)
     return drawCall(drawLine, points[1], points[2], points[3], points[4], c)
   elseif n_coords == 6 then
     return drawCall(drawTriangle6, points, center_x, center_y, c)
