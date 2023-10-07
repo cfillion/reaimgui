@@ -27,6 +27,7 @@
 -- GFX2IMGUI_MAX_DRAW_CALLS = 8192
 -- GFX2IMGUI_NO_BLIT_PREMULTIPLY = false
 -- GFX2IMGUI_NO_LOG = false
+-- GFX2IMGUI_PROFILER = dofile('cfillion_Lua profiler.lua')
 -- GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE = 8
 
 local ImGui = {}
@@ -35,7 +36,7 @@ for name, func in pairs(reaper) do
   if name then ImGui[name] = func end
 end
 
-local reaper, ogfx, print = reaper, gfx, print
+local reaper, ogfx, print, tonumber = reaper, gfx, print, tonumber
 local debug, math, string, table, utf8 = debug, math, string, table, utf8
 
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
@@ -113,7 +114,7 @@ local BLIT_NO_PREMULTIPLY          = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
 local DEBUG                        = GFX2IMGUI_DEBUG               or false
 local NO_LOG                       = GFX2IMGUI_NO_LOG              or false
 local MAX_DRAW_CALLS               = GFX2IMGUI_MAX_DRAW_CALLS      or 1<<13
-local PROFILE                      = GFX2IMGUI_PROFILE             or false
+local PROFILER                     = GFX2IMGUI_PROFILER
 local THROTTLE_FONT_LOADING_FRAMES = 16
 local UNUSED_FONTS_CACHE_SIZE      = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 
@@ -125,14 +126,6 @@ local TP_NO_ORIGIN = 1<<0
 local TP_NO_FLOOR  = 1<<1
 local TP_NO_SCALE  = 1<<2
 local TP_NO_ROTATE = 1<<3
-
-local profiler
-if PROFILE then
-  -- https://github.com/charlesmallah/lua-profiler
-  profiler = dofile(reaper.GetResourcePath() .. '/Scripts/profiler.lua')
-  profiler.attachPrintFunction(reaper.ShowConsoleMsg)
-  profiler.configuration({ fW = 60 })
-end
 
 local DL_AddCircle               = ImGui.DrawList_AddCircle
 local DL_AddCircleFilled         = ImGui.DrawList_AddCircleFilled
@@ -190,11 +183,10 @@ local function tofloat(v)
 end
 
 local function ringReserve(buffer)
-  local ptr = buffer.ptr
-  buffer.ptr = (ptr + 1) % buffer.max_size
-  buffer.size = buffer.size + 1
-  if buffer.size > buffer.max_size then buffer.size = buffer.max_size end
-  return ptr + 1
+  local ptr, size, max_size = buffer.ptr + 1, buffer.size, buffer.max_size
+  buffer.ptr = ptr % buffer.max_size
+  if size < max_size then buffer.size = size + 1 end
+  return ptr
 end
 
 local function ringInsert(buffer, value)
@@ -1879,23 +1871,23 @@ function gfx.update()
     commands.rendered_frame = state.frame_count
   end
 
-  if PROFILE then
-    ImGui.SetCursorPos(state.ctx, 0, 0)
-    if type(PROFILE) == 'number' then
-      local label = ('Profiling (%d)...'):format(PROFILE - state.frame_count)
-      if ImGui.Button(state.ctx, label) or PROFILE == state.frame_count then
-        profiler.stop()
-        profiler.report(reaper.GetResourcePath() .. '/Scripts/profiler.log')
-        PROFILE = true
-      end
-    elseif ImGui.Button(state.ctx, 'Start profiler') then
-      PROFILE = state.frame_count + 60
-      profiler.start()
-    end
-  end
-
   ImGui.End(state.ctx)
   return 0
+end
+
+if PROFILER then
+  PROFILER.attachToLocals({ search_above = false, recursive = false })
+  PROFILER.attachTo('gfx')
+
+  -- avoid profiler overhead for hot functions
+  PROFILER.detachFrom('color')
+  PROFILER.detachFrom('makeColor')
+  PROFILER.detachFrom('tobool')
+  PROFILER.detachFrom('tofloat')
+  PROFILER.detachFrom('tonumber')
+  PROFILER.detachFrom('toint')
+  PROFILER.detachFrom('transformColor')
+  PROFILER.detachFrom('transformPoint')
 end
 
 if DEBUG then
