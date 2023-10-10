@@ -1574,12 +1574,13 @@ function gfx.set(...)
   if n < 2 then g = r end
   if n < 3 then b = r end
 
-  -- write through gfx's metadatable for sanitization
-  gfx.r, gfx.g, gfx.b = tonumber(r) or 0, tonumber(g) or 0, tonumber(b) or 0
-  if n >= 4 then gfx.a    = tonumber(a)    or 0 end
-  if n >= 5 then gfx.mode = tonumber(mode) or 0 end
-  if n >= 6 then gfx.dest = tonumber(dest) or 0 end
-  if n >= 7 then gfx.a2   = tonumber(a2)   or 0 end
+  -- using gfx`meta.__newindex for validation is too slow
+  gfx_vars.r, gfx_vars.g, gfx_vars.b =
+    tofloat(tonumber(r)), tofloat(tonumber(g)), tofloat(tonumber(b))
+  if n >= 4 then gfx_vars.a    = tofloat(tonumber(a))    end
+  if n >= 5 then gfx_vars.mode = tofloat(tonumber(mode)) end
+  if n >= 6 then gfx_vars.dest = tofloat(tonumber(dest)) end
+  if n >= 7 then gfx_vars.a2   = tofloat(tonumber(a2))   end
 
   return 0
 end
