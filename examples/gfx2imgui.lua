@@ -108,6 +108,7 @@ local FONT_FLAGS = {
 }
 local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
+local DRAW_CALL_SIZE = 8
 
 -- settings
 local BLIT_NO_PREMULTIPLY          = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
@@ -182,15 +183,16 @@ local function tofloat(v)
   return v
 end
 
-local function ringReserve(buffer)
-  local ptr, size, max_size = buffer.ptr + 1, buffer.size, buffer.max_size
-  buffer.ptr = ptr % buffer.max_size
-  if size < max_size then buffer.size = size + 1 end
+local function ringReserve(buffer, want_size)
+  local ptr = buffer.ptr + 1
+  local size, max_size = buffer.size + want_size, buffer.max_size
+  buffer.ptr = (buffer.ptr + want_size) % buffer.max_size
+  if size < max_size then buffer.size = size end
   return ptr
 end
 
 local function ringInsert(buffer, value)
-  buffer[ringReserve(buffer)] = value
+  buffer[ringReserve(buffer, 1)] = value
 end
 
 local function ringEnum(buffer)
@@ -208,30 +210,22 @@ end
 local function drawCall(...)
   local list = global_state.commands[gfx_vars.dest]
   if not list then
-    list = { ptr=0, size=0, max_size=MAX_DRAW_CALLS }
+    list = { ptr=0, size=0, max_size=MAX_DRAW_CALLS * DRAW_CALL_SIZE }
     global_state.commands[gfx_vars.dest] = list
   elseif list.want_clear then
     list.size, list.ptr, list.rendered_frame, list.want_clear = 0, 0, 0, false
   end
 
-  local ptr = ringReserve(list)
-  local c = list[ptr]
-
-  if not c then
-    -- pre-allocate the maximum size w/o nil gaps
-    -- IF SIZE CHANGES: also update copy code in gfx.blit!
-    c = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 }
-    list[ptr] = c
-  end
-
-  -- faster than looping over select('#', ...) or creating a new table
-  c[ 1], c[ 2], c[ 3], c[ 4], c[ 5], c[ 6], c[ 7], c[ 8], c[ 9],
-  c[10], c[11], c[12], c[13], c[14], c[15], c[16], c[17], c[18],
-  c[19], c[20] = ...
+  local ptr = ringReserve(list, DRAW_CALL_SIZE)
+  list[ptr  ], list[ptr+1], list[ptr+2], list[ptr+3],
+  list[ptr+4], list[ptr+5], list[ptr+6], list[ptr+7] = ...
 
   if DEBUG then
     assert(type((...)) == 'function', 'uncallable draw command')
-    assert(select('#', ...) <= 20)
+    assert(select('#', ...) == DRAW_CALL_SIZE, 'incorrect argument count')
+    for i = 1, DRAW_CALL_SIZE do
+      assert(select(i, ...) ~= nil, 'nils holes degrade copy performance')
+    end
   end
 
   return 0
@@ -239,10 +233,9 @@ end
 
 local function render(draw_list, commands, opts)
   local ptr, size = commands.ptr, commands.size
-  for i = 0, size - 1 do
-    local j = (ptr + i) % size
-    local command = commands[j + 1]
-    command[1](draw_list, command, opts)
+  for i = 0, size - DRAW_CALL_SIZE, DRAW_CALL_SIZE do
+    local j = ((ptr + i) % size) + 1
+    commands[j](draw_list, commands, j + 1, opts)
   end
   commands.want_clear = true
 end
@@ -341,6 +334,17 @@ local function alignText(flags, pos, size, limit)
   end
 
   return pos, offset
+end
+
+local function packSigned(a, b)
+  return (a << 32) | (b & 0xFFFFFFFF)
+end
+
+local function unpackSigned(v)
+  local a, b = (v >> 32), v & 0xFFFFFFFF
+  if a & 0x80000000 ~= 0 then a = a - 0x100000000 end
+  if b & 0x80000000 ~= 0 then b = b - 0x100000000 end
+  return a, b
 end
 
 local function updateMouse()
@@ -792,16 +796,16 @@ local function combineMatrix(matrix,
   m3[3] = a31*b13 + a32*b23 + a33*b33
 end
 
-local function drawPixel(draw_list, cmd, opts)
-  local x, y, c = cmd[2], cmd[3], cmd[4]
+local function drawPixel(draw_list, cmd, i, opts)
+  local x, y, c = cmd[i], cmd[i+1], cmd[i+2]
   c = transformColor(c, opts)
   x, y = transformPoint(x, y, opts)
   w, h = transformPoint(1, 1, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
   DL_AddRectFilled(draw_list, x, y, x + w, y + h, c)
 end
 
-local function drawLine(draw_list, cmd, opts)
-  local x1, y1, x2, y2, c = cmd[2], cmd[3], cmd[4], cmd[5], cmd[6]
+local function drawLine(draw_list, cmd, i, opts)
+  local x1, y1, x2, y2, c = cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4]
   c = transformColor(c, opts)
 
   -- workarounds to avoid gaps due to rounding in vertical/horizontal lines
@@ -819,8 +823,8 @@ local function drawLine(draw_list, cmd, opts)
     return
   end
 
-  local x1, y1 = transformPoint(x1, y1, opts)
-  local x2, y2 = transformPoint(x2, y2, opts)
+  x1, y1 = transformPoint(x1, y1, opts)
+  x2, y2 = transformPoint(x2, y2, opts)
   DL_AddLine(draw_list, x1, y1, x2, y2, c, (opts.scale_x + opts.scale_y) * .5)
 end
 
@@ -892,8 +896,9 @@ setmetatable(gfx, {
 })
 
 -- translation functions
-local function drawArc(draw_list, cmd, opts)
-  local x, y, r, c, ang1, ang2 = cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+local function drawArc(draw_list, cmd, i, opts)
+  local x, y, r, c, ang1, ang2 =
+    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
   x, y = transformPoint(x, y, opts)
   r = r * opts.scale_y -- FIXME: scale_x
   c = transformColor(c, opts)
@@ -905,16 +910,14 @@ function gfx.arc(x, y, r, ang1, ang2, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   local quarter = math.pi * .5
   return drawCall(drawArc, toint(x) + 1, toint(y), r, color(),
-    ang1 - quarter, ang2 - quarter)
+    ang1 - quarter, ang2 - quarter, 0)
 end
 
-local function drawBlit(draw_list, cmd, opts)
-  local commands, sourceCommands, alpha, mode, scale_x, scale_y,
-        srcx, srcy, srcw, srch, dstx, dsty, dstw, dsth,
-        angle, angle_sin, angle_cos, rotxoffs, rotyoffs =
-    cmd[ 2], cmd[ 3], cmd[ 4], cmd[ 5], cmd[ 6], cmd[ 7], cmd[ 8], cmd[ 9],
-    cmd[10], cmd[11], cmd[12], cmd[13], cmd[14], cmd[15], cmd[16], cmd[17],
-    cmd[18], cmd[19], cmd[20]
+local function drawBlit(draw_list, cmd, i, opts)
+  local commands, sourceCommands, alpha, mode, scale_x, scale_y, more =
+    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5], cmd[i+6]
+  local srcx, srcy, srcw, srch, dstx, dsty, dstw, dsth,
+        angle, angle_sin, angle_cos, rotxoffs, rotyoffs = table.unpack(more)
 
   dstx, dsty = transformPoint(dstx, dsty, opts)
   dstw, dsth = transformPoint(dstw, dsth, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
@@ -1038,16 +1041,13 @@ function gfx.blit(source, ...)
     return 0
   end
 
-  local size = sourceCommands.size
-  local commands = { ptr=sourceCommands.ptr, size=size, max_size=size }
-  for i = 1, size do
-    -- make an immutable copy
-    local c = sourceCommands[i]
-    commands[i] = {
-      c[ 1], c[ 2], c[ 3], c[ 4], c[ 5], c[ 6], c[ 7], c[ 8], c[ 9],
-      c[10], c[11], c[12], c[13], c[14], c[15], c[16], c[17], c[18],
-      c[19], c[20]
-    }
+  local size, commands = sourceCommands.size
+  if #sourceCommands == sourceCommands.size then
+    commands = { table.unpack(sourceCommands) }
+    commands.ptr, commands.size = sourceCommands.ptr, size
+  else
+    commands = table.move(sourceCommands, 1, size, 1,
+      { ptr = sourceCommands.ptr, size = size })
   end
 
   local scale_x, scale_y = srcw ~= 0 and destw / srcw or 1,
@@ -1061,8 +1061,8 @@ function gfx.blit(source, ...)
 
   drawCall(drawBlit, commands, sourceCommands,
     gfx.a, gfx_vars.mode, scale_x, scale_y,
-    srcx, srcy, srcw, srch, destx, desty, destw, desth,
-    rotation, rotation_sin, rotation_cos, rotxoffs, rotyoffs)
+    { srcx, srcy, srcw, srch, destx, desty, destw, desth,
+    rotation, rotation_sin, rotation_cos, rotxoffs, rotyoffs })
 
   return source
 end
@@ -1077,8 +1077,8 @@ function gfx.blurto()
   -- return x
 end
 
-local function drawCircle(draw_list, cmd, opts)
-  local circleFunc, x, y, r, c = cmd[2], cmd[3], cmd[4], cmd[5], cmd[6]
+local function drawCircle(draw_list, cmd, i, opts)
+  local circleFunc, x, y, r, c = cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4]
   c = transformColor(c, opts)
   x, y = transformPoint(x, y, opts)
   r = r * opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
@@ -1088,7 +1088,8 @@ end
 function gfx.circle(x, y, r, fill, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   local circleFunc = tobool(fill, false) and DL_AddCircleFilled or DL_AddCircle
-  return drawCall(drawCircle, circleFunc, toint(x), toint(y), toint(r), color())
+  return drawCall(drawCircle, circleFunc, toint(x), toint(y), toint(r), color(),
+    0, 0)
 end
 
 function gfx.clienttoscreen(x, y)
@@ -1133,10 +1134,15 @@ function gfx.drawnumber(n, ndigits)
   return n
 end
 
-local function drawString(draw_list, cmd, opts)
-  local c, str, size, x, x_off, y, y_off, right, bottom, font =
-    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8], cmd[9], cmd[10],
-    cmd[11]
+local function drawString(draw_list, cmd, i, opts)
+  local c, str, size, xy, xy_off, rb, font =
+    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5], cmd[i+6]
+  local x,     y      = unpackSigned(xy)
+  local x_off, y_off  = unpackSigned(xy_off)
+  local right, bottom = unpackSigned(rb)
+
+  if right  == 0xFFFFFFFF then right  = nil end
+  if bottom == 0xFFFFFFFF then bottom = nil end
 
   -- search for a new font as the draw call may have been stored for a
   -- long time in an offscreen buffer while the font instance got detached
@@ -1183,7 +1189,9 @@ function gfx.drawstr(str, flags, right, bottom)
   end
 
   -- passing f_{cache,inst} as a table to be read/writeable
-  return drawCall(drawString, c, str, f_sz, x, x_off, y, y_off, right, bottom,
+  return drawCall(drawString, c, str, f_sz,
+    packSigned(x, y), packSigned(x_off, y_off),
+    packSigned(right or 0xFFFFFFFF, bottom or 0xFFFFFFFF),
     { cache = f_cache, inst = f_inst })
 end
 
@@ -1239,9 +1247,11 @@ function gfx.getpixel()
   return 0
 end
 
-local function drawGradRect(draw_list, cmd, opts)
-  local x1, y1, x2, y2, ctl, ctr, cbr, cbl =
-    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8], cmd[9]
+local function drawGradRect(draw_list, cmd, i, opts)
+  local xy1, xy2, ctl, ctr, cbr, cbl =
+    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
+  local x1, y1 = unpackSigned(xy1)
+  local x2, y2 = unpackSigned(xy2)
   ctl = transformColor(ctl, opts)
   ctr = transformColor(ctr, opts)
   cbr = transformColor(cbr, opts)
@@ -1277,11 +1287,12 @@ function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy
   local cbr = makeColor(
     r + drdx + drdy, g + dgdx + dgdy,
     b + dbdx + dbdy, a + dadx + dady)
-  return drawCall(drawGradRect, x, y, x + w, y + h, ctl, ctr, cbr, cbl)
+  return drawCall(drawGradRect, packSigned(x, y), packSigned(x + w, y + h),
+    ctl, ctr, cbr, cbl, 0)
 end
 
-local function drawImGui(draw_list, cmd, opts)
-  local callback, x, y = cmd[2], cmd[3], cmd[4]
+local function drawImGui(draw_list, cmd, i, opts)
+  local callback, x, y = cmd[i], cmd[i+1], cmd[i+2]
   x, y = transformPoint(x, y, opts)
   ImGui.SetCursorScreenPos(state.ctx, x, y)
   ImGui.BeginGroup(state.ctx)
@@ -1290,7 +1301,8 @@ local function drawImGui(draw_list, cmd, opts)
 end
 
 function gfx.imgui(callback)
-  return drawCall(drawImGui, callback, toint(gfx_vars.x), toint(gfx_vars.y))
+  return drawCall(drawImGui, callback, toint(gfx_vars.x), toint(gfx_vars.y),
+    0, 0, 0, 0)
 end
 
 function gfx.init(name, width, height, dockstate, xpos, ypos)
@@ -1363,9 +1375,9 @@ function gfx.line(x1, y1, x2, y2, aa)
   -- gfx.line(10, 30, 10, 30)
   if x1 == x2 and y1 == y2 then
     -- faster than 1px lines according to dear imgui
-    return drawCall(drawPixel, x1, y1, color())
+    return drawCall(drawPixel, x1, y1, color(), 0, 0, 0, 0)
   else
-    return drawCall(drawLine, x1, y1, x2, y2, color())
+    return drawCall(drawLine, x1, y1, x2, y2, color(), 0, 0)
   end
 end
 
@@ -1375,9 +1387,9 @@ function gfx.lineto(x, y, aa)
   return x
 end
 
-local function drawImage(draw_list, cmd, opts)
+local function drawImage(draw_list, cmd, i, opts)
   local filename, imageState, x, y, w, h =
-    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
 
   if not imageState.attached then
     -- could not attach before in loadimg, as it can be called before gfx.init
@@ -1442,7 +1454,7 @@ function gfx.loadimg(image, filename)
   gfx_vars.dest = image
   local commands = global_state.commands[gfx_vars.dest]
   if commands then commands.want_clear = true end
-  drawCall(drawImage, filename, imageState, x, y, w, h)
+  drawCall(drawImage, filename, imageState, x, y, w, h, 0)
   gfx_vars.dest = dest_backup
 
   return image
@@ -1497,9 +1509,9 @@ function gfx.quit()
   return 0
 end
 
-local function drawRect(draw_list, cmd, opts)
+local function drawRect(draw_list, cmd, i, opts)
   local rectFunc, quadFunc, x1, y1, x2, y2, c =
-    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7], cmd[8]
+    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5], cmd[i+6]
   c = transformColor(c, opts)
   -- FIXME: scale thickness
 
@@ -1529,9 +1541,9 @@ function gfx.rectto(x, y)
   return x
 end
 
-local function drawRoundRect(draw_list, cmd, opts)
+local function drawRoundRect(draw_list, cmd, i, opts)
   local x1, y1, x2, y2, c, radius =
-    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
   c = transformColor(c, opts)
   -- FIXME: scale thickness
 
@@ -1558,7 +1570,7 @@ end
 function gfx.roundrect(x, y, w, h, radius, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
   x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  return drawCall(drawRoundRect, x, y, x + w, y + h, color(), radius)
+  return drawCall(drawRoundRect, x, y, x + w, y + h, color(), radius, 0)
 end
 
 function gfx.screentoclient(x, y)
@@ -1663,7 +1675,7 @@ function gfx.setimgdim(image, w, h)
 end
 
 function gfx.setpixel(r, g, b)
-  drawCall(drawPixel, gfx_vars.x, gfx_vars.y, makeColor(r, g, b, 1))
+  drawCall(drawPixel, gfx_vars.x, gfx_vars.y, makeColor(r, g, b, 1), 0, 0, 0, 0)
   return r
 end
 
@@ -1701,8 +1713,8 @@ function gfx.transformblit()
   return 0
 end
 
-local function drawTriangle6(draw_list, cmd, opts)
-  local points, center_x, center_y, c = cmd[2], cmd[3], cmd[4], cmd[5]
+local function drawTriangle6(draw_list, cmd, i, opts)
+  local points, center_x, center_y, c = cmd[i], cmd[i+1], cmd[i+2], cmd[i+3]
   c = transformColor(c, opts)
   local x1, y1 = transformPoint(points[1], points[2], opts)
   local x2, y2 = transformPoint(points[3], points[4], opts)
@@ -1716,9 +1728,9 @@ local function drawTriangle6(draw_list, cmd, opts)
   DL_AddTriangleFilled(draw_list, x1, y1, x2, y2, x3, y3, c)
 end
 
-local function drawTriangleN(draw_list, cmd, opts)
+local function drawTriangleN(draw_list, cmd, i, opts)
   local points, screen_points, n_coords, center_x, center_y, c =
-    cmd[2], cmd[3], cmd[4], cmd[5], cmd[6], cmd[7]
+    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
   c = transformColor(c, opts)
   for i = 1, n_coords, 2 do
     screen_points[i], screen_points[i + 1] =
@@ -1755,21 +1767,21 @@ function gfx.triangle(...)
   local is_vline, is_hline = center_x == first, center_y == second
   if is_vline and is_hline then
     -- gfx.triangle(0,10, 0,10, 0,10, 0,10)
-    return drawCall(drawPixel, center_x, center_y, c)
+    return drawCall(drawPixel, center_x, center_y, c, 0, 0, 0, 0)
   elseif is_vline then
     -- gfx.triangle(0,0, 0,10, 0,20)
     local min_y, max_y = 1/0, -1/0
     for i = 2, n_coords, 2 do
       min_y, max_y = math.min(min_y, points[i]), math.max(max_y, points[i])
     end
-    return drawCall(drawLine, center_x, min_y, center_x, max_y, c)
+    return drawCall(drawLine, center_x, min_y, center_x, max_y, c, 0, 0)
   elseif is_hline then
     -- gfx.triangle(0,0, 10,0, 20,0)
     local min_x, max_x = 1/0, -1/0
     for i = 1, n_coords, 2 do
       min_x, max_x = math.min(min_x, points[i]), math.max(max_x, points[i])
     end
-    return drawCall(drawLine, min_x, center_y, max_x, center_y, c)
+    return drawCall(drawLine, min_x, center_y, max_x, center_y, c, 0, 0)
   end
 
   sort2D(points, center_x, center_y) -- sort clockwise for antialiasing
@@ -1779,13 +1791,15 @@ function gfx.triangle(...)
 
   if n_coords == 4 then
     -- diagonal line gfx.triangle(0,0, 0,0, 10,10, 10,10)
-    return drawCall(drawLine, points[1], points[2], points[3], points[4], c)
+    return drawCall(drawLine, points[1], points[2], points[3], points[4], c,
+      0, 0)
   elseif n_coords == 6 then
-    return drawCall(drawTriangle6, points, center_x, center_y, c)
+    return drawCall(drawTriangle6, points, center_x, center_y, c,
+      0, 0, 0)
   else
     local screen_points = reaper.new_array(n_coords)
     return drawCall(drawTriangleN, points, screen_points, n_coords,
-       center_x, center_y, c)
+       center_x, center_y, c, 0)
   end
 end
 
@@ -1905,10 +1919,12 @@ if PROFILER then
   -- avoid profiler overhead for hot functions
   PROFILER.detachFrom('color')
   PROFILER.detachFrom('makeColor')
+  PROFILER.detachFrom('packSigned')
+  PROFILER.detachFrom('unpackSigned')
   PROFILER.detachFrom('tobool')
   PROFILER.detachFrom('tofloat')
-  PROFILER.detachFrom('tonumber')
   PROFILER.detachFrom('toint')
+  PROFILER.detachFrom('tonumber')
   PROFILER.detachFrom('transformColor')
   PROFILER.detachFrom('transformPoint')
 end
