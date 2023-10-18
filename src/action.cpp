@@ -48,6 +48,12 @@ static bool commandHook(const int id, const int flag)
   (void)flag;
 
   if(Action *action { findAction(id) }) {
+    while(true) {
+      MSG msg;
+      while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+        DispatchMessage(&msg);
+      SendMessage(GetMainHwnd(), 0x113, 0x29a, 0);
+    }
     action->run();
     return true;
   }
