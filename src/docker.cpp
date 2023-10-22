@@ -374,7 +374,14 @@ static void DockWindowActivate2(HWND window, const bool allowStealFocus)
     EnableWindow(dockerWindow, false);
   }
 #endif
+
   DockWindowActivate(window);
+
+  // DockWindowActivate alone is not enough to give keyboard focus if the
+  // window is the only tab in the docker (the docker was not already open)
+  if(allowStealFocus)
+    SetFocus(window);
+
   restoreMovingWindowFocus();
 #ifdef _WIN32
   if(!allowStealFocus)
