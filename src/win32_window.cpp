@@ -26,7 +26,7 @@
 #include "win32_unicode.hpp"
 
 #include <reaper_plugin_secrets.h>
-#include <ShellScalingApi.h> // GetDpiForMonitor
+#include <shellscalingapi.h> // GetDpiForMonitor
 #define GetThemeColor Win32_GetThemeColor // solve conflict with REAPER API
 #include <dwmapi.h> // Dwm* functions for compositing
 #undef GetThemeColor
