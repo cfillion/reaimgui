@@ -22,6 +22,7 @@
 #include "win32_window.hpp"
 
 #include <imgui/imgui.h>
+#include <shellscalingapi.h> // GetProcessDpiAwareness for Windows 8.1
 
 // Windows 10 Anniversary Update (1607) and newer
 static FuncImport<decltype(SetThreadDpiAwarenessContext)>
@@ -53,19 +54,31 @@ static bool isPerMonitorDpiAware()
     return *result;
 
   // Windows 10 Anniversary Update (1607) and newer
-  static FuncImport<decltype(GetThreadDpiAwarenessContext)>
+  FuncImport<decltype(GetThreadDpiAwarenessContext)>
     _GetThreadDpiAwarenessContext
     { L"User32.dll", "GetThreadDpiAwarenessContext" };
-  static FuncImport<decltype(GetAwarenessFromDpiAwarenessContext)>
+  FuncImport<decltype(GetAwarenessFromDpiAwarenessContext)>
     _GetAwarenessFromDpiAwarenessContext
     { L"User32.dll", "GetAwarenessFromDpiAwarenessContext" };
+  if(_GetThreadDpiAwarenessContext && _GetAwarenessFromDpiAwarenessContext) {
+    const DPI_AWARENESS_CONTEXT context { _GetThreadDpiAwarenessContext() };
+    const DPI_AWARENESS awareness { _GetAwarenessFromDpiAwarenessContext(context) };
+    result = awareness == DPI_AWARENESS_PER_MONITOR_AWARE;
+    return *result;
+  }
 
-  if(!_GetThreadDpiAwarenessContext || !_GetAwarenessFromDpiAwarenessContext)
-    return false;
+  // Windows 8.1
+  FuncImport<decltype(GetProcessDpiAwareness)>
+    _GetProcessDpiAwareness { L"Shcore.dll", "GetProcessDpiAwareness" };
+  if(_GetProcessDpiAwareness) {
+    PROCESS_DPI_AWARENESS awareness {};
+    if(FAILED(_GetProcessDpiAwareness(nullptr, &awareness)))
+      return false;
+    result = awareness == PROCESS_PER_MONITOR_DPI_AWARE;
+    return *result;
+  }
 
-  const DPI_AWARENESS_CONTEXT context { _GetThreadDpiAwarenessContext() };
-  const DPI_AWARENESS awareness { _GetAwarenessFromDpiAwarenessContext(context) };
-  result = awareness == DPI_AWARENESS_PER_MONITOR_AWARE;
+  result = false;
   return *result;
 }
 
