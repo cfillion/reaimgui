@@ -227,9 +227,11 @@ void Platform::scalePosition(ImVec2 *pos, const bool toNative, const ImGuiViewpo
   if(!toNative)
     scale = 1.f / scale;
 
+  // Truncate decimals when scaling from native so that converting back and
+  // forth to native gives back the same result (native coordinates are integers)
   const ImVec2 diff { pos->x - info.rcMonitor.left, pos->y - info.rcMonitor.top };
-  pos->x = info.rcMonitor.left + (diff.x * scale);
-  pos->y = info.rcMonitor.top  + (diff.y * scale);
+  pos->x = info.rcMonitor.left + static_cast<LONG>(diff.x * scale);
+  pos->y = info.rcMonitor.top  + static_cast<LONG>(diff.y * scale);
 }
 
 float Platform::scaleForWindow(HWND hwnd)
