@@ -34,7 +34,7 @@ You can use GetWindowDrawList() to access the current window draw list and draw
 custom primitives.
 
 The Draw List API uses absolute coordinates (0,0 is the top-left corner of the
-rimary monitor, not of your window!). See GetCursorScreenPos.)");
+primary monitor, not of your window!). See GetCursorScreenPos.)");
 
 DEFINE_API(ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
 "The draw list associated to the current window, to append your own drawing primitives")
