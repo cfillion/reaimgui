@@ -262,17 +262,16 @@ bool Context::endFrame(const bool render) try
 {
   setCurrent();
 
-  if(render) {
-    updateCursor();
-    updateDragDrop();
-    ImGui::Render();
-  }
-  else
+  if(!render) {
     ImGui::EndFrame();
+    return true;
+  }
 
+  updateCursor();
+  updateDragDrop();
+  ImGui::Render();
   ImGui::UpdatePlatformWindows();
-  if(render)
-    ImGui::RenderPlatformWindowsDefault();
+  ImGui::RenderPlatformWindowsDefault();
 
 #ifdef FOCUS_POLLING
   // WM_KILLFOCUS/WM_ACTIVATE+WA_INACTIVE are incomplete or missing in SWELL
