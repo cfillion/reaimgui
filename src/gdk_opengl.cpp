@@ -170,6 +170,7 @@ void GDKOpenGL::resizeTextures(const ImVec2 size)
 
   if(m_pixels) {
     LICE__resize(m_pixels.get(), size.x, size.y);
+    LICE_FillRect(m_pixels.get(), 0, 0, size.x, size.y, 0, 1.f, 0);
     glPixelStorei(GL_PACK_ROW_LENGTH, LICE__GetRowSpan(m_pixels.get()));
   }
 }
