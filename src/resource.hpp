@@ -20,6 +20,8 @@
 
 #include <memory>
 
+#include "flat_set.hpp"
+
 class Context;
 
 class Resource {
@@ -37,15 +39,30 @@ public:
   template<typename T>
   static bool isValid(T *userData)
   {
-    static_assert(!std::is_same_v<Resource, T>);
+    if constexpr(std::is_same_v<Resource, T>)
+      return g_rsx.contains(userData) && userData->isValid();
 
-    // short-circuiting dynamic_cast for faster exact type match
-    Resource *resource { static_cast<Resource *>(userData) };
-    return isValid(resource) &&
-      (typeid(*resource) == typeid(T) || dynamic_cast<T *>(resource));
+    auto resource { static_cast<Resource *>(userData) };
+    return isValid(resource) && resource->isInstanceOf<T>();
+  }
+
+  template<typename T, typename Fn>
+  static void foreach(const Fn &&callback) // O(n) of all types, not per type
+  {
+    for(Resource *rs : g_rsx) {
+      if(rs->isInstanceOf<T>())
+        callback(static_cast<T *>(rs));
+    }
   }
 
   static void destroyAll();
+
+  template<typename T>
+  bool isInstanceOf() const
+  {
+    // short-circuiting dynamic_cast for faster exact type match
+    return typeid(*this) == typeid(T) || dynamic_cast<const T *>(this);
+  }
 
 protected:
   virtual bool heartbeat();
@@ -53,12 +70,12 @@ protected:
 
 private:
   class Timer;
+
+  static FlatSet<Resource *> g_rsx;
+
   std::shared_ptr<Timer> m_timer;
   unsigned int m_keepAlive;
 };
-
-template<>
-bool Resource::isValid<Resource>(Resource *);
 
 using ImGui_Resource = Resource;
 

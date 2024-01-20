@@ -75,6 +75,7 @@ public:
   void endDrag(bool drop);
   void updateFocus();
   void enableViewports(bool enable);
+  void invalidateViewportsPos();
 
   ImGuiIO &IO();
   ImGuiStyle &style();

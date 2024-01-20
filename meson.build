@@ -45,6 +45,7 @@ project_cpp_args = {
     '-Wno-missing-braces',  # for Xcode 9
     '-Wno-missing-field-initializers',
     '-Wno-multichar',
+    '-Wno-nonnull-compare',  # dynamic_cast(this)
     '-Wno-unused-parameter', # for reaper-sdk and WDL
   ],
   'msvc': [

@@ -22,6 +22,7 @@
 #include "window.hpp"
 
 #include <objc/runtime.h>
+#include <functional>
 
 #ifndef _WIN32
 #  include <swell/swell.h>
@@ -47,6 +48,10 @@ static Context *getWindowContext(NSWindow *window)
 - (EventHandler *)init
 {
   NSNotificationCenter *nc { [NSNotificationCenter defaultCenter] };
+  [nc addObserver:self
+         selector:@selector(screenChanged:)
+             name:NSApplicationDidChangeScreenParametersNotification
+           object:nil];
   [nc addObserver:self
          selector:@selector(menuDidBeginTracking:)
              name:NSMenuDidBeginTrackingNotification
@@ -81,6 +86,14 @@ static Context *getWindowContext(NSWindow *window)
   Context *(^getContext)() { ^{ return ctx; } };
   objc_setAssociatedObject([view window], &GET_WND_CTX,
                            getContext, OBJC_ASSOCIATION_COPY);
+}
+
+- (void)screenChanged:(NSNotification *)notification
+{
+  // some version of macOS after 10.14 does not call
+  // NSWindowDelegate::windowDidMove when changing display resolution
+  using namespace std::placeholders;
+  Resource::foreach<Context>(std::bind(&Context::invalidateViewportsPos, _1));
 }
 
 - (void)menuDidBeginTracking:(NSNotification *)notification

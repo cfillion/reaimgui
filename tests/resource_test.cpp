@@ -11,6 +11,10 @@ struct Foo : Resource {
 
 struct Bar : Foo {};
 
+struct Baz : Resource {
+  bool attachable(const Context *) const override { return false; }
+};
+
 TEST(ResourceTest, ValidateNull) {
   auto foo { std::make_unique<Foo>() };
   EXPECT_FALSE(Resource::isValid<Foo>(nullptr));
@@ -53,4 +57,20 @@ TEST(ResourceTest, ValidateVoid) {
   EXPECT_TRUE(Resource::isValid<void>(foo.get()));
   foo->valid = false;
   EXPECT_FALSE(Resource::isValid<void>(foo.get()));
+}
+
+TEST(ResourceTest, ForeachBase) {
+  Foo foo; Bar bar; Baz baz;
+
+  unsigned int matches {};
+  Resource::foreach<Resource>([&matches](Resource *) { ++matches; });
+  EXPECT_EQ(matches, 3u);
+}
+
+TEST(ResourceTest, ForeachDerived) {
+  Foo foo; Bar bar; Baz baz;
+
+  unsigned int matches {};
+  Resource::foreach<Foo>([&matches](const Foo *) { ++matches; });
+  EXPECT_EQ(matches, 2u); // Foo + Bar (derived from Foo)
 }
