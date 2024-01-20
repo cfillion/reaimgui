@@ -605,3 +605,10 @@ void Context::enableViewports(const bool enable)
     EnableWindow(instance->nativeHandle(), enable);
   }
 }
+
+void Context::invalidateViewportsPos()
+{
+  const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
+  for(int i {}; i < pio.Viewports.Size; ++i)
+    pio.Viewports[i]->PlatformRequestMove = true;
+}

@@ -19,9 +19,10 @@
 
 #include "context.hpp"
 #include "error.hpp"
-#include "flat_set.hpp"
 
 #include <cassert>
+#include <functional>
+
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h>
 
@@ -32,7 +33,8 @@
 // [p=2450259]
 constexpr unsigned int KEEP_ALIVE_FRAMES { 2 };
 
-static FlatSet<Resource *> g_rsx;
+FlatSet<Resource *> Resource::g_rsx;
+
 static unsigned int g_reentrant;
 static WNDPROC g_mainProc;
 static bool g_disableProcOverride;
@@ -82,16 +84,15 @@ Resource::Timer::~Timer()
     g_disableProcOverride = true;
 }
 
+volatile bool foo;
 void Resource::Timer::tick()
 {
   const bool blocked { isDeferLoopBlocked() };
 
 #ifndef __APPLE__
   if(blocked != g_disabledViewports) {
-    for(Resource *rs : g_rsx) {
-      if(Context *ctx { dynamic_cast<Context *>(rs) })
-        ctx->enableViewports(!blocked);
-    }
+    using namespace std::placeholders;
+    Resource::foreach<Context>(std::bind(&Context::enableViewports, _1, !blocked));
     g_disabledViewports = blocked;
   }
 #endif
@@ -166,12 +167,6 @@ bool Resource::heartbeat()
 bool Resource::isValid() const
 {
   return true;
-}
-
-template<>
-bool Resource::isValid<Resource>(Resource *rs)
-{
-  return g_rsx.contains(rs) && rs->isValid();
 }
 
 void Resource::destroyAll()
