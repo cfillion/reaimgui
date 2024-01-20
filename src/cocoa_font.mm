@@ -123,8 +123,8 @@ bool Font::resolve(const char *family, const int style)
   NSURL *url { findMatchingFile(attrs) };
 
   if(!url) {
-    [attrs removeObjectForKey:NSFontFamilyAttribute];
-    attrs[NSFontCharacterSetAttribute] = [NSCharacterSet alphanumericCharacterSet];
+    family = translateGenericFont("sans-serif");
+    attrs[NSFontFamilyAttribute] = [NSString stringWithUTF8String:family];
     if(!(url = findMatchingFile(attrs)))
       return false;
   }
