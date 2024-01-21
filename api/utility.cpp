@@ -55,20 +55,21 @@ DEFINE_API(void, GetVersion,
     return klass::isValid(static_cast<klass *>(pointer));
 
 DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid.
+R"(Return whether the pointer of the specified type is valid. Supported types are:
 
-Supported types are:
+- `ImGui_Resource*`
+  - `ImGui_Context*`
+  - `ImGui_Font*`
+  - `ImGui_Function*`
+  - `ImGui_Image*`
+    - `ImGui_ImageSet*`
+  - `ImGui_ListClipper*`
+  - `ImGui_TextFilter*`
+- `ImGui_DrawList*`
+- `ImGui_DrawListSplitter*`
+- `ImGui_Viewport*`
 
-- ImGui_Context*
-- ImGui_DrawList*
-- ImGui_DrawListSplitter*
-- ImGui_Font*
-- ImGui_Function*
-- ImGui_Image*
-- ImGui_ImageSet*
-- ImGui_ListClipper*
-- ImGui_TextFilter*
-- ImGui_Viewport*)")
+Indentation represents inheritance: an `ImageSet` is also an `Image` and a `Resource`.)")
 {
 
   RESOURCE_ISVALID(Context);
@@ -78,6 +79,7 @@ Supported types are:
   RESOURCE_ISVALID(Image);
   RESOURCE_ISVALID(ImageSet);
   RESOURCE_ISVALID(ListClipper);
+  RESOURCE_ISVALID(Resource);
   RESOURCE_ISVALID(TextFilter);
 
   RESOURCEPROXY_ISVALID(DrawListProxy);
