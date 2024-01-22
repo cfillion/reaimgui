@@ -162,8 +162,11 @@ void GDKOpenGL::setSize(const ImVec2 size)
   resizeTextures(size);
 }
 
-void GDKOpenGL::resizeTextures(const ImVec2 size)
+void GDKOpenGL::resizeTextures(ImVec2 size)
 {
+  const float scale { m_window->scaleFactor() };
+  size.x *= scale, size.y *= scale;
+
   glBindTexture(GL_TEXTURE_2D, m_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y,
     0, GL_BGRA, GL_UNSIGNED_BYTE, nullptr);
@@ -200,14 +203,14 @@ void GDKOpenGL::render(void *userData)
   }
 
   GdkWindow *window { static_cast<GDKWindow *>(m_window)->getOSWindow() };
-  const ImDrawData *drawData { m_window->viewport()->DrawData };
+  const ImGuiViewport *viewport { m_window->viewport() };
   const cairo_region_t *region { gdk_window_get_clip_region(window) };
   GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(window, region) };
   cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
   gdk_cairo_draw_from_gl(cairoContext, window,
     m_tex, GL_TEXTURE, 1, 0, 0,
-    drawData->DisplaySize.x * drawData->FramebufferScale.x,
-    drawData->DisplaySize.y * drawData->FramebufferScale.y);
+    viewport->DrawData->DisplaySize.x * viewport->DpiScale,
+    viewport->DrawData->DisplaySize.y * viewport->DpiScale);
   gdk_window_end_draw_frame(window, drawContext);
 
   // required for making the window visible on GNOME
