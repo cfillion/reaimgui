@@ -75,7 +75,7 @@ ImFont *Font::load(ImFontAtlas *atlas, const float scale)
     font = atlas->AddFontFromMemoryTTF(data.data(), data.size(), scaledSize, &cfg);
   }
 
-  font->Scale = 1.f / scale;
+  font->Scale = static_cast<float>(m_size) / scaledSize;
 
   return font;
 }
