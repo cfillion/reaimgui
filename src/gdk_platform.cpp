@@ -138,8 +138,10 @@ void Platform::scalePosition(ImVec2 *pos, const bool toHiDpi, const ImGuiViewpor
   if(!toHiDpi)
     scale = 1.f / scale;
 
-  pos->x *= scale;
-  pos->y *= scale;
+  // Truncate decimals when scaling from native so that converting back and
+  // forth to native gives back the same result (native coordinates are integers)
+  pos->x = static_cast<long>(pos->x * scale);
+  pos->y = static_cast<long>(pos->y * scale);
 }
 
 float Platform::scaleForWindow(HWND hwnd)
