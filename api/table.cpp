@@ -306,8 +306,8 @@ See TableNeedSort.)")
   FRAME_GUARD;
 
   const ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() };
-  if(!specs || id >= specs->SpecsCount)
-    return false;
+  if(!specs || id < 0 || id >= specs->SpecsCount)
+    return false; // don't assert: user cannot know how many specs there are
 
   const ImGuiTableColumnSortSpecs &spec { specs->Specs[id] };
   if(API_W(column_user_id)) *API_W(column_user_id) = spec.ColumnUserID;
