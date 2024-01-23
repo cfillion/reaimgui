@@ -27,7 +27,7 @@
 template<typename ProxyT, typename ResT, typename ObjT>
 class ResourceProxy {
 public:
-  using Key = uint32_t;
+  using Key = uint32_t; // max 53 bits for EEL compatibility (double fraction)
 
   ResourceProxy()  = delete;
   ~ResourceProxy() = delete;
@@ -36,9 +36,9 @@ public:
   static ProxyT *encode(const ResT *in)
   {
     static_assert(sizeof(Type::key) <= sizeof(Key));
+    static_assert(Type::key <= 1ull<<53, "out of double range (EEL incompatible)");
     uintptr_t out { reinterpret_cast<uintptr_t>(in) };
     out ^= static_cast<uintptr_t>(Type::key);
-    assert("out of double range (EEL incompatible)" && out <= 1ull<<53);
     return reinterpret_cast<ProxyT *>(out);
   }
 
