@@ -288,18 +288,15 @@ See TableGetColumnSortSpecs.)")
 
 DEFINE_API(bool, TableGetColumnSortSpecs, (ImGui_Context*,ctx)
 (int,id)
-(int*,API_W(column_user_id))(int*,API_W(column_index))
-(int*,API_W(sort_order))(int*,API_W(sort_direction)),
+(int*,API_W(column_user_id))(int*,API_W(column_index))(int*,API_W(sort_direction)),
 R"(Sorting specification for one column of a table.
 Call while incrementing 'id' from 0 until false is returned.
 
-- ColumnUserID:  User id of the column (if specified by a TableSetupColumn call)
-- ColumnIndex:   Index of the column
-- SortOrder:     Index within parent SortSpecs (always stored in order starting
-  from 0, tables sorted on a single criteria will always have a 0 here)
-- SortDirection: SortDirection_Ascending or SortDirection_Descending
-  (you can use this or SortSign, whichever is more convenient for your sort
-  function)
+- id:             Index of the sorting specification (always stored in order
+  starting from 0, tables sorted on a single criteria will always have a 0 here)
+- column_user_id: User ID of the column (if specified by a TableSetupColumn call)
+- column_index:   Index of the column
+- sort_direction: SortDirection_Ascending or SortDirection_Descending
 
 See TableNeedSort.)")
 {
@@ -312,8 +309,8 @@ See TableNeedSort.)")
   const ImGuiTableColumnSortSpecs &spec { specs->Specs[id] };
   if(API_W(column_user_id)) *API_W(column_user_id) = spec.ColumnUserID;
   if(API_W(column_index))   *API_W(column_index)   = spec.ColumnIndex;
-  if(API_W(sort_order))     *API_W(sort_order)     = spec.SortOrder;
   if(API_W(sort_direction)) *API_W(sort_direction) = spec.SortDirection;
+
   return true;
 }
 

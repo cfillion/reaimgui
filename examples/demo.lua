@@ -3992,7 +3992,7 @@ local MyItemColumnID_Description = 7
 
 function demo.CompareTableItems(a, b)
   for next_id = 0, math.huge do
-    local ok, col_user_id, col_idx, sort_order, sort_direction = ImGui.TableGetColumnSortSpecs(ctx, next_id)
+    local ok, col_user_id, col_idx, sort_direction = ImGui.TableGetColumnSortSpecs(ctx, next_id)
     if not ok then break end
 
     -- Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
@@ -5513,9 +5513,9 @@ function demo.ShowDemoWindowTables()
     -- Options
     demo.PushStyleCompact()
     rv,tables.sorting.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortMulti', tables.sorting.flags, ImGui.TableFlags_SortMulti())
-    ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).')
+    ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetColumnSortSpecs() may return specs where (SpecsCount > 1).')
     rv,tables.sorting.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortTristate', tables.sorting.flags, ImGui.TableFlags_SortTristate())
-    ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).')
+    ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: allow no sorting, disable default sorting. TableGetColumnSortSpecs() may return specs where (SpecsCount == 0).')
     demo.PopStyleCompact()
 
     if ImGui.BeginTable(ctx, 'table_sorting', 4, tables.sorting.flags, 0.0, TEXT_BASE_HEIGHT * 15, 0.0) then
@@ -5664,9 +5664,9 @@ function demo.ShowDemoWindowTables()
 
       if ImGui.TreeNode(ctx, 'Sorting:', ImGui.TreeNodeFlags_DefaultOpen()) then
         rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortMulti', tables.advanced.flags, ImGui.TableFlags_SortMulti())
-        ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).')
+        ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetColumnSortSpecs() may return specs where (SpecsCount > 1).')
         rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortTristate', tables.advanced.flags, ImGui.TableFlags_SortTristate())
-        ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).')
+        ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: allow no sorting, disable default sorting. TableGetColumnSortSpecs() may return specs where (SpecsCount == 0).')
         ImGui.TreePop(ctx)
       end
 
