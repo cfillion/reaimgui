@@ -46,3 +46,5 @@ for name, func in pairs(reaper) do
     reaper[name] = shimResourceCreator(func)
   end
 end
+
+function reaper.ImGui_DestroyContext(ctx) end -- no-op

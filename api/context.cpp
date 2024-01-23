@@ -32,16 +32,6 @@ and also as a unique identifier for storing settings.)")
   return new Context { label, API_RO_GET(config_flags) };
 }
 
-DEFINE_API(void, DestroyContext, (ImGui_Context*,ctx),
-R"(Free the resources used by a context.
-
-Calling this function is usually not required as all ReaImGui objects are
-automatically garbage-collected when unused.)")
-{
-  assertValid(ctx);
-  delete ctx;
-}
-
 DEFINE_API(double, GetTime, (ImGui_Context*,ctx),
 "Get global imgui time. Incremented every frame.")
 {
