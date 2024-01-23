@@ -39,10 +39,10 @@ public:
   template<typename T>
   static bool isValid(T *userData)
   {
-    if constexpr(std::is_same_v<Resource, T>)
-      return g_rsx.contains(userData) && userData->isValid();
+    if constexpr(std::is_same_v<Resource, std::remove_const_t<T>>)
+      return g_rsx.contains(const_cast<Resource *>(userData)) && userData->isValid();
 
-    auto resource { static_cast<Resource *>(userData) };
+    auto resource { static_cast<const Resource *>(userData) };
     return isValid(resource) && resource->isInstanceOf<T>();
   }
 
