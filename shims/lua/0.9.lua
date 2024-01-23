@@ -51,7 +51,7 @@ function reaper.ImGui_DestroyContext(ctx) end -- no-op
 
 local TableGetColumnSortSpecs = reaper.ImGui_TableGetColumnSortSpecs
 function reaper.ImGui_TableGetColumnSortSpecs(ctx, id)
-  local rv, column_user_id, column_index, sort_direction =
+  local rv, column_index, column_user_id, sort_direction =
     TableGetColumnSortSpecs(ctx, id)
   return rv, column_user_id, column_index, id, sort_direction
 end

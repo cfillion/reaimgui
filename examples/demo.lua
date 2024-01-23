@@ -3992,7 +3992,7 @@ local MyItemColumnID_Description = 7
 
 function demo.CompareTableItems(a, b)
   for next_id = 0, math.huge do
-    local ok, col_user_id, col_idx, sort_direction = ImGui.TableGetColumnSortSpecs(ctx, next_id)
+    local ok, col_idx, col_user_id, sort_direction = ImGui.TableGetColumnSortSpecs(ctx, next_id)
     if not ok then break end
 
     -- Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
