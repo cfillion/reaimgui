@@ -1108,6 +1108,7 @@ function demo.ShowDemoWindowWidgets()
       }
     end
     if not ImGui.ValidatePtr(widgets.images.bitmap, 'ImGui_Image*') then
+      -- see "Dump file to string literal" in ReaPack
       widgets.images.bitmap = ImGui.CreateImageFromMem(
        "\x89\x50\x4E\x47\x0D\x0A\x1A\x0A\x00\x00\x00\x0D\x49\x48\x44\x52\z
         \x00\x00\x01\x9D\x00\x00\x00\x45\x08\x00\x00\x00\x00\xB4\xAE\x64\z
