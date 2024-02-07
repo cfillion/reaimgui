@@ -6418,6 +6418,7 @@ function demo.ShowStyleEditor()
       style  = demo.GetStyleData(),
       ref    = demo.GetStyleData(),
       output_dest = 0,
+      output_prefix = 1,
       output_only_modified = true,
       push_count = 0,
     }
@@ -6459,6 +6460,7 @@ function demo.ShowStyleEditor()
     'Save/Revert in local non-persistent storage. Default Colors definition are not affected. \z
      Use "Export" below to save them somewhere.')
 
+  local funcPrefixes = { 'reaper.ImGui_', 'ImGui.' }
   local export = function(enumName, funcSuffix, curTable, refTable, isEqual, formatValue)
     local lines, name_maxlen = {}, 0
     for i, name in demo.EachEnum(enumName) do
@@ -6468,6 +6470,7 @@ function demo.ShowStyleEditor()
       end
     end
 
+    local funcPrefix = funcPrefixes[app.style_editor.output_prefix + 1]
     if app.style_editor.output_dest == 0 then
       ImGui.LogToClipboard(ctx)
     else
@@ -6475,13 +6478,13 @@ function demo.ShowStyleEditor()
     end
     for _, line in ipairs(lines) do
       local pad = string.rep('\x20', name_maxlen - line[1]:len())
-      ImGui.LogText(ctx, ('ImGui.Push%s(ctx, ImGui.%s_%s(),%s %s)\n')
-        :format(funcSuffix, enumName, line[1], pad, formatValue(line[2])))
+      ImGui.LogText(ctx, ('%sPush%s(ctx, ImGui.%s_%s(),%s %s)\n')
+        :format(funcPrefix, funcSuffix, enumName, line[1], pad, formatValue(line[2])))
     end
     if #lines == 1 then
-      ImGui.LogText(ctx, ('\nImGui.Pop%s(ctx)\n'):format(funcSuffix))
+      ImGui.LogText(ctx, ('\n%sPop%s(ctx)\n'):format(funcPrefix, funcSuffix))
     elseif #lines > 1 then
-      ImGui.LogText(ctx, ('\nImGui.Pop%s(ctx, %d)\n'):format(funcSuffix, #lines))
+      ImGui.LogText(ctx, ('\n%sPop%s(ctx, %d)\n'):format(funcPrefix, funcSuffix, #lines))
     end
     ImGui.LogFinish(ctx)
   end
@@ -6497,6 +6500,7 @@ function demo.ShowStyleEditor()
       function(a, b) return a == b end, function(val) return ('0x%08X'):format(val & 0xffffffff) end)
   end
   ImGui.SameLine(ctx); ImGui.SetNextItemWidth(ctx, 120); rv,app.style_editor.output_dest = ImGui.Combo(ctx, '##output_type', app.style_editor.output_dest, 'To Clipboard\0To TTY\0')
+  ImGui.SameLine(ctx); ImGui.SetNextItemWidth(ctx, 120); rv,app.style_editor.output_prefix = ImGui.Combo(ctx, '##output_prefix', app.style_editor.output_prefix, table.concat(funcPrefixes, '*\0') .. '*\0')
   ImGui.SameLine(ctx); rv,app.style_editor.output_only_modified = ImGui.Checkbox(ctx, 'Only Modified', app.style_editor.output_only_modified)
 
   ImGui.Separator(ctx)
