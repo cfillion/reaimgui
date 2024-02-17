@@ -15,28 +15,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_BASENAME_HPP
-#define REAIMGUI_BASENAME_HPP
+#ifndef REAIMGUI_COMPSTR_HPP
+#define REAIMGUI_COMPSTR_HPP
 
 #include <array>
+#include <cstddef>
 
-template<auto Fn>
-class MakeBasename {
-  static constexpr size_t N { sizeof(*Fn) };
+namespace CompStr {
+
+template<auto fn>
+class Basename {
+  static constexpr size_t N { sizeof(*fn) };
 
   static constexpr const char *after(const char match,
     const char *start, const char *fallback)
   {
     size_t i { N - 1 };
-    const auto end { static_cast<size_t>(start - *Fn) };
-    do { if((*Fn)[i] == match) return *Fn + i + 1; } while(i-- > end);
+    const auto end { static_cast<size_t>(start - *fn) };
+    do { if((*fn)[i] == match) return *fn + i + 1; } while(i-- > end);
     return fallback;
   }
 
   static constexpr auto compute()
   {
-    constexpr const char *start { after('/', *Fn, *Fn) },
-                         *end   { after('.', start, *Fn + N) };
+    constexpr const char *start { after('/', *fn, *fn) },
+                         *end   { after('.', start, *fn + N) };
     std::array<char, end - start> name {};
     for(size_t i {}; i < name.size() - 1; ++i)
       name[i] = start[i];
@@ -47,7 +50,9 @@ public:
   static constexpr auto value { compute() };
 };
 
-template<auto Fn>
-static constexpr const char *Basename { MakeBasename<Fn>::value.data() };
+template<auto filename>
+static constexpr const char *basename { Basename<filename>::value.data() };
+
+}
 
 #endif

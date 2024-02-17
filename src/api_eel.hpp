@@ -62,6 +62,8 @@ namespace API {
   };
 };
 
+namespace CallConv {
+
 template<typename T>
 T fetchEELArgument(const Function *, EEL_F value)
 {
@@ -75,17 +77,19 @@ inline std::string_view fetchEELArgument(const Function *func, EEL_F value)
 }
 
 template<typename T>
-struct EELAPI;
+struct EEL;
 
 template<typename R, typename... Args>
-struct EELAPI<R(*)(Args...) noexcept> {
+struct EEL<R(*)(Args...) noexcept> {
   static constexpr size_t ARGC { sizeof...(Args) };
 
-  static EEL_F applyVarArg(Function *func, R(*fn)(Args...), EEL_F **argv, size_t argc)
+  template<R(*fn)(Args...)>
+  static EEL_F NSEEL_CGEN_CALL apply(void *self, INT_PTR argc, EEL_F **argv)
   {
     if(static_cast<size_t>(argc) < sizeof...(Args))
       return 0;
 
+    Function *func { static_cast<Function *>(self) };
     const auto &args
       { makeTuple(func, argv, std::index_sequence_for<Args...>{}) };
     if constexpr(std::is_void_v<R>) {
@@ -109,10 +113,8 @@ private:
 };
 
 template<auto fn>
-EEL_F NSEEL_CGEN_CALL InvokeEELAPI(void *self, INT_PTR argc, EEL_F **argv)
-{
-  Function *func { static_cast<Function *>(self) };
-  return EELAPI<decltype(fn)>::applyVarArg(func, fn, argv, argc);
+inline constexpr auto applyEEL = &EEL<decltype(fn)>::template apply<fn>;
+
 }
 
 #endif

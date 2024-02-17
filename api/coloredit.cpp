@@ -59,7 +59,7 @@ DEFINE_API(bool, ColorEdit3, (ImGui_Context*,ctx)
   // Edit4 will take care of starting the frame and validating col_rgb
   ImGuiColorEditFlags flags { API_RO_GET(flags) };
   flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorEdit4::invoke_unsafe(ctx, label, API_RW(col_rgb), &flags);
+  return ColorEdit4::impl(ctx, label, API_RW(col_rgb), &flags);
 }
 
 DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
@@ -96,8 +96,7 @@ R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.)")
   // Picker4 will take care of starting the frame and validating col_rgb
   ImGuiColorEditFlags flags { API_RO_GET(flags) };
   flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorPicker4::invoke_unsafe(
-    ctx, label, API_RW(col_rgb), &flags, nullptr);
+  return ColorPicker4::impl(ctx, label, API_RW(col_rgb), &flags, nullptr);
 }
 
 DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)

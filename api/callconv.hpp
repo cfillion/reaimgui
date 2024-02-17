@@ -15,19 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_API_VARARG_HPP
-#define REAIMGUI_API_VARARG_HPP
+#ifndef REAIMGUI_CALLCONV_HPP
+#define REAIMGUI_CALLCONV_HPP
+
+#include "../src/api.hpp"
+#include "../src/error.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <tuple>
 
+namespace CallConv {
+
 template<typename T>
-struct ReaScriptAPI;
+struct ReaScript;
 
 template<typename R, typename... Args>
-struct ReaScriptAPI<R(*)(Args...) noexcept>
+struct ReaScript<R(*)(Args...) noexcept>
 {
-  static const void *applyVarArg(R(*fn)(Args...), void **argv, const int argc)
+  template<R(*fn)(Args...)>
+  static const void *apply(void **argv, const int argc)
   {
     if(static_cast<size_t>(argc) < sizeof...(Args))
       return nullptr;
@@ -70,9 +77,33 @@ private:
 };
 
 template<auto fn>
-const void *InvokeReaScriptAPI(void **argv, int argc)
+inline constexpr auto applyReaScript = &ReaScript<decltype(fn)>::template apply<fn>;
+
+template<typename T>
+struct Safe;
+
+template<typename R, typename... Args>
+struct Safe<R(*)(Args...)>
 {
-  return ReaScriptAPI<decltype(fn)>::applyVarArg(fn, argv, argc);
+  template<R(*fn)(Args...), auto name>
+  static R invoke(Args... args) noexcept
+  try {
+    // TODO: API::clearError() for C++, clearContext for correct destruction?
+    return std::invoke(fn, args...);
+  }
+  catch(const imgui_error &e) { // TODO: recoverable_error base class
+    API::handleError(*name, e);
+    return static_cast<R>(0);
+  }
+  catch(const reascript_error &e) {
+    API::handleError(*name, e);
+    return static_cast<R>(0);
+  }
+};
+
+template<auto fn, auto name>
+inline constexpr auto invokeSafe = &Safe<decltype(fn)>::template invoke<fn, name>;
+
 }
 
 #endif

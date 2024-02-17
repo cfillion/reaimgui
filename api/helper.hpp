@@ -18,9 +18,14 @@
 #ifndef REAIMGUI_API_HELPER_HPP
 #define REAIMGUI_API_HELPER_HPP
 
+// TODO: figure out which ones are required/helpful
+#define NOGDI // prevent windows.h from defining unwanted macros (eg. CreateFont)
+#define WIN32_LEAN_AND_MEAN
+
+#include "callconv.hpp"
+#include "compstr.hpp"
+
 #include "../src/api.hpp"
-#include "../src/api_vararg.hpp"
-#include "../src/basename.hpp"
 #include "../src/context.hpp"
 
 #include <array>
@@ -47,7 +52,6 @@
   BOOST_PP_SEQ_FOR_EACH_I(macro, data, BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))
 #define _SIGARG(r, data, i, arg) \
   BOOST_PP_COMMA_IF(i) _ARG_TYPE(arg) _ARG_NAME(arg)
-#define _RAWARG(r, macro, i, arg) BOOST_PP_COMMA_IF(i) macro(arg)
 #define _STRARG(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
 #define _STRARGUS(r, macro, i, arg) \
@@ -70,12 +74,6 @@ using DefArgVal = std::conditional_t<
 // error out if API_SECTION() was not used in the file
 #define _API_CHECKROOTSECTION static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);
 
-#define _API_CATCH(name, type, except) \
-  catch(const except &e) {             \
-    API::handleError(#name, e);        \
-    return static_cast<type>(0);       \
-  }
-
 #define _API_DEF(type, args, help)            \
   #type                                  "\0" \
   _FOREACH_ARG(_STRARG, _ARG_TYPE, args) "\0" \
@@ -87,39 +85,40 @@ using DefArgVal = std::conditional_t<
   static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) { __LINE__ };
 
 #define _DECLARE_FUNC(type, name, args) \
-  namespace API_##name {                                                  \
+  namespace API::name {                                                   \
     _FOREACH_ARG(_DEFARG, name, args) /* constexprs of default args */    \
-                                                                          \
-    static type invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args));            \
-    static type invoke(_FOREACH_ARG(_SIGARG, _, args)) noexcept           \
-    try {                                                                 \
-      return invoke_unsafe(_FOREACH_ARG(_RAWARG, _ARG_NAME, args));       \
-    }                                                                     \
-    _API_CATCH(name, type, reascript_error)                               \
-    _API_CATCH(name, type, imgui_error)                                   \
+    constexpr const char id[] { #name };                                  \
+    static type impl(_FOREACH_ARG(_SIGARG, _, args));                     \
   }
+
 #define _DEFINE_FUNC(type, name, args) \
-  type API_##name::invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args))
+  type API::name::impl(_FOREACH_ARG(_SIGARG, _, args))
+
+// extern for link-time duplicate detection
+#define _API_EXPORT(type, name) \
+  namespace API::name { extern const API::type symbol; } \
+  const API::type API::name::symbol
+
+#define _API_SAFECALL(apiName) \
+  CallConv::invokeSafe<&API::apiName::impl, &API::apiName::id>
 
 #define DEFINE_API _STORE_LINE _DEFINE_API
-#define _DEFINE_API(type, name, args, help, ...)                          \
-  _API_CHECKROOTSECTION                                                   \
-  _DECLARE_FUNC(type, name, args)                                         \
-                                                                          \
-  /* link-time duplicate check */                                         \
-  extern const API::ReaScriptFunc API_EXPORT_##name;                      \
-  const API::ReaScriptFunc API_EXPORT_##name {                            \
-    { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
-      reinterpret_cast<void *>(&API_##name::invoke),                      \
-    },                                                                    \
-    { "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
-      reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name::invoke>), \
-    },                                                                    \
-    { "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
-      reinterpret_cast<void *>(const_cast<char *>(                        \
-        _API_DEF(type, args, help))),                                     \
-    },                                                                    \
-  };                                                                      \
+#define _DEFINE_API(type, name, args, help)                      \
+  _API_CHECKROOTSECTION                                          \
+  _DECLARE_FUNC(type, name, args)                                \
+  _API_EXPORT(ReaScriptFunc, name) {                             \
+    { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
+      reinterpret_cast<void *>(_API_SAFECALL(name)),             \
+    },                                                           \
+    { "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
+      reinterpret_cast<void *>(                                  \
+        CallConv::applyReaScript<_API_SAFECALL(name)>),          \
+    },                                                           \
+    { "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
+      reinterpret_cast<void *>(const_cast<char *>(               \
+        _API_DEF(type, args, help))),                            \
+    },                                                           \
+  };                                                             \
   _DEFINE_FUNC(type, name, args)
 
 #define DEFINE_ENUM _STORE_LINE _DEFINE_ENUM
@@ -127,21 +126,19 @@ using DefArgVal = std::conditional_t<
   _DEFINE_API(int, name, NO_ARGS, doc) { return prefix##name; }
 
 #define DEFINE_EELAPI _STORE_LINE _DEFINE_EELAPI
-#define _DEFINE_EELAPI(type, name, args, help)                     \
-  _API_CHECKROOTSECTION                                            \
-  _DECLARE_FUNC(type, name, args)                                  \
-                                                                   \
-  extern const API::EELFunc API_EXPORT_##name;                     \
-  const API::EELFunc API_EXPORT_##name {                           \
-    #name, _API_DEF(type, args, help),                             \
-    &InvokeEELAPI<&API_##name::invoke>,                            \
-    EELAPI<decltype(&API_##name::invoke)>::ARGC,                   \
-  };                                                               \
+#define _DEFINE_EELAPI(type, name, args, help) \
+  _API_CHECKROOTSECTION                        \
+  _DECLARE_FUNC(type, name, args)              \
+  _API_EXPORT(EELFunc, name) {                 \
+    #name, _API_DEF(type, args, help),         \
+    CallConv::applyEEL<_API_SAFECALL(name)>,   \
+    CallConv::EEL<std::remove_const_t<decltype(_API_SAFECALL(name))>>::ARGC, \
+  };                                           \
   _DEFINE_FUNC(type, name, args)
 
 #define DEFINE_EELVAR _STORE_LINE _DEFINE_EELVAR
-#define _DEFINE_EELVAR(type, name, help)                           \
-  _API_CHECKROOTSECTION                                            \
+#define _DEFINE_EELVAR(type, name, help) \
+  _API_CHECKROOTSECTION                  \
   const API::EELVar EELVar_##name { #name, #type "\0\0\0" help "\0" }
 
 #define DEFINE_SECTION(id, parent, ...) static const API::Section id \
@@ -149,10 +146,10 @@ using DefArgVal = std::conditional_t<
 
 // shortcuts with auto-generated identifier name for the section object
 #define _UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
-#define API_SECTION(...)                             \
-  constexpr const char FILE_PATH[] { __FILE__ };     \
-  constexpr auto ROOT_FILE { Basename<&FILE_PATH> }; \
-  static const API::Section ROOT_SECTION             \
+#define API_SECTION(...)                                      \
+  constexpr const char FILE_PATH[] { __FILE__ };              \
+  constexpr auto ROOT_FILE { CompStr::basename<&FILE_PATH> }; \
+  static const API::Section ROOT_SECTION                      \
     { nullptr, ROOT_FILE, __VA_ARGS__ }
 #define API_SUBSECTION(...) \
   DEFINE_SECTION(_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
@@ -180,7 +177,7 @@ using DefArgVal = std::conditional_t<
 #define API_RO_GET(var)  _API_GET(API_RO(var))
 #define API_RWO_GET(var) _API_GET(API_RWO(var))
 
-#define FRAME_GUARD assertValid(ctx); assertFrame(ctx);
+#define FRAME_GUARD assertValid(ctx); assertFrame(ctx)
 
 // const char *foobarInOptional from REAPER are never null before 6.58
 inline void nullIfEmpty(const char *&string)
