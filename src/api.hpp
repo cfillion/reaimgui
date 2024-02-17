@@ -24,7 +24,8 @@
 #define API_PREFIX ImGui_
 
 namespace API {
-  void announceAll(bool add);
+  void setup();
+  void teardown();
   void handleError(const char *fnName, const reascript_error &);
   void handleError(const char *fnName, const imgui_error &);
 
@@ -49,6 +50,9 @@ namespace API {
 
     Callable(VerNum since, VerNum until, const char *name);
     VerNum version() const { return m_since; }
+
+    virtual void *safeImpl()   const = 0;
+    virtual void *unsafeImpl() const = 0;
 
   private:
     VerNum m_since, m_until;
@@ -83,11 +87,14 @@ namespace API {
 
   class ReaScriptFunc final : public Callable, Symbol {
   public:
-    ReaScriptFunc(VerNum availableSince,
+    ReaScriptFunc(VerNum availableSince, void *impl,
                   const PluginRegister &native,
                   const PluginRegister &reascript,
                   const PluginRegister &desc);
     void announce(bool) const override;
+
+    void *safeImpl()   const override { return m_regs[1].value; }
+    void *unsafeImpl() const override { return m_impl; }
 
     const char *name() const override {
       return &m_regs[0].key[5]; /* strlen("-API_") */ }
@@ -99,7 +106,36 @@ namespace API {
     VerNum version() const override { return Callable::version(); }
 
   private:
+    void *m_impl;
     PluginRegister m_regs[3]; // native, reascript, definition
+  };
+
+  class ShimFunc final : public Callable {
+  public:
+    ShimFunc(VerNum since, VerNum until,
+      const char *name, void *impl, void *unsafeImpl);
+
+    void *safeImpl()   const override { return m_impl; }
+    void *unsafeImpl() const override { return m_unsafeImpl; }
+
+  private:
+    void *m_impl, *m_unsafeImpl;
+  };
+
+  // All fields from this+size are treated as const char* of Callable names
+  // resolve() replaces them with the addresses of their unsafe implementations
+  class ImportTable {
+  protected:
+    ImportTable(VerNum, size_t);
+
+  public:
+    void resolve();
+    ImportTable *m_next;
+
+  private:
+    void **offset(size_t);
+    void **m_ftable;
+    VerNum m_version;
   };
 }
 

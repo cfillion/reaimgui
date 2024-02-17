@@ -55,6 +55,12 @@ static const Section *&lastSection()
   return section;
 }
 
+static ImportTable *&lastImportTable()
+{
+  static ImportTable *table;
+  return table;
+}
+
 Callable::Callable(const VerNum since, const VerNum until, const char *name)
   : m_since { since }, m_until { until }
 {
@@ -113,13 +119,13 @@ void PluginRegister::announce(const bool init) const
   plugin_register(key + init, value);
 }
 
-ReaScriptFunc::ReaScriptFunc(const VerNum version,
+ReaScriptFunc::ReaScriptFunc(const VerNum version, void *impl,
                              const PluginRegister &native,
                              const PluginRegister &reascript,
                              const PluginRegister &desc)
   : Callable { version, VerNum::MAX,
       &native.key[strlen("-API_" BOOST_PP_STRINGIZE(API_PREFIX))] },
-    m_regs { native, reascript, desc }
+    m_impl { impl }, m_regs { native, reascript, desc }
 {
 }
 
@@ -159,6 +165,31 @@ EELVar::EELVar(const VerNum version, const char *name, const char *definition)
 {
 }
 
+ShimFunc::ShimFunc(const VerNum since, const VerNum until,
+                   const char *name, void *safeImpl, void *unsafeImpl)
+  : Callable { since, until, name }, m_impl { safeImpl }, m_unsafeImpl { unsafeImpl }
+{
+}
+
+ImportTable::ImportTable(const VerNum version, const size_t size)
+  : m_next { lastImportTable() }, m_ftable { offset(size) }, m_version { version }
+{
+  lastImportTable() = this;
+}
+
+void **ImportTable::offset(const size_t bytes)
+{
+  return reinterpret_cast<void **>(reinterpret_cast<char *>(this) + bytes);
+}
+
+void ImportTable::resolve()
+{
+  for(void **func { offset(sizeof(*this)) }; func < m_ftable; ++func) {
+    const char *name { static_cast<const char *>(*func) };
+    *func = Callable::lookup(m_version, name)->unsafeImpl();
+  }
+}
+
 const API::Symbol *API_head() // immutable public accessor
 {
   return lastSymbol();
@@ -169,10 +200,23 @@ eel_function_table *API::eelFunctionTable()
   return &g_eelFuncs;
 }
 
-void API::announceAll(const bool add)
+static void announceAll(const bool add)
 {
   for(const Symbol *sym { lastSymbol() }; sym; sym = sym->m_next)
     sym->announce(add);
+}
+
+void API::setup()
+{
+  announceAll(true);
+
+  for(ImportTable *tbl { lastImportTable() }; tbl; tbl = tbl->m_next)
+    tbl->resolve();
+}
+
+void API::teardown()
+{
+  announceAll(false);
 }
 
 // REAPER 6.29+ uses the '!' prefix to abort the calling Lua script's execution

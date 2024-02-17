@@ -40,8 +40,3 @@ if host_machine.system() == 'windows'
 elif host_machine.system() == 'darwin'
   genmetalshader = files('genmetalshader.sh')
 endif
-
-genshim = executable('genshim',
-  ['genshim.cpp', version],
-  dependencies: [boost_native_dep, compat_dep],
-  native: native)
