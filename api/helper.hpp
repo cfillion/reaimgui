@@ -18,9 +18,13 @@
 #ifndef REAIMGUI_API_HELPER_HPP
 #define REAIMGUI_API_HELPER_HPP
 
-// TODO: figure out which ones are required/helpful
-#define NOGDI // prevent windows.h from defining unwanted macros (eg. CreateFont)
-#define WIN32_LEAN_AND_MEAN
+// prevent Windows.h from defining unwanted macros (eg. CreateFont)
+#ifdef _WIN32
+#  define NOGDI
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+DECLARE_HANDLE(HDROP);
+#endif
 
 #include "callconv.hpp"
 #include "compstr.hpp"
@@ -43,32 +47,31 @@
 
 #define API_PREFIX ImGui_
 
-#define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
-#define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
-#define _ARG_DEFV(arg) BOOST_PP_TUPLE_ELEM(2, arg)
-#define _ARG_DEFV_T(arg) decltype(_ARG_DEFV(arg))
+#define _API_ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
+#define _API_ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
+#define _API_ARG_DEFV(arg) BOOST_PP_TUPLE_ELEM(2, arg)
+#define _API_ARG_DEFV_T(arg) decltype(_API_ARG_DEFV(arg))
 
-#define _FOREACH_ARG(macro, data, args) \
+#define _API_FOREACH_ARG(macro, data, args) \
   BOOST_PP_SEQ_FOR_EACH_I(macro, data, BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))
-#define _SIGARG(r, data, i, arg) \
-  BOOST_PP_COMMA_IF(i) _ARG_TYPE(arg) _ARG_NAME(arg)
-#define _STRARG(r, macro, i, arg) \
+#define _API_SIGARG(r, data, i, arg) \
+  BOOST_PP_COMMA_IF(i) _API_ARG_TYPE(arg) _API_ARG_NAME(arg)
+#define _API_STRARG(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
-#define _STRARGUS(r, macro, i, arg) \
+#define _API_STRARGUS(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, "\31") BOOST_PP_STRINGIZE(macro(arg))
 
 template<typename T>
 using DefArgVal = std::conditional_t<
-  std::is_same_v<const char *, T>,
-  T, std::remove_pointer_t<T>
+  std::is_same_v<const char *, T>, T, std::remove_pointer_t<T>
 >;
 
-#define _DEFARG_ID(argName) BOOST_PP_CAT(argName, Default)
-#define _DEFARG(r, name, i, arg)                         \
-  BOOST_PP_EXPR_IF(                                      \
-    BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3), \
-    constexpr DefArgVal<_ARG_TYPE(arg)>                  \
-      _DEFARG_ID(_ARG_NAME(arg))(_ARG_DEFV(arg));        \
+#define _API_DEFARG_ID(argName) BOOST_PP_CAT(argName, Default)
+#define _API_DEFARG(r, name, i, arg)                          \
+  BOOST_PP_EXPR_IF(                                           \
+    BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3),      \
+    constexpr DefArgVal<_API_ARG_TYPE(arg)>                   \
+      _API_DEFARG_ID(_API_ARG_NAME(arg))(_API_ARG_DEFV(arg)); \
   )
 
 // error out if API_SECTION() was not used in the file
@@ -76,23 +79,23 @@ using DefArgVal = std::conditional_t<
 
 #define _API_DEF(type, args, help)            \
   #type                                  "\0" \
-  _FOREACH_ARG(_STRARG, _ARG_TYPE, args) "\0" \
-  _FOREACH_ARG(_STRARG, _ARG_NAME, args) "\0" \
+  _API_FOREACH_ARG(_API_STRARG, _API_ARG_TYPE, args) "\0" \
+  _API_FOREACH_ARG(_API_STRARG, _API_ARG_NAME, args) "\0" \
   help                                   "\0" \
-  _FOREACH_ARG(_STRARGUS, _ARG_DEFV, args)
+  _API_FOREACH_ARG(_API_STRARGUS, _API_ARG_DEFV, args)
 
-#define _STORE_LINE \
+#define _API_STORE_LINE \
   static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) { __LINE__ };
 
-#define _DECLARE_FUNC(type, name, args) \
-  namespace API::name {                                                   \
-    _FOREACH_ARG(_DEFARG, name, args) /* constexprs of default args */    \
-    constexpr const char id[] { #name };                                  \
-    static type impl(_FOREACH_ARG(_SIGARG, _, args));                     \
+#define _API_FUNC_DECL(type, name, args) \
+  namespace API::name {                                                \
+    _API_FOREACH_ARG(_API_DEFARG, name, args) /* default arg values */ \
+    constexpr const char id[] { #name };                               \
+    static type impl(_API_FOREACH_ARG(_API_SIGARG, _, args));          \
   }
 
-#define _DEFINE_FUNC(type, name, args) \
-  type API::name::impl(_FOREACH_ARG(_SIGARG, _, args))
+#define _API_FUNC_DEF(type, name, args) \
+  type API::name::impl(_API_FOREACH_ARG(_API_SIGARG, _, args))
 
 // extern for link-time duplicate detection
 #define _API_EXPORT(type, name) \
@@ -102,10 +105,10 @@ using DefArgVal = std::conditional_t<
 #define _API_SAFECALL(apiName) \
   CallConv::invokeSafe<&API::apiName::impl, &API::apiName::id>
 
-#define DEFINE_API _STORE_LINE _DEFINE_API
-#define _DEFINE_API(type, name, args, help)                      \
+#define DEFINE_API _API_STORE_LINE _API_FUNC
+#define _API_FUNC(type, name, args, help)                        \
   _API_CHECKROOTSECTION                                          \
-  _DECLARE_FUNC(type, name, args)                                \
+  _API_FUNC_DECL(type, name, args)                               \
   _API_EXPORT(ReaScriptFunc, name) {                             \
     { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
       reinterpret_cast<void *>(_API_SAFECALL(name)),             \
@@ -119,42 +122,42 @@ using DefArgVal = std::conditional_t<
         _API_DEF(type, args, help))),                            \
     },                                                           \
   };                                                             \
-  _DEFINE_FUNC(type, name, args)
+  _API_FUNC_DEF(type, name, args)
 
-#define DEFINE_ENUM _STORE_LINE _DEFINE_ENUM
-#define _DEFINE_ENUM(prefix, name, doc) \
-  _DEFINE_API(int, name, NO_ARGS, doc) { return prefix##name; }
+#define DEFINE_ENUM _API_STORE_LINE _API_CONST
+#define _API_CONST(prefix, name, doc) \
+  _API_FUNC(int, name, NO_ARGS, doc) { return prefix##name; }
 
-#define DEFINE_EELAPI _STORE_LINE _DEFINE_EELAPI
-#define _DEFINE_EELAPI(type, name, args, help) \
-  _API_CHECKROOTSECTION                        \
-  _DECLARE_FUNC(type, name, args)              \
-  _API_EXPORT(EELFunc, name) {                 \
-    #name, _API_DEF(type, args, help),         \
-    CallConv::applyEEL<_API_SAFECALL(name)>,   \
+#define DEFINE_EELAPI _API_STORE_LINE _API_EELFUNC
+#define _API_EELFUNC(type, name, args, help) \
+  _API_CHECKROOTSECTION                      \
+  _API_FUNC_DECL(type, name, args)           \
+  _API_EXPORT(EELFunc, name) {               \
+    #name, _API_DEF(type, args, help),       \
+    CallConv::applyEEL<_API_SAFECALL(name)>, \
     CallConv::EEL<std::remove_const_t<decltype(_API_SAFECALL(name))>>::ARGC, \
-  };                                           \
-  _DEFINE_FUNC(type, name, args)
+  };                                         \
+  _API_FUNC_DEF(type, name, args)
 
-#define DEFINE_EELVAR _STORE_LINE _DEFINE_EELVAR
-#define _DEFINE_EELVAR(type, name, help) \
-  _API_CHECKROOTSECTION                  \
+#define DEFINE_EELVAR _API_STORE_LINE _API_EELVAR
+#define _API_EELVAR(type, name, help) \
+  _API_CHECKROOTSECTION               \
   const API::EELVar EELVar_##name { #name, #type "\0\0\0" help "\0" }
 
 #define DEFINE_SECTION(id, parent, ...) static const API::Section id \
   { &parent, ROOT_FILE, __VA_ARGS__ };
 
 // shortcuts with auto-generated identifier name for the section object
-#define _UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
+#define _API_UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
 #define API_SECTION(...)                                      \
   constexpr const char FILE_PATH[] { __FILE__ };              \
   constexpr auto ROOT_FILE { CompStr::basename<&FILE_PATH> }; \
   static const API::Section ROOT_SECTION                      \
     { nullptr, ROOT_FILE, __VA_ARGS__ }
 #define API_SUBSECTION(...) \
-  DEFINE_SECTION(_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
+  DEFINE_SECTION(_API_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
 #define API_SECTION_P(parent, ...) \
-  DEFINE_SECTION(_UNIQ_SEC_ID, parent,       __VA_ARGS__)
+  DEFINE_SECTION(_API_UNIQ_SEC_ID, parent,       __VA_ARGS__)
 
 #define NO_ARGS (,)
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
@@ -173,7 +176,7 @@ using DefArgVal = std::conditional_t<
     return v ?  v : d;                                 \
   else                                                 \
     return v ? *v : d;                                 \
-}(var, _DEFARG_ID(var))
+}(var, _API_DEFARG_ID(var))
 #define API_RO_GET(var)  _API_GET(API_RO(var))
 #define API_RWO_GET(var) _API_GET(API_RWO(var))
 
