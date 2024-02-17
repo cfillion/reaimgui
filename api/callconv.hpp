@@ -27,13 +27,12 @@
 
 namespace CallConv {
 
-template<typename T>
+template<auto fn>
 struct ReaScript;
 
-template<typename R, typename... Args>
-struct ReaScript<R(*)(Args...) noexcept>
+template<typename R, typename... Args, R (*fn)(Args...) noexcept>
+struct ReaScript<fn>
 {
-  template<R(*fn)(Args...)>
   static const void *apply(void **argv, const int argc)
   {
     if(static_cast<size_t>(argc) < sizeof...(Args))
@@ -61,7 +60,7 @@ struct ReaScript<R(*)(Args...) noexcept>
 
 private:
   template<size_t I>
-  using NthType = typename std::tuple_element<I, std::tuple<Args...>>::type;
+  using NthType = typename std::tuple_element_t<I, std::tuple<Args...>>;
 
   template<size_t... I>
   static auto makeTuple(void **argv, std::index_sequence<I...>)
@@ -76,16 +75,12 @@ private:
   }
 };
 
-template<auto fn>
-inline constexpr auto applyReaScript = &ReaScript<decltype(fn)>::template apply<fn>;
-
-template<typename T>
+template<auto fn, auto name>
 struct Safe;
 
-template<typename R, typename... Args>
-struct Safe<R(*)(Args...)>
+template<typename R, typename... Args, R (*fn)(Args...), auto name>
+struct Safe<fn, name>
 {
-  template<R(*fn)(Args...), auto name>
   static R invoke(Args... args) noexcept
   try {
     // TODO: API::clearError() for C++, clearContext for correct destruction?
@@ -100,9 +95,6 @@ struct Safe<R(*)(Args...)>
     return static_cast<R>(0);
   }
 };
-
-template<auto fn, auto name>
-inline constexpr auto invokeSafe = &Safe<decltype(fn)>::template invoke<fn, name>;
 
 }
 

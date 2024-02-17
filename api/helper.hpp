@@ -103,7 +103,7 @@ using DefArgVal = std::conditional_t<
   const API::type API::name::symbol
 
 #define _API_SAFECALL(apiName) \
-  CallConv::invokeSafe<&API::apiName::impl, &API::apiName::id>
+  &CallConv::Safe<&API::apiName::impl, &API::apiName::id>::invoke
 
 #define API_FUNC _API_STORE_LINE _API_FUNC
 #define _API_FUNC(type, name, args, help)                        \
@@ -115,7 +115,7 @@ using DefArgVal = std::conditional_t<
     },                                                           \
     { "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
       reinterpret_cast<void *>(                                  \
-        CallConv::applyReaScript<_API_SAFECALL(name)>),          \
+        CallConv::ReaScript<_API_SAFECALL(name)>::apply),        \
     },                                                           \
     { "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
       reinterpret_cast<void *>(const_cast<char *>(               \
@@ -129,14 +129,14 @@ using DefArgVal = std::conditional_t<
   _API_FUNC(int, name, NO_ARGS, doc) { return prefix##name; }
 
 #define API_EELFUNC _API_STORE_LINE _API_EELFUNC
-#define _API_EELFUNC(type, name, args, help) \
-  _API_CHECKROOTSECTION                      \
-  _API_FUNC_DECL(type, name, args)           \
-  _API_EXPORT(EELFunc, name) {               \
-    #name, _API_DEF(type, args, help),       \
-    CallConv::applyEEL<_API_SAFECALL(name)>, \
-    CallConv::EEL<std::remove_const_t<decltype(_API_SAFECALL(name))>>::ARGC, \
-  };                                         \
+#define _API_EELFUNC(type, name, args, help)       \
+  _API_CHECKROOTSECTION                            \
+  _API_FUNC_DECL(type, name, args)                 \
+  _API_EXPORT(EELFunc, name) {                     \
+    #name, _API_DEF(type, args, help),             \
+    &CallConv::EEL<_API_SAFECALL(name)>::apply,    \
+     CallConv::EEL<_API_SAFECALL(name)>::ARGC,     \
+  };                                               \
   _API_FUNC_DEF(type, name, args)
 
 #define API_EELVAR _API_STORE_LINE _API_EELVAR

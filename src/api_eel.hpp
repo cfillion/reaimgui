@@ -76,14 +76,13 @@ inline std::string_view fetchEELArgument(const Function *func, EEL_F value)
   return func->getString(value).value_or("");
 }
 
-template<typename T>
+template<auto fn>
 struct EEL;
 
-template<typename R, typename... Args>
-struct EEL<R(*)(Args...) noexcept> {
+template<typename R, typename... Args, R (*fn)(Args...) noexcept>
+struct EEL<fn> {
   static constexpr size_t ARGC { sizeof...(Args) };
 
-  template<R(*fn)(Args...)>
   static EEL_F NSEEL_CGEN_CALL apply(void *self, INT_PTR argc, EEL_F **argv)
   {
     if(static_cast<size_t>(argc) < sizeof...(Args))
@@ -113,7 +112,7 @@ private:
 };
 
 template<auto fn>
-inline constexpr auto applyEEL = &EEL<decltype(fn)>::template apply<fn>;
+inline constexpr auto applyEEL = &EEL<fn>::apply;
 
 }
 
