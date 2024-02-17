@@ -532,8 +532,8 @@ puts "imgui:    found %d functions, %d enums (total: %d symbols)" %
   [imgui_funcs.size, imgui_enums.size, imgui_funcs.size + imgui_enums.size]
 
 # load ReaImGui definitions
-REAIMGUI_FUNC_R = /\ADEFINE_API \s*\(\s* (?<type>[\w\s\*]+) \s*,\s* (?<name>[\w]+) \s*,\s* (?<args>.*?) \s*(?<arg_end>,)?\s*(\/|\Z)/x
-REAIMGUI_ENUM_R = /\ADEFINE_ENUM \s*\(\s* (?<prefix>\w+) \s*,\s* (?<name>\w+) \s*,\s*/x
+REAIMGUI_FUNC_R = /\AAPI_FUNC \s*\(\s* (?<type>[\w\s\*]+) \s*,\s* (?<name>[\w]+) \s*,\s* (?<args>.*?) \s*(?<arg_end>,)?\s*(\/|\Z)/x
+REAIMGUI_ENUM_R = /\AAPI_ENUM \s*\(\s* (?<prefix>\w+) \s*,\s* (?<name>\w+) \s*,\s*/x
 REAIMGUI_ARGS_R = /\A\s* (?<args>\(.+?\)) \s*(?<arg_end>,)?\s*(\/|\Z)/x
 REAIMGUI_ARGN_R = /\A(?:(?<raw_name>[^\(\)]+)|(?<decoration>[^\(]+)\((?<raw_name>[^\)]+)\))\z/
 

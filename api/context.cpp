@@ -21,7 +21,7 @@
 
 API_SECTION("Context");
 
-DEFINE_API(ImGui_Context*, CreateContext,
+API_FUNC(ImGui_Context*, CreateContext,
 (const char*,label)(int*,API_RO(config_flags),ImGuiConfigFlags_None),
 R"(Create a new ReaImGui context.
 The context will remain valid as long as it is used in each defer cycle.
@@ -32,28 +32,28 @@ and also as a unique identifier for storing settings.)")
   return new Context { label, API_RO_GET(config_flags) };
 }
 
-DEFINE_API(double, GetTime, (ImGui_Context*,ctx),
+API_FUNC(double, GetTime, (ImGui_Context*,ctx),
 "Get global imgui time. Incremented every frame.")
 {
   FRAME_GUARD;
   return ImGui::GetTime();
 }
 
-DEFINE_API(double, GetDeltaTime, (ImGui_Context*,ctx),
+API_FUNC(double, GetDeltaTime, (ImGui_Context*,ctx),
 "Time elapsed since last frame, in seconds.")
 {
   FRAME_GUARD;
   return ctx->IO().DeltaTime;
 }
 
-DEFINE_API(int, GetFrameCount, (ImGui_Context*,ctx),
+API_FUNC(int, GetFrameCount, (ImGui_Context*,ctx),
 "Get global imgui frame count. incremented by 1 every frame.")
 {
   FRAME_GUARD;
   return ImGui::GetFrameCount();
 }
 
-DEFINE_API(double, GetFramerate, (ImGui_Context*,ctx),
+API_FUNC(double, GetFramerate, (ImGui_Context*,ctx),
 R"(Estimate of application framerate (rolling average over 60 frames, based on
 GetDeltaTime), in frame per second. Solely for convenience.)")
 {
@@ -61,7 +61,7 @@ GetDeltaTime), in frame per second. Solely for convenience.)")
   return ctx->IO().Framerate;
 }
 
-DEFINE_API(void, Attach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
+API_FUNC(void, Attach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
 R"(Link the object's lifetime to the given context.
 Objects can be draw list splitters, fonts, images, list clippers, etc.
 Call Detach to let the object be garbage-collected after unuse again.
@@ -78,7 +78,7 @@ context per defer cycle. See "limitations" in the font API documentation.)")
   ctx->attach(obj);
 }
 
-DEFINE_API(void, Detach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
+API_FUNC(void, Detach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
 R"(Unlink the object's lifetime. Unattached objects are automatically destroyed
 when left unused. You may check whether an object has been destroyed using
 ValidatePtr.)")
@@ -132,7 +132,7 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
 };
 
 #define DEFINE_CONFIGVAR(name, doc) \
-  DEFINE_API(int, ConfigVar##_##name, NO_ARGS, doc) \
+  API_FUNC(int, ConfigVar##_##name, NO_ARGS, doc) \
     { return __COUNTER__ - baseConfigVar - 1; }
 
 constexpr int baseConfigVar { __COUNTER__ };
@@ -206,7 +206,7 @@ Windows should be flickering while running.)");
 static_assert(__COUNTER__ - baseConfigVar - 1 == std::size(g_configVars),
   "forgot to DEFINE_CONFIGVAR() a config var?");
 
-DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
+API_FUNC(double, GetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx),
 "")
 {
@@ -227,7 +227,7 @@ DEFINE_API(double, GetConfigVar, (ImGui_Context*,ctx)
   }, g_configVars[var_idx]);
 }
 
-DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
+API_FUNC(void, SetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,value),
 "")
 {
@@ -251,23 +251,23 @@ DEFINE_API(void, SetConfigVar, (ImGui_Context*,ctx)
 }
 
 API_SUBSECTION("Flags", "For CreateContext and SetConfigVar(ConfigVar_Flags()).");
-DEFINE_ENUM(ImGui, ConfigFlags_None, "");
-DEFINE_ENUM(ImGui, ConfigFlags_NavEnableKeyboard,
+API_ENUM(ImGui, ConfigFlags_None, "");
+API_ENUM(ImGui, ConfigFlags_NavEnableKeyboard,
 R"(Master keyboard navigation enable flag.
 Enable full Tabbing + directional arrows + space/enter to activate.)");
-// DEFINE_ENUM(ImGui, ConfigFlags_NavEnableGamepad,
+// API_ENUM(ImGui, ConfigFlags_NavEnableGamepad,
 //"Master gamepad navigation enable flag.");
-DEFINE_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos,
+API_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos,
   "Instruct navigation to move the mouse cursor.");
-DEFINE_ENUM(ImGui, ConfigFlags_NavNoCaptureKeyboard,
+API_ENUM(ImGui, ConfigFlags_NavNoCaptureKeyboard,
 R"(Instruct navigation to not capture global keyboard input when
    ConfigFlags_NavEnableKeyboard is set (see SetNextFrameWantCaptureKeyboard).)");
-DEFINE_ENUM(ImGui, ConfigFlags_NoMouse,
+API_ENUM(ImGui, ConfigFlags_NoMouse,
   "Instruct imgui to ignore mouse position/buttons.");
-DEFINE_ENUM(ImGui, ConfigFlags_NoMouseCursorChange,
+API_ENUM(ImGui, ConfigFlags_NoMouseCursorChange,
   "Instruct backend to not alter mouse cursor shape and visibility.");
-DEFINE_ENUM(ImGui, ConfigFlags_DockingEnable,
+API_ENUM(ImGui, ConfigFlags_DockingEnable,
   "[BETA] Enable docking functionality.");
 
-DEFINE_ENUM(ReaImGui, ConfigFlags_NoSavedSettings,
+API_ENUM(ReaImGui, ConfigFlags_NoSavedSettings,
   "Disable state restoration and persistence for the whole context.");

@@ -27,7 +27,7 @@ static float getArrayValue(void *data, const int index)
   return static_cast<float>(value);
 }
 
-DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
+API_FUNC(void, PlotLines, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)(int*,API_RO(values_offset),0)
 (const char*,API_RO(overlay_text))
 (double*,API_RO(scale_min),FLT_MAX)(double*,API_RO(scale_max),FLT_MAX)
@@ -44,7 +44,7 @@ DEFINE_API(void, PlotLines, (ImGui_Context*,ctx)
     ImVec2(API_RO_GET(graph_size_w), API_RO_GET(graph_size_h)));
 }
 
-DEFINE_API(void, PlotHistogram, (ImGui_Context*,ctx)
+API_FUNC(void, PlotHistogram, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)(int*,API_RO(values_offset),0)
 (const char*,API_RO(overlay_text))
 (double*,API_RO(scale_min),FLT_MAX)(double*,API_RO(scale_max),FLT_MAX)

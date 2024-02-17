@@ -42,7 +42,7 @@ static std::vector<const char *> splitList(const char *buf, const int size)
 
 API_SUBSECTION("Combo Box (Dropdown)");
 
-DEFINE_API(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
 (const char*,preview_value)(int*,API_RO(flags),ImGuiComboFlags_None),
 R"(The BeginCombo/EndCombo API allows you to manage your contents and selection
 state however you want it, by creating e.g. Selectable items.)")
@@ -52,14 +52,14 @@ state however you want it, by creating e.g. Selectable items.)")
   return ImGui::BeginCombo(label, preview_value, API_RO_GET(flags));
 }
 
-DEFINE_API(void, EndCombo, (ImGui_Context*,ctx),
+API_FUNC(void, EndCombo, (ImGui_Context*,ctx),
 "Only call EndCombo() if BeginCombo returns true!")
 {
   FRAME_GUARD;
   ImGui::EndCombo();
 }
 
-DEFINE_API(bool, Combo, (ImGui_Context*,ctx)
+API_FUNC(bool, Combo, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(popup_max_height_in_items),-1),
 R"(Helper over BeginCombo/EndCombo for convenience purpose. Each item must be
@@ -72,24 +72,24 @@ null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)")
     strings.data(), strings.size(), API_RO_GET(popup_max_height_in_items));
 }
 
-DEFINE_ENUM(ImGui, ComboFlags_None,           "");
-DEFINE_ENUM(ImGui, ComboFlags_PopupAlignLeft,
+API_ENUM(ImGui, ComboFlags_None,           "");
+API_ENUM(ImGui, ComboFlags_PopupAlignLeft,
   "Align the popup toward the left by default.");
-DEFINE_ENUM(ImGui, ComboFlags_HeightSmall,
+API_ENUM(ImGui, ComboFlags_HeightSmall,
 R"(Max ~4 items visible. Tip: If you want your combo popup to be a specific size
 you can use SetNextWindowSizeConstraints prior to calling BeginCombo.)");
-DEFINE_ENUM(ImGui, ComboFlags_HeightRegular,  "Max ~8 items visible (default).");
-DEFINE_ENUM(ImGui, ComboFlags_HeightLarge,    "Max ~20 items visible.");
-DEFINE_ENUM(ImGui, ComboFlags_HeightLargest,  "As many fitting items as possible.");
-DEFINE_ENUM(ImGui, ComboFlags_NoArrowButton,
+API_ENUM(ImGui, ComboFlags_HeightRegular,  "Max ~8 items visible (default).");
+API_ENUM(ImGui, ComboFlags_HeightLarge,    "Max ~20 items visible.");
+API_ENUM(ImGui, ComboFlags_HeightLargest,  "As many fitting items as possible.");
+API_ENUM(ImGui, ComboFlags_NoArrowButton,
   "Display on the preview box without the square arrow button.");
-DEFINE_ENUM(ImGui, ComboFlags_NoPreview,      "Display only a square arrow button.");
+API_ENUM(ImGui, ComboFlags_NoPreview,      "Display only a square arrow button.");
 
 API_SUBSECTION("List Boxes",
 R"(This is essentially a thin wrapper to using BeginChild/EndChild with some
 stylistic changes.)");
 
-DEFINE_API(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(height_in_items),-1),
 R"(This is an helper over BeginListBox/EndListBox for convenience purpose.
@@ -103,7 +103,7 @@ Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lu
     strings.data(), strings.size(), API_RO_GET(height_in_items));
 }
 
-DEFINE_API(bool, BeginListBox, (ImGui_Context*,ctx)
+API_FUNC(bool, BeginListBox, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
 R"(Open a framed scrolling region. This is essentially a thin wrapper to using
 BeginChild/EndChild with some stylistic changes.
@@ -127,7 +127,7 @@ See EndListBox.)")
   return ImGui::BeginListBox(label, size);
 }
 
-DEFINE_API(void, EndListBox, (ImGui_Context*,ctx),
+API_FUNC(void, EndListBox, (ImGui_Context*,ctx),
 "Only call EndListBox() if BeginListBox returned true!")
 {
   FRAME_GUARD;
@@ -140,7 +140,7 @@ selected. Neighbors selectable extend their highlight bounds in order to leave
 no gap between them. This is so a series of selected Selectable appear
 contiguous.)");
 
-DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
+API_FUNC(bool, Selectable, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RW(p_selected))
 (int*,API_RO(flags),ImGuiSelectableFlags_None)
 (double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
@@ -153,14 +153,14 @@ DEFINE_API(bool, Selectable, (ImGui_Context*,ctx)
   return ImGui::Selectable(label, selected, API_RO_GET(flags), size);
 }
 
-DEFINE_ENUM(ImGui, SelectableFlags_None, "");
-DEFINE_ENUM(ImGui, SelectableFlags_DontClosePopups,
+API_ENUM(ImGui, SelectableFlags_None, "");
+API_ENUM(ImGui, SelectableFlags_DontClosePopups,
   "Clicking this doesn't close parent popup window.");
-DEFINE_ENUM(ImGui, SelectableFlags_SpanAllColumns,
+API_ENUM(ImGui, SelectableFlags_SpanAllColumns,
   "Selectable frame can span all columns (text will still fit in current column).");
-DEFINE_ENUM(ImGui, SelectableFlags_AllowDoubleClick,
+API_ENUM(ImGui, SelectableFlags_AllowDoubleClick,
   "Generate press events on double clicks too.");
-DEFINE_ENUM(ImGui, SelectableFlags_Disabled,
+API_ENUM(ImGui, SelectableFlags_Disabled,
   "Cannot be selected, display grayed out text.");
-DEFINE_ENUM(ImGui, SelectableFlags_AllowItemOverlap,
+API_ENUM(ImGui, SelectableFlags_AllowItemOverlap,
   "Hit testing to allow subsequent widgets to overlap this one.");

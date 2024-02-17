@@ -21,20 +21,20 @@
 
 API_SECTION("Viewport");
 
-DEFINE_API(ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
+API_FUNC(ImGui_Viewport*, GetMainViewport, (ImGui_Context*,ctx),
 R"(Currently represents REAPER's main window (arrange view).
 WARNING: This may change or be removed in the future.)")
 {
   return ViewportProxy::encode<ViewportProxy::Main>(ctx);
 }
 
-DEFINE_API(ImGui_Viewport*, GetWindowViewport, (ImGui_Context*,ctx),
+API_FUNC(ImGui_Viewport*, GetWindowViewport, (ImGui_Context*,ctx),
 "Get viewport currently associated to the current window.")
 {
   return ViewportProxy::encode<ViewportProxy::Window>(ctx);
 }
 
-DEFINE_API(void, Viewport_GetPos, (ImGui_Viewport*,viewport)
+API_FUNC(void, Viewport_GetPos, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
 "Main Area: Position of the viewport")
 {
@@ -43,7 +43,7 @@ DEFINE_API(void, Viewport_GetPos, (ImGui_Viewport*,viewport)
   if(API_W(y)) *API_W(y) = pos.y;
 }
 
-DEFINE_API(void, Viewport_GetSize, (ImGui_Viewport*,viewport)
+API_FUNC(void, Viewport_GetSize, (ImGui_Viewport*,viewport)
 (double*,API_W(w))(double*,API_W(h)),
 "Main Area: Size of the viewport.")
 {
@@ -52,7 +52,7 @@ DEFINE_API(void, Viewport_GetSize, (ImGui_Viewport*,viewport)
   if(API_W(h)) *API_W(h) = size.y;
 }
 
-DEFINE_API(void, Viewport_GetCenter, (ImGui_Viewport*,viewport)
+API_FUNC(void, Viewport_GetCenter, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
 "Center of the viewport.")
 {
@@ -63,7 +63,7 @@ DEFINE_API(void, Viewport_GetCenter, (ImGui_Viewport*,viewport)
 
 API_SUBSECTION("Work Area", "Viewport minus task bars, menu bars, status bars");
 
-DEFINE_API(void, Viewport_GetWorkPos, (ImGui_Viewport*,viewport)
+API_FUNC(void, Viewport_GetWorkPos, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
 ">= Viewport_GetPos")
 {
@@ -72,7 +72,7 @@ DEFINE_API(void, Viewport_GetWorkPos, (ImGui_Viewport*,viewport)
   if(API_W(y)) *API_W(y) = pos.y;
 }
 
-DEFINE_API(void, Viewport_GetWorkSize, (ImGui_Viewport*,viewport)
+API_FUNC(void, Viewport_GetWorkSize, (ImGui_Viewport*,viewport)
 (double*,API_W(w))(double*,API_W(h)),
 "<= Viewport_GetSize")
 {
@@ -81,7 +81,7 @@ DEFINE_API(void, Viewport_GetWorkSize, (ImGui_Viewport*,viewport)
   if(API_W(h)) *API_W(h) = size.y;
 }
 
-DEFINE_API(void, Viewport_GetWorkCenter, (ImGui_Viewport*,viewport)
+API_FUNC(void, Viewport_GetWorkCenter, (ImGui_Viewport*,viewport)
 (double*,API_W(x))(double*,API_W(y)),
 "Center of the viewport's work area.")
 {

@@ -105,7 +105,7 @@ using DefArgVal = std::conditional_t<
 #define _API_SAFECALL(apiName) \
   CallConv::invokeSafe<&API::apiName::impl, &API::apiName::id>
 
-#define DEFINE_API _API_STORE_LINE _API_FUNC
+#define API_FUNC _API_STORE_LINE _API_FUNC
 #define _API_FUNC(type, name, args, help)                        \
   _API_CHECKROOTSECTION                                          \
   _API_FUNC_DECL(type, name, args)                               \
@@ -124,11 +124,11 @@ using DefArgVal = std::conditional_t<
   };                                                             \
   _API_FUNC_DEF(type, name, args)
 
-#define DEFINE_ENUM _API_STORE_LINE _API_CONST
-#define _API_CONST(prefix, name, doc) \
+#define API_ENUM _API_STORE_LINE _API_ENUM
+#define _API_ENUM(prefix, name, doc) \
   _API_FUNC(int, name, NO_ARGS, doc) { return prefix##name; }
 
-#define DEFINE_EELAPI _API_STORE_LINE _API_EELFUNC
+#define API_EELFUNC _API_STORE_LINE _API_EELFUNC
 #define _API_EELFUNC(type, name, args, help) \
   _API_CHECKROOTSECTION                      \
   _API_FUNC_DECL(type, name, args)           \
@@ -139,12 +139,12 @@ using DefArgVal = std::conditional_t<
   };                                         \
   _API_FUNC_DEF(type, name, args)
 
-#define DEFINE_EELVAR _API_STORE_LINE _API_EELVAR
+#define API_EELVAR _API_STORE_LINE _API_EELVAR
 #define _API_EELVAR(type, name, help) \
   _API_CHECKROOTSECTION               \
   const API::EELVar EELVar_##name { #name, #type "\0\0\0" help "\0" }
 
-#define DEFINE_SECTION(id, parent, ...) static const API::Section id \
+#define API_SECTION_DEF(id, parent, ...) static const API::Section id \
   { &parent, ROOT_FILE, __VA_ARGS__ };
 
 // shortcuts with auto-generated identifier name for the section object
@@ -155,9 +155,9 @@ using DefArgVal = std::conditional_t<
   static const API::Section ROOT_SECTION                      \
     { nullptr, ROOT_FILE, __VA_ARGS__ }
 #define API_SUBSECTION(...) \
-  DEFINE_SECTION(_API_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
+  API_SECTION_DEF(_API_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
 #define API_SECTION_P(parent, ...) \
-  DEFINE_SECTION(_API_UNIQ_SEC_ID, parent,       __VA_ARGS__)
+  API_SECTION_DEF(_API_UNIQ_SEC_ID, parent,       __VA_ARGS__)
 
 #define NO_ARGS (,)
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)

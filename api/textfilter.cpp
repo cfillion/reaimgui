@@ -46,14 +46,14 @@ Filter usage:
 - "xxx,yyy"  display lines containing "xxx" or "yyy"
 - "-xxx"     hide lines containing "xxx")");
 
-DEFINE_API(ImGui_TextFilter*, CreateTextFilter,
+API_FUNC(ImGui_TextFilter*, CreateTextFilter,
 (const char*,API_RO(default_filter),""),
 "Valid while used every frame unless attached to a context (see Attach).")
 {
   return new TextFilter { API_RO_GET(default_filter) };
 }
 
-DEFINE_API(void, TextFilter_Set, (ImGui_TextFilter*,filter)
+API_FUNC(void, TextFilter_Set, (ImGui_TextFilter*,filter)
 (const char*,filter_text),
 "")
 {
@@ -61,13 +61,13 @@ DEFINE_API(void, TextFilter_Set, (ImGui_TextFilter*,filter)
   filter->set(filter_text);
 }
 
-DEFINE_API(const char*, TextFilter_Get, (ImGui_TextFilter*,filter),
+API_FUNC(const char*, TextFilter_Get, (ImGui_TextFilter*,filter),
 "")
 {
   return (*filter)->InputBuf;
 }
 
-DEFINE_API(bool, TextFilter_Draw, (ImGui_TextFilter*,filter)
+API_FUNC(bool, TextFilter_Draw, (ImGui_TextFilter*,filter)
 (ImGui_Context*,ctx)(const char*,API_RO(label),"Filter (inc,-exc)")
 (double*,API_RO(width),0.0),
 "Helper calling InputText+TextFilter_Set")
@@ -77,20 +77,20 @@ DEFINE_API(bool, TextFilter_Draw, (ImGui_TextFilter*,filter)
   return (*filter)->Draw(API_RO_GET(label), API_RO_GET(width));
 }
 
-DEFINE_API(bool, TextFilter_PassFilter, (ImGui_TextFilter*,filter)
+API_FUNC(bool, TextFilter_PassFilter, (ImGui_TextFilter*,filter)
 (const char*,text),
 "")
 {
   return (*filter)->PassFilter(text);
 }
 
-DEFINE_API(void, TextFilter_Clear, (ImGui_TextFilter*,filter),
+API_FUNC(void, TextFilter_Clear, (ImGui_TextFilter*,filter),
 "")
 {
   return (*filter)->Clear();
 }
 
-DEFINE_API(bool, TextFilter_IsActive, (ImGui_TextFilter*,filter),
+API_FUNC(bool, TextFilter_IsActive, (ImGui_TextFilter*,filter),
 "")
 {
   return (*filter)->IsActive();
