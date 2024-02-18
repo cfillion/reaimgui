@@ -1,10 +1,13 @@
 test_src = files([
+  'api_test.cpp',
   'color_test.cpp',
+  'compstr_test.cpp',
   'environment.cpp',
   'function_test.cpp',
   'resource_proxy_test.cpp',
   'resource_test.cpp',
   'texture_test.cpp',
+  'vernum_test.cpp',
 ])
 
 eel_dep   = dependency('EEL2')

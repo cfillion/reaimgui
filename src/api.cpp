@@ -20,12 +20,22 @@
 
 #include "context.hpp"
 
+#include <boost/preprocessor/stringize.hpp>
 #include <cassert>
 #include <reaper_plugin_functions.h>
+#include <unordered_map>
 
 using namespace API;
 
 static eel_function_table g_eelFuncs;
+
+using CallableMap = std::unordered_map<std::string_view, const Callable *>;
+
+static CallableMap &callables()
+{
+  static CallableMap map;
+  return map;
+}
 
 static const Symbol *&lastSymbol()
 {
@@ -45,7 +55,34 @@ static const Section *&lastSection()
   return section;
 }
 
-API::StoreLineNumber::StoreLineNumber(LineNumber line)
+Callable::Callable(const VerNum since, const VerNum until, const char *name)
+  : m_since { since }, m_until { until }
+{
+  auto [it, isNew] { callables().try_emplace(name, this) };
+  if(!isNew && since > it->second->m_since) {
+    m_precursor = it->second;
+    it->second = this;
+  }
+  else
+    m_precursor = nullptr;
+}
+
+const Callable *Callable::lookup(const VerNum version, const char *name)
+{
+  const auto &map { callables() };
+  const auto it { map.find(name) };
+  if(it == map.end())
+    return nullptr;
+
+  const Callable *match { it->second };
+  while(match && match->m_since > version)
+    match = match->m_precursor;
+  if(match && match->m_until <= version)
+    return nullptr;
+  return match;
+}
+
+StoreLineNumber::StoreLineNumber(LineNumber line)
 {
   lastLine() = line;
 }
@@ -76,10 +113,13 @@ void PluginRegister::announce(const bool init) const
   plugin_register(key + init, value);
 }
 
-ReaScriptFunc::ReaScriptFunc(const PluginRegister &native,
+ReaScriptFunc::ReaScriptFunc(const VerNum version,
+                             const PluginRegister &native,
                              const PluginRegister &reascript,
                              const PluginRegister &desc)
-  : m_regs { native, reascript, desc }
+  : Callable { version, VerNum::MAX,
+      &native.key[strlen("-API_" BOOST_PP_STRINGIZE(API_PREFIX))] },
+    m_regs { native, reascript, desc }
 {
 }
 
@@ -89,10 +129,10 @@ void ReaScriptFunc::announce(const bool init) const
     reg.announce(init);
 }
 
-EELFunc::EELFunc(const char *name, const char *definition,
+EELFunc::EELFunc(const VerNum version, const char *name, const char *definition,
                  VarArgFunc impl, const int argc)
   : m_name { name }, m_definition { definition },
-    m_impl { impl }, m_argc { std::max(1, argc) }
+    m_impl { impl }, m_version { version }, m_argc { std::max(1, argc) }
 {
   // std::max as workaround for EEL needing argc >= 1 because it does
   // nseel_resolve_named_symbol(..., np<1 ? 1 : np, ...)
@@ -114,8 +154,8 @@ void EELFunc::announce(const bool init) const
                          NSEEL_PProc_THIS, m_impl, &g_eelFuncs);
 }
 
-EELVar::EELVar(const char *name, const char *definition)
-  : m_name { name }, m_definition { definition }
+EELVar::EELVar(const VerNum version, const char *name, const char *definition)
+  : m_name { name }, m_definition { definition }, m_version { version }
 {
 }
 

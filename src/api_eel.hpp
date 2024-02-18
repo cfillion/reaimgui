@@ -29,36 +29,41 @@
 namespace API {
   eel_function_table *eelFunctionTable();
 
-  class EELFunc : public Symbol {
+  class EELFunc final : public Symbol {
   public:
     using VarArgFunc = EEL_F (NSEEL_CGEN_CALL *)(void *, INT_PTR, EEL_F **);
 
-    EELFunc(const char *name, const char *definition, VarArgFunc impl, int argc);
+    EELFunc(VerNum availableSince, const char *name,
+      const char *definition, VarArgFunc impl, int argc);
     void announce(bool) const override;
 
     const char *name() const override { return m_name; }
     const char *definition() const override { return m_definition; }
     unsigned int flags() const override { return TargetEEL; }
+    VerNum version() const override { return m_version; }
 
   private:
     const char *m_name, *m_definition;
     VarArgFunc m_impl;
+    VerNum m_version;
     int m_argc;
   };
 
-  class EELVar : public Symbol {
+  class EELVar final : public Symbol {
   public:
-    EELVar(const char *name, const char *help);
+    EELVar(VerNum availableSince, const char *name, const char *help);
     void announce(bool) const override {}
 
     const char *name() const override { return m_name; }
     const char *definition() const override { return m_definition; }
     unsigned int flags() const override { return TargetEEL | Variable; }
+    VerNum version() const override { return m_version; }
 
     operator const char *() const { return m_name; }
 
   private:
     const char *m_name, *m_definition;
+    VerNum m_version;
   };
 };
 

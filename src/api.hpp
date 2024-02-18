@@ -19,6 +19,9 @@
 #define REAIMGUI_API_HPP
 
 #include "error.hpp"
+#include "vernum.hpp"
+
+#define API_PREFIX ImGui_
 
 namespace API {
   void announceAll(bool add);
@@ -38,6 +41,18 @@ namespace API {
   struct PluginRegister {
     const char *key; void *value;
     void announce(bool) const;
+  };
+
+  class Callable { // C++/ReaScript API and shims
+  public:
+    static const Callable *lookup(VerNum, const char *name);
+
+    Callable(VerNum since, VerNum until, const char *name);
+    VerNum version() const { return m_since; }
+
+  private:
+    VerNum m_since, m_until;
+    const Callable *m_precursor;
   };
 
   class Symbol {
@@ -63,11 +78,13 @@ namespace API {
     virtual const char *name()       const = 0;
     virtual const char *definition() const = 0;
     virtual unsigned int flags()     const = 0;
+    virtual VerNum version()         const = 0;
   };
 
-  class ReaScriptFunc : public Symbol {
+  class ReaScriptFunc final : public Callable, Symbol {
   public:
-    ReaScriptFunc(const PluginRegister &native,
+    ReaScriptFunc(VerNum availableSince,
+                  const PluginRegister &native,
                   const PluginRegister &reascript,
                   const PluginRegister &desc);
     void announce(bool) const override;
@@ -79,6 +96,7 @@ namespace API {
     unsigned int flags() const override {
       return TargetNative | TargetLua | TargetEEL | TargetEELOld | TargetPython;
     }
+    VerNum version() const override { return Callable::version(); }
 
   private:
     PluginRegister m_regs[3]; // native, reascript, definition

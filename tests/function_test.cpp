@@ -201,10 +201,10 @@ static double customFunc2(const double rh, const double lh,
 
 TEST(FunctionTest, CustomFunction) {
   const API::EELFunc funcs[] {
-    { "MyFunc1", "double\0\0\0",
+    { "0.8.5", "MyFunc1", "double\0\0\0",
       &CallConv::EEL<&customFunc1>::apply, CallConv::EEL<&customFunc1>::ARGC,
     },
-    { "MyFunc2", "double\0double,double\0rh,lh\0",
+    { "0.8.5", "MyFunc2", "double\0double,double\0rh,lh\0",
       &CallConv::EEL<&customFunc2>::apply, CallConv::EEL<&customFunc2>::ARGC,
     },
   };

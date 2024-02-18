@@ -108,6 +108,7 @@ struct Function {
   std::string_view displayName;
   std::deque<const API::Section *> sections;
   unsigned int flags;
+  VerNum version;
 
   bool operator<(const Function &) const;
 
@@ -176,7 +177,7 @@ static std::string_view defaultValue(const std::string_view value)
 Function::Function(const API::Symbol *api)
   : section { api->m_section }, name { api->name() },
     type { api->definition() }, line { api->m_line },
-    flags { api->flags() }
+    flags { api->flags() }, version { api->version() }
 {
   const API::Section *curSection { section };
   do { sections.push_front(curSection); }
@@ -866,7 +867,7 @@ static void humanBinding(std::ostream &stream)
   .sr, .keyword  { color: #d7875f; /* LightSalmon3  */ }
        .comment  { color: #b2b2b2; /* Grey70        */ }
        .built_in { color: #87d75f; /* DarkOliveGreen3 */ }
-  .source a { color: gray; }
+  .meta, .meta a { color: gray; }
   </style>
 </head>
 <body>
@@ -985,10 +986,11 @@ static void humanBinding(std::ostream &stream)
     if(!func.doc.empty())
       outputMarkdown(stream, func.doc);
 
-    stream << "<p class=\"source\">"
+    stream << "<p class=\"meta\">"
               "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
               REAIMGUI_VERSION "/api/" << func.section->file << ".cpp#L"
-           << func.line << "\">View source</a></p>";
+           << func.line << "\">View source</a>"
+           << " ・ v" << func.version.toString() << "+</p>";
 
     stream << "</details>\n";
   }

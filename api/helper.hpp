@@ -45,8 +45,6 @@ DECLARE_HANDLE(HDROP);
 #include <boost/type_index.hpp>
 #include <type_traits>
 
-#define API_PREFIX ImGui_
-
 #define _API_ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
 #define _API_ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
 #define _API_ARG_DEFV(arg) BOOST_PP_TUPLE_ELEM(2, arg)
@@ -87,62 +85,71 @@ using DefArgVal = std::conditional_t<
 #define _API_STORE_LINE \
   static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) { __LINE__ };
 
-#define _API_FUNC_DECL(type, name, args) \
-  namespace API::name {                                                \
+#define _API_FUNC_DECL(vernum, type, name, args)                       \
+  namespace API::v##vernum::name {                                     \
     _API_FOREACH_ARG(_API_DEFARG, name, args) /* default arg values */ \
-    constexpr const char id[] { #name };                               \
+    constexpr const char id[] { #name   };                             \
+    constexpr const char vn[] { #vernum };                             \
+    constexpr VerNum version  { CompStr::version<&vn> };               \
     static type impl(_API_FOREACH_ARG(_API_SIGARG, _, args));          \
   }
 
-#define _API_FUNC_DEF(type, name, args) \
-  type API::name::impl(_API_FOREACH_ARG(_API_SIGARG, _, args))
+#define _API_FUNC_DEF(vernum, type, name, args) \
+  type API::v##vernum::name::impl(_API_FOREACH_ARG(_API_SIGARG, _, args))
 
 // extern for link-time duplicate detection
-#define _API_EXPORT(type, name) \
-  namespace API::name { extern const API::type symbol; } \
-  const API::type API::name::symbol
+#define _API_EXPORT(type, vernum, name) \
+  namespace API::v##vernum::name { extern const API::type symbol; } \
+  const API::type API::v##vernum::name::symbol
 
-#define _API_SAFECALL(apiName) \
-  &CallConv::Safe<&API::apiName::impl, &API::apiName::id>::invoke
+#define _API_SAFECALL(vernum, apiName) &CallConv::Safe< \
+  &API::v##vernum::apiName::impl, &API::v##vernum::apiName::id>::invoke
 
 #define API_FUNC _API_STORE_LINE _API_FUNC
 #define _API_FUNC(type, name, args, help)                        \
   _API_CHECKROOTSECTION                                          \
-  _API_FUNC_DECL(type, name, args)                               \
-  _API_EXPORT(ReaScriptFunc, name) {                             \
+  _API_FUNC_DECL(0_1, type, name, args)                          \
+  _API_EXPORT(ReaScriptFunc, 0_1, name) {                        \
+    API::v0_1::name::version,                                    \
     { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
-      reinterpret_cast<void *>(_API_SAFECALL(name)),             \
+      reinterpret_cast<void *>(_API_SAFECALL(0_1, name)),        \
     },                                                           \
     { "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
       reinterpret_cast<void *>(                                  \
-        CallConv::ReaScript<_API_SAFECALL(name)>::apply),        \
+        CallConv::ReaScript<_API_SAFECALL(0_1, name)>::apply),   \
     },                                                           \
     { "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
       reinterpret_cast<void *>(const_cast<char *>(               \
         _API_DEF(type, args, help))),                            \
     },                                                           \
   };                                                             \
-  _API_FUNC_DEF(type, name, args)
+  _API_FUNC_DEF(0_1, type, name, args)
 
 #define API_ENUM _API_STORE_LINE _API_ENUM
 #define _API_ENUM(prefix, name, doc) \
   _API_FUNC(int, name, NO_ARGS, doc) { return prefix##name; }
 
 #define API_EELFUNC _API_STORE_LINE _API_EELFUNC
-#define _API_EELFUNC(type, name, args, help)       \
-  _API_CHECKROOTSECTION                            \
-  _API_FUNC_DECL(type, name, args)                 \
-  _API_EXPORT(EELFunc, name) {                     \
-    #name, _API_DEF(type, args, help),             \
-    &CallConv::EEL<_API_SAFECALL(name)>::apply,    \
-     CallConv::EEL<_API_SAFECALL(name)>::ARGC,     \
-  };                                               \
-  _API_FUNC_DEF(type, name, args)
+#define _API_EELFUNC(type, name, args, help)            \
+  _API_CHECKROOTSECTION                                 \
+  _API_FUNC_DECL(0, type, name, args)                   \
+  _API_EXPORT(EELFunc, 0, name) {                       \
+    API::v0::name::version,                             \
+    #name, _API_DEF(type, args, help),                  \
+    &CallConv::EEL<_API_SAFECALL(0, name)>::apply,      \
+     CallConv::EEL<_API_SAFECALL(0, name)>::ARGC,       \
+  };                                                    \
+  _API_FUNC_DEF(0, type, name, args)
 
 #define API_EELVAR _API_STORE_LINE _API_EELVAR
-#define _API_EELVAR(type, name, help) \
-  _API_CHECKROOTSECTION               \
-  const API::EELVar EELVar_##name { #name, #type "\0\0\0" help "\0" }
+#define _API_EELVAR(type, name, help)                    \
+  _API_CHECKROOTSECTION                                  \
+  namespace API::v0::EELVar_##name {                     \
+    constexpr const char vn[] { "0"     };               \
+    constexpr VerNum version  { CompStr::version<&vn> }; \
+  }                                                      \
+  const API::EELVar EELVar_##name {                      \
+    API::v0::EELVar_##name::version, #name, #type "\0\0\0" help "\0" }
 
 #define API_SECTION_DEF(id, parent, ...) static const API::Section id \
   { &parent, ROOT_FILE, __VA_ARGS__ };
