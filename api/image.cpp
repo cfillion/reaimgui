@@ -32,8 +32,7 @@ Width/height are limited to 8192 pixels.
 There are also image functions in the DrawList API such as
 DrawList_AddImageQuad and DrawList_AddImageRounded.)");
 
-// TODO: Attach/Detach API
-API_FUNC(ImGui_Image*, CreateImage,
+API_FUNC(0_8, ImGui_Image*, CreateImage,
 (const char*,file)(int*,API_RO(flags)),
 R"(The returned object is valid as long as it is used in each defer cycle
 unless attached to a context (see Attach).
@@ -44,7 +43,7 @@ unless attached to a context (see Attach).
   return Image::fromFile(file);
 }
 
-API_FUNC(ImGui_Image*, CreateImageFromMem,
+API_FUNC(0_8, ImGui_Image*, CreateImageFromMem,
 (const char*,data)(int,data_sz),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Load from a file using
 CreateImage or explicitely specify data_sz if supporting older versions.)")
@@ -53,7 +52,7 @@ CreateImage or explicitely specify data_sz if supporting older versions.)")
   return Image::fromMemory(data, data_sz);
 }
 
-API_FUNC(void, Image_GetSize, (ImGui_Image*,img)
+API_FUNC(0_8, void, Image_GetSize, (ImGui_Image*,img)
 (double*,API_W(w))(double*,API_W(h)),
 "")
 {
@@ -62,7 +61,7 @@ API_FUNC(void, Image_GetSize, (ImGui_Image*,img)
   if(API_W(h)) *API_W(h) = img->height();
 }
 
-API_FUNC(void, Image, (ImGui_Context*,ctx)
+API_FUNC(0_8, void, Image, (ImGui_Context*,ctx)
 (ImGui_Image*,img)(double,size_w)(double,size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
@@ -79,7 +78,7 @@ API_FUNC(void, Image, (ImGui_Context*,ctx)
     Color(API_RO_GET(tint_col_rgba)), Color(API_RO_GET(border_col_rgba)));
 }
 
-API_FUNC(bool, ImageButton, (ImGui_Context*,ctx)
+API_FUNC(0_8, bool, ImageButton, (ImGui_Context*,ctx)
 (const char*,str_id)(ImGui_Image*,img)(double,size_w)(double,size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
@@ -114,13 +113,13 @@ Usage:
       -- ...
     end)");
 
-API_FUNC(ImGui_ImageSet*, CreateImageSet, NO_ARGS,
+API_FUNC(0_9, ImGui_ImageSet*, CreateImageSet, NO_ARGS,
 "")
 {
   return new ImageSet;
 }
 
-API_FUNC(void, ImageSet_Add, (ImGui_ImageSet*,set)
+API_FUNC(0_8, void, ImageSet_Add, (ImGui_ImageSet*,set)
 (double,scale)(ImGui_Image*,img),
 "'img' cannot be another ImageSet.")
 {

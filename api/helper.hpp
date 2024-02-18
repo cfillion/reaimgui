@@ -106,50 +106,50 @@ using DefArgVal = std::conditional_t<
   &API::v##vernum::apiName::impl, &API::v##vernum::apiName::id>::invoke
 
 #define API_FUNC _API_STORE_LINE _API_FUNC
-#define _API_FUNC(type, name, args, help)                        \
-  _API_CHECKROOTSECTION                                          \
-  _API_FUNC_DECL(0_1, type, name, args)                          \
-  _API_EXPORT(ReaScriptFunc, 0_1, name) {                        \
-    API::v0_1::name::version,                                    \
-    { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
-      reinterpret_cast<void *>(_API_SAFECALL(0_1, name)),        \
-    },                                                           \
-    { "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
-      reinterpret_cast<void *>(                                  \
-        CallConv::ReaScript<_API_SAFECALL(0_1, name)>::apply),   \
-    },                                                           \
-    { "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) #name,        \
-      reinterpret_cast<void *>(const_cast<char *>(               \
-        _API_DEF(type, args, help))),                            \
-    },                                                           \
-  };                                                             \
-  _API_FUNC_DEF(0_1, type, name, args)
+#define _API_FUNC(vernum, type, name, args, help)                 \
+  _API_CHECKROOTSECTION                                           \
+  _API_FUNC_DECL(vernum, type, name, args)                        \
+  _API_EXPORT(ReaScriptFunc, vernum, name) {                      \
+    API::v##vernum::name::version,                                \
+    { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,         \
+      reinterpret_cast<void *>(_API_SAFECALL(vernum, name)),      \
+    },                                                            \
+    { "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) #name,         \
+      reinterpret_cast<void *>(                                   \
+        CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply), \
+    },                                                            \
+    { "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) #name,         \
+      reinterpret_cast<void *>(const_cast<char *>(                \
+        _API_DEF(type, args, help))),                             \
+    },                                                            \
+  };                                                              \
+  _API_FUNC_DEF(vernum, type, name, args)
 
 #define API_ENUM _API_STORE_LINE _API_ENUM
-#define _API_ENUM(prefix, name, doc) \
-  _API_FUNC(int, name, NO_ARGS, doc) { return prefix##name; }
+#define _API_ENUM(vernum, prefix, name, doc) \
+  _API_FUNC(vernum, int, name, NO_ARGS, doc) { return prefix##name; }
 
 #define API_EELFUNC _API_STORE_LINE _API_EELFUNC
-#define _API_EELFUNC(type, name, args, help)            \
+#define _API_EELFUNC(vernum, type, name, args, help)    \
   _API_CHECKROOTSECTION                                 \
-  _API_FUNC_DECL(0, type, name, args)                   \
-  _API_EXPORT(EELFunc, 0, name) {                       \
-    API::v0::name::version,                             \
+  _API_FUNC_DECL(vernum, type, name, args)              \
+  _API_EXPORT(EELFunc, vernum, name) {                  \
+    API::v##vernum::name::version,                      \
     #name, _API_DEF(type, args, help),                  \
-    &CallConv::EEL<_API_SAFECALL(0, name)>::apply,      \
-     CallConv::EEL<_API_SAFECALL(0, name)>::ARGC,       \
+    &CallConv::EEL<_API_SAFECALL(vernum, name)>::apply, \
+     CallConv::EEL<_API_SAFECALL(vernum, name)>::ARGC,  \
   };                                                    \
-  _API_FUNC_DEF(0, type, name, args)
+  _API_FUNC_DEF(vernum, type, name, args)
 
 #define API_EELVAR _API_STORE_LINE _API_EELVAR
-#define _API_EELVAR(type, name, help)                    \
+#define _API_EELVAR(vernum, type, name, help)            \
   _API_CHECKROOTSECTION                                  \
-  namespace API::v0::EELVar_##name {                     \
-    constexpr const char vn[] { "0"     };               \
+  namespace API::v##vernum::EELVar_##name {              \
+    constexpr const char vn[] { #vernum };               \
     constexpr VerNum version  { CompStr::version<&vn> }; \
   }                                                      \
   const API::EELVar EELVar_##name {                      \
-    API::v0::EELVar_##name::version, #name, #type "\0\0\0" help "\0" }
+    API::v##vernum::EELVar_##name::version, #name, #type "\0\0\0" help "\0" }
 
 #define API_SECTION_DEF(id, parent, ...) static const API::Section id \
   { &parent, ROOT_FILE, __VA_ARGS__ };

@@ -19,7 +19,7 @@
 
 API_SECTION("Tree Node");
 
-API_FUNC(bool, TreeNode, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, TreeNode, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags),ImGuiTreeNodeFlags_None),
 R"(TreeNode functions return true when the node is open, in which case you need
 to also call TreePop when you are finished displaying the tree node contents.)")
@@ -28,7 +28,7 @@ to also call TreePop when you are finished displaying the tree node contents.)")
   return ImGui::TreeNodeEx(label, API_RO_GET(flags));
 }
 
-API_FUNC(bool, TreeNodeEx, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, TreeNodeEx, (ImGui_Context*,ctx)
 (const char*,str_id)(const char*,label)
 (int*,API_RO(flags),ImGuiTreeNodeFlags_None),
 R"(Helper variation to easily decorelate the id from the displayed string.
@@ -39,7 +39,7 @@ To align arbitrary text at the same level as a TreeNode you can use Bullet.)")
   return ImGui::TreeNodeEx(str_id, API_RO_GET(flags), "%s", label);
 }
 
-API_FUNC(void, TreePush, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, TreePush, (ImGui_Context*,ctx)
 (const char*,str_id),
 R"(Indent()+PushID(). Already called by TreeNode when returning true,
 but you can call TreePush/TreePop yourself if desired.)")
@@ -48,14 +48,14 @@ but you can call TreePush/TreePop yourself if desired.)")
   ImGui::TreePush(str_id);
 }
 
-API_FUNC(void, TreePop, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, TreePop, (ImGui_Context*,ctx),
 "Unindent()+PopID()")
 {
   FRAME_GUARD;
   ImGui::TreePop();
 }
 
-API_FUNC(double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetTreeNodeToLabelSpacing, (ImGui_Context*,ctx),
 R"(Horizontal distance preceding label when using TreeNode*() or Bullet()
 == (GetFontSize + StyleVar_FramePadding.x*2) for a regular unframed TreeNode.)")
 {
@@ -63,7 +63,7 @@ R"(Horizontal distance preceding label when using TreeNode*() or Bullet()
   return ImGui::GetTreeNodeToLabelSpacing();
 }
 
-API_FUNC(bool, CollapsingHeader, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, CollapsingHeader, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RW(p_visible))
 (int*,API_RO(flags),ImGuiTreeNodeFlags_None),
 R"(Returns true when opened but do not indent nor push into the ID stack
@@ -85,7 +85,7 @@ if 'false' don't display the header.)")
     openPtrBehavior(API_RW(p_visible)), API_RO_GET(flags));
 }
 
-API_FUNC(void, SetNextItemOpen, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetNextItemOpen, (ImGui_Context*,ctx)
 (bool,is_open)(int*,API_RO(cond),ImGuiCond_Always),
 R"(Set next TreeNode/CollapsingHeader open state.
 Can also be done with the TreeNodeFlags_DefaultOpen flag.)")
@@ -94,7 +94,7 @@ Can also be done with the TreeNodeFlags_DefaultOpen flag.)")
   ImGui::SetNextItemOpen(is_open, API_RO_GET(cond));
 }
 
-API_FUNC(bool, IsItemToggledOpen, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsItemToggledOpen, (ImGui_Context*,ctx),
 "Was the last item open state toggled? Set by TreeNode.")
 {
   FRAME_GUARD;
@@ -103,41 +103,41 @@ API_FUNC(bool, IsItemToggledOpen, (ImGui_Context*,ctx),
 
 API_SUBSECTION("Flags", "For TreeNode, TreeNodeEx and CollapsingHeader.");
 
-API_ENUM(ImGui, TreeNodeFlags_None,     "");
-API_ENUM(ImGui, TreeNodeFlags_Selected, "Draw as selected.");
-API_ENUM(ImGui, TreeNodeFlags_Framed,
+API_ENUM(0_1, ImGui, TreeNodeFlags_None,     "");
+API_ENUM(0_1, ImGui, TreeNodeFlags_Selected, "Draw as selected.");
+API_ENUM(0_1, ImGui, TreeNodeFlags_Framed,
   "Draw frame with background (e.g. for CollapsingHeader).");
-API_ENUM(ImGui, TreeNodeFlags_AllowItemOverlap,
+API_ENUM(0_1, ImGui, TreeNodeFlags_AllowItemOverlap,
   "Hit testing to allow subsequent widgets to overlap this one.");
-API_ENUM(ImGui, TreeNodeFlags_NoTreePushOnOpen,
+API_ENUM(0_1, ImGui, TreeNodeFlags_NoTreePushOnOpen,
 R"(Don't do a TreePush when open (e.g. for CollapsingHeader)
    = no extra indent nor pushing on ID stack.)");
-API_ENUM(ImGui, TreeNodeFlags_NoAutoOpenOnLog,
+API_ENUM(0_1, ImGui, TreeNodeFlags_NoAutoOpenOnLog,
 R"(Don't automatically and temporarily open node when Logging is active
    (by default logging will automatically open tree nodes).)");
-API_ENUM(ImGui, TreeNodeFlags_DefaultOpen,       "Default node to be open.");
-API_ENUM(ImGui, TreeNodeFlags_OpenOnDoubleClick, "Need double-click to open node.");
-API_ENUM(ImGui, TreeNodeFlags_OpenOnArrow,
+API_ENUM(0_1, ImGui, TreeNodeFlags_DefaultOpen,       "Default node to be open.");
+API_ENUM(0_1, ImGui, TreeNodeFlags_OpenOnDoubleClick, "Need double-click to open node.");
+API_ENUM(0_1, ImGui, TreeNodeFlags_OpenOnArrow,
 R"(Only open when clicking on the arrow part.
    If TreeNodeFlags_OpenOnDoubleClick is also set, single-click arrow or
    double-click all box to open.)");
-API_ENUM(ImGui, TreeNodeFlags_Leaf,
+API_ENUM(0_1, ImGui, TreeNodeFlags_Leaf,
   "No collapsing, no arrow (use as a convenience for leaf nodes).");
-API_ENUM(ImGui, TreeNodeFlags_Bullet,
+API_ENUM(0_1, ImGui, TreeNodeFlags_Bullet,
   "Display a bullet instead of arrow.");
-API_ENUM(ImGui, TreeNodeFlags_FramePadding,
+API_ENUM(0_1, ImGui, TreeNodeFlags_FramePadding,
 R"(Use FramePadding (even for an unframed text node) to vertically align text
    baseline to regular widget height.
    Equivalent to calling AlignTextToFramePadding.)");
-API_ENUM(ImGui, TreeNodeFlags_SpanAvailWidth,
+API_ENUM(0_1, ImGui, TreeNodeFlags_SpanAvailWidth,
 R"(Extend hit box to the right-most edge, even if not framed.
    This is not the default in order to allow adding other items on the same line.
    In the future we may refactor the hit system to be front-to-back,
    allowing natural overlaps and then this can become the default.)");
-API_ENUM(ImGui, TreeNodeFlags_SpanFullWidth,
+API_ENUM(0_1, ImGui, TreeNodeFlags_SpanFullWidth,
   "Extend hit box to the left-most and right-most edges (bypass the indented area).");
 // API_ENUM(ImGui, TreeNodeFlags_NavLeftJumpsBackHere,
 // R"((WIP) Nav: left direction may move to this TreeNode() from any of its child
 //    (items submitted between TreeNode and TreePop).)");
-API_ENUM(ImGui, TreeNodeFlags_CollapsingHeader,
+API_ENUM(0_1, ImGui, TreeNodeFlags_CollapsingHeader,
   "TreeNodeFlags_Framed | TreeNodeFlags_NoTreePushOnOpen | TreeNodeFlags_NoAutoOpenOnLog");

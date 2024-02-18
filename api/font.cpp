@@ -34,7 +34,7 @@ This API currently has multiple limitations (v1.0 blockers):
   (Attaching a font is a heavy operation and should ideally be done outside
   of the defer loop.))");
 
-API_FUNC(ImGui_Font*, CreateFont,
+API_FUNC(0_4, ImGui_Font*, CreateFont,
 (const char*,family_or_file)(int,size)(int*,API_RO(flags),ReaImGuiFontFlags_None),
 R"(Load a font matching a font family name or from a font file.
 The font will remain valid while it's attached to a context. See Attach.
@@ -49,14 +49,14 @@ If 'family_or_file' specifies a path to a font file (contains a / or \\):
   return new Font { family_or_file, size, API_RO_GET(flags) };
 }
 
-API_FUNC(ImGui_Font*, GetFont, (ImGui_Context*,ctx),
+API_FUNC(0_4, ImGui_Font*, GetFont, (ImGui_Context*,ctx),
 "Get the current font")
 {
   FRAME_GUARD;
   return ctx->fonts().get(ImGui::GetFont());
 }
 
-API_FUNC(void, PushFont, (ImGui_Context*,ctx)
+API_FUNC(0_4, void, PushFont, (ImGui_Context*,ctx)
 (ImGui_Font*,font),
 R"(Change the current font. Use nil to push the default font.
 The font object must have been registered using Attach. See PopFont.)")
@@ -65,14 +65,14 @@ The font object must have been registered using Attach. See PopFont.)")
   ImGui::PushFont(ctx->fonts().instanceOf(font));
 }
 
-API_FUNC(void, PopFont, (ImGui_Context*,ctx),
+API_FUNC(0_4, void, PopFont, (ImGui_Context*,ctx),
 "See PushFont.")
 {
   FRAME_GUARD;
   ImGui::PopFont();
 }
 
-API_FUNC(double, GetFontSize, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetFontSize, (ImGui_Context*,ctx),
 R"(Get current font size (= height in pixels) of current font with current scale
 applied.)")
 {
@@ -80,6 +80,6 @@ applied.)")
   return ImGui::GetFontSize();
 }
 
-API_ENUM(ReaImGui, FontFlags_None,   "");
-API_ENUM(ReaImGui, FontFlags_Bold,   "");
-API_ENUM(ReaImGui, FontFlags_Italic, "");
+API_ENUM(0_4, ReaImGui, FontFlags_None,   "");
+API_ENUM(0_4, ReaImGui, FontFlags_Bold,   "");
+API_ENUM(0_4, ReaImGui, FontFlags_Italic, "");

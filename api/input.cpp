@@ -64,7 +64,7 @@ static void copyToBuffer(const std::string &value, char *buf, const size_t bufSi
 #define CALLBACK_ARGS \
   InputTextCallback::use<int>(API_RO(callback)), API_RO(callback)
 
-API_FUNC(bool, InputText, (ImGui_Context*,ctx)
+API_FUNC(0_8_5, bool, InputText, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags),ImGuiInputTextFlags_None)
 (ImGui_Function*,API_RO(callback)),
@@ -87,7 +87,7 @@ API_FUNC(bool, InputText, (ImGui_Context*,ctx)
   return false;
 }
 
-API_FUNC(bool, InputTextMultiline, (ImGui_Context*,ctx)
+API_FUNC(0_8_5, bool, InputTextMultiline, (ImGui_Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0)
 (int*,API_RO(flags),ImGuiInputTextFlags_None)
@@ -108,7 +108,7 @@ API_FUNC(bool, InputTextMultiline, (ImGui_Context*,ctx)
   return false;
 }
 
-API_FUNC(bool, InputTextWithHint, (ImGui_Context*,ctx)
+API_FUNC(0_8_5, bool, InputTextWithHint, (ImGui_Context*,ctx)
 (const char*,label)(const char*,hint)
 (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags),ImGuiInputTextFlags_None)
@@ -128,7 +128,7 @@ API_FUNC(bool, InputTextWithHint, (ImGui_Context*,ctx)
   return false;
 }
 
-API_FUNC(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v))(int*,API_RO(step),1)(int*,API_RO(step_fast),100)
 (int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -140,7 +140,7 @@ API_FUNC(bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
     API_RO_GET(step), API_RO_GET(step_fast), flags);
 }
 
-API_FUNC(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
 {
@@ -155,7 +155,7 @@ API_FUNC(bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -171,7 +171,7 @@ API_FUNC(bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RW(v4))(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -188,7 +188,7 @@ API_FUNC(bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v))(double*,API_RO(step),0.0)(double*,API_RO(step_fast),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -209,7 +209,7 @@ static bool inputDoubleN(const char *label, double *data, const size_t size,
     nullptr, nullptr, format, flags);
 }
 
-API_FUNC(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -226,7 +226,7 @@ API_FUNC(bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -243,7 +243,7 @@ API_FUNC(bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))(double*,API_RW(v4))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -261,7 +261,7 @@ API_FUNC(bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
 (reaper_array*,values)(double*,API_RO(step))(double*,API_RO(step_fast))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -282,45 +282,45 @@ InputIntX etc.
 (Those are per-item flags. There are shared flags in SetConfigVar:
 ConfigVar_InputTextCursorBlink and ConfigVar_InputTextEnterKeepActive.))");
 
-API_ENUM(ImGui, InputTextFlags_None,             "");
-API_ENUM(ImGui, InputTextFlags_CharsDecimal,     "Allow 0123456789.+-*/.");
-API_ENUM(ImGui, InputTextFlags_CharsHexadecimal, "Allow 0123456789ABCDEFabcdef.");
-API_ENUM(ImGui, InputTextFlags_CharsUppercase,   "Turn a..z into A..Z.");
-API_ENUM(ImGui, InputTextFlags_CharsNoBlank,     "Filter out spaces, tabs.");
-API_ENUM(ImGui, InputTextFlags_AutoSelectAll,
+API_ENUM(0_1, ImGui, InputTextFlags_None,             "");
+API_ENUM(0_1, ImGui, InputTextFlags_CharsDecimal,     "Allow 0123456789.+-*/.");
+API_ENUM(0_1, ImGui, InputTextFlags_CharsHexadecimal, "Allow 0123456789ABCDEFabcdef.");
+API_ENUM(0_1, ImGui, InputTextFlags_CharsUppercase,   "Turn a..z into A..Z.");
+API_ENUM(0_1, ImGui, InputTextFlags_CharsNoBlank,     "Filter out spaces, tabs.");
+API_ENUM(0_1, ImGui, InputTextFlags_AutoSelectAll,
   "Select entire text when first taking mouse focus.");
-API_ENUM(ImGui, InputTextFlags_EnterReturnsTrue,
+API_ENUM(0_1, ImGui, InputTextFlags_EnterReturnsTrue,
 R"(Return 'true' when Enter is pressed (as opposed to every time the value was
    modified). Consider looking at the IsItemDeactivatedAfterEdit function.)");
-API_ENUM(ImGui, InputTextFlags_CallbackCompletion,
+API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackCompletion,
   "Callback on pressing TAB (for completion handling).");
-API_ENUM(ImGui, InputTextFlags_CallbackHistory,
+API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackHistory,
   "Callback on pressing Up/Down arrows (for history handling).");
-API_ENUM(ImGui, InputTextFlags_CallbackAlways,
+API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackAlways,
   "Callback on each iteration. User code may query cursor position, modify text buffer.");
-API_ENUM(ImGui, InputTextFlags_CallbackCharFilter,
+API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackCharFilter,
 R"(Callback on character inputs to replace or discard them.
    Modify 'EventChar' to replace or 'EventChar = 0' to discard.)");
-API_ENUM(ImGui, InputTextFlags_CallbackEdit,
+API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackEdit,
 R"(Callback on any edit (note that InputText() already returns true on edit,
    the callback is useful mainly to manipulate the underlying buffer while
    focus is active).)");
-API_ENUM(ImGui, InputTextFlags_AllowTabInput,
+API_ENUM(0_1, ImGui, InputTextFlags_AllowTabInput,
   "Pressing TAB input a '\\t' character into the text field.");
-API_ENUM(ImGui, InputTextFlags_CtrlEnterForNewLine,
+API_ENUM(0_1, ImGui, InputTextFlags_CtrlEnterForNewLine,
 R"(In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter
    (default is opposite: unfocus with Ctrl+Enter, add line with Enter).)");
-API_ENUM(ImGui, InputTextFlags_NoHorizontalScroll,
+API_ENUM(0_1, ImGui, InputTextFlags_NoHorizontalScroll,
   "Disable following the cursor horizontally.");
-API_ENUM(ImGui, InputTextFlags_AlwaysOverwrite, "Overwrite mode.");
-API_ENUM(ImGui, InputTextFlags_ReadOnly,        "Read-only mode.");
-API_ENUM(ImGui, InputTextFlags_Password,
+API_ENUM(0_2, ImGui, InputTextFlags_AlwaysOverwrite, "Overwrite mode.");
+API_ENUM(0_1, ImGui, InputTextFlags_ReadOnly,        "Read-only mode.");
+API_ENUM(0_1, ImGui, InputTextFlags_Password,
     "Password mode, display all characters as '*'.");
-API_ENUM(ImGui, InputTextFlags_NoUndoRedo,
+API_ENUM(0_1, ImGui, InputTextFlags_NoUndoRedo,
     "Disable undo/redo. Note that input text owns the text data while active.");
-API_ENUM(ImGui, InputTextFlags_CharsScientific,
+API_ENUM(0_1, ImGui, InputTextFlags_CharsScientific,
     "Allow 0123456789.+-*/eE (Scientific notation input).");
-API_ENUM(ImGui, InputTextFlags_EscapeClearsAll,
+API_ENUM(0_8, ImGui, InputTextFlags_EscapeClearsAll,
 R"(Escape key clears content if not empty, and deactivate otherwise
    (constrast to default behavior of Escape to revert).)");
 
@@ -358,17 +358,17 @@ Variable access table (R = updated for reading,
 The InputTextCallback_* functions should only be used when EventFlag is one of
 InputTextFlags_CallbackAlways/Completion/Edit/History.)");
 
-API_EELVAR(int, EventFlag,      "One of InputTextFlags_Callback*");
-API_EELVAR(int, Flags,          "What was passed to InputText()");
-API_EELVAR(int, EventChar,
+API_EELVAR(0_8_5, int, EventFlag,      "One of InputTextFlags_Callback*");
+API_EELVAR(0_8_5, int, Flags,          "What was passed to InputText()");
+API_EELVAR(0_8_5, int, EventChar,
   "Character input. Replace character with another one, or set to zero to drop.");
-API_EELVAR(int, EventKey,
+API_EELVAR(0_8_5, int, EventKey,
 R"(Key_UpArrow/DownArrow/Tab. Compare against these constants instead of
 a hard-coded numerical value.)");
-API_EELVAR(const char*, Buf,    "Current value being edited.");
-API_EELVAR(int, CursorPos,      "");
-API_EELVAR(int, SelectionStart, "Equal to SelectionEnd when no selection.");
-API_EELVAR(int, SelectionEnd,   "");
+API_EELVAR(0_8_5, const char*, Buf,    "Current value being edited.");
+API_EELVAR(0_8_5, int, CursorPos,      "");
+API_EELVAR(0_8_5, int, SelectionStart, "Equal to SelectionEnd when no selection.");
+API_EELVAR(0_8_5, int, SelectionEnd,   "");
 
 template<>
 void InputTextCallback::storeVars(Function *func)
@@ -412,7 +412,7 @@ void InputTextCallback::loadVars(const Function *func)
   }
 }
 
-API_EELFUNC(void, InputTextCallback_DeleteChars,
+API_EELFUNC(0_8_5, void, InputTextCallback_DeleteChars,
 (int,pos)(int,bytes_count),
 "")
 {
@@ -420,7 +420,7 @@ API_EELFUNC(void, InputTextCallback_DeleteChars,
     data->DeleteChars(pos, bytes_count);
 }
 
-API_EELFUNC(void, InputTextCallback_InsertChars,
+API_EELFUNC(0_8_5, void, InputTextCallback_InsertChars,
 (int,pos)(std::string_view,new_text),
 "")
 {
@@ -428,19 +428,19 @@ API_EELFUNC(void, InputTextCallback_InsertChars,
     data->InsertChars(pos, &new_text.front(), &*new_text.end());
 }
 
-API_EELFUNC(void, InputTextCallback_SelectAll, NO_ARGS, "")
+API_EELFUNC(0_8_5, void, InputTextCallback_SelectAll, NO_ARGS, "")
 {
   if(InputTextCallback::DataAccess data {})
     data->SelectAll();
 }
 
-API_EELFUNC(void, InputTextCallback_ClearSelection, NO_ARGS, "")
+API_EELFUNC(0_8_5, void, InputTextCallback_ClearSelection, NO_ARGS, "")
 {
   if(InputTextCallback::DataAccess data {})
     data->ClearSelection();
 }
 
-API_EELFUNC(bool, InputTextCallback_HasSelection, NO_ARGS, "")
+API_EELFUNC(0_8_5, bool, InputTextCallback_HasSelection, NO_ARGS, "")
 {
   if(InputTextCallback::DataAccess data {})
     return data->HasSelection();

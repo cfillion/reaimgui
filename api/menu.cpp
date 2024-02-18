@@ -19,7 +19,7 @@
 
 API_SECTION("Menu");
 
-API_FUNC(bool, BeginMenuBar, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, BeginMenuBar, (ImGui_Context*,ctx),
 R"(Append to menu-bar of current window (requires WindowFlags_MenuBar flag set
 on parent window). See EndMenuBar.)")
 {
@@ -27,14 +27,14 @@ on parent window). See EndMenuBar.)")
   return ImGui::BeginMenuBar();
 }
 
-API_FUNC(void, EndMenuBar, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndMenuBar, (ImGui_Context*,ctx),
 "Only call EndMenuBar if BeginMenuBar returns true!")
 {
   FRAME_GUARD;
   ImGui::EndMenuBar();
 }
 
-API_FUNC(bool, BeginMenu, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginMenu, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RO(enabled),true),
 "Create a sub-menu entry. only call EndMenu if this returns true!")
 {
@@ -42,14 +42,14 @@ API_FUNC(bool, BeginMenu, (ImGui_Context*,ctx)
   return ImGui::BeginMenu(label, API_RO_GET(enabled));
 }
 
-API_FUNC(void, EndMenu, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndMenu, (ImGui_Context*,ctx),
 R"(Only call EndMenu() if BeginMenu returns true!)")
 {
   FRAME_GUARD;
   ImGui::EndMenu();
 }
 
-API_FUNC(bool, MenuItem, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, MenuItem, (ImGui_Context*,ctx)
 (const char*,label)(const char*,API_RO(shortcut))
 (bool*,API_RWO(p_selected))(bool*,API_RO(enabled),true),
 R"(Return true when activated. Shortcuts are displayed for convenience but not

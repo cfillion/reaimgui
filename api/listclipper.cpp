@@ -110,7 +110,7 @@ Generally what happens is:
 - The clipper also handles various subtleties related to keyboard/gamepad
   navigation, wrapping etc.)");
 
-API_FUNC(ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
+API_FUNC(0_1, ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
 R"(The returned clipper object is only valid for the given context and is valid
 as long as it is used in each defer cycle unless attached (see Attach).)")
 {
@@ -119,7 +119,7 @@ as long as it is used in each defer cycle unless attached (see Attach).)")
   return new ListClipper {};
 }
 
-API_FUNC(void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
+API_FUNC(0_1, void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
 (int,items_count)(double*,API_RO(items_height),-1.0),
 R"(- items_count: Use INT_MAX if you don't know how many items you have
 (in which case the cursor won't be advanced in the final step)
@@ -130,20 +130,20 @@ R"(- items_count: Use INT_MAX if you don't know how many items you have
   (*clipper)->Begin(items_count, API_RO_GET(items_height));
 }
 
-API_FUNC(bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
+API_FUNC(0_1, bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
 R"(Call until it returns false. The display_start/display_end fields from
 ListClipper_GetDisplayRange will be set and you can process/draw those items.)")
 {
   return (*clipper)->Step();
 }
 
-API_FUNC(void, ListClipper_End, (ImGui_ListClipper*,clipper),
+API_FUNC(0_1, void, ListClipper_End, (ImGui_ListClipper*,clipper),
 "Automatically called on the last call of ListClipper_Step that returns false.")
 {
   (*clipper)->End();
 }
 
-API_FUNC(void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
+API_FUNC(0_3, void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
 (int*,API_W(display_start))(int*,API_W(display_end)),
 "")
 {
@@ -152,8 +152,8 @@ API_FUNC(void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
   if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
 }
 
-API_FUNC(void, ListClipper_IncludeRangeByIndices, (ImGui_ListClipper*,clipper)
-(int,item_begin)(int,item_end),
+API_FUNC(0_8_7, void, ListClipper_IncludeRangeByIndices,
+(ImGui_ListClipper*,clipper)(int,item_begin)(int,item_end),
 R"(Call ListClipper_IncludeRangeByIndices before first call to
 ListClipper_Step if you need a range of items to be displayed regardless of
 visibility.

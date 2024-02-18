@@ -21,7 +21,7 @@
 
 API_SECTION("Text");
 
-API_FUNC(void, Text, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, Text, (ImGui_Context*,ctx)
 (const char*,text),
 "")
 {
@@ -29,7 +29,7 @@ API_FUNC(void, Text, (ImGui_Context*,ctx)
   ImGui::TextUnformatted(text);
 }
 
-API_FUNC(void, TextColored, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, TextColored, (ImGui_Context*,ctx)
 (int,col_rgba)(const char*,text),
 "Shortcut for PushStyleColor(Col_Text, color); Text(text); PopStyleColor();")
 {
@@ -41,7 +41,7 @@ API_FUNC(void, TextColored, (ImGui_Context*,ctx)
   ImGui::PopStyleColor();
 }
 
-API_FUNC(void, TextDisabled, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, TextDisabled, (ImGui_Context*,ctx)
 (const char*,text),
 "")
 {
@@ -52,7 +52,7 @@ API_FUNC(void, TextDisabled, (ImGui_Context*,ctx)
   ImGui::PopStyleColor();
 }
 
-API_FUNC(void, TextWrapped, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, TextWrapped, (ImGui_Context*,ctx)
 (const char*,text),
 R"(Shortcut for PushTextWrapPos(0.0); Text(text); PopTextWrapPos();.
 Note that this won't work on an auto-resizing window if there's no other
@@ -65,7 +65,7 @@ SetNextWindowSize.)")
   ImGui::PopTextWrapPos();
 }
 
-API_FUNC(void, LabelText, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, LabelText, (ImGui_Context*,ctx)
 (const char*,label)(const char*,text),
 "Display text+label aligned the same way as value+label widgets")
 {
@@ -73,7 +73,7 @@ API_FUNC(void, LabelText, (ImGui_Context*,ctx)
   ImGui::LabelText(label, "%s", text);
 }
 
-API_FUNC(void, Bullet, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, Bullet, (ImGui_Context*,ctx),
 R"(Draw a small circle + keep the cursor on the same line.
 Advance cursor x position by GetTreeNodeToLabelSpacing,
 same distance that TreeNode uses.)")
@@ -82,7 +82,7 @@ same distance that TreeNode uses.)")
   ImGui::Bullet();
 }
 
-API_FUNC(void, BulletText, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, BulletText, (ImGui_Context*,ctx)
 (const char*,text),
 "Shortcut for Bullet + Text.")
 {
@@ -91,7 +91,7 @@ API_FUNC(void, BulletText, (ImGui_Context*,ctx)
   ImGui::TextUnformatted(text);
 }
 
-API_FUNC(void, PushTextWrapPos, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, PushTextWrapPos, (ImGui_Context*,ctx)
 (double*,API_RO(wrap_local_pos_x),0.0),
 R"(Push word-wrapping position for Text*() commands.
 
@@ -103,14 +103,14 @@ R"(Push word-wrapping position for Text*() commands.
   ImGui::PushTextWrapPos(API_RO_GET(wrap_local_pos_x));
 }
 
-API_FUNC(void, PopTextWrapPos, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, PopTextWrapPos, (ImGui_Context*,ctx),
 "")
 {
   FRAME_GUARD;
   ImGui::PopTextWrapPos();
 }
 
-API_FUNC(void, AlignTextToFramePadding, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, AlignTextToFramePadding, (ImGui_Context*,ctx),
 R"(Vertically align upcoming text baseline to StyleVar_FramePadding.y so that it
 will align properly to regularly framed items (call if you have text on a line
 before a framed item).)")
@@ -119,14 +119,14 @@ before a framed item).)")
   ImGui::AlignTextToFramePadding();
 }
 
-API_FUNC(double, GetTextLineHeight, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetTextLineHeight, (ImGui_Context*,ctx),
 "Same as GetFontSize")
 {
   FRAME_GUARD;
   return ImGui::GetTextLineHeight();
 }
 
-API_FUNC(double, GetTextLineHeightWithSpacing, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetTextLineHeightWithSpacing, (ImGui_Context*,ctx),
 R"(GetFontSize + StyleVar_ItemSpacing.y
 (distance in pixels between 2 consecutive lines of text).)")
 {
@@ -134,14 +134,14 @@ R"(GetFontSize + StyleVar_ItemSpacing.y
   return ImGui::GetTextLineHeightWithSpacing();
 }
 
-API_FUNC(double, GetFrameHeight, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetFrameHeight, (ImGui_Context*,ctx),
 "GetFontSize + StyleVar_FramePadding.y * 2")
 {
   FRAME_GUARD;
   return ImGui::GetFrameHeight();
 }
 
-API_FUNC(double, GetFrameHeightWithSpacing, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetFrameHeightWithSpacing, (ImGui_Context*,ctx),
 R"(GetFontSize + StyleVar_FramePadding.y * 2 + StyleVar_ItemSpacing.y
 (distance in pixels between 2 consecutive lines of framed widgets).)")
 {
@@ -149,7 +149,7 @@ R"(GetFontSize + StyleVar_FramePadding.y * 2 + StyleVar_ItemSpacing.y
   return ImGui::GetFrameHeightWithSpacing();
 }
 
-API_FUNC(void, CalcTextSize, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, CalcTextSize, (ImGui_Context*,ctx)
 (const char*,text)(double*,API_W(w))(double*,API_W(h))
 (bool*,API_RO(hide_text_after_double_hash),false)
 (double*,API_RO(wrap_width),-1.0),
@@ -164,7 +164,7 @@ API_FUNC(void, CalcTextSize, (ImGui_Context*,ctx)
   if(API_W(h)) *API_W(h) = size.y;
 }
 
-API_FUNC(void, DebugTextEncoding, (ImGui_Context*,ctx)
+API_FUNC(0_7, void, DebugTextEncoding, (ImGui_Context*,ctx)
 (const char*,text),
 R"(Helper tool to diagnose between text encoding issues and font loading issues.
 Pass your UTF-8 string and verify that there are correct.)")

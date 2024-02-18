@@ -21,7 +21,7 @@
 
 API_SECTION("Context");
 
-API_FUNC(ImGui_Context*, CreateContext,
+API_FUNC(0_5, ImGui_Context*, CreateContext,
 (const char*,label)(int*,API_RO(config_flags),ImGuiConfigFlags_None),
 R"(Create a new ReaImGui context.
 The context will remain valid as long as it is used in each defer cycle.
@@ -32,28 +32,28 @@ and also as a unique identifier for storing settings.)")
   return new Context { label, API_RO_GET(config_flags) };
 }
 
-API_FUNC(double, GetTime, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetTime, (ImGui_Context*,ctx),
 "Get global imgui time. Incremented every frame.")
 {
   FRAME_GUARD;
   return ImGui::GetTime();
 }
 
-API_FUNC(double, GetDeltaTime, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetDeltaTime, (ImGui_Context*,ctx),
 "Time elapsed since last frame, in seconds.")
 {
   FRAME_GUARD;
   return ctx->IO().DeltaTime;
 }
 
-API_FUNC(int, GetFrameCount, (ImGui_Context*,ctx),
+API_FUNC(0_1, int, GetFrameCount, (ImGui_Context*,ctx),
 "Get global imgui frame count. incremented by 1 every frame.")
 {
   FRAME_GUARD;
   return ImGui::GetFrameCount();
 }
 
-API_FUNC(double, GetFramerate, (ImGui_Context*,ctx),
+API_FUNC(0_8, double, GetFramerate, (ImGui_Context*,ctx),
 R"(Estimate of application framerate (rolling average over 60 frames, based on
 GetDeltaTime), in frame per second. Solely for convenience.)")
 {
@@ -61,7 +61,7 @@ GetDeltaTime), in frame per second. Solely for convenience.)")
   return ctx->IO().Framerate;
 }
 
-API_FUNC(void, Attach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
+API_FUNC(0_8, void, Attach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
 R"(Link the object's lifetime to the given context.
 Objects can be draw list splitters, fonts, images, list clippers, etc.
 Call Detach to let the object be garbage-collected after unuse again.
@@ -78,7 +78,7 @@ context per defer cycle. See "limitations" in the font API documentation.)")
   ctx->attach(obj);
 }
 
-API_FUNC(void, Detach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
+API_FUNC(0_8, void, Detach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
 R"(Unlink the object's lifetime. Unattached objects are automatically destroyed
 when left unused. You may check whether an object has been destroyed using
 ValidatePtr.)")
@@ -94,7 +94,7 @@ template<typename... T>
 using IOFields = std::variant<T ImGuiIO::*...>;
 
 // expose most settings from ImGuiIO
-// ITEM ORDER MUST MATCH WITH THE DEFINE_CONFIGVAR() BELOW!
+// ITEM ORDER MUST MATCH WITH THE API_CONFIGVAR() BELOW!
 static constexpr IOFields<bool, float, int> g_configVars[] {
   &ImGuiIO::ConfigFlags,
 
@@ -131,48 +131,48 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   &ImGuiIO::ConfigDebugBeginReturnValueLoop,
 };
 
-#define DEFINE_CONFIGVAR(name, doc) \
-  API_FUNC(int, ConfigVar##_##name, NO_ARGS, doc) \
+#define API_CONFIGVAR(vernum, name, doc) \
+  API_FUNC(vernum, int, ConfigVar##_##name, NO_ARGS, doc) \
     { return __COUNTER__ - baseConfigVar - 1; }
 
 constexpr int baseConfigVar { __COUNTER__ };
-DEFINE_CONFIGVAR(Flags, "ConfigFlags_*");
+API_CONFIGVAR(0_7, Flags, "ConfigFlags_*");
 
-DEFINE_CONFIGVAR(MouseDoubleClickTime, "Time for a double-click, in seconds.");
-DEFINE_CONFIGVAR(MouseDoubleClickMaxDist,
+API_CONFIGVAR(0_7, MouseDoubleClickTime, "Time for a double-click, in seconds.");
+API_CONFIGVAR(0_7, MouseDoubleClickMaxDist,
   "Distance threshold to stay in to validate a double-click, in pixels.");
-DEFINE_CONFIGVAR(MouseDragThreshold,
+API_CONFIGVAR(0_7, MouseDragThreshold,
   "Distance threshold before considering we are dragging.");
-DEFINE_CONFIGVAR(KeyRepeatDelay,
+API_CONFIGVAR(0_7, KeyRepeatDelay,
 R"(When holding a key/button, time before it starts repeating, in seconds
    (for buttons in Repeat mode, etc.).)");
-DEFINE_CONFIGVAR(KeyRepeatRate,
+API_CONFIGVAR(0_7, KeyRepeatRate,
   "When holding a key/button, rate at which it repeats, in seconds.");
-DEFINE_CONFIGVAR(HoverDelayNormal,
+API_CONFIGVAR(0_8, HoverDelayNormal,
   "Delay on hovering before IsItemHovered(HoveredFlags_DelayNormal) returns true.");
-DEFINE_CONFIGVAR(HoverDelayShort,
+API_CONFIGVAR(0_8, HoverDelayShort,
   "Delay on hovering before IsItemHovered(HoveredFlags_DelayShort) returns true.");
 
-DEFINE_CONFIGVAR(DockingNoSplit,
+API_CONFIGVAR(0_7, DockingNoSplit,
 R"(Simplified docking mode: disable window splitting, so docking is limited to
    merging multiple windows together into tab-bars.)");
-DEFINE_CONFIGVAR(DockingWithShift,
+API_CONFIGVAR(0_7, DockingWithShift,
 R"(Enable docking with holding Shift key
    (reduce visual noise, allows dropping in wider space)");
-DEFINE_CONFIGVAR(DockingTransparentPayload,
+API_CONFIGVAR(0_7, DockingTransparentPayload,
 R"(Make window or viewport transparent when docking and only display docking
    boxes on the target viewport.)");
 
-DEFINE_CONFIGVAR(ViewportsNoDecoration,
+API_CONFIGVAR(0_7, ViewportsNoDecoration,
 R"(Disable default OS window decoration. Enabling decoration can create
    subsequent issues at OS levels (e.g. minimum window size).)");
 
-DEFINE_CONFIGVAR(MacOSXBehaviors,
+API_CONFIGVAR(0_7, MacOSXBehaviors,
 R"(OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts
    using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows
    instead of Home/End, Double click selects by word instead of selecting whole
    text, Multi-selection in lists uses Cmd/Super instead of Ctrl.)");
-DEFINE_CONFIGVAR(InputTrickleEventQueue,
+API_CONFIGVAR(0_7, InputTrickleEventQueue,
 R"(Enable input queue trickling: some types of events submitted during the same
    frame (e.g. button down + up) will be spread over multiple frames, improving
    interactions with low framerates.
@@ -180,23 +180,23 @@ R"(Enable input queue trickling: some types of events submitted during the same
    Warning: when this option is disabled mouse clicks and key presses faster
    than a frame will be lost.
    This affects accessiblity features and some input devices.)");
-DEFINE_CONFIGVAR(InputTextCursorBlink,
+API_CONFIGVAR(0_7, InputTextCursorBlink,
   "Enable blinking cursor (optional as some users consider it to be distracting).");
-DEFINE_CONFIGVAR(InputTextEnterKeepActive,
+API_CONFIGVAR(0_8, InputTextEnterKeepActive,
   "Pressing Enter will keep item active and select contents (single-line only).");
-DEFINE_CONFIGVAR(DragClickToInputText,
+API_CONFIGVAR(0_7, DragClickToInputText,
 R"(Enable turning Drag* widgets into text input with a simple mouse
    click-release (without moving). Not desirable on devices without a keyboard.)");
-DEFINE_CONFIGVAR(WindowsResizeFromEdges,
+API_CONFIGVAR(0_7, WindowsResizeFromEdges,
   "Enable resizing of windows from their edges and from the lower-left corner.");
-DEFINE_CONFIGVAR(WindowsMoveFromTitleBarOnly,
+API_CONFIGVAR(0_7, WindowsMoveFromTitleBarOnly,
 R"(Enable allowing to move windows only when clicking on their title bar.
    Does not apply to windows without a title bar.)");
 
-DEFINE_CONFIGVAR(DebugBeginReturnValueOnce,
+API_CONFIGVAR(0_8_5, DebugBeginReturnValueOnce,
 R"(First-time calls to Begin()/BeginChild() will return false.
 **Needs to be set at context startup time** if you don't want to miss windows.)");
-DEFINE_CONFIGVAR(DebugBeginReturnValueLoop,
+API_CONFIGVAR(0_8_5, DebugBeginReturnValueLoop,
 R"(Some calls to Begin()/BeginChild() will return false.
 Will cycle through window depths then repeat. Suggested use: add
 "SetConfigVar(ConfigVar_DebugBeginReturnValueLoop(), GetKeyMods() == Mod_Shift"
@@ -204,9 +204,9 @@ in your main loop then occasionally press SHIFT.
 Windows should be flickering while running.)");
 
 static_assert(__COUNTER__ - baseConfigVar - 1 == std::size(g_configVars),
-  "forgot to DEFINE_CONFIGVAR() a config var?");
+  "forgot to API_CONFIGVAR() a config var?");
 
-API_FUNC(double, GetConfigVar, (ImGui_Context*,ctx)
+API_FUNC(0_7, double, GetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx),
 "")
 {
@@ -227,7 +227,7 @@ API_FUNC(double, GetConfigVar, (ImGui_Context*,ctx)
   }, g_configVars[var_idx]);
 }
 
-API_FUNC(void, SetConfigVar, (ImGui_Context*,ctx)
+API_FUNC(0_7, void, SetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx)(double,value),
 "")
 {
@@ -251,23 +251,23 @@ API_FUNC(void, SetConfigVar, (ImGui_Context*,ctx)
 }
 
 API_SUBSECTION("Flags", "For CreateContext and SetConfigVar(ConfigVar_Flags()).");
-API_ENUM(ImGui, ConfigFlags_None, "");
-API_ENUM(ImGui, ConfigFlags_NavEnableKeyboard,
+API_ENUM(0_1, ImGui, ConfigFlags_None, "");
+API_ENUM(0_1, ImGui, ConfigFlags_NavEnableKeyboard,
 R"(Master keyboard navigation enable flag.
 Enable full Tabbing + directional arrows + space/enter to activate.)");
 // API_ENUM(ImGui, ConfigFlags_NavEnableGamepad,
 //"Master gamepad navigation enable flag.");
-API_ENUM(ImGui, ConfigFlags_NavEnableSetMousePos,
+API_ENUM(0_1, ImGui, ConfigFlags_NavEnableSetMousePos,
   "Instruct navigation to move the mouse cursor.");
-API_ENUM(ImGui, ConfigFlags_NavNoCaptureKeyboard,
+API_ENUM(0_8, ImGui, ConfigFlags_NavNoCaptureKeyboard,
 R"(Instruct navigation to not capture global keyboard input when
    ConfigFlags_NavEnableKeyboard is set (see SetNextFrameWantCaptureKeyboard).)");
-API_ENUM(ImGui, ConfigFlags_NoMouse,
+API_ENUM(0_1, ImGui, ConfigFlags_NoMouse,
   "Instruct imgui to ignore mouse position/buttons.");
-API_ENUM(ImGui, ConfigFlags_NoMouseCursorChange,
+API_ENUM(0_1, ImGui, ConfigFlags_NoMouseCursorChange,
   "Instruct backend to not alter mouse cursor shape and visibility.");
-API_ENUM(ImGui, ConfigFlags_DockingEnable,
+API_ENUM(0_5, ImGui, ConfigFlags_DockingEnable,
   "[BETA] Enable docking functionality.");
 
-API_ENUM(ReaImGui, ConfigFlags_NoSavedSettings,
+API_ENUM(0_4, ReaImGui, ConfigFlags_NoSavedSettings,
   "Disable state restoration and persistence for the whole context.");
