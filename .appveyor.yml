@@ -1,6 +1,6 @@
 ---
 version: "{build}-{branch}"
-stack: ruby 2.7, python 3
+stack: python 3
 
 install:
   - sh:  sudo -H "$(command -v pip3)" install meson
@@ -72,16 +72,17 @@ for:
         meson_options+=(--cross-file "cross/$crossfile.ini")
       fi
 
-  - matrix: { only: [ appveyor_build_worker_image: macos-monterey,
+  - matrix: { only: [ appveyor_build_worker_image: macos-sonoma,
                       appveyor_build_worker_image: macos-bigsur,
                       appveyor_build_worker_image: macos-mojave ] }
     cache:
       - $HOME/Library/Caches/pip -> .appveyor.yml
       - subprojects/packagecache -> subprojects/*.wrap
     before_build:
+      - ls /Applications
       - |-
         case $ARCH in
-        arm64)  export MACOSX_DEPLOYMENT_TARGET=11.0 XCODE_VERSION=14.1   ;;
+        arm64)  export MACOSX_DEPLOYMENT_TARGET=11.0 XCODE_VERSION=15.2.0 ;;
         x86_64) export MACOSX_DEPLOYMENT_TARGET=10.9 XCODE_VERSION=13.2.1 ;;
         i386)   export MACOSX_DEPLOYMENT_TARGET=10.9 XCODE_VERSION=9.4.1  ;;
         esac
@@ -139,7 +140,7 @@ environment:
       appveyor_build_worker_image: *windows
       ARCH: x86
     - job_name: macOS ARM 64-bit
-      appveyor_build_worker_image: macos-monterey
+      appveyor_build_worker_image: macos-sonoma
       ARCH: arm64
     - job_name: macOS x86 64-bit
       appveyor_build_worker_image: macos-bigsur
