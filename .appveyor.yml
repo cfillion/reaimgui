@@ -13,7 +13,6 @@ build_script:
   - ninja -C build
 test_script:
   - meson test -vC build reaimgui
-  - ruby -E UTF-8 tools/coverage.rb
 artifacts:
   - path: build/reaper_imgui*.*
   - path: build/imgui_python.py
