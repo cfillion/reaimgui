@@ -1,4 +1,4 @@
-project('boost', version: '1.74')
+project('boost', version: '1.84')
 
 boost_dep = declare_dependency(
   include_directories: '.',

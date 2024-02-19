@@ -23,7 +23,7 @@ Library requirements:
 
 By default these will be picked up from the system or downloaded if missing.
 
-- [Boost](https://www.boost.org/) (1.74 or newer)
+- [Boost](https://www.boost.org/) (1.81 or newer)
 - [FreeType](https://www.freetype.org/)
 - [GoogleTest](https://github.com/google/googletest)
 - [libjpeg-turbo](https://www.libjpeg-turbo.org/)
