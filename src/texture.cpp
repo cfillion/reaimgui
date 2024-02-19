@@ -155,7 +155,7 @@ void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) 
   // allow selecting only textures of a given scale (eg. if the GDK backend
   // ever gain multi-DPI capability.)
 
-  constexpr auto NullCmd { static_cast<TextureCmd::Type>(-1) };
+  const auto NullCmd { static_cast<TextureCmd::Type>(-1) };
 
   if(m_version == cookie->m_version)
     return;
