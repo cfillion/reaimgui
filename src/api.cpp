@@ -29,7 +29,7 @@ using namespace API;
 
 static eel_function_table g_eelFuncs;
 
-using CallableMap = std::unordered_map<std::string_view, const Callable *>;
+using CallableMap = std::unordered_map<std::string_view, Callable *>;
 
 static CallableMap &callables()
 {
@@ -65,22 +65,31 @@ Callable::Callable(const VerNum since, const VerNum until, const char *name)
   : m_since { since }, m_until { until }
 {
   auto [it, isNew] { callables().try_emplace(name, this) };
-  if(!isNew && since > it->second->m_since) {
+  if(isNew)
+    m_precursor = nullptr;
+  else if(since >= it->second->m_since) {
     m_precursor = it->second;
     it->second = this;
   }
-  else
-    m_precursor = nullptr;
+  else {
+    Callable *precursor = it->second;
+    while(precursor->m_precursor && since < precursor->m_precursor->m_since)
+      precursor = precursor->m_precursor;
+    m_precursor = precursor->m_precursor;
+    precursor->m_precursor = this;
+  }
 }
 
 const Callable *Callable::lookup(const VerNum version, const char *name)
 {
   const auto &map { callables() };
   const auto it { map.find(name) };
-  if(it == map.end())
-    return nullptr;
+  return it == map.end() ? nullptr : it->second->rollback(version);
+}
 
-  const Callable *match { it->second };
+const Callable *Callable::rollback(const VerNum version) const
+{
+  const Callable *match { this };
   while(match && match->m_since > version)
     match = match->m_precursor;
   if(match && match->m_until <= version)

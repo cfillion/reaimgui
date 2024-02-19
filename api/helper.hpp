@@ -98,9 +98,10 @@ using DefArgVal = std::conditional_t<
   type API::v##vernum::name::impl(_API_FOREACH_ARG(_API_SIGARG, _, args))
 
 // extern for link-time duplicate detection
+// must NOT be const: Callable constructor of other functions may write to us
 #define _API_EXPORT(type, vernum, name) \
-  namespace API::v##vernum::name { extern const API::type symbol; } \
-  const API::type API::v##vernum::name::symbol
+  namespace API::v##vernum::name { extern API::type symbol; } \
+  API::type API::v##vernum::name::symbol
 
 #define _API_SAFECALL(vernum, apiName) &CallConv::Safe< \
   &API::v##vernum::apiName::impl, &API::v##vernum::apiName::id>::invoke

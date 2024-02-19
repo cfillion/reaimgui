@@ -44,19 +44,20 @@ namespace API {
     void announce(bool) const;
   };
 
-  class Callable { // C++/ReaScript API and shims
+  class Callable { // all instances must be mutable (not in .rodata)!
   public:
     static const Callable *lookup(VerNum, const char *name);
 
     Callable(VerNum since, VerNum until, const char *name);
     VerNum version() const { return m_since; }
+    const Callable *rollback(VerNum) const;
 
     virtual void *safeImpl()   const = 0;
     virtual void *unsafeImpl() const = 0;
 
   private:
     VerNum m_since, m_until;
-    const Callable *m_precursor;
+    Callable *m_precursor;
   };
 
   class Symbol {

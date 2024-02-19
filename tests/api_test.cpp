@@ -6,22 +6,24 @@ using namespace API;
 
 class MyCallable : public Callable {
 public:
-  MyCallable(VerNum a, VerNum b, const char *n, uintptr_t safe, uintptr_t unsafe)
-    : Callable { a, b, n },
+  MyCallable(VerNum since, VerNum until, const char *name,
+    uintptr_t safe = 0, uintptr_t unsafe = 0)
+    : Callable { since, until, name },
       m_safe   { reinterpret_cast<void *>(safe)   },
       m_unsafe { reinterpret_cast<void *>(unsafe) }
   {}
-  virtual void *safeImpl()   const override { return m_safe;   }
-  virtual void *unsafeImpl() const override { return m_unsafe; }
+
+  void *safeImpl()   const override { return m_safe;   }
+  void *unsafeImpl() const override { return m_unsafe; }
 
 private:
   void *m_safe, *m_unsafe;
 };
 
 TEST(APITest, LookupCallable) {
-  MyCallable foo1 { "0.7", "0.8", "test!lookup!foo", 1, 2 };
-  MyCallable foo2 { "0.8", "0.9", "test!lookup!foo", 3, 4 };
-  MyCallable bar  { "0.8", VerNum::MAX, "test!lookup!bar", 5, 6 };
+  MyCallable foo1 { "0.7", "0.8", "test!lookup!foo" };
+  MyCallable foo2 { "0.8", "0.9", "test!lookup!foo" };
+  MyCallable bar  { "0.8", VerNum::MAX, "test!lookup!bar" };
 
   EXPECT_EQ(MyCallable::lookup("0.6.0", "test!lookup!foo"), nullptr);
   EXPECT_EQ(MyCallable::lookup("0.6.1", "test!lookup!foo"), nullptr);
@@ -34,6 +36,27 @@ TEST(APITest, LookupCallable) {
   EXPECT_EQ(MyCallable::lookup("0.7.0", "test!lookup!bar"), nullptr);
   EXPECT_EQ(MyCallable::lookup("0.8.0", "test!lookup!bar"), &bar);
   EXPECT_EQ(MyCallable::lookup("0.9.0", "test!lookup!bar"), &bar);
+}
+
+TEST(APITest, RollbackCallable) {
+  MyCallable foo1 { "0.5", "0.7", "test!rollback!foo" };
+  EXPECT_EQ(foo1.rollback("0.4"), nullptr);
+  EXPECT_EQ(foo1.rollback("0.5"), &foo1);
+  EXPECT_EQ(foo1.rollback("0.6"), &foo1);
+  EXPECT_EQ(foo1.rollback("0.7"), nullptr);
+  EXPECT_EQ(foo1.rollback("0.8"), nullptr);
+
+  MyCallable foo2 { "0.7", "0.8", "test!rollback!foo" };
+  EXPECT_EQ(foo2.rollback("0.6"), &foo1);
+  EXPECT_EQ(foo2.rollback("0.7"), &foo2);
+  EXPECT_EQ(foo2.rollback("0.8"), nullptr);
+  EXPECT_EQ(foo1.rollback("0.7"), nullptr);
+
+  // out-of-order initialization
+  MyCallable foo0 { "0.4", "0.5", "test!rollback!foo" };
+  EXPECT_EQ(foo2.rollback("0.4"), &foo0);
+  EXPECT_EQ(foo2.rollback("0.5"), &foo1);
+  EXPECT_EQ(foo1.rollback("0.4"), &foo0);
 }
 
 TEST(APITest, ImportTable) {
