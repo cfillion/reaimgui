@@ -21,7 +21,6 @@
 
 #include <cassert>
 #include <cstring> // strlen
-#include <reaper_plugin_functions.h> // realloc_cmd_ptr
 
 API_SECTION("Drag & Drop",
 R"(On source items, call BeginDragDropSource(),
@@ -83,23 +82,6 @@ If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.)")
   return ImGui::BeginDragDropTarget();
 }
 
-static void copyPayload(const ImGuiPayload *payload, char **reabuf, const int reabuf_sz)
-{
-  assertValid(*reabuf);
-
-  int newSize {};
-  if(payload->DataSize > reabuf_sz &&
-      realloc_cmd_ptr(reabuf, &newSize, payload->DataSize)) {
-    // output buffer is no longer null terminated!
-    std::memcpy(*reabuf, payload->Data, newSize);
-  }
-  else {
-    const int limit { std::min(reabuf_sz - 1, payload->DataSize) };
-    std::memcpy(*reabuf, payload->Data, limit);
-    (*reabuf)[limit] = '\0';
-  }
-}
-
 API_FUNC(0_1, bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
@@ -115,8 +97,10 @@ you can peek into the payload before the mouse button is released.)")
   const ImGuiDragDropFlags flags { API_RO_GET(flags) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
 
-  if(payload)
-    copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
+  if(payload && API_WBIG(payload)) {
+    copyToBigBuf(API_WBIG(payload), API_WBIG_SZ(payload),
+      payload->Data, payload->DataSize);
+  }
 
   return payload;
 }
@@ -196,7 +180,10 @@ API_FUNC(0_1, bool, GetDragDropPayload, (ImGui_Context*,ctx)
 
   if(API_W(type))
     snprintf(API_W(type), API_W_SZ(type), "%s", payload->DataType);
-  copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
+  if(API_WBIG(payload)) {
+    copyToBigBuf(API_WBIG(payload), API_WBIG_SZ(payload),
+      payload->Data, payload->DataSize);
+  }
   if(API_W(is_preview))  *API_W(is_preview)  = payload->Preview;
   if(API_W(is_delivery)) *API_W(is_delivery) = payload->Delivery;
 

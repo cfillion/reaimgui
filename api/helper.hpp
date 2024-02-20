@@ -261,8 +261,33 @@ public:
 
 private:
   std::array<PtrType*, N> m_inputs;
-  std::array<ValType, N> m_values;
+  std::array<ValType,  N> m_values;
 };
+
+// EEL may pass a null buffer, make sure it's valid before calling these
+inline void copyToBigBuf(char *&buf, int &bufSize,
+  const void *data, size_t dataSize, const bool mayHaveNulls = true)
+{
+  extern bool (*realloc_cmd_ptr)(char **ptr, int *ptr_size, int new_size);
+  const bool wantRealloc { mayHaveNulls || dataSize >= static_cast<size_t>(bufSize) };
+  if(wantRealloc && dataSize > 0 && dataSize < INT_MAX &&
+      realloc_cmd_ptr(&buf, &bufSize, dataSize)) {
+    // the buffer is no longer null-terminated after using realloc_cmd_ptr!
+    std::memcpy(buf, data, bufSize);
+  }
+  else if(bufSize > 1) {
+    const size_t limit { std::min<size_t>(bufSize - 1, dataSize) };
+    std::memcpy(buf, data, limit);
+    buf[limit] = '\0';
+  }
+}
+
+template<typename T, typename = std::enable_if_t<std::is_class_v<T>>>
+auto copyToBigBuf(char *&buf, int &bufSize, const T &value, const bool mayHaveNulls = true)
+{
+  const size_t byteSize { value.size() * sizeof(typename T::value_type) };
+  return copyToBigBuf(buf, bufSize, value.data(), byteSize, mayHaveNulls);
+}
 
 // Common behavior for p_open throughout the API.
 // When false, set output to true to signal it's open to the caller, but give

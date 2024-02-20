@@ -96,8 +96,7 @@ API_FUNC(0_8_5, void, Function_GetValue_String, (ImGui_Function*,func)
   const auto &value { func->getString(name) };
   if(!value)
     throw reascript_error { "could not read string value" };
-  realloc_cmd_ptr(&API_WBIG(value), &API_WBIG_SZ(value), value->size());
-  memcpy(API_WBIG(value), value->data(), API_WBIG_SZ(value));
+  copyToBigBuf(API_WBIG(value), API_WBIG_SZ(value), *value);
 }
 
 API_FUNC(0_8_5, void, Function_SetValue_String, (ImGui_Function*,func)

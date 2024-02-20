@@ -47,20 +47,6 @@ public:
   }
 };
 
-static void copyToBuffer(const std::string &value, char *buf, const size_t bufSize)
-{
-  int newSize {};
-  if(value.size() >= bufSize && realloc_cmd_ptr(&buf, &newSize, value.size())) {
-    // the buffer is no longer null-terminated after using realloc_cmd_ptr!
-    std::memcpy(buf, value.c_str(), newSize);
-  }
-  else {
-    const size_t limit { std::min(bufSize - 1, value.size()) };
-    std::memcpy(buf, value.c_str(), limit);
-    buf[limit] = '\0';
-  }
-}
-
 #define CALLBACK_ARGS \
   InputTextCallback::use<int>(API_RO(callback)), API_RO(callback)
 
@@ -81,7 +67,7 @@ API_FUNC(0_8_5, bool, InputText, (ImGui_Context*,ctx)
   // is used. However it makes the behavior consistent with the scalar input
   // functions (eg. InputDouble). https://github.com/ocornut/imgui/issues/3946
   if(ImGui::InputText(label, &value, flags, CALLBACK_ARGS)) {
-    copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
+    copyToBigBuf(API_RWBIG(buf), API_RWBIG_SZ(buf), value, false);
     return true;
   }
   return false;
@@ -102,7 +88,7 @@ API_FUNC(0_8_5, bool, InputTextMultiline, (ImGui_Context*,ctx)
   const InputTextFlags flags { API_RO_GET(flags) };
 
   if(ImGui::InputTextMultiline(label, &value, size, flags, CALLBACK_ARGS)) {
-    copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
+    copyToBigBuf(API_RWBIG(buf), API_RWBIG_SZ(buf), value, false);
     return true;
   }
   return false;
@@ -122,7 +108,7 @@ API_FUNC(0_8_5, bool, InputTextWithHint, (ImGui_Context*,ctx)
   const InputTextFlags flags { API_RO_GET(flags) };
 
   if(ImGui::InputTextWithHint(label, hint, &value, flags, CALLBACK_ARGS)) {
-    copyToBuffer(value, API_RWBIG(buf), API_RWBIG_SZ(buf));
+    copyToBigBuf(API_RWBIG(buf), API_RWBIG_SZ(buf), value, false);
     return true;
   }
   return false;
