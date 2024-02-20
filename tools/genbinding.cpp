@@ -968,10 +968,11 @@ static void humanBinding(std::ostream &stream)
     using namespace std::placeholders;
     static const Target targets[] {
       { "C++",        API::Symbol::TargetNative, std::mem_fn(&Function::cppSignature)              },
-      { "EEL",        API::Symbol::TargetEEL,    std::bind(&Function::eelSignature, _1, _2, false) },
-      { "Legacy EEL", API::Symbol::TargetEELOld, std::bind(&Function::eelSignature, _1, _2, true)  },
-      { "Lua",        API::Symbol::TargetLua,    std::mem_fn(&Function::luaSignature)              },
-      { "Python",     API::Symbol::TargetPython, std::mem_fn(&Function::pythonSignature)           },
+      { "EEL",        API::Symbol::TargetScript | API::Symbol::TargetEELFunc,
+        std::bind(&Function::eelSignature, _1, _2, false) },
+      { "Legacy EEL", API::Symbol::TargetScript, std::bind(&Function::eelSignature, _1, _2, true)  },
+      { "Lua",        API::Symbol::TargetScript, std::mem_fn(&Function::luaSignature)              },
+      { "Python",     API::Symbol::TargetScript, std::mem_fn(&Function::pythonSignature)           },
     };
     stream << "<table>";
     for(const Target &target : targets) {
@@ -1066,7 +1067,7 @@ static void pythonBinding(std::ostream &stream)
             "from reaper_python import *\n";
 
   for(const Function &func : g_funcs) {
-    if(!(func.flags & API::Symbol::TargetPython))
+    if(!(func.flags & API::Symbol::TargetScript))
       continue;
 
     stream << "\ndef " << func.displayName << '(';

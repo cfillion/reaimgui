@@ -63,13 +63,11 @@ namespace API {
   class Symbol {
   public:
     enum Flags {
-      TargetNative = 1<<0,
-      TargetLua    = 1<<1,
-      TargetEEL    = 1<<2,
-      TargetEELOld = 1<<3,
-      TargetPython = 1<<4,
+      TargetNative  = 1<<0,
+      TargetScript  = 1<<1,
+      TargetEELFunc = 1<<2,
 
-      Variable = 1<<10,
+      Variable = 1<<11,
     };
 
     Symbol();
@@ -101,9 +99,7 @@ namespace API {
       return &m_regs[0].key[5]; /* strlen("-API_") */ }
     const char *definition() const override {
       return static_cast<const char *>(m_regs[2].value); }
-    unsigned int flags() const override {
-      return TargetNative | TargetLua | TargetEEL | TargetEELOld | TargetPython;
-    }
+    unsigned int flags() const override { return TargetNative | TargetScript; }
     VerNum version() const override { return Callable::version(); }
 
   private:

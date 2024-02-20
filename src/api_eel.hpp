@@ -39,7 +39,7 @@ namespace API {
 
     const char *name() const override { return m_name; }
     const char *definition() const override { return m_definition; }
-    unsigned int flags() const override { return TargetEEL; }
+    unsigned int flags() const override { return TargetEELFunc; }
     VerNum version() const override { return m_version; }
 
   private:
@@ -56,7 +56,7 @@ namespace API {
 
     const char *name() const override { return m_name; }
     const char *definition() const override { return m_definition; }
-    unsigned int flags() const override { return TargetEEL | Variable; }
+    unsigned int flags() const override { return TargetEELFunc | Variable; }
     VerNum version() const override { return m_version; }
 
     operator const char *() const { return m_name; }
