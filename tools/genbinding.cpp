@@ -1187,8 +1187,10 @@ int main(int argc, const char *argv[])
     return 2;
   }
 
-  for(const API::Symbol *func { _API_head() }; func; func = func->m_next)
-    g_funcs.push_back(func);
+  for(const API::Symbol *func { _API_head() }; func; func = func->m_next) {
+    if(func->name()[0] != '_')
+      g_funcs.push_back(func);
+  }
   std::sort(g_funcs.begin(), g_funcs.end());
 
   const std::string_view lang { argc >= 3 ? argv[2] : "cpp" };
