@@ -18,14 +18,13 @@
 #ifndef REAIMGUI_RESOURCE_HPP
 #define REAIMGUI_RESOURCE_HPP
 
+#include "../api/types.hpp"
 #include "flat_set.hpp"
 
 class Context;
 
 class Resource {
 public:
-  static constexpr const char *api_type_name { "ImGui_Resource" };
-
   Resource();
   Resource(const Resource &) = delete;
   virtual ~Resource();
@@ -76,5 +75,6 @@ private:
 };
 
 using ImGui_Resource = Resource;
+API_REGISTER_OBJECT_TYPE(Resource);
 
 #endif

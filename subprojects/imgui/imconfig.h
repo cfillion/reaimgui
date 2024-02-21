@@ -1,12 +1,10 @@
 #ifndef REAIMGUI_IMCONFIG_H
 #define REAIMGUI_IMCONFIG_H
 
-#include "../../src/error.hpp"
-
-inline void ReaImGui_AssertFailure(const char *message)
-{
-  throw imgui_error { message };
-}
+namespace Error {
+  [[noreturn]] void imguiAssertionFailure(const char *);
+  [[noreturn]] void imguiDebugBreak();
+};
 
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
@@ -16,7 +14,7 @@ inline void ReaImGui_AssertFailure(const char *message)
 
 #define ImTextureID size_t
 
-#define IM_ASSERT(_EXPR) (_EXPR ? (void)0 : ReaImGui_AssertFailure(#_EXPR))
-#define IM_DEBUG_BREAK() throw reascript_error { "debug break" }
+#define IM_ASSERT(_EXPR) (_EXPR ? (void)0 : Error::imguiAssertionFailure(#_EXPR))
+#define IM_DEBUG_BREAK() Error::imguiDebugBreak();
 
 #endif

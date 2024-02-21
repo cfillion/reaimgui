@@ -64,6 +64,7 @@ private:
 };
 
 using ImGui_Font = Font; // user-facing alias
+API_REGISTER_OBJECT_TYPE(Font);
 
 class FontList {
 public:

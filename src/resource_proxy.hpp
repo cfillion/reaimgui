@@ -87,12 +87,7 @@ protected:
   struct GetStrategy {
     template<typename Getter>
     static ObjT *pass(ResT *resource) { return Getter::get(resource); }
-    static ObjT *fail(const ProxyT *ptr) {
-      char message[255];
-      snprintf(message, sizeof(message),
-        "expected a valid %s*, got %p", ProxyT::api_type_name, ptr);
-      throw reascript_error { message };
-    }
+    static ObjT *fail(const ProxyT *ptr) { Error::invalidObject(ptr); }
   };
 
   struct ValidateStrategy {

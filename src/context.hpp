@@ -49,7 +49,6 @@ constexpr const char *REAIMGUI_PAYLOAD_TYPE_FILES { "_FILES" };
 
 class Context final : public Resource {
 public:
-  static constexpr const char *api_type_name { "ImGui_Context" };
   static Context *current();
 
   Context(const char *label, int userConfigFlags = ImGuiConfigFlags_None);
@@ -129,5 +128,6 @@ private:
 };
 
 using ImGui_Context = Context; // user-facing alias
+API_REGISTER_OBJECT_TYPE(Context);
 
 #endif

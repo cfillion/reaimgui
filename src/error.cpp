@@ -217,3 +217,13 @@ void Error::report(Context *ctx, const backend_error &ex)
     TEXT(" or report this problem if the issue persists."),
   });
 }
+
+void Error::imguiAssertionFailure(const char *message)
+{
+  throw imgui_error { message };
+}
+
+void Error::imguiDebugBreak()
+{
+  throw reascript_error { "debug break" };
+}

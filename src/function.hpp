@@ -32,7 +32,6 @@ struct reaper_array;
 
 class Function : public Resource {
 public:
-  static constexpr const char *api_type_name { "ImGui_Function" };
   static void setup();
 
   Function(const char *eel2Code);
@@ -65,5 +64,6 @@ private:
 };
 
 using ImGui_Function = Function; // user-facing type
+API_REGISTER_OBJECT_TYPE(Function);
 
 #endif

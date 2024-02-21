@@ -12,8 +12,6 @@ struct MyResource : Resource {
 struct MyValue { Resource *res; unsigned int val; };
 
 struct MyProxy : ResourceProxy<MyProxy, MyResource, MyValue> {
-  static constexpr const char *api_type_name { "MyProxy" };
-
   struct TypeA {
     static constexpr Key key { 0x1234 };
     static MyValue *get(MyResource *res)
@@ -36,6 +34,7 @@ struct MyProxy : ResourceProxy<MyProxy, MyResource, MyValue> {
 
   using Decoder = MakeDecoder<TypeA, TypeB>;
 };
+API_REGISTER_BASIC_TYPE(MyProxy*);
 
 TEST(ResourceProxyTest, Encode) {
   auto res { std::make_unique<MyResource>() };

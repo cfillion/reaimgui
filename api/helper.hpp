@@ -42,7 +42,7 @@ DECLARE_HANDLE(HDROP);
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
-#include <boost/type_index.hpp>
+#include <cstring> // memcpy
 #include <type_traits>
 
 #define _API_ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
@@ -212,16 +212,7 @@ void assertValid(T *ptr)
   else if(ptr)
     return;
 
-  std::string type;
-  if constexpr(std::is_class_v<T>)
-    type = T::api_type_name;
-  else
-    type = boost::typeindex::type_id<T>().pretty_name();
-
-  char message[255];
-  snprintf(message, sizeof(message),
-    "expected a valid %s*, got %p", type.c_str(), ptr);
-  throw reascript_error { message };
+  Error::invalidObject(ptr);
 }
 
 inline void assertFrame(Context *ctx)

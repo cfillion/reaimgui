@@ -25,7 +25,7 @@ version = custom_target('version.hpp',
 
 genbinding = executable('genbinding',
   ['genbinding.cpp', version],
-  dependencies: [boost_dep, dl_dep, md4c_html_dep])
+  dependencies: [boost_dep, compat_dep, dl_dep, md4c_html_dep])
 
 if host_machine.system() == 'windows'
   d3dcompiler_dep = cpp_native.find_library('D3DCompiler')

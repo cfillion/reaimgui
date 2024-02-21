@@ -20,6 +20,7 @@
 
 #include <array>
 #include <cstddef>
+#include <optional>
 
 namespace CompStr {
 
@@ -40,6 +41,18 @@ namespace Utils {
     const char *p { *str + sizeof(*str) - 1 };
     do { if(*p == match) return p + 1; } while(--p > start);
     return fallback;
+  }
+
+  template<typename T>
+  constexpr char &append(char *&p, const T &str,
+    const std::optional<char> sep = std::nullopt)
+  {
+    for(size_t i {}; i < str.size(); ++i, ++p)
+      *p = str[i];
+    if(!sep)
+      return *(p - 1);
+    *p = *sep;
+    return *p++;
   }
 }
 

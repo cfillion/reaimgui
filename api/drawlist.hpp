@@ -25,8 +25,6 @@
 
 struct DrawListProxy
     : public ResourceProxy<DrawListProxy, Context, ImDrawList> {
-  static constexpr const char *api_type_name { "ImGui_DrawList" };
-
   using GetterFuncType = ImDrawList*(*)();
   template<Key KeyValue, GetterFuncType GetterFunc>
   struct Getter {
@@ -46,11 +44,10 @@ struct DrawListProxy
 };
 
 using ImGui_DrawList = DrawListProxy;
+API_REGISTER_TYPE(DrawListProxy*, "ImGui_DrawList*");
 
 class DrawListSplitter : public Resource {
 public:
-  static constexpr const char *api_type_name { "ImGui_DrawListSplitter" };
-
   DrawListSplitter(ImGui_DrawList *);
   ImDrawList *drawList() const;
   ImDrawListSplitter *operator->();
@@ -67,5 +64,6 @@ private:
 };
 
 using ImGui_DrawListSplitter = DrawListSplitter;
+API_REGISTER_OBJECT_TYPE(DrawListSplitter);
 
 #endif

@@ -1,0 +1,25 @@
+// -*- C++ -*-
+
+#ifndef REAIMGUI_FORMAT
+#define REAIMGUI_FORMAT
+
+#include "config.hpp"
+
+#ifdef HAVE_STD_FORMAT
+#  ifdef HAVE_INCLUDE_NEXT
+#    include_next <format>
+#  else
+#    include <../include/format>
+#  endif
+#else
+// removes ~30KB from release builds when FMT_HEADER_ONLY is enabled
+#  define FMT_STATIC_THOUSANDS_SEPARATOR
+#  define FMT_USE_FLOAT       0
+#  define FMT_USE_LONG_DOUBLE 0
+#  include <fmt/format.h>
+  namespace std {
+    using namespace fmt;
+  }
+#endif
+
+#endif

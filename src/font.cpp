@@ -17,6 +17,7 @@
 
 #include "font.hpp"
 
+#include "error.hpp"
 #include "texture.hpp"
 
 #include <algorithm>
