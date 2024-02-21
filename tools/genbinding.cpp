@@ -480,7 +480,7 @@ void Function::luaSignature(std::ostream &stream) const
   }
   if(hasReturns)
     stream << " = ";
-  stream << "reaper." API_PREFIX << name << '(';
+  stream << "ImGui." << name << '(';
   {
     const bool listOutputs { hasOptionalArgs() };
     CommaSep cs { stream };

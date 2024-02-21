@@ -10,8 +10,8 @@
 --   gfx.set(1, 0, 0, 1)
 --   gfx.rect(30, 30, 50, 50)
 --   gfx.imgui(function(ctx, draw_list)
---     reaper.ImGui_Button(ctx, 'Brown fox')
---     reaper.ImGui_Button(ctx, 'Lazy dog')
+--     ImGui.Button(ctx, 'Brown fox')
+--     ImGui.Button(ctx, 'Lazy dog')
 --   end)
 --   if gfx.getchar() >= 0 then
 --     gfx.update()

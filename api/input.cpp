@@ -316,13 +316,13 @@ within the callbacks given to the InputText* functions.
 See CreateFunctionFromEEL.
 
 ```lua
-local reverseAlphabet = reaper.ImGui_CreateFunctionFromEEL([[
+local reverseAlphabet = ImGui.CreateFunctionFromEEL([[
   EventChar >= 'a' && EventChar <= 'z' ? EventChar = 'z' - (EventChar - 'a');
 ]])
 
 local function frame()
-  rv, text = reaper.ImGui_InputText(ctx, 'Lowercase reversed', text,
-    reaper.ImGui_InputTextFlags_CallbackCharFilter(), reverseAlphabet)
+  rv, text = ImGui.InputText(ctx, 'Lowercase reversed', text,
+    ImGui.InputTextFlags_CallbackCharFilter(), reverseAlphabet)
 end
 ```
 

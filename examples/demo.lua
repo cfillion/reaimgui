@@ -4,13 +4,13 @@
 This file can be imported in other scripts to help during development:
 
 local demo = dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/ReaImGui_Demo.lua')
-local ctx = reaper.ImGui_CreateContext('My script')
+local ctx = ImGui.CreateContext('My script')
 local function loop()
   demo.PushStyle(ctx)
   demo.ShowDemoWindow(ctx)
-  if reaper.ImGui_Begin(ctx, 'Dear ImGui Style Editor') then
+  if ImGui.Begin(ctx, 'Dear ImGui Style Editor') then
     demo.ShowStyleEditor(ctx)
-    reaper.ImGui_End(ctx)
+    ImGui.End(ctx)
   end
   demo.PopStyle(ctx)
   reaper.defer(loop)

@@ -88,14 +88,14 @@ scale using lists with tens of thousands of items without a problem.)
 
 Usage:
 
-    if not reaper.ImGui_ValidatePtr(clipper, 'ImGui_ListClipper*') then
-      clipper = reaper.ImGui_CreateListClipper(ctx)
+    if not ImGui.ValidatePtr(clipper, 'ImGui_ListClipper*') then
+      clipper = ImGui.CreateListClipper(ctx)
     end
-    reaper.ImGui_ListClipper_Begin(clipper, 1000) -- We have 1000 elements, evenly spaced
-    while reaper.ImGui_ListClipper_Step(clipper) do
-      local display_start, display_end = reaper.ImGui_ListClipper_GetDisplayRange(clipper)
+    ImGui.ListClipper_Begin(clipper, 1000) -- We have 1000 elements, evenly spaced
+    while ImGui.ListClipper_Step(clipper) do
+      local display_start, display_end = ImGui.ListClipper_GetDisplayRange(clipper)
       for row = display_start, display_end - 1 do
-        reaper.ImGui_Text(ctx, ("line number %d"):format(row))
+        ImGui.Text(ctx, ("line number %d"):format(row))
       end
     end
 

@@ -505,17 +505,17 @@ clipping rectangles, prefer to append into separate channels then merge at the e
 
 Usage:
 
-    if not reaper.ImGui_ValidatePtr(splitter, 'ImGui_DrawListSplitter*') then
-      splitter = reaper.ImGui_CreateDrawListSplitter(draw_list)
+    if not ImGui.ValidatePtr(splitter, 'ImGui_DrawListSplitter*') then
+      splitter = ImGui.CreateDrawListSplitter(draw_list)
     end
-    reaper.ImGui_DrawListSplitter_Split(splitter, 2)
-    reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
-    reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 1)
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- foreground
-    reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
-    reaper.ImGui_DrawListSplitter_Merge(splitter))");
+    ImGui.DrawListSplitter_Split(splitter, 2)
+    ImGui.DrawListSplitter_SetCurrentChannel(splitter, 0)
+    ImGui.DrawList_AddRectFilled(draw_list, ...) -- background
+    ImGui.DrawListSplitter_SetCurrentChannel(splitter, 1)
+    ImGui.DrawList_AddRectFilled(draw_list, ...) -- foreground
+    ImGui.DrawListSplitter_SetCurrentChannel(splitter, 0)
+    ImGui.DrawList_AddRectFilled(draw_list, ...) -- background
+    ImGui.DrawListSplitter_Merge(splitter))");
 
 API_FUNC(0_7_1, ImGui_DrawListSplitter*, CreateDrawListSplitter,
 (ImGui_DrawList*,draw_list),

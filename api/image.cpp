@@ -104,12 +104,12 @@ parameter.
 
 Usage:
 
-    local set = reaper.ImGui_CreateImageSet()
-    reaper.ImGui_ImageSet_Add(set, 1.0, reaper.ImGui_CreateImage('32x32.png'))
-    reaper.ImGui_ImageSet_Add(set, 2.0, reaper.ImGui_CreateImage('64x64.png'))
+    local set = ImGui.CreateImageSet()
+    ImGui.ImageSet_Add(set, 1.0, ImGui.CreateImage('32x32.png'))
+    ImGui.ImageSet_Add(set, 2.0, ImGui.CreateImage('64x64.png'))
 
     local function frame()
-      reaper.ImGui_Image(ctx, set, reaper.ImGui_Image_GetSize(set))
+      ImGui.Image(ctx, set, ImGui.Image_GetSize(set))
       -- ...
     end)");
 
