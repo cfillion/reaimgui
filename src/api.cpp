@@ -97,6 +97,24 @@ const Callable *Callable::rollback(const VerNum version) const
   return match;
 }
 
+std::string Callable::serializeAll(const VerNum version)
+{
+  enum Flags { IsConst = 1<<0, IsShim = 1<<1 };
+  std::string out;
+  for(const auto &pair : callables()) {
+    const Callable *match { pair.second->rollback(version) };
+    if(!match)
+      continue;
+    char flags {};
+    if(typeid(*match) == typeid(ShimFunc))
+      flags |= IsShim;
+    out += flags;
+    out += pair.first;
+    out += '\0';
+  }
+  return out;
+}
+
 StoreLineNumber::StoreLineNumber(LineNumber line)
 {
   lastLine() = line;
@@ -175,9 +193,20 @@ EELVar::EELVar(const VerNum version, const char *name, const char *definition)
 }
 
 ShimFunc::ShimFunc(const VerNum since, const VerNum until,
-                   const char *name, void *safeImpl, void *unsafeImpl)
-  : Callable { since, until, name }, m_impl { safeImpl }, m_unsafeImpl { unsafeImpl }
+                   const char *name, const char *definition,
+                   void *safeImpl, void *varargImpl, void *unsafeImpl)
+  : Callable { since, until, name }, m_definition { definition },
+    m_safeImpl { safeImpl }, m_varargImpl { varargImpl }, m_unsafeImpl { unsafeImpl }
 {
+}
+
+void ShimFunc::activate() const
+{
+#define SHIM_FUNC BOOST_PP_STRINGIZE(API_PREFIX) "_shim"
+  plugin_register("API_"       SHIM_FUNC, m_safeImpl);
+  plugin_register("APIvararg_" SHIM_FUNC, m_varargImpl);
+  plugin_register("APIdef_"    SHIM_FUNC, const_cast<char *>(m_definition));
+#undef SHIM_FUNC
 }
 
 ImportTable::ImportTable(const VerNum version, const size_t size)

@@ -168,6 +168,7 @@ using DefArgVal = std::conditional_t<
 #define API_SECTION_P(parent, ...) \
   API_SECTION_DEF(_API_UNIQ_SEC_ID, parent,       __VA_ARGS__)
 
+// TODO: replace these in favor of the new type tags from types.hpp
 #define NO_ARGS (,)
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write

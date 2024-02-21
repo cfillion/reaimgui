@@ -18,50 +18,21 @@
 #ifndef REAIMGUI_COMPSTR_HPP
 #define REAIMGUI_COMPSTR_HPP
 
+#include "compstr_utils.hpp"
+#include "types.hpp"
+
 #include <array>
 #include <cstddef>
-#include <optional>
+#include <string_view>
 
 namespace CompStr {
-
-namespace Utils {
-  template<auto str>
-  constexpr const char *lfind(const char match,
-    const char *start, const char *fallback)
-  {
-    const char *end { *str + sizeof(*str) - 1 };
-    do { if (*start == match) return start + 1; } while(++start < end);
-    return fallback;
-  }
-
-  template<auto str>
-  constexpr const char *rfind(const char match,
-    const char *start, const char *fallback)
-  {
-    const char *p { *str + sizeof(*str) - 1 };
-    do { if(*p == match) return p + 1; } while(--p > start);
-    return fallback;
-  }
-
-  template<typename T>
-  constexpr char &append(char *&p, const T &str,
-    const std::optional<char> sep = std::nullopt)
-  {
-    for(size_t i {}; i < str.size(); ++i, ++p)
-      *p = str[i];
-    if(!sep)
-      return *(p - 1);
-    *p = *sep;
-    return *p++;
-  }
-}
 
 template<auto fn>
 class Basename {
   static constexpr auto compute()
   {
-    constexpr const char *start { Utils::rfind<fn>('/', *fn, *fn) },
-                         *end   { Utils::rfind<fn>('.', start, *fn + sizeof(*fn)) };
+    constexpr const char *start { rfind<fn>('/', *fn, *fn) },
+                         *end   { rfind<fn>('.', start, *fn + sizeof(*fn)) };
     std::array<char, end - start> name {};
     for(size_t i {}; i < name.size() - 1; ++i)
       name[i] = start[i];
@@ -80,7 +51,7 @@ class Version {
   static constexpr auto compute()
   {
     constexpr const char *start { **ver == 'v' ? *ver + 1 : *ver },
-                         *end   { Utils::lfind<ver>('-', start, *ver + sizeof(*ver)) };
+                         *end   { lfind<ver>('-', start, *ver + sizeof(*ver)) };
     std::array<char, end - start> version {};
     for(size_t i {}; i < version.size() - 1; ++i) {
       const char c { start[i] };
@@ -95,6 +66,46 @@ public:
 
 template<auto input>
 static constexpr const char *version { Version<input>::value.data() };
+
+template<auto fn>
+class APIDef;
+
+template<typename R, typename... Args, R (*fn)(Args...)>
+class APIDef<fn>
+{
+  static constexpr auto compute()
+  {
+    constexpr std::string_view help { "Internal use only." };
+    constexpr auto length {
+      TypeInfo<R>::type().size() + 1 +
+      [] {
+        if constexpr(sizeof...(Args) == 0)
+          return 2;
+        else
+         return (TypeInfo<Args>::type().size() + ...) + sizeof...(Args) +
+                (TypeInfo<Args>::name().size() + ...) + sizeof...(Args);
+      }() + help.size() + 1
+    };
+    std::array<char, length> def {};
+    char *p { def.data() };
+    append(p, TypeInfo<R>::type(), '\0');
+    if constexpr(sizeof...(Args) == 0)
+      p += 2;
+    else {
+      ((append(p, TypeInfo<Args>::type(), ',')), ...) = '\0';
+      ((append(p, TypeInfo<Args>::name(), ',')), ...) = '\0';
+    }
+    append(p, help, '\0');
+
+    return def;
+  }
+
+public:
+  static constexpr auto value { compute() };
+};
+
+template<auto func>
+static constexpr const char *apidef { APIDef<func>::value.data() };
 
 }
 

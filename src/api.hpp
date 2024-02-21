@@ -47,6 +47,7 @@ namespace API {
   class Callable { // all instances must be mutable (not in .rodata)!
   public:
     static const Callable *lookup(VerNum, const char *name);
+    static std::string serializeAll(VerNum);
 
     Callable(VerNum since, VerNum until, const char *name);
     VerNum version() const { return m_since; }
@@ -110,13 +111,17 @@ namespace API {
   class ShimFunc final : public Callable {
   public:
     ShimFunc(VerNum since, VerNum until,
-      const char *name, void *impl, void *unsafeImpl);
+      const char *name, const char *definition,
+      void *safeImpl, void *varargImpl, void *unsafeImpl);
 
-    void *safeImpl()   const override { return m_impl; }
+    void *safeImpl()   const override { return m_safeImpl; }
     void *unsafeImpl() const override { return m_unsafeImpl; }
 
+    void activate() const;
+
   private:
-    void *m_impl, *m_unsafeImpl;
+    const char *m_definition;
+    void *m_safeImpl, *m_varargImpl, *m_unsafeImpl;
   };
 
   // All fields from this+size are treated as const char* of Callable names

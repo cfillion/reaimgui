@@ -7,3 +7,5 @@ shim_sources = files([
 ])
 
 shims = static_library('shims', shim_sources, dependencies: [common_dep])
+
+install_data(sources: 'imgui.lua', install_dir: scripts_dir, install_tag: 'runtime')

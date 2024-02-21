@@ -1,3 +1,20 @@
+/* ReaImGui: ReaScript binding for Dear ImGui
+ * Copyright (C) 2021-2024  Christian Fillion
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "shims.hpp"
 
 SHIM("0.8",
@@ -5,24 +22,24 @@ SHIM("0.8",
   (int, Mod_Shift)
   (int, Mod_Alt)
   (int, Mod_Super)
-  (int, GetKeyMods, ImGui_Context*)
+  (int, GetKeyMods, Context*)
 
-  (void, Attach, ImGui_Context*, void*)
-  (void, Detach, ImGui_Context*, void*)
+  (void, Attach, Context*, void*)
+  (void, Detach, Context*, void*)
 
-  (void, SameLine, ImGui_Context*, double*, double*)
-  (void, Spacing,  ImGui_Context*)
+  (void, SameLine, Context*, RO<double*>, RO<double*>)
+  (void, Spacing,  Context*)
 
-  (void, End,           ImGui_Context*)
-  (void, EndChild,      ImGui_Context*)
-  (void, EndChildFrame, ImGui_Context*)
-  (void, EndGroup,      ImGui_Context*)
-  (void, EndPopup,      ImGui_Context*)
-  (void, EndTable,      ImGui_Context*)
-  (void, EndTooltip,    ImGui_Context*)
-  (bool, TableNextColumn, ImGui_Context*)
-  (void, TableNextRow,    ImGui_Context*, int*, double*)
-  (bool, TableSetColumnIndex, ImGui_Context*, int)
+  (void, End,           Context*)
+  (void, EndChild,      Context*)
+  (void, EndChildFrame, Context*)
+  (void, EndGroup,      Context*)
+  (void, EndPopup,      Context*)
+  (void, EndTable,      Context*)
+  (void, EndTooltip,    Context*)
+  (bool, TableNextColumn, Context*)
+  (void, TableNextRow,    Context*, RO<int*>, RO<double*>)
+  (bool, TableSetColumnIndex, Context*, int)
 );
 
 // ModFlags and Key_Mod to Mod rename
@@ -43,7 +60,7 @@ SHIM_ALIAS(0_6, Key_ModCtrl,  Mod_Ctrl)
 SHIM_ALIAS(0_6, Key_ModShift, Mod_Shift)
 SHIM_ALIAS(0_6, Key_ModAlt,   Mod_Alt)
 SHIM_ALIAS(0_6, Key_ModSuper, Mod_Super)
-SHIM_FUNC(0_1, int, GetKeyMods, (ImGui_Context*,ctx))
+SHIM_FUNC(0_1, int, GetKeyMods, (Context*,ctx))
 {
   int oldmods {};
   const int newmods { api.GetKeyMods(ctx) };
@@ -65,7 +82,7 @@ SHIM_ALIAS(0_4, AttachFont, Attach)
 SHIM_ALIAS(0_4, DetachFont, Detach)
 
 // broken since v0.5
-SHIM_FUNC(0_1, bool, IsWindowCollapsed, (ImGui_Context*,ctx))
+SHIM_FUNC(0_1, bool, IsWindowCollapsed, (Context*,ctx))
 {
   return false;
 }
@@ -73,7 +90,7 @@ SHIM_FUNC(0_1, bool, IsWindowCollapsed, (ImGui_Context*,ctx))
 // obsoleted window boundary extension via SetCursorPos (ocornut/imgui#5548)
 SHIM_PROXY_BEGIN(ShimWindowEnd, func, args)
 {
-  ImGui_Context *ctx { std::get<0>(args) };
+  Context *ctx { std::get<0>(args) };
   double spacing { 0.0 };
   api.SameLine(ctx, nullptr, &spacing);
   api.Spacing(ctx);

@@ -1,3 +1,20 @@
+/* ReaImGui: ReaScript binding for Dear ImGui
+ * Copyright (C) 2021-2024  Christian Fillion
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef REAIMGUI_SHIMS_HPP
 #define REAIMGUI_SHIMS_HPP
 
@@ -29,30 +46,36 @@
     _API_FOREACH_ARG(_SHIM_EACH_IMPORT, _, imports) \
   }; } static ImportTable api
 
-#define SHIM_FUNC(vernum, type, name, args)                 \
-  _API_FUNC_DECL(vernum, type, name, args)                  \
-  _API_EXPORT(ShimFunc, version, name) {                    \
-    API::v##vernum::name::version, api_version, #name,      \
-    reinterpret_cast<void *>(_API_SAFECALL(vernum, name)),  \
-    reinterpret_cast<void *>(&API::v##vernum::name::impl)   \
-  };                                                        \
+#define SHIM_FUNC(vernum, type, name, args)                     \
+  _API_FUNC_DECL(vernum, type, name, args)                      \
+  _API_EXPORT(ShimFunc, version, name) {                        \
+    API::v##vernum::name::version, api_version, #name,          \
+    CompStr::apidef<&API::v##vernum::name::impl>,               \
+    reinterpret_cast<void *>(_API_SAFECALL(vernum, name)),      \
+    reinterpret_cast<void *>(                                   \
+      CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply), \
+    reinterpret_cast<void *>(&API::v##vernum::name::impl)       \
+  };                                                            \
   _API_FUNC_DEF(vernum, type, name, args)
 
 #define SHIM_CONST(version, name, value) \
   SHIM_FUNC(version, int, name, NO_ARGS) { return value; }
 
-#define _SHIM_EXPORT(vernum, name, func)                 \
-  namespace API::v##vernum::name {                       \
-    constexpr const char id[] { #name   };               \
-    constexpr const char vn[] { #vernum };               \
-    constexpr VerNum version  { CompStr::version<&vn> }; \
-  }                                                      \
-  _API_EXPORT(ShimFunc, vernum, name) {                  \
-    API::v##vernum::name::version,                       \
-    api_version, #name,                                  \
-    reinterpret_cast<void *>(CallConv::Safe<             \
-      func, &API::v##vernum::name::id>::invoke),         \
-    reinterpret_cast<void *>(func),                      \
+#define _SHIM_EXPORT(vernum, name, func)                   \
+  namespace API::v##vernum::name {                         \
+    constexpr const char id[] { #name   };                 \
+    constexpr const char vn[] { #vernum };                 \
+    constexpr VerNum version  { CompStr::version<&vn> };   \
+  }                                                        \
+  _API_EXPORT(ShimFunc, vernum, name) {                    \
+    API::v##vernum::name::version,                         \
+    api_version, #name, CompStr::apidef<func>,             \
+    reinterpret_cast<void *>(CallConv::Safe<               \
+      func, &API::v##vernum::name::id>::invoke),           \
+    reinterpret_cast<void *>(                              \
+      CallConv::ReaScript<CallConv::Safe<                  \
+        func, &API::v##vernum::name::id>::invoke>::apply), \
+    reinterpret_cast<void *>(func),                        \
   };
 
 #define _SHIM_WRAP(func) ShimWrap<&api, &decltype(api)::func>

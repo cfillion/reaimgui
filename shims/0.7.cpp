@@ -1,3 +1,20 @@
+/* ReaImGui: ReaScript binding for Dear ImGui
+ * Copyright (C) 2021-2024  Christian Fillion
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "shims.hpp"
 
 SHIM("0.7",
@@ -7,20 +24,20 @@ SHIM("0.7",
   (int, ModFlags_Alt)
   (int, ModFlags_Super)
 
-  (void, SetNextFrameWantCaptureKeyboard, ImGui_Context*)
+  (void, SetNextFrameWantCaptureKeyboard, Context*)
 
-  (void, ColorConvertHSVtoRGB, double, double, double, double*, double*, double*)
-  (void, ColorConvertRGBtoHSV, double, double, double, double*, double*, double*)
+  (void, ColorConvertHSVtoRGB, double, double, double, W<double*>, W<double*>, W<double*>)
+  (void, ColorConvertRGBtoHSV, double, double, double, W<double*>, W<double*>, W<double*>)
   (int,  ColorConvertDouble4ToU32, double, double, double, double)
 
-  (double, GetConfigVar, ImGui_Context*, int)
-  (void,   SetConfigVar, ImGui_Context*, int, int)
+  (double, GetConfigVar, Context*, int)
+  (void,   SetConfigVar, Context*, int, int)
   (int,    ConfigVar_Flags)
 
-  (bool, Combo,   ImGui_Context*, const char*, int*, const char*, int, int*)
-  (bool, ListBox, ImGui_Context*, const char*, int*, const char*, int, int*)
+  (bool, Combo,   Context*, const char*, RW<int*>, const char*, WS<int>, RO<int*>)
+  (bool, ListBox, Context*, const char*, RW<int*>, const char*, WS<int>, RO<int*>)
 
-  (void, GetVersion, char*, int, int*, char*, int)
+  (void, GetVersion, W<char*>, WS<int>, W<int*>, W<char*>, WS<int>)
 );
 
 // KeyModFlags to ModFlags rename
@@ -46,28 +63,26 @@ static int shimColorConv(decltype(api.ColorConvertHSVtoRGB) convFunc,
 }
 
 SHIM_FUNC(0_1, int, ColorConvertHSVtoRGB,
-  (double,h)(double,s)(double,v)(double*,API_RO(a))
-  (double*,API_W(r))(double*,API_W(g))(double*,API_W(b)))
+  (double,h) (double,s) (double,v) (RO<double*>,a)
+  (W<double*>,r) (W<double*>,g) (W<double*>,b))
 {
-  return shimColorConv(api.ColorConvertHSVtoRGB,
-    h, s, v, API_RO(a), API_W(r), API_W(g), API_W(b));
+  return shimColorConv(api.ColorConvertHSVtoRGB, h, s, v, a, r, g, b);
 }
 
 SHIM_FUNC(0_1, int, ColorConvertRGBtoHSV,
-  (double,r)(double,g)(double,b)(double*,API_RO(a))
-  (double*,API_W(h))(double*,API_W(s))(double*,API_W(v)))
+  (double,r) (double,g) (double,b) (RO<double*>,a)
+  (W<double*>,h) (W<double*>,s) (W<double*>,v))
 {
-  return shimColorConv(api.ColorConvertRGBtoHSV,
-    r, g, b, API_RO(a), API_W(h), API_W(s), API_W(v));
+  return shimColorConv(api.ColorConvertRGBtoHSV, r, g, b, a, h, s, v);
 }
 
 // ConfigVar API
-SHIM_FUNC(0_1, int, GetConfigFlags, (ImGui_Context*,ctx))
+SHIM_FUNC(0_1, int, GetConfigFlags, (Context*,ctx))
 {
   return api.GetConfigVar(ctx, api.ConfigVar_Flags());
 }
 
-SHIM_FUNC(0_1, void, SetConfigFlags, (ImGui_Context*,ctx)(int,flags))
+SHIM_FUNC(0_1, void, SetConfigFlags, (Context*,ctx) (int,flags))
 {
   api.SetConfigVar(ctx, api.ConfigVar_Flags(), flags);
 }
@@ -83,28 +98,26 @@ static int convertItemSeparator(char *items)
   return size + 1;
 }
 
-SHIM_FUNC(0_1, bool, Combo, (ImGui_Context*,ctx)
-  (const char*,label)(int*,API_RW(current_item))(char*,items)
-  (int*,API_RO(popup_max_height_in_items)))
+SHIM_FUNC(0_1, bool, Combo, (Context*,ctx)
+  (const char*,label) (RW<int*>,current_item) (char*,items)
+  (RO<int*>,popup_max_height_in_items))
 {
   const int size { convertItemSeparator(items) };
-  return api.Combo(ctx, label, API_RW(current_item),
-    items, size, API_RO(popup_max_height_in_items));
+  return api.Combo(ctx, label, current_item, items, size, popup_max_height_in_items);
 }
 
-SHIM_FUNC(0_1, bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
-  (int*,API_RW(current_item))(char*,items)(int*,API_RO(height_in_items)))
+SHIM_FUNC(0_1, bool, ListBox, (Context*,ctx) (const char*,label)
+  (RW<int*>,current_item) (char*,items) (RO<int*>,height_in_items))
 {
   const int size { convertItemSeparator(items) };
-  return api.ListBox(ctx, label, API_RW(current_item),
-      items, size, API_RO(height_in_items));
+  return api.ListBox(ctx, label, current_item, items, size, height_in_items);
 }
 
 // Addition of IMGUI_VERSION_NUM to GetVersion
 SHIM_FUNC(0_1, void, GetVersion,
-  (char*,API_W(imgui_version))(int,API_W_SZ(imgui_version))
-  (char*,API_W(reaimgui_version))(int,API_W_SZ(reaimgui_version)))
+  (W<char*>,imgui_version) (WS<int>,imgui_version_sz)
+  (W<char*>,reaimgui_version) (WS<int>,reaimgui_version_sz))
 {
-  api.GetVersion(API_W(imgui_version), API_W_SZ(imgui_version), nullptr,
-    API_W(reaimgui_version), API_W_SZ(reaimgui_version));
+  api.GetVersion(imgui_version, imgui_version_sz, nullptr,
+    reaimgui_version, reaimgui_version_sz);
 }
