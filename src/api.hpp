@@ -21,7 +21,7 @@
 #include "error.hpp"
 #include "vernum.hpp"
 
-#define API_PREFIX ImGui_
+#define API_PREFIX "ImGui_"
 
 namespace API {
   void setup();
@@ -97,8 +97,7 @@ namespace API {
     void *safeImpl()   const override { return m_regs[1].value; }
     void *unsafeImpl() const override { return m_impl; }
 
-    const char *name() const override {
-      return &m_regs[0].key[5]; /* strlen("-API_") */ }
+    const char *name() const override;
     const char *definition() const override {
       return static_cast<const char *>(m_regs[2].value); }
     unsigned int flags() const override { return TargetNative | TargetScript; }

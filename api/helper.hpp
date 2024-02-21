@@ -113,14 +113,14 @@ using DefArgVal = std::conditional_t<
   _API_EXPORT(ReaScriptFunc, vernum, name) {                      \
     API::v##vernum::name::version,                                \
     reinterpret_cast<void *>(&API::v##vernum::name::impl),        \
-    { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,         \
+    { "-API_"       API_PREFIX #name,                             \
       reinterpret_cast<void *>(_API_SAFECALL(vernum, name)),      \
     },                                                            \
-    { "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) #name,         \
+    { "-APIvararg_" API_PREFIX #name,                             \
       reinterpret_cast<void *>(                                   \
         CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply), \
     },                                                            \
-    { "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) #name,         \
+    { "-APIdef_"    API_PREFIX #name,                             \
       reinterpret_cast<void *>(const_cast<char *>(                \
         _API_DEF(type, args, help))),                             \
     },                                                            \

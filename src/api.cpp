@@ -20,7 +20,6 @@
 
 #include "context.hpp"
 
-#include <boost/preprocessor/stringize.hpp>
 #include <cassert>
 #include <reaper_plugin_functions.h>
 #include <unordered_map>
@@ -155,12 +154,16 @@ void PluginRegister::announce(const bool init) const
   plugin_register(key + init, value);
 }
 
+static const char *funcNameFromReg(const PluginRegister &reg)
+{
+  return &reg.key[strlen("-API_" API_PREFIX)];
+}
+
 ReaScriptFunc::ReaScriptFunc(const VerNum version, void *impl,
                              const PluginRegister &native,
                              const PluginRegister &reascript,
                              const PluginRegister &desc)
-  : Callable { version, VerNum::MAX,
-      &native.key[strlen("-API_" BOOST_PP_STRINGIZE(API_PREFIX))] },
+  : Callable { version, VerNum::MAX, funcNameFromReg(native) },
     m_impl { impl }, m_regs { native, reascript, desc }
 {
 }
@@ -169,6 +172,11 @@ void ReaScriptFunc::announce(const bool init) const
 {
   for(const PluginRegister &reg : m_regs)
     reg.announce(init);
+}
+
+const char *ReaScriptFunc::name() const
+{
+  return funcNameFromReg(m_regs[0]);
 }
 
 EELFunc::EELFunc(const VerNum version, const char *name, const char *definition,
@@ -211,7 +219,7 @@ ShimFunc::ShimFunc(const VerNum since, const VerNum until,
 
 void ShimFunc::activate() const
 {
-#define SHIM_FUNC BOOST_PP_STRINGIZE(API_PREFIX) "_shim"
+#define SHIM_FUNC API_PREFIX "_shim"
   plugin_register("API_"       SHIM_FUNC, m_safeImpl);
   plugin_register("APIvararg_" SHIM_FUNC, m_varargImpl);
   plugin_register("APIdef_"    SHIM_FUNC, const_cast<char *>(m_definition));
