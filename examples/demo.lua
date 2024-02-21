@@ -47,11 +47,8 @@ Index of this file:
 // [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
 --]]
 
-local ImGui = {}
-for name, func in pairs(reaper) do
-  name = name:match('^ImGui_(.+)$')
-  if name then ImGui[name] = func end
-end
+local ImGui = dofile(reaper.GetResourcePath() ..
+  '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.9')
 
 local ctx, clipper
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()

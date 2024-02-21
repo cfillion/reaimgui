@@ -30,11 +30,8 @@
 -- GFX2IMGUI_PROFILER = dofile('cfillion_Lua profiler.lua')
 -- GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE = 8
 
-local ImGui = {}
-for name, func in pairs(reaper) do
-  name = name:match('^ImGui_(.+)$')
-  if name then ImGui[name] = func end
-end
+local ImGui = dofile(reaper.GetResourcePath() ..
+  '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.9')
 
 local reaper, ogfx, print, tonumber = reaper, gfx, print, tonumber
 local debug, math, string, table, utf8 = debug, math, string, table, utf8
