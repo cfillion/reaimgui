@@ -27,7 +27,7 @@ static void assertVersion(const VerNum requested)
 {
   static constexpr const char gitVersion[] { REAIMGUI_VERSION };
   constexpr VerNum current { CompStr::version<&gitVersion> };
-  if(current >= requested)
+  if(std::max(current, API::version()) >= requested)
     return;
 
   throw reascript_error {

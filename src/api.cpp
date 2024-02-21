@@ -37,6 +37,12 @@ static CallableMap &callables()
   return map;
 }
 
+static VerNum &latestVersion()
+{
+  static VerNum version;
+  return version;
+}
+
 static const Symbol *&lastSymbol()
 {
   static const Symbol *head;
@@ -64,6 +70,9 @@ static ImportTable *&lastImportTable()
 Callable::Callable(const VerNum since, const VerNum until, const char *name)
   : m_since { since }, m_until { until }
 {
+  if(since > latestVersion())
+    latestVersion() = since;
+
   auto [it, isNew] { callables().try_emplace(name, this) };
   if(isNew)
     m_precursor = nullptr;
@@ -255,6 +264,11 @@ void API::setup()
 void API::teardown()
 {
   announceAll(false);
+}
+
+VerNum API::version()
+{
+  return latestVersion();
 }
 
 // REAPER 6.29+ uses the '!' prefix to abort the calling Lua script's execution

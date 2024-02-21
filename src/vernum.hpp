@@ -35,7 +35,7 @@ class VerNum {
 public:
   static constexpr auto MAX { std::numeric_limits<ValT>::max() };
 
-  constexpr VerNum(ValT v) : m_value { v } {}
+  constexpr VerNum(ValT v = 0) : m_value { v } {}
   constexpr VerNum(const char *input)
     : m_value {}
   {
