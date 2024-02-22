@@ -1141,8 +1141,8 @@ local function drawString(draw_list, cmd, i, opts)
   local x_off, y_off  = unpackSigned(xy_off)
   local right, bottom = unpackSigned(rb)
 
-  if right  == 0xFFFFFFFF then right  = nil end
-  if bottom == 0xFFFFFFFF then bottom = nil end
+  if right  == 0x7FFFFFFF then right  = nil end
+  if bottom == 0x7FFFFFFF then bottom = nil end
 
   -- search for a new font as the draw call may have been stored for a
   -- long time in an offscreen buffer while the font instance got detached
@@ -1191,7 +1191,7 @@ function gfx.drawstr(str, flags, right, bottom)
   -- passing f_{cache,inst} as a table to be read/writeable
   return drawCall(drawString, c, str, f_sz,
     packSigned(x, y), packSigned(x_off, y_off),
-    packSigned(right or 0xFFFFFFFF, bottom or 0xFFFFFFFF),
+    packSigned(right or 0x7FFFFFFF, bottom or 0x7FFFFFFF),
     { cache = f_cache, inst = f_inst })
 end
 
