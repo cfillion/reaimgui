@@ -15,10 +15,38 @@ public:
 
   void *safeImpl()   const override { return m_safe;   }
   void *unsafeImpl() const override { return m_unsafe; }
+  bool  isConstant() const override { return false;    }
 
 private:
   void *m_safe, *m_unsafe;
 };
+
+TEST(APITest, FuncFlags) {
+  const ReaScriptFunc func { "0.9", nullptr,
+    { "-API_"       API_PREFIX "foo", nullptr },
+    { "-APIvararg_" API_PREFIX "foo", nullptr },
+    { "-APIdef_"    API_PREFIX "foo",
+      const_cast<char *>("int\0ImGui_Context*\0ctx\0help text") },
+  };
+  EXPECT_STREQ(func.name(), "foo");
+  EXPECT_EQ(func.m_flags, API::Symbol::TargetNative | API::Symbol::TargetScript);
+
+  const ReaScriptFunc cnst { "0.9", nullptr,
+    { "-API_"       API_PREFIX "bar", nullptr },
+    { "-APIvararg_" API_PREFIX "bar", nullptr },
+    { "-APIdef_"    API_PREFIX "bar",
+      const_cast<char *>("int\0\0\0help text") },
+  };
+  EXPECT_TRUE(cnst.m_flags & API::Symbol::Constant);
+
+  const ReaScriptFunc factory { "0.9", nullptr,
+    { "-API_"       API_PREFIX "create", nullptr },
+    { "-APIvararg_" API_PREFIX "create", nullptr },
+    { "-APIdef_"    API_PREFIX "create",
+      const_cast<char *>("ImGui_ImageSet*\0\0\0help text") },
+  };
+  EXPECT_FALSE(factory.m_flags & API::Symbol::Constant);
+}
 
 TEST(APITest, LookupCallable) {
   MyCallable foo1 { "0.7", "0.8", "test!lookup!foo" };

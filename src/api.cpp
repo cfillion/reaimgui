@@ -114,6 +114,8 @@ std::string Callable::serializeAll(const VerNum version)
     if(!match)
       continue;
     char flags {};
+    if(match->isConstant())
+      flags |= IsConst;
     if(typeid(*match) == typeid(ShimFunc))
       flags |= IsShim;
     out += flags;
@@ -135,8 +137,9 @@ Section::Section(const Section *parent, const char *file,
   lastSection() = this;
 }
 
-Symbol::Symbol()
-  : m_section { lastSection() }, m_next { lastSymbol() }, m_line { lastLine() }
+Symbol::Symbol(const int flags)
+  : m_section { lastSection() }, m_next { lastSymbol() }, m_line { lastLine() },
+    m_flags { flags }
 {
   lastSymbol() = this;
 }
@@ -154,16 +157,25 @@ void PluginRegister::announce(const bool init) const
   plugin_register(key + init, value);
 }
 
-static const char *funcNameFromReg(const PluginRegister &reg)
+static const char *extractRegName(const PluginRegister &reg)
 {
   return &reg.key[strlen("-API_" API_PREFIX)];
+}
+
+constexpr bool isDefConstant(const char *definition)
+{
+  using namespace std::literals;
+  constexpr std::string_view signature { "int\0\0"sv };
+  return std::string_view { definition, signature.size() } == signature;
 }
 
 ReaScriptFunc::ReaScriptFunc(const VerNum version, void *impl,
                              const PluginRegister &native,
                              const PluginRegister &reascript,
                              const PluginRegister &desc)
-  : Callable { version, VerNum::MAX, funcNameFromReg(native) },
+  : Callable { version, VerNum::MAX, extractRegName(native) },
+    Symbol { TargetNative | TargetScript |
+      (isDefConstant(static_cast<const char *>(desc.value)) ? Constant : 0) },
     m_impl { impl }, m_regs { native, reascript, desc }
 {
 }
@@ -176,12 +188,12 @@ void ReaScriptFunc::announce(const bool init) const
 
 const char *ReaScriptFunc::name() const
 {
-  return funcNameFromReg(m_regs[0]);
+  return extractRegName(m_regs[0]);
 }
 
 EELFunc::EELFunc(const VerNum version, const char *name, const char *definition,
                  VarArgFunc impl, const int argc)
-  : m_name { name }, m_definition { definition },
+  : Symbol { TargetEELFunc }, m_name { name }, m_definition { definition },
     m_impl { impl }, m_version { version }, m_argc { std::max(1, argc) }
 {
   // std::max as workaround for EEL needing argc >= 1 because it does
@@ -205,7 +217,8 @@ void EELFunc::announce(const bool init) const
 }
 
 EELVar::EELVar(const VerNum version, const char *name, const char *definition)
-  : m_name { name }, m_definition { definition }, m_version { version }
+  : Symbol { TargetEELFunc | Variable },
+    m_name { name }, m_definition { definition }, m_version { version }
 {
 }
 
@@ -213,7 +226,8 @@ ShimFunc::ShimFunc(const VerNum since, const VerNum until,
                    const char *name, const char *definition,
                    void *safeImpl, void *varargImpl, void *unsafeImpl)
   : Callable { since, until, name }, m_definition { definition },
-    m_safeImpl { safeImpl }, m_varargImpl { varargImpl }, m_unsafeImpl { unsafeImpl }
+    m_safeImpl { safeImpl }, m_varargImpl { varargImpl },
+    m_unsafeImpl { unsafeImpl }, m_isConstant { isDefConstant(definition) }
 {
 }
 

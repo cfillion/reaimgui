@@ -106,13 +106,13 @@ struct Function {
   std::vector<Argument> args;
   std::string_view doc;
   std::deque<const API::Section *> sections;
-  unsigned int flags;
   VerNum version;
+  int flags;
 
   bool operator<(const Function &) const;
 
-  bool isVar() const { return flags & API::Symbol::Variable; }
-  bool isEnum() const { return type.isInt() && args.empty(); }
+  bool isVar()  const { return flags & API::Symbol::Variable; }
+  bool isEnum() const { return flags & API::Symbol::Constant; }
   bool hasOutputArgs() const;
   bool hasOptionalArgs() const;
 
@@ -176,7 +176,7 @@ static std::string_view defaultValue(const std::string_view value)
 Function::Function(const API::Symbol *api)
   : section { api->m_section }, name { api->name() },
     type { api->definition() }, line { api->m_line },
-    flags { api->flags() }, version { api->version() }
+    version { api->version() }, flags { api->m_flags }
 {
   const API::Section *curSection { section };
   do { sections.push_front(curSection); }
@@ -480,7 +480,10 @@ void Function::luaSignature(std::ostream &stream) const
   }
   if(hasReturns)
     stream << " = ";
-  stream << "ImGui." << name << '(';
+  stream << "ImGui." << name;
+  if(isEnum())
+    return;
+  stream << '(';
   {
     const bool listOutputs { hasOptionalArgs() };
     CommaSep cs { stream };

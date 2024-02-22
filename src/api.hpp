@@ -56,6 +56,7 @@ namespace API {
 
     virtual void *safeImpl()   const = 0;
     virtual void *unsafeImpl() const = 0;
+    virtual bool  isConstant() const = 0;
 
   private:
     VerNum m_since, m_until;
@@ -69,24 +70,25 @@ namespace API {
       TargetScript  = 1<<1,
       TargetEELFunc = 1<<2,
 
+      Constant = 1<<10,
       Variable = 1<<11,
     };
 
-    Symbol();
+    Symbol(int flags);
     Symbol(const Symbol &) = delete;
 
     const Section *m_section;
     const Symbol  *m_next;
     LineNumber     m_line;
+    int m_flags;
 
     virtual void announce(bool)      const = 0;
     virtual const char *name()       const = 0;
     virtual const char *definition() const = 0;
-    virtual unsigned int flags()     const = 0;
     virtual VerNum version()         const = 0;
   };
 
-  class ReaScriptFunc final : public Callable, Symbol {
+  class ReaScriptFunc final : public Callable, public Symbol {
   public:
     ReaScriptFunc(VerNum availableSince, void *impl,
                   const PluginRegister &native,
@@ -100,8 +102,8 @@ namespace API {
     const char *name() const override;
     const char *definition() const override {
       return static_cast<const char *>(m_regs[2].value); }
-    unsigned int flags() const override { return TargetNative | TargetScript; }
-    VerNum version() const override { return Callable::version(); }
+    VerNum version()  const override { return Callable::version(); }
+    bool isConstant() const override { return m_flags & Constant;  }
 
   private:
     void *m_impl;
@@ -114,14 +116,16 @@ namespace API {
       const char *name, const char *definition,
       void *safeImpl, void *varargImpl, void *unsafeImpl);
 
-    void *safeImpl()   const override { return m_safeImpl; }
+    void *safeImpl()   const override { return m_safeImpl;   }
     void *unsafeImpl() const override { return m_unsafeImpl; }
+    bool  isConstant() const override { return m_isConstant; }
 
     void activate() const;
 
   private:
     const char *m_definition;
     void *m_safeImpl, *m_varargImpl, *m_unsafeImpl;
+    bool m_isConstant;
   };
 
   // All fields from this+size are treated as const char* of Callable names

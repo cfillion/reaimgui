@@ -147,7 +147,7 @@ end
 -- In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
 function demo.HelpMarker(desc)
   ImGui.TextDisabled(ctx, '(?)')
-  if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayShort()) and ImGui.BeginTooltip(ctx) then
+  if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayShort) and ImGui.BeginTooltip(ctx) then
     ImGui.PushTextWrapPos(ctx, ImGui.GetFontSize(ctx) * 35.0)
     ImGui.Text(ctx, desc)
     ImGui.PopTextWrapPos(ctx)
@@ -179,12 +179,12 @@ function demo.Link(url)
     return
   end
 
-  local color = ImGui.GetStyleColor(ctx, ImGui.Col_CheckMark())
+  local color = ImGui.GetStyleColor(ctx, ImGui.Col_CheckMark)
   ImGui.TextColored(ctx, color, url)
   if ImGui.IsItemClicked(ctx) then
     reaper.CF_ShellExecute(url)
   elseif ImGui.IsItemHovered(ctx) then
-    ImGui.SetMouseCursor(ctx, ImGui.MouseCursor_Hand())
+    ImGui.SetMouseCursor(ctx, ImGui.MouseCursor_Hand)
   end
 end
 
@@ -277,27 +277,27 @@ function demo.ShowDemoWindow(open)
   end
 
   -- Demonstrate the various window flags. Typically you would just use the default!
-  local window_flags = ImGui.WindowFlags_None()
-  if demo.no_titlebar       then window_flags = window_flags | ImGui.WindowFlags_NoTitleBar()            end
-  if demo.no_scrollbar      then window_flags = window_flags | ImGui.WindowFlags_NoScrollbar()           end
-  if not demo.no_menu       then window_flags = window_flags | ImGui.WindowFlags_MenuBar()               end
-  if demo.no_move           then window_flags = window_flags | ImGui.WindowFlags_NoMove()                end
-  if demo.no_resize         then window_flags = window_flags | ImGui.WindowFlags_NoResize()              end
-  if demo.no_collapse       then window_flags = window_flags | ImGui.WindowFlags_NoCollapse()            end
-  if demo.no_nav            then window_flags = window_flags | ImGui.WindowFlags_NoNav()                 end
-  if demo.no_background     then window_flags = window_flags | ImGui.WindowFlags_NoBackground()          end
+  local window_flags = ImGui.WindowFlags_None
+  if demo.no_titlebar       then window_flags = window_flags | ImGui.WindowFlags_NoTitleBar            end
+  if demo.no_scrollbar      then window_flags = window_flags | ImGui.WindowFlags_NoScrollbar           end
+  if not demo.no_menu       then window_flags = window_flags | ImGui.WindowFlags_MenuBar               end
+  if demo.no_move           then window_flags = window_flags | ImGui.WindowFlags_NoMove                end
+  if demo.no_resize         then window_flags = window_flags | ImGui.WindowFlags_NoResize              end
+  if demo.no_collapse       then window_flags = window_flags | ImGui.WindowFlags_NoCollapse            end
+  if demo.no_nav            then window_flags = window_flags | ImGui.WindowFlags_NoNav                 end
+  if demo.no_background     then window_flags = window_flags | ImGui.WindowFlags_NoBackground          end
   -- if demo.no_bring_to_front then window_flags = window_flags | ImGui.WindowFlags_NoBringToFrontOnFocus() end
-  if demo.no_docking        then window_flags = window_flags | ImGui.WindowFlags_NoDocking()             end
-  if demo.topmost           then window_flags = window_flags | ImGui.WindowFlags_TopMost()               end
-  if demo.unsaved_document  then window_flags = window_flags | ImGui.WindowFlags_UnsavedDocument()       end
+  if demo.no_docking        then window_flags = window_flags | ImGui.WindowFlags_NoDocking             end
+  if demo.topmost           then window_flags = window_flags | ImGui.WindowFlags_TopMost               end
+  if demo.unsaved_document  then window_flags = window_flags | ImGui.WindowFlags_UnsavedDocument       end
   if demo.no_close          then open = false end -- disable the close button
 
   -- We specify a default position/size in case there's no data in the .ini file.
   -- We only do it to make the demo applications a little more welcoming, but typically this isn't required.
   local main_viewport = ImGui.GetMainViewport(ctx)
   local work_pos = {ImGui.Viewport_GetWorkPos(main_viewport)}
-  ImGui.SetNextWindowPos(ctx, work_pos[1] + 20, work_pos[2] + 20, ImGui.Cond_FirstUseEver())
-  ImGui.SetNextWindowSize(ctx, 550, 680, ImGui.Cond_FirstUseEver())
+  ImGui.SetNextWindowPos(ctx, work_pos[1] + 20, work_pos[2] + 20, ImGui.Cond_FirstUseEver)
+  ImGui.SetNextWindowSize(ctx, 550, 680, ImGui.Cond_FirstUseEver)
 
   if demo.set_dock_id then
     ImGui.SetNextWindowDockID(ctx, demo.set_dock_id)
@@ -410,39 +410,39 @@ function demo.ShowDemoWindow(open)
         local rv,val = ImGui.Checkbox(ctx, name, ImGui.GetConfigVar(ctx, var))
         if rv then ImGui.SetConfigVar(ctx, var, val and 1 or 0) end
       end
-      config.flags = ImGui.GetConfigVar(ctx, ImGui.ConfigVar_Flags())
+      config.flags = ImGui.GetConfigVar(ctx, ImGui.ConfigVar_Flags)
 
       ImGui.SeparatorText(ctx, 'General')
-      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NavEnableKeyboard', config.flags, ImGui.ConfigFlags_NavEnableKeyboard())
+      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NavEnableKeyboard', config.flags, ImGui.ConfigFlags_NavEnableKeyboard)
       ImGui.SameLine(ctx); demo.HelpMarker('Enable keyboard controls.')
       -- ImGui.CheckboxFlags("io.ConfigFlags: NavEnableGamepad",     &io.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad)
       -- ImGui.SameLine(ctx); demo.HelpMarker("Enable gamepad controls. Require backend to set io.BackendFlags |= ImGuiBackendFlags_HasGamepad.\n\nRead instructions in imgui.cpp for details.")
-      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NavEnableSetMousePos', config.flags, ImGui.ConfigFlags_NavEnableSetMousePos())
+      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NavEnableSetMousePos', config.flags, ImGui.ConfigFlags_NavEnableSetMousePos)
       ImGui.SameLine(ctx); demo.HelpMarker('Instruct navigation to move the mouse cursor.')
-      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoMouse', config.flags, ImGui.ConfigFlags_NoMouse())
-      if (config.flags & ImGui.ConfigFlags_NoMouse()) ~= 0 then
+      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoMouse', config.flags, ImGui.ConfigFlags_NoMouse)
+      if (config.flags & ImGui.ConfigFlags_NoMouse) ~= 0 then
         -- The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
         if ImGui.GetTime(ctx) % 0.40 < 0.20 then
           ImGui.SameLine(ctx)
           ImGui.Text(ctx, '<<PRESS SPACE TO DISABLE>>')
         end
-        if ImGui.IsKeyPressed(ctx, ImGui.Key_Space()) then
-          config.flags = config.flags & ~ImGui.ConfigFlags_NoMouse()
+        if ImGui.IsKeyPressed(ctx, ImGui.Key_Space) then
+          config.flags = config.flags & ~ImGui.ConfigFlags_NoMouse
         end
       end
-      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', config.flags, ImGui.ConfigFlags_NoMouseCursorChange())
+      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', config.flags, ImGui.ConfigFlags_NoMouseCursorChange)
       ImGui.SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
-      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, ImGui.ConfigFlags_NoSavedSettings())
+      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, ImGui.ConfigFlags_NoSavedSettings)
       ImGui.SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
 
-      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_DockingEnable', config.flags, ImGui.ConfigFlags_DockingEnable())
+      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_DockingEnable', config.flags, ImGui.ConfigFlags_DockingEnable)
       ImGui.SameLine(ctx)
-      if ImGui.GetConfigVar(ctx, ImGui.ConfigVar_DockingWithShift()) then
+      if ImGui.GetConfigVar(ctx, ImGui.ConfigVar_DockingWithShift) then
         demo.HelpMarker('Drag from window title bar or their tab to dock/undock. Hold SHIFT to enable docking.\n\nDrag from window menu button (upper-left button) to undock an entire node (all windows).')
       else
           demo.HelpMarker('Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking.\n\nDrag from window menu button (upper-left button) to undock an entire node (all windows).')
       end
-      if config.flags & ImGui.ConfigFlags_DockingEnable() ~= 0 then
+      if config.flags & ImGui.ConfigFlags_DockingEnable ~= 0 then
         ImGui.Indent(ctx)
         configVarCheckbox('ConfigVar_DockingNoSplit')
         ImGui.SameLine(ctx); demo.HelpMarker('Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.')
@@ -499,7 +499,7 @@ function demo.ShowDemoWindow(open)
       -- configVarCheckbox('ConfigVar_DebugIgnoreFocusLoss')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Option to deactivate io.AddFocusEvent(false) handling. May facilitate interactions with a debugger when focus loss leads to clearing inputs data.')
 
-      ImGui.SetConfigVar(ctx, ImGui.ConfigVar_Flags(), config.flags)
+      ImGui.SetConfigVar(ctx, ImGui.ConfigVar_Flags, config.flags)
       ImGui.TreePop(ctx)
       ImGui.Spacing(ctx)
     end
@@ -588,8 +588,8 @@ function demo.ShowDemoWindow(open)
       ImGui.EndTable(ctx)
     end
 
-    local flags = ImGui.GetConfigVar(ctx, ImGui.ConfigVar_Flags())
-    local docking_disabled = demo.no_docking or (flags & ImGui.ConfigFlags_DockingEnable()) == 0
+    local flags = ImGui.GetConfigVar(ctx, ImGui.ConfigVar_Flags)
+    local docking_disabled = demo.no_docking or (flags & ImGui.ConfigFlags_DockingEnable) == 0
 
     ImGui.Spacing(ctx)
     if docking_disabled then
@@ -696,9 +696,9 @@ function demo.ShowDemoWindowWidgets()
       ImGui.SameLine(ctx)
      end
      ImGui.PushID(ctx, i)
-     ImGui.PushStyleColor(ctx, ImGui.Col_Button(),        demo.HSV(i / 7.0, 0.6, 0.6, 1.0))
-     ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(), demo.HSV(i / 7.0, 0.7, 0.7, 1.0))
-     ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(),  demo.HSV(i / 7.0, 0.8, 0.8, 1.0))
+     ImGui.PushStyleColor(ctx, ImGui.Col_Button,        demo.HSV(i / 7.0, 0.6, 0.6, 1.0))
+     ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered, demo.HSV(i / 7.0, 0.7, 0.7, 1.0))
+     ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive,  demo.HSV(i / 7.0, 0.8, 0.8, 1.0))
      ImGui.Button(ctx, 'Click')
      ImGui.PopStyleColor(ctx, 3)
      ImGui.PopID(ctx)
@@ -712,13 +712,13 @@ function demo.ShowDemoWindowWidgets()
     ImGui.SameLine(ctx)
 
     -- Arrow buttons with Repeater
-    local spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing())
+    local spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
     ImGui.PushButtonRepeat(ctx, true)
-    if ImGui.ArrowButton(ctx, '##left', ImGui.Dir_Left()) then
+    if ImGui.ArrowButton(ctx, '##left', ImGui.Dir_Left) then
       widgets.basic.counter = widgets.basic.counter - 1
     end
     ImGui.SameLine(ctx, 0.0, spacing)
-    if ImGui.ArrowButton(ctx, '##right', ImGui.Dir_Right()) then
+    if ImGui.ArrowButton(ctx, '##right', ImGui.Dir_Right) then
       widgets.basic.counter = widgets.basic.counter + 1
     end
     ImGui.PopButtonRepeat(ctx)
@@ -747,7 +747,7 @@ function demo.ShowDemoWindowWidgets()
 
       ImGui.SameLine(ctx)
       ImGui.Button(ctx, 'Delayed')
-      if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNormal()) then -- With a delay
+      if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNormal) then -- With a delay
         ImGui.SetTooltip(ctx, 'I am a tooltip with a delay.')
       end
 
@@ -792,7 +792,7 @@ function demo.ShowDemoWindowWidgets()
         Hold SHIFT/ALT for faster/slower edit.\n\z
         Double-click or CTRL+click to input value.')
 
-      rv,widgets.basic.i2 = ImGui.DragInt(ctx, 'drag int 0..100', widgets.basic.i2, 1, 0, 100, '%d%%', ImGui.SliderFlags_AlwaysClamp())
+      rv,widgets.basic.i2 = ImGui.DragInt(ctx, 'drag int 0..100', widgets.basic.i2, 1, 0, 100, '%d%%', ImGui.SliderFlags_AlwaysClamp)
 
       rv,widgets.basic.d2 = ImGui.DragDouble(ctx, 'drag double', widgets.basic.d2, 0.005)
       rv,widgets.basic.d3 = ImGui.DragDouble(ctx, 'drag small double', widgets.basic.d3, 0.0001, 0.0, 0.0, '%.06f ns')
@@ -805,7 +805,7 @@ function demo.ShowDemoWindowWidgets()
       ImGui.SameLine(ctx); demo.HelpMarker('CTRL+click to input value.')
 
       rv,widgets.basic.d4 = ImGui.SliderDouble(ctx, 'slider double', widgets.basic.d4, 0.0, 1.0, 'ratio = %.3f')
-      rv,widgets.basic.d5 = ImGui.SliderDouble(ctx, 'slider double (log)', widgets.basic.d5, -10.0, 10.0, '%.4f', ImGui.SliderFlags_Logarithmic())
+      rv,widgets.basic.d5 = ImGui.SliderDouble(ctx, 'slider double (log)', widgets.basic.d5, -10.0, 10.0, '%.4f', ImGui.SliderFlags_Logarithmic)
 
       rv,widgets.basic.angle = ImGui.SliderAngle(ctx, 'slider angle', widgets.basic.angle)
 
@@ -869,9 +869,9 @@ function demo.ShowDemoWindowWidgets()
   if ImGui.TreeNode(ctx, 'Trees') then
     if not widgets.trees then
       widgets.trees = {
-        base_flags = ImGui.TreeNodeFlags_OpenOnArrow() |
-                     ImGui.TreeNodeFlags_OpenOnDoubleClick() |
-                     ImGui.TreeNodeFlags_SpanAvailWidth(),
+        base_flags = ImGui.TreeNodeFlags_OpenOnArrow |
+                     ImGui.TreeNodeFlags_OpenOnDoubleClick |
+                     ImGui.TreeNodeFlags_SpanAvailWidth,
         align_label_with_current_x_position = false,
         test_drag_and_drop = false,
         selection_mask = 1 << 2,
@@ -883,7 +883,7 @@ function demo.ShowDemoWindowWidgets()
         -- Use SetNextItemOpen() so set the default state of a node to be open. We could
         -- also use TreeNodeEx() with the ImGui_TreeNodeFlags_DefaultOpen flag to achieve the same thing!
         if i == 0 then
-          ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once())
+          ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
         end
 
         if ImGui.TreeNodeEx(ctx, i, ('Child %d'):format(i)) then
@@ -900,10 +900,10 @@ function demo.ShowDemoWindowWidgets()
       demo.HelpMarker(
         'This is a more typical looking tree with selectable nodes.\n\z
          Click to select, CTRL+Click to toggle, click on arrows or double-click to open.')
-      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnArrow',       widgets.trees.base_flags, ImGui.TreeNodeFlags_OpenOnArrow())
-      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnDoubleClick', widgets.trees.base_flags, ImGui.TreeNodeFlags_OpenOnDoubleClick())
-      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_SpanAvailWidth',    widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanAvailWidth()); ImGui.SameLine(ctx); demo.HelpMarker('Extend hit area to all available width instead of allowing more items to be laid out after the node.')
-      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'ImGuiTreeNodeFlags_SpanFullWidth',      widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanFullWidth())
+      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnArrow',       widgets.trees.base_flags, ImGui.TreeNodeFlags_OpenOnArrow)
+      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_OpenOnDoubleClick', widgets.trees.base_flags, ImGui.TreeNodeFlags_OpenOnDoubleClick)
+      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'ImGui_TreeNodeFlags_SpanAvailWidth',    widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanAvailWidth); ImGui.SameLine(ctx); demo.HelpMarker('Extend hit area to all available width instead of allowing more items to be laid out after the node.')
+      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'ImGuiTreeNodeFlags_SpanFullWidth',      widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanFullWidth)
       rv,widgets.trees.align_label_with_current_x_position = ImGui.Checkbox(ctx, 'Align label with current X position', widgets.trees.align_label_with_current_x_position)
       rv,widgets.trees.test_drag_and_drop = ImGui.Checkbox(ctx, 'Test tree node as drag source',      widgets.trees.test_drag_and_drop)
       ImGui.Text(ctx, 'Hello!')
@@ -923,7 +923,7 @@ function demo.ShowDemoWindowWidgets()
         local node_flags = widgets.trees.base_flags
         local is_selected = (widgets.trees.selection_mask & (1 << i)) ~= 0
         if is_selected then
-          node_flags = node_flags | ImGui.TreeNodeFlags_Selected()
+          node_flags = node_flags | ImGui.TreeNodeFlags_Selected
         end
         if i < 3 then
           -- Items 0..2 are Tree Node
@@ -944,7 +944,7 @@ function demo.ShowDemoWindowWidgets()
           -- Items 3..5 are Tree Leaves
           -- The only reason we use TreeNode at all is to allow selection of the leaf. Otherwise we can
           -- use BulletText() or advance the cursor by GetTreeNodeToLabelSpacing() and call Text().
-          node_flags = node_flags | ImGui.TreeNodeFlags_Leaf() | ImGui.TreeNodeFlags_NoTreePushOnOpen() -- | ImGui.TreeNodeFlags_Bullet()
+          node_flags = node_flags | ImGui.TreeNodeFlags_Leaf | ImGui.TreeNodeFlags_NoTreePushOnOpen -- | ImGui.TreeNodeFlags_Bullet
           ImGui.TreeNodeEx(ctx, i, ('Selectable Leaf %d'):format(i), node_flags)
           if ImGui.IsItemClicked(ctx) and not ImGui.IsItemToggledOpen(ctx) then
             node_clicked = i
@@ -960,7 +960,7 @@ function demo.ShowDemoWindowWidgets()
       if node_clicked ~= -1 then
         -- Update selection state
         -- (process outside of tree loop to avoid visual inconsistencies during the clicking frame)
-        if ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl()) then -- CTRL+click to toggle
+        if ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl) then -- CTRL+click to toggle
           widgets.trees.selection_mask = widgets.trees.selection_mask ~ (1 << node_clicked)
         elseif widgets.trees.selection_mask & (1 << node_clicked) == 0 then -- Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
           widgets.trees.selection_mask = (1 << node_clicked)                -- Click to single-select
@@ -986,7 +986,7 @@ function demo.ShowDemoWindowWidgets()
 
     rv,widgets.cheads.closable_group = ImGui.Checkbox(ctx, 'Show 2nd header', widgets.cheads.closable_group)
 
-    if ImGui.CollapsingHeader(ctx, 'Header', nil, ImGui.TreeNodeFlags_None()) then
+    if ImGui.CollapsingHeader(ctx, 'Header', nil, ImGui.TreeNodeFlags_None) then
       ImGui.Text(ctx, ('IsItemHovered: %s'):format(ImGui.IsItemHovered(ctx)))
       for i = 0, 4 do
         ImGui.Text(ctx, ('Some content %s'):format(i))
@@ -1223,8 +1223,8 @@ function demo.ShowDemoWindowWidgets()
       local pos_x, pos_y = ImGui.GetCursorScreenPos(ctx)
       local uv_min_x, uv_min_y = 0.0, 0.0 -- Top-left
       local uv_max_x, uv_max_y = 1.0, 1.0 -- Lower-right
-      local tint_col   = widgets.images.use_text_color_for_tint and ImGui.GetStyleColor(ctx, ImGui.Col_Text()) or 0xFFFFFFFF -- No tint
-      local border_col = ImGui.GetStyleColor(ctx, ImGui.Col_Border())
+      local tint_col   = widgets.images.use_text_color_for_tint and ImGui.GetStyleColor(ctx, ImGui.Col_Text) or 0xFFFFFFFF -- No tint
+      local border_col = ImGui.GetStyleColor(ctx, ImGui.Col_Border)
       ImGui.Image(ctx, widgets.images.bitmap, my_tex_w, my_tex_h,
         uv_min_x, uv_min_y, uv_max_x, uv_max_y, tint_col, border_col)
       if ImGui.IsItemHovered(ctx) and ImGui.BeginTooltip(ctx) then
@@ -1253,7 +1253,7 @@ function demo.ShowDemoWindowWidgets()
       -- Here we are trying to display only a 32x32 pixels area of the texture, hence the UV computation.
       -- Read about UV coordinates here: https://github.com/ocornut/imgui/wiki/Image-Loading-and-Displaying-Examples
       if i > 0 then
-        ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding(), i - 1, i - 1)
+        ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, i - 1, i - 1)
       end
       local size_w, size_h = 32.0, 32.0                     -- Size of the image we want to make visible
       local uv0_x, uv0_y = 0.0, 0.0                         -- UV coordinates for lower-left
@@ -1277,7 +1277,7 @@ function demo.ShowDemoWindowWidgets()
   if ImGui.TreeNode(ctx, 'Combo') then
     if not widgets.combos then
       widgets.combos = {
-        flags = ImGui.ComboFlags_None(),
+        flags = ImGui.ComboFlags_None,
         current_item1 = 1,
         current_item2 = 0,
         current_item3 = -1,
@@ -1286,17 +1286,17 @@ function demo.ShowDemoWindowWidgets()
 
     -- Combo Boxes are also called "Dropdown" in other systems
     -- Expose flags as checkbox for the demo
-    rv,widgets.combos.flags = ImGui.CheckboxFlags(ctx, 'ImGuiComboFlags_PopupAlignLeft', widgets.combos.flags, ImGui.ComboFlags_PopupAlignLeft())
+    rv,widgets.combos.flags = ImGui.CheckboxFlags(ctx, 'ImGuiComboFlags_PopupAlignLeft', widgets.combos.flags, ImGui.ComboFlags_PopupAlignLeft)
     ImGui.SameLine(ctx); demo.HelpMarker('Only makes a difference if the popup is larger than the combo')
 
-    rv,widgets.combos.flags = ImGui.CheckboxFlags(ctx, 'ImGuiComboFlags_NoArrowButton', widgets.combos.flags, ImGui.ComboFlags_NoArrowButton())
+    rv,widgets.combos.flags = ImGui.CheckboxFlags(ctx, 'ImGuiComboFlags_NoArrowButton', widgets.combos.flags, ImGui.ComboFlags_NoArrowButton)
     if rv then
-      widgets.combos.flags = widgets.combos.flags & ~ImGui.ComboFlags_NoPreview() -- Clear the other flag, as we cannot combine both
+      widgets.combos.flags = widgets.combos.flags & ~ImGui.ComboFlags_NoPreview -- Clear the other flag, as we cannot combine both
     end
 
-    rv,widgets.combos.flags = ImGui.CheckboxFlags(ctx, 'ImGuiComboFlags_NoPreview', widgets.combos.flags, ImGui.ComboFlags_NoPreview())
+    rv,widgets.combos.flags = ImGui.CheckboxFlags(ctx, 'ImGuiComboFlags_NoPreview', widgets.combos.flags, ImGui.ComboFlags_NoPreview)
     if rv then
-      widgets.combos.flags = widgets.combos.flags & ~ImGui.ComboFlags_NoArrowButton() -- Clear the other flag, as we cannot combine both
+      widgets.combos.flags = widgets.combos.flags & ~ImGui.ComboFlags_NoArrowButton -- Clear the other flag, as we cannot combine both
     end
 
     -- Using the generic BeginCombo() API, you have full control over how to display the combo contents.
@@ -1413,7 +1413,7 @@ function demo.ShowDemoWindowWidgets()
       rv,widgets.selectables.basic[2] = ImGui.Selectable(ctx, '2. I am selectable', widgets.selectables.basic[2])
       ImGui.Text(ctx, '(I am not selectable)')
       rv,widgets.selectables.basic[4] = ImGui.Selectable(ctx, '4. I am selectable', widgets.selectables.basic[4])
-      if ImGui.Selectable(ctx, '5. I am double clickable', widgets.selectables.basic[5], ImGui.SelectableFlags_AllowDoubleClick()) then
+      if ImGui.Selectable(ctx, '5. I am double clickable', widgets.selectables.basic[5], ImGui.SelectableFlags_AllowDoubleClick) then
         if ImGui.IsMouseDoubleClicked(ctx, 0) then
           widgets.selectables.basic[5] = not widgets.selectables.basic[5]
         end
@@ -1434,7 +1434,7 @@ function demo.ShowDemoWindowWidgets()
       demo.HelpMarker('Hold CTRL and click to select multiple items.')
       for i,sel in ipairs(widgets.selectables.multiple) do
         if ImGui.Selectable(ctx, ('Object %d'):format(i-1), sel) then
-          if not ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl()) then -- Clear selection when CTRL is not held
+          if not ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl) then -- Clear selection when CTRL is not held
             for j = 1, #widgets.selectables.multiple do
               widgets.selectables.multiple[j] = false
             end
@@ -1452,7 +1452,7 @@ function demo.ShowDemoWindowWidgets()
       ImGui.TreePop(ctx)
     end
     if ImGui.TreeNode(ctx, 'In columns') then
-      if ImGui.BeginTable(ctx, 'split1', 3, ImGui.TableFlags_Resizable() | ImGui.TableFlags_NoSavedSettings() | ImGui.TableFlags_Borders()) then
+      if ImGui.BeginTable(ctx, 'split1', 3, ImGui.TableFlags_Resizable | ImGui.TableFlags_NoSavedSettings | ImGui.TableFlags_Borders) then
         for i,sel in ipairs(widgets.selectables.columns) do
           ImGui.TableNextColumn(ctx)
           rv,widgets.selectables.columns[i] = ImGui.Selectable(ctx, ('Item %d'):format(i-1), sel)
@@ -1460,11 +1460,11 @@ function demo.ShowDemoWindowWidgets()
         ImGui.EndTable(ctx)
       end
       ImGui.Spacing(ctx)
-      if ImGui.BeginTable(ctx, 'split2', 3, ImGui.TableFlags_Resizable() | ImGui.TableFlags_NoSavedSettings() | ImGui.TableFlags_Borders()) then
+      if ImGui.BeginTable(ctx, 'split2', 3, ImGui.TableFlags_Resizable | ImGui.TableFlags_NoSavedSettings | ImGui.TableFlags_Borders) then
         for i,sel in ipairs(widgets.selectables.columns) do
           ImGui.TableNextRow(ctx)
           ImGui.TableNextColumn(ctx)
-          rv,widgets.selectables.columns[i] = ImGui.Selectable(ctx, ('Item %d'):format(i-1), sel, ImGui.SelectableFlags_SpanAllColumns())
+          rv,widgets.selectables.columns[i] = ImGui.Selectable(ctx, ('Item %d'):format(i-1), sel, ImGui.SelectableFlags_SpanAllColumns)
           ImGui.TableNextColumn(ctx)
           ImGui.Text(ctx, 'Some other contents')
           ImGui.TableNextColumn(ctx)
@@ -1488,7 +1488,7 @@ function demo.ShowDemoWindowWidgets()
       end
       if winning_state then
         local time = ImGui.GetTime(ctx)
-        ImGui.PushStyleVar(ctx, ImGui.StyleVar_SelectableTextAlign(),
+        ImGui.PushStyleVar(ctx, ImGui.StyleVar_SelectableTextAlign,
           0.5 + 0.5 * math.cos(time * 2.0), 0.5 + 0.5 * math.sin(time * 3.0))
       end
 
@@ -1527,9 +1527,9 @@ function demo.ShowDemoWindowWidgets()
           local align_x, align_y = (x-1) / 2.0, (y-1) / 2.0
           local name = ('(%.1f,%.1f)'):format(align_x, align_y)
           if x > 1 then ImGui.SameLine(ctx); end
-          ImGui.PushStyleVar(ctx, ImGui.StyleVar_SelectableTextAlign(), align_x, align_y)
+          ImGui.PushStyleVar(ctx, ImGui.StyleVar_SelectableTextAlign, align_x, align_y)
           local row = widgets.selectables.align[y]
-          rv,row[x] = ImGui.Selectable(ctx, name, row[x], ImGui.SelectableFlags_None(), 80, 80)
+          rv,row[x] = ImGui.Selectable(ctx, name, row[x], ImGui.SelectableFlags_None, 80, 80)
           ImGui.PopStyleVar(ctx)
         end
       end
@@ -1557,16 +1557,16 @@ label:
 	lock cmpxchg8b eax
 ]],
         },
-        flags = ImGui.InputTextFlags_AllowTabInput(),
+        flags = ImGui.InputTextFlags_AllowTabInput,
         buf = { '', '', '', '', '', '', '', '', '', '' },
         password = 'hunter2',
       }
     end
 
     if ImGui.TreeNode(ctx, 'Multi-line Text Input') then
-      rv,widgets.input.multiline.flags = ImGui.CheckboxFlags(ctx, 'ImGuiInputTextFlags_ReadOnly', widgets.input.multiline.flags, ImGui.InputTextFlags_ReadOnly());
-      rv,widgets.input.multiline.flags = ImGui.CheckboxFlags(ctx, 'ImGuiInputTextFlags_AllowTabInput', widgets.input.multiline.flags, ImGui.InputTextFlags_AllowTabInput());
-      rv,widgets.input.multiline.flags = ImGui.CheckboxFlags(ctx, 'ImGuiInputTextFlags_CtrlEnterForNewLine', widgets.input.multiline.flags, ImGui.InputTextFlags_CtrlEnterForNewLine());
+      rv,widgets.input.multiline.flags = ImGui.CheckboxFlags(ctx, 'ImGuiInputTextFlags_ReadOnly', widgets.input.multiline.flags, ImGui.InputTextFlags_ReadOnly);
+      rv,widgets.input.multiline.flags = ImGui.CheckboxFlags(ctx, 'ImGuiInputTextFlags_AllowTabInput', widgets.input.multiline.flags, ImGui.InputTextFlags_AllowTabInput);
+      rv,widgets.input.multiline.flags = ImGui.CheckboxFlags(ctx, 'ImGuiInputTextFlags_CtrlEnterForNewLine', widgets.input.multiline.flags, ImGui.InputTextFlags_CtrlEnterForNewLine);
       rv,widgets.input.multiline.text = ImGui.InputTextMultiline(ctx, '##source', widgets.input.multiline.text, -FLT_MIN, ImGui.GetTextLineHeight(ctx) * 16, widgets.input.multiline.flags)
       ImGui.TreePop(ctx)
     end
@@ -1595,19 +1595,19 @@ label:
       end
 
       rv,widgets.input.buf[1] = ImGui.InputText(ctx, 'default',     widgets.input.buf[1])
-      rv,widgets.input.buf[2] = ImGui.InputText(ctx, 'decimal',     widgets.input.buf[2], ImGui.InputTextFlags_CharsDecimal())
-      rv,widgets.input.buf[3] = ImGui.InputText(ctx, 'hexadecimal', widgets.input.buf[3], ImGui.InputTextFlags_CharsHexadecimal() | ImGui.InputTextFlags_CharsUppercase())
-      rv,widgets.input.buf[4] = ImGui.InputText(ctx, 'uppercase',   widgets.input.buf[4], ImGui.InputTextFlags_CharsUppercase())
-      rv,widgets.input.buf[5] = ImGui.InputText(ctx, 'no blank',    widgets.input.buf[5], ImGui.InputTextFlags_CharsNoBlank())
-      rv,widgets.input.buf[6] = ImGui.InputText(ctx, 'casing swap', widgets.input.buf[6], ImGui.InputTextFlags_CallbackCharFilter(), widgets.input.filterCasingSwap)
-      rv,widgets.input.buf[7] = ImGui.InputText(ctx, '"imgui"',     widgets.input.buf[7], ImGui.InputTextFlags_CallbackCharFilter(), widgets.input.filterImGuiLetters)
+      rv,widgets.input.buf[2] = ImGui.InputText(ctx, 'decimal',     widgets.input.buf[2], ImGui.InputTextFlags_CharsDecimal)
+      rv,widgets.input.buf[3] = ImGui.InputText(ctx, 'hexadecimal', widgets.input.buf[3], ImGui.InputTextFlags_CharsHexadecimal | ImGui.InputTextFlags_CharsUppercase)
+      rv,widgets.input.buf[4] = ImGui.InputText(ctx, 'uppercase',   widgets.input.buf[4], ImGui.InputTextFlags_CharsUppercase)
+      rv,widgets.input.buf[5] = ImGui.InputText(ctx, 'no blank',    widgets.input.buf[5], ImGui.InputTextFlags_CharsNoBlank)
+      rv,widgets.input.buf[6] = ImGui.InputText(ctx, 'casing swap', widgets.input.buf[6], ImGui.InputTextFlags_CallbackCharFilter, widgets.input.filterCasingSwap)
+      rv,widgets.input.buf[7] = ImGui.InputText(ctx, '"imgui"',     widgets.input.buf[7], ImGui.InputTextFlags_CallbackCharFilter, widgets.input.filterImGuiLetters)
       ImGui.TreePop(ctx)
     end
 
     if ImGui.TreeNode(ctx, 'Password Input') then
-      rv,widgets.input.password = ImGui.InputText(ctx, 'password', widgets.input.password, ImGui.InputTextFlags_Password())
+      rv,widgets.input.password = ImGui.InputText(ctx, 'password', widgets.input.password, ImGui.InputTextFlags_Password)
       ImGui.SameLine(ctx); demo.HelpMarker("Display all characters as '*'.\nDisable clipboard cut and copy.\nDisable logging.\n")
-      rv,widgets.input.password = ImGui.InputTextWithHint(ctx, 'password (w/ hint)', '<password>', widgets.input.password, ImGui.InputTextFlags_Password())
+      rv,widgets.input.password = ImGui.InputTextWithHint(ctx, 'password (w/ hint)', '<password>', widgets.input.password, ImGui.InputTextFlags_Password)
       rv,widgets.input.password = ImGui.InputText(ctx, 'password (clear)', widgets.input.password)
       ImGui.TreePop(ctx)
     end
@@ -1649,17 +1649,17 @@ label:
           'Key_DownArrow',
         }
         for _, const in ipairs(consts) do
-          ImGui.Function_SetValue(widgets.input.callback, const, ImGui[const]())
+          ImGui.Function_SetValue(widgets.input.callback, const, ImGui[const])
         end
       end
 
-      rv,widgets.input.buf[8] = ImGui.InputText(ctx, 'Completion', widgets.input.buf[8], ImGui.InputTextFlags_CallbackCompletion(), widgets.input.callback)
+      rv,widgets.input.buf[8] = ImGui.InputText(ctx, 'Completion', widgets.input.buf[8], ImGui.InputTextFlags_CallbackCompletion, widgets.input.callback)
       ImGui.SameLine(ctx); demo.HelpMarker("Here we append \"..\" each time Tab is pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.")
 
-      rv,widgets.input.buf[9] = ImGui.InputText(ctx, 'History', widgets.input.buf[9], ImGui.InputTextFlags_CallbackHistory(), widgets.input.callback)
+      rv,widgets.input.buf[9] = ImGui.InputText(ctx, 'History', widgets.input.buf[9], ImGui.InputTextFlags_CallbackHistory, widgets.input.callback)
       ImGui.SameLine(ctx); demo.HelpMarker("Here we replace and select text each time Up/Down are pressed. See 'Examples>Console' for a more meaningful demonstration of using this callback.")
 
-      rv,widgets.input.buf[10] = ImGui.InputText(ctx, 'Edit', widgets.input.buf[10], ImGui.InputTextFlags_CallbackEdit(), widgets.input.callback)
+      rv,widgets.input.buf[10] = ImGui.InputText(ctx, 'Edit', widgets.input.buf[10], ImGui.InputTextFlags_CallbackEdit, widgets.input.callback)
       ImGui.SameLine(ctx); demo.HelpMarker('Here we toggle the casing of the first character on every edit + count edits.')
       local edit_count = ImGui.Function_GetValue(widgets.input.callback, 'edit_count')
       ImGui.SameLine(ctx); ImGui.Text(ctx, ('(%d)'):format(edit_count))
@@ -1673,11 +1673,11 @@ label:
   if ImGui.TreeNode(ctx, 'Tabs') then
     if not widgets.tabs then
       widgets.tabs = {
-        flags1  = ImGui.TabBarFlags_Reorderable(),
+        flags1  = ImGui.TabBarFlags_Reorderable,
         opened  = { true, true, true, true },
-        flags2  = ImGui.TabBarFlags_AutoSelectNewTabs() |
-                  ImGui.TabBarFlags_Reorderable() |
-                  ImGui.TabBarFlags_FittingPolicyResizeDown(),
+        flags2  = ImGui.TabBarFlags_AutoSelectNewTabs |
+                  ImGui.TabBarFlags_Reorderable       |
+                  ImGui.TabBarFlags_FittingPolicyResizeDown,
         active  = { 1, 2, 3 },
         next_id = 4,
         show_leading_button  = true,
@@ -1685,11 +1685,11 @@ label:
       }
     end
 
-    local fitting_policy_mask = ImGui.TabBarFlags_FittingPolicyResizeDown() |
-                                ImGui.TabBarFlags_FittingPolicyScroll()
+    local fitting_policy_mask = ImGui.TabBarFlags_FittingPolicyResizeDown |
+                                ImGui.TabBarFlags_FittingPolicyScroll
 
     if ImGui.TreeNode(ctx, 'Basic') then
-      if ImGui.BeginTabBar(ctx, 'MyTabBar', ImGui.TabBarFlags_None()) then
+      if ImGui.BeginTabBar(ctx, 'MyTabBar', ImGui.TabBarFlags_None) then
         if ImGui.BeginTabItem(ctx, 'Avocado') then
           ImGui.Text(ctx, 'This is the Avocado tab!\nblah blah blah blah blah')
           ImGui.EndTabItem(ctx)
@@ -1710,19 +1710,19 @@ label:
 
     if ImGui.TreeNode(ctx, 'Advanced & Close Button') then
       -- Expose a couple of the available flags. In most cases you may just call BeginTabBar() with no flags (0).
-      rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_Reorderable', widgets.tabs.flags1, ImGui.TabBarFlags_Reorderable())
-      rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_AutoSelectNewTabs', widgets.tabs.flags1, ImGui.TabBarFlags_AutoSelectNewTabs())
-      rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_TabListPopupButton', widgets.tabs.flags1, ImGui.TabBarFlags_TabListPopupButton())
-      rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_NoCloseWithMiddleMouseButton', widgets.tabs.flags1, ImGui.TabBarFlags_NoCloseWithMiddleMouseButton())
+      rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_Reorderable', widgets.tabs.flags1, ImGui.TabBarFlags_Reorderable)
+      rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_AutoSelectNewTabs', widgets.tabs.flags1, ImGui.TabBarFlags_AutoSelectNewTabs)
+      rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_TabListPopupButton', widgets.tabs.flags1, ImGui.TabBarFlags_TabListPopupButton)
+      rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_NoCloseWithMiddleMouseButton', widgets.tabs.flags1, ImGui.TabBarFlags_NoCloseWithMiddleMouseButton)
 
       if widgets.tabs.flags1 & fitting_policy_mask == 0 then
-        widgets.tabs.flags1 = widgets.tabs.flags1 | ImGui.TabBarFlags_FittingPolicyResizeDown() -- was FittingPolicyDefault_
+        widgets.tabs.flags1 = widgets.tabs.flags1 | ImGui.TabBarFlags_FittingPolicyResizeDown -- was FittingPolicyDefault_
       end
-      if ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyResizeDown', widgets.tabs.flags1, ImGui.TabBarFlags_FittingPolicyResizeDown()) then
-        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fitting_policy_mask | ImGui.TabBarFlags_FittingPolicyResizeDown()
+      if ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyResizeDown', widgets.tabs.flags1, ImGui.TabBarFlags_FittingPolicyResizeDown) then
+        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fitting_policy_mask | ImGui.TabBarFlags_FittingPolicyResizeDown
       end
-      if ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyScroll', widgets.tabs.flags1, ImGui.TabBarFlags_FittingPolicyScroll()) then
-        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fitting_policy_mask | ImGui.TabBarFlags_FittingPolicyScroll()
+      if ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyScroll', widgets.tabs.flags1, ImGui.TabBarFlags_FittingPolicyScroll) then
+        widgets.tabs.flags1 = widgets.tabs.flags1 & ~fitting_policy_mask | ImGui.TabBarFlags_FittingPolicyScroll
       end
 
       -- Tab Bar
@@ -1737,7 +1737,7 @@ label:
       if ImGui.BeginTabBar(ctx, 'MyTabBar', widgets.tabs.flags1) then
         for n,opened in ipairs(widgets.tabs.opened) do
           if opened then
-            rv,widgets.tabs.opened[n] = ImGui.BeginTabItem(ctx, names[n], true, ImGui.TabItemFlags_None())
+            rv,widgets.tabs.opened[n] = ImGui.BeginTabItem(ctx, names[n], true, ImGui.TabItemFlags_None)
             if rv then
               ImGui.Text(ctx, ('This is the %s tab!'):format(names[n]))
               if n & 1 == 0 then
@@ -1761,18 +1761,18 @@ label:
       rv,widgets.tabs.show_trailing_button = ImGui.Checkbox(ctx, 'Show Trailing TabItemButton()', widgets.tabs.show_trailing_button)
 
       -- Expose some other flags which are useful to showcase how they interact with Leading/Trailing tabs
-      rv,widgets.tabs.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_TabListPopupButton', widgets.tabs.flags2, ImGui.TabBarFlags_TabListPopupButton())
-      if ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyResizeDown', widgets.tabs.flags2, ImGui.TabBarFlags_FittingPolicyResizeDown()) then
-        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fitting_policy_mask | ImGui.TabBarFlags_FittingPolicyResizeDown()
+      rv,widgets.tabs.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_TabListPopupButton', widgets.tabs.flags2, ImGui.TabBarFlags_TabListPopupButton)
+      if ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyResizeDown', widgets.tabs.flags2, ImGui.TabBarFlags_FittingPolicyResizeDown) then
+        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fitting_policy_mask | ImGui.TabBarFlags_FittingPolicyResizeDown
       end
-      if ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyScroll', widgets.tabs.flags2, ImGui.TabBarFlags_FittingPolicyScroll()) then
-        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fitting_policy_mask | ImGui.TabBarFlags_FittingPolicyScroll()
+      if ImGui.CheckboxFlags(ctx, 'ImGuiTabBarFlags_FittingPolicyScroll', widgets.tabs.flags2, ImGui.TabBarFlags_FittingPolicyScroll) then
+        widgets.tabs.flags2 = widgets.tabs.flags2 & ~fitting_policy_mask | ImGui.TabBarFlags_FittingPolicyScroll
       end
 
       if ImGui.BeginTabBar(ctx, 'MyTabBar', widgets.tabs.flags2) then
         -- Demo a Leading TabItemButton(): click the '?' button to open a menu
         if widgets.tabs.show_leading_button then
-          if ImGui.TabItemButton(ctx, '?', ImGui.TabItemFlags_Leading() | ImGui.TabItemFlags_NoTooltip()) then
+          if ImGui.TabItemButton(ctx, '?', ImGui.TabItemFlags_Leading | ImGui.TabItemFlags_NoTooltip) then
             ImGui.OpenPopup(ctx, 'MyHelpMenu')
           end
         end
@@ -1784,7 +1784,7 @@ label:
         -- Demo Trailing Tabs: click the "+" button to add a new tab (in your app you may want to use a font icon instead of the "+")
         -- Note that we submit it before the regular tabs, but because of the ImGuiTabItemFlags_Trailing flag it will always appear at the end.
         if widgets.tabs.show_trailing_button then
-          if ImGui.TabItemButton(ctx, '+', ImGui.TabItemFlags_Trailing() | ImGui.TabItemFlags_NoTooltip()) then
+          if ImGui.TabItemButton(ctx, '+', ImGui.TabItemFlags_Trailing | ImGui.TabItemFlags_NoTooltip) then
             -- add new tab
             table.insert(widgets.tabs.active, widgets.tabs.next_id)
             widgets.tabs.next_id = widgets.tabs.next_id + 1
@@ -1796,7 +1796,7 @@ label:
         while n <= #widgets.tabs.active do
           local name = ('%04d'):format(widgets.tabs.active[n]-1)
           local open
-          rv,open = ImGui.BeginTabItem(ctx, name, true, ImGui.TabItemFlags_None())
+          rv,open = ImGui.BeginTabItem(ctx, name, true, ImGui.TabItemFlags_None)
           if rv then
             ImGui.Text(ctx, ('This is the %s tab!'):format(name))
             ImGui.EndTabItem(ctx)
@@ -1912,7 +1912,7 @@ label:
     -- Typically we would use (-1.0,0.0) or (-FLT_MIN,0.0) to use all available width,
     -- or (width,0.0) for a specified width. (0.0,0.0) uses ItemWidth.
     ImGui.ProgressBar(ctx, widgets.plots.progress, 0.0, 0.0)
-    ImGui.SameLine(ctx, 0.0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing())))
+    ImGui.SameLine(ctx, 0.0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)))
     ImGui.Text(ctx, 'Progress Bar')
 
     local progress_saturated = demo.clamp(widgets.plots.progress, 0.0, 1.0);
@@ -1953,11 +1953,11 @@ label:
     rv,widgets.colors.options_menu       = ImGui.Checkbox(ctx, 'With Options Menu',       widgets.colors.options_menu)
     ImGui.SameLine(ctx); demo.HelpMarker('Right-click on the individual color widget to show options.')
     -- ImGui.Checkbox("With HDR", &hdr); ImGui.SameLine(); HelpMarker("Currently all this does is to lift the 0..1 limits on dragging widgets.")
-    local misc_flags = --(widgets.colors.hdr and ImGui.ColorEditFlags_HDR() or 0) |
-    (widgets.colors.drag_and_drop and 0 or ImGui.ColorEditFlags_NoDragDrop()) |
-    (widgets.colors.alpha_half_preview and ImGui.ColorEditFlags_AlphaPreviewHalf()
-    or (widgets.colors.alpha_preview and ImGui.ColorEditFlags_AlphaPreview() or 0)) |
-    (widgets.colors.options_menu  and 0 or ImGui.ColorEditFlags_NoOptions())
+    local misc_flags = --(widgets.colors.hdr and ImGui.ColorEditFlags_HDR or 0) |
+      (widgets.colors.drag_and_drop and 0 or ImGui.ColorEditFlags_NoDragDrop) |
+      (widgets.colors.alpha_half_preview and ImGui.ColorEditFlags_AlphaPreviewHalf
+        or (widgets.colors.alpha_preview and ImGui.ColorEditFlags_AlphaPreview or 0)) |
+      (widgets.colors.options_menu  and 0 or ImGui.ColorEditFlags_NoOptions)
 
     ImGui.SeparatorText(ctx, 'Inline color editor')
     ImGui.Text(ctx, 'Color widget:')
@@ -1971,17 +1971,17 @@ label:
     end
 
     ImGui.Text(ctx, 'Color widget HSV with Alpha:')
-    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##2', widgets.colors.rgba, ImGui.ColorEditFlags_DisplayHSV() | misc_flags)
+    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##2', widgets.colors.rgba, ImGui.ColorEditFlags_DisplayHSV | misc_flags)
 
     ImGui.Text(ctx, 'Color widget with Float Display:')
-    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##2f', widgets.colors.rgba, ImGui.ColorEditFlags_Float() | misc_flags)
+    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##2f', widgets.colors.rgba, ImGui.ColorEditFlags_Float | misc_flags)
 
     ImGui.Text(ctx, 'Color button with Picker:')
     ImGui.SameLine(ctx); demo.HelpMarker(
       'With the ImGuiColorEditFlags_NoInputs flag you can hide all the slider/text inputs.\n\z
        With the ImGuiColorEditFlags_NoLabel flag you can pass a non-empty label which will only \z
        be used for the tooltip and picker popup.')
-    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##3', widgets.colors.rgba, ImGui.ColorEditFlags_NoInputs() | ImGui.ColorEditFlags_NoLabel() | misc_flags)
+    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##3', widgets.colors.rgba, ImGui.ColorEditFlags_NoInputs | ImGui.ColorEditFlags_NoLabel | misc_flags)
 
     ImGui.Text(ctx, 'Color button with Custom Picker Popup:')
 
@@ -1994,7 +1994,7 @@ label:
     end
 
     local open_popup = ImGui.ColorButton(ctx, 'MyColor##3b', widgets.colors.rgba, misc_flags)
-    ImGui.SameLine(ctx, 0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing())))
+    ImGui.SameLine(ctx, 0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)))
     open_popup = ImGui.Button(ctx, 'Palette') or open_popup
     if open_popup then
       ImGui.OpenPopup(ctx, 'mypicker')
@@ -2003,29 +2003,29 @@ label:
     if ImGui.BeginPopup(ctx, 'mypicker') then
       ImGui.Text(ctx, 'MY CUSTOM COLOR PICKER WITH AN AMAZING PALETTE!')
       ImGui.Separator(ctx)
-      rv,widgets.colors.rgba = ImGui.ColorPicker4(ctx, '##picker', widgets.colors.rgba, misc_flags | ImGui.ColorEditFlags_NoSidePreview() | ImGui.ColorEditFlags_NoSmallPreview())
+      rv,widgets.colors.rgba = ImGui.ColorPicker4(ctx, '##picker', widgets.colors.rgba, misc_flags | ImGui.ColorEditFlags_NoSidePreview | ImGui.ColorEditFlags_NoSmallPreview)
       ImGui.SameLine(ctx)
 
       ImGui.BeginGroup(ctx) -- Lock X position
       ImGui.Text(ctx, 'Current')
       ImGui.ColorButton(ctx, '##current', widgets.colors.rgba,
-        ImGui.ColorEditFlags_NoPicker() |
-        ImGui.ColorEditFlags_AlphaPreviewHalf(), 60, 40)
+        ImGui.ColorEditFlags_NoPicker |
+        ImGui.ColorEditFlags_AlphaPreviewHalf, 60, 40)
       ImGui.Text(ctx, 'Previous')
       if ImGui.ColorButton(ctx, '##previous', widgets.colors.backup_color,
-          ImGui.ColorEditFlags_NoPicker() |
-          ImGui.ColorEditFlags_AlphaPreviewHalf(), 60, 40) then
+          ImGui.ColorEditFlags_NoPicker |
+          ImGui.ColorEditFlags_AlphaPreviewHalf, 60, 40) then
         widgets.colors.rgba = widgets.colors.backup_color
       end
       ImGui.Separator(ctx)
       ImGui.Text(ctx, 'Palette')
-      local palette_button_flags = ImGui.ColorEditFlags_NoAlpha()  |
-                                   ImGui.ColorEditFlags_NoPicker() |
-                                   ImGui.ColorEditFlags_NoTooltip()
+      local palette_button_flags = ImGui.ColorEditFlags_NoAlpha  |
+                                   ImGui.ColorEditFlags_NoPicker |
+                                   ImGui.ColorEditFlags_NoTooltip
       for n,c in ipairs(widgets.colors.saved_palette) do
         ImGui.PushID(ctx, n)
         if ((n - 1) % 8) ~= 0 then
-          ImGui.SameLine(ctx, 0.0, select(2, ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing())))
+          ImGui.SameLine(ctx, 0.0, select(2, ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)))
         end
 
         if ImGui.ColorButton(ctx, '##palette', c, palette_button_flags, 20, 20) then
@@ -2056,7 +2056,7 @@ label:
     ImGui.Text(ctx, 'Color button only:')
     rv,widgets.colors.no_border = ImGui.Checkbox(ctx, 'ImGuiColorEditFlags_NoBorder', widgets.colors.no_border)
     ImGui.ColorButton(ctx, 'MyColor##3c', widgets.colors.rgba,
-      misc_flags | (widgets.colors.no_border and ImGui.ColorEditFlags_NoBorder() or 0),
+      misc_flags | (widgets.colors.no_border and ImGui.ColorEditFlags_NoBorder or 0),
       80, 80)
 
     ImGui.SeparatorText(ctx, 'Color picker')
@@ -2069,7 +2069,7 @@ label:
       if widgets.colors.ref_color then
         ImGui.SameLine(ctx)
         rv,widgets.colors.ref_color_rgba = ImGui.ColorEdit4(ctx, '##RefColor',
-          widgets.colors.ref_color_rgba, ImGui.ColorEditFlags_NoInputs() | misc_flags)
+          widgets.colors.ref_color_rgba, ImGui.ColorEditFlags_NoInputs | misc_flags)
       end
     end
     rv,widgets.colors.display_mode = ImGui.Combo(ctx, 'Display Mode', widgets.colors.display_mode,
@@ -2082,15 +2082,15 @@ label:
       'Auto/Current\0Hue bar + SV rect\0Hue wheel + SV triangle\0')
     ImGui.SameLine(ctx); demo.HelpMarker('When not specified explicitly (Auto/Current mode), user can right-click the picker to change mode.')
     local flags = misc_flags
-    if not widgets.colors.alpha         then flags = flags | ImGui.ColorEditFlags_NoAlpha()        end
-    if widgets.colors.alpha_bar         then flags = flags | ImGui.ColorEditFlags_AlphaBar()       end
-    if not widgets.colors.side_preview  then flags = flags | ImGui.ColorEditFlags_NoSidePreview()  end
-    if widgets.colors.picker_mode  == 1 then flags = flags | ImGui.ColorEditFlags_PickerHueBar()   end
-    if widgets.colors.picker_mode  == 2 then flags = flags | ImGui.ColorEditFlags_PickerHueWheel() end
-    if widgets.colors.display_mode == 1 then flags = flags | ImGui.ColorEditFlags_NoInputs()       end -- Disable all RGB/HSV/Hex displays
-    if widgets.colors.display_mode == 2 then flags = flags | ImGui.ColorEditFlags_DisplayRGB()     end -- Override display mode
-    if widgets.colors.display_mode == 3 then flags = flags | ImGui.ColorEditFlags_DisplayHSV()     end
-    if widgets.colors.display_mode == 4 then flags = flags | ImGui.ColorEditFlags_DisplayHex()     end
+    if not widgets.colors.alpha         then flags = flags | ImGui.ColorEditFlags_NoAlpha        end
+    if widgets.colors.alpha_bar         then flags = flags | ImGui.ColorEditFlags_AlphaBar       end
+    if not widgets.colors.side_preview  then flags = flags | ImGui.ColorEditFlags_NoSidePreview  end
+    if widgets.colors.picker_mode  == 1 then flags = flags | ImGui.ColorEditFlags_PickerHueBar   end
+    if widgets.colors.picker_mode  == 2 then flags = flags | ImGui.ColorEditFlags_PickerHueWheel end
+    if widgets.colors.display_mode == 1 then flags = flags | ImGui.ColorEditFlags_NoInputs       end -- Disable all RGB/HSV/Hex displays
+    if widgets.colors.display_mode == 2 then flags = flags | ImGui.ColorEditFlags_DisplayRGB     end -- Override display mode
+    if widgets.colors.display_mode == 3 then flags = flags | ImGui.ColorEditFlags_DisplayHSV     end
+    if widgets.colors.display_mode == 4 then flags = flags | ImGui.ColorEditFlags_DisplayHex     end
 
     local color = widgets.colors.alpha and widgets.colors.rgba or demo.RgbaToArgb(widgets.colors.rgba)
     local ref_color = widgets.colors.alpha and widgets.colors.ref_color_rgba or demo.RgbaToArgb(widgets.colors.ref_color_rgba)
@@ -2107,22 +2107,22 @@ label:
        and the user can change non-forced ones with the options menu.\nWe don't have a getter to avoid\z
        encouraging you to persistently save values that aren't forward-compatible.")
     if ImGui.Button(ctx, 'Default: Uint8 + HSV + Hue Bar') then
-      ImGui.SetColorEditOptions(ctx, ImGui.ColorEditFlags_Uint8() | ImGui.ColorEditFlags_DisplayHSV() | ImGui.ColorEditFlags_PickerHueBar())
+      ImGui.SetColorEditOptions(ctx, ImGui.ColorEditFlags_Uint8 | ImGui.ColorEditFlags_DisplayHSV | ImGui.ColorEditFlags_PickerHueBar)
     end
     if ImGui.Button(ctx, 'Default: Float + Hue Wheel') then -- (NOTE: removed HDR for ReaImGui as we use uint32 for color i/o)
-      ImGui.SetColorEditOptions(ctx, ImGui.ColorEditFlags_Float() | ImGui.ColorEditFlags_PickerHueWheel())
+      ImGui.SetColorEditOptions(ctx, ImGui.ColorEditFlags_Float | ImGui.ColorEditFlags_PickerHueWheel)
     end
 
     -- Always both a small version of both types of pickers (to make it more visible in the demo to people who are skimming quickly through it)
     local color = demo.RgbaToArgb(widgets.colors.rgba)
     ImGui.Text(ctx, 'Both types:')
-    local w = (ImGui.GetContentRegionAvail(ctx) - select(2, ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing()))) * 0.40
+    local w = (ImGui.GetContentRegionAvail(ctx) - select(2, ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing))) * 0.40
     ImGui.SetNextItemWidth(ctx, w)
-    rv,color = ImGui.ColorPicker3(ctx, '##MyColor##5', color, ImGui.ColorEditFlags_PickerHueBar() | ImGui.ColorEditFlags_NoSidePreview() | ImGui.ColorEditFlags_NoInputs() | ImGui.ColorEditFlags_NoAlpha())
+    rv,color = ImGui.ColorPicker3(ctx, '##MyColor##5', color, ImGui.ColorEditFlags_PickerHueBar | ImGui.ColorEditFlags_NoSidePreview | ImGui.ColorEditFlags_NoInputs | ImGui.ColorEditFlags_NoAlpha)
     if rv then widgets.colors.rgba = demo.ArgbToRgba(color) end
     ImGui.SameLine(ctx)
     ImGui.SetNextItemWidth(ctx, w)
-    rv,color = ImGui.ColorPicker3(ctx, '##MyColor##6', color, ImGui.ColorEditFlags_PickerHueWheel() | ImGui.ColorEditFlags_NoSidePreview() | ImGui.ColorEditFlags_NoInputs() | ImGui.ColorEditFlags_NoAlpha())
+    rv,color = ImGui.ColorPicker3(ctx, '##MyColor##6', color, ImGui.ColorEditFlags_PickerHueWheel | ImGui.ColorEditFlags_NoSidePreview | ImGui.ColorEditFlags_NoInputs | ImGui.ColorEditFlags_NoAlpha)
     if rv then widgets.colors.rgba = demo.ArgbToRgba(color) end
 
     -- HSV encoded support (to avoid RGB<>HSV round trips and singularities when S==0 or V==0)
@@ -2134,9 +2134,9 @@ label:
        added benefit that you can manipulate hue values with the picker even when saturation or value are zero.')
     ImGui.Text(ctx, 'Color widget with InputHSV:')
     rv,widgets.colors.hsva = ImGui.ColorEdit4(ctx, 'HSV shown as RGB##1', widgets.colors.hsva,
-      ImGui.ColorEditFlags_DisplayRGB() | ImGui.ColorEditFlags_InputHSV() | ImGui.ColorEditFlags_Float())
+      ImGui.ColorEditFlags_DisplayRGB | ImGui.ColorEditFlags_InputHSV | ImGui.ColorEditFlags_Float)
     rv,widgets.colors.hsva = ImGui.ColorEdit4(ctx, 'HSV shown as HSV##1', widgets.colors.hsva,
-      ImGui.ColorEditFlags_DisplayHSV() | ImGui.ColorEditFlags_InputHSV() | ImGui.ColorEditFlags_Float())
+      ImGui.ColorEditFlags_DisplayHSV | ImGui.ColorEditFlags_InputHSV | ImGui.ColorEditFlags_Float)
 
     local raw_hsv = widgets.colors.raw_hsv
     raw_hsv[1] = (widgets.colors.hsva >> 24 & 0xFF) / 255.0 -- H
@@ -2157,7 +2157,7 @@ label:
   if ImGui.TreeNode(ctx, 'Drag/Slider Flags') then
     if not widgets.sliders then
       widgets.sliders = {
-        flags    = ImGui.SliderFlags_None(),
+        flags    = ImGui.SliderFlags_None,
         drag_d   = 0.5,
         drag_i   = 50,
         slider_d = 0.5,
@@ -2166,13 +2166,13 @@ label:
     end
 
     -- Demonstrate using advanced flags for DragXXX and SliderXXX functions. Note that the flags are the same!
-    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'ImGuiSliderFlags_AlwaysClamp', widgets.sliders.flags, ImGui.SliderFlags_AlwaysClamp())
+    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'ImGuiSliderFlags_AlwaysClamp', widgets.sliders.flags, ImGui.SliderFlags_AlwaysClamp)
     ImGui.SameLine(ctx); demo.HelpMarker('Always clamp value to min/max bounds (if any) when input manually with CTRL+Click.')
-    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'ImGuiSliderFlags_Logarithmic', widgets.sliders.flags, ImGui.SliderFlags_Logarithmic())
+    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'ImGuiSliderFlags_Logarithmic', widgets.sliders.flags, ImGui.SliderFlags_Logarithmic)
     ImGui.SameLine(ctx); demo.HelpMarker('Enable logarithmic editing (more precision for small values).')
-    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'ImGuiSliderFlags_NoRoundToFormat', widgets.sliders.flags, ImGui.SliderFlags_NoRoundToFormat())
+    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'ImGuiSliderFlags_NoRoundToFormat', widgets.sliders.flags, ImGui.SliderFlags_NoRoundToFormat)
     ImGui.SameLine(ctx); demo.HelpMarker('Disable rounding underlying value to match precision of the format string (e.g. %.3f values are rounded to those 3 digits).')
-    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'ImGuiSliderFlags_NoInput', widgets.sliders.flags, ImGui.SliderFlags_NoInput())
+    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'ImGuiSliderFlags_NoInput', widgets.sliders.flags, ImGui.SliderFlags_NoInput)
     ImGui.SameLine(ctx); demo.HelpMarker('Disable CTRL+Click or Enter key allowing to input text directly into the widget.')
 
     local DBL_MIN, DBL_MAX = 2.22507e-308, 1.79769e+308
@@ -2203,7 +2203,7 @@ label:
       }
     end
 
-    rv,widgets.range.begin_f,widgets.range.end_f = ImGui.DragFloatRange2(ctx, 'range float', widgets.range.begin_f, widgets.range.end_f, 0.25, 0.0, 100.0, 'Min: %.1f %%', 'Max: %.1f %%', ImGui.SliderFlags_AlwaysClamp())
+    rv,widgets.range.begin_f,widgets.range.end_f = ImGui.DragFloatRange2(ctx, 'range float', widgets.range.begin_f, widgets.range.end_f, 0.25, 0.0, 100.0, 'Min: %.1f %%', 'Max: %.1f %%', ImGui.SliderFlags_AlwaysClamp)
     rv,widgets.range.begin_i,widgets.range.end_i = ImGui.DragIntRange2(ctx, 'range int', widgets.range.begin_i, widgets.range.end_i, 5, 0, 1000, 'Min: %d units', 'Max: %d units')
     rv,widgets.range.begin_i,widgets.range.end_i = ImGui.DragIntRange2(ctx, 'range int (no bounds)', widgets.range.begin_i, widgets.range.end_i, 5, 0, 0, 'Min: %d units', 'Max: %d units')
     ImGui.TreePop(ctx)
@@ -2383,7 +2383,7 @@ label:
     end
 
     local spacing = 4
-    ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing(), spacing, spacing)
+    ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing, spacing, spacing)
 
     rv,widgets.vsliders.int_value = ImGui.VSliderInt(ctx, '##int', 18, 160, widgets.vsliders.int_value, 0, 5)
     ImGui.SameLine(ctx)
@@ -2392,10 +2392,10 @@ label:
     for i,v in ipairs(widgets.vsliders.values) do
       if i > 1 then ImGui.SameLine(ctx) end
       ImGui.PushID(ctx, i)
-      ImGui.PushStyleColor(ctx, ImGui.Col_FrameBg(),        demo.HSV((i-1) / 7.0, 0.5, 0.5, 1.0))
-      ImGui.PushStyleColor(ctx, ImGui.Col_FrameBgHovered(), demo.HSV((i-1) / 7.0, 0.6, 0.5, 1.0))
-      ImGui.PushStyleColor(ctx, ImGui.Col_FrameBgActive(),  demo.HSV((i-1) / 7.0, 0.7, 0.5, 1.0))
-      ImGui.PushStyleColor(ctx, ImGui.Col_SliderGrab(),     demo.HSV((i-1) / 7.0, 0.9, 0.9, 1.0))
+      ImGui.PushStyleColor(ctx, ImGui.Col_FrameBg,        demo.HSV((i-1) / 7.0, 0.5, 0.5, 1.0))
+      ImGui.PushStyleColor(ctx, ImGui.Col_FrameBgHovered, demo.HSV((i-1) / 7.0, 0.6, 0.5, 1.0))
+      ImGui.PushStyleColor(ctx, ImGui.Col_FrameBgActive,  demo.HSV((i-1) / 7.0, 0.7, 0.5, 1.0))
+      ImGui.PushStyleColor(ctx, ImGui.Col_SliderGrab,     demo.HSV((i-1) / 7.0, 0.9, 0.9, 1.0))
       rv,widgets.vsliders.values[i] = ImGui.VSliderDouble(ctx, '##v', 18, 160, v, 0.0, 1.0, ' ')
       if ImGui.IsItemActive(ctx) or ImGui.IsItemHovered(ctx) then
         ImGui.SetTooltip(ctx, ('%.3f'):format(v))
@@ -2433,7 +2433,7 @@ label:
       local v = widgets.vsliders.values[i]
       if i > 1 then ImGui.SameLine(ctx) end
       ImGui.PushID(ctx, i)
-      ImGui.PushStyleVar(ctx, ImGui.StyleVar_GrabMinSize(), 40)
+      ImGui.PushStyleVar(ctx, ImGui.StyleVar_GrabMinSize, 40)
       rv,widgets.vsliders.values[i] = ImGui.VSliderDouble(ctx, '##v', 40, 160, v, 0.0, 1.0, '%.2f\nsec')
       ImGui.PopStyleVar(ctx)
       ImGui.PopID(ctx)
@@ -2484,7 +2484,7 @@ label:
         ImGui.Button(ctx, name, 60, 60)
 
         -- Our buttons are both drag sources and drag targets here!
-        if ImGui.BeginDragDropSource(ctx, ImGui.DragDropFlags_None()) then
+        if ImGui.BeginDragDropSource(ctx, ImGui.DragDropFlags_None) then
           -- Set payload to carry the index of our item (could be anything)
           ImGui.SetDragDropPayload(ctx, 'DND_DEMO_CELL', tostring(n))
 
@@ -2528,12 +2528,12 @@ label:
         ImGui.Selectable(ctx, item)
 
         if ImGui.IsItemActive(ctx) and not ImGui.IsItemHovered(ctx) then
-          local mouse_delta = select(2, ImGui.GetMouseDragDelta(ctx, ImGui.MouseButton_Left()))
+          local mouse_delta = select(2, ImGui.GetMouseDragDelta(ctx, ImGui.MouseButton_Left))
           local n_next = n + (mouse_delta < 0 and -1 or 1)
           if n_next >= 1 and n_next <= #widgets.dragdrop.items then
             widgets.dragdrop.items[n] = widgets.dragdrop.items[n_next]
             widgets.dragdrop.items[n_next] = item
-            ImGui.ResetMouseDragDelta(ctx, ImGui.MouseButton_Left())
+            ImGui.ResetMouseDragDelta(ctx, ImGui.MouseButton_Left)
           end
         end
       end
@@ -2652,7 +2652,7 @@ label:
     end
     if item_type == 13 then -- Testing tree node with ImGuiButtonFlags_PressedOnDoubleClick button policy.
       rv = ImGui.TreeNode(ctx, 'ITEM: TreeNode w/ ImGuiTreeNodeFlags_OpenOnDoubleClick',
-        ImGui.TreeNodeFlags_OpenOnDoubleClick() | ImGui.TreeNodeFlags_NoTreePushOnOpen())
+        ImGui.TreeNodeFlags_OpenOnDoubleClick | ImGui.TreeNodeFlags_NoTreePushOnOpen)
     end
     if item_type == 14 then
       rv,widgets.query_item.current = ImGui.Combo(ctx, 'ITEM: Combo', widgets.query_item.current, 'Apple\0Banana\0Cherry\0Kiwi\0')
@@ -2662,8 +2662,8 @@ label:
     end
 
     local hovered_delay_none = ImGui.IsItemHovered(ctx)
-    local hovered_delay_short = ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayShort())
-    local hovered_delay_normal = ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNormal())
+    local hovered_delay_short = ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayShort)
+    local hovered_delay_normal = ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNormal)
 
     -- Display the values of IsItemHovered() and other common item state functions.
     -- Note that the ImGuiHoveredFlags_XXX flags can be combined.
@@ -2691,11 +2691,11 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
       rv,
       ImGui.IsItemFocused(ctx),
       ImGui.IsItemHovered(ctx),
-      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByPopup()),
-      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByActiveItem()),
-      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenOverlapped()),
-      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenDisabled()),
-      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_RectOnly()),
+      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByPopup),
+      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByActiveItem),
+      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenOverlapped),
+      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenDisabled),
+      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_RectOnly),
       ImGui.IsItemActive(ctx),
       ImGui.IsItemEdited(ctx),
       ImGui.IsItemActivated(ctx),
@@ -2716,7 +2716,7 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
       ImGui.EndDisabled(ctx)
     end
 
-    ImGui.InputText(ctx, 'unused', '', ImGui.InputTextFlags_ReadOnly())
+    ImGui.InputText(ctx, 'unused', '', ImGui.InputTextFlags_ReadOnly)
     ImGui.SameLine(ctx)
     demo.HelpMarker('This widget is only here to be able to tab-out of the widgets above and see e.g. Deactivated() status.')
     ImGui.TreePop(ctx)
@@ -2751,16 +2751,16 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
   IsWindowFocused(_RootWindow|_DockHierarchy) = %s
   IsWindowFocused(_AnyWindow) = %s]]):format(
         ImGui.IsWindowFocused(ctx),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows()),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows() | ImGui.FocusedFlags_NoPopupHierarchy()),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows() | ImGui.FocusedFlags_DockHierarchy()),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows() | ImGui.FocusedFlags_RootWindow()),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows() | ImGui.FocusedFlags_RootWindow() | ImGui.FocusedFlags_NoPopupHierarchy()),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows() | ImGui.FocusedFlags_RootWindow() | ImGui.FocusedFlags_DockHierarchy()),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_RootWindow()),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_RootWindow() | ImGui.FocusedFlags_NoPopupHierarchy()),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_RootWindow() | ImGui.FocusedFlags_DockHierarchy()),
-        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_AnyWindow())))
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows),
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows | ImGui.FocusedFlags_NoPopupHierarchy),
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows | ImGui.FocusedFlags_DockHierarchy),
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows | ImGui.FocusedFlags_RootWindow),
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows | ImGui.FocusedFlags_RootWindow | ImGui.FocusedFlags_NoPopupHierarchy),
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows | ImGui.FocusedFlags_RootWindow | ImGui.FocusedFlags_DockHierarchy),
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_RootWindow),
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_RootWindow | ImGui.FocusedFlags_NoPopupHierarchy),
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_RootWindow | ImGui.FocusedFlags_DockHierarchy),
+        ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_AnyWindow)))
 
       -- Testing IsWindowHovered() function with its various flags.
       ImGui.BulletText(ctx, ([[IsWindowHovered() = %s
@@ -2778,19 +2778,19 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
   IsWindowHovered(_ChildWindows|_AllowWhenBlockedByPopup) = %s
   IsWindowHovered(_AnyWindow) = %s]]):format(
         ImGui.IsWindowHovered(ctx),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByPopup()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByActiveItem()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows() | ImGui.HoveredFlags_NoPopupHierarchy()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows() | ImGui.HoveredFlags_DockHierarchy()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows() | ImGui.HoveredFlags_RootWindow()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows() | ImGui.HoveredFlags_RootWindow() | ImGui.HoveredFlags_NoPopupHierarchy()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows() | ImGui.HoveredFlags_RootWindow() | ImGui.HoveredFlags_DockHierarchy()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_RootWindow()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_RootWindow() | ImGui.HoveredFlags_NoPopupHierarchy()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_RootWindow() | ImGui.HoveredFlags_DockHierarchy()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows() | ImGui.HoveredFlags_AllowWhenBlockedByPopup()),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AnyWindow())))
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByPopup),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByActiveItem),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows | ImGui.HoveredFlags_NoPopupHierarchy),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows | ImGui.HoveredFlags_DockHierarchy),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows | ImGui.HoveredFlags_RootWindow),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows | ImGui.HoveredFlags_RootWindow | ImGui.HoveredFlags_NoPopupHierarchy),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows | ImGui.HoveredFlags_RootWindow | ImGui.HoveredFlags_DockHierarchy),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_RootWindow),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_RootWindow | ImGui.HoveredFlags_NoPopupHierarchy),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_RootWindow | ImGui.HoveredFlags_DockHierarchy),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows | ImGui.HoveredFlags_AllowWhenBlockedByPopup),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AnyWindow)))
 
       if ImGui.BeginChild(ctx, 'child', 0, 50, true) then
         ImGui.Text(ctx, 'This is another child window for testing the _ChildWindows flag.')
@@ -2887,9 +2887,9 @@ function demo.ShowDemoWindowLayout()
 
     -- Child 1: no border, enable horizontal scrollbar
     do
-      local window_flags = ImGui.WindowFlags_HorizontalScrollbar()
+      local window_flags = ImGui.WindowFlags_HorizontalScrollbar
       if layout.child.disable_mouse_wheel then
-        window_flags = window_flags | ImGui.WindowFlags_NoScrollWithMouse()
+        window_flags = window_flags | ImGui.WindowFlags_NoScrollWithMouse
       end
       if ImGui.BeginChild(ctx, 'ChildL', ImGui.GetContentRegionAvail(ctx) * 0.5, 260, false, window_flags) then
         for i = 0, 99 do
@@ -2903,14 +2903,14 @@ function demo.ShowDemoWindowLayout()
 
     -- Child 2: rounded border
     do
-      local window_flags = ImGui.WindowFlags_None()
+      local window_flags = ImGui.WindowFlags_None
       if layout.child.disable_mouse_wheel then
-        window_flags = window_flags | ImGui.WindowFlags_NoScrollWithMouse()
+        window_flags = window_flags | ImGui.WindowFlags_NoScrollWithMouse
       end
       if not layout.child.disable_menu then
-        window_flags = window_flags | ImGui.WindowFlags_MenuBar()
+        window_flags = window_flags | ImGui.WindowFlags_MenuBar
       end
-      ImGui.PushStyleVar(ctx, ImGui.StyleVar_ChildRounding(), 5.0)
+      ImGui.PushStyleVar(ctx, ImGui.StyleVar_ChildRounding, 5.0)
       local visible = ImGui.BeginChild(ctx, 'ChildR', 0, 260, true, window_flags)
       if visible then
         if not layout.child.disable_menu and ImGui.BeginMenuBar(ctx) then
@@ -2920,7 +2920,7 @@ function demo.ShowDemoWindowLayout()
           end
           ImGui.EndMenuBar(ctx)
         end
-        if ImGui.BeginTable(ctx, 'split', 2, ImGui.TableFlags_Resizable() | ImGui.TableFlags_NoSavedSettings()) then
+        if ImGui.BeginTable(ctx, 'split', 2, ImGui.TableFlags_Resizable | ImGui.TableFlags_NoSavedSettings) then
           for i = 0, 99 do
             ImGui.TableNextColumn(ctx)
             ImGui.Button(ctx, ('%03d'):format(i), -FLT_MIN, 0.0)
@@ -2946,8 +2946,8 @@ function demo.ShowDemoWindowLayout()
       rv,layout.child.offset_x = ImGui.DragInt(ctx, 'Offset X', layout.child.offset_x, 1.0, -1000, 1000)
 
       ImGui.SetCursorPosX(ctx, ImGui.GetCursorPosX(ctx) + layout.child.offset_x)
-      ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg(), 0xFF000064)
-      local visible = ImGui.BeginChild(ctx, 'Red', 200, 100, true, ImGui.WindowFlags_None())
+      ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg, 0xFF000064)
+      local visible = ImGui.BeginChild(ctx, 'Red', 200, 100, true, ImGui.WindowFlags_None)
       ImGui.PopStyleColor(ctx)
       if visible then
         for n = 0, 49 do
@@ -3116,7 +3116,7 @@ function demo.ShowDemoWindowLayout()
     -- Manually wrapping
     -- (we should eventually provide this as an automatic layout feature, but for now you can do it manually)
     ImGui.Text(ctx, 'Manual wrapping:')
-    local item_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing())
+    local item_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)
     local buttons_count = 20
     local window_visible_x2 = ImGui.GetWindowPos(ctx) + ImGui.GetWindowContentRegionMax(ctx)
     for n = 0, buttons_count - 1 do
@@ -3163,7 +3163,7 @@ function demo.ShowDemoWindowLayout()
 
     -- Capture the group size and create widgets using the same size
     local size = {ImGui.GetItemRectSize(ctx)}
-    local item_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing())
+    local item_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)
 
     ImGui.PlotHistogram(ctx, '##values', widgets.groups.values, 0, nil, 0.0, 1.0, table.unpack(size))
 
@@ -3261,7 +3261,7 @@ function demo.ShowDemoWindowLayout()
       ImGui.SmallButton(ctx, 'SmallButton()')
 
       -- Tree
-      local spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing())
+      local spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
       ImGui.Button(ctx, 'Button##1')
       ImGui.SameLine(ctx, 0.0, spacing)
       if ImGui.TreeNode(ctx, 'Node##1') then
@@ -3348,9 +3348,9 @@ function demo.ShowDemoWindowLayout()
     end
 
     local names = { 'Top', '25%', 'Center', '75%', 'Bottom' }
-    local item_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing())
+    local item_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)
     local child_w = (ImGui.GetContentRegionAvail(ctx) - 4 * item_spacing_x) / #names
-    local child_flags = layout.scrolling.enable_extra_decorations and ImGui.WindowFlags_MenuBar() or ImGui.WindowFlags_None()
+    local child_flags = layout.scrolling.enable_extra_decorations and ImGui.WindowFlags_MenuBar or ImGui.WindowFlags_None
     if child_w < 1.0 then
       child_w = 1.0
     end
@@ -3398,12 +3398,12 @@ function demo.ShowDemoWindowLayout()
        left/right, using SetScrollFromPosX(+1) will usually result in clipped text whereas the \z
        equivalent SetScrollFromPosY(+1) wouldn't.")
     ImGui.PushID(ctx, '##HorizontalScrolling')
-    local scrollbar_size = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ScrollbarSize())
-    local window_padding_y = select(2, ImGui.GetStyleVar(ctx, ImGui.StyleVar_WindowPadding()))
+    local scrollbar_size = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ScrollbarSize)
+    local window_padding_y = select(2, ImGui.GetStyleVar(ctx, ImGui.StyleVar_WindowPadding))
     local child_height = ImGui.GetTextLineHeight(ctx) + scrollbar_size + window_padding_y * 2.0
-    local child_flags = ImGui.WindowFlags_HorizontalScrollbar()
+    local child_flags = ImGui.WindowFlags_HorizontalScrollbar
     if layout.scrolling.enable_extra_decorations then
-      child_flags = child_flags | ImGui.WindowFlags_AlwaysVerticalScrollbar()
+      child_flags = child_flags | ImGui.WindowFlags_AlwaysVerticalScrollbar
     end
     for i,name in ipairs(names) do
       local scroll_x, scroll_max_x = 0.0, 0.0
@@ -3440,11 +3440,11 @@ function demo.ShowDemoWindowLayout()
       'Horizontal scrolling for a window is enabled via the ImGuiWindowFlags_HorizontalScrollbar flag.\n\n\z
        You may want to also explicitly specify content width by using SetNextWindowContentWidth() before Begin().')
     rv,layout.scrolling.lines = ImGui.SliderInt(ctx, 'Lines', layout.scrolling.lines, 1, 15)
-    ImGui.PushStyleVar(ctx, ImGui.StyleVar_FrameRounding(), 3.0)
-    ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding(), 2.0, 1.0)
+    ImGui.PushStyleVar(ctx, ImGui.StyleVar_FrameRounding, 3.0)
+    ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, 2.0, 1.0)
     local scrolling_child_width = ImGui.GetFrameHeightWithSpacing(ctx) * 7 + 30
     local scroll_x, scroll_max_x = 0.0, 0.0
-    if ImGui.BeginChild(ctx, 'scrolling', 0, scrolling_child_width, true, ImGui.WindowFlags_HorizontalScrollbar()) then
+    if ImGui.BeginChild(ctx, 'scrolling', 0, scrolling_child_width, true, ImGui.WindowFlags_HorizontalScrollbar) then
       for line = 0, layout.scrolling.lines - 1 do
         -- Display random stuff. For the sake of this trivial demo we are using basic Button() + SameLine()
         -- If you want to create your own time line for a real application you may be better off manipulating
@@ -3465,9 +3465,9 @@ function demo.ShowDemoWindowLayout()
             label = tostring(n)
           end
           local hue = n * 0.05
-          ImGui.PushStyleColor(ctx, ImGui.Col_Button(), demo.HSV(hue, 0.6, 0.6))
-          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered(), demo.HSV(hue, 0.7, 0.7))
-          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive(), demo.HSV(hue, 0.8, 0.8))
+          ImGui.PushStyleColor(ctx, ImGui.Col_Button, demo.HSV(hue, 0.6, 0.6))
+          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonHovered, demo.HSV(hue, 0.7, 0.7))
+          ImGui.PushStyleColor(ctx, ImGui.Col_ButtonActive, demo.HSV(hue, 0.8, 0.8))
           ImGui.Button(ctx, label, 40.0 + math.sin(line + n) * 20.0, 0.0)
           ImGui.PopStyleColor(ctx, 3)
           ImGui.PopID(ctx)
@@ -3525,10 +3525,10 @@ function demo.ShowDemoWindowLayout()
       end
       rv,layout.scrolling.show_horizontal_contents_size_demo_window =
         ImGui.Begin(ctx, 'Horizontal contents size demo window', true,
-          layout.horizontal_window.show_h_scrollbar and ImGui.WindowFlags_HorizontalScrollbar() or ImGui.WindowFlags_None())
+          layout.horizontal_window.show_h_scrollbar and ImGui.WindowFlags_HorizontalScrollbar or ImGui.WindowFlags_None)
       if rv then
-        ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing(), 2, 0)
-        ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding(), 2, 0)
+        ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing, 2, 0)
+        ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, 2, 0)
         demo.HelpMarker("Test of different widgets react and impact the work rectangle growing when horizontal scrolling is enabled.\n\nUse 'Metrics->Tools->Show windows rectangles' to visualize rectangles.")
         rv,layout.horizontal_window.show_h_scrollbar =
           ImGui.Checkbox(ctx, 'H-scrollbar', layout.horizontal_window.show_h_scrollbar)
@@ -3578,7 +3578,7 @@ function demo.ShowDemoWindowLayout()
         end
         if layout.horizontal_window.show_columns then
           ImGui.Text(ctx, 'Tables:')
-          if ImGui.BeginTable(ctx, 'table', 4, ImGui.TableFlags_Borders()) then
+          if ImGui.BeginTable(ctx, 'table', 4, ImGui.TableFlags_Borders) then
             for n = 0, 3 do
               ImGui.TableNextColumn(ctx)
               ImGui.Text(ctx, ('Width %.2f'):format(ImGui.GetContentRegionAvail(ctx)))
@@ -3641,7 +3641,7 @@ function demo.ShowDemoWindowLayout()
 
       ImGui.PushID(ctx, n)
       ImGui.InvisibleButton(ctx, '##canvas', table.unpack(layout.clipping.size))
-      if ImGui.IsItemActive(ctx) and ImGui.IsMouseDragging(ctx, ImGui.MouseButton_Left()) then
+      if ImGui.IsItemActive(ctx) and ImGui.IsMouseDragging(ctx, ImGui.MouseButton_Left) then
         local mouse_delta = {ImGui.GetMouseDelta(ctx)}
         layout.clipping.offset[1] = layout.clipping.offset[1] + mouse_delta[1]
         layout.clipping.offset[2] = layout.clipping.offset[2] + mouse_delta[2]
@@ -3780,7 +3780,7 @@ function demo.ShowDemoWindowPopups()
     if ImGui.Button(ctx, 'With a menu..') then
       ImGui.OpenPopup(ctx, 'my_file_popup')
     end
-    if ImGui.BeginPopup(ctx, 'my_file_popup', ImGui.WindowFlags_MenuBar()) then
+    if ImGui.BeginPopup(ctx, 'my_file_popup', ImGui.WindowFlags_MenuBar) then
       if ImGui.BeginMenuBar(ctx) then
         if ImGui.BeginMenu(ctx, 'File') then
           demo.ShowExampleMenuFile()
@@ -3861,7 +3861,7 @@ function demo.ShowDemoWindowPopups()
       -- Here we make it that right-clicking this other text element opens the same popup as above.
       -- The popup itself will be submitted by the code above.
       ImGui.Text(ctx, '(2) Or right-click this text')
-      ImGui.OpenPopupOnItemClick(ctx, 'my popup', ImGui.PopupFlags_MouseButtonRight())
+      ImGui.OpenPopupOnItemClick(ctx, 'my popup', ImGui.PopupFlags_MouseButtonRight)
 
       -- Back to square one: manually open the same popup.
       if ImGui.Button(ctx, '(3) Or click this button') then
@@ -3907,16 +3907,16 @@ function demo.ShowDemoWindowPopups()
 
     -- Always center this window when appearing
     local center = {ImGui.Viewport_GetCenter(ImGui.GetWindowViewport(ctx))}
-    ImGui.SetNextWindowPos(ctx, center[1], center[2], ImGui.Cond_Appearing(), 0.5, 0.5)
+    ImGui.SetNextWindowPos(ctx, center[1], center[2], ImGui.Cond_Appearing, 0.5, 0.5)
 
-    if ImGui.BeginPopupModal(ctx, 'Delete?', nil, ImGui.WindowFlags_AlwaysAutoResize()) then
+    if ImGui.BeginPopupModal(ctx, 'Delete?', nil, ImGui.WindowFlags_AlwaysAutoResize) then
       ImGui.Text(ctx, 'All those beautiful files will be deleted.\nThis operation cannot be undone!')
       ImGui.Separator(ctx)
 
       --static int unused_i = 0;
       --ImGui.Combo("Combo", &unused_i, "Delete\0Delete harder\0");
 
-      ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding(), 0, 0)
+      ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, 0, 0)
       rv,popups.modal.dont_ask_me_next_time =
         ImGui.Checkbox(ctx, "Don't ask me next time", popups.modal.dont_ask_me_next_time)
       ImGui.PopStyleVar(ctx)
@@ -3931,7 +3931,7 @@ function demo.ShowDemoWindowPopups()
     if ImGui.Button(ctx, 'Stacked modals..') then
       ImGui.OpenPopup(ctx, 'Stacked 1')
     end
-    if ImGui.BeginPopupModal(ctx, 'Stacked 1', nil, ImGui.WindowFlags_MenuBar()) then
+    if ImGui.BeginPopupModal(ctx, 'Stacked 1', nil, ImGui.WindowFlags_MenuBar) then
       if ImGui.BeginMenuBar(ctx) then
         if ImGui.BeginMenu(ctx, 'File') then
           if ImGui.MenuItem(ctx, 'Some menu item') then end
@@ -4008,7 +4008,7 @@ function demo.CompareTableItems(a, b)
       error('unknown user column ID')
     end
 
-    local is_ascending = sort_direction == ImGui.SortDirection_Ascending()
+    local is_ascending = sort_direction == ImGui.SortDirection_Ascending
     if a[key] < b[key] then
       return is_ascending
     elseif a[key] > b[key] then
@@ -4023,10 +4023,10 @@ end
 
 -- Make the UI compact because there are so many fields
 function demo.PushStyleCompact()
-  local frame_padding_x, frame_padding_y = ImGui.GetStyleVar(ctx, ImGui.StyleVar_FramePadding())
-  local item_spacing_x,  item_spacing_y  = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing())
-  ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding(), frame_padding_x, math.floor(frame_padding_y * 0.60))
-  ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing(),  item_spacing_x,  math.floor(item_spacing_y  * 0.60))
+  local frame_padding_x, frame_padding_y = ImGui.GetStyleVar(ctx, ImGui.StyleVar_FramePadding)
+  local item_spacing_x,  item_spacing_y  = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)
+  ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, frame_padding_x, math.floor(frame_padding_y * 0.60))
+  ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing,  item_spacing_x,  math.floor(item_spacing_y  * 0.60))
 end
 
 function demo.PopStyleCompact()
@@ -4037,36 +4037,36 @@ end
 function demo.EditTableSizingFlags(flags)
   local policies = {
     {
-      value   = ImGui.TableFlags_None(),
+      value   = ImGui.TableFlags_None,
       name    = 'Default',
       tooltip = 'Use default sizing policy:\n- ImGuiTableFlags_SizingFixedFit if ScrollX is on or if host window has ImGuiWindowFlags_AlwaysAutoResize.\n- ImGuiTableFlags_SizingStretchSame otherwise.',
     },
     {
-      value   = ImGui.TableFlags_SizingFixedFit(),
+      value   = ImGui.TableFlags_SizingFixedFit,
       name    = 'ImGuiTableFlags_SizingFixedFit',
       tooltip = 'Columns default to _WidthFixed (if resizable) or _WidthAuto (if not resizable), matching contents width.',
     },
     {
-      value   = ImGui.TableFlags_SizingFixedSame(),
+      value   = ImGui.TableFlags_SizingFixedSame,
       name    = 'ImGuiTableFlags_SizingFixedSame',
       tooltip = 'Columns are all the same width, matching the maximum contents width.\nImplicitly disable ImGuiTableFlags_Resizable and enable ImGuiTableFlags_NoKeepColumnsVisible.',
     },
     {
-      value   = ImGui.TableFlags_SizingStretchProp(),
+      value   = ImGui.TableFlags_SizingStretchProp,
       name    = 'ImGuiTableFlags_SizingStretchProp',
       tooltip = 'Columns default to _WidthStretch with weights proportional to their widths.',
     },
     {
-      value   = ImGui.TableFlags_SizingStretchSame(),
+      value   = ImGui.TableFlags_SizingStretchSame,
       name    = 'ImGuiTableFlags_SizingStretchSame',
       tooltip = 'Columns default to _WidthStretch with same weights.',
     },
   }
 
-  local sizing_mask = ImGui.TableFlags_SizingFixedFit()    |
-                      ImGui.TableFlags_SizingFixedSame()   |
-                      ImGui.TableFlags_SizingStretchProp() |
-                      ImGui.TableFlags_SizingStretchSame()
+  local sizing_mask = ImGui.TableFlags_SizingFixedFit    |
+                      ImGui.TableFlags_SizingFixedSame   |
+                      ImGui.TableFlags_SizingStretchProp |
+                      ImGui.TableFlags_SizingStretchSame
   local idx = 1
   while idx < #policies do
     if policies[idx].value == (flags & sizing_mask) then
@@ -4097,7 +4097,7 @@ function demo.EditTableSizingFlags(flags)
       ImGui.Separator(ctx)
       ImGui.Text(ctx, ('%s:'):format(policy.name))
       ImGui.Separator(ctx)
-      local indent_spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_IndentSpacing())
+      local indent_spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_IndentSpacing)
       ImGui.SetCursorPosX(ctx, ImGui.GetCursorPosX(ctx) + indent_spacing * 0.5)
       ImGui.Text(ctx, policy.tooltip)
     end
@@ -4110,46 +4110,46 @@ end
 
 function demo.EditTableColumnsFlags(flags)
   local rv
-  local width_mask = ImGui.TableColumnFlags_WidthStretch() |
-                     ImGui.TableColumnFlags_WidthFixed()
+  local width_mask = ImGui.TableColumnFlags_WidthStretch |
+                     ImGui.TableColumnFlags_WidthFixed
 
-  rv,flags = ImGui.CheckboxFlags(ctx, '_Disabled', flags, ImGui.TableColumnFlags_Disabled()); ImGui.SameLine(ctx); demo.HelpMarker('Master disable flag (also hide from context menu)')
-  rv,flags = ImGui.CheckboxFlags(ctx, '_DefaultHide', flags, ImGui.TableColumnFlags_DefaultHide())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_DefaultSort', flags, ImGui.TableColumnFlags_DefaultSort())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_WidthStretch', flags, ImGui.TableColumnFlags_WidthStretch())
+  rv,flags = ImGui.CheckboxFlags(ctx, '_Disabled', flags, ImGui.TableColumnFlags_Disabled); ImGui.SameLine(ctx); demo.HelpMarker('Master disable flag (also hide from context menu)')
+  rv,flags = ImGui.CheckboxFlags(ctx, '_DefaultHide', flags, ImGui.TableColumnFlags_DefaultHide)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_DefaultSort', flags, ImGui.TableColumnFlags_DefaultSort)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_WidthStretch', flags, ImGui.TableColumnFlags_WidthStretch)
   if rv then
-    flags = flags & ~(width_mask ^ ImGui.TableColumnFlags_WidthStretch())
+    flags = flags & ~(width_mask ^ ImGui.TableColumnFlags_WidthStretch)
   end
-  rv,flags = ImGui.CheckboxFlags(ctx, '_WidthFixed', flags, ImGui.TableColumnFlags_WidthFixed())
+  rv,flags = ImGui.CheckboxFlags(ctx, '_WidthFixed', flags, ImGui.TableColumnFlags_WidthFixed)
   if rv then
-    flags = flags & ~(width_mask ^ ImGui.TableColumnFlags_WidthFixed())
+    flags = flags & ~(width_mask ^ ImGui.TableColumnFlags_WidthFixed)
   end
-  rv,flags = ImGui.CheckboxFlags(ctx, '_NoResize', flags, ImGui.TableColumnFlags_NoResize())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_NoReorder', flags, ImGui.TableColumnFlags_NoReorder())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_NoHide', flags, ImGui.TableColumnFlags_NoHide())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_NoClip', flags, ImGui.TableColumnFlags_NoClip())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_NoSort', flags, ImGui.TableColumnFlags_NoSort())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_NoSortAscending', flags, ImGui.TableColumnFlags_NoSortAscending())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_NoSortDescending', flags, ImGui.TableColumnFlags_NoSortDescending())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_NoHeaderLabel', flags, ImGui.TableColumnFlags_NoHeaderLabel())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_NoHeaderWidth', flags, ImGui.TableColumnFlags_NoHeaderWidth())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_PreferSortAscending', flags, ImGui.TableColumnFlags_PreferSortAscending())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_PreferSortDescending', flags, ImGui.TableColumnFlags_PreferSortDescending())
-  rv,flags = ImGui.CheckboxFlags(ctx, '_IndentEnable', flags, ImGui.TableColumnFlags_IndentEnable()); ImGui.SameLine(ctx); demo.HelpMarker('Default for column 0')
-  rv,flags = ImGui.CheckboxFlags(ctx, '_IndentDisable', flags, ImGui.TableColumnFlags_IndentDisable()); ImGui.SameLine(ctx); demo.HelpMarker('Default for column >0')
+  rv,flags = ImGui.CheckboxFlags(ctx, '_NoResize', flags, ImGui.TableColumnFlags_NoResize)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_NoReorder', flags, ImGui.TableColumnFlags_NoReorder)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_NoHide', flags, ImGui.TableColumnFlags_NoHide)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_NoClip', flags, ImGui.TableColumnFlags_NoClip)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_NoSort', flags, ImGui.TableColumnFlags_NoSort)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_NoSortAscending', flags, ImGui.TableColumnFlags_NoSortAscending)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_NoSortDescending', flags, ImGui.TableColumnFlags_NoSortDescending)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_NoHeaderLabel', flags, ImGui.TableColumnFlags_NoHeaderLabel)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_NoHeaderWidth', flags, ImGui.TableColumnFlags_NoHeaderWidth)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_PreferSortAscending', flags, ImGui.TableColumnFlags_PreferSortAscending)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_PreferSortDescending', flags, ImGui.TableColumnFlags_PreferSortDescending)
+  rv,flags = ImGui.CheckboxFlags(ctx, '_IndentEnable', flags, ImGui.TableColumnFlags_IndentEnable); ImGui.SameLine(ctx); demo.HelpMarker('Default for column 0')
+  rv,flags = ImGui.CheckboxFlags(ctx, '_IndentDisable', flags, ImGui.TableColumnFlags_IndentDisable); ImGui.SameLine(ctx); demo.HelpMarker('Default for column >0')
 
   return flags
 end
 
 function demo.ShowTableColumnsStatusFlags(flags)
-  ImGui.CheckboxFlags(ctx, '_IsEnabled', flags, ImGui.TableColumnFlags_IsEnabled())
-  ImGui.CheckboxFlags(ctx, '_IsVisible', flags, ImGui.TableColumnFlags_IsVisible())
-  ImGui.CheckboxFlags(ctx, '_IsSorted',  flags, ImGui.TableColumnFlags_IsSorted())
-  ImGui.CheckboxFlags(ctx, '_IsHovered', flags, ImGui.TableColumnFlags_IsHovered())
+  ImGui.CheckboxFlags(ctx, '_IsEnabled', flags, ImGui.TableColumnFlags_IsEnabled)
+  ImGui.CheckboxFlags(ctx, '_IsVisible', flags, ImGui.TableColumnFlags_IsVisible)
+  ImGui.CheckboxFlags(ctx, '_IsSorted',  flags, ImGui.TableColumnFlags_IsSorted)
+  ImGui.CheckboxFlags(ctx, '_IsHovered', flags, ImGui.TableColumnFlags_IsHovered)
 end
 
 function demo.ShowDemoWindowTables()
-  -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once())
+  -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
   if not ImGui.CollapsingHeader(ctx, 'Tables') then
     return
   end
@@ -4182,7 +4182,7 @@ function demo.ShowDemoWindowTables()
   demo.HelpMarker('Disable the indenting of tree nodes so demo tables can use the full window width.')
   ImGui.Separator(ctx)
   if tables.disable_indent then
-    ImGui.PushStyleVar(ctx, ImGui.StyleVar_IndentSpacing(), 0.0)
+    ImGui.PushStyleVar(ctx, ImGui.StyleVar_IndentSpacing, 0.0)
   end
 
   -- About Styling of tables
@@ -4258,7 +4258,7 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Borders, background') then
     if not tables.borders_bg then
       tables.borders_bg = {
-        flags = ImGui.TableFlags_Borders() | ImGui.TableFlags_RowBg(),
+        flags = ImGui.TableFlags_Borders | ImGui.TableFlags_RowBg,
         display_headers = false,
         contents_type = 0,
       }
@@ -4266,25 +4266,25 @@ function demo.ShowDemoWindowTables()
     -- Expose a few Borders related flags interactively
 
     demo.PushStyleCompact()
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.borders_bg.flags, ImGui.TableFlags_RowBg())
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.borders_bg.flags, ImGui.TableFlags_Borders())
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.borders_bg.flags, ImGui.TableFlags_RowBg)
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.borders_bg.flags, ImGui.TableFlags_Borders)
     ImGui.SameLine(ctx); demo.HelpMarker('ImGuiTableFlags_Borders\n = ImGuiTableFlags_BordersInnerV\n | ImGuiTableFlags_BordersOuterV\n | ImGuiTableFlags_BordersInnerV\n | ImGuiTableFlags_BordersOuterH')
     ImGui.Indent(ctx)
 
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.borders_bg.flags, ImGui.TableFlags_BordersH())
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.borders_bg.flags, ImGui.TableFlags_BordersH)
     ImGui.Indent(ctx)
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterH', tables.borders_bg.flags, ImGui.TableFlags_BordersOuterH())
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerH', tables.borders_bg.flags, ImGui.TableFlags_BordersInnerH())
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterH', tables.borders_bg.flags, ImGui.TableFlags_BordersOuterH)
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerH', tables.borders_bg.flags, ImGui.TableFlags_BordersInnerH)
     ImGui.Unindent(ctx)
 
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.borders_bg.flags, ImGui.TableFlags_BordersV())
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.borders_bg.flags, ImGui.TableFlags_BordersV)
     ImGui.Indent(ctx)
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.borders_bg.flags, ImGui.TableFlags_BordersOuterV())
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.borders_bg.flags, ImGui.TableFlags_BordersInnerV())
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.borders_bg.flags, ImGui.TableFlags_BordersOuterV)
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.borders_bg.flags, ImGui.TableFlags_BordersInnerV)
     ImGui.Unindent(ctx)
 
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuter', tables.borders_bg.flags, ImGui.TableFlags_BordersOuter())
-    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInner', tables.borders_bg.flags, ImGui.TableFlags_BordersInner())
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuter', tables.borders_bg.flags, ImGui.TableFlags_BordersOuter)
+    rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInner', tables.borders_bg.flags, ImGui.TableFlags_BordersInner)
     ImGui.Unindent(ctx)
 
     ImGui.AlignTextToFramePadding(ctx); ImGui.Text(ctx, 'Cell contents:')
@@ -4325,19 +4325,19 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Resizable, stretch') then
     if not tables.resz_stretch then
       tables.resz_stretch = {
-        flags = ImGui.TableFlags_SizingStretchSame() |
-                ImGui.TableFlags_Resizable() |
-                ImGui.TableFlags_BordersOuter() |
-                ImGui.TableFlags_BordersV() |
-                ImGui.TableFlags_ContextMenuInBody(),
+        flags = ImGui.TableFlags_SizingStretchSame |
+                ImGui.TableFlags_Resizable |
+                ImGui.TableFlags_BordersOuter |
+                ImGui.TableFlags_BordersV |
+                ImGui.TableFlags_ContextMenuInBody,
       }
     end
 
     -- By default, if we don't enable ScrollX the sizing policy for each column is "Stretch"
     -- All columns maintain a sizing weight, and they will occupy all available width.
     demo.PushStyleCompact()
-    rv,tables.resz_stretch.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.resz_stretch.flags, ImGui.TableFlags_Resizable())
-    rv,tables.resz_stretch.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.resz_stretch.flags, ImGui.TableFlags_BordersV())
+    rv,tables.resz_stretch.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.resz_stretch.flags, ImGui.TableFlags_Resizable)
+    rv,tables.resz_stretch.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.resz_stretch.flags, ImGui.TableFlags_BordersV)
     ImGui.SameLine(ctx); demo.HelpMarker('Using the _Resizable flag automatically enables the _BordersInnerV flag as well, this is why the resize borders are still showing when unchecking this.')
     demo.PopStyleCompact()
 
@@ -4358,11 +4358,11 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Resizable, fixed') then
     if not tables.resz_fixed then
       tables.resz_fixed = {
-        flags = ImGui.TableFlags_SizingFixedFit() |
-                ImGui.TableFlags_Resizable() |
-                ImGui.TableFlags_BordersOuter() |
-                ImGui.TableFlags_BordersV() |
-                ImGui.TableFlags_ContextMenuInBody(),
+        flags = ImGui.TableFlags_SizingFixedFit |
+                ImGui.TableFlags_Resizable |
+                ImGui.TableFlags_BordersOuter |
+                ImGui.TableFlags_BordersV |
+                ImGui.TableFlags_ContextMenuInBody,
       }
     end
 
@@ -4375,7 +4375,7 @@ function demo.ShowDemoWindowTables()
        Fixed-width columns generally makes more sense if you want to use horizontal scrolling.\n\n\z
        Double-click a column border to auto-fit the column to its contents.')
     demo.PushStyleCompact()
-    rv,tables.resz_fixed.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.resz_fixed.flags, ImGui.TableFlags_NoHostExtendX())
+    rv,tables.resz_fixed.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.resz_fixed.flags, ImGui.TableFlags_NoHostExtendX)
     demo.PopStyleCompact()
 
     if ImGui.BeginTable(ctx, 'table1', 3, tables.resz_fixed.flags) then
@@ -4395,10 +4395,10 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, "Resizable, mixed") then
     if not tables.resz_mixed then
       tables.resz_mixed = {
-        flags = ImGui.TableFlags_SizingFixedFit() |
-                ImGui.TableFlags_RowBg() | ImGui.TableFlags_Borders() |
-                ImGui.TableFlags_Resizable() |
-                ImGui.TableFlags_Reorderable() | ImGui.TableFlags_Hideable()
+        flags = ImGui.TableFlags_SizingFixedFit |
+                ImGui.TableFlags_RowBg | ImGui.TableFlags_Borders |
+                ImGui.TableFlags_Resizable |
+                ImGui.TableFlags_Reorderable | ImGui.TableFlags_Hideable
       }
     end
     demo.HelpMarker(
@@ -4406,9 +4406,9 @@ function demo.ShowDemoWindowTables()
        When combining Fixed and Stretch columns, generally you only want one, maybe two trailing columns to use _WidthStretch.')
 
     if ImGui.BeginTable(ctx, 'table1', 3, tables.resz_mixed.flags) then
-      ImGui.TableSetupColumn(ctx, 'AAA', ImGui.TableColumnFlags_WidthFixed())
-      ImGui.TableSetupColumn(ctx, 'BBB', ImGui.TableColumnFlags_WidthFixed())
-      ImGui.TableSetupColumn(ctx, 'CCC', ImGui.TableColumnFlags_WidthStretch())
+      ImGui.TableSetupColumn(ctx, 'AAA', ImGui.TableColumnFlags_WidthFixed)
+      ImGui.TableSetupColumn(ctx, 'BBB', ImGui.TableColumnFlags_WidthFixed)
+      ImGui.TableSetupColumn(ctx, 'CCC', ImGui.TableColumnFlags_WidthStretch)
       ImGui.TableHeadersRow(ctx)
       for row = 0, 4 do
         ImGui.TableNextRow(ctx)
@@ -4420,12 +4420,12 @@ function demo.ShowDemoWindowTables()
       ImGui.EndTable(ctx)
     end
     if ImGui.BeginTable(ctx, 'table2', 6, tables.resz_mixed.flags) then
-      ImGui.TableSetupColumn(ctx, 'AAA', ImGui.TableColumnFlags_WidthFixed())
-      ImGui.TableSetupColumn(ctx, 'BBB', ImGui.TableColumnFlags_WidthFixed())
-      ImGui.TableSetupColumn(ctx, 'CCC', ImGui.TableColumnFlags_WidthFixed() | ImGui.TableColumnFlags_DefaultHide())
-      ImGui.TableSetupColumn(ctx, 'DDD', ImGui.TableColumnFlags_WidthStretch())
-      ImGui.TableSetupColumn(ctx, 'EEE', ImGui.TableColumnFlags_WidthStretch())
-      ImGui.TableSetupColumn(ctx, 'FFF', ImGui.TableColumnFlags_WidthStretch() | ImGui.TableColumnFlags_DefaultHide())
+      ImGui.TableSetupColumn(ctx, 'AAA', ImGui.TableColumnFlags_WidthFixed)
+      ImGui.TableSetupColumn(ctx, 'BBB', ImGui.TableColumnFlags_WidthFixed)
+      ImGui.TableSetupColumn(ctx, 'CCC', ImGui.TableColumnFlags_WidthFixed | ImGui.TableColumnFlags_DefaultHide)
+      ImGui.TableSetupColumn(ctx, 'DDD', ImGui.TableColumnFlags_WidthStretch)
+      ImGui.TableSetupColumn(ctx, 'EEE', ImGui.TableColumnFlags_WidthStretch)
+      ImGui.TableSetupColumn(ctx, 'FFF', ImGui.TableColumnFlags_WidthStretch | ImGui.TableColumnFlags_DefaultHide)
       ImGui.TableHeadersRow(ctx)
       for row = 0, 4 do
         ImGui.TableNextRow(ctx)
@@ -4443,11 +4443,11 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Reorderable, hideable, with headers') then
     if not tables.reorder then
       tables.reorder = {
-        flags = ImGui.TableFlags_Resizable() |
-                ImGui.TableFlags_Reorderable() |
-                ImGui.TableFlags_Hideable() |
-                ImGui.TableFlags_BordersOuter() |
-                ImGui.TableFlags_BordersV()
+        flags = ImGui.TableFlags_Resizable |
+                ImGui.TableFlags_Reorderable |
+                ImGui.TableFlags_Hideable |
+                ImGui.TableFlags_BordersOuter |
+                ImGui.TableFlags_BordersV
       }
     end
 
@@ -4455,9 +4455,9 @@ function demo.ShowDemoWindowTables()
       'Click and drag column headers to reorder columns.\n\n\z
        Right-click on a header to open a context menu.')
     demo.PushStyleCompact()
-    rv,tables.reorder.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.reorder.flags, ImGui.TableFlags_Resizable())
-    rv,tables.reorder.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Reorderable', tables.reorder.flags, ImGui.TableFlags_Reorderable())
-    rv,tables.reorder.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Hideable', tables.reorder.flags, ImGui.TableFlags_Hideable())
+    rv,tables.reorder.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.reorder.flags, ImGui.TableFlags_Resizable)
+    rv,tables.reorder.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Reorderable', tables.reorder.flags, ImGui.TableFlags_Reorderable)
+    rv,tables.reorder.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Hideable', tables.reorder.flags, ImGui.TableFlags_Hideable)
     -- rv,tables.reorder.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.reorder.flags, ImGui.TableFlags_NoBordersInBody())
     -- rv,tables.reorder.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.reorder.flags, ImGui.TableFlags_NoBordersInBodyUntilResize()); ImGui.SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body until hovered for resize (borders will always appear in Headers)')
     demo.PopStyleCompact()
@@ -4480,7 +4480,7 @@ function demo.ShowDemoWindowTables()
     end
 
     -- Use outer_size.x == 0.0 instead of default to make the table as tight as possible (only valid when no scrolling and no stretch column)
-    if ImGui.BeginTable(ctx, 'table2', 3, tables.reorder.flags | ImGui.TableFlags_SizingFixedFit(), 0.0, 0.0) then
+    if ImGui.BeginTable(ctx, 'table2', 3, tables.reorder.flags | ImGui.TableFlags_SizingFixedFit, 0.0, 0.0) then
       ImGui.TableSetupColumn(ctx, 'One')
       ImGui.TableSetupColumn(ctx, 'Two')
       ImGui.TableSetupColumn(ctx, 'Three')
@@ -4501,10 +4501,10 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Padding') then
     if not tables.padding then
       tables.padding = {
-        flags1 = ImGui.TableFlags_BordersV(),
+        flags1 = ImGui.TableFlags_BordersV,
         show_headers = false,
 
-        flags2 = ImGui.TableFlags_Borders() | ImGui.TableFlags_RowBg(),
+        flags2 = ImGui.TableFlags_Borders | ImGui.TableFlags_RowBg,
         cell_padding = { 0.0, 0.0 },
         show_widget_frame_bg = true,
         text_bufs = {}, -- Mini text storage for 3x5 cells
@@ -4527,14 +4527,14 @@ function demo.ShowDemoWindowTables()
        In this demo we don't show horizontal borders to emphasize how they don't affect default horizontal padding.")
 
     demo.PushStyleCompact()
-    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_PadOuterX', tables.padding.flags1, ImGui.TableFlags_PadOuterX())
+    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_PadOuterX', tables.padding.flags1, ImGui.TableFlags_PadOuterX)
     ImGui.SameLine(ctx); demo.HelpMarker('Enable outer-most padding (default if ImGuiTableFlags_BordersOuterV is set)')
-    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadOuterX', tables.padding.flags1, ImGui.TableFlags_NoPadOuterX())
+    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadOuterX', tables.padding.flags1, ImGui.TableFlags_NoPadOuterX)
     ImGui.SameLine(ctx); demo.HelpMarker('Disable outer-most padding (default if ImGuiTableFlags_BordersOuterV is not set)')
-    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadInnerX', tables.padding.flags1, ImGui.TableFlags_NoPadInnerX())
+    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadInnerX', tables.padding.flags1, ImGui.TableFlags_NoPadInnerX)
     ImGui.SameLine(ctx); demo.HelpMarker('Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off)')
-    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.padding.flags1, ImGui.TableFlags_BordersOuterV())
-    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.padding.flags1, ImGui.TableFlags_BordersInnerV())
+    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.padding.flags1, ImGui.TableFlags_BordersOuterV)
+    rv,tables.padding.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.padding.flags1, ImGui.TableFlags_BordersInnerV)
     rv,tables.padding.show_headers = ImGui.Checkbox(ctx, 'show_headers', tables.padding.show_headers)
     demo.PopStyleCompact()
 
@@ -4568,23 +4568,23 @@ function demo.ShowDemoWindowTables()
     demo.HelpMarker('Setting style.CellPadding to (0,0) or a custom value.')
 
     demo.PushStyleCompact()
-    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.padding.flags2, ImGui.TableFlags_Borders())
-    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.padding.flags2, ImGui.TableFlags_BordersH())
-    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.padding.flags2, ImGui.TableFlags_BordersV())
-    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInner', tables.padding.flags2, ImGui.TableFlags_BordersInner())
-    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuter', tables.padding.flags2, ImGui.TableFlags_BordersOuter())
-    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.padding.flags2, ImGui.TableFlags_RowBg())
-    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.padding.flags2, ImGui.TableFlags_Resizable())
+    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.padding.flags2, ImGui.TableFlags_Borders)
+    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.padding.flags2, ImGui.TableFlags_BordersH)
+    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.padding.flags2, ImGui.TableFlags_BordersV)
+    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInner', tables.padding.flags2, ImGui.TableFlags_BordersInner)
+    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuter', tables.padding.flags2, ImGui.TableFlags_BordersOuter)
+    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.padding.flags2, ImGui.TableFlags_RowBg)
+    rv,tables.padding.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.padding.flags2, ImGui.TableFlags_Resizable)
     rv,tables.padding.show_widget_frame_bg = ImGui.Checkbox(ctx, 'show_widget_frame_bg', tables.padding.show_widget_frame_bg)
     rv,tables.padding.cell_padding[1],tables.padding.cell_padding[2] =
       ImGui.SliderDouble2(ctx, 'CellPadding', tables.padding.cell_padding[1],
       tables.padding.cell_padding[2], 0.0, 10.0, '%.0f')
     demo.PopStyleCompact()
 
-    ImGui.PushStyleVar(ctx, ImGui.StyleVar_CellPadding(), table.unpack(tables.padding.cell_padding))
+    ImGui.PushStyleVar(ctx, ImGui.StyleVar_CellPadding, table.unpack(tables.padding.cell_padding))
     if ImGui.BeginTable(ctx, 'table_padding_2', 3, tables.padding.flags2) then
       if not tables.padding.show_widget_frame_bg then
-        ImGui.PushStyleColor(ctx, ImGui.Col_FrameBg(), 0)
+        ImGui.PushStyleColor(ctx, ImGui.Col_FrameBg, 0)
       end
       for cell = 1, 3 * 5 do
         ImGui.TableNextColumn(ctx)
@@ -4607,21 +4607,21 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Sizing policies') then
     if not tables.sz_policies then
       tables.sz_policies = {
-        flags1 = ImGui.TableFlags_BordersV()      |
-                 ImGui.TableFlags_BordersOuterH() |
-                 ImGui.TableFlags_RowBg()         |
-                 ImGui.TableFlags_ContextMenuInBody(),
+        flags1 = ImGui.TableFlags_BordersV      |
+                 ImGui.TableFlags_BordersOuterH |
+                 ImGui.TableFlags_RowBg         |
+                 ImGui.TableFlags_ContextMenuInBody,
         sizing_policy_flags = {
-          ImGui.TableFlags_SizingFixedFit(),
-          ImGui.TableFlags_SizingFixedSame(),
-          ImGui.TableFlags_SizingStretchProp(),
-          ImGui.TableFlags_SizingStretchSame(),
+          ImGui.TableFlags_SizingFixedFit,
+          ImGui.TableFlags_SizingFixedSame,
+          ImGui.TableFlags_SizingStretchProp,
+          ImGui.TableFlags_SizingStretchSame,
         },
 
-        flags2 = ImGui.TableFlags_ScrollY() |
-                 ImGui.TableFlags_Borders() |
-                 ImGui.TableFlags_RowBg()   |
-                 ImGui.TableFlags_Resizable(),
+        flags2 = ImGui.TableFlags_ScrollY |
+                 ImGui.TableFlags_Borders |
+                 ImGui.TableFlags_RowBg   |
+                 ImGui.TableFlags_Resizable,
         contents_type = 0,
         column_count  = 3,
         text_buf      = '',
@@ -4629,8 +4629,8 @@ function demo.ShowDemoWindowTables()
     end
 
     demo.PushStyleCompact()
-    rv,tables.sz_policies.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.sz_policies.flags1, ImGui.TableFlags_Resizable())
-    rv,tables.sz_policies.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.sz_policies.flags1, ImGui.TableFlags_NoHostExtendX())
+    rv,tables.sz_policies.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.sz_policies.flags1, ImGui.TableFlags_Resizable)
+    rv,tables.sz_policies.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.sz_policies.flags1, ImGui.TableFlags_NoHostExtendX)
     demo.PopStyleCompact()
 
     for table_n,sizing_flags in ipairs(tables.sz_policies.sizing_policy_flags) do
@@ -4676,13 +4676,13 @@ function demo.ShowDemoWindowTables()
       ImGui.SameLine(ctx)
       demo.HelpMarker('Be mindful that using right-alignment (e.g. size.x = -FLT_MIN) creates a feedback loop where contents width can feed into auto-column width can feed into contents width.')
     end
-    rv,tables.sz_policies.column_count = ImGui.DragInt(ctx, 'Columns', tables.sz_policies.column_count, 0.1, 1, 64, '%d', ImGui.SliderFlags_AlwaysClamp())
-    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.sz_policies.flags2, ImGui.TableFlags_Resizable())
-    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_PreciseWidths', tables.sz_policies.flags2, ImGui.TableFlags_PreciseWidths())
+    rv,tables.sz_policies.column_count = ImGui.DragInt(ctx, 'Columns', tables.sz_policies.column_count, 0.1, 1, 64, '%d', ImGui.SliderFlags_AlwaysClamp)
+    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.sz_policies.flags2, ImGui.TableFlags_Resizable)
+    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_PreciseWidths', tables.sz_policies.flags2, ImGui.TableFlags_PreciseWidths)
     ImGui.SameLine(ctx); demo.HelpMarker('Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.')
-    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.sz_policies.flags2, ImGui.TableFlags_ScrollX())
-    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.sz_policies.flags2, ImGui.TableFlags_ScrollY())
-    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoClip', tables.sz_policies.flags2, ImGui.TableFlags_NoClip())
+    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.sz_policies.flags2, ImGui.TableFlags_ScrollX)
+    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.sz_policies.flags2, ImGui.TableFlags_ScrollY)
+    rv,tables.sz_policies.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoClip', tables.sz_policies.flags2, ImGui.TableFlags_NoClip)
     ImGui.PopItemWidth(ctx)
     ImGui.PopID(ctx)
     demo.PopStyleCompact()
@@ -4721,20 +4721,20 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Vertical scrolling, with clipping') then
     if not tables.vertical then
       tables.vertical = {
-        flags = ImGui.TableFlags_ScrollY()      |
-                ImGui.TableFlags_RowBg()        |
-                ImGui.TableFlags_BordersOuter() |
-                ImGui.TableFlags_BordersV()     |
-                ImGui.TableFlags_Resizable()    |
-                ImGui.TableFlags_Reorderable()  |
-                ImGui.TableFlags_Hideable(),
+        flags = ImGui.TableFlags_ScrollY      |
+                ImGui.TableFlags_RowBg        |
+                ImGui.TableFlags_BordersOuter |
+                ImGui.TableFlags_BordersV     |
+                ImGui.TableFlags_Resizable    |
+                ImGui.TableFlags_Reorderable  |
+                ImGui.TableFlags_Hideable,
       }
     end
 
     demo.HelpMarker('Here we activate ScrollY, which will create a child window container to allow hosting scrollable contents.\n\nWe also demonstrate using ImGuiListClipper to virtualize the submission of many items.')
 
     demo.PushStyleCompact()
-    rv,tables.vertical.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.vertical.flags, ImGui.TableFlags_ScrollY())
+    rv,tables.vertical.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.vertical.flags, ImGui.TableFlags_ScrollY)
     demo.PopStyleCompact()
 
     -- When using ScrollX or ScrollY we need to specify a size for our table container!
@@ -4742,9 +4742,9 @@ function demo.ShowDemoWindowTables()
     local outer_size = { 0.0, TEXT_BASE_HEIGHT * 8 }
     if ImGui.BeginTable(ctx, 'table_scrolly', 3, tables.vertical.flags, table.unpack(outer_size)) then
       ImGui.TableSetupScrollFreeze(ctx, 0, 1); -- Make top row always visible
-      ImGui.TableSetupColumn(ctx, 'One', ImGui.TableColumnFlags_None())
-      ImGui.TableSetupColumn(ctx, 'Two', ImGui.TableColumnFlags_None())
-      ImGui.TableSetupColumn(ctx, 'Three', ImGui.TableColumnFlags_None())
+      ImGui.TableSetupColumn(ctx, 'One', ImGui.TableColumnFlags_None)
+      ImGui.TableSetupColumn(ctx, 'Two', ImGui.TableColumnFlags_None)
+      ImGui.TableSetupColumn(ctx, 'Three', ImGui.TableColumnFlags_None)
       ImGui.TableHeadersRow(ctx)
 
       -- Demonstrate using clipper for large vertical lists
@@ -4768,23 +4768,23 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Horizontal scrolling') then
     if not tables.horizontal then
       tables.horizontal = {
-        flags1 = ImGui.TableFlags_ScrollX()      |
-                 ImGui.TableFlags_ScrollY()      |
-                 ImGui.TableFlags_RowBg()        |
-                 ImGui.TableFlags_BordersOuter() |
-                 ImGui.TableFlags_BordersV()     |
-                 ImGui.TableFlags_Resizable()    |
-                 ImGui.TableFlags_Reorderable()  |
-                 ImGui.TableFlags_Hideable(),
+        flags1 = ImGui.TableFlags_ScrollX      |
+                 ImGui.TableFlags_ScrollY      |
+                 ImGui.TableFlags_RowBg        |
+                 ImGui.TableFlags_BordersOuter |
+                 ImGui.TableFlags_BordersV     |
+                 ImGui.TableFlags_Resizable    |
+                 ImGui.TableFlags_Reorderable  |
+                 ImGui.TableFlags_Hideable,
         freeze_cols = 1,
         freeze_rows = 1,
 
-        flags2 = ImGui.TableFlags_SizingStretchSame() |
-                 ImGui.TableFlags_ScrollX()           |
-                 ImGui.TableFlags_ScrollY()           |
-                 ImGui.TableFlags_BordersOuter()      |
-                 ImGui.TableFlags_RowBg()             |
-                 ImGui.TableFlags_ContextMenuInBody(),
+        flags2 = ImGui.TableFlags_SizingStretchSame |
+                 ImGui.TableFlags_ScrollX           |
+                 ImGui.TableFlags_ScrollY           |
+                 ImGui.TableFlags_BordersOuter      |
+                 ImGui.TableFlags_RowBg             |
+                 ImGui.TableFlags_ContextMenuInBody,
         inner_width = 1000.0,
       }
     end
@@ -4796,13 +4796,13 @@ function demo.ShowDemoWindowTables()
        because the container window won't automatically extend vertically to fix contents (this may be improved in future versions).")
 
     demo.PushStyleCompact()
-    rv,tables.horizontal.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.horizontal.flags1, ImGui.TableFlags_Resizable())
-    rv,tables.horizontal.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.horizontal.flags1, ImGui.TableFlags_ScrollX())
-    rv,tables.horizontal.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.horizontal.flags1, ImGui.TableFlags_ScrollY())
+    rv,tables.horizontal.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.horizontal.flags1, ImGui.TableFlags_Resizable)
+    rv,tables.horizontal.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.horizontal.flags1, ImGui.TableFlags_ScrollX)
+    rv,tables.horizontal.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.horizontal.flags1, ImGui.TableFlags_ScrollY)
     ImGui.SetNextItemWidth(ctx, ImGui.GetFrameHeight(ctx))
-    rv,tables.horizontal.freeze_cols = ImGui.DragInt(ctx, 'freeze_cols', tables.horizontal.freeze_cols, 0.2, 0, 9, nil, ImGui.SliderFlags_NoInput())
+    rv,tables.horizontal.freeze_cols = ImGui.DragInt(ctx, 'freeze_cols', tables.horizontal.freeze_cols, 0.2, 0, 9, nil, ImGui.SliderFlags_NoInput)
     ImGui.SetNextItemWidth(ctx, ImGui.GetFrameHeight(ctx))
-    rv,tables.horizontal.freeze_rows = ImGui.DragInt(ctx, 'freeze_rows', tables.horizontal.freeze_rows, 0.2, 0, 9, nil, ImGui.SliderFlags_NoInput())
+    rv,tables.horizontal.freeze_rows = ImGui.DragInt(ctx, 'freeze_rows', tables.horizontal.freeze_rows, 0.2, 0, 9, nil, ImGui.SliderFlags_NoInput)
     demo.PopStyleCompact()
 
     -- When using ScrollX or ScrollY we need to specify a size for our table container!
@@ -4810,7 +4810,7 @@ function demo.ShowDemoWindowTables()
     local outer_size = { 0.0, TEXT_BASE_HEIGHT * 8 }
     if ImGui.BeginTable(ctx, 'table_scrollx', 7, tables.horizontal.flags1, table.unpack(outer_size)) then
       ImGui.TableSetupScrollFreeze(ctx, tables.horizontal.freeze_cols, tables.horizontal.freeze_rows)
-      ImGui.TableSetupColumn(ctx, 'Line #', ImGui.TableColumnFlags_NoHide()) -- Make the first column not hideable to match our use of TableSetupScrollFreeze()
+      ImGui.TableSetupColumn(ctx, 'Line #', ImGui.TableColumnFlags_NoHide) -- Make the first column not hideable to match our use of TableSetupScrollFreeze()
       ImGui.TableSetupColumn(ctx, 'One')
       ImGui.TableSetupColumn(ctx, 'Two')
       ImGui.TableSetupColumn(ctx, 'Three')
@@ -4849,7 +4849,7 @@ function demo.ShowDemoWindowTables()
     demo.PushStyleCompact()
     ImGui.PushID(ctx, 'flags3')
     ImGui.PushItemWidth(ctx, TEXT_BASE_WIDTH * 30)
-    rv,tables.horizontal.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.horizontal.flags2, ImGui.TableFlags_ScrollX())
+    rv,tables.horizontal.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.horizontal.flags2, ImGui.TableFlags_ScrollX)
     rv,tables.horizontal.inner_width = ImGui.DragDouble(ctx, 'inner_width', tables.horizontal.inner_width, 1.0, 0.0, FLT_MAX, '%.1f')
     ImGui.PopItemWidth(ctx)
     ImGui.PopID(ctx)
@@ -4869,15 +4869,15 @@ function demo.ShowDemoWindowTables()
     if not tables.col_flags then
       tables.col_flags = {
         columns = {
-          { name='One',   flags=ImGui.TableColumnFlags_DefaultSort(), flags_out=0 },
-          { name='Two',   flags=ImGui.TableColumnFlags_None(),        flags_out=0 },
-          { name='Three', flags=ImGui.TableColumnFlags_DefaultHide(), flags_out=0 },
+          { name='One',   flags=ImGui.TableColumnFlags_DefaultSort, flags_out=0 },
+          { name='Two',   flags=ImGui.TableColumnFlags_None,        flags_out=0 },
+          { name='Three', flags=ImGui.TableColumnFlags_DefaultHide, flags_out=0 },
         },
       }
     end
 
     -- Create a first table just to show all the options/flags we want to make visible in our example!
-    if ImGui.BeginTable(ctx, 'table_columns_flags_checkboxes', #tables.col_flags.columns, ImGui.TableFlags_None()) then
+    if ImGui.BeginTable(ctx, 'table_columns_flags_checkboxes', #tables.col_flags.columns, ImGui.TableFlags_None) then
       demo.PushStyleCompact()
       for i,column in ipairs(tables.col_flags.columns) do
         ImGui.TableNextColumn(ctx)
@@ -4901,16 +4901,16 @@ function demo.ShowDemoWindowTables()
     -- Create the real table we care about for the example!
     -- We use a scrolling table to be able to showcase the difference between the _IsEnabled and _IsVisible flags above, otherwise in
     -- a non-scrolling table columns are always visible (unless using ImGuiTableFlags_NoKeepColumnsVisible + resizing the parent window down)
-    local flags = ImGui.TableFlags_SizingFixedFit() |
-                  ImGui.TableFlags_ScrollX()        |
-                  ImGui.TableFlags_ScrollY()        |
-                  ImGui.TableFlags_RowBg()          |
-                  ImGui.TableFlags_BordersOuter()   |
-                  ImGui.TableFlags_BordersV()       |
-                  ImGui.TableFlags_Resizable()      |
-                  ImGui.TableFlags_Reorderable()    |
-                  ImGui.TableFlags_Hideable()       |
-                  ImGui.TableFlags_Sortable()
+    local flags = ImGui.TableFlags_SizingFixedFit |
+                  ImGui.TableFlags_ScrollX        |
+                  ImGui.TableFlags_ScrollY        |
+                  ImGui.TableFlags_RowBg          |
+                  ImGui.TableFlags_BordersOuter   |
+                  ImGui.TableFlags_BordersV       |
+                  ImGui.TableFlags_Resizable      |
+                  ImGui.TableFlags_Reorderable    |
+                  ImGui.TableFlags_Hideable       |
+                  ImGui.TableFlags_Sortable
     local outer_size = { 0.0, TEXT_BASE_HEIGHT * 9 }
     if ImGui.BeginTable(ctx, 'table_columns_flags', #tables.col_flags.columns, flags, table.unpack(outer_size)) then
       for i,column in ipairs(tables.col_flags.columns) do
@@ -4940,22 +4940,22 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Columns widths') then
     if not tables.col_widths then
       tables.col_widths = {
-        flags1 = ImGui.TableFlags_Borders(), --|
+        flags1 = ImGui.TableFlags_Borders, --|
                  -- ImGui.TableFlags_NoBordersInBodyUntilResize(),
-        flags2 = ImGui.TableFlags_None(),
+        flags2 = ImGui.TableFlags_None,
       }
     end
     demo.HelpMarker('Using TableSetupColumn() to setup default width.')
 
     demo.PushStyleCompact()
-    rv,tables.col_widths.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.col_widths.flags1, ImGui.TableFlags_Resizable())
+    rv,tables.col_widths.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.col_widths.flags1, ImGui.TableFlags_Resizable)
     -- rv,tables.col_widths.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.col_widths.flags1, ImGui.TableFlags_NoBordersInBodyUntilResize())
     demo.PopStyleCompact()
     if ImGui.BeginTable(ctx, 'table1', 3, tables.col_widths.flags1) then
       -- We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
-      ImGui.TableSetupColumn(ctx, 'one', ImGui.TableColumnFlags_WidthFixed(), 100.0) -- Default to 100.0
-      ImGui.TableSetupColumn(ctx, 'two', ImGui.TableColumnFlags_WidthFixed(), 200.0) -- Default to 200.0
-      ImGui.TableSetupColumn(ctx, 'three', ImGui.TableColumnFlags_WidthFixed());     -- Default to auto
+      ImGui.TableSetupColumn(ctx, 'one', ImGui.TableColumnFlags_WidthFixed, 100.0) -- Default to 100.0
+      ImGui.TableSetupColumn(ctx, 'two', ImGui.TableColumnFlags_WidthFixed, 200.0) -- Default to 200.0
+      ImGui.TableSetupColumn(ctx, 'three', ImGui.TableColumnFlags_WidthFixed);     -- Default to auto
       ImGui.TableHeadersRow(ctx)
       for row = 0, 3 do
         ImGui.TableNextRow(ctx)
@@ -4974,16 +4974,16 @@ function demo.ShowDemoWindowTables()
     demo.HelpMarker("Using TableSetupColumn() to setup explicit width.\n\nUnless _NoKeepColumnsVisible is set, fixed columns with set width may still be shrunk down if there's not enough space in the host.")
 
     demo.PushStyleCompact()
-    rv,tables.col_widths.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoKeepColumnsVisible', tables.col_widths.flags2, ImGui.TableFlags_NoKeepColumnsVisible())
-    rv,tables.col_widths.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.col_widths.flags2, ImGui.TableFlags_BordersInnerV())
-    rv,tables.col_widths.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.col_widths.flags2, ImGui.TableFlags_BordersOuterV())
+    rv,tables.col_widths.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoKeepColumnsVisible', tables.col_widths.flags2, ImGui.TableFlags_NoKeepColumnsVisible)
+    rv,tables.col_widths.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.col_widths.flags2, ImGui.TableFlags_BordersInnerV)
+    rv,tables.col_widths.flags2 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.col_widths.flags2, ImGui.TableFlags_BordersOuterV)
     demo.PopStyleCompact()
     if ImGui.BeginTable(ctx, 'table2', 4, tables.col_widths.flags2) then
       -- We could also set ImGuiTableFlags_SizingFixedFit on the table and all columns will default to ImGuiTableColumnFlags_WidthFixed.
-      ImGui.TableSetupColumn(ctx, '', ImGui.TableColumnFlags_WidthFixed(), 100.0)
-      ImGui.TableSetupColumn(ctx, '', ImGui.TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 15.0)
-      ImGui.TableSetupColumn(ctx, '', ImGui.TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 30.0)
-      ImGui.TableSetupColumn(ctx, '', ImGui.TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 15.0)
+      ImGui.TableSetupColumn(ctx, '', ImGui.TableColumnFlags_WidthFixed, 100.0)
+      ImGui.TableSetupColumn(ctx, '', ImGui.TableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.0)
+      ImGui.TableSetupColumn(ctx, '', ImGui.TableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 30.0)
+      ImGui.TableSetupColumn(ctx, '', ImGui.TableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 15.0)
       for row = 0, 4 do
         ImGui.TableNextRow(ctx)
         for column = 0, 3 do
@@ -5004,7 +5004,7 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Nested tables') then
     demo.HelpMarker('This demonstrates embedding a table into another table cell.')
 
-    local flags = ImGui.TableFlags_Borders() | ImGui.TableFlags_Resizable() | ImGui.TableFlags_Reorderable() | ImGui.TableFlags_Hideable()
+    local flags = ImGui.TableFlags_Borders | ImGui.TableFlags_Resizable | ImGui.TableFlags_Reorderable | ImGui.TableFlags_Hideable
     if ImGui.BeginTable(ctx, 'table_nested1', 2, flags) then
       ImGui.TableSetupColumn(ctx, 'A0')
       ImGui.TableSetupColumn(ctx, 'A1')
@@ -5019,12 +5019,12 @@ function demo.ShowDemoWindowTables()
         ImGui.TableSetupColumn(ctx, 'B1')
         ImGui.TableHeadersRow(ctx)
 
-        ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None(), rows_height)
+        ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None, rows_height)
         ImGui.TableNextColumn(ctx)
         ImGui.Text(ctx, 'B0 Row 0')
         ImGui.TableNextColumn(ctx)
         ImGui.Text(ctx, 'B0 Row 1')
-        ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None(), rows_height)
+        ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None, rows_height)
         ImGui.TableNextColumn(ctx)
         ImGui.Text(ctx, 'B1 Row 0')
         ImGui.TableNextColumn(ctx)
@@ -5044,10 +5044,10 @@ function demo.ShowDemoWindowTables()
   DoOpenAction()
   if ImGui.TreeNode(ctx, 'Row height') then
     demo.HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'ImGui_StyleVar_CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'ImGui_StyleVar_CellPadding.y * 2.0'.\n\nWe cannot honor a _maximum_ row height as that would require a unique clipping rectangle per row.")
-    if ImGui.BeginTable(ctx, 'table_row_height', 1, ImGui.TableFlags_BordersOuter() | ImGui.TableFlags_BordersInnerV()) then
+    if ImGui.BeginTable(ctx, 'table_row_height', 1, ImGui.TableFlags_BordersOuter | ImGui.TableFlags_BordersInnerV) then
       for row = 0, 9 do
         local min_row_height = TEXT_BASE_HEIGHT * 0.30 * row
-        ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None(), min_row_height)
+        ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None, min_row_height)
         ImGui.TableNextColumn(ctx)
         ImGui.Text(ctx, ('min_row_height = %.2f'):format(min_row_height))
       end
@@ -5060,12 +5060,12 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Outer size') then
     if not tables.outer_sz then
       tables.outer_sz = {
-        flags = ImGui.TableFlags_Borders() |
-                ImGui.TableFlags_Resizable() |
-                ImGui.TableFlags_ContextMenuInBody() |
-                ImGui.TableFlags_RowBg() |
-                ImGui.TableFlags_SizingFixedFit() |
-                ImGui.TableFlags_NoHostExtendX(),
+        flags = ImGui.TableFlags_Borders |
+                ImGui.TableFlags_Resizable |
+                ImGui.TableFlags_ContextMenuInBody |
+                ImGui.TableFlags_RowBg |
+                ImGui.TableFlags_SizingFixedFit |
+                ImGui.TableFlags_NoHostExtendX,
       }
     end
 
@@ -5073,9 +5073,9 @@ function demo.ShowDemoWindowTables()
     -- Important to that note how the two flags have slightly different behaviors!
     ImGui.Text(ctx, 'Using NoHostExtendX and NoHostExtendY:')
     demo.PushStyleCompact()
-    rv,tables.outer_sz.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.outer_sz.flags, ImGui.TableFlags_NoHostExtendX())
+    rv,tables.outer_sz.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.outer_sz.flags, ImGui.TableFlags_NoHostExtendX)
     ImGui.SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.')
-    rv,tables.outer_sz.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendY', tables.outer_sz.flags, ImGui.TableFlags_NoHostExtendY())
+    rv,tables.outer_sz.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendY', tables.outer_sz.flags, ImGui.TableFlags_NoHostExtendY)
     ImGui.SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.')
     demo.PopStyleCompact()
 
@@ -5095,7 +5095,7 @@ function demo.ShowDemoWindowTables()
 
     ImGui.Spacing(ctx)
 
-    local flags = ImGui.TableFlags_Borders() | ImGui.TableFlags_RowBg()
+    local flags = ImGui.TableFlags_Borders | ImGui.TableFlags_RowBg
     ImGui.Text(ctx, 'Using explicit size:')
     if ImGui.BeginTable(ctx, 'table2', 3, flags, TEXT_BASE_WIDTH * 30, 0.0) then
       for row = 0, 4 do
@@ -5126,7 +5126,7 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Background color') then
     if not tables.bg_col then
       tables.bg_col = {
-        flags         = ImGui.TableFlags_RowBg(),
+        flags         = ImGui.TableFlags_RowBg,
         row_bg_type   = 1,
         row_bg_target = 1,
         cell_bg_type  = 1,
@@ -5134,8 +5134,8 @@ function demo.ShowDemoWindowTables()
     end
 
     demo.PushStyleCompact()
-    rv,tables.bg_col.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.bg_col.flags, ImGui.TableFlags_Borders())
-    rv,tables.bg_col.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.bg_col.flags, ImGui.TableFlags_RowBg())
+    rv,tables.bg_col.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Borders', tables.bg_col.flags, ImGui.TableFlags_Borders)
+    rv,tables.bg_col.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.bg_col.flags, ImGui.TableFlags_RowBg)
     ImGui.SameLine(ctx); demo.HelpMarker('ImGuiTableFlags_RowBg automatically sets RowBg0 to alternative colors pulled from the Style.')
     rv,tables.bg_col.row_bg_type = ImGui.Combo(ctx, 'row bg type', tables.bg_col.row_bg_type, "None\0Red\0Gradient\0")
     rv,tables.bg_col.row_bg_target = ImGui.Combo(ctx, 'row bg target', tables.bg_col.row_bg_target, "RowBg0\0RowBg1\0"); ImGui.SameLine(ctx); demo.HelpMarker('Target RowBg0 to override the alternating odd/even colors,\nTarget RowBg1 to blend with them.')
@@ -5156,7 +5156,7 @@ function demo.ShowDemoWindowTables()
             row_bg_color = 0x333333a6
             row_bg_color = row_bg_color + (demo.round((row * 0.1) * 0xFF) << 24)
           end
-          ImGui.TableSetBgColor(ctx, ImGui.TableBgTarget_RowBg0() + tables.bg_col.row_bg_target, row_bg_color)
+          ImGui.TableSetBgColor(ctx, ImGui.TableBgTarget_RowBg0 + tables.bg_col.row_bg_target, row_bg_color)
         end
 
         -- Fill cells
@@ -5169,7 +5169,7 @@ function demo.ShowDemoWindowTables()
           -- (the CellBg color will be blended over the RowBg and ColumnBg colors)
           -- We can also pass a column number as a third parameter to TableSetBgColor() and do this outside the column loop.
           if row >= 1 and row <= 2 and column >= 1 and column <= 2 and tables.bg_col.cell_bg_type == 1 then
-            ImGui.TableSetBgColor(ctx, ImGui.TableBgTarget_CellBg(), 0x4d4db3a6)
+            ImGui.TableSetBgColor(ctx, ImGui.TableBgTarget_CellBg, 0x4d4db3a6)
           end
         end
       end
@@ -5180,17 +5180,17 @@ function demo.ShowDemoWindowTables()
 
   DoOpenAction()
   if ImGui.TreeNode(ctx, 'Tree view') then
-    local flags = ImGui.TableFlags_BordersV()      |
-                  ImGui.TableFlags_BordersOuterH() |
-                  ImGui.TableFlags_Resizable()     |
-                  ImGui.TableFlags_RowBg()--         |
+    local flags = ImGui.TableFlags_BordersV      |
+                  ImGui.TableFlags_BordersOuterH |
+                  ImGui.TableFlags_Resizable     |
+                  ImGui.TableFlags_RowBg--         |
                   -- ImGui.TableFlags_NoBordersInBody()
 
     if ImGui.BeginTable(ctx, '3ways', 3, flags) then
       -- The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
-      ImGui.TableSetupColumn(ctx, 'Name', ImGui.TableColumnFlags_NoHide())
-      ImGui.TableSetupColumn(ctx, 'Size', ImGui.TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 12.0)
-      ImGui.TableSetupColumn(ctx, 'Type', ImGui.TableColumnFlags_WidthFixed(), TEXT_BASE_WIDTH * 18.0)
+      ImGui.TableSetupColumn(ctx, 'Name', ImGui.TableColumnFlags_NoHide)
+      ImGui.TableSetupColumn(ctx, 'Size', ImGui.TableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0)
+      ImGui.TableSetupColumn(ctx, 'Type', ImGui.TableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 18.0)
       ImGui.TableHeadersRow(ctx)
 
       -- Simple storage to output a dummy file-system.
@@ -5211,7 +5211,7 @@ function demo.ShowDemoWindowTables()
         ImGui.TableNextColumn(ctx)
         local is_folder = node.child_count > 0
         if is_folder then
-          local open = ImGui.TreeNode(ctx, node.name, ImGui.TreeNodeFlags_SpanFullWidth())
+          local open = ImGui.TreeNode(ctx, node.name, ImGui.TreeNodeFlags_SpanFullWidth)
           ImGui.TableNextColumn(ctx)
           ImGui.TextDisabled(ctx, '--')
           ImGui.TableNextColumn(ctx)
@@ -5223,7 +5223,7 @@ function demo.ShowDemoWindowTables()
             ImGui.TreePop(ctx)
           end
         else
-          ImGui.TreeNode(ctx, node.name, ImGui.TreeNodeFlags_Leaf() | ImGui.TreeNodeFlags_Bullet() | ImGui.TreeNodeFlags_NoTreePushOnOpen() | ImGui.TreeNodeFlags_SpanFullWidth())
+          ImGui.TreeNode(ctx, node.name, ImGui.TreeNodeFlags_Leaf | ImGui.TreeNodeFlags_Bullet | ImGui.TreeNodeFlags_NoTreePushOnOpen | ImGui.TreeNodeFlags_SpanFullWidth)
           ImGui.TableNextColumn(ctx)
           ImGui.Text(ctx, ('%d'):format(node.size))
           ImGui.TableNextColumn(ctx)
@@ -5249,7 +5249,7 @@ function demo.ShowDemoWindowTables()
     demo.HelpMarker(
       "Showcase using PushItemWidth() and how it is preserved on a per-column basis.\n\n\z
        Note that on auto-resizing non-resizable fixed columns, querying the content width for e.g. right-alignment doesn't make sense.")
-    if ImGui.BeginTable(ctx, 'table_item_width', 3, ImGui.TableFlags_Borders()) then
+    if ImGui.BeginTable(ctx, 'table_item_width', 3, ImGui.TableFlags_Borders) then
       ImGui.TableSetupColumn(ctx, 'small')
       ImGui.TableSetupColumn(ctx, 'half')
       ImGui.TableSetupColumn(ctx, 'right-align')
@@ -5292,22 +5292,22 @@ function demo.ShowDemoWindowTables()
     end
 
     local COLUMNS_COUNT = 3
-    if ImGui.BeginTable(ctx, 'table_custom_headers', COLUMNS_COUNT, ImGui.TableFlags_Borders() | ImGui.TableFlags_Reorderable() | ImGui.TableFlags_Hideable()) then
+    if ImGui.BeginTable(ctx, 'table_custom_headers', COLUMNS_COUNT, ImGui.TableFlags_Borders | ImGui.TableFlags_Reorderable | ImGui.TableFlags_Hideable) then
       ImGui.TableSetupColumn(ctx, 'Apricot')
       ImGui.TableSetupColumn(ctx, 'Banana')
       ImGui.TableSetupColumn(ctx, 'Cherry')
 
       -- Instead of calling TableHeadersRow() we'll submit custom headers ourselves
-      ImGui.TableNextRow(ctx, ImGui.TableRowFlags_Headers())
+      ImGui.TableNextRow(ctx, ImGui.TableRowFlags_Headers)
       for column = 0, COLUMNS_COUNT - 1 do
         ImGui.TableSetColumnIndex(ctx, column)
         local column_name = ImGui.TableGetColumnName(ctx, column) -- Retrieve name passed to TableSetupColumn()
         ImGui.PushID(ctx, column)
-        ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding(), 0, 0)
+        ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, 0, 0)
         rv,tables.headers.column_selected[column + 1] =
           ImGui.Checkbox(ctx, '##checkall', tables.headers.column_selected[column + 1])
         ImGui.PopStyleVar(ctx)
-        ImGui.SameLine(ctx, 0.0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing())))
+        ImGui.SameLine(ctx, 0.0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)))
         ImGui.TableHeader(ctx, column_name)
         ImGui.PopID(ctx)
       end
@@ -5330,17 +5330,17 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Context menus') then
     if not tables.ctx_menus then
       tables.ctx_menus = {
-        flags1 = ImGui.TableFlags_Resizable()   |
-                 ImGui.TableFlags_Reorderable() |
-                 ImGui.TableFlags_Hideable()    |
-                 ImGui.TableFlags_Borders()     |
-                 ImGui.TableFlags_ContextMenuInBody()
+        flags1 = ImGui.TableFlags_Resizable   |
+                 ImGui.TableFlags_Reorderable |
+                 ImGui.TableFlags_Hideable    |
+                 ImGui.TableFlags_Borders     |
+                 ImGui.TableFlags_ContextMenuInBody
       }
     end
     demo.HelpMarker('By default, right-clicking over a TableHeadersRow()/TableHeader() line will open the default context-menu.\nUsing ImGuiTableFlags_ContextMenuInBody we also allow right-clicking over columns body.')
 
     demo.PushStyleCompact()
-    rv,tables.ctx_menus.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ContextMenuInBody', tables.ctx_menus.flags1, ImGui.TableFlags_ContextMenuInBody())
+    rv,tables.ctx_menus.flags1 = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ContextMenuInBody', tables.ctx_menus.flags1, ImGui.TableFlags_ContextMenuInBody)
     demo.PopStyleCompact()
 
     -- Context Menus: first example
@@ -5371,11 +5371,11 @@ function demo.ShowDemoWindowTables()
     -- [2.2] Right-click on the ".." to open a custom popup
     -- [2.3] Right-click in columns to open another custom popup
     demo.HelpMarker('Demonstrate mixing table context menu (over header), item context button (over button) and custom per-colum context menu (over column body).')
-    local flags2 = ImGui.TableFlags_Resizable()      |
-                   ImGui.TableFlags_SizingFixedFit() |
-                   ImGui.TableFlags_Reorderable()    |
-                   ImGui.TableFlags_Hideable()       |
-                   ImGui.TableFlags_Borders()
+    local flags2 = ImGui.TableFlags_Resizable      |
+                   ImGui.TableFlags_SizingFixedFit |
+                   ImGui.TableFlags_Reorderable    |
+                   ImGui.TableFlags_Hideable       |
+                   ImGui.TableFlags_Borders
     if ImGui.BeginTable(ctx, 'table_context_menu_2', COLUMNS_COUNT, flags2) then
       ImGui.TableSetupColumn(ctx, 'One')
       ImGui.TableSetupColumn(ctx, 'Two')
@@ -5411,7 +5411,7 @@ function demo.ShowDemoWindowTables()
       local hovered_column = -1
       for column = 0, COLUMNS_COUNT do
         ImGui.PushID(ctx, column)
-        if (ImGui.TableGetColumnFlags(ctx, column) & ImGui.TableColumnFlags_IsHovered()) ~= 0 then
+        if (ImGui.TableGetColumnFlags(ctx, column) & ImGui.TableColumnFlags_IsHovered) ~= 0 then
           hovered_column = column
         end
         if hovered_column == column and not ImGui.IsAnyItemHovered(ctx) and ImGui.IsMouseReleased(ctx, 1) then
@@ -5442,20 +5442,20 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Synced instances') then
     if not tables.synced then
       tables.synced = {
-        flags = ImGui.TableFlags_Resizable()      |
-                ImGui.TableFlags_Reorderable()    |
-                ImGui.TableFlags_Hideable()       |
-                ImGui.TableFlags_Borders()        |
-                ImGui.TableFlags_SizingFixedFit() |
-                ImGui.TableFlags_NoSavedSettings(),
+        flags = ImGui.TableFlags_Resizable      |
+                ImGui.TableFlags_Reorderable    |
+                ImGui.TableFlags_Hideable       |
+                ImGui.TableFlags_Borders        |
+                ImGui.TableFlags_SizingFixedFit |
+                ImGui.TableFlags_NoSavedSettings,
       }
     end
     demo.HelpMarker('Multiple tables with the same identifier will share their settings, width, visibility, order etc.')
-    rv,tables.synced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.synced.flags, ImGui.TableFlags_ScrollY())
-    rv,tables.synced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SizingFixedFit', tables.synced.flags, ImGui.TableFlags_SizingFixedFit())
+    rv,tables.synced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.synced.flags, ImGui.TableFlags_ScrollY)
+    rv,tables.synced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SizingFixedFit', tables.synced.flags, ImGui.TableFlags_SizingFixedFit)
     for n = 0, 2 do
       local buf = ('Synced Table %d'):format(n)
-      local open = ImGui.CollapsingHeader(ctx, buf, nil, ImGui.TreeNodeFlags_DefaultOpen())
+      local open = ImGui.CollapsingHeader(ctx, buf, nil, ImGui.TreeNodeFlags_DefaultOpen)
       if open and ImGui.BeginTable(ctx, 'Table', 3, tables.synced.flags, 0, ImGui.GetTextLineHeightWithSpacing(ctx) * 5) then
         ImGui.TableSetupColumn(ctx, 'One')
         ImGui.TableSetupColumn(ctx, 'Two')
@@ -5483,16 +5483,16 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Sorting') then
     if not tables.sorting then
       tables.sorting = {
-        flags = ImGui.TableFlags_Resizable()       |
-                ImGui.TableFlags_Reorderable()     |
-                ImGui.TableFlags_Hideable()        |
-                ImGui.TableFlags_Sortable()        |
-                ImGui.TableFlags_SortMulti()       |
-                ImGui.TableFlags_RowBg()           |
-                ImGui.TableFlags_BordersOuter()    |
-                ImGui.TableFlags_BordersV()        |
+        flags = ImGui.TableFlags_Resizable       |
+                ImGui.TableFlags_Reorderable     |
+                ImGui.TableFlags_Hideable        |
+                ImGui.TableFlags_Sortable        |
+                ImGui.TableFlags_SortMulti       |
+                ImGui.TableFlags_RowBg           |
+                ImGui.TableFlags_BordersOuter    |
+                ImGui.TableFlags_BordersV        |
                 -- ImGui.TableFlags_NoBordersInBody() |
-                ImGui.TableFlags_ScrollY(),
+                ImGui.TableFlags_ScrollY,
         items = {},
       }
 
@@ -5510,9 +5510,9 @@ function demo.ShowDemoWindowTables()
 
     -- Options
     demo.PushStyleCompact()
-    rv,tables.sorting.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortMulti', tables.sorting.flags, ImGui.TableFlags_SortMulti())
+    rv,tables.sorting.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortMulti', tables.sorting.flags, ImGui.TableFlags_SortMulti)
     ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetColumnSortSpecs() may return specs where (SpecsCount > 1).')
-    rv,tables.sorting.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortTristate', tables.sorting.flags, ImGui.TableFlags_SortTristate())
+    rv,tables.sorting.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortTristate', tables.sorting.flags, ImGui.TableFlags_SortTristate)
     ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: allow no sorting, disable default sorting. TableGetColumnSortSpecs() may return specs where (SpecsCount == 0).')
     demo.PopStyleCompact()
 
@@ -5524,10 +5524,10 @@ function demo.ShowDemoWindowTables()
       -- - ImGuiTableColumnFlags_DefaultSort
       -- - ImGuiTableColumnFlags_NoSort / ImGuiTableColumnFlags_NoSortAscending / ImGuiTableColumnFlags_NoSortDescending
       -- - ImGuiTableColumnFlags_PreferSortAscending / ImGuiTableColumnFlags_PreferSortDescending
-      ImGui.TableSetupColumn(ctx, 'ID',       ImGui.TableColumnFlags_DefaultSort()          | ImGui.TableColumnFlags_WidthFixed(),   0.0, MyItemColumnID_ID)
-      ImGui.TableSetupColumn(ctx, 'Name',                                                       ImGui.TableColumnFlags_WidthFixed(),   0.0, MyItemColumnID_Name)
-      ImGui.TableSetupColumn(ctx, 'Action',   ImGui.TableColumnFlags_NoSort()               | ImGui.TableColumnFlags_WidthFixed(),   0.0, MyItemColumnID_Action)
-      ImGui.TableSetupColumn(ctx, 'Quantity', ImGui.TableColumnFlags_PreferSortDescending() | ImGui.TableColumnFlags_WidthStretch(), 0.0, MyItemColumnID_Quantity)
+      ImGui.TableSetupColumn(ctx, 'ID',       ImGui.TableColumnFlags_DefaultSort          | ImGui.TableColumnFlags_WidthFixed,   0.0, MyItemColumnID_ID)
+      ImGui.TableSetupColumn(ctx, 'Name',                                                       ImGui.TableColumnFlags_WidthFixed,   0.0, MyItemColumnID_Name)
+      ImGui.TableSetupColumn(ctx, 'Action',   ImGui.TableColumnFlags_NoSort               | ImGui.TableColumnFlags_WidthFixed,   0.0, MyItemColumnID_Action)
+      ImGui.TableSetupColumn(ctx, 'Quantity', ImGui.TableColumnFlags_PreferSortDescending | ImGui.TableColumnFlags_WidthStretch, 0.0, MyItemColumnID_Quantity)
       ImGui.TableSetupScrollFreeze(ctx, 0, 1) -- Make row always visible
       ImGui.TableHeadersRow(ctx)
 
@@ -5564,23 +5564,23 @@ function demo.ShowDemoWindowTables()
   -- In this example we'll expose most table flags and settings.
   -- For specific flags and settings refer to the corresponding section for more detailed explanation.
   -- This section is mostly useful to experiment with combining certain flags or settings with each others.
-  -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once()) -- [DEBUG]
+  -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once) -- [DEBUG]
   DoOpenAction()
   if ImGui.TreeNode(ctx, 'Advanced') then
     if not tables.advanced then
       tables.advanced = {
         items = {},
-        flags = ImGui.TableFlags_Resizable()       |
-                ImGui.TableFlags_Reorderable()     |
-                ImGui.TableFlags_Hideable()        |
-                ImGui.TableFlags_Sortable()        |
-                ImGui.TableFlags_SortMulti()       |
-                ImGui.TableFlags_RowBg()           |
-                ImGui.TableFlags_Borders()         |
+        flags = ImGui.TableFlags_Resizable       |
+                ImGui.TableFlags_Reorderable     |
+                ImGui.TableFlags_Hideable        |
+                ImGui.TableFlags_Sortable        |
+                ImGui.TableFlags_SortMulti       |
+                ImGui.TableFlags_RowBg           |
+                ImGui.TableFlags_Borders         |
                 -- ImGui.TableFlags_NoBordersInBody() |
-                ImGui.TableFlags_ScrollX()         |
-                ImGui.TableFlags_ScrollY()         |
-                ImGui.TableFlags_SizingFixedFit(),
+                ImGui.TableFlags_ScrollX         |
+                ImGui.TableFlags_ScrollY         |
+                ImGui.TableFlags_SizingFixedFit,
         contents_type           = 5, -- selectable span row
         freeze_cols             = 1,
         freeze_rows             = 1,
@@ -5596,85 +5596,85 @@ function demo.ShowDemoWindowTables()
     end
 
     -- //static ImGuiTextFilter filter;
-    -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once()) -- FIXME-TABLE: Enabling this results in initial clipped first pass on table which tend to affect column sizing
+    -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once) -- FIXME-TABLE: Enabling this results in initial clipped first pass on table which tend to affect column sizing
     if ImGui.TreeNode(ctx, 'Options') then
       -- Make the UI compact because there are so many fields
       demo.PushStyleCompact()
       ImGui.PushItemWidth(ctx, TEXT_BASE_WIDTH * 28.0)
 
-      if ImGui.TreeNode(ctx, 'Features:', ImGui.TreeNodeFlags_DefaultOpen()) then
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.advanced.flags, ImGui.TableFlags_Resizable())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Reorderable', tables.advanced.flags, ImGui.TableFlags_Reorderable())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Hideable', tables.advanced.flags, ImGui.TableFlags_Hideable())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Sortable', tables.advanced.flags, ImGui.TableFlags_Sortable())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoSavedSettings', tables.advanced.flags, ImGui.TableFlags_NoSavedSettings())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ContextMenuInBody', tables.advanced.flags, ImGui.TableFlags_ContextMenuInBody())
+      if ImGui.TreeNode(ctx, 'Features:', ImGui.TreeNodeFlags_DefaultOpen) then
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Resizable', tables.advanced.flags, ImGui.TableFlags_Resizable)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Reorderable', tables.advanced.flags, ImGui.TableFlags_Reorderable)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Hideable', tables.advanced.flags, ImGui.TableFlags_Hideable)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_Sortable', tables.advanced.flags, ImGui.TableFlags_Sortable)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoSavedSettings', tables.advanced.flags, ImGui.TableFlags_NoSavedSettings)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ContextMenuInBody', tables.advanced.flags, ImGui.TableFlags_ContextMenuInBody)
         ImGui.TreePop(ctx)
       end
 
-      if ImGui.TreeNode(ctx, 'Decorations:', ImGui.TreeNodeFlags_DefaultOpen()) then
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.advanced.flags, ImGui.TableFlags_RowBg())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.advanced.flags, ImGui.TableFlags_BordersV())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.advanced.flags, ImGui.TableFlags_BordersOuterV())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.advanced.flags, ImGui.TableFlags_BordersInnerV())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.advanced.flags, ImGui.TableFlags_BordersH())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterH', tables.advanced.flags, ImGui.TableFlags_BordersOuterH())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerH', tables.advanced.flags, ImGui.TableFlags_BordersInnerH())
+      if ImGui.TreeNode(ctx, 'Decorations:', ImGui.TreeNodeFlags_DefaultOpen) then
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_RowBg', tables.advanced.flags, ImGui.TableFlags_RowBg)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersV', tables.advanced.flags, ImGui.TableFlags_BordersV)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterV', tables.advanced.flags, ImGui.TableFlags_BordersOuterV)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerV', tables.advanced.flags, ImGui.TableFlags_BordersInnerV)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersH', tables.advanced.flags, ImGui.TableFlags_BordersH)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersOuterH', tables.advanced.flags, ImGui.TableFlags_BordersOuterH)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_BordersInnerH', tables.advanced.flags, ImGui.TableFlags_BordersInnerH)
         -- rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBody', tables.advanced.flags, ImGui.TableFlags_NoBordersInBody()) ImGui.SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body (borders will always appear in Headers')
         -- rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoBordersInBodyUntilResize', tables.advanced.flags, ImGui.TableFlags_NoBordersInBodyUntilResize()) ImGui.SameLine(ctx); demo.HelpMarker('Disable vertical borders in columns Body until hovered for resize (borders will always appear in Headers)')
         ImGui.TreePop(ctx)
       end
 
-      if ImGui.TreeNode(ctx, 'Sizing:', ImGui.TreeNodeFlags_DefaultOpen()) then
+      if ImGui.TreeNode(ctx, 'Sizing:', ImGui.TreeNodeFlags_DefaultOpen) then
         tables.advanced.flags = demo.EditTableSizingFlags(tables.advanced.flags)
         ImGui.SameLine(ctx); demo.HelpMarker('In the Advanced demo we override the policy of each column so those table-wide settings have less effect that typical.')
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.advanced.flags, ImGui.TableFlags_NoHostExtendX())
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.advanced.flags, ImGui.TableFlags_NoHostExtendX)
         ImGui.SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.')
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendY', tables.advanced.flags, ImGui.TableFlags_NoHostExtendY())
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendY', tables.advanced.flags, ImGui.TableFlags_NoHostExtendY)
         ImGui.SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.')
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoKeepColumnsVisible', tables.advanced.flags, ImGui.TableFlags_NoKeepColumnsVisible())
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoKeepColumnsVisible', tables.advanced.flags, ImGui.TableFlags_NoKeepColumnsVisible)
         ImGui.SameLine(ctx); demo.HelpMarker('Only available if ScrollX is disabled.')
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_PreciseWidths', tables.advanced.flags, ImGui.TableFlags_PreciseWidths())
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_PreciseWidths', tables.advanced.flags, ImGui.TableFlags_PreciseWidths)
         ImGui.SameLine(ctx); demo.HelpMarker('Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.')
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoClip', tables.advanced.flags, ImGui.TableFlags_NoClip())
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoClip', tables.advanced.flags, ImGui.TableFlags_NoClip)
         ImGui.SameLine(ctx); demo.HelpMarker('Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with ScrollFreeze options.')
         ImGui.TreePop(ctx)
       end
 
-      if ImGui.TreeNode(ctx, 'Padding:', ImGui.TreeNodeFlags_DefaultOpen()) then
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_PadOuterX',   tables.advanced.flags, ImGui.TableFlags_PadOuterX())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadOuterX', tables.advanced.flags, ImGui.TableFlags_NoPadOuterX())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadInnerX', tables.advanced.flags, ImGui.TableFlags_NoPadInnerX())
+      if ImGui.TreeNode(ctx, 'Padding:', ImGui.TreeNodeFlags_DefaultOpen) then
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_PadOuterX',   tables.advanced.flags, ImGui.TableFlags_PadOuterX)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadOuterX', tables.advanced.flags, ImGui.TableFlags_NoPadOuterX)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoPadInnerX', tables.advanced.flags, ImGui.TableFlags_NoPadInnerX)
         ImGui.TreePop(ctx)
       end
 
-      if ImGui.TreeNode(ctx, 'Scrolling:', ImGui.TreeNodeFlags_DefaultOpen()) then
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.advanced.flags, ImGui.TableFlags_ScrollX())
+      if ImGui.TreeNode(ctx, 'Scrolling:', ImGui.TreeNodeFlags_DefaultOpen) then
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollX', tables.advanced.flags, ImGui.TableFlags_ScrollX)
         ImGui.SameLine(ctx)
         ImGui.SetNextItemWidth(ctx, ImGui.GetFrameHeight(ctx))
-        rv,tables.advanced.freeze_cols = ImGui.DragInt(ctx, 'freeze_cols', tables.advanced.freeze_cols, 0.2, 0, 9, nil, ImGui.SliderFlags_NoInput())
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.advanced.flags, ImGui.TableFlags_ScrollY())
+        rv,tables.advanced.freeze_cols = ImGui.DragInt(ctx, 'freeze_cols', tables.advanced.freeze_cols, 0.2, 0, 9, nil, ImGui.SliderFlags_NoInput)
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_ScrollY', tables.advanced.flags, ImGui.TableFlags_ScrollY)
         ImGui.SameLine(ctx)
         ImGui.SetNextItemWidth(ctx, ImGui.GetFrameHeight(ctx))
-        rv,tables.advanced.freeze_rows = ImGui.DragInt(ctx, 'freeze_rows', tables.advanced.freeze_rows, 0.2, 0, 9, nil, ImGui.SliderFlags_NoInput())
+        rv,tables.advanced.freeze_rows = ImGui.DragInt(ctx, 'freeze_rows', tables.advanced.freeze_rows, 0.2, 0, 9, nil, ImGui.SliderFlags_NoInput)
         ImGui.TreePop(ctx)
       end
 
-      if ImGui.TreeNode(ctx, 'Sorting:', ImGui.TreeNodeFlags_DefaultOpen()) then
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortMulti', tables.advanced.flags, ImGui.TableFlags_SortMulti())
+      if ImGui.TreeNode(ctx, 'Sorting:', ImGui.TreeNodeFlags_DefaultOpen) then
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortMulti', tables.advanced.flags, ImGui.TableFlags_SortMulti)
         ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: hold shift when clicking headers to sort on multiple column. TableGetColumnSortSpecs() may return specs where (SpecsCount > 1).')
-        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortTristate', tables.advanced.flags, ImGui.TableFlags_SortTristate())
+        rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_SortTristate', tables.advanced.flags, ImGui.TableFlags_SortTristate)
         ImGui.SameLine(ctx); demo.HelpMarker('When sorting is enabled: allow no sorting, disable default sorting. TableGetColumnSortSpecs() may return specs where (SpecsCount == 0).')
         ImGui.TreePop(ctx)
       end
 
-      if ImGui.TreeNode(ctx, 'Other:', ImGui.TreeNodeFlags_DefaultOpen()) then
+      if ImGui.TreeNode(ctx, 'Other:', ImGui.TreeNodeFlags_DefaultOpen) then
         rv,tables.advanced.show_headers = ImGui.Checkbox(ctx, 'show_headers', tables.advanced.show_headers)
         rv,tables.advanced.show_wrapped_text = ImGui.Checkbox(ctx, 'show_wrapped_text', tables.advanced.show_wrapped_text)
 
         rv,tables.advanced.outer_size_value[1],tables.advanced.outer_size_value[2] =
           ImGui.DragDouble2(ctx, '##OuterSize', table.unpack(tables.advanced.outer_size_value))
-        ImGui.SameLine(ctx, 0.0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing())))
+        ImGui.SameLine(ctx, 0.0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)))
         rv,tables.advanced.outer_size_enabled = ImGui.Checkbox(ctx, 'outer_size', tables.advanced.outer_size_enabled)
         ImGui.SameLine(ctx)
         demo.HelpMarker(
@@ -5723,7 +5723,7 @@ function demo.ShowDemoWindowTables()
     -- local table_scroll_cur, table_scroll_max, table_draw_list -- For debug display
 
     -- Submit table
-    local inner_width_to_use = (tables.advanced.flags & ImGui.TableFlags_ScrollX()) ~= 0 and tables.advanced.inner_width_with_scroll or 0.0
+    local inner_width_to_use = (tables.advanced.flags & ImGui.TableFlags_ScrollX) ~= 0 and tables.advanced.inner_width_with_scroll or 0.0
     local w, h = 0, 0
     if tables.advanced.outer_size_enabled then
       w, h = table.unpack(tables.advanced.outer_size_value)
@@ -5732,12 +5732,12 @@ function demo.ShowDemoWindowTables()
       -- Declare columns
       -- We use the "user_id" parameter of TableSetupColumn() to specify a user id that will be stored in the sort specifications.
       -- This is so our sort function can identify a column given our own identifier. We could also identify them based on their index!
-      ImGui.TableSetupColumn(ctx, 'ID',           ImGui.TableColumnFlags_DefaultSort() | ImGui.TableColumnFlags_WidthFixed() | ImGui.TableColumnFlags_NoHide(), 0.0, MyItemColumnID_ID)
-      ImGui.TableSetupColumn(ctx, 'Name',         ImGui.TableColumnFlags_WidthFixed(), 0.0, MyItemColumnID_Name)
-      ImGui.TableSetupColumn(ctx, 'Action',       ImGui.TableColumnFlags_NoSort() | ImGui.TableColumnFlags_WidthFixed(), 0.0, MyItemColumnID_Action)
-      ImGui.TableSetupColumn(ctx, 'Quantity',     ImGui.TableColumnFlags_PreferSortDescending(), 0.0, MyItemColumnID_Quantity)
-      ImGui.TableSetupColumn(ctx, 'Description',  (tables.advanced.flags & ImGui.TableFlags_NoHostExtendX()) ~= 0 and 0 or ImGui.TableColumnFlags_WidthStretch(), 0.0, MyItemColumnID_Description)
-      ImGui.TableSetupColumn(ctx, 'Hidden',       ImGui.TableColumnFlags_DefaultHide() | ImGui.TableColumnFlags_NoSort())
+      ImGui.TableSetupColumn(ctx, 'ID',           ImGui.TableColumnFlags_DefaultSort | ImGui.TableColumnFlags_WidthFixed | ImGui.TableColumnFlags_NoHide, 0.0, MyItemColumnID_ID)
+      ImGui.TableSetupColumn(ctx, 'Name',         ImGui.TableColumnFlags_WidthFixed, 0.0, MyItemColumnID_Name)
+      ImGui.TableSetupColumn(ctx, 'Action',       ImGui.TableColumnFlags_NoSort | ImGui.TableColumnFlags_WidthFixed, 0.0, MyItemColumnID_Action)
+      ImGui.TableSetupColumn(ctx, 'Quantity',     ImGui.TableColumnFlags_PreferSortDescending, 0.0, MyItemColumnID_Quantity)
+      ImGui.TableSetupColumn(ctx, 'Description',  (tables.advanced.flags & ImGui.TableFlags_NoHostExtendX) ~= 0 and 0 or ImGui.TableColumnFlags_WidthStretch, 0.0, MyItemColumnID_Description)
+      ImGui.TableSetupColumn(ctx, 'Hidden',       ImGui.TableColumnFlags_DefaultHide | ImGui.TableColumnFlags_NoSort)
       ImGui.TableSetupScrollFreeze(ctx, tables.advanced.freeze_cols, tables.advanced.freeze_rows)
 
       -- Sort our data if sort specs have been changed!
@@ -5749,7 +5749,7 @@ function demo.ShowDemoWindowTables()
 
       -- Take note of whether we are currently sorting based on the Quantity field,
       -- we will use this to trigger sorting when we know the data of this column has been modified.
-      local sorts_specs_using_quantity = (ImGui.TableGetColumnFlags(ctx, 3) & ImGui.TableColumnFlags_IsSorted()) ~= 0
+      local sorts_specs_using_quantity = (ImGui.TableGetColumnFlags(ctx, 3) & ImGui.TableColumnFlags_IsSorted) ~= 0
 
       -- Show headers
       if tables.advanced.show_headers then
@@ -5769,7 +5769,7 @@ function demo.ShowDemoWindowTables()
           -- //    continue;
 
           ImGui.PushID(ctx, item.id)
-          ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None(), tables.advanced.row_min_height)
+          ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None, tables.advanced.row_min_height)
 
           -- For the demo purpose we can select among different type of items submitted in the first column
           ImGui.TableSetColumnIndex(ctx, 0)
@@ -5784,9 +5784,9 @@ function demo.ShowDemoWindowTables()
           elseif contents_type == 3 then -- fill button
               ImGui.Button(ctx, label, -FLT_MIN, 0.0)
           elseif contents_type == 4 or contents_type == 5 then -- selectable/selectable (span row)
-            local selectable_flags = contents_type == 5 and ImGui.SelectableFlags_SpanAllColumns() | ImGui.SelectableFlags_AllowItemOverlap() or ImGui.SelectableFlags_None()
+            local selectable_flags = contents_type == 5 and ImGui.SelectableFlags_SpanAllColumns | ImGui.SelectableFlags_AllowItemOverlap or ImGui.SelectableFlags_None
             if ImGui.Selectable(ctx, label, item.is_selected, selectable_flags, 0, tables.advanced.row_min_height) then
-              if ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl()) then
+              if ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl) then
                 item.is_selected = not item.is_selected
               else
                 for _,it in ipairs(tables.advanced.items) do
@@ -6069,7 +6069,7 @@ function demo.ShowDemoWindowInputs()
 
   if ImGui.CollapsingHeader(ctx, 'Inputs & Focus') then
     -- Display inputs
-    ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once())
+    ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
     if ImGui.TreeNode(ctx, 'Inputs') then
       demo.HelpMarker(
         "This is a simplified view. See more detailed input state:\n\z
@@ -6103,10 +6103,10 @@ function demo.ShowDemoWindowInputs()
         end
       end
       ImGui.Text(ctx, ('Keys mods: %s%s%s%s'):format(
-        ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl())  and 'CTRL '   or '',
-        ImGui.IsKeyDown(ctx, ImGui.Mod_Shift()) and 'SHIFT '  or '',
-        ImGui.IsKeyDown(ctx, ImGui.Mod_Alt())   and 'ALT '    or '',
-        ImGui.IsKeyDown(ctx, ImGui.Mod_Super()) and 'SUPER '  or ''))
+        ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl)  and 'CTRL '   or '',
+        ImGui.IsKeyDown(ctx, ImGui.Mod_Shift) and 'SHIFT '  or '',
+        ImGui.IsKeyDown(ctx, ImGui.Mod_Alt)   and 'ALT '    or '',
+        ImGui.IsKeyDown(ctx, ImGui.Mod_Super) and 'SUPER '  or ''))
 
       ImGui.Text(ctx, 'Chars queue:')
       for next_id = 0, math.huge do
@@ -6120,7 +6120,7 @@ function demo.ShowDemoWindowInputs()
     end
 
     -- Display ImGuiIO output flags
-    -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once())
+    -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
     -- if ImGui.TreeNode(ctx, 'Outputs') then
     --   demo.HelpMarker(
     --    'The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui \z
@@ -6150,11 +6150,11 @@ function demo.ShowDemoWindowInputs()
 
         local capture_override_desc = { 'None', 'Set to false', 'Set to true' }
         -- ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 15)
-        -- rv,misc.capture_override.mouse = ImGui.SliderInt(ctx, 'SetNextFrameWantCaptureMouse() on hover', misc.capture_override.mouse, -1, 1, capture_override_desc[misc.capture_override.mouse + 2], ImGui.SliderFlags_AlwaysClamp())
+        -- rv,misc.capture_override.mouse = ImGui.SliderInt(ctx, 'SetNextFrameWantCaptureMouse() on hover', misc.capture_override.mouse, -1, 1, capture_override_desc[misc.capture_override.mouse + 2], ImGui.SliderFlags_AlwaysClamp)
         ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 15)
-        rv,misc.capture_override.keyboard = ImGui.SliderInt(ctx, 'SetNextFrameWantCaptureKeyboard() on hover', misc.capture_override.keyboard, -1, 1, capture_override_desc[misc.capture_override.keyboard + 2], ImGui.SliderFlags_AlwaysClamp())
+        rv,misc.capture_override.keyboard = ImGui.SliderInt(ctx, 'SetNextFrameWantCaptureKeyboard() on hover', misc.capture_override.keyboard, -1, 1, capture_override_desc[misc.capture_override.keyboard + 2], ImGui.SliderFlags_AlwaysClamp)
 
-        ImGui.ColorButton(ctx, '##panel', 0xb219b2ff, ImGui.ColorEditFlags_NoTooltip() | ImGui.ColorEditFlags_NoDragDrop(), 128, 96) -- Dummy item
+        ImGui.ColorButton(ctx, '##panel', 0xb219b2ff, ImGui.ColorEditFlags_NoTooltip | ImGui.ColorEditFlags_NoDragDrop, 128, 96) -- Dummy item
         -- if ImGui.IsItemHovered(ctx) and misc.capture_override.mouse ~= -1 then
         --   ImGui.SetNextFrameWantCaptureMouse(ctx, misc.capture_override.mouse == 1)
         -- end
@@ -6273,15 +6273,15 @@ function demo.ShowDemoWindowInputs()
         local draw_list = ImGui.GetForegroundDrawList(ctx)
         local mouse_pos = { ImGui.GetMousePos(ctx) }
         local click_pos = { ImGui.GetMouseClickedPos(ctx, 0) }
-        local color = ImGui.GetColor(ctx, ImGui.Col_Button())
+        local color = ImGui.GetColor(ctx, ImGui.Col_Button)
         ImGui.DrawList_AddLine(draw_list, click_pos[1], click_pos[2], mouse_pos[1], mouse_pos[2], color, 4.0)
       end
 
       -- Drag operations gets "unlocked" when the mouse has moved past a certain threshold
       -- (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
       -- threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
-      local value_raw = { ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left(), 0.0) }
-      local value_with_lock_threshold = { ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left()) }
+      local value_raw = { ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left, 0.0) }
+      local value_with_lock_threshold = { ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left) }
       local mouse_delta = { ImGui.GetMouseDelta(ctx) }
       ImGui.Text(ctx, 'GetMouseDragDelta(0):')
       ImGui.Text(ctx, ('  w/ default threshold: (%.1f, %.1f)'):format(table.unpack(value_with_lock_threshold)))
@@ -6415,7 +6415,7 @@ function demo.ShowStyleEditor()
       style  = demo.GetStyleData(),
       ref    = demo.GetStyleData(),
       output_dest = 0,
-      output_prefix = 1,
+      output_prefix = 0,
       output_only_modified = true,
       push_count = 0,
     }
@@ -6428,8 +6428,8 @@ function demo.ShowStyleEditor()
 --     ImGui.ShowFontSelector("Fonts##Selector");
 
   -- Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0 or 1.0)
-  local FrameRounding, GrabRounding = ImGui.StyleVar_FrameRounding(),
-                                      ImGui.StyleVar_GrabRounding()
+  local FrameRounding, GrabRounding = ImGui.StyleVar_FrameRounding,
+                                      ImGui.StyleVar_GrabRounding
   rv,app.style_editor.style.vars[FrameRounding] = ImGui.SliderDouble(ctx, 'FrameRounding', app.style_editor.style.vars[FrameRounding], 0.0, 12.0, '%.0f')
   if rv then
     app.style_editor.style.vars[GrabRounding] = app.style_editor.style.vars[FrameRounding] -- Make GrabRounding always the same value as FrameRounding
@@ -6437,7 +6437,7 @@ function demo.ShowStyleEditor()
 
   local borders = { 'WindowBorder', 'FrameBorder', 'PopupBorder' }
   for i, name in ipairs(borders) do
-    local var = ImGui[('StyleVar_%sSize'):format(name)]()
+    local var = ImGui[('StyleVar_%sSize'):format(name)]
     local enable = app.style_editor.style.vars[var] > 0
     if i > 1 then ImGui.SameLine(ctx) end
     rv, enable = ImGui.Checkbox(ctx, name, enable)
@@ -6457,7 +6457,7 @@ function demo.ShowStyleEditor()
     'Save/Revert in local non-persistent storage. Default Colors definition are not affected. \z
      Use "Export" below to save them somewhere.')
 
-  local funcPrefixes = { 'reaper.ImGui_', 'ImGui.' }
+  local funcPrefixes = { 'ImGui.', 'reaper.ImGui_' }
   local export = function(enumName, funcSuffix, curTable, refTable, isEqual, formatValue)
     local lines, name_maxlen = {}, 0
     for i, name in demo.EachEnum(enumName) do
@@ -6468,6 +6468,7 @@ function demo.ShowStyleEditor()
     end
 
     local funcPrefix = funcPrefixes[app.style_editor.output_prefix + 1]
+    local constParen = app.style_editor.output_prefix == 1 and '()' or ''
     if app.style_editor.output_dest == 0 then
       ImGui.LogToClipboard(ctx)
     else
@@ -6475,8 +6476,9 @@ function demo.ShowStyleEditor()
     end
     for _, line in ipairs(lines) do
       local pad = string.rep('\x20', name_maxlen - line[1]:len())
-      ImGui.LogText(ctx, ('%sPush%s(ctx, ImGui.%s_%s(),%s %s)\n')
-        :format(funcPrefix, funcSuffix, enumName, line[1], pad, formatValue(line[2])))
+      ImGui.LogText(ctx, ('%sPush%s(ctx, %s%s_%s%s,%s %s)\n')
+        :format(funcPrefix, funcSuffix, funcPrefix, enumName,
+        line[1], constParen, pad, formatValue(line[2])))
     end
     if #lines == 1 then
       ImGui.LogText(ctx, ('\n%sPop%s(ctx)\n'):format(funcPrefix, funcSuffix))
@@ -6502,12 +6504,11 @@ function demo.ShowStyleEditor()
 
   ImGui.Separator(ctx)
 
-  if ImGui.BeginTabBar(ctx, '##tabs', ImGui.TabBarFlags_None()) then
+  if ImGui.BeginTabBar(ctx, '##tabs', ImGui.TabBarFlags_None) then
     if ImGui.BeginTabItem(ctx, 'Sizes') then
       local slider = function(varname, min, max, format)
-        local func = ImGui['StyleVar_' .. varname]
-        assert(func, ('%s is not exposed as a StyleVar'):format(varname))
-        local var = func()
+        local var = ImGui['StyleVar_' .. varname]
+        assert(var, ('%s is not exposed as a StyleVar'):format(varname))
         if type(app.style_editor.style.vars[var]) == 'table' then
           local rv,val1,val2 = ImGui.SliderDouble2(ctx, varname, app.style_editor.style.vars[var][1], app.style_editor.style.vars[var][2], min, max, format)
           if rv then app.style_editor.style.vars[var] = { val1, val2 } end
@@ -6570,23 +6571,23 @@ function demo.ShowStyleEditor()
       if not app.style_editor.colors then
         app.style_editor.colors = {
           filter = ImGui.CreateTextFilter(),
-          alpha_flags = ImGui.ColorEditFlags_None(),
+          alpha_flags = ImGui.ColorEditFlags_None,
         }
         ImGui.Attach(ctx, app.style_editor.colors.filter)
       end
 
       ImGui.TextFilter_Draw(app.style_editor.colors.filter, ctx, 'Filter colors', ImGui.GetFontSize(ctx) * 16)
 
-      if ImGui.RadioButton(ctx, 'Opaque', app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_None()) then
-        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_None()
+      if ImGui.RadioButton(ctx, 'Opaque', app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_None) then
+        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_None
       end
       ImGui.SameLine(ctx)
-      if ImGui.RadioButton(ctx, 'Alpha',  app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_AlphaPreview()) then
-        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_AlphaPreview()
+      if ImGui.RadioButton(ctx, 'Alpha',  app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_AlphaPreview) then
+        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_AlphaPreview
       end
       ImGui.SameLine(ctx)
-      if ImGui.RadioButton(ctx, 'Both',   app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_AlphaPreviewHalf()) then
-        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_AlphaPreviewHalf()
+      if ImGui.RadioButton(ctx, 'Both',   app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_AlphaPreviewHalf) then
+        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_AlphaPreviewHalf
       end
       ImGui.SameLine(ctx)
       demo.HelpMarker(
@@ -6595,16 +6596,16 @@ function demo.ShowStyleEditor()
          Right-click to open edit options menu.')
 
       if ImGui.BeginChild(ctx, '##colors', 0, 0, true,
-                            ImGui.WindowFlags_AlwaysVerticalScrollbar()   |
-                            ImGui.WindowFlags_AlwaysHorizontalScrollbar() |
+                            ImGui.WindowFlags_AlwaysVerticalScrollbar   |
+                            ImGui.WindowFlags_AlwaysHorizontalScrollbar |
                          -- ImGui.WindowFlags_NavFlattened()) TODO: BETA/INTERNAL, not exposed yet
                             0) then
         ImGui.PushItemWidth(ctx, -160)
-        local inner_spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing())
+        local inner_spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
         for i, name in demo.EachEnum('Col') do
           if ImGui.TextFilter_PassFilter(app.style_editor.colors.filter, name) then
             ImGui.PushID(ctx, i)
-            rv, app.style_editor.style.colors[i] = ImGui.ColorEdit4(ctx, '##color', app.style_editor.style.colors[i], ImGui.ColorEditFlags_AlphaBar() | app.style_editor.colors.alpha_flags)
+            rv, app.style_editor.style.colors[i] = ImGui.ColorEdit4(ctx, '##color', app.style_editor.style.colors[i], ImGui.ColorEditFlags_AlphaBar | app.style_editor.colors.alpha_flags)
             if app.style_editor.style.colors[i] ~= app.style_editor.ref.colors[i] then
               -- Tips: in a real user application, you may want to merge and use an icon font into the main font,
               -- so instead of "Save"/"Revert" you'd use icons!
@@ -6713,7 +6714,7 @@ function demo.ShowStyleEditor()
 --             ImGui.SameLine();
 --             HelpMarker("When drawing circle primitives with \"num_segments == 0\" tesselation will be calculated automatically.");
 
-      local Alpha, DisabledAlpha = ImGui.StyleVar_Alpha(), ImGui.StyleVar_DisabledAlpha()
+      local Alpha, DisabledAlpha = ImGui.StyleVar_Alpha, ImGui.StyleVar_DisabledAlpha
       rv,app.style_editor.style.vars[Alpha] = ImGui.DragDouble(ctx, 'Global Alpha', app.style_editor.style.vars[Alpha], 0.005, 0.20, 1.0, '%.2f') -- Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
       rv,app.style_editor.style.vars[DisabledAlpha] = ImGui.DragDouble(ctx, 'Disabled Alpha', app.style_editor.style.vars[DisabledAlpha], 0.005, 0.0, 1.0, '%.2f'); ImGui.SameLine(ctx); demo.HelpMarker('Additional alpha multiplier for disabled items (multiply over current value of Alpha).')
       ImGui.PopItemWidth(ctx)
@@ -6983,7 +6984,7 @@ function ExampleAppConsole:new(ctx)
     'Key_UpArrow', 'Key_DownArrow',
   }
   for i, flag in ipairs(use_flags) do
-    ImGui.Function_SetValue(instance.callback, flag, ImGui[flag]())
+    ImGui.Function_SetValue(instance.callback, flag, ImGui[flag])
   end
   ImGui.Function_SetValue(instance.callback, 'CommandsCount', 0)
 
@@ -7010,7 +7011,7 @@ function ExampleAppConsole:AddLog(fmt, ...)
 end
 
 function ExampleAppConsole:Draw(title)
-  ImGui.SetNextWindowSize(self.ctx, 520, 600, ImGui.Cond_FirstUseEver())
+  ImGui.SetNextWindowSize(self.ctx, 520, 600, ImGui.Cond_FirstUseEver)
   local rv, open = ImGui.Begin(self.ctx, title, true)
   if not rv then return open end
 
@@ -7061,8 +7062,8 @@ function ExampleAppConsole:Draw(title)
   ImGui.Separator(self.ctx)
 
   -- Reserve enough left-over height for 1 separator + 1 input text
-  local footer_height_to_reserve = select(2, ImGui.GetStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing())) + ImGui.GetFrameHeightWithSpacing(self.ctx)
-  if ImGui.BeginChild(self.ctx, 'ScrollingRegion', 0, -footer_height_to_reserve, false, ImGui.WindowFlags_HorizontalScrollbar()) then
+  local footer_height_to_reserve = select(2, ImGui.GetStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing)) + ImGui.GetFrameHeightWithSpacing(self.ctx)
+  if ImGui.BeginChild(self.ctx, 'ScrollingRegion', 0, -footer_height_to_reserve, false, ImGui.WindowFlags_HorizontalScrollbar) then
     if ImGui.BeginPopupContextWindow(self.ctx) then
       if ImGui.Selectable(self.ctx, 'Clear') then self:ClearLog() end
       ImGui.EndPopup(self.ctx)
@@ -7092,7 +7093,7 @@ function ExampleAppConsole:Draw(title)
     -- If your items are of variable height:
     -- - Split them into same height items would be simpler and facilitate random-seeking into your list.
     -- - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
-    ImGui.PushStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing(), 4, 1) -- Tighten spacing
+    ImGui.PushStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing, 4, 1) -- Tighten spacing
     if copy_to_clipboard then
       ImGui.LogToClipboard(self.ctx)
     end
@@ -7104,7 +7105,7 @@ function ExampleAppConsole:Draw(title)
         if item:find("[error]", 1, true) then color = 0xFF6666FF
         elseif item:sub(1, 2) == '# '   then color = 0xFFCC99FF end
         if color then
-          ImGui.PushStyleColor(self.ctx, ImGui.Col_Text(), color)
+          ImGui.PushStyleColor(self.ctx, ImGui.Col_Text, color)
         end
         ImGui.Text(self.ctx, item)
         if color then
@@ -7130,10 +7131,10 @@ function ExampleAppConsole:Draw(title)
 
   -- Command-line
   local reclaim_focus = false
-  local input_text_flags = ImGui.InputTextFlags_EnterReturnsTrue()   |
-                           ImGui.InputTextFlags_EscapeClearsAll()    |
-                           ImGui.InputTextFlags_CallbackCompletion() |
-                           ImGui.InputTextFlags_CallbackHistory()
+  local input_text_flags = ImGui.InputTextFlags_EnterReturnsTrue   |
+                           ImGui.InputTextFlags_EscapeClearsAll    |
+                           ImGui.InputTextFlags_CallbackCompletion |
+                           ImGui.InputTextFlags_CallbackHistory
   local rv
   self:CallbackPre()
   rv, self.input_buf = ImGui.InputText(self.ctx, 'Input', self.input_buf, input_text_flags, self.callback)
@@ -7222,7 +7223,7 @@ function ExampleAppConsole:CallbackPost()
   -- Callback post-processing
   self.history_pos = ImGui.Function_GetValue(self.callback, 'HistoryPos')
 
-  if ImGui.Function_GetValue(self.callback, 'EventFlag') == ImGui.InputTextFlags_CallbackCompletion() then
+  if ImGui.Function_GetValue(self.callback, 'EventFlag') == ImGui.InputTextFlags_CallbackCompletion then
     local CandidatesCount = ImGui.Function_GetValue(self.callback, 'CandidatesCount')
     if CandidatesCount == 0 then
       self:AddLog('No match for "%s"!\n', ImGui.Function_GetValue_String(self.callback, 'word'))
@@ -7302,7 +7303,7 @@ function ExampleAppLog.Draw(self, title, p_open)
   ImGui.TextFilter_Draw(self.filter, ctx, 'Filter', -100.0)
 
   ImGui.Separator(self.ctx)
-  if ImGui.BeginChild(self.ctx, 'scrolling', 0, 0, false, ImGui.WindowFlags_HorizontalScrollbar()) then
+  if ImGui.BeginChild(self.ctx, 'scrolling', 0, 0, false, ImGui.WindowFlags_HorizontalScrollbar) then
     if clear then
       self:Clear()
     end
@@ -7310,7 +7311,7 @@ function ExampleAppLog.Draw(self, title, p_open)
       ImGui.LogToClipboard(self.ctx)
     end
 
-    ImGui.PushStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing(), 0, 0)
+    ImGui.PushStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing, 0, 0)
     if ImGui.TextFilter_IsActive(self.filter) then
       -- In this example we don't use the clipper when Filter is enabled.
       -- This is because we don't have a random access on the result on our filter.
@@ -7370,7 +7371,7 @@ function demo.ShowExampleAppLog()
   -- For the demo: add a debug button _BEFORE_ the normal log window contents
   -- We take advantage of a rarely used feature: multiple calls to Begin()/End() are appending to the _same_ window.
   -- Most of the contents of the window will be added by the log.Draw() call.
-  ImGui.SetNextWindowSize(ctx, 500, 400, ImGui.Cond_FirstUseEver())
+  ImGui.SetNextWindowSize(ctx, 500, 400, ImGui.Cond_FirstUseEver)
   local rv,open = ImGui.Begin(ctx, 'Example: Log', true)
   if not rv then return open end
 
@@ -7407,8 +7408,8 @@ function demo.ShowExampleAppLayout()
     }
   end
 
-  ImGui.SetNextWindowSize(ctx, 500, 440, ImGui.Cond_FirstUseEver())
-  local rv,open = ImGui.Begin(ctx, 'Example: Simple layout', true, ImGui.WindowFlags_MenuBar())
+  ImGui.SetNextWindowSize(ctx, 500, 440, ImGui.Cond_FirstUseEver)
+  local rv,open = ImGui.Begin(ctx, 'Example: Simple layout', true, ImGui.WindowFlags_MenuBar)
   if not rv then return open end
 
   if ImGui.BeginMenuBar(ctx) then
@@ -7435,7 +7436,7 @@ function demo.ShowExampleAppLayout()
   if ImGui.BeginChild(ctx, 'item view', 0, -ImGui.GetFrameHeightWithSpacing(ctx)) then -- Leave room for 1 line below us
     ImGui.Text(ctx, ('MyObject: %d'):format(app.layout.selected))
     ImGui.Separator(ctx)
-    if ImGui.BeginTabBar(ctx, '##Tabs', ImGui.TabBarFlags_None()) then
+    if ImGui.BeginTabBar(ctx, '##Tabs', ImGui.TabBarFlags_None) then
       if ImGui.BeginTabItem(ctx, 'Description') then
         ImGui.TextWrapped(ctx, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. ')
         ImGui.EndTabItem(ctx)
@@ -7485,9 +7486,9 @@ function demo.ShowPlaceholderObject(prefix, uid)
         ImGui.TableNextRow(ctx)
         ImGui.TableSetColumnIndex(ctx, 0)
         ImGui.AlignTextToFramePadding(ctx)
-        local flags = ImGui.TreeNodeFlags_Leaf()             |
-                      ImGui.TreeNodeFlags_NoTreePushOnOpen() |
-                      ImGui.TreeNodeFlags_Bullet()
+        local flags = ImGui.TreeNodeFlags_Leaf             |
+                      ImGui.TreeNodeFlags_NoTreePushOnOpen |
+                      ImGui.TreeNodeFlags_Bullet
         ImGui.TreeNodeEx(ctx, 'Field', ('Field_%d'):format(i), flags)
 
         ImGui.TableSetColumnIndex(ctx, 1)
@@ -7515,7 +7516,7 @@ function demo.ShowExampleAppPropertyEditor()
     }
   end
 
-  ImGui.SetNextWindowSize(ctx, 430, 450, ImGui.Cond_FirstUseEver())
+  ImGui.SetNextWindowSize(ctx, 430, 450, ImGui.Cond_FirstUseEver)
   local rv,open = ImGui.Begin(ctx, 'Example: Property editor', true)
   if not rv then return open end
 
@@ -7525,8 +7526,8 @@ function demo.ShowExampleAppPropertyEditor()
      Remember that in many simple cases, you can use ImGui.SameLine(xxx) to position\n\z
      your cursor horizontally instead of using the Columns() API.')
 
-  ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding(), 2, 2)
-  if ImGui.BeginTable(ctx, 'split', 2, ImGui.TableFlags_BordersOuter() | ImGui.TableFlags_Resizable()) then
+  ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, 2, 2)
+  if ImGui.BeginTable(ctx, 'split', 2, ImGui.TableFlags_BordersOuter | ImGui.TableFlags_Resizable) then
     -- Iterate placeholder objects (all the same data)
     for obj_i = 0, 4 - 1 do
       demo.ShowPlaceholderObject('Object', obj_i)
@@ -7553,7 +7554,7 @@ function demo.ShowExampleAppLongText()
     }
   end
 
-  ImGui.SetNextWindowSize(ctx, 520, 600, ImGui.Cond_FirstUseEver())
+  ImGui.SetNextWindowSize(ctx, 520, 600, ImGui.Cond_FirstUseEver)
   local rv, open = ImGui.Begin(ctx, 'Example: Long text display', true)
   if not rv then return open end
 
@@ -7580,7 +7581,7 @@ function demo.ShowExampleAppLongText()
       ImGui.Text(ctx, app.long_text.log)
     elseif app.long_text.test_type == 1 then
       -- Multiple calls to Text(), manually coarsely clipped - demonstrate how to use the ImGui_ListClipper helper.
-      ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing(), 0, 0)
+      ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing, 0, 0)
       ImGui.ListClipper_Begin(clipper, app.long_text.lines)
       while ImGui.ListClipper_Step(clipper) do
         local display_start, display_end = ImGui.ListClipper_GetDisplayRange(clipper)
@@ -7591,7 +7592,7 @@ function demo.ShowExampleAppLongText()
       ImGui.PopStyleVar(ctx)
     elseif app.long_text.test_type == 2 then
       -- Multiple calls to Text(), not clipped (slow)
-      ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing(), 0, 0)
+      ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing, 0, 0)
       for i = 0, app.long_text.lines do
         ImGui.Text(ctx, ('%i The quick brown fox jumps over the lazy dog'):format(i))
       end
@@ -7617,7 +7618,7 @@ function demo.ShowExampleAppAutoResize()
     }
   end
 
-  local rv,open = ImGui.Begin(ctx, 'Example: Auto-resizing window', true, ImGui.WindowFlags_AlwaysAutoResize())
+  local rv,open = ImGui.Begin(ctx, 'Example: Auto-resizing window', true, ImGui.WindowFlags_AlwaysAutoResize)
   if not rv then return open end
 
   ImGui.Text(ctx,
@@ -7678,20 +7679,20 @@ function demo.ShowExampleAppConstrainedResize()
 
   -- Submit window
   if not app.constrained_resize.window_padding then
-    ImGui.PushStyleVar(ctx, ImGui.StyleVar_WindowPadding(), 0, 0)
+    ImGui.PushStyleVar(ctx, ImGui.StyleVar_WindowPadding, 0, 0)
   end
-  local window_flags = app.constrained_resize.auto_resize and ImGui.WindowFlags_AlwaysAutoResize() or 0
+  local window_flags = app.constrained_resize.auto_resize and ImGui.WindowFlags_AlwaysAutoResize or 0
   local visible,open = ImGui.Begin(ctx, 'Example: Constrained Resize', true, window_flags)
   if not app.constrained_resize.window_padding then
     ImGui.PopStyleVar(ctx)
   end
   if not visible then return open end
 
-  if ImGui.IsKeyDown(ctx, ImGui.Mod_Shift()) then
+  if ImGui.IsKeyDown(ctx, ImGui.Mod_Shift) then
     -- Display a dummy viewport (in your real app you would likely use ImageButton() to display a texture.
     local avail_size_w, avail_size_h = ImGui.GetContentRegionAvail(ctx)
     local pos_x, pos_y = ImGui.GetCursorScreenPos(ctx)
-    ImGui.ColorButton(ctx, 'viewport', 0x7f337fff, ImGui.ColorEditFlags_NoTooltip() | ImGui.ColorEditFlags_NoDragDrop(), avail_size_w, avail_size_h)
+    ImGui.ColorButton(ctx, 'viewport', 0x7f337fff, ImGui.ColorEditFlags_NoTooltip | ImGui.ColorEditFlags_NoDragDrop, avail_size_w, avail_size_h)
     ImGui.SetCursorScreenPos(ctx, pos_x + 10, pos_y + 10)
     ImGui.Text(ctx, ('%.2f x %.2f'):format(avail_size_w, avail_size_h))
   else
@@ -7738,12 +7739,12 @@ function demo.ShowExampleAppSimpleOverlay()
     }
   end
 
-  local window_flags = ImGui.WindowFlags_NoDecoration()       |
-                       ImGui.WindowFlags_NoDocking()          |
-                       ImGui.WindowFlags_AlwaysAutoResize()   |
-                       ImGui.WindowFlags_NoSavedSettings()    |
-                       ImGui.WindowFlags_NoFocusOnAppearing() |
-                       ImGui.WindowFlags_NoNav()
+  local window_flags = ImGui.WindowFlags_NoDecoration       |
+                       ImGui.WindowFlags_NoDocking          |
+                       ImGui.WindowFlags_AlwaysAutoResize   |
+                       ImGui.WindowFlags_NoSavedSettings    |
+                       ImGui.WindowFlags_NoFocusOnAppearing |
+                       ImGui.WindowFlags_NoNav
 
   if app.simple_overlay.location >= 0 then
     local PAD = 10.0
@@ -7755,14 +7756,14 @@ function demo.ShowExampleAppSimpleOverlay()
     window_pos_y = app.simple_overlay.location & 2 ~= 0 and work_pos_y + work_size_h - PAD or work_pos_y + PAD
     window_pos_pivot_x = app.simple_overlay.location & 1 ~= 0 and 1.0 or 0.0
     window_pos_pivot_y = app.simple_overlay.location & 2 ~= 0 and 1.0 or 0.0
-    ImGui.SetNextWindowPos(ctx, window_pos_x, window_pos_y, ImGui.Cond_Always(), window_pos_pivot_x, window_pos_pivot_y)
+    ImGui.SetNextWindowPos(ctx, window_pos_x, window_pos_y, ImGui.Cond_Always, window_pos_pivot_x, window_pos_pivot_y)
     -- ImGui::SetNextWindowViewport(viewport->ID) TODO?
-    window_flags = window_flags | ImGui.WindowFlags_NoMove()
+    window_flags = window_flags | ImGui.WindowFlags_NoMove
   elseif app.simple_overlay.location == -2 then
     -- Center window
     local center_x, center_y = ImGui.Viewport_GetCenter(ImGui.GetMainViewport(ctx))
-    ImGui.SetNextWindowPos(ctx, center_x, center_y, ImGui.Cond_Always(), 0.5, 0.5)
-    window_flags = window_flags | ImGui.WindowFlags_NoMove()
+    ImGui.SetNextWindowPos(ctx, center_x, center_y, ImGui.Cond_Always, 0.5, 0.5)
+    window_flags = window_flags | ImGui.WindowFlags_NoMove
   end
 
   ImGui.SetNextWindowBgAlpha(ctx, 0.35) -- Transparent background
@@ -7801,9 +7802,9 @@ function demo.ShowExampleAppFullscreen()
   if not app.fullscreen then
     app.fullscreen = {
       use_work_area = true,
-      flags = ImGui.WindowFlags_NoDecoration() |
-              ImGui.WindowFlags_NoMove()       |
-              ImGui.WindowFlags_NoSavedSettings(),
+      flags = ImGui.WindowFlags_NoDecoration |
+              ImGui.WindowFlags_NoMove       |
+              ImGui.WindowFlags_NoSavedSettings,
     }
   end
 
@@ -7822,12 +7823,12 @@ function demo.ShowExampleAppFullscreen()
   ImGui.SameLine(ctx)
   demo.HelpMarker('Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.')
 
-  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoBackground', app.fullscreen.flags, ImGui.WindowFlags_NoBackground())
-  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoDecoration', app.fullscreen.flags, ImGui.WindowFlags_NoDecoration())
+  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoBackground', app.fullscreen.flags, ImGui.WindowFlags_NoBackground)
+  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoDecoration', app.fullscreen.flags, ImGui.WindowFlags_NoDecoration)
   ImGui.Indent(ctx)
-  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoTitleBar', app.fullscreen.flags, ImGui.WindowFlags_NoTitleBar())
-  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoCollapse', app.fullscreen.flags, ImGui.WindowFlags_NoCollapse())
-  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoScrollbar', app.fullscreen.flags, ImGui.WindowFlags_NoScrollbar())
+  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoTitleBar', app.fullscreen.flags, ImGui.WindowFlags_NoTitleBar)
+  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoCollapse', app.fullscreen.flags, ImGui.WindowFlags_NoCollapse)
+  rv,app.fullscreen.flags = ImGui.CheckboxFlags(ctx, 'ImGuiWindowFlags_NoScrollbar', app.fullscreen.flags, ImGui.WindowFlags_NoScrollbar)
   ImGui.Unindent(ctx)
 
   if ImGui.Button(ctx, 'Close this window') then
@@ -7854,20 +7855,20 @@ function demo.ShowExampleAppWindowTitles()
   -- You can use the "##" and "###" markers to manipulate the display/ID.
 
   -- Using "##" to display same title but have unique identifier.
-  ImGui.SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 100, ImGui.Cond_FirstUseEver())
+  ImGui.SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 100, ImGui.Cond_FirstUseEver)
   if ImGui.Begin(ctx, 'Same title as another window##1') then
     ImGui.Text(ctx, 'This is window 1.\nMy title is the same as window 2, but my identifier is unique.')
     ImGui.End(ctx)
   end
 
-  ImGui.SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 200, ImGui.Cond_FirstUseEver())
+  ImGui.SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 200, ImGui.Cond_FirstUseEver)
   if ImGui.Begin(ctx, 'Same title as another window##2') then
     ImGui.Text(ctx, 'This is window 2.\nMy title is the same as window 1, but my identifier is unique.')
     ImGui.End(ctx)
   end
 
   -- Using "###" to display a changing title but keep a static identifier "AnimatedTitle"
-  ImGui.SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 300, ImGui.Cond_FirstUseEver())
+  ImGui.SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 300, ImGui.Cond_FirstUseEver)
   spinners = { '|', '/', '-', '\\' }
   local spinner = math.floor(ImGui.GetTime(ctx) / 0.25) & 3
   if ImGui.Begin(ctx, ('Animated title %s %d###AnimatedTitle'):format(spinners[spinner+1], ImGui.GetFrameCount(ctx))) then
@@ -7933,7 +7934,7 @@ function demo.ShowExampleAppCustomRendering()
       ImGui.InvisibleButton(ctx, '##gradient2', gradient_size[1], gradient_size[2])
 
       -- Draw a bunch of primitives
-      local item_inner_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing())
+      local item_inner_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
       ImGui.Text(ctx, 'All primitives')
       rv,app.rendering.sz = ImGui.DragDouble(ctx, 'Size', app.rendering.sz, 0.2, 2.0, 100.0, '%.0f')
       rv,app.rendering.thickness = ImGui.DragDouble(ctx, 'Thickness', app.rendering.thickness, 0.05, 1.0, 8.0, '%.02f')
@@ -7950,7 +7951,7 @@ function demo.ShowExampleAppCustomRendering()
 
       local p = {ImGui.GetCursorScreenPos(ctx)}
       local spacing = 10.0
-      local corners_tl_br = ImGui.DrawFlags_RoundCornersTopLeft() | ImGui.DrawFlags_RoundCornersBottomRight()
+      local corners_tl_br = ImGui.DrawFlags_RoundCornersTopLeft | ImGui.DrawFlags_RoundCornersBottomRight
       local col = app.rendering.col
       local sz = app.rendering.sz
       local rounding = sz / 5.0
@@ -7963,8 +7964,8 @@ function demo.ShowExampleAppCustomRendering()
         local th = n == 1 and 1.0 or app.rendering.thickness
         ImGui.DrawList_AddNgon(draw_list, x + sz*0.5, y + sz*0.5, sz*0.5, col, app.rendering.ngon_sides, th); x = x + sz + spacing  -- N-gon
         ImGui.DrawList_AddCircle(draw_list, x + sz*0.5, y + sz*0.5, sz*0.5, col, circle_segments, th);        x = x + sz + spacing  -- Circle
-        ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, 0.0, ImGui.DrawFlags_None(), th);      x = x + sz + spacing    -- Square
-        ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, rounding, ImGui.DrawFlags_None(), th); x = x + sz + spacing    -- Square with all rounded corners
+        ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, 0.0, ImGui.DrawFlags_None, th);      x = x + sz + spacing    -- Square
+        ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, rounding, ImGui.DrawFlags_None, th); x = x + sz + spacing    -- Square with all rounded corners
         ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, rounding, corners_tl_br, th);            x = x + sz + spacing  -- Square with two rounded corners
         ImGui.DrawList_AddTriangle(draw_list, x+sz*0.5, y, x+sz, y+sz-0.5, x, y+sz-0.5, col, th);             x = x + sz + spacing  -- Triangle
         -- ImGui.DrawList_AddTriangle(draw_list, x+sz*0.2, y, x, y+sz-0.5, x+sz*0.4, y+sz-0.5, col, th);      x = x + sz*0.4 + spacing -- Thin triangle
@@ -8015,9 +8016,9 @@ function demo.ShowExampleAppCustomRendering()
       -- Typically you would use a BeginChild()/EndChild() pair to benefit from a clipping region + own scrolling.
       -- Here we demonstrate that this can be replaced by simple offsetting + custom drawing + PushClipRect/PopClipRect() calls.
       -- To use a child window instead we could use, e.g:
-      --   ImGui.PushStyleVar(ctx, ImGui.StyleVar_WindowPadding(), 0, 0) -- Disable padding
-      --   ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg(), 0x323232ff)    -- Set a background color
-      --   if ImGui.BeginChild(ctx, 'canvas', 0.0, 0.0, true, ImGui.WindowFlags_NoMove()) then
+      --   ImGui.PushStyleVar(ctx, ImGui.StyleVar_WindowPadding, 0, 0) -- Disable padding
+      --   ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg, 0x323232ff)    -- Set a background color
+      --   if ImGui.BeginChild(ctx, 'canvas', 0.0, 0.0, true, ImGui.WindowFlags_NoMove) then
       --     ImGui.PopStyleColor(ctx)
       --     ImGui.PopStyleVar(ctx)
       --     [...]
@@ -8038,21 +8039,21 @@ function demo.ShowExampleAppCustomRendering()
       ImGui.DrawList_AddRect(draw_list, canvas_p0[1], canvas_p0[2], canvas_p1[1], canvas_p1[2], 0xffffffff)
 
       -- This will catch our interactions
-      ImGui.InvisibleButton(ctx, 'canvas', canvas_sz[1], canvas_sz[2], ImGui.ButtonFlags_MouseButtonLeft() | ImGui.ButtonFlags_MouseButtonRight())
+      ImGui.InvisibleButton(ctx, 'canvas', canvas_sz[1], canvas_sz[2], ImGui.ButtonFlags_MouseButtonLeft | ImGui.ButtonFlags_MouseButtonRight)
       local is_hovered = ImGui.IsItemHovered(ctx) -- Hovered
       local is_active = ImGui.IsItemActive(ctx)   -- Held
       local origin = {canvas_p0[1] + app.rendering.scrolling[1], canvas_p0[2] + app.rendering.scrolling[2]} -- Lock scrolled origin
       local mouse_pos_in_canvas = {mouse_pos[1] - origin[1], mouse_pos[2] - origin[2]}
 
       -- Add first and second point
-      if is_hovered and not app.rendering.adding_line and ImGui.IsMouseClicked(ctx, ImGui.MouseButton_Left()) then
+      if is_hovered and not app.rendering.adding_line and ImGui.IsMouseClicked(ctx, ImGui.MouseButton_Left) then
         table.insert(app.rendering.points, mouse_pos_in_canvas)
         table.insert(app.rendering.points, mouse_pos_in_canvas)
         app.rendering.adding_line = true
       end
       if app.rendering.adding_line then
         app.rendering.points[#app.rendering.points] = mouse_pos_in_canvas
-        if not ImGui.IsMouseDown(ctx, ImGui.MouseButton_Left()) then
+        if not ImGui.IsMouseDown(ctx, ImGui.MouseButton_Left) then
           app.rendering.adding_line = false
         end
       end
@@ -8060,7 +8061,7 @@ function demo.ShowExampleAppCustomRendering()
       -- Pan (we use a zero mouse threshold when there's no context menu)
       -- You may decide to make that threshold dynamic based on whether the mouse is hovering something etc.
       local mouse_threshold_for_pan = app.rendering.opt_enable_context_menu and -1.0 or 0.0
-      if is_active and ImGui.IsMouseDragging(ctx, ImGui.MouseButton_Right(), mouse_threshold_for_pan) then
+      if is_active and ImGui.IsMouseDragging(ctx, ImGui.MouseButton_Right, mouse_threshold_for_pan) then
         local mouse_delta = {ImGui.GetMouseDelta(ctx)}
         app.rendering.scrolling[1] = app.rendering.scrolling[1] + mouse_delta[1]
         app.rendering.scrolling[2] = app.rendering.scrolling[2] + mouse_delta[2]
@@ -8072,9 +8073,9 @@ function demo.ShowExampleAppCustomRendering()
       end
 
       -- Context menu (under default mouse threshold)
-      local drag_delta = {ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Right())}
+      local drag_delta = {ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Right)}
       if app.rendering.opt_enable_context_menu and drag_delta[1] == 0.0 and drag_delta[2] == 0.0 then
-        ImGui.OpenPopupOnItemClick(ctx, 'context', ImGui.PopupFlags_MouseButtonRight())
+        ImGui.OpenPopupOnItemClick(ctx, 'context', ImGui.PopupFlags_MouseButtonRight)
       end
       if ImGui.BeginPopup(ctx, 'context') then
         if app.rendering.adding_line then

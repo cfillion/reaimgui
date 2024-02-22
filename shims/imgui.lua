@@ -22,6 +22,10 @@ return function(compat_version)
     else
       ImGui[name] = reaper[unshimed] or reaper[full_name]
     end
+
+    if flags & 1 ~= 0 then
+      ImGui[name] = ImGui[name]()
+    end
   end
 
   return ImGui
