@@ -1492,9 +1492,6 @@ end
 function gfx.quit()
   if not state then return end
   -- context will already have been destroyed when calling quit() from atexit()
-  if ImGui.ValidatePtr(state.ctx, 'ImGui_Context*') then
-    ImGui.DestroyContext(state.ctx)
-  end
   for family, styles in pairs(state.fontmap) do
     for style, sizes in pairs(styles) do
       for size, cache in pairs(sizes) do
