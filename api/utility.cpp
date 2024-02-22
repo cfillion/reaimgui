@@ -55,21 +55,19 @@ API_FUNC(0_7, void, GetVersion,
     return klass::isValid(static_cast<klass *>(pointer));
 
 API_FUNC(0_3, bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid. Supported types are:
+R"(Return whether the given pointer is a valid instance of one of the following
+types (indentation represents inheritance):
 
-- `ImGui_Resource*`
-  - `ImGui_Context*`
-  - `ImGui_Font*`
-  - `ImGui_Function*`
-  - `ImGui_Image*`
-    - `ImGui_ImageSet*`
-  - `ImGui_ListClipper*`
-  - `ImGui_TextFilter*`
-- `ImGui_DrawList*`
-- `ImGui_DrawListSplitter*`
-- `ImGui_Viewport*`
-
-Indentation represents inheritance: an `ImageSet` is also an `Image` and a `Resource`.)")
+- ImGui_Context*
+- ImGui_DrawList*
+- ImGui_DrawListSplitter*
+- ImGui_Font*
+- ImGui_Function*
+- ImGui_Image*
+  - ImGui_ImageSet*
+- ImGui_ListClipper*
+- ImGui_TextFilter*
+- ImGui_Viewport*)")
 {
 
   RESOURCE_ISVALID(Context);
@@ -79,7 +77,6 @@ Indentation represents inheritance: an `ImageSet` is also an `Image` and a `Reso
   RESOURCE_ISVALID(Image);
   RESOURCE_ISVALID(ImageSet);
   RESOURCE_ISVALID(ListClipper);
-  RESOURCE_ISVALID(Resource);
   RESOURCE_ISVALID(TextFilter);
 
   RESOURCEPROXY_ISVALID(DrawListProxy);
