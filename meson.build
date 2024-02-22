@@ -34,7 +34,6 @@ windows = import('windows')
 global_cpp_args = {
   'gcc': [
     '-fsigned-char', # defaults to unsigned on ARM
-    '-fstack-protector-strong',
     '-fvisibility=hidden', # meson's gnu_symbol_visibility is per-target
   ],
   'msvc': [],
@@ -72,21 +71,33 @@ link_args = {
   ],
   'msvc': [
     # store only the PDB file's basename instead of its full absolute path
-    '/PDBALTPATH:%_PDB%'
-  ]
+    '/PDBALTPATH:%_PDB%',
+  ],
 }
 
 if get_option('buildtype') == 'debug'
-  global_cpp_args += {'gcc':  global_cpp_args['gcc'] + [
-    '-fno-lto' # meson is lacking a b_lto=if-release option
-  ]}
+  global_cpp_args += {
+    'gcc':  global_cpp_args['gcc'] + [
+      '-fno-lto', # meson is lacking a b_lto=if-release option
+      '-fstack-protector-strong',
+    ],
+    'msvc':  global_cpp_args['msvc'] + [
+      '/GS', # stack protector
+    ]
+  }
 else
-  global_cpp_args += {'msvc':  global_cpp_args['msvc'] + [
-    '/GL', # whole program optimization
-    '/Gy', # enable function-level linking
-    '/Zc:inline', # remove unreferenced COMDAT
-    '/Zi', # generate a PDB file (implies /DEBUG and /Zo)
-  ]}
+  global_cpp_args += {
+    'gcc': global_cpp_args['gcc'] + [
+      '-fno-stack-protector',
+    ],
+    'msvc':  global_cpp_args['msvc'] + [
+      '/GL',  # whole program optimization
+      '/GS-', # disable stack protector
+      '/Gy',  # enable function-level linking
+      '/Zc:inline', # remove unreferenced COMDAT
+      '/Zi',  # generate a PDB file (implies /DEBUG and /Zo)
+    ],
+  }
   link_args += {'msvc':  link_args['msvc'] + [
     '/LTCG',
     '/OPT:REF,ICF,LBR', # re-enable link-time optimizations when /DEBUG is set
