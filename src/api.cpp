@@ -77,6 +77,8 @@ Callable::Callable(const VerNum since, const VerNum until, const char *name)
     m_precursor = nullptr;
   else if(since >= it->second->m_since) {
     m_precursor = it->second;
+    if(since < m_precursor->m_until)
+      throw reascript_error { "overlapping callable version range" };
     it->second = this;
   }
   else {
@@ -84,6 +86,8 @@ Callable::Callable(const VerNum since, const VerNum until, const char *name)
     while(precursor->m_precursor && since < precursor->m_precursor->m_since)
       precursor = precursor->m_precursor;
     m_precursor = precursor->m_precursor;
+    if(until > precursor->m_since)
+      throw reascript_error { "overlapping callable version range" };
     precursor->m_precursor = this;
   }
 }

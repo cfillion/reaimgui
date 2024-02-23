@@ -87,6 +87,13 @@ TEST(APITest, RollbackCallable) {
   EXPECT_EQ(foo1.rollback("0.4"), &foo0);
 }
 
+TEST(APITest, OverlappingCallable) {
+  MyCallable foo { "0.5", "0.7", "test!overlap!foo" };
+  EXPECT_THROW((MyCallable { "0.4", "0.6", "test!overlap!foo" }), reascript_error);
+  EXPECT_THROW((MyCallable { "0.6", "0.8", "test!overlap!foo" }), reascript_error);
+  EXPECT_THROW((MyCallable { "0.5", "0.7", "test!overlap!foo" }), reascript_error);
+}
+
 TEST(APITest, ImportTable) {
   struct MyImport : ImportTable {
     MyImport() : ImportTable { "0.8.5", sizeof(*this) } {}
