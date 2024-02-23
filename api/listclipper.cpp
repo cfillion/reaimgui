@@ -110,7 +110,7 @@ Generally what happens is:
 - The clipper also handles various subtleties related to keyboard/gamepad
   navigation, wrapping etc.)");
 
-API_FUNC(0_1, ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
+API_FUNC(0_9, ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
 R"(The returned clipper object is only valid for the given context and is valid
 as long as it is used in each defer cycle unless attached (see Attach).)")
 {

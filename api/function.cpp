@@ -28,7 +28,7 @@ such as InputText* and SetNextWindowSizeConstraints.
 They can also be used standalone with Function_Execute
 (eg. faster-than-Lua DSP processing).)");
 
-API_FUNC(0_8_5, ImGui_Function*, CreateFunctionFromEEL, (const char*,code),
+API_FUNC(0_9, ImGui_Function*, CreateFunctionFromEEL, (const char*,code),
 R"(Compile an EEL program.
 
 Standard EEL [math](https://www.reaper.fm/sdk/js/basiccode.php#js_basicfunc)

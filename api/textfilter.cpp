@@ -46,7 +46,7 @@ Filter usage:
 - "xxx,yyy"  display lines containing "xxx" or "yyy"
 - "-xxx"     hide lines containing "xxx")");
 
-API_FUNC(0_5_6, ImGui_TextFilter*, CreateTextFilter,
+API_FUNC(0_9, ImGui_TextFilter*, CreateTextFilter,
 (const char*,API_RO(default_filter),""),
 "Valid while used every frame unless attached to a context (see Attach).")
 {

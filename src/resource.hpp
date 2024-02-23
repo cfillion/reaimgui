@@ -53,6 +53,7 @@ public:
   }
 
   static void destroyAll();
+  static void bypassGCCheckOnce();
 
   template<typename T>
   bool isInstanceOf() const
@@ -71,7 +72,7 @@ private:
   static FlatSet<Resource *> g_rsx;
   static Timer *g_timer;
 
-  unsigned int m_keepAlive;
+  unsigned char m_keepAlive, m_flags;
 };
 
 using ImGui_Resource = Resource;

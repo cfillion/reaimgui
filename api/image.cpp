@@ -32,7 +32,7 @@ Width/height are limited to 8192 pixels.
 There are also image functions in the DrawList API such as
 DrawList_AddImageQuad and DrawList_AddImageRounded.)");
 
-API_FUNC(0_8, ImGui_Image*, CreateImage,
+API_FUNC(0_9, ImGui_Image*, CreateImage,
 (const char*,file)(int*,API_RO(flags)),
 R"(The returned object is valid as long as it is used in each defer cycle
 unless attached to a context (see Attach).
@@ -43,7 +43,7 @@ unless attached to a context (see Attach).
   return Image::fromFile(file);
 }
 
-API_FUNC(0_8, ImGui_Image*, CreateImageFromMem,
+API_FUNC(0_9, ImGui_Image*, CreateImageFromMem,
 (const char*,data)(int,data_sz),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Load from a file using
 CreateImage or explicitely specify data_sz if supporting older versions.)")
