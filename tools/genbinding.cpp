@@ -205,6 +205,10 @@ Function::Function(const API::Symbol *api)
       argDefvs.remove_prefix(strlen("Im"));
       defvLen -= strlen("Im");
     }
+    else if(argDefvs.substr(0, strlen("ReaImGui")) == "ReaImGui") {
+      argDefvs.remove_prefix(strlen("ReaImGui"));
+      defvLen -= strlen("ReaImGui");
+    }
 
     args.emplace_back(Argument {
       typeName(argTypes.substr(0, typeLen)),
