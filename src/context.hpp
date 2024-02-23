@@ -22,6 +22,7 @@
 
 #include <bitset>
 #include <chrono>
+#include <memory>
 #include <string>
 #include <vector>
 

@@ -20,6 +20,7 @@
 
 #include "resource.hpp"
 
+#include <memory>
 #include <optional>
 #include <string_view>
 

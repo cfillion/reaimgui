@@ -34,6 +34,7 @@
 constexpr unsigned int KEEP_ALIVE_FRAMES { 2 };
 
 FlatSet<Resource *> Resource::g_rsx;
+Resource::Timer *Resource::g_timer;
 
 static unsigned int g_reentrant, g_consecutiveGcFrames;
 static WNDPROC g_mainProc;
@@ -85,7 +86,6 @@ Resource::Timer::~Timer()
     g_disableProcOverride = true;
 }
 
-volatile bool foo;
 void Resource::Timer::tick()
 {
   const bool blocked { isDeferLoopBlocked() };
@@ -143,15 +143,11 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
 Resource::Resource()
   : m_keepAlive { KEEP_ALIVE_FRAMES }
 {
-  static std::weak_ptr<Timer> g_timer;
-
   if(g_consecutiveGcFrames >= 120)
     throw reascript_error { "excessive creation of short-lived resources" };
 
-  if(g_timer.expired())
-    g_timer = m_timer = std::make_shared<Timer>();
-  else
-    m_timer = g_timer.lock();
+  if(!g_timer)
+    g_timer = new Timer;
 
   g_rsx.insert(this);
 }
@@ -159,6 +155,11 @@ Resource::Resource()
 Resource::~Resource()
 {
   g_rsx.erase(this);
+
+  if(g_rsx.empty()) {
+    delete g_timer;
+    g_timer = nullptr;
+  }
 }
 
 void Resource::keepAlive()

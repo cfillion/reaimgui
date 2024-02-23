@@ -18,8 +18,6 @@
 #ifndef REAIMGUI_RESOURCE_HPP
 #define REAIMGUI_RESOURCE_HPP
 
-#include <memory>
-
 #include "flat_set.hpp"
 
 class Context;
@@ -72,8 +70,8 @@ private:
   class Timer;
 
   static FlatSet<Resource *> g_rsx;
+  static Timer *g_timer;
 
-  std::shared_ptr<Timer> m_timer;
   unsigned int m_keepAlive;
 };
 
