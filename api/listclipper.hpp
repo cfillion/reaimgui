@@ -24,17 +24,17 @@ class ListClipper final : public Resource {
 public:
   static constexpr const char *api_type_name { "ImGui_ListClipper" };
 
-  ListClipper(Context *ctx);
+  ListClipper();
   ~ListClipper();
   ImGuiListClipper *operator->();
 
-  bool attachable(const Context *ctx) const override { return m_ctx == ctx; }
+  bool attachable(const Context *ctx) const override;
 
 protected:
   bool isValid() const override;
 
 private:
-  Context *m_ctx;
+  Context *context() const;
   ImGuiListClipper m_imlc;
 };
 

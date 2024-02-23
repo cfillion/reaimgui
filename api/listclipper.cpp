@@ -22,14 +22,15 @@
 #include <imgui/imgui_internal.h>
 #include <reaper_plugin_functions.h>
 
-ListClipper::ListClipper(Context *ctx) : m_ctx { ctx } {}
+// ImGuiListClipper initializes itself for the current context
+ListClipper::ListClipper() {}
 
 ListClipper::~ListClipper()
 {
   // do ~ImGuiListClipper's work to allow out-of-order destruction
 
-  if(m_imlc.TempData && Resource::isValid(m_ctx)) {
-    ImGuiContext *ctx { m_ctx->imgui() };
+  if(m_imlc.TempData && isValid()) {
+    ImGuiContext *ctx { m_imlc.Ctx };
     --ctx->ClipperTempDataStacked;
 
     bool shift { false };
@@ -49,15 +50,25 @@ ListClipper::~ListClipper()
   m_imlc.TempData = nullptr;
 }
 
+Context *ListClipper::context() const
+{
+  return static_cast<Context *>(m_imlc.Ctx->IO.UserData);
+}
+
+bool ListClipper::attachable(const Context *ctx) const
+{
+  return ctx == context();
+}
+
 bool ListClipper::isValid() const
 {
-  return Resource::isValid(m_ctx);
+  return Resource::isValid(context());
 }
 
 ImGuiListClipper *ListClipper::operator->()
 {
   assertValid(this);
-  assertFrame(m_ctx);
+  assertFrame(context());
   return &m_imlc;
 }
 
@@ -104,7 +115,8 @@ R"(The returned clipper object is only valid for the given context and is valid
 as long as it is used in each defer cycle unless attached (see Attach).)")
 {
   assertValid(ctx);
-  return new ListClipper { ctx };
+  ctx->setCurrent();
+  return new ListClipper {};
 }
 
 DEFINE_API(void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
