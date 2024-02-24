@@ -18,13 +18,28 @@
 #ifndef REAIMGUI_ERROR_HPP
 #define REAIMGUI_ERROR_HPP
 
-#include <stdexcept>
+#include "../api/types.hpp"
 
-#define DEFINE_EXCEPT(type)                \
-  class type : public std::runtime_error { \
-  public:                                  \
-    using runtime_error::runtime_error;    \
+#include <stdexcept>
+#include <format>
+
+class runtime_error : public std::runtime_error {
+public:
+  using std::runtime_error::runtime_error;
+
+  template<typename... Args>
+  runtime_error(std::format_string<Args...> fmt, Args&&... args)
+    : std::runtime_error { std::vformat(fmt.get(), std::make_format_args(args...)) }
+  {
+    static_assert(sizeof...(Args) > 0);
   }
+};
+
+#define DEFINE_EXCEPT(type)             \
+  class type : public runtime_error {   \
+  public:                               \
+    using runtime_error::runtime_error; \
+  };
 
 DEFINE_EXCEPT(backend_error);
 DEFINE_EXCEPT(imgui_error);
@@ -35,6 +50,18 @@ DEFINE_EXCEPT(reascript_error);
 class Context;
 
 namespace Error {
+  [[noreturn]] void imguiAssertionFailure(const char *message);
+  [[noreturn]] void imguiDebugBreak();
+
+  template<typename T>
+  [[noreturn]] void invalidObject(const T *ptr)
+  {
+    constexpr auto typeInfo { TypeInfo<T*>::type() };
+    const std::string_view typeName { typeInfo.data(), typeInfo.size() };
+    throw reascript_error {
+      "expected a valid {}, got {}", typeName, static_cast<const void *>(ptr) };
+  }
+
   void report(Context *, const imgui_error &);
   void report(Context *, const backend_error &);
 };

@@ -139,7 +139,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
   REAPER_PLUGIN_HINSTANCE instance, reaper_plugin_info_t *rec)
 {
   if(!rec) {
-    API::announceAll(false);
+    API::teardown();
     Resource::destroyAll(); // save context settings
     Settings::teardown();
     Action::teardown();
@@ -152,7 +152,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
   IMGUI_CHECKVERSION();
 
   Window::s_instance = instance;
-  API::announceAll(true);
+  API::setup();
   Action::setup();
   Settings::setup();
   Function::setup();

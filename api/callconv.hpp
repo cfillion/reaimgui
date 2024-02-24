@@ -15,19 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef REAIMGUI_API_VARARG_HPP
-#define REAIMGUI_API_VARARG_HPP
+#ifndef REAIMGUI_CALLCONV_HPP
+#define REAIMGUI_CALLCONV_HPP
+
+#include "../src/api.hpp"
+#include "../src/error.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <tuple>
 
-template<typename T>
-struct ReaScriptAPI;
+namespace CallConv {
 
-template<typename R, typename... Args>
-struct ReaScriptAPI<R(*)(Args...) noexcept>
+template<auto fn>
+struct ReaScript;
+
+template<typename R, typename... Args, R (*fn)(Args...) noexcept>
+struct ReaScript<fn>
 {
-  static const void *applyVarArg(R(*fn)(Args...), void **argv, const int argc)
+  static const void *apply(void **argv, const int argc)
   {
     if(static_cast<size_t>(argc) < sizeof...(Args))
       return nullptr;
@@ -54,7 +60,7 @@ struct ReaScriptAPI<R(*)(Args...) noexcept>
 
 private:
   template<size_t I>
-  using NthType = typename std::tuple_element<I, std::tuple<Args...>>::type;
+  using NthType = typename std::tuple_element_t<I, std::tuple<Args...>>;
 
   template<size_t... I>
   static auto makeTuple(void **argv, std::index_sequence<I...>)
@@ -63,16 +69,33 @@ private:
     return std::make_tuple(
       std::is_floating_point_v<NthType<I>> ?
         *reinterpret_cast<NthType<I>*>(argv[I]) :
-        (NthType<I>)reinterpret_cast<uintptr_t>(argv[I])
+        *const_cast<NthType<I>*>(reinterpret_cast<const NthType<I>*>(&argv[I]))
       ...
     );
   }
 };
 
-template<auto fn>
-const void *InvokeReaScriptAPI(void **argv, int argc)
+template<auto fn, auto name>
+struct Safe;
+
+template<typename R, typename... Args, R (*fn)(Args...), auto name>
+struct Safe<fn, name>
 {
-  return ReaScriptAPI<decltype(fn)>::applyVarArg(fn, argv, argc);
+  static R invoke(Args... args) noexcept
+  try {
+    // TODO: API::clearError() for C++, clearContext for correct destruction?
+    return std::invoke(fn, args...);
+  }
+  catch(const imgui_error &e) { // TODO: recoverable_error base class
+    API::handleError(*name, e);
+    return static_cast<R>(0);
+  }
+  catch(const reascript_error &e) {
+    API::handleError(*name, e);
+    return static_cast<R>(0);
+  }
+};
+
 }
 
 #endif

@@ -105,14 +105,14 @@ struct Function {
   API::LineNumber line;
   std::vector<Argument> args;
   std::string_view doc;
-  std::string_view displayName;
   std::deque<const API::Section *> sections;
-  unsigned int flags;
+  VerNum version;
+  int flags;
 
   bool operator<(const Function &) const;
 
-  bool isVar() const { return flags & API::Symbol::Variable; }
-  bool isEnum() const { return type.isInt() && args.empty(); }
+  bool isVar()  const { return flags & API::Symbol::Variable; }
+  bool isEnum() const { return flags & API::Symbol::Constant; }
   bool hasOutputArgs() const;
   bool hasOptionalArgs() const;
 
@@ -133,7 +133,7 @@ bool Function::operator<(const Function &o) const
   if(sections.size() != o.sections.size())
     return sections.size() < o.sections.size();
 
-  return displayName < o.displayName;
+  return name < o.name;
 }
 
 static std::deque<Function> g_funcs;
@@ -176,15 +176,11 @@ static std::string_view defaultValue(const std::string_view value)
 Function::Function(const API::Symbol *api)
   : section { api->m_section }, name { api->name() },
     type { api->definition() }, line { api->m_line },
-    flags { api->flags() }
+    version { api->version() }, flags { api->m_flags }
 {
   const API::Section *curSection { section };
   do { sections.push_front(curSection); }
   while((curSection = curSection->parent));
-
-  // C++20's starts_with isn't available when building for old macOS
-  displayName = name.substr(0, strlen("ImGui_")) == "ImGui_"
-              ? name.substr(   strlen("ImGui_")) : name;
 
   const char *def { api->definition() };
   std::string_view argTypes { nextString(def) };
@@ -348,7 +344,7 @@ namespace ImGui {
       stream << ")> ";
     }
 
-    stream << func.displayName << " REAIMGUIAPI_INIT(\"" << func.name << "\");\n";
+    stream << func.name << " REAIMGUIAPI_INIT(\"" API_PREFIX << func.name << "\");\n";
   }
 
   stream << R"(}
@@ -438,7 +434,7 @@ bool Function::hasOptionalArgs() const
 
 void Function::cppSignature(std::ostream &stream) const
 {
-  stream << hl(Highlight::Type) << type << hl() << " ImGui::" << displayName;
+  stream << hl(Highlight::Type) << type << hl() << " ImGui::" << name;
   if(isEnum())
     return;
   stream << '(';
@@ -484,7 +480,10 @@ void Function::luaSignature(std::ostream &stream) const
   }
   if(hasReturns)
     stream << " = ";
-  stream << "reaper." << name << '(';
+  stream << "ImGui." << name;
+  if(isEnum())
+    return;
+  stream << '(';
   {
     const bool listOutputs { hasOptionalArgs() };
     CommaSep cs { stream };
@@ -527,9 +526,12 @@ void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
     stream << hl(Highlight::Type) << type << hl() << ' ';
 
   if(legacySyntax)
-    cs << "extension_api(" << hl(Highlight::String) << '"' << name << '"' << hl();
-  else
+    cs << "extension_api(" << hl(Highlight::String) << "\"" API_PREFIX << name << '"' << hl();
+  else {
+    if(!(flags & API::Symbol::TargetEELFunc))
+      stream << API_PREFIX;
     stream << name << '(';
+  }
   for(const Argument &arg : args) {
     if(arg.isBufSize())
       continue;
@@ -585,7 +587,7 @@ void Function::pythonSignature(std::ostream &stream) const
   else if(!type.isVoid())
     stream << hl(Highlight::Type) << pythonType(type) << hl() << " retval = ";
 
-  stream << "ImGui." << displayName << '(';
+  stream << "ImGui." << name << '(';
   {
     CommaSep cs { stream };
     for(const Argument &arg : args) {
@@ -652,10 +654,8 @@ static std::vector<Reference> parseReferences(const std::string_view &input)
   static char charmap[0x100];
   if(funcs.empty()) {
     charmap[static_cast<size_t>('*')] |= ValidChar;
-    for(const Function &func : g_funcs) {
-      funcs.emplace(func.displayName, &func);
+    for(const Function &func : g_funcs)
       funcs.emplace(func.name, &func);
-    }
     // build a maps of which characters may be present in a reference
     for(const auto &pair : funcs) {
       charmap[static_cast<unsigned char>(pair.first[0])] |= InitialChar;
@@ -705,7 +705,7 @@ static void outputHtmlBlock(std::ostream &stream, std::string_view html,
       outputHtmlText(stream, prefix);
     else
       stream << prefix;
-    stream << "<a href=\"#" << link->func->displayName << "\">"
+    stream << "<a href=\"#" << link->func->name << "\">"
            << link->range << "</a>";
     html.remove_prefix(prefixSize + link->range.size());
   }
@@ -866,7 +866,7 @@ static void humanBinding(std::ostream &stream)
   .sr, .keyword  { color: #d7875f; /* LightSalmon3  */ }
        .comment  { color: #b2b2b2; /* Grey70        */ }
        .built_in { color: #87d75f; /* DarkOliveGreen3 */ }
-  .source a { color: gray; }
+  .meta, .meta a { color: gray; }
   </style>
 </head>
 <body>
@@ -950,14 +950,14 @@ static void humanBinding(std::ostream &stream)
         outputMarkdown(stream, section->help);
     }
 
-    stream << "<details id=\"" << func.displayName << "\"><summary>";
+    stream << "<details id=\"" << func.name << "\"><summary>";
     if(func.isVar())
       stream << "Variable: ";
     else if(func.isEnum())
       stream << "Constant: ";
     else
       stream << "Function: ";
-    stream << func.displayName << "</summary>";
+    stream << func.name << "</summary>";
 
     struct Target {
       const char *name;
@@ -967,10 +967,11 @@ static void humanBinding(std::ostream &stream)
     using namespace std::placeholders;
     static const Target targets[] {
       { "C++",        API::Symbol::TargetNative, std::mem_fn(&Function::cppSignature)              },
-      { "EEL",        API::Symbol::TargetEEL,    std::bind(&Function::eelSignature, _1, _2, false) },
-      { "Legacy EEL", API::Symbol::TargetEELOld, std::bind(&Function::eelSignature, _1, _2, true)  },
-      { "Lua",        API::Symbol::TargetLua,    std::mem_fn(&Function::luaSignature)              },
-      { "Python",     API::Symbol::TargetPython, std::mem_fn(&Function::pythonSignature)           },
+      { "EEL",        API::Symbol::TargetScript | API::Symbol::TargetEELFunc,
+        std::bind(&Function::eelSignature, _1, _2, false) },
+      { "Legacy EEL", API::Symbol::TargetScript, std::bind(&Function::eelSignature, _1, _2, true)  },
+      { "Lua",        API::Symbol::TargetScript, std::mem_fn(&Function::luaSignature)              },
+      { "Python",     API::Symbol::TargetScript, std::mem_fn(&Function::pythonSignature)           },
     };
     stream << "<table>";
     for(const Target &target : targets) {
@@ -985,10 +986,11 @@ static void humanBinding(std::ostream &stream)
     if(!func.doc.empty())
       outputMarkdown(stream, func.doc);
 
-    stream << "<p class=\"source\">"
+    stream << "<p class=\"meta\">"
               "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
               REAIMGUI_VERSION "/api/" << func.section->file << ".cpp#L"
-           << func.line << "\">View source</a></p>";
+           << func.line << "\">View source</a>"
+           << " ・ v" << func.version.toString() << "+</p>";
 
     stream << "</details>\n";
   }
@@ -1064,10 +1066,10 @@ static void pythonBinding(std::ostream &stream)
             "from reaper_python import *\n";
 
   for(const Function &func : g_funcs) {
-    if(!(func.flags & API::Symbol::TargetPython))
+    if(!(func.flags & API::Symbol::TargetScript))
       continue;
 
-    stream << "\ndef " << func.displayName << '(';
+    stream << "\ndef " << func.name << '(';
     {
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
@@ -1079,9 +1081,9 @@ static void pythonBinding(std::ostream &stream)
       }
     }
     stream << "):\n"
-              "  if not hasattr(" << func.displayName << ", 'func'):\n"
-              "    proc = rpr_getfp('" << func.name << "')\n"
-              "    " << func.displayName << ".func = CFUNCTYPE(";
+              "  if not hasattr(" << func.name << ", 'func'):\n"
+              "    proc = rpr_getfp('" API_PREFIX << func.name << "')\n"
+              "    " << func.name << ".func = CFUNCTYPE(";
     {
       CommaSep cs { stream };
       cs << pythonCType(func.type);
@@ -1122,9 +1124,9 @@ static void pythonBinding(std::ostream &stream)
     }
 
     if(func.isEnum()) {
-      stream << "  if not hasattr(" << func.displayName << ", 'cache'):\n"
-                "    " << func.displayName << ".cache = " << func.displayName << ".func()\n"
-                "  return " << func.displayName << ".cache\n";
+      stream << "  if not hasattr(" << func.name << ", 'cache'):\n"
+                "    " << func.name << ".cache = " << func.name << ".func()\n"
+                "  return " << func.name << ".cache\n";
       continue;
     }
 
@@ -1132,7 +1134,7 @@ static void pythonBinding(std::ostream &stream)
       stream << "  ";
       if(!func.type.isVoid())
         stream << "rval = ";
-      stream << func.displayName << ".func(";
+      stream << func.name << ".func(";
       CommaSep cs { stream };
       for(size_t i { 0 }; i < func.args.size(); ++i) {
         const Argument &arg { func.args[i] };
@@ -1188,8 +1190,10 @@ int main(int argc, const char *argv[])
     return 2;
   }
 
-  for(const API::Symbol *func { _API_head() }; func; func = func->m_next)
-    g_funcs.push_back(func);
+  for(const API::Symbol *func { _API_head() }; func; func = func->m_next) {
+    if(func->name()[0] != '_')
+      g_funcs.push_back(func);
+  }
   std::sort(g_funcs.begin(), g_funcs.end());
 
   const std::string_view lang { argc >= 3 ? argv[2] : "cpp" };

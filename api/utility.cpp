@@ -33,7 +33,7 @@
 
 API_SECTION("Utility");
 
-DEFINE_API(void, GetVersion,
+API_FUNC(0_7, void, GetVersion,
 (char*,API_W(imgui_version))(int,API_W_SZ(imgui_version))
 (int*,API_W(imgui_version_num))
 (char*,API_W(reaimgui_version))(int,API_W_SZ(reaimgui_version)),
@@ -54,22 +54,20 @@ DEFINE_API(void, GetVersion,
   if(!strcmp(type, "ImGui_" #klass "*")) \
     return klass::isValid(static_cast<klass *>(pointer));
 
-DEFINE_API(bool, ValidatePtr, (void*,pointer)(const char*,type),
-R"(Return whether the pointer of the specified type is valid. Supported types are:
+API_FUNC(0_3, bool, ValidatePtr, (void*,pointer)(const char*,type),
+R"(Return whether the given pointer is a valid instance of one of the following
+types (indentation represents inheritance):
 
-- `ImGui_Resource*`
-  - `ImGui_Context*`
-  - `ImGui_Font*`
-  - `ImGui_Function*`
-  - `ImGui_Image*`
-    - `ImGui_ImageSet*`
-  - `ImGui_ListClipper*`
-  - `ImGui_TextFilter*`
-- `ImGui_DrawList*`
-- `ImGui_DrawListSplitter*`
-- `ImGui_Viewport*`
-
-Indentation represents inheritance: an `ImageSet` is also an `Image` and a `Resource`.)")
+- ImGui_Context*
+- ImGui_DrawList*
+- ImGui_DrawListSplitter*
+- ImGui_Font*
+- ImGui_Function*
+- ImGui_Image*
+  - ImGui_ImageSet*
+- ImGui_ListClipper*
+- ImGui_TextFilter*
+- ImGui_Viewport*)")
 {
 
   RESOURCE_ISVALID(Context);
@@ -79,7 +77,6 @@ Indentation represents inheritance: an `ImageSet` is also an `Image` and a `Reso
   RESOURCE_ISVALID(Image);
   RESOURCE_ISVALID(ImageSet);
   RESOURCE_ISVALID(ListClipper);
-  RESOURCE_ISVALID(Resource);
   RESOURCE_ISVALID(TextFilter);
 
   RESOURCEPROXY_ISVALID(DrawListProxy);
@@ -91,7 +88,7 @@ Indentation represents inheritance: an `ImageSet` is also an `Image` and a `Reso
 #undef RESOURCE_ISVALID
 #undef RESOURCEPROXY_ISVALID
 
-DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, ProgressBar, (ImGui_Context*,ctx)
 (double,fraction)
 (double*,API_RO(size_arg_w),-FLT_MIN)(double*,API_RO(size_arg_h),0.0)
 (const char*,API_RO(overlay)),
@@ -103,7 +100,7 @@ DEFINE_API(void, ProgressBar, (ImGui_Context*,ctx)
   ImGui::ProgressBar(fraction, size, API_RO(overlay));
 }
 
-DEFINE_API(void, PointConvertNative, (ImGui_Context*,ctx)
+API_FUNC(0_5_1, void, PointConvertNative, (ImGui_Context*,ctx)
 (double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native),false),
 R"(Convert a position from the current platform's native coordinate position
 system to ReaImGui global coordinates (or vice versa).
@@ -123,19 +120,20 @@ Windows and Linux.)")
   *API_RW(y) = point.y;
 }
 
-#define NUMERIC_LIMITS(name, type, minVal, maxVal)                             \
-  DEFINE_API(void, NumericLimits_##name, (type*,API_W(min))(type*,API_W(max)), \
-  "Returns " #minVal " and " #maxVal " for this system.")                      \
-  {                                                                            \
-    assertValid(API_W(min));                                                   \
-    assertValid(API_W(max));                                                   \
-    *API_W(min) = minVal;                                                      \
-    *API_W(max) = maxVal;                                                      \
+#define NUMERIC_LIMITS(vernum, name, type, minVal, maxVal) \
+  API_FUNC(vernum, void, NumericLimits_##name,             \
+    (type*,API_W(min))(type*,API_W(max)),                  \
+  "Returns " #minVal " and " #maxVal " for this system.")  \
+  {                                                        \
+    assertValid(API_W(min));                               \
+    assertValid(API_W(max));                               \
+    *API_W(min) = minVal;                                  \
+    *API_W(max) = maxVal;                                  \
   }
 
-NUMERIC_LIMITS(Double, double, DBL_MIN, DBL_MAX);
-NUMERIC_LIMITS(Float,  double, FLT_MIN, FLT_MAX);
-NUMERIC_LIMITS(Int,    int,    INT_MIN, INT_MAX);
+NUMERIC_LIMITS(0_8_4, Double, double, DBL_MIN, DBL_MAX);
+NUMERIC_LIMITS(0_4,   Float,  double, FLT_MIN, FLT_MAX);
+NUMERIC_LIMITS(0_8_4, Int,    int,    INT_MIN, INT_MAX);
 
 API_SUBSECTION("ID stack/scope",
 R"(Read the [FAQ](https://dearimgui.com/faq) for more details about how IDs are
@@ -154,7 +152,7 @@ handled in dear imgui.
   displayed + used as an ID, whereas "str_id" denote a string that is only used
   as an ID and not normally displayed.)");
 
-DEFINE_API(void, PushID, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, PushID, (ImGui_Context*,ctx)
 (const char*,str_id),
 "Push string into the ID stack.")
 {
@@ -162,7 +160,7 @@ DEFINE_API(void, PushID, (ImGui_Context*,ctx)
   ImGui::PushID(str_id);
 }
 
-DEFINE_API(void, PopID, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, PopID, (ImGui_Context*,ctx),
 "Pop from the ID stack.")
 {
   FRAME_GUARD;
@@ -171,7 +169,7 @@ DEFINE_API(void, PopID, (ImGui_Context*,ctx),
 
 API_SUBSECTION("Color Conversion");
 
-DEFINE_API(void, ColorConvertU32ToDouble4,
+API_FUNC(0_7, void, ColorConvertU32ToDouble4,
 (int,rgba)
 (double*,API_W(r))(double*,API_W(g))(double*,API_W(b))(double*,API_W(a)),
 "Unpack a 32-bit integer (0xRRGGBBAA) into separate RGBA values (0..1).")
@@ -183,14 +181,14 @@ DEFINE_API(void, ColorConvertU32ToDouble4,
   if(API_W(a)) *API_W(a) = color.w;
 }
 
-DEFINE_API(int, ColorConvertDouble4ToU32,
+API_FUNC(0_7, int, ColorConvertDouble4ToU32,
 (double,r)(double,g)(double,b)(double,a),
 "Pack 0..1 RGBA values into a 32-bit integer (0xRRGGBBAA).")
 {
   return Color { ImVec4(r, g, b, a) }.pack(true);
 }
 
-DEFINE_API(void, ColorConvertHSVtoRGB,
+API_FUNC(0_7, void, ColorConvertHSVtoRGB,
 (double,h)(double,s)(double,v)
 (double*,API_W(r))(double*,API_W(g))(double*,API_W(b)),
 "Convert HSV values (0..1) into RGB (0..1).")
@@ -202,7 +200,7 @@ DEFINE_API(void, ColorConvertHSVtoRGB,
   if(API_W(b)) *API_W(b) = rgb[2];
 }
 
-DEFINE_API(void, ColorConvertRGBtoHSV,
+API_FUNC(0_7, void, ColorConvertRGBtoHSV,
 (double,r)(double,g)(double,b)
 (double*,API_W(h))(double*,API_W(s))(double*,API_W(v)),
 "Convert RGB values (0..1) into HSV (0..1).")
@@ -214,7 +212,7 @@ DEFINE_API(void, ColorConvertRGBtoHSV,
   if(API_W(v)) *API_W(v) = hsv[2];
 }
 
-DEFINE_API(int, ColorConvertNative,
+API_FUNC(0_3, int, ColorConvertNative,
 (int,rgb),
 R"(Convert a native color coming from REAPER or 0xRRGGBB to native.
 This swaps the red and blue channels on Windows.)")
@@ -226,7 +224,7 @@ API_SUBSECTION("Logging/Capture",
 R"(All text output from the interface can be captured into tty/file/clipboard.
 By default, tree nodes are automatically opened during logging.)");
 
-DEFINE_API(void, LogToTTY, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, LogToTTY, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth),-1),
 "Start logging all text output from the interface to the TTY (stdout).")
 {
@@ -234,7 +232,7 @@ DEFINE_API(void, LogToTTY, (ImGui_Context*,ctx)
   ImGui::LogToTTY(API_RO_GET(auto_open_depth));
 }
 
-DEFINE_API(void, LogToFile, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, LogToFile, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth),-1)(const char*,API_RO(filename)),
 R"(Start logging all text output from the interface to a file.
 The data is saved to $resource_path/imgui_log.txt if filename is nil.)")
@@ -244,7 +242,7 @@ The data is saved to $resource_path/imgui_log.txt if filename is nil.)")
   ImGui::LogToFile(API_RO_GET(auto_open_depth), API_RO(filename));
 }
 
-DEFINE_API(void, LogToClipboard, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, LogToClipboard, (ImGui_Context*,ctx)
 (int*,API_RO(auto_open_depth),-1),
 R"(Start logging all text output from the interface to the OS clipboard.
 See also SetClipboardText.)")
@@ -253,14 +251,14 @@ See also SetClipboardText.)")
   ImGui::LogToClipboard(API_RO_GET(auto_open_depth));
 }
 
-DEFINE_API(void, LogFinish, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, LogFinish, (ImGui_Context*,ctx),
 "Stop logging (close file, etc.)")
 {
   FRAME_GUARD;
   ImGui::LogFinish();
 }
 
-DEFINE_API(void, LogText, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, LogText, (ImGui_Context*,ctx)
 (const char*,text),
 "Pass text data straight to log (without being displayed)")
 {
@@ -270,7 +268,7 @@ DEFINE_API(void, LogText, (ImGui_Context*,ctx)
 
 API_SUBSECTION("Clipboard");
 
-DEFINE_API(const char*, GetClipboardText, (ImGui_Context*,ctx),
+API_FUNC(0_1, const char*, GetClipboardText, (ImGui_Context*,ctx),
 "")
 {
   assertValid(ctx);
@@ -278,7 +276,7 @@ DEFINE_API(const char*, GetClipboardText, (ImGui_Context*,ctx),
   return ImGui::GetClipboardText();
 }
 
-DEFINE_API(void, SetClipboardText, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetClipboardText, (ImGui_Context*,ctx)
 (const char*,text),
 R"(See also the LogToClipboard function to capture GUI into clipboard,
 or easily output text data to the clipboard.)")
@@ -290,13 +288,13 @@ or easily output text data to the clipboard.)")
 
 API_SUBSECTION("Conditions",
   "Used for many SetNextWindow*() and SetWindow*() functions.");
-DEFINE_ENUM(ImGui, Cond_Always,
+API_ENUM(0_1, ImGui, Cond_Always,
   "No condition (always set the variable).");
-DEFINE_ENUM(ImGui, Cond_Once,
+API_ENUM(0_1, ImGui, Cond_Once,
   "Set the variable once per runtime session (only the first call will succeed).");
-DEFINE_ENUM(ImGui, Cond_FirstUseEver,
+API_ENUM(0_1, ImGui, Cond_FirstUseEver,
 R"(Set the variable if the object/window has no persistently saved data
    (no entry in .ini file).)");
-DEFINE_ENUM(ImGui, Cond_Appearing,
+API_ENUM(0_1, ImGui, Cond_Appearing,
 R"(Set the variable if the object/window is appearing after being
    hidden/inactive (or the first time).)");

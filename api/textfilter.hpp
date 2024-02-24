@@ -22,8 +22,6 @@
 
 class TextFilter : public Resource {
 public:
-  static constexpr const char *api_type_name { "ImGui_TextFilter" };
-
   TextFilter(const char *filter);
   void set(const char *filter);
   ImGuiTextFilter *operator->();
@@ -35,5 +33,6 @@ private:
 };
 
 using ImGui_TextFilter = TextFilter;
+API_REGISTER_OBJECT_TYPE(TextFilter);
 
 #endif

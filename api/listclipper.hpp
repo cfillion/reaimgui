@@ -22,8 +22,6 @@
 
 class ListClipper final : public Resource {
 public:
-  static constexpr const char *api_type_name { "ImGui_ListClipper" };
-
   ListClipper();
   ~ListClipper();
   ImGuiListClipper *operator->();
@@ -39,5 +37,6 @@ private:
 };
 
 using ImGui_ListClipper = ListClipper;
+API_REGISTER_OBJECT_TYPE(ListClipper);
 
 #endif

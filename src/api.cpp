@@ -22,10 +22,25 @@
 
 #include <cassert>
 #include <reaper_plugin_functions.h>
+#include <unordered_map>
 
 using namespace API;
 
 static eel_function_table g_eelFuncs;
+
+using CallableMap = std::unordered_map<std::string_view, Callable *>;
+
+static CallableMap &callables()
+{
+  static CallableMap map;
+  return map;
+}
+
+static VerNum &latestVersion()
+{
+  static VerNum version;
+  return version;
+}
 
 static const Symbol *&lastSymbol()
 {
@@ -45,7 +60,76 @@ static const Section *&lastSection()
   return section;
 }
 
-API::StoreLineNumber::StoreLineNumber(LineNumber line)
+static ImportTable *&lastImportTable()
+{
+  static ImportTable *table;
+  return table;
+}
+
+Callable::Callable(const VerNum since, const VerNum until, const char *name)
+  : m_since { since }, m_until { until }
+{
+  if(since > latestVersion())
+    latestVersion() = since;
+
+  auto [it, isNew] { callables().try_emplace(name, this) };
+  if(isNew)
+    m_precursor = nullptr;
+  else if(since >= it->second->m_since) {
+    m_precursor = it->second;
+    if(since < m_precursor->m_until)
+      throw reascript_error { "overlapping callable version range" };
+    it->second = this;
+  }
+  else {
+    Callable *precursor = it->second;
+    while(precursor->m_precursor && since < precursor->m_precursor->m_since)
+      precursor = precursor->m_precursor;
+    m_precursor = precursor->m_precursor;
+    if(until > precursor->m_since)
+      throw reascript_error { "overlapping callable version range" };
+    precursor->m_precursor = this;
+  }
+}
+
+const Callable *Callable::lookup(const VerNum version, const char *name)
+{
+  const auto &map { callables() };
+  const auto it { map.find(name) };
+  return it == map.end() ? nullptr : it->second->rollback(version);
+}
+
+const Callable *Callable::rollback(const VerNum version) const
+{
+  const Callable *match { this };
+  while(match && match->m_since > version)
+    match = match->m_precursor;
+  if(match && match->m_until <= version)
+    return nullptr;
+  return match;
+}
+
+std::string Callable::serializeAll(const VerNum version)
+{
+  enum Flags { IsConst = 1<<0, IsShim = 1<<1 };
+  std::string out;
+  for(const auto &pair : callables()) {
+    const Callable *match { pair.second->rollback(version) };
+    if(!match)
+      continue;
+    char flags {};
+    if(match->isConstant())
+      flags |= IsConst;
+    if(typeid(*match) == typeid(ShimFunc))
+      flags |= IsShim;
+    out += flags;
+    out += pair.first;
+    out += '\0';
+  }
+  return out;
+}
+
+StoreLineNumber::StoreLineNumber(LineNumber line)
 {
   lastLine() = line;
 }
@@ -57,8 +141,9 @@ Section::Section(const Section *parent, const char *file,
   lastSection() = this;
 }
 
-Symbol::Symbol()
-  : m_section { lastSection() }, m_next { lastSymbol() }, m_line { lastLine() }
+Symbol::Symbol(const int flags)
+  : m_section { lastSection() }, m_next { lastSymbol() }, m_line { lastLine() },
+    m_flags { flags }
 {
   lastSymbol() = this;
 }
@@ -76,10 +161,26 @@ void PluginRegister::announce(const bool init) const
   plugin_register(key + init, value);
 }
 
-ReaScriptFunc::ReaScriptFunc(const PluginRegister &native,
+static const char *extractRegName(const PluginRegister &reg)
+{
+  return &reg.key[strlen("-API_" API_PREFIX)];
+}
+
+constexpr bool isDefConstant(const char *definition)
+{
+  using namespace std::literals;
+  constexpr std::string_view signature { "int\0\0"sv };
+  return std::string_view { definition, signature.size() } == signature;
+}
+
+ReaScriptFunc::ReaScriptFunc(const VerNum version, void *impl,
+                             const PluginRegister &native,
                              const PluginRegister &reascript,
                              const PluginRegister &desc)
-  : m_regs { native, reascript, desc }
+  : Callable { version, VerNum::MAX, extractRegName(native) },
+    Symbol { TargetNative | TargetScript |
+      (isDefConstant(static_cast<const char *>(desc.value)) ? Constant : 0) },
+    m_impl { impl }, m_regs { native, reascript, desc }
 {
 }
 
@@ -89,10 +190,15 @@ void ReaScriptFunc::announce(const bool init) const
     reg.announce(init);
 }
 
-EELFunc::EELFunc(const char *name, const char *definition,
+const char *ReaScriptFunc::name() const
+{
+  return extractRegName(m_regs[0]);
+}
+
+EELFunc::EELFunc(const VerNum version, const char *name, const char *definition,
                  VarArgFunc impl, const int argc)
-  : m_name { name }, m_definition { definition },
-    m_impl { impl }, m_argc { std::max(1, argc) }
+  : Symbol { TargetEELFunc }, m_name { name }, m_definition { definition },
+    m_impl { impl }, m_version { version }, m_argc { std::max(1, argc) }
 {
   // std::max as workaround for EEL needing argc >= 1 because it does
   // nseel_resolve_named_symbol(..., np<1 ? 1 : np, ...)
@@ -114,9 +220,47 @@ void EELFunc::announce(const bool init) const
                          NSEEL_PProc_THIS, m_impl, &g_eelFuncs);
 }
 
-EELVar::EELVar(const char *name, const char *definition)
-  : m_name { name }, m_definition { definition }
+EELVar::EELVar(const VerNum version, const char *name, const char *definition)
+  : Symbol { TargetEELFunc | Variable },
+    m_name { name }, m_definition { definition }, m_version { version }
 {
+}
+
+ShimFunc::ShimFunc(const VerNum since, const VerNum until,
+                   const char *name, const char *definition,
+                   void *safeImpl, void *varargImpl, void *unsafeImpl)
+  : Callable { since, until, name }, m_definition { definition },
+    m_safeImpl { safeImpl }, m_varargImpl { varargImpl },
+    m_unsafeImpl { unsafeImpl }, m_isConstant { isDefConstant(definition) }
+{
+}
+
+void ShimFunc::activate() const
+{
+#define SHIM_FUNC API_PREFIX "_shim"
+  plugin_register("API_"       SHIM_FUNC, m_safeImpl);
+  plugin_register("APIvararg_" SHIM_FUNC, m_varargImpl);
+  plugin_register("APIdef_"    SHIM_FUNC, const_cast<char *>(m_definition));
+#undef SHIM_FUNC
+}
+
+ImportTable::ImportTable(const VerNum version, const size_t size)
+  : m_next { lastImportTable() }, m_ftable { offset(size) }, m_version { version }
+{
+  lastImportTable() = this;
+}
+
+void **ImportTable::offset(const size_t bytes)
+{
+  return reinterpret_cast<void **>(reinterpret_cast<char *>(this) + bytes);
+}
+
+void ImportTable::resolve()
+{
+  for(void **func { offset(sizeof(*this)) }; func < m_ftable; ++func) {
+    const char *name { static_cast<const char *>(*func) };
+    *func = Callable::lookup(m_version, name)->unsafeImpl();
+  }
 }
 
 const API::Symbol *API_head() // immutable public accessor
@@ -129,26 +273,40 @@ eel_function_table *API::eelFunctionTable()
   return &g_eelFuncs;
 }
 
-void API::announceAll(const bool add)
+static void announceAll(const bool add)
 {
   for(const Symbol *sym { lastSymbol() }; sym; sym = sym->m_next)
     sym->announce(add);
 }
 
+void API::setup()
+{
+  announceAll(true);
+
+  for(ImportTable *tbl { lastImportTable() }; tbl; tbl = tbl->m_next)
+    tbl->resolve();
+}
+
+void API::teardown()
+{
+  announceAll(false);
+}
+
+VerNum API::version()
+{
+  return latestVersion();
+}
+
 // REAPER 6.29+ uses the '!' prefix to abort the calling Lua script's execution
 void API::handleError(const char *fnName, const reascript_error &e)
 {
-  char message[1024];
-  snprintf(message, sizeof(message), "!ImGui_%s: %s", fnName, e.what());
-  ReaScriptError(message);
+  ReaScriptError(std::format("!ImGui_{}: {}", fnName, e.what()).c_str());
 }
 
 void API::handleError(const char *fnName, const imgui_error &e)
 {
-  char message[1024];
-  snprintf(message, sizeof(message),
-    "!ImGui_%s: ImGui assertion failed: %s", fnName, e.what());
-  ReaScriptError(message);
+  ReaScriptError(std::format(
+    "!ImGui_{}: ImGui assertion failed: {}", fnName, e.what()).c_str());
 
   delete Context::current();
 }

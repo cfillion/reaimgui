@@ -36,27 +36,27 @@ custom primitives.
 The Draw List API uses absolute coordinates (0,0 is the top-left corner of the
 primary monitor, not of your window!). See GetCursorScreenPos.)");
 
-DEFINE_API(ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
+API_FUNC(0_1, ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
 "The draw list associated to the current window, to append your own drawing primitives")
 {
   return DrawListProxy::encode<DrawListProxy::Window>(ctx);
 }
 
-DEFINE_API(ImGui_DrawList*, GetBackgroundDrawList, (ImGui_Context*,ctx),
+API_FUNC(0_1, ImGui_DrawList*, GetBackgroundDrawList, (ImGui_Context*,ctx),
 R"(This draw list will be the first rendering one. Useful to quickly draw
 shapes/text behind dear imgui contents.)")
 {
   return DrawListProxy::encode<DrawListProxy::Background>(ctx);
 }
 
-DEFINE_API(ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
+API_FUNC(0_1, ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
 R"(This draw list will be the last rendered one. Useful to quickly draw
 shapes/text over dear imgui contents.)")
 {
   return DrawListProxy::encode<DrawListProxy::Foreground>(ctx);
 }
 
-DEFINE_API(void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
 (double,clip_rect_min_x)(double,clip_rect_min_y)
 (double,clip_rect_max_x)(double,clip_rect_max_y)
 (bool*,API_RO(intersect_with_current_clip_rect),false),
@@ -69,42 +69,42 @@ logic (hit-testing and widget culling).)")
     API_RO_GET(intersect_with_current_clip_rect));
 }
 
-DEFINE_API(void, DrawList_PushClipRectFullScreen, (ImGui_DrawList*,draw_list),
+API_FUNC(0_1, void, DrawList_PushClipRectFullScreen, (ImGui_DrawList*,draw_list),
 "")
 {
   draw_list->get()->PushClipRectFullScreen();
 }
 
-DEFINE_API(void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
+API_FUNC(0_1, void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
 "See DrawList_PushClipRect")
 {
   draw_list->get()->PopClipRect();
 }
 
-DEFINE_ENUM(Im, DrawFlags_None, "");
-DEFINE_ENUM(Im, DrawFlags_Closed,
+API_ENUM(0_2, Im, DrawFlags_None, "");
+API_ENUM(0_2, Im, DrawFlags_Closed,
 R"(DrawList_PathStroke, DrawList_AddPolyline: specify that shape should be
    closed (Important: this is always == 1 for legacy reason).)");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTopLeft,
+API_ENUM(0_2, Im, DrawFlags_RoundCornersTopLeft,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
    top-left corner only (when rounding > 0.0, we default to all corners).)");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTopRight,
+API_ENUM(0_2, Im, DrawFlags_RoundCornersTopRight,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
    top-right corner only (when rounding > 0.0, we default to all corners).)");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomLeft,
+API_ENUM(0_2, Im, DrawFlags_RoundCornersBottomLeft,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
    bottom-left corner only (when rounding > 0.0, we default to all corners).)");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottomRight,
+API_ENUM(0_2, Im, DrawFlags_RoundCornersBottomRight,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
    bottom-right corner only (when rounding > 0.0, we default to all corners).)");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersNone,
+API_ENUM(0_2, Im, DrawFlags_RoundCornersNone,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: disable rounding
    on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!.)");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersTop,    "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersBottom, "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersLeft,   "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersRight,  "");
-DEFINE_ENUM(Im, DrawFlags_RoundCornersAll,    "");
+API_ENUM(0_2, Im, DrawFlags_RoundCornersTop,    "");
+API_ENUM(0_2, Im, DrawFlags_RoundCornersBottom, "");
+API_ENUM(0_2, Im, DrawFlags_RoundCornersLeft,   "");
+API_ENUM(0_2, Im, DrawFlags_RoundCornersRight,  "");
+API_ENUM(0_2, Im, DrawFlags_RoundCornersAll,    "");
 
 API_SUBSECTION("Primitives",
 R"(Filled shapes must always use clockwise winding order. The anti-aliasing
@@ -116,7 +116,7 @@ lower-right corners.
 For circle primitives, use "num_segments == 0" to automatically calculate
 tessellation (preferred).)");
 
-DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (int,col_rgba)(double*,API_RO(thickness),1.0),
 "")
@@ -126,7 +126,7 @@ DEFINE_API(void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_rgba), API_RO_GET(thickness));
 }
 
-DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
 (double*,API_RO(rounding),0.0)(int*,API_RO(flags),ImDrawFlags_None)
 (double*,API_RO(thickness),1.0),
@@ -138,7 +138,7 @@ DEFINE_API(void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
     API_RO_GET(rounding), API_RO_GET(flags), API_RO_GET(thickness));
 }
 
-DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
 (double*,API_RO(rounding),0.0)(int*,API_RO(flags),ImDrawFlags_None),
 "")
@@ -148,7 +148,7 @@ DEFINE_API(void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_rgba), API_RO_GET(rounding), API_RO_GET(flags));
 }
 
-DEFINE_API(void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,draw_list)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
 (int,col_upr_left)(int,col_upr_right)(int,col_bot_right)(int,col_bot_left),
 "")
@@ -159,7 +159,7 @@ DEFINE_API(void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_bot_right), Color::fromBigEndian(col_bot_left));
 }
 
-DEFINE_API(void, DrawList_AddQuad, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddQuad, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (int,col_rgba)(double*,API_RO(thickness),1.0),
@@ -170,7 +170,7 @@ DEFINE_API(void, DrawList_AddQuad, (ImGui_DrawList*,draw_list)
     ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba), API_RO_GET(thickness));
 }
 
-DEFINE_API(void, DrawList_AddQuadFilled, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddQuadFilled, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (int,col_rgba),
@@ -181,7 +181,7 @@ DEFINE_API(void, DrawList_AddQuadFilled, (ImGui_DrawList*,draw_list)
     ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba));
 }
 
-DEFINE_API(void, DrawList_AddTriangle, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddTriangle, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(int,col_rgba)(double*,API_RO(thickness),1.0),
 "")
@@ -191,7 +191,7 @@ DEFINE_API(void, DrawList_AddTriangle, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_rgba), API_RO_GET(thickness));
 }
 
-DEFINE_API(void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(int,col_rgba),
 "")
@@ -201,7 +201,7 @@ DEFINE_API(void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_rgba));
 }
 
-DEFINE_API(void, DrawList_AddCircle, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddCircle, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
 (int*,API_RO(num_segments),0)(double*,API_RO(thickness),1.0),
 R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)")
@@ -211,7 +211,7 @@ R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)
     API_RO_GET(num_segments), API_RO_GET(thickness));
 }
 
-DEFINE_API(void, DrawList_AddCircleFilled, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddCircleFilled, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
 (int*,API_RO(num_segments),0),
 R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)")
@@ -220,7 +220,7 @@ R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)
     Color::fromBigEndian(col_rgba), API_RO_GET(num_segments));
 }
 
-DEFINE_API(void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
 (int,num_segments)(double*,API_RO(thickness),1.0),
 "")
@@ -229,7 +229,7 @@ DEFINE_API(void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_rgba), num_segments, API_RO_GET(thickness));
 }
 
-DEFINE_API(void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(int,col_rgba)
 (int,num_segments),
 "")
@@ -238,14 +238,14 @@ DEFINE_API(void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
     radius, Color::fromBigEndian(col_rgba), num_segments);
 }
 
-DEFINE_API(void, DrawList_AddText, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddText, (ImGui_DrawList*,draw_list)
 (double,x)(double,y)(int,col_rgba)(const char*,text),
 "")
 {
   draw_list->get()->AddText(ImVec2(x, y), Color::fromBigEndian(col_rgba), text);
 }
 
-DEFINE_API(void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
+API_FUNC(0_4, void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
 (ImGui_Font*,font)(double,font_size)(double,pos_x)(double,pos_y)
 (int,col_rgba)(const char*,text)(double*,API_RO(wrap_width),0.0)
 (double*,API_RO(cpu_fine_clip_rect_x))(double*,API_RO(cpu_fine_clip_rect_y))
@@ -294,7 +294,7 @@ static std::vector<ImVec2> makePointsArray(const reaper_array *points)
   return out;
 }
 
-DEFINE_API(void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
+API_FUNC(0_2, void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
 (reaper_array*,points)(int,col_rgba)(int,flags)(double,thickness),
 "Points is a list of x,y coordinates.")
 {
@@ -304,7 +304,7 @@ DEFINE_API(void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
     flags, thickness);
 }
 
-DEFINE_API(void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
+API_FUNC(0_6, void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
 (reaper_array*,points)(int,col_rgba),
 "Note: Anti-aliased filling requires points to be in clockwise order.")
 {
@@ -313,7 +313,7 @@ DEFINE_API(void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
     vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
 }
 
-DEFINE_API(void, DrawList_AddBezierCubic, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddBezierCubic, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (int,col_rgba)(double,thickness)(int*,API_RO(num_segments),0),
@@ -325,7 +325,7 @@ DEFINE_API(void, DrawList_AddBezierCubic, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_rgba), thickness, API_RO_GET(num_segments));
 }
 
-DEFINE_API(void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)
 (int,col_rgba)(double,thickness)(int*,API_RO(num_segments),0),
 "Quadratic Bezier (3 control points)")
@@ -335,7 +335,7 @@ DEFINE_API(void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_rgba), thickness, API_RO_GET(num_segments));
 }
 
-DEFINE_API(void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
+API_FUNC(0_8, void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
 (ImGui_Image*,img)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
 (double*,API_RO(uv_min_x),0.0)(double*,API_RO(uv_min_y),0.0)
@@ -353,7 +353,7 @@ DEFINE_API(void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(API_RO_GET(col_rgba)));
 }
 
-DEFINE_API(void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
+API_FUNC(0_8, void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
 (ImGui_Image*,img)(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (double*,API_RO(uv1_x),0.0)(double*,API_RO(uv1_y),0.0)
@@ -376,7 +376,7 @@ DEFINE_API(void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(API_RO_GET(col_rgba)));
 }
 
-DEFINE_API(void, DrawList_AddImageRounded, (ImGui_DrawList*,draw_list)
+API_FUNC(0_8, void, DrawList_AddImageRounded, (ImGui_DrawList*,draw_list)
 (ImGui_Image*,img)(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
 (double,uv_min_x)(double,uv_min_y)(double,uv_max_x)(double,uv_max_y)
 (int,col_rgba)(double,rounding)(int*,API_RO(flags),ImDrawFlags_None),
@@ -394,27 +394,27 @@ DEFINE_API(void, DrawList_AddImageRounded, (ImGui_DrawList*,draw_list)
 API_SUBSECTION("Stateful Path",
 "Stateful path API, add points then finish with PathFillConvex() or PathStroke().");
 
-DEFINE_API(void, DrawList_PathClear, (ImGui_DrawList*,draw_list),
+API_FUNC(0_1, void, DrawList_PathClear, (ImGui_DrawList*,draw_list),
 "")
 {
   draw_list->get()->PathClear();
 }
 
-DEFINE_API(void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
 (double,pos_x)(double,pos_y),
 "")
 {
   draw_list->get()->PathLineToMergeDuplicate(ImVec2(pos_x, pos_y));
 }
 
-DEFINE_API(void, DrawList_PathFillConvex, (ImGui_DrawList*,draw_list)
+API_FUNC(0_5_1, void, DrawList_PathFillConvex, (ImGui_DrawList*,draw_list)
 (int,col_rgba),
 "Note: Anti-aliased filling requires points to be in clockwise order.")
 {
   draw_list->get()->PathFillConvex(Color::fromBigEndian(col_rgba));
 }
 
-DEFINE_API(void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
+API_FUNC(0_2, void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
 (int,col_rgba)(int*,API_RO(flags),ImDrawFlags_None)(double*,API_RO(thickness),1.0),
 "")
 {
@@ -422,7 +422,7 @@ DEFINE_API(void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_rgba), API_RO_GET(flags), API_RO_GET(thickness));
 }
 
-DEFINE_API(void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)(double,a_min)(double,a_max)
 (int*,API_RO(num_segments),0),
 "")
@@ -431,7 +431,7 @@ DEFINE_API(void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
     radius, a_min, a_max, API_RO_GET(num_segments));
 }
 
-DEFINE_API(void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
 (double,center_x)(double,center_y)(double,radius)
 (int,a_min_of_12)(int,a_max_of_12),
 "Use precomputed angles for a 12 steps circle.")
@@ -440,7 +440,7 @@ DEFINE_API(void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
     ImVec2(center_x, center_y), radius, a_min_of_12, a_max_of_12);
 }
 
-DEFINE_API(void, DrawList_PathBezierCubicCurveTo, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_PathBezierCubicCurveTo, (ImGui_DrawList*,draw_list)
 (double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (int*,API_RO(num_segments),0),
 "Cubic Bezier (4 control points)")
@@ -450,7 +450,7 @@ DEFINE_API(void, DrawList_PathBezierCubicCurveTo, (ImGui_DrawList*,draw_list)
     API_RO_GET(num_segments));
 }
 
-DEFINE_API(void, DrawList_PathBezierQuadraticCurveTo, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_PathBezierQuadraticCurveTo, (ImGui_DrawList*,draw_list)
 (double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(int*,API_RO(num_segments),0),
 "Quadratic Bezier (3 control points)")
 {
@@ -458,7 +458,7 @@ DEFINE_API(void, DrawList_PathBezierQuadraticCurveTo, (ImGui_DrawList*,draw_list
     ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), API_RO_GET(num_segments));
 }
 
-DEFINE_API(void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
+API_FUNC(0_1, void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
 (double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y)
 (double*,API_RO(rounding),0.0)(int*,API_RO(flags),ImDrawFlags_None),
 "")
@@ -505,45 +505,45 @@ clipping rectangles, prefer to append into separate channels then merge at the e
 
 Usage:
 
-    if not reaper.ImGui_ValidatePtr(splitter, 'ImGui_DrawListSplitter*') then
-      splitter = reaper.ImGui_CreateDrawListSplitter(draw_list)
+    if not ImGui.ValidatePtr(splitter, 'ImGui_DrawListSplitter*') then
+      splitter = ImGui.CreateDrawListSplitter(draw_list)
     end
-    reaper.ImGui_DrawListSplitter_Split(splitter, 2)
-    reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
-    reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 1)
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- foreground
-    reaper.ImGui_DrawListSplitter_SetCurrentChannel(splitter, 0)
-    reaper.ImGui_DrawList_AddRectFilled(draw_list, ...) -- background
-    reaper.ImGui_DrawListSplitter_Merge(splitter))");
+    ImGui.DrawListSplitter_Split(splitter, 2)
+    ImGui.DrawListSplitter_SetCurrentChannel(splitter, 0)
+    ImGui.DrawList_AddRectFilled(draw_list, ...) -- background
+    ImGui.DrawListSplitter_SetCurrentChannel(splitter, 1)
+    ImGui.DrawList_AddRectFilled(draw_list, ...) -- foreground
+    ImGui.DrawListSplitter_SetCurrentChannel(splitter, 0)
+    ImGui.DrawList_AddRectFilled(draw_list, ...) -- background
+    ImGui.DrawListSplitter_Merge(splitter))");
 
-DEFINE_API(ImGui_DrawListSplitter*, CreateDrawListSplitter,
+API_FUNC(0_7_1, ImGui_DrawListSplitter*, CreateDrawListSplitter,
 (ImGui_DrawList*,draw_list),
 "")
 {
   return new DrawListSplitter { draw_list };
 }
 
-DEFINE_API(void, DrawListSplitter_Clear, (ImGui_DrawListSplitter*,splitter),
+API_FUNC(0_7_1, void, DrawListSplitter_Clear, (ImGui_DrawListSplitter*,splitter),
 "")
 {
   (*splitter)->Clear();
 }
 
-DEFINE_API(void, DrawListSplitter_Split, (ImGui_DrawListSplitter*,splitter)
+API_FUNC(0_7_1, void, DrawListSplitter_Split, (ImGui_DrawListSplitter*,splitter)
 (int,count),
 "")
 {
   (*splitter)->Split(splitter->drawList(), count);
 }
 
-DEFINE_API(void, DrawListSplitter_Merge, (ImGui_DrawListSplitter*,splitter),
+API_FUNC(0_7_1, void, DrawListSplitter_Merge, (ImGui_DrawListSplitter*,splitter),
 "")
 {
   (*splitter)->Merge(splitter->drawList());
 }
 
-DEFINE_API(void, DrawListSplitter_SetCurrentChannel,
+API_FUNC(0_7_1, void, DrawListSplitter_SetCurrentChannel,
 (ImGui_DrawListSplitter*,splitter)(int,channel_idx),
 "")
 {

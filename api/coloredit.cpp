@@ -28,7 +28,7 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
   flags &= ~ImGuiColorEditFlags_HDR; // enforce 0.0..1.0 limits
 }
 
-DEFINE_API(bool, ColorEdit4, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorEdit4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgba))
 (int*,API_RO(flags),ImGuiColorEditFlags_None),
 R"(Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xXXRRGGBB
@@ -51,7 +51,7 @@ R"(Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xXXRRGGBB
   return false;
 }
 
-DEFINE_API(bool, ColorEdit3, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorEdit3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgb))
 (int*,API_RO(flags),ImGuiColorEditFlags_None),
 "Color is in 0xXXRRGGBB. XX is ignored and will not be modified.")
@@ -59,10 +59,10 @@ DEFINE_API(bool, ColorEdit3, (ImGui_Context*,ctx)
   // Edit4 will take care of starting the frame and validating col_rgb
   ImGuiColorEditFlags flags { API_RO_GET(flags) };
   flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorEdit4::invoke_unsafe(ctx, label, API_RW(col_rgb), &flags);
+  return ColorEdit4::impl(ctx, label, API_RW(col_rgb), &flags);
 }
 
-DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorPicker4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgba))
 (int*,API_RO(flags),ImGuiColorEditFlags_None)(int*,API_RO(ref_col)),
 "")
@@ -88,7 +88,7 @@ DEFINE_API(bool, ColorPicker4, (ImGui_Context*,ctx)
   return false;
 }
 
-DEFINE_API(bool, ColorPicker3, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorPicker3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgb))
 (int*,API_RO(flags),ImGuiColorEditFlags_None),
 R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.)")
@@ -96,11 +96,10 @@ R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.)")
   // Picker4 will take care of starting the frame and validating col_rgb
   ImGuiColorEditFlags flags { API_RO_GET(flags) };
   flags |= ImGuiColorEditFlags_NoAlpha;
-  return API_ColorPicker4::invoke_unsafe(
-    ctx, label, API_RW(col_rgb), &flags, nullptr);
+  return ColorPicker4::impl(ctx, label, API_RW(col_rgb), &flags, nullptr);
 }
 
-DEFINE_API(bool, ColorButton, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorButton, (ImGui_Context*,ctx)
 (const char*,desc_id)(int,col_rgba)(int*,API_RO(flags),ImGuiColorEditFlags_None)
 (double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
 R"(Display a color square/button, hover for details, return true when pressed.
@@ -118,7 +117,7 @@ Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xRRGGBB.)")
   return ImGui::ColorButton(desc_id, col, flags, size);
 }
 
-DEFINE_API(void, SetColorEditOptions, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetColorEditOptions, (ImGui_Context*,ctx)
 (int,flags),
 R"(Picker type, etc. User will be able to change many settings, unless you pass
 the _NoOptions flag to your calls.)")
@@ -128,64 +127,64 @@ the _NoOptions flag to your calls.)")
   ImGui::SetColorEditOptions(flags);
 }
 
-DEFINE_SECTION(colorFlags, ROOT_SECTION, "Flags");
-DEFINE_ENUM(ImGui, ColorEditFlags_None,             "");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoAlpha,
+API_SECTION_DEF(colorFlags, ROOT_SECTION, "Flags");
+API_ENUM(0_1, ImGui, ColorEditFlags_None, "");
+API_ENUM(0_1, ImGui, ColorEditFlags_NoAlpha,
 R"(ColorEdit, ColorPicker, ColorButton: ignore Alpha component
   (will only read 3 components from the input pointer).)");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoPicker,
+API_ENUM(0_1, ImGui, ColorEditFlags_NoPicker,
   "ColorEdit: disable picker when clicking on color square.");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoOptions,
+API_ENUM(0_1, ImGui, ColorEditFlags_NoOptions,
   "ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoSmallPreview,
+API_ENUM(0_1, ImGui, ColorEditFlags_NoSmallPreview,
 R"(ColorEdit, ColorPicker: disable color square preview next to the inputs.
    (e.g. to show only the inputs).)");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoInputs,
+API_ENUM(0_1, ImGui, ColorEditFlags_NoInputs,
 R"(ColorEdit, ColorPicker: disable inputs sliders/text widgets
    (e.g. to show only the small preview color square).)");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoTooltip,
+API_ENUM(0_1, ImGui, ColorEditFlags_NoTooltip,
   "ColorEdit, ColorPicker, ColorButton: disable tooltip when hovering the preview.");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoLabel,
+API_ENUM(0_1, ImGui, ColorEditFlags_NoLabel,
 R"(ColorEdit, ColorPicker: disable display of inline text label
    (the label is still forwarded to the tooltip and picker).)");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoSidePreview,
+API_ENUM(0_1, ImGui, ColorEditFlags_NoSidePreview,
 R"(ColorPicker: disable bigger color preview on right side of the picker,
    use small color square preview instead.)");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoDragDrop,
+API_ENUM(0_1, ImGui, ColorEditFlags_NoDragDrop,
   "ColorEdit: disable drag and drop target. ColorButton: disable drag and drop source.");
-DEFINE_ENUM(ImGui, ColorEditFlags_NoBorder,
+API_ENUM(0_1, ImGui, ColorEditFlags_NoBorder,
   "ColorButton: disable border (which is enforced by default).");
 API_SECTION_P(colorFlags, "User Options", "(right-click on widget to change some of them)");
-DEFINE_ENUM(ImGui, ColorEditFlags_AlphaBar,
+API_ENUM(0_1, ImGui, ColorEditFlags_AlphaBar,
   "ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.");
-DEFINE_ENUM(ImGui, ColorEditFlags_AlphaPreview,
+API_ENUM(0_1, ImGui, ColorEditFlags_AlphaPreview,
 R"(ColorEdit, ColorPicker, ColorButton: display preview as a transparent color
    over a checkerboard, instead of opaque.)");
-DEFINE_ENUM(ImGui, ColorEditFlags_AlphaPreviewHalf,
+API_ENUM(0_1, ImGui, ColorEditFlags_AlphaPreviewHalf,
 R"(ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard,
    instead of opaque.)");
-// DEFINE_ENUM(ImGui, ColorEditFlags_HDR,
+// API_ENUM(ImGui, ColorEditFlags_HDR,
 // R"((WIP) ColorEdit: Currently only disable 0.0..1.0 limits in RGBA edition
 //    (note: you probably want to use ImGuiColorEditFlags_Float flag as well).)");
-DEFINE_ENUM(ImGui, ColorEditFlags_DisplayRGB,
+API_ENUM(0_1, ImGui, ColorEditFlags_DisplayRGB,
 R"(ColorEdit: override _display_ type to RGB. ColorPicker:
    select any combination using one or more of RGB/HSV/Hex.)");
-DEFINE_ENUM(ImGui, ColorEditFlags_DisplayHSV,
+API_ENUM(0_1, ImGui, ColorEditFlags_DisplayHSV,
 R"(ColorEdit: override _display_ type to HSV. ColorPicker:
    select any combination using one or more of RGB/HSV/Hex.)");
-DEFINE_ENUM(ImGui, ColorEditFlags_DisplayHex,
+API_ENUM(0_1, ImGui, ColorEditFlags_DisplayHex,
 R"(ColorEdit: override _display_ type to Hex. ColorPicker:
    select any combination using one or more of RGB/HSV/Hex.)");
-DEFINE_ENUM(ImGui, ColorEditFlags_Uint8,
+API_ENUM(0_1, ImGui, ColorEditFlags_Uint8,
   "ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0..255.");
-DEFINE_ENUM(ImGui, ColorEditFlags_Float,
+API_ENUM(0_1, ImGui, ColorEditFlags_Float,
 R"(ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0..1.0
    floats instead of 0..255 integers. No round-trip of value via integers.)");
-DEFINE_ENUM(ImGui, ColorEditFlags_PickerHueBar,
+API_ENUM(0_1, ImGui, ColorEditFlags_PickerHueBar,
   "ColorPicker: bar for Hue, rectangle for Sat/Value.");
-DEFINE_ENUM(ImGui, ColorEditFlags_PickerHueWheel,
+API_ENUM(0_1, ImGui, ColorEditFlags_PickerHueWheel,
   "ColorPicker: wheel for Hue, triangle for Sat/Value.");
-DEFINE_ENUM(ImGui, ColorEditFlags_InputRGB,
+API_ENUM(0_1, ImGui, ColorEditFlags_InputRGB,
   "ColorEdit, ColorPicker: input and output data in RGB format.");
-DEFINE_ENUM(ImGui, ColorEditFlags_InputHSV,
+API_ENUM(0_1, ImGui, ColorEditFlags_InputHSV,
   "ColorEdit, ColorPicker: input and output data in HSV format.");

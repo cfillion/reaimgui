@@ -21,6 +21,7 @@
 #include "cocoa_inject.hpp"
 #include "cocoa_inputview.hpp"
 #include "context.hpp"
+#include "error.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
 

@@ -32,8 +32,7 @@ Width/height are limited to 8192 pixels.
 There are also image functions in the DrawList API such as
 DrawList_AddImageQuad and DrawList_AddImageRounded.)");
 
-// TODO: Attach/Detach API
-DEFINE_API(ImGui_Image*, CreateImage,
+API_FUNC(0_9, ImGui_Image*, CreateImage,
 (const char*,file)(int*,API_RO(flags)),
 R"(The returned object is valid as long as it is used in each defer cycle
 unless attached to a context (see Attach).
@@ -44,7 +43,7 @@ unless attached to a context (see Attach).
   return Image::fromFile(file);
 }
 
-DEFINE_API(ImGui_Image*, CreateImageFromMem,
+API_FUNC(0_9, ImGui_Image*, CreateImageFromMem,
 (const char*,data)(int,data_sz),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Load from a file using
 CreateImage or explicitely specify data_sz if supporting older versions.)")
@@ -53,7 +52,7 @@ CreateImage or explicitely specify data_sz if supporting older versions.)")
   return Image::fromMemory(data, data_sz);
 }
 
-DEFINE_API(void, Image_GetSize, (ImGui_Image*,img)
+API_FUNC(0_8, void, Image_GetSize, (ImGui_Image*,img)
 (double*,API_W(w))(double*,API_W(h)),
 "")
 {
@@ -62,7 +61,7 @@ DEFINE_API(void, Image_GetSize, (ImGui_Image*,img)
   if(API_W(h)) *API_W(h) = img->height();
 }
 
-DEFINE_API(void, Image, (ImGui_Context*,ctx)
+API_FUNC(0_8, void, Image, (ImGui_Context*,ctx)
 (ImGui_Image*,img)(double,size_w)(double,size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
@@ -79,7 +78,7 @@ DEFINE_API(void, Image, (ImGui_Context*,ctx)
     Color(API_RO_GET(tint_col_rgba)), Color(API_RO_GET(border_col_rgba)));
 }
 
-DEFINE_API(bool, ImageButton, (ImGui_Context*,ctx)
+API_FUNC(0_8, bool, ImageButton, (ImGui_Context*,ctx)
 (const char*,str_id)(ImGui_Image*,img)(double,size_w)(double,size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
@@ -105,22 +104,22 @@ parameter.
 
 Usage:
 
-    local set = reaper.ImGui_CreateImageSet()
-    reaper.ImGui_ImageSet_Add(set, 1.0, reaper.ImGui_CreateImage('32x32.png'))
-    reaper.ImGui_ImageSet_Add(set, 2.0, reaper.ImGui_CreateImage('64x64.png'))
+    local set = ImGui.CreateImageSet()
+    ImGui.ImageSet_Add(set, 1.0, ImGui.CreateImage('32x32.png'))
+    ImGui.ImageSet_Add(set, 2.0, ImGui.CreateImage('64x64.png'))
 
     local function frame()
-      reaper.ImGui_Image(ctx, set, reaper.ImGui_Image_GetSize(set))
+      ImGui.Image(ctx, set, ImGui.Image_GetSize(set))
       -- ...
     end)");
 
-DEFINE_API(ImGui_ImageSet*, CreateImageSet, NO_ARGS,
+API_FUNC(0_9, ImGui_ImageSet*, CreateImageSet, NO_ARGS,
 "")
 {
   return new ImageSet;
 }
 
-DEFINE_API(void, ImageSet_Add, (ImGui_ImageSet*,set)
+API_FUNC(0_8, void, ImageSet_Add, (ImGui_ImageSet*,set)
 (double,scale)(ImGui_Image*,img),
 "'img' cannot be another ImageSet.")
 {

@@ -18,9 +18,18 @@
 #ifndef REAIMGUI_API_HELPER_HPP
 #define REAIMGUI_API_HELPER_HPP
 
+// prevent Windows.h from defining unwanted macros (eg. CreateFont)
+#ifdef _WIN32
+#  define NOGDI
+#  define WIN32_LEAN_AND_MEAN
+#  include <windows.h>
+DECLARE_HANDLE(HDROP);
+#endif
+
+#include "callconv.hpp"
+#include "compstr.hpp"
+
 #include "../src/api.hpp"
-#include "../src/api_vararg.hpp"
-#include "../src/basename.hpp"
 #include "../src/context.hpp"
 
 #include <array>
@@ -33,132 +42,133 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
-#include <boost/type_index.hpp>
+#include <cstring> // memcpy
 #include <type_traits>
 
-#define API_PREFIX ImGui_
+#define _API_ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
+#define _API_ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
+#define _API_ARG_DEFV(arg) BOOST_PP_TUPLE_ELEM(2, arg)
+#define _API_ARG_DEFV_T(arg) decltype(_API_ARG_DEFV(arg))
 
-#define _ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
-#define _ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
-#define _ARG_DEFV(arg) BOOST_PP_TUPLE_ELEM(2, arg)
-#define _ARG_DEFV_T(arg) decltype(_ARG_DEFV(arg))
-
-#define _FOREACH_ARG(macro, data, args) \
+#define _API_FOREACH_ARG(macro, data, args) \
   BOOST_PP_SEQ_FOR_EACH_I(macro, data, BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))
-#define _SIGARG(r, data, i, arg) \
-  BOOST_PP_COMMA_IF(i) _ARG_TYPE(arg) _ARG_NAME(arg)
-#define _RAWARG(r, macro, i, arg) BOOST_PP_COMMA_IF(i) macro(arg)
-#define _STRARG(r, macro, i, arg) \
+#define _API_SIGARG(r, data, i, arg) \
+  BOOST_PP_COMMA_IF(i) _API_ARG_TYPE(arg) _API_ARG_NAME(arg)
+#define _API_STRARG(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
-#define _STRARGUS(r, macro, i, arg) \
+#define _API_STRARGUS(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, "\31") BOOST_PP_STRINGIZE(macro(arg))
 
 template<typename T>
 using DefArgVal = std::conditional_t<
-  std::is_same_v<const char *, T>,
-  T, std::remove_pointer_t<T>
+  std::is_same_v<const char *, T>, T, std::remove_pointer_t<T>
 >;
 
-#define _DEFARG_ID(argName) BOOST_PP_CAT(argName, Default)
-#define _DEFARG(r, name, i, arg)                         \
-  BOOST_PP_EXPR_IF(                                      \
-    BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3), \
-    constexpr DefArgVal<_ARG_TYPE(arg)>                  \
-      _DEFARG_ID(_ARG_NAME(arg))(_ARG_DEFV(arg));        \
+#define _API_DEFARG_ID(argName) BOOST_PP_CAT(argName, Default)
+#define _API_DEFARG(r, name, i, arg)                          \
+  BOOST_PP_EXPR_IF(                                           \
+    BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3),      \
+    constexpr DefArgVal<_API_ARG_TYPE(arg)>                   \
+      _API_DEFARG_ID(_API_ARG_NAME(arg))(_API_ARG_DEFV(arg)); \
   )
 
 // error out if API_SECTION() was not used in the file
 #define _API_CHECKROOTSECTION static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);
 
-#define _API_CATCH(name, type, except) \
-  catch(const except &e) {             \
-    API::handleError(#name, e);        \
-    return static_cast<type>(0);       \
-  }
-
 #define _API_DEF(type, args, help)            \
   #type                                  "\0" \
-  _FOREACH_ARG(_STRARG, _ARG_TYPE, args) "\0" \
-  _FOREACH_ARG(_STRARG, _ARG_NAME, args) "\0" \
+  _API_FOREACH_ARG(_API_STRARG, _API_ARG_TYPE, args) "\0" \
+  _API_FOREACH_ARG(_API_STRARG, _API_ARG_NAME, args) "\0" \
   help                                   "\0" \
-  _FOREACH_ARG(_STRARGUS, _ARG_DEFV, args)
+  _API_FOREACH_ARG(_API_STRARGUS, _API_ARG_DEFV, args)
 
-#define _STORE_LINE \
+#define _API_STORE_LINE \
   static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) { __LINE__ };
 
-#define _DECLARE_FUNC(type, name, args) \
-  namespace API_##name {                                                  \
-    _FOREACH_ARG(_DEFARG, name, args) /* constexprs of default args */    \
-                                                                          \
-    static type invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args));            \
-    static type invoke(_FOREACH_ARG(_SIGARG, _, args)) noexcept           \
-    try {                                                                 \
-      return invoke_unsafe(_FOREACH_ARG(_RAWARG, _ARG_NAME, args));       \
-    }                                                                     \
-    _API_CATCH(name, type, reascript_error)                               \
-    _API_CATCH(name, type, imgui_error)                                   \
+#define _API_FUNC_DECL(vernum, type, name, args)                       \
+  namespace API::v##vernum::name {                                     \
+    _API_FOREACH_ARG(_API_DEFARG, name, args) /* default arg values */ \
+    constexpr const char id[] { #name   };                             \
+    constexpr const char vn[] { #vernum };                             \
+    constexpr VerNum version  { CompStr::version<&vn> };               \
+    static type impl(_API_FOREACH_ARG(_API_SIGARG, _, args));          \
   }
-#define _DEFINE_FUNC(type, name, args) \
-  type API_##name::invoke_unsafe(_FOREACH_ARG(_SIGARG, _, args))
 
-#define DEFINE_API _STORE_LINE _DEFINE_API
-#define _DEFINE_API(type, name, args, help, ...)                          \
-  _API_CHECKROOTSECTION                                                   \
-  _DECLARE_FUNC(type, name, args)                                         \
-                                                                          \
-  /* link-time duplicate check */                                         \
-  extern const API::ReaScriptFunc API_EXPORT_##name;                      \
-  const API::ReaScriptFunc API_EXPORT_##name {                            \
-    { "-API_"       BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
-      reinterpret_cast<void *>(&API_##name::invoke),                      \
-    },                                                                    \
-    { "-APIvararg_" BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
-      reinterpret_cast<void *>(&InvokeReaScriptAPI<&API_##name::invoke>), \
-    },                                                                    \
-    { "-APIdef_"    BOOST_PP_STRINGIZE(API_PREFIX) #name,                 \
-      reinterpret_cast<void *>(const_cast<char *>(                        \
-        _API_DEF(type, args, help))),                                     \
-    },                                                                    \
-  };                                                                      \
-  _DEFINE_FUNC(type, name, args)
+#define _API_FUNC_DEF(vernum, type, name, args) \
+  type API::v##vernum::name::impl(_API_FOREACH_ARG(_API_SIGARG, _, args))
 
-#define DEFINE_ENUM _STORE_LINE _DEFINE_ENUM
-#define _DEFINE_ENUM(prefix, name, doc) \
-  _DEFINE_API(int, name, NO_ARGS, doc) { return prefix##name; }
+// extern for link-time duplicate detection
+// must NOT be const: Callable constructor of other functions may write to us
+#define _API_EXPORT(type, vernum, name) \
+  namespace API::v##vernum::name { extern API::type symbol; } \
+  API::type API::v##vernum::name::symbol
 
-#define DEFINE_EELAPI _STORE_LINE _DEFINE_EELAPI
-#define _DEFINE_EELAPI(type, name, args, help)                     \
-  _API_CHECKROOTSECTION                                            \
-  _DECLARE_FUNC(type, name, args)                                  \
-                                                                   \
-  extern const API::EELFunc API_EXPORT_##name;                     \
-  const API::EELFunc API_EXPORT_##name {                           \
-    #name, _API_DEF(type, args, help),                             \
-    &InvokeEELAPI<&API_##name::invoke>,                            \
-    EELAPI<decltype(&API_##name::invoke)>::ARGC,                   \
-  };                                                               \
-  _DEFINE_FUNC(type, name, args)
+#define _API_SAFECALL(vernum, apiName) &CallConv::Safe< \
+  &API::v##vernum::apiName::impl, &API::v##vernum::apiName::id>::invoke
 
-#define DEFINE_EELVAR _STORE_LINE _DEFINE_EELVAR
-#define _DEFINE_EELVAR(type, name, help)                           \
-  _API_CHECKROOTSECTION                                            \
-  const API::EELVar EELVar_##name { #name, #type "\0\0\0" help "\0" }
+#define API_FUNC _API_STORE_LINE _API_FUNC
+#define _API_FUNC(vernum, type, name, args, help)                 \
+  _API_CHECKROOTSECTION                                           \
+  _API_FUNC_DECL(vernum, type, name, args)                        \
+  _API_EXPORT(ReaScriptFunc, vernum, name) {                      \
+    API::v##vernum::name::version,                                \
+    reinterpret_cast<void *>(&API::v##vernum::name::impl),        \
+    { "-API_"       API_PREFIX #name,                             \
+      reinterpret_cast<void *>(_API_SAFECALL(vernum, name)),      \
+    },                                                            \
+    { "-APIvararg_" API_PREFIX #name,                             \
+      reinterpret_cast<void *>(                                   \
+        CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply), \
+    },                                                            \
+    { "-APIdef_"    API_PREFIX #name,                             \
+      reinterpret_cast<void *>(const_cast<char *>(                \
+        _API_DEF(type, args, help))),                             \
+    },                                                            \
+  };                                                              \
+  _API_FUNC_DEF(vernum, type, name, args)
 
-#define DEFINE_SECTION(id, parent, ...) static const API::Section id \
+#define API_ENUM _API_STORE_LINE _API_ENUM
+#define _API_ENUM(vernum, prefix, name, doc) \
+  _API_FUNC(vernum, int, name, NO_ARGS, doc) { return prefix##name; }
+
+#define API_EELFUNC _API_STORE_LINE _API_EELFUNC
+#define _API_EELFUNC(vernum, type, name, args, help)    \
+  _API_CHECKROOTSECTION                                 \
+  _API_FUNC_DECL(vernum, type, name, args)              \
+  _API_EXPORT(EELFunc, vernum, name) {                  \
+    API::v##vernum::name::version,                      \
+    #name, _API_DEF(type, args, help),                  \
+    &CallConv::EEL<_API_SAFECALL(vernum, name)>::apply, \
+     CallConv::EEL<_API_SAFECALL(vernum, name)>::ARGC,  \
+  };                                                    \
+  _API_FUNC_DEF(vernum, type, name, args)
+
+#define API_EELVAR _API_STORE_LINE _API_EELVAR
+#define _API_EELVAR(vernum, type, name, help)            \
+  _API_CHECKROOTSECTION                                  \
+  namespace API::v##vernum::EELVar_##name {              \
+    constexpr const char vn[] { #vernum };               \
+    constexpr VerNum version  { CompStr::version<&vn> }; \
+  }                                                      \
+  const API::EELVar EELVar_##name {                      \
+    API::v##vernum::EELVar_##name::version, #name, #type "\0\0\0" help "\0" }
+
+#define API_SECTION_DEF(id, parent, ...) static const API::Section id \
   { &parent, ROOT_FILE, __VA_ARGS__ };
 
 // shortcuts with auto-generated identifier name for the section object
-#define _UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
-#define API_SECTION(...)                             \
-  constexpr const char FILE_PATH[] { __FILE__ };     \
-  constexpr auto ROOT_FILE { Basename<&FILE_PATH> }; \
-  static const API::Section ROOT_SECTION             \
+#define _API_UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
+#define API_SECTION(...)                                      \
+  constexpr const char FILE_PATH[] { __FILE__ };              \
+  constexpr auto ROOT_FILE { CompStr::basename<&FILE_PATH> }; \
+  static const API::Section ROOT_SECTION                      \
     { nullptr, ROOT_FILE, __VA_ARGS__ }
 #define API_SUBSECTION(...) \
-  DEFINE_SECTION(_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
+  API_SECTION_DEF(_API_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
 #define API_SECTION_P(parent, ...) \
-  DEFINE_SECTION(_UNIQ_SEC_ID, parent,       __VA_ARGS__)
+  API_SECTION_DEF(_API_UNIQ_SEC_ID, parent,       __VA_ARGS__)
 
+// TODO: replace these in favor of the new type tags from types.hpp
 #define NO_ARGS (,)
 #define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
 #define API_RW(var)       var##InOut      // read/write
@@ -176,11 +186,11 @@ using DefArgVal = std::conditional_t<
     return v ?  v : d;                                 \
   else                                                 \
     return v ? *v : d;                                 \
-}(var, _DEFARG_ID(var))
+}(var, _API_DEFARG_ID(var))
 #define API_RO_GET(var)  _API_GET(API_RO(var))
 #define API_RWO_GET(var) _API_GET(API_RWO(var))
 
-#define FRAME_GUARD assertValid(ctx); assertFrame(ctx);
+#define FRAME_GUARD assertValid(ctx); assertFrame(ctx)
 
 // const char *foobarInOptional from REAPER are never null before 6.58
 inline void nullIfEmpty(const char *&string)
@@ -203,16 +213,7 @@ void assertValid(T *ptr)
   else if(ptr)
     return;
 
-  std::string type;
-  if constexpr(std::is_class_v<T>)
-    type = T::api_type_name;
-  else
-    type = boost::typeindex::type_id<T>().pretty_name();
-
-  char message[255];
-  snprintf(message, sizeof(message),
-    "expected a valid %s*, got %p", type.c_str(), ptr);
-  throw reascript_error { message };
+  Error::invalidObject(ptr);
 }
 
 inline void assertFrame(Context *ctx)
@@ -252,8 +253,33 @@ public:
 
 private:
   std::array<PtrType*, N> m_inputs;
-  std::array<ValType, N> m_values;
+  std::array<ValType,  N> m_values;
 };
+
+// EEL may pass a null buffer, make sure it's valid before calling these
+inline void copyToBigBuf(char *&buf, int &bufSize,
+  const void *data, size_t dataSize, const bool mayHaveNulls = true)
+{
+  extern bool (*realloc_cmd_ptr)(char **ptr, int *ptr_size, int new_size);
+  const bool wantRealloc { mayHaveNulls || dataSize >= static_cast<size_t>(bufSize) };
+  if(wantRealloc && dataSize > 0 && dataSize < INT_MAX &&
+      realloc_cmd_ptr(&buf, &bufSize, dataSize)) {
+    // the buffer is no longer null-terminated after using realloc_cmd_ptr!
+    std::memcpy(buf, data, bufSize);
+  }
+  else if(bufSize > 1) {
+    const size_t limit { std::min<size_t>(bufSize - 1, dataSize) };
+    std::memcpy(buf, data, limit);
+    buf[limit] = '\0';
+  }
+}
+
+template<typename T, typename = std::enable_if_t<std::is_class_v<T>>>
+auto copyToBigBuf(char *&buf, int &bufSize, const T &value, const bool mayHaveNulls = true)
+{
+  const size_t byteSize { value.size() * sizeof(typename T::value_type) };
+  return copyToBigBuf(buf, bufSize, value.data(), byteSize, mayHaveNulls);
+}
 
 // Common behavior for p_open throughout the API.
 // When false, set output to true to signal it's open to the caller, but give

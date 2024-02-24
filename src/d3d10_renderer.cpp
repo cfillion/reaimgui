@@ -18,6 +18,7 @@
 #include "renderer.hpp"
 
 #include "context.hpp"
+#include "error.hpp"
 #include "import.hpp"
 #include "texture.hpp"
 #include "window.hpp"

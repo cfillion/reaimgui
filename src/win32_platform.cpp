@@ -18,6 +18,7 @@
 #include "platform.hpp"
 
 #include "context.hpp"
+#include "error.hpp"
 #include "import.hpp"
 #include "win32_window.hpp"
 

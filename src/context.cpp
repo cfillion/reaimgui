@@ -19,6 +19,7 @@
 
 #include "configvar.hpp"
 #include "docker.hpp"
+#include "error.hpp"
 #include "font.hpp"
 #include "keymap.hpp"
 #include "platform.hpp"

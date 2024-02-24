@@ -21,7 +21,6 @@
 
 #include <cassert>
 #include <cstring> // strlen
-#include <reaper_plugin_functions.h> // realloc_cmd_ptr
 
 API_SECTION("Drag & Drop",
 R"(On source items, call BeginDragDropSource(),
@@ -39,7 +38,7 @@ static bool isUserType(const char *type)
   return type && *type && type[0] != '_';
 }
 
-DEFINE_API(bool, BeginDragDropSource, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginDragDropSource, (ImGui_Context*,ctx)
 (int*,API_RO(flags),ImGuiDragDropFlags_None),
 R"(Call after submitting an item which may be dragged. when this return true,
 you can call SetDragDropPayload() + EndDragDropSource()
@@ -52,7 +51,7 @@ as replacement).)")
   return ImGui::BeginDragDropSource(API_RO_GET(flags));
 }
 
-DEFINE_API(bool, SetDragDropPayload, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SetDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)(const char*,data)(int*,API_RO(cond),ImGuiCond_Always),
 R"(The type is a user defined string of maximum 32 characters.
 Strings starting with '_' are reserved for dear imgui internal types.
@@ -68,14 +67,14 @@ Data is copied and held by imgui.)")
     type, data, data ? strlen(data) : 0, API_RO_GET(cond));
 }
 
-DEFINE_API(void, EndDragDropSource, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndDragDropSource, (ImGui_Context*,ctx),
 "Only call EndDragDropSource() if BeginDragDropSource returns true!")
 {
   FRAME_GUARD;
   ImGui::EndDragDropSource();
 }
 
-DEFINE_API(bool, BeginDragDropTarget, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, BeginDragDropTarget, (ImGui_Context*,ctx),
 R"(Call after submitting an item that may receive a payload.
 If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.)")
 {
@@ -83,24 +82,7 @@ If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.)")
   return ImGui::BeginDragDropTarget();
 }
 
-static void copyPayload(const ImGuiPayload *payload, char **reabuf, const int reabuf_sz)
-{
-  assertValid(*reabuf);
-
-  int newSize {};
-  if(payload->DataSize > reabuf_sz &&
-      realloc_cmd_ptr(reabuf, &newSize, payload->DataSize)) {
-    // output buffer is no longer null terminated!
-    std::memcpy(*reabuf, payload->Data, newSize);
-  }
-  else {
-    const int limit { std::min(reabuf_sz - 1, payload->DataSize) };
-    std::memcpy(*reabuf, payload->Data, limit);
-    (*reabuf)[limit] = '\0';
-  }
-}
-
-DEFINE_API(bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
 (const char*,type)
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
 (int*,API_RO(flags),ImGuiDragDropFlags_None),
@@ -115,8 +97,10 @@ you can peek into the payload before the mouse button is released.)")
   const ImGuiDragDropFlags flags { API_RO_GET(flags) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
 
-  if(payload)
-    copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
+  if(payload && API_WBIG(payload)) {
+    copyToBigBuf(API_WBIG(payload), API_WBIG_SZ(payload),
+      payload->Data, payload->DataSize);
+  }
 
   return payload;
 }
@@ -142,7 +126,7 @@ static bool AcceptDragDropPayloadColor(int *color, bool alpha,
   return true;
 }
 
-DEFINE_API(bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
 (int*,API_W(rgb))(int*,API_RO(flags),ImGuiDragDropFlags_None),
 "Accept a RGB color. See AcceptDragDropPayload.")
 {
@@ -150,7 +134,7 @@ DEFINE_API(bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
   return AcceptDragDropPayloadColor(API_W(rgb), false, API_RO_GET(flags));
 }
 
-DEFINE_API(bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
 (int*,API_W(rgba))(int*,API_RO(flags),ImGuiDragDropFlags_None),
 "Accept a RGBA color. See AcceptDragDropPayload.")
 {
@@ -158,7 +142,7 @@ DEFINE_API(bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
   return AcceptDragDropPayloadColor(API_W(rgba), true, API_RO_GET(flags));
 }
 
-DEFINE_API(bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
 (int*,API_W(count))(int*,API_RO(flags),ImGuiDragDropFlags_None),
 R"(Accept a list of dropped files. See AcceptDragDropPayload and GetDragDropPayloadFile.)")
 {
@@ -175,14 +159,14 @@ R"(Accept a list of dropped files. See AcceptDragDropPayload and GetDragDropPayl
   return payload;
 }
 
-DEFINE_API(void, EndDragDropTarget, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndDragDropTarget, (ImGui_Context*,ctx),
 "Only call EndDragDropTarget() if BeginDragDropTarget returns true!")
 {
   FRAME_GUARD;
   ImGui::EndDragDropTarget();
 }
 
-DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, GetDragDropPayload, (ImGui_Context*,ctx)
 (char*,API_W(type))(int,API_W_SZ(type))
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
 (bool*,API_W(is_preview))(bool*,API_W(is_delivery)),
@@ -196,14 +180,17 @@ DEFINE_API(bool, GetDragDropPayload, (ImGui_Context*,ctx)
 
   if(API_W(type))
     snprintf(API_W(type), API_W_SZ(type), "%s", payload->DataType);
-  copyPayload(payload, &API_WBIG(payload), API_WBIG_SZ(payload));
+  if(API_WBIG(payload)) {
+    copyToBigBuf(API_WBIG(payload), API_WBIG_SZ(payload),
+      payload->Data, payload->DataSize);
+  }
   if(API_W(is_preview))  *API_W(is_preview)  = payload->Preview;
   if(API_W(is_delivery)) *API_W(is_delivery) = payload->Delivery;
 
   return true;
 }
 
-DEFINE_API(bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
 (int,index)(char*,API_W(filename))(int,API_W_SZ(filename)),
 R"(Get a filename from the list of dropped files.
 Returns false if index is out of bounds.)")
@@ -223,42 +210,42 @@ Returns false if index is out of bounds.)")
   return true;
 }
 
-DEFINE_SECTION(flags, ROOT_SECTION, "Flags");
-DEFINE_ENUM(ImGui, DragDropFlags_None, "");
+API_SECTION_DEF(flags, ROOT_SECTION, "Flags");
+API_ENUM(0_1, ImGui, DragDropFlags_None, "");
 API_SECTION_P(flags, "Source", "For BeginDragDropSource");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoPreviewTooltip,
+API_ENUM(0_1, ImGui, DragDropFlags_SourceNoPreviewTooltip,
 R"(By default, a successful call to BeginDragDropSource opens a tooltip so you
    can display a preview or description of the source contents.
    This flag disables this behavior.)");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoDisableHover,
+API_ENUM(0_1, ImGui, DragDropFlags_SourceNoDisableHover,
 R"(By default, when dragging we clear data so that IsItemHovered will return
    false, to avoid subsequent user code submitting tooltips. This flag disables
    this behavior so you can still call IsItemHovered on the source item.)");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceNoHoldToOpenOthers,
+API_ENUM(0_1, ImGui, DragDropFlags_SourceNoHoldToOpenOthers,
 R"(Disable the behavior that allows to open tree nodes and collapsing header by
    holding over them while dragging a source item.)");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceAllowNullID,
+API_ENUM(0_1, ImGui, DragDropFlags_SourceAllowNullID,
 R"(Allow items such as Text, Image that have no unique identifier to be used as
    drag source, by manufacturing a temporary identifier based on their
    window-relative position. This is extremely unusual within the dear imgui
    ecosystem and so we made it explicit.)");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceExtern,
+API_ENUM(0_1, ImGui, DragDropFlags_SourceExtern,
 R"(External source (from outside of dear imgui), won't attempt to read current
    item/window info. Will always return true.
    Only one Extern source can be active simultaneously.)");
-DEFINE_ENUM(ImGui, DragDropFlags_SourceAutoExpirePayload,
+API_ENUM(0_1, ImGui, DragDropFlags_SourceAutoExpirePayload,
 R"(Automatically expire the payload if the source cease to be submitted
    (otherwise payloads are persisting while being dragged).)");
 API_SECTION_P(flags, "Payload", "For AcceptDragDropPayload");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptBeforeDelivery,
+API_ENUM(0_1, ImGui, DragDropFlags_AcceptBeforeDelivery,
 R"(AcceptDragDropPayload will returns true even before the mouse button is
    released. You can then check GetDragDropPayload/is_delivery to test if the
    payload needs to be delivered.)");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoDrawDefaultRect,
+API_ENUM(0_1, ImGui, DragDropFlags_AcceptNoDrawDefaultRect,
   "Do not draw the default highlight rectangle when hovering over target.");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptNoPreviewTooltip,
+API_ENUM(0_1, ImGui, DragDropFlags_AcceptNoPreviewTooltip,
   "Request hiding the BeginDragDropSource tooltip from the BeginDragDropTarget site.");
-DEFINE_ENUM(ImGui, DragDropFlags_AcceptPeekOnly,
+API_ENUM(0_1, ImGui, DragDropFlags_AcceptPeekOnly,
 R"(For peeking ahead and inspecting the payload before delivery.
    Equivalent to DragDropFlags_AcceptBeforeDelivery |
    DragDropFlags_AcceptNoDrawDefaultRect.)");

@@ -19,6 +19,7 @@
 
 #include "configvar.hpp"
 #include "context.hpp"
+#include "error.hpp"
 #include "import.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"

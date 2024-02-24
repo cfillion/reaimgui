@@ -28,8 +28,6 @@ class TextureManager;
 
 class Image : public Resource {
 public:
-  static constexpr const char *api_type_name { "ImGui_Image" };
-
   struct RegisterType {
     using TestFunc   = bool   (*)(std::istream &);
     using CreateFunc = Image *(*)(std::istream &);
@@ -52,6 +50,7 @@ public:
 };
 
 using ImGui_Image = Image;
+API_REGISTER_OBJECT_TYPE(Image);
 
 class Bitmap : public Image {
 public:
@@ -74,8 +73,6 @@ private:
 
 class ImageSet final : public Image {
 public:
-  static constexpr const char *api_type_name { "ImGui_ImageSet" };
-
   void add(float scale, Image *);
 
   size_t width() const override;
@@ -101,5 +98,6 @@ private:
 };
 
 using ImGui_ImageSet = ImageSet;
+API_REGISTER_OBJECT_TYPE(ImageSet);
 
 #endif

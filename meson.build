@@ -182,7 +182,7 @@ subdir('shims')
 subdir('src')
 
 reaimgui = shared_library('reaper_imgui-' + arch_suffix, win32_resources,
-  link_whole: [api, src],
+  link_whole: [api, shims, src],
   name_prefix: '',
   install: true,
   install_dir: plugins_dir)
@@ -220,7 +220,7 @@ endif
 
 summary({
   'Bindings': meson.can_run_host_binaries() ? bindings : '<unavailable>',
-  'Shims': get_option('shims'),
+  'Examples': get_option('examples'),
 }, section: 'Generate')
 
 summary({

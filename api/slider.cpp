@@ -54,7 +54,7 @@ input can override those limits if SliderFlags_AlwaysClamp is not used.
 Use v_max = FLT_MAX / INT_MAX etc to avoid clamping to a maximum, same with
 v_min = -FLT_MAX / INT_MIN to avoid clamping to a minimum.)");
 
-DEFINE_API(bool, DragInt, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, DragInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(double*,API_RO(v_speed),1.0)
 (int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -68,7 +68,7 @@ DEFINE_API(bool, DragInt, (ImGui_Context*,ctx)
     SliderFlags { API_RO_GET(flags) });
 }
 
-DEFINE_API(bool, DragInt2, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, DragInt2, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (double*,API_RO(v_speed),1.0)
 (int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
@@ -88,7 +88,7 @@ DEFINE_API(bool, DragInt2, (ImGui_Context*,ctx)
     return false;
 }
 
-DEFINE_API(bool, DragInt3, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, DragInt3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (int*,API_RW(v3))(double*,API_RO(v_speed),1.0)
 (int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
@@ -108,7 +108,7 @@ DEFINE_API(bool, DragInt3, (ImGui_Context*,ctx)
     return false;
 }
 
-DEFINE_API(bool, DragInt4, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, DragInt4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (int*,API_RW(v3))(int*,API_RW(v4))(double*,API_RO(v_speed),1.0)
 (int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
@@ -129,7 +129,7 @@ DEFINE_API(bool, DragInt4, (ImGui_Context*,ctx)
     return false;
 }
 
-DEFINE_API(bool, DragIntRange2, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, DragIntRange2, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v_current_min))(int*,API_RW(v_current_max))
 (double*,API_RO(v_speed),1.0)(int*,API_RO(v_min),0)(int*,API_RO(v_max),0)
 (const char*,API_RO(format),"%d")(const char*,API_RO(format_max))
@@ -152,7 +152,7 @@ DEFINE_API(bool, DragIntRange2, (ImGui_Context*,ctx)
     return false;
 }
 
-DEFINE_API(bool, DragFloatRange2, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, DragFloatRange2, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RW(v_current_min))(double*,API_RW(v_current_max))
 (double*,API_RO(v_speed),1.0)(double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
 (const char*,API_RO(format),"%.3f")(const char*,API_RO(format_max))
@@ -175,7 +175,7 @@ DEFINE_API(bool, DragFloatRange2, (ImGui_Context*,ctx)
     return false;
 }
 
-DEFINE_API(bool, DragDouble, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, DragDouble, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RW(v))(double*,API_RO(v_speed),1.0)
 (double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -198,7 +198,7 @@ static bool dragDoubleN(const char *label, double *data, const size_t size,
     v_speed, &v_min, &v_max, format, flags);
 }
 
-DEFINE_API(bool, DragDouble2, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, DragDouble2, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
 (double*,API_RO(v_speed),1.0)(double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -217,7 +217,7 @@ DEFINE_API(bool, DragDouble2, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-DEFINE_API(bool, DragDouble3, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, DragDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double*,API_RO(v_speed),1.0)(double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -236,7 +236,7 @@ DEFINE_API(bool, DragDouble3, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-DEFINE_API(bool, DragDouble4, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, DragDouble4, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double*,API_RW(v4))(double*,API_RO(v_speed),1.0)
 (double*,API_RO(v_min),0.0)(double*,API_RO(v_max),0.0)
@@ -257,7 +257,7 @@ DEFINE_API(bool, DragDouble4, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-DEFINE_API(bool, DragDoubleN, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, DragDoubleN, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)
 (double*,API_RO(speed),1.0)(double*,API_RO(min),0.0)(double*,API_RO(max),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -274,7 +274,7 @@ DEFINE_API(bool, DragDoubleN, (ImGui_Context*,ctx)
 
 API_SUBSECTION("Regular Sliders");
 
-DEFINE_API(bool, SliderInt, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SliderInt, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v))(int,v_min)(int,v_max)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
 "")
@@ -286,7 +286,7 @@ DEFINE_API(bool, SliderInt, (ImGui_Context*,ctx)
     API_RO_GET(format), SliderFlags { API_RO_GET(flags) });
 }
 
-DEFINE_API(bool, SliderInt2, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SliderInt2, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))(int,v_min)(int,v_max)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
 "")
@@ -303,7 +303,7 @@ DEFINE_API(bool, SliderInt2, (ImGui_Context*,ctx)
     return false;
 }
 
-DEFINE_API(bool, SliderInt3, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SliderInt3, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (int*,API_RW(v3))(int,v_min)(int,v_max)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -321,7 +321,7 @@ DEFINE_API(bool, SliderInt3, (ImGui_Context*,ctx)
     return false;
 }
 
-DEFINE_API(bool, SliderInt4, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SliderInt4, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RW(v1))(int*,API_RW(v2))
 (int*,API_RW(v3))(int*,API_RW(v4))(int,v_min)(int,v_max)
 (const char*,API_RO(format),"%d")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -340,7 +340,7 @@ DEFINE_API(bool, SliderInt4, (ImGui_Context*,ctx)
     return false;
 }
 
-DEFINE_API(bool, SliderDouble, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SliderDouble, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RW(v))(double,v_min)(double,v_max)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
 "")
@@ -360,7 +360,7 @@ static bool sliderDoubleN(const char *label, double *data, const size_t size,
     &v_min, &v_max, format, flags);
 }
 
-DEFINE_API(bool, SliderDouble2, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, SliderDouble2, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
 (double,v_min)(double,v_max)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -378,7 +378,7 @@ DEFINE_API(bool, SliderDouble2, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-DEFINE_API(bool, SliderDouble3, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, SliderDouble3, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double,v_min)(double,v_max)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -396,7 +396,7 @@ DEFINE_API(bool, SliderDouble3, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-DEFINE_API(bool, SliderDouble4, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, SliderDouble4, (ImGui_Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (double*,API_RW(v4))(double,v_min)(double,v_max)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -415,7 +415,7 @@ DEFINE_API(bool, SliderDouble4, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-DEFINE_API(bool, SliderDoubleN, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SliderDoubleN, (ImGui_Context*,ctx)
 (const char*,label)(reaper_array*,values)
 (double,v_min)(double,v_max)(const char*,API_RO(format),"%.3f")
 (int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -429,7 +429,7 @@ DEFINE_API(bool, SliderDoubleN, (ImGui_Context*,ctx)
     v_min, v_max, API_RO_GET(format), API_RO_GET(flags));
 }
 
-DEFINE_API(bool, SliderAngle, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SliderAngle, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RW(v_rad))
 (double*,API_RO(v_degrees_min),-360.0)(double*,API_RO(v_degrees_max),+360.0)
 (const char*,API_RO(format),"%.0f deg")
@@ -451,7 +451,7 @@ DEFINE_API(bool, SliderAngle, (ImGui_Context*,ctx)
   return false;
 }
 
-DEFINE_API(bool, VSliderInt, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, VSliderInt, (ImGui_Context*,ctx)
 (const char*,label)(double,size_w)(double,size_h)(int*,API_RW(v))
 (int,v_min)(int,v_max)(const char*,API_RO(format),"%d")
 (int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -464,7 +464,7 @@ DEFINE_API(bool, VSliderInt, (ImGui_Context*,ctx)
     v_min, v_max, API_RO_GET(format), SliderFlags { API_RO_GET(flags) });
 }
 
-DEFINE_API(bool, VSliderDouble, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, VSliderDouble, (ImGui_Context*,ctx)
 (const char*,label)(double,size_w)(double,size_h)(double*,API_RW(v))
 (double,v_min)(double,v_max)(const char*,API_RO(format),"%.3f")
 (int*,API_RO(flags),ImGuiSliderFlags_None),
@@ -481,16 +481,16 @@ DEFINE_API(bool, VSliderDouble, (ImGui_Context*,ctx)
 API_SUBSECTION("Flags",
 R"(For DragDouble, DragInt, SliderDouble, SliderInt etc. (Those are per-item
 flags. There are shared flags in SetConfigVar: ConfigVar_DragClickToInputText)");
-DEFINE_ENUM(ImGui, SliderFlags_None,            "");
-DEFINE_ENUM(ImGui, SliderFlags_AlwaysClamp,
+API_ENUM(0_1, ImGui, SliderFlags_None,            "");
+API_ENUM(0_1, ImGui, SliderFlags_AlwaysClamp,
 R"(Clamp value to min/max bounds when input manually with CTRL+Click.
    By default CTRL+Click allows going out of bounds.)");
-DEFINE_ENUM(ImGui, SliderFlags_Logarithmic,
+API_ENUM(0_1, ImGui, SliderFlags_Logarithmic,
 R"(Make the widget logarithmic (linear otherwise).
    Consider using SliderFlags_NoRoundToFormat with this if using a format-string
    with small amount of digits.)");
-DEFINE_ENUM(ImGui, SliderFlags_NoRoundToFormat,
+API_ENUM(0_1, ImGui, SliderFlags_NoRoundToFormat,
 R"(Disable rounding underlying value to match precision of the display format
    string (e.g. %.3f values are rounded to those 3 digits).)");
-DEFINE_ENUM(ImGui, SliderFlags_NoInput,
+API_ENUM(0_1, ImGui, SliderFlags_NoInput,
   "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");

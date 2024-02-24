@@ -9,6 +9,7 @@ api_sources = files([
   'image.cpp',
   'indev.cpp',
   'input.cpp',
+  'internal.cpp',
   'item.cpp',
   'layout.cpp',
   'listclipper.cpp',

@@ -24,8 +24,6 @@
 
 struct ViewportProxy
     : public ResourceProxy<ViewportProxy, Context, ImGuiViewport> {
-  static constexpr const char *api_type_name { "ImGui_Viewport" };
-
   template<Key KeyValue, auto GetterFunc>
   struct Getter {
     static constexpr Key key { KeyValue };
@@ -43,5 +41,6 @@ struct ViewportProxy
 };
 
 using ImGui_Viewport = ViewportProxy;
+API_REGISTER_TYPE(ViewportProxy*, "ImGui_Viewport*");
 
 #endif

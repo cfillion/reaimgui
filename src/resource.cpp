@@ -31,14 +31,22 @@
 // deferred scripts while still running extension callbacks (seen on Windows).
 // To workaround this, wait an extra frame before collecting unused objects.
 // [p=2450259]
-constexpr unsigned int KEEP_ALIVE_FRAMES { 2 };
+constexpr unsigned char KEEP_ALIVE_FRAMES { 2 };
+
+// How many back-to-back GC frames to tolerate before complaining
+constexpr unsigned char MAX_GC_FRAMES { 120 };
+
+enum Flags {
+  BypassGCCheck = 1<<0,
+};
 
 FlatSet<Resource *> Resource::g_rsx;
 Resource::Timer *Resource::g_timer;
 
-static unsigned int g_reentrant, g_consecutiveGcFrames;
+static unsigned int  g_reentrant;
+static unsigned char g_consecutiveGcFrames;
 static WNDPROC g_mainProc;
-static bool g_disableProcOverride;
+static bool g_disableProcOverride, g_bypassGCCheckOnce;
 #ifndef __APPLE__
 static bool g_disabledViewports;
 #endif
@@ -109,7 +117,7 @@ void Resource::Timer::tick()
     if(rs->heartbeat())
       ++it;
     else {
-      didGc = true;
+      didGc |= !(rs->m_flags & BypassGCCheck);
       delete rs; // invalidates the iterator
       it = g_rsx.lowerBound(rs);
     }
@@ -141,9 +149,14 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
 }
 
 Resource::Resource()
-  : m_keepAlive { KEEP_ALIVE_FRAMES }
+  : m_keepAlive { KEEP_ALIVE_FRAMES }, m_flags {}
 {
-  if(g_consecutiveGcFrames >= 120)
+  if(g_bypassGCCheckOnce) {
+    // < 0.9 backward compatibility
+    g_bypassGCCheckOnce = false;
+    m_flags |= BypassGCCheck;
+  }
+  else if(g_consecutiveGcFrames >= MAX_GC_FRAMES)
     throw reascript_error { "excessive creation of short-lived resources" };
 
   if(!g_timer)
@@ -185,4 +198,9 @@ void Resource::destroyAll()
 {
   while(!g_rsx.empty())
     delete g_rsx.back();
+}
+
+void Resource::bypassGCCheckOnce()
+{
+  g_bypassGCCheckOnce = true;
 }

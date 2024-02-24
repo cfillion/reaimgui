@@ -19,7 +19,7 @@
 
 API_SECTION("Tab Bar");
 
-DEFINE_API(bool, BeginTabBar, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginTabBar, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags),ImGuiTabBarFlags_None),
 "Create and append into a TabBar.")
 {
@@ -27,38 +27,38 @@ DEFINE_API(bool, BeginTabBar, (ImGui_Context*,ctx)
   return ImGui::BeginTabBar(str_id, API_RO_GET(flags));
 }
 
-DEFINE_API(void, EndTabBar, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndTabBar, (ImGui_Context*,ctx),
 "Only call EndTabBar() if BeginTabBar() returns true!")
 {
   FRAME_GUARD;
   ImGui::EndTabBar();
 }
 
-DEFINE_ENUM(ImGui, TabBarFlags_None, "");
-DEFINE_ENUM(ImGui, TabBarFlags_Reorderable,
+API_ENUM(0_1, ImGui, TabBarFlags_None, "");
+API_ENUM(0_1, ImGui, TabBarFlags_Reorderable,
 R"(Allow manually dragging tabs to re-order them + New tabs are appended at
    the end of list.)");
-DEFINE_ENUM(ImGui, TabBarFlags_AutoSelectNewTabs,
+API_ENUM(0_1, ImGui, TabBarFlags_AutoSelectNewTabs,
   "Automatically select new tabs when they appear.");
-DEFINE_ENUM(ImGui, TabBarFlags_TabListPopupButton,
+API_ENUM(0_1, ImGui, TabBarFlags_TabListPopupButton,
   "Disable buttons to open the tab list popup.");
-DEFINE_ENUM(ImGui, TabBarFlags_NoCloseWithMiddleMouseButton,
+API_ENUM(0_1, ImGui, TabBarFlags_NoCloseWithMiddleMouseButton,
 R"(Disable behavior of closing tabs (that are submitted with p_open != nil)
    with middle mouse button. You can still repro this behavior on user's side
    with if(IsItemHovered() && IsMouseClicked(2)) p_open = false.)");
-DEFINE_ENUM(ImGui, TabBarFlags_NoTabListScrollingButtons,
+API_ENUM(0_1, ImGui, TabBarFlags_NoTabListScrollingButtons,
 R"(Disable scrolling buttons (apply when fitting policy is
    TabBarFlags_FittingPolicyScroll).)");
-DEFINE_ENUM(ImGui, TabBarFlags_NoTooltip,
+API_ENUM(0_1, ImGui, TabBarFlags_NoTooltip,
   "Disable tooltips when hovering a tab.");
-DEFINE_ENUM(ImGui, TabBarFlags_FittingPolicyResizeDown,
+API_ENUM(0_1, ImGui, TabBarFlags_FittingPolicyResizeDown,
   "Resize tabs when they don't fit.");
-DEFINE_ENUM(ImGui, TabBarFlags_FittingPolicyScroll,
+API_ENUM(0_1, ImGui, TabBarFlags_FittingPolicyScroll,
   "Add scroll buttons when tabs don't fit.");
 
 API_SUBSECTION("Tab Item");
 
-DEFINE_API(bool, BeginTabItem, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginTabItem, (ImGui_Context*,ctx)
 (const char*,label)(bool*,API_RWO(p_open))
 (int*,API_RO(flags),ImGuiTabItemFlags_None),
 R"(Create a Tab. Returns true if the Tab is selected.
@@ -69,14 +69,14 @@ Set 'p_open' to true to enable the close button.)")
     openPtrBehavior(API_RWO(p_open)), API_RO_GET(flags));
 }
 
-DEFINE_API(void, EndTabItem, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndTabItem, (ImGui_Context*,ctx),
 "Only call EndTabItem() if BeginTabItem() returns true!")
 {
   FRAME_GUARD;
   ImGui::EndTabItem();
 }
 
-DEFINE_API(bool, TabItemButton, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, TabItemButton, (ImGui_Context*,ctx)
 (const char*,label)(int*,API_RO(flags),ImGuiTabItemFlags_None),
 R"(Create a Tab behaving like a button. Return true when clicked.
 Cannot be selected in the tab bar.)")
@@ -85,7 +85,7 @@ Cannot be selected in the tab bar.)")
   return ImGui::TabItemButton(label, API_RO_GET(flags));
 }
 
-DEFINE_API(void, SetTabItemClosed, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetTabItemClosed, (ImGui_Context*,ctx)
 (const char*,tab_or_docked_window_label),
 R"(Notify TabBar or Docking system of a closed tab/window ahead
 (useful to reduce visual flicker on reorderable tab bars).
@@ -96,24 +96,24 @@ Otherwise call with a window name.)")
   ImGui::SetTabItemClosed(tab_or_docked_window_label);
 }
 
-DEFINE_ENUM(ImGui, TabItemFlags_None,                         "");
-DEFINE_ENUM(ImGui, TabItemFlags_UnsavedDocument,
+API_ENUM(0_1, ImGui, TabItemFlags_None,                         "");
+API_ENUM(0_1, ImGui, TabItemFlags_UnsavedDocument,
 R"(Append '*' to title without affecting the ID, as a convenience to avoid using
    the ### operator. Also: tab is selected on closure and closure is deferred by
    one frame to allow code to undo it without flicker.)");
-DEFINE_ENUM(ImGui, TabItemFlags_SetSelected,
+API_ENUM(0_1, ImGui, TabItemFlags_SetSelected,
   "Trigger flag to programmatically make the tab selected when calling BeginTabItem.");
-DEFINE_ENUM(ImGui, TabItemFlags_NoCloseWithMiddleMouseButton,
+API_ENUM(0_1, ImGui, TabItemFlags_NoCloseWithMiddleMouseButton,
 R"(Disable behavior of closing tabs (that are submitted with p_open != nil) with
    middle mouse button. You can still repro this behavior on user's side with
    if(IsItemHovered() && IsMouseClicked(2)) p_open = false.)");
-DEFINE_ENUM(ImGui, TabItemFlags_NoPushId,
+API_ENUM(0_1, ImGui, TabItemFlags_NoPushId,
   "Don't call PushID(tab->ID)/PopID() on BeginTabItem/EndTabItem.");
-DEFINE_ENUM(ImGui, TabItemFlags_NoTooltip,
+API_ENUM(0_1, ImGui, TabItemFlags_NoTooltip,
   "Disable tooltip for the given tab.");
-DEFINE_ENUM(ImGui, TabItemFlags_NoReorder,
+API_ENUM(0_1, ImGui, TabItemFlags_NoReorder,
   "Disable reordering this tab or having another tab cross over this tab.");
-DEFINE_ENUM(ImGui, TabItemFlags_Leading,
+API_ENUM(0_1, ImGui, TabItemFlags_Leading,
   "Enforce the tab position to the left of the tab bar (after the tab list popup button).");
-DEFINE_ENUM(ImGui, TabItemFlags_Trailing,
+API_ENUM(0_1, ImGui, TabItemFlags_Trailing,
   "Enforce the tab position to the right of the tab bar (before the scrolling buttons).");

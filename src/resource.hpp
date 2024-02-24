@@ -18,14 +18,13 @@
 #ifndef REAIMGUI_RESOURCE_HPP
 #define REAIMGUI_RESOURCE_HPP
 
+#include "../api/types.hpp"
 #include "flat_set.hpp"
 
 class Context;
 
 class Resource {
 public:
-  static constexpr const char *api_type_name { "ImGui_Resource" };
-
   Resource();
   Resource(const Resource &) = delete;
   virtual ~Resource();
@@ -54,6 +53,7 @@ public:
   }
 
   static void destroyAll();
+  static void bypassGCCheckOnce();
 
   template<typename T>
   bool isInstanceOf() const
@@ -72,9 +72,10 @@ private:
   static FlatSet<Resource *> g_rsx;
   static Timer *g_timer;
 
-  unsigned int m_keepAlive;
+  unsigned char m_keepAlive, m_flags;
 };
 
 using ImGui_Resource = Resource;
+API_REGISTER_OBJECT_TYPE(Resource);
 
 #endif

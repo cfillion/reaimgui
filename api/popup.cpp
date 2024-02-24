@@ -36,7 +36,7 @@ HoveredFlags_AllowWhenBlockedByPopup when calling IsItemHovered or IsWindowHover
 IMPORTANT: Popup identifiers are relative to the current ID stack, so OpenPopup
 and BeginPopup generally needs to be at the same level of the stack.)");
 
-DEFINE_API(bool, BeginPopup, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags),ImGuiWindowFlags_None),
 R"(Query popup state, if open start appending into the window. Call EndPopup
 afterwards. WindowFlags* are forwarded to the window.
@@ -47,7 +47,7 @@ Return true if the popup is open, and you can start outputting to it.)")
   return ImGui::BeginPopup(str_id, WindowFlags { API_RO_GET(flags) });
 }
 
-DEFINE_API(bool, BeginPopupModal, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginPopupModal, (ImGui_Context*,ctx)
 (const char*,name)(bool*,API_RWO(p_open))
 (int*,API_RO(flags),ImGuiWindowFlags_None),
 R"(Block every interaction behind the window, cannot be closed by user, add a
@@ -59,14 +59,14 @@ can start outputting to it. See BeginPopup.)")
   return ImGui::BeginPopupModal(name, openPtrBehavior(API_RWO(p_open)), flags);
 }
 
-DEFINE_API(void, EndPopup, (ImGui_Context*,ctx),
+API_FUNC(0_8, void, EndPopup, (ImGui_Context*,ctx),
 "Only call EndPopup() if BeginPopup*() returns true!")
 {
   FRAME_GUARD;
   ImGui::EndPopup();
 }
 
-DEFINE_API(void, OpenPopup, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, OpenPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(popup_flags),ImGuiPopupFlags_None),
 R"(Set popup state to open (don't call every frame!).
 ImGuiPopupFlags are available for opening options.
@@ -81,7 +81,7 @@ already one at the same level.)")
   ImGui::OpenPopup(str_id, API_RO_GET(popup_flags));
 }
 
-DEFINE_API(void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, OpenPopupOnItemClick, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))
 (int*,API_RO(popup_flags),ImGuiPopupFlags_MouseButtonRight),
 R"(Helper to open popup when clicked on last item. return true when just opened.
@@ -94,7 +94,7 @@ popup behaviors.))")
   ImGui::OpenPopupOnItemClick(API_RO(str_id), API_RO_GET(popup_flags));
 }
 
-DEFINE_API(void, CloseCurrentPopup, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, CloseCurrentPopup, (ImGui_Context*,ctx),
 R"(Manually close the popup we have begin-ed into.
 Use inside the BeginPopup/EndPopup scope to close manually.
 
@@ -104,7 +104,7 @@ CloseCurrentPopup() is called by default by Selectable/MenuItem when activated.)
   ImGui::CloseCurrentPopup();
 }
 
-DEFINE_API(bool, IsPopupOpen, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, IsPopupOpen, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags),ImGuiPopupFlags_None),
 R"(Return true if the popup is open at the current BeginPopup level of the
 popup stack.
@@ -118,33 +118,33 @@ popup stack.
   return ImGui::IsPopupOpen(str_id, API_RO_GET(flags));
 }
 
-DEFINE_SECTION(flags, ROOT_SECTION, "Flags",
+API_SECTION_DEF(flags, ROOT_SECTION, "Flags",
   "For OpenPopup*(), BeginPopupContext*() and IsPopupOpen.");
 
-DEFINE_ENUM(ImGui, PopupFlags_None, "");
-DEFINE_ENUM(ImGui, PopupFlags_NoOpenOverExistingPopup,
+API_ENUM(0_1, ImGui, PopupFlags_None, "");
+API_ENUM(0_1, ImGui, PopupFlags_NoOpenOverExistingPopup,
 R"(For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup
    at the same level of the popup stack.)");
 API_SECTION_P(flags, "BeginPopupContext*");
-DEFINE_ENUM(ImGui, PopupFlags_NoOpenOverItems,
+API_ENUM(0_1, ImGui, PopupFlags_NoOpenOverItems,
 R"(For BeginPopupContextWindow: don't return true when hovering items,
    only when hovering empty space.)");
-DEFINE_ENUM(ImGui, PopupFlags_MouseButtonLeft,
+API_ENUM(0_1, ImGui, PopupFlags_MouseButtonLeft,
 R"(For BeginPopupContext*(): open on Left Mouse release.
    Guaranteed to always be == 0 (same as MouseButton_Left).)");
-DEFINE_ENUM(ImGui, PopupFlags_MouseButtonRight,
+API_ENUM(0_1, ImGui, PopupFlags_MouseButtonRight,
 R"(For BeginPopupContext*(): open on Right Mouse release.
    Guaranteed to always be == 1 (same as MouseButton_Right).)");
-DEFINE_ENUM(ImGui, PopupFlags_MouseButtonMiddle,
+API_ENUM(0_1, ImGui, PopupFlags_MouseButtonMiddle,
 R"(For BeginPopupContext*(): open on Middle Mouse release.
    Guaranteed to always be == 2 (same as MouseButton_Middle).)");
 API_SECTION_P(flags, "IsPopupOpen");
-DEFINE_ENUM(ImGui, PopupFlags_AnyPopupId,
+API_ENUM(0_1, ImGui, PopupFlags_AnyPopupId,
   "For IsPopupOpen: ignore the str_id parameter and test for any popup.");
-DEFINE_ENUM(ImGui, PopupFlags_AnyPopupLevel,
+API_ENUM(0_1, ImGui, PopupFlags_AnyPopupLevel,
 R"(For IsPopupOpen: search/test at any level of the popup stack
   (default test in the current level).)");
-DEFINE_ENUM(ImGui, PopupFlags_AnyPopup,
+API_ENUM(0_1, ImGui, PopupFlags_AnyPopup,
   "PopupFlags_AnyPopupId | PopupFlags_AnyPopupLevel");
 
 API_SUBSECTION("Open+begin combined helpers", R"(
@@ -159,7 +159,7 @@ We exceptionally default their flags to 1 (== PopupFlags_MouseButtonRight) for
 backward compatibility with older API taking 'int mouse_button = 1' parameter,
 so if you add other flags remember to re-add the PopupFlags_MouseButtonRight.)");
 
-DEFINE_API(bool, BeginPopupContextItem, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginPopupContextItem, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))
 (int*,API_RO(popup_flags),ImGuiPopupFlags_MouseButtonRight),
 R"(This is a helper to handle the simplest case of associating one named popup
@@ -177,7 +177,7 @@ in an explicit ID here.)")
   return ImGui::BeginPopupContextItem(API_RO(str_id), API_RO_GET(popup_flags));
 }
 
-DEFINE_API(bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
 (const char*,API_RO(str_id))
 (int*,API_RO(popup_flags),ImGuiPopupFlags_MouseButtonRight),
 "Open+begin popup when clicked on current window.")
@@ -191,7 +191,7 @@ DEFINE_API(bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
 API_SUBSECTION("Tooltips",
   "Tooltip are windows following the mouse. They do not take focus away.");
 
-DEFINE_API(bool, BeginTooltip, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, BeginTooltip, (ImGui_Context*,ctx),
 R"(Begin/append a tooltip window.
 To create full-featured tooltip (with any kind of items).)")
 {
@@ -199,14 +199,14 @@ To create full-featured tooltip (with any kind of items).)")
   return ImGui::BeginTooltip();
 }
 
-DEFINE_API(void, EndTooltip, (ImGui_Context*,ctx),
+API_FUNC(0_8, void, EndTooltip, (ImGui_Context*,ctx),
 "Only call EndTooltip() if BeginTooltip() returns true.")
 {
   FRAME_GUARD;
   ImGui::EndTooltip();
 }
 
-DEFINE_API(void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
+API_FUNC(0_1, void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
 R"(Set a text-only tooltip, typically use with IsItemHovered. override any
 previous call to SetTooltip.)")
 {

@@ -19,6 +19,7 @@
 
 #include "context.hpp"
 #include "docker.hpp"
+#include "error.hpp"
 #include "platform.hpp"
 #include "viewport_forwarder.hpp"
 #include "window.hpp"
