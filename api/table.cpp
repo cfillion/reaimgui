@@ -490,7 +490,7 @@ R"(Enable vertical scrolling.
 API_SECTION_P(tableFlags, "Sorting");
 API_ENUM(0_1, ImGui, TableFlags_SortMulti,
 R"(Hold shift when clicking headers to sort on multiple column.
-   TableGetSortSpecs may return specs where (SpecsCount > 1).)");
+   TableGetColumnSortSpecs may return specs where (SpecsCount > 1).)");
 API_ENUM(0_1, ImGui, TableFlags_SortTristate,
 R"(Allow no sorting, disable default sorting.
    TableGetColumnSortSpecs may return specs where (SpecsCount == 0).)");
