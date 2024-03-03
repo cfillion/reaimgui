@@ -275,7 +275,7 @@ See TableGetColumnSortSpecs.)")
 {
   FRAME_GUARD;
   if(ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() }) {
-    if(API_W(has_specs)) *API_W(has_specs) = true;
+    if(API_W(has_specs)) *API_W(has_specs) = specs->SpecsCount > 0;
 
     const bool needSort { specs->SpecsDirty };
     specs->SpecsDirty = false;
