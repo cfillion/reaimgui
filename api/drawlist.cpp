@@ -517,7 +517,7 @@ Usage:
     ImGui.DrawList_AddRectFilled(draw_list, ...) -- background
     ImGui.DrawListSplitter_Merge(splitter))");
 
-API_FUNC(0_7_1, ImGui_DrawListSplitter*, CreateDrawListSplitter,
+API_FUNC(0_9, ImGui_DrawListSplitter*, CreateDrawListSplitter,
 (ImGui_DrawList*,draw_list),
 "")
 {

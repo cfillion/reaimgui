@@ -43,13 +43,14 @@ SHIM_PROXY_BEGIN(CreateExemptGCCheck, func, args)
   return std::apply(api.*func, args);
 }
 SHIM_PROXY_END()
-SHIM_PROXY(0_4,   CreateFont,            CreateExemptGCCheck)
-SHIM_PROXY(0_8_5, CreateFunctionFromEEL, CreateExemptGCCheck)
-SHIM_PROXY(0_8,   CreateImage,           CreateExemptGCCheck)
-SHIM_PROXY(0_8,   CreateImageFromMem,    CreateExemptGCCheck)
-SHIM_PROXY(0_8,   CreateImageSet,        CreateExemptGCCheck)
-SHIM_PROXY(0_1,   CreateListClipper,     CreateExemptGCCheck)
-SHIM_PROXY(0_5_6, CreateTextFilter,      CreateExemptGCCheck)
+SHIM_PROXY(0_7_1, CreateDrawListSplitter, CreateExemptGCCheck)
+SHIM_PROXY(0_4,   CreateFont,             CreateExemptGCCheck)
+SHIM_PROXY(0_8_5, CreateFunctionFromEEL,  CreateExemptGCCheck)
+SHIM_PROXY(0_8,   CreateImage,            CreateExemptGCCheck)
+SHIM_PROXY(0_8,   CreateImageFromMem,     CreateExemptGCCheck)
+SHIM_PROXY(0_8,   CreateImageSet,         CreateExemptGCCheck)
+SHIM_PROXY(0_1,   CreateListClipper,      CreateExemptGCCheck)
+SHIM_PROXY(0_5_6, CreateTextFilter,       CreateExemptGCCheck)
 
 SHIM_FUNC(0_1, void, DestroyContext, (Context*,)) {} // no-op
 
