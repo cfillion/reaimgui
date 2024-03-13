@@ -120,7 +120,6 @@ void CocoaOpenGL::render(void *)
     [m_gl setView:(__bridge NSView *)m_window->nativeHandle()];
 
   MakeCurrent cur { m_gl };
-  OpenGLRenderer::updateTextures();
   OpenGLRenderer::render(false);
 }
 

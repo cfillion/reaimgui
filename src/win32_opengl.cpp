@@ -147,7 +147,6 @@ void Win32OpenGL::createContext()
 void Win32OpenGL::render(void *)
 {
   MakeCurrent cur { m_dc, m_gl };
-  OpenGLRenderer::updateTextures();
   OpenGLRenderer::render(false);
 }
 

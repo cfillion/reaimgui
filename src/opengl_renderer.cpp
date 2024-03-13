@@ -192,15 +192,12 @@ void OpenGLRenderer::teardown()
   glDeleteVertexArrays(1, &m_vbo);
 }
 
-void OpenGLRenderer::updateTextures()
+void OpenGLRenderer::render(const bool flip)
 {
   using namespace std::placeholders;
   m_window->context()->textureManager()->update(&m_shared->m_cookie,
     std::bind(&Shared::textureCommand, m_shared.get(), _1));
-}
 
-void OpenGLRenderer::render(const bool flip)
-{
   const ImGuiViewport *viewport { m_window->viewport() };
   const ImDrawData *drawData { viewport->DrawData };
 

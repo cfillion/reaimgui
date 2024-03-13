@@ -189,7 +189,6 @@ void GDKOpenGL::render(void *userData)
   // If this changes, we'll want to only upload textures for our own DPI
   // since we're not sharing them with other windows.
   const bool useSoftwareBlit { m_window->isDocked() };
-  OpenGLRenderer::updateTextures();
   OpenGLRenderer::render(useSoftwareBlit);
 
   if(useSoftwareBlit) {

@@ -32,7 +32,6 @@ public:
   using Renderer::render;
 
 protected:
-  void updateTextures();
   void render(bool flip);
 
   struct Shared {
