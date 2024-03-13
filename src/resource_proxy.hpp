@@ -22,6 +22,7 @@
 #include "resource.hpp"
 
 #include <cassert>
+#include <cstdint>
 #include <optional>
 
 template<typename ProxyT, typename ResT, typename ObjT>
