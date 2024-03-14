@@ -77,7 +77,6 @@ for:
       - $HOME/Library/Caches/pip -> .appveyor.yml
       - subprojects/packagecache -> subprojects/*.wrap
     before_build:
-      - ls /Applications
       - |-
         case $ARCH in
         arm64)  export MACOSX_DEPLOYMENT_TARGET=11.0 XCODE_VERSION=15.2.0 ;;
