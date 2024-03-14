@@ -28,7 +28,7 @@
 using namespace API;
 
 static eel_function_table g_eelFuncs;
-static std::string g_lastError[2];
+static std::string g_lastError;
 
 using CallableMap = std::unordered_map<std::string_view, Callable *>;
 
@@ -310,29 +310,28 @@ VerNum API::version()
 
 void API::clearError()
 {
-  std::swap(g_lastError[0], g_lastError[1]);
-  g_lastError[0].clear();
+  g_lastError.clear();
 #ifndef NDEBUG
   Context::clearCurrent();
 #endif
 }
 
-const char *API::lastError()
+const char *API::lastError() noexcept
 {
-  return g_lastError[1].empty() ? nullptr : &g_lastError[1][1];
+  return g_lastError.empty() ? nullptr : &g_lastError[1];
 }
 
 // REAPER 6.29+ uses the '!' prefix to abort the calling Lua script's execution
 void API::handleError(const char *fnName, const reascript_error &e)
 {
-  g_lastError[0] = std::format("!" API_PREFIX "{}: {}", fnName, e.what());
-  ReaScriptError(g_lastError[0].c_str());
+  g_lastError = std::format("!" API_PREFIX "{}: {}", fnName, e.what());
+  ReaScriptError(g_lastError.c_str());
 }
 
 void API::handleError(const char *fnName, const imgui_error &e)
 {
-  g_lastError[0] = std::format("!" API_PREFIX "{}: ImGui assertion failed: {}", fnName, e.what());
-  ReaScriptError(g_lastError[0].c_str());
+  g_lastError = std::format("!" API_PREFIX "{}: ImGui assertion failed: {}", fnName, e.what());
+  ReaScriptError(g_lastError.c_str());
 
   assert(Context::current());
   ImGui::ErrorCheckEndFrameRecover(nullptr);

@@ -29,7 +29,7 @@ namespace API {
   VerNum version();
 
   void clearError();
-  const char *lastError();
+  const char *lastError() noexcept;
   void handleError(const char *fnName, const reascript_error &);
   void handleError(const char *fnName, const imgui_error &);
 

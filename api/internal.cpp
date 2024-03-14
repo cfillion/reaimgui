@@ -47,10 +47,16 @@ DO_NOT_USE)
     symbol_name, vernum.toString() };
 }
 
-API_FUNC(0_9, const char*, _geterr, NO_ARGS, DO_NOT_USE)
-{
-  return API::lastError();
-}
+// special definition to not have CallConv::Safe clear the last error
+_API_EXPORT(ReaScriptFunc, 0_9, _geterr) {
+  {}, reinterpret_cast<void *>(&API::lastError),
+  { "-API_"       API_PREFIX "_geterr",
+    reinterpret_cast<void *>(&API::lastError) },
+  { "-APIvararg_" API_PREFIX "_geterr",
+    reinterpret_cast<void *>(CallConv::ReaScript<&API::lastError>::apply) },
+  { "-APIdef_"    API_PREFIX "_geterr",
+    reinterpret_cast<void *>(const_cast<char *>(CompStr::apidef<&API::lastError>)) },
+};
 
 API_FUNC(0_9, void, _init, (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf)), DO_NOT_USE)
 {
