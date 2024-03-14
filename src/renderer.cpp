@@ -53,6 +53,8 @@ const RendererType *RendererType::bestMatch(const char *id)
 
 RendererType::Register::Register(RendererType *type)
 {
+  if(!type->creator)
+    return;
   RendererType **insertionPoint { &typeHead() };
   while(*insertionPoint && **insertionPoint < *type)
     insertionPoint = &(*insertionPoint)->next;

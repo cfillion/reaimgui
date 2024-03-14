@@ -33,8 +33,12 @@ static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
 class MetalRenderer;
-REGISTER_RENDERER(10, metal, "Metal (macOS 10.11+)",
-                  &Renderer::create<MetalRenderer>);
+REGISTER_RENDERER(10, metal, "Metal", []() -> decltype(RendererType::creator) {
+  if(@available(macOS 10.11, *))
+    return &Renderer::create<MetalRenderer>;
+  else
+    return nullptr;
+}());
 
 #define FPATH(name) \
   "/System/Library/Frameworks/" name ".framework/Versions/Current/" name

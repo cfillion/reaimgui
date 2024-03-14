@@ -362,7 +362,7 @@ void D3D10Renderer::render(void *)
       static_cast<unsigned int>(drawData->DisplaySize.y * viewport->DpiScale),
     .MinDepth = 0.0f, .MaxDepth = 1.0f,
   };
-  m_shared->m_device->RSSetViewports(1, &viewportDesc);
+  device->RSSetViewports(1, &viewportDesc);
 
   if(!setupBuffer(m_buffers[VertexBuf],
                   drawData->TotalVtxCount, 5000, sizeof(ImDrawVert),
