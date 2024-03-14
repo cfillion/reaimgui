@@ -105,7 +105,6 @@ void OpenGLRenderer::Shared::setup()
   m_locations[VtxUVAttrLoc]    = glGetAttribLocation(m_program,  "UV");
 
   glActiveTexture(GL_TEXTURE0);
-  glUniform1i(m_locations[TexUniLoc], 0);
 }
 
 void OpenGLRenderer::Shared::teardown()
@@ -158,6 +157,7 @@ void OpenGLRenderer::setup()
     m_shared->setup();
 
   glUseProgram(m_shared->m_program);
+  glUniform1i(m_shared->m_locations[TexUniLoc], 0);
 
   glGenVertexArrays(1, &m_vbo);
   glBindVertexArray(m_vbo);
