@@ -18,15 +18,44 @@
 #include "opengl_renderer.hpp"
 
 #include "error.hpp"
-#include "flat_set.hpp"
 #include "window.hpp"
 
 #define GL_SILENCE_DEPRECATION
 #include <AppKit/AppKit.h>
+#include <QuartzCore/CATransaction.h>
 #include <imgui/imgui.h>
 #include <swell/swell-types.h>
 
-using GLPool = FlatSet<NSOpenGLContext *>;
+static_assert(__has_feature(objc_arc),
+  "This file must be built with automatic reference counting enabled.");
+
+class CocoaOpenGL;
+
+@interface OpenGLLayer : NSOpenGLLayer {
+@private
+  NSOpenGLContext *m_oldGlCtx;
+  CocoaOpenGL *m_renderer;
+  bool m_inRender;
+}
+
+- (instancetype)initWithRenderer:(CocoaOpenGL *)renderer;
+- (void)setContentsScale:(CGFloat)scale;
+- (void)render;
+
+- (NSOpenGLPixelFormat *)openGLPixelFormatForDisplayMask:(uint32_t)mask;
+
+- (NSOpenGLContext *)openGLContextForPixelFormat:(NSOpenGLPixelFormat *)pixelFormat;
+- (void)releaseCGLContext:(CGLContextObj)ctx;
+
+- (BOOL)canDrawInOpenGLContext:(NSOpenGLContext *)gl
+                   pixelFormat:(CGLPixelFormatObj)pf
+                  forLayerTime:(CFTimeInterval)t
+                   displayTime:(const CVTimeStamp *)ts;
+- (void)drawInOpenGLContext:(NSOpenGLContext *)gl
+                pixelFormat:(CGLPixelFormatObj)pf
+               forLayerTime:(CFTimeInterval)t
+                displayTime:(const CVTimeStamp *)ts;
+@end
 
 class CocoaOpenGL final : public OpenGLRenderer {
 public:
@@ -37,9 +66,19 @@ public:
   void render(void *) override;
   void swapBuffers(void *) override;
 
+  // protected friend OpenGLLayer
+  using OpenGLRenderer::setup;
+  using OpenGLRenderer::render;
+  using OpenGLRenderer::teardown;
+  using OpenGLRenderer::m_shared;
+
 private:
-  GLPool *contextPool() const;
-  NSOpenGLContext *m_gl;
+  OpenGLLayer *m_layer;
+};
+
+struct CocoaOpenGLShared {
+  CocoaOpenGLShared() : ctx { nil } {}
+  NSOpenGLContext *ctx;
 };
 
 class MakeCurrent {
@@ -65,65 +104,149 @@ decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
 CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
   : OpenGLRenderer { factory, window }
 {
-  NSView *view { (__bridge NSView *)window->nativeHandle() };
-  [view setWantsBestResolutionOpenGLSurface:YES]; // retina
-  [view setWantsLayer:YES]; // required to be transparent before resizing
-
-  constexpr NSOpenGLPixelFormatAttribute attrs[] {
-    NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
-    NSOpenGLPFADoubleBuffer,
-    kCGLPFASupportsAutomaticGraphicsSwitching,
-    0
-  };
-
   if(!m_shared->m_platform)
-    m_shared->m_platform = std::make_shared<GLPool>();
+    m_shared->m_platform = std::make_shared<CocoaOpenGLShared>();
 
-  auto pool { contextPool() };
-  NSOpenGLPixelFormat *fmt { [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs] };
-  NSOpenGLContext *share { pool->empty() ? nil : pool->front() };
-  m_gl = [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:share];
-  if(!m_gl)
-    throw backend_error { "failed to initialize OpenGL 3.2 core context" };
+  m_layer = [[OpenGLLayer alloc] initWithRenderer:this];
 
-  pool->insert(m_gl);
-
-  GLint value { 0 }; // enable transparency
-  [m_gl setValues:&value forParameter:NSOpenGLContextParameterSurfaceOpacity];
-
-  MakeCurrent cur { m_gl };
-  setup();
+  HWND hwnd { m_window->nativeHandle() };
+  SetOpaque(hwnd, false);
+  NSView *view { (__bridge NSView *)hwnd };
+  [view setWantsBestResolutionOpenGLSurface:YES]; // enable HiDPI support
+  [view setLayer:m_layer];
+  [view setWantsLayer:YES];
+  // don't stretch when resizing & native decorations are enabled
+  [view setLayerContentsPlacement:NSViewLayerContentsPlacementTopLeft];
 }
 
 CocoaOpenGL::~CocoaOpenGL()
 {
-  MakeCurrent cur { m_gl };
-  teardown();
-  contextPool()->erase(m_gl);
-}
-
-GLPool *CocoaOpenGL::contextPool() const
-{
-  return std::static_pointer_cast<GLPool>(m_shared->m_platform).get();
+  if(NSOpenGLContext *gl { [m_layer openGLContext] }) {
+    MakeCurrent cur { gl };
+    teardown();
+  }
 }
 
 void CocoaOpenGL::setSize(ImVec2)
 {
-  [m_gl update];
 }
 
 void CocoaOpenGL::render(void *)
 {
-  // the intial setView in show() may fail if the view doesn't have a "device"
-  // (eg. when docked not activated = hidden NSView)
-  if(![m_gl view])
-    [m_gl setView:(__bridge NSView *)m_window->nativeHandle()];
+  [m_layer render];
 
-  MakeCurrent cur { m_gl };
-  OpenGLRenderer::render(false);
+  if(![m_layer openGLContext])
+    throw backend_error { "failed to initialize a OpenGL 3.2 context" };
 }
 
 void CocoaOpenGL::swapBuffers(void *)
 {
-  [m_gl flushBuffer];
 }
+
+@implementation OpenGLLayer
+- (instancetype)initWithRenderer:(CocoaOpenGL *)renderer
+{
+  self = [super init];
+  [self setOpaque:NO];
+  [self setContentsGravity:kCAGravityBottomLeft]; // don't stretch when resizing
+  m_oldGlCtx = nil;
+  m_renderer = renderer;
+  m_inRender = false;
+  return self;
+}
+
+- (void)setContentsScale:(CGFloat)scale
+{
+  // disable animation when scale changes
+  [CATransaction begin];
+  [CATransaction setDisableActions:YES];
+  [super setContentsScale:scale];
+  [CATransaction commit];
+}
+
+- (void)render
+{
+  m_inRender = true;
+  [super setNeedsDisplay];
+  [super displayIfNeeded];
+  m_inRender = false;
+}
+
+- (NSOpenGLPixelFormat *)openGLPixelFormatForDisplayMask:(uint32_t)mask
+{
+  const NSOpenGLPixelFormatAttribute attrs[] {
+    NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
+    kCGLPFASupportsAutomaticGraphicsSwitching,
+    NSOpenGLPFAScreenMask, mask,
+    NSOpenGLPFADoubleBuffer,
+
+    NSOpenGLPFAClosestPolicy,
+    NSOpenGLPFAColorSize, 24,
+    NSOpenGLPFAAlphaSize, 8,
+
+    // NSOpenGLPFARendererID, kCGLRendererGenericFloatID, // Apple Software Renderer
+
+    0
+  };
+
+  return [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
+}
+
+- (NSOpenGLContext *)openGLContextForPixelFormat:(NSOpenGLPixelFormat *)fmt
+{
+  // increases the reference count so that teardown() below doesn't incorrectly
+  // frees shared OpenGL resources
+  auto globalShared { m_renderer->m_shared };
+
+  CocoaOpenGLShared *shared
+    { std::static_pointer_cast<CocoaOpenGLShared>(globalShared->m_platform).get() };
+  NSOpenGLContext *gl
+    { [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:shared->ctx] };
+
+  if(m_oldGlCtx) {
+    MakeCurrent cur { m_oldGlCtx };
+    if(!gl)
+      globalShared.reset(); // teardown shared state if new context failed
+    m_renderer->teardown();
+    m_oldGlCtx = nil;
+  }
+
+  if(!gl)
+    return nil; // CocoaOpenGl::render(void*) will report the error
+  if(!shared->ctx)
+    shared->ctx = gl;
+
+  MakeCurrent cur { gl };
+  globalShared.reset(); // decrease ref count to initialize shared resources
+  m_renderer->setup();
+
+  return gl;
+}
+
+- (void)releaseCGLContext:(CGLContextObj)gl
+{
+  // This is invoked before the new context is created when moving between monitors
+  // Because of that we can't do teardown() here, as that would free shared resources
+  //
+  // Allocating a new one because [[self openGLContext] CGLContextObj] != gl on 10.9
+  m_oldGlCtx = [[NSOpenGLContext alloc] initWithCGLContextObj:gl];
+  [super releaseCGLContext:gl];
+}
+
+- (BOOL)canDrawInOpenGLContext:(NSOpenGLContext *)gl
+                   pixelFormat:(CGLPixelFormatObj)pf
+                  forLayerTime:(CFTimeInterval)t
+                   displayTime:(const CVTimeStamp *)ts
+{
+  return m_inRender;
+}
+
+- (void)drawInOpenGLContext:(NSOpenGLContext *)gl
+                pixelFormat:(CGLPixelFormatObj)pf
+               forLayerTime:(CFTimeInterval)t
+                displayTime:(const CVTimeStamp *)ts
+{
+  MakeCurrent cur { gl };
+  m_renderer->render(false);
+}
+@end
