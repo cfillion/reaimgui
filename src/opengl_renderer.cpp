@@ -17,6 +17,7 @@
 
 #include "opengl_renderer.hpp"
 
+#include "error.hpp"
 #include "context.hpp"
 #include "window.hpp"
 
@@ -27,7 +28,8 @@
 #  include <imgui/backends/imgui_impl_opengl3_loader.h>
 constexpr int GL_TEXTURE_WRAP_S { 0x2802 },
               GL_TEXTURE_WRAP_T { 0x2803 },
-              GL_REPEAT         { 0x2901 };
+              GL_REPEAT         { 0x2901 },
+              GL_NO_ERROR       { 0x0000 };
 #else
 #  include <epoxy/gl.h>
 #endif
@@ -97,6 +99,11 @@ void OpenGLRenderer::Shared::setup()
   glDetachShader(m_program, fragShader);
   glDeleteShader(vertShader);
   glDeleteShader(fragShader);
+
+  int shadersStatus;
+  glGetProgramiv(m_program, GL_LINK_STATUS, &shadersStatus);
+  if(!shadersStatus)
+    throw backend_error { "failed to compile or link OpenGL shaders" };
 
   m_locations[ProjMtxUniLoc]   = glGetUniformLocation(m_program, "ProjMtx");
   m_locations[TexUniLoc]       = glGetUniformLocation(m_program, "Texture");
@@ -254,4 +261,8 @@ void OpenGLRenderer::render(const bool flip)
 
   // allow glClear to modify the whole framebuffer
   glDisable(GL_SCISSOR_TEST);
+
+  const GLenum err { glGetError() };
+  if(err != GL_NO_ERROR)
+    throw backend_error { "rendering failed with OpenGL error {:#x}", err };
 }
