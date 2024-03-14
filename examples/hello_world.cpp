@@ -31,52 +31,75 @@
 #define REAPERAPI_IMPLEMENT
 #include "reaper_plugin_functions.h"
 
+#include <memory>
+
+class Example {
+public:
+  static void start();
+  ~Example();
+
+private:
+  static void loop();
+  static std::unique_ptr<Example> s_inst;
+
+  Example();
+  void frame();
+
+  ImGui_Context *m_ctx;
+  int m_click_count;
+  char m_text[255];
+};
+
+constexpr const char *g_name { "ReaImGui C++ example" };
 static int g_actionId;
-static ImGui_Context *g_ctx;
+std::unique_ptr<Example> Example::s_inst;
 
-static void loop();
-
-static void start()
+Example::Example()
+  : m_ctx {}, m_click_count {}, m_text { "The quick brown fox jumps over the lazy dog" }
 {
   ImGui::init(plugin_getapi);
-  g_ctx = ImGui::CreateContext("My extension");
+  m_ctx = ImGui::CreateContext(g_name);
   plugin_register("timer", reinterpret_cast<void *>(&loop));
 }
 
-static void stop()
+Example::~Example()
 {
   plugin_register("-timer", reinterpret_cast<void *>(&loop));
-  g_ctx = nullptr;
 }
 
-static void frame()
+void Example::start()
 {
-  static int click_count;
-  static char text[255] { "The quick brown fox jumps over the lazy dog" };
-
-  if(ImGui::Button(g_ctx, "Click me!"))
-    ++click_count;
-
-  if(click_count % 2 == 1) {
-    ImGui::SameLine(g_ctx);
-    ImGui::Text(g_ctx, R"(\o/)");
-  }
-
-  ImGui::InputText(g_ctx, "text input", text, sizeof(text));
+  if(s_inst)
+    ImGui::SetNextWindowFocus(s_inst->m_ctx);
+  else
+    s_inst.reset(new Example);
 }
 
-void loop()
+void Example::loop()
 {
-  ImGui::SetNextWindowSize(g_ctx, 400, 80, ImGui::Cond_FirstUseEver);
+  s_inst->frame();
+}
+
+void Example::frame()
+{
+  ImGui::SetNextWindowSize(m_ctx, 400, 80, ImGui::Cond_FirstUseEver);
 
   bool open { true };
-  if(ImGui::Begin(g_ctx, "ReaImGui C++ example", &open)) {
-    frame();
-    ImGui::End(g_ctx);
+  if(ImGui::Begin(m_ctx, g_name, &open)) {
+    if(ImGui::Button(m_ctx, "Click me!"))
+      ++m_click_count;
+
+    if(m_click_count & 1) {
+      ImGui::SameLine(m_ctx);
+      ImGui::Text(m_ctx, R"(\o/)");
+    }
+
+    ImGui::InputText(m_ctx, "text input", m_text, sizeof(m_text));
+    ImGui::End(m_ctx);
   }
 
   if(!open)
-    stop();
+    return s_inst.reset();
 }
 
 static bool commandHook(KbdSectionInfo *sec, const int command,
@@ -87,7 +110,7 @@ static bool commandHook(KbdSectionInfo *sec, const int command,
   if(command != g_actionId)
     return false;
 
-  (g_ctx ? &stop : &start)();
+  Example::start();
   return true;
 }
 
