@@ -21,6 +21,7 @@
 #include "context.hpp"
 
 #include <cassert>
+#include <imgui/imgui_internal.h>
 #include <reaper_plugin_functions.h>
 #include <unordered_map>
 
@@ -332,5 +333,6 @@ void API::handleError(const char *fnName, const imgui_error &e)
   ReaScriptError(g_lastError[0].c_str());
 
   assert(Context::current());
+  ImGui::ErrorCheckEndFrameRecover(nullptr);
   delete Context::current();
 }
