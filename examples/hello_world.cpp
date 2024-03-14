@@ -12,27 +12,42 @@
 // Linux
 // =====
 //
-// c++ -fPIC -O2 -std=c++14 -IWDL/WDL -shared hello_world.cpp -o reaper_hello_world.so
+// c++ -fPIC -std=c++17 -O2 -IWDL/WDL -shared hello_world.cpp -o reaper_hello_world.so
 //
 // macOS
 // =====
 //
-// c++ -fPIC -O2 -std=c++14 -IWDL/WDL -dynamiclib hello_world.cpp -o reaper_hello_world.dylib
+// c++ -fPIC -std=c++17 -O2 -IWDL/WDL -dynamiclib hello_world.cpp -o reaper_hello_world.dylib
 //
 // Windows
 // =======
 //
 // (Use the VS Command Prompt matching your REAPER architecture, eg. x64 to use the 64-bit compiler)
-// cl /nologo /O2 /Z7 /Zo /DUNICODE main.cpp /link /DEBUG /OPT:REF /DLL /OUT:reaper_hello_world.dll
-
-#define REAPERAPI_IMPLEMENT
-#include "reaper_plugin_functions.h"
+// cl /nologo /std:c++17 /O2 /MT /DUNICODE main.cpp /link /DLL /OUT:reaper_hello_world.dll
 
 #define REAIMGUIAPI_IMPLEMENT
 #include "reaper_imgui_functions.h"
 
+#define REAPERAPI_IMPLEMENT
+#include "reaper_plugin_functions.h"
+
 static int g_actionId;
 static ImGui_Context *g_ctx;
+
+static void loop();
+
+static void start()
+{
+  ImGui::init(plugin_getapi);
+  g_ctx = ImGui::CreateContext("My extension");
+  plugin_register("timer", reinterpret_cast<void *>(&loop));
+}
+
+static void stop()
+{
+  plugin_register("-timer", reinterpret_cast<void *>(&loop));
+  g_ctx = nullptr;
+}
 
 static void frame()
 {
@@ -50,11 +65,8 @@ static void frame()
   ImGui::InputText(g_ctx, "text input", text, sizeof(text));
 }
 
-static void loop()
+void loop()
 {
-  if(!g_ctx)
-    g_ctx = ImGui::CreateContext("My extension");
-
   int cond { ImGui::Cond_FirstUseEver };
   ImGui::SetNextWindowSize(g_ctx, 400, 80, &cond);
 
@@ -64,10 +76,8 @@ static void loop()
     ImGui::End(g_ctx);
   }
 
-  if(!open || !ImGui::ValidatePtr(g_ctx, "ImGui_Context*")) {
-    plugin_register("-timer", reinterpret_cast<void *>(&loop));
-    g_ctx = nullptr;
-  }
+  if(!open)
+    stop();
 }
 
 static bool commandHook(KbdSectionInfo *sec, const int command,
@@ -75,13 +85,11 @@ static bool commandHook(KbdSectionInfo *sec, const int command,
 {
   (void)sec; (void)val; (void)valhw; (void)relmode; (void)hwnd; // unused
 
-  if(command == g_actionId) {
-    if(!g_ctx)
-      plugin_register("timer", reinterpret_cast<void *>(&loop));
-    return true;
-  }
+  if(command != g_actionId)
+    return false;
 
-  return false;
+  (g_ctx ? &stop : &start)();
+  return true;
 }
 
 extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
@@ -94,7 +102,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
 
   // see also https://gist.github.com/cfillion/350356a62c61a1a2640024f8dc6c6770
   plugin_getapi   = reinterpret_cast<decltype(plugin_getapi)>
-    (rec->GetFunc("plugin_getapi")); // used by reaper_imgui_functions.h
+    (rec->GetFunc("plugin_getapi"));
   plugin_register = reinterpret_cast<decltype(plugin_register)>
     (rec->GetFunc("plugin_register"));
 

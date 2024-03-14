@@ -96,7 +96,7 @@ namespace API {
                   const PluginRegister &desc);
     void announce(bool) const override;
 
-    void *safeImpl()   const override { return m_regs[1].value; }
+    void *safeImpl()   const override { return m_regs[0].value; }
     void *unsafeImpl() const override { return m_impl; }
 
     const char *name() const override;
@@ -152,5 +152,6 @@ namespace API {
 #endif
 
 extern "C" GENBINDINGS_API const API::Symbol *API_head();
+extern "C" GENBINDINGS_API void API_version(char *, size_t);
 
 #endif

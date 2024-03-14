@@ -268,6 +268,11 @@ const API::Symbol *API_head() // immutable public accessor
   return lastSymbol();
 }
 
+void API_version(char *out, size_t size)
+{
+  snprintf(out, size, "%s", latestVersion().toString().c_str());
+}
+
 eel_function_table *API::eelFunctionTable()
 {
   return &g_eelFuncs;

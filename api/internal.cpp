@@ -39,7 +39,9 @@ static void assertVersion(const VerNum requested)
 API_FUNC(0_9, void*, _getapi, (const char*,version)(const char*,symbol_name),
 DO_NOT_USE)
 {
-  if(auto callable { API::Callable::lookup(version, symbol_name) })
+  const VerNum vernum { version };
+  assertVersion(vernum);
+  if(auto callable { API::Callable::lookup(vernum, symbol_name) })
     return callable->safeImpl();
   return nullptr;
 }

@@ -36,6 +36,7 @@
 
 #include <md4c-html.h>
 
+static char API_VERSION[255];
 constexpr const char *GENERATED_FOR
   { "Generated for ReaImGui v" REAIMGUI_VERSION };
 
@@ -250,7 +251,7 @@ static void cppBinding(std::ostream &stream)
 #ifndef REAPER_IMGUI_FUNCTIONS_H
 #define REAPER_IMGUI_FUNCTIONS_H
 
-#include <reaper_plugin_functions.h>
+#include <type_traits>
 #include <utility>
 
 class ImGui_Context;
@@ -267,90 +268,105 @@ class ImGui_Viewport;
 
 struct reaper_array;
 
-template<typename T>
-class ReaImGuiFunc;
-
-template<typename R, typename... Args>
-class ReaImGuiFunc<R(Args...)>
-{
-public:
-  ReaImGuiFunc(const char *name) : m_name { name }, m_proc { nullptr } {}
-  operator bool() { return proc() != nullptr; }
-  template<typename... CallArgs>
-  auto operator()(CallArgs... args)
-  {
-    if constexpr(sizeof...(CallArgs) < sizeof...(Args))
-      return (*this)(std::forward<CallArgs>(args)..., nullptr);
-    else
-      return proc()(std::forward<CallArgs>(args)...);
-  }
-
-private:
-  R(*proc())(Args...)
-  {
-    if(!m_proc)
-      m_proc = reinterpret_cast<decltype(m_proc)>(plugin_getapi(m_name));
-    return m_proc;
-  }
-
-  const char *m_name;
-  R(*m_proc)(Args...);
-};
-
-class ReaImGuiEnum
-{
-public:
-  ReaImGuiEnum(const char *name) : m_name { name }, m_init { false } {}
-  operator int()
-  {
-    if(!m_init) {
-      ReaImGuiFunc<int()> func { m_name };
-      m_value = func();
-      m_init  = true;
-    }
-    return m_value;
-  }
-
-private:
-  const char *m_name;
-  bool m_init;
-  int m_value;
-};
-
 #ifdef REAIMGUIAPI_IMPLEMENT
 #  define REAIMGUIAPI_EXTERN
-#  define REAIMGUIAPI_INIT(n) { n }
 #else
 #  define REAIMGUIAPI_EXTERN extern
-#  define REAIMGUIAPI_INIT(n)
 #endif
 
 namespace ImGui {
+  constexpr const char *version = ")" << API_VERSION << R"(";
+  void init(void *(*plugin_getapi)(const char *));
+
+  namespace details {
+    template<typename T>
+    class function;
+
+    template<typename R, typename... Args>
+    class function<R(Args...)> {
+    public:
+      using Proc = R(*)(Args...) noexcept;
+      function() : m_proc { nullptr } {}
+      function(Proc proc) : m_proc { proc } {}
+      operator bool() const { return m_proc != nullptr; }
+
+      template<typename... CallArgs>
+      R operator()(CallArgs... args) const noexcept
+      {
+        if constexpr(sizeof...(CallArgs) < sizeof...(Args))
+          return (*this)(std::forward<CallArgs>(args)..., nullptr);
+        else
+          return invoke(std::forward<CallArgs>(args)...);
+      }
+
+    protected:
+      friend void ImGui::init(void *(*)(const char *));
+      function(void *proc) : m_proc { reinterpret_cast<Proc>(proc) } {}
+
+    private:
+      R invoke(Args... args) const
+      {
+        return m_proc(std::forward<Args>(args)...);
+      }
+
+      Proc m_proc;
+    };
+
+    inline int get_enum(const function<int()> f)
+    {
+      return f ? f() : 0;
+    }
+  }
 )";
 
   for(const Function &func : g_funcs) {
     if(!(func.flags & API::Symbol::TargetNative))
       continue;
 
-    stream << "  REAIMGUIAPI_EXTERN ";
+    stream << "\n  REAIMGUIAPI_EXTERN ";
 
     if(func.isEnum())
-      stream << "ReaImGuiEnum ";
+      stream << func.type << ' ';
     else {
-      stream << "ReaImGuiFunc<" << func.type << '(';
+      stream << "details::function<" << func.type << '(';
       CommaSep cs { stream };
       for(const Argument &arg : func.args)
         cs << arg.type << ' ' << arg.name;
       stream << ")> ";
     }
 
-    stream << func.name << " REAIMGUIAPI_INIT(\"" API_PREFIX << func.name << "\");\n";
+    stream << func.name << ";";
   }
 
-  stream << R"(}
+  stream << R"(
+}
 
 #undef REAIMGUIAPI_EXTERN
-#undef REAIMGUIAPI_INIT
+
+#ifdef REAIMGUIAPI_IMPLEMENT
+void ImGui::init(void *(*plugin_getapi)(const char *))
+{
+  void *(*get_func)(const char *v, const char *n) = reinterpret_cast<decltype(get_func)>(plugin_getapi("ImGui__getapi"));
+  if(!get_func)
+    return;
+)";
+
+  for(const Function &func : g_funcs) {
+    if(!(func.flags & API::Symbol::TargetNative))
+      continue;
+
+    stream << "\n  " << func.name << " = ";
+    if(func.isEnum())
+      stream << "details::get_enum(";
+    stream << "get_func(version, \"" << func.name << "\")";
+    if(func.isEnum())
+      stream << ')';
+    stream << ';';
+  }
+
+  stream << R"(
+}
+#endif
 
 #endif
 )";
@@ -1185,10 +1201,13 @@ int main(int argc, const char *argv[])
   }
 
   FuncImport<decltype(API_head)> _API_head { WIDEN(argv[1]), "API_head" };
-  if(!_API_head) {
+  FuncImport<decltype(API_version)> _API_version { WIDEN(argv[1]), "API_version" };
+  if(!_API_head || !_API_version) {
     std::cerr << "failed to find API head of '" << argv[1] << "'\n";
     return 2;
   }
+
+  _API_version(API_VERSION, sizeof(API_VERSION));
 
   for(const API::Symbol *func { _API_head() }; func; func = func->m_next) {
     if(func->name()[0] != '_')
