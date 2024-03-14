@@ -1,7 +1,7 @@
 # Warning: Python ReaScripts have significant CPU overhead compared to Lua/EEL2
 
 sys.path.append(RPR_GetResourcePath() + "/Scripts/ReaTeam Extensions/API")
-import imgui_python as ImGui
+import imgui as ImGui
 
 FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
 

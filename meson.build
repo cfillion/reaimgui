@@ -199,7 +199,7 @@ endif
 binding_targets = {
   'cpp':    { 'output': 'reaper_imgui_functions.h' },
   'human':  { 'output': 'reaper_imgui_doc.html', 'install_dir': data_dir    },
-  'python': { 'output': 'imgui_python.py',       'install_dir': scripts_dir },
+  'python': { 'output': 'imgui.py',              'install_dir': scripts_dir },
 }
 foreach name : bindings
   binding = binding_targets[name]
