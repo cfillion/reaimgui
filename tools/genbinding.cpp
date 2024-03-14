@@ -963,12 +963,14 @@ static void humanBinding(std::ostream &stream)
   </aside>
   <main>
     <h1>ReaImGui Documentation</h1>
-    <p>)" << GENERATED_FOR << "</p>\n\n";
+    <p>Generated for version )" << REAIMGUI_VERSION;
+  stream << " &middot; API version " << API_VERSION << R"(</p>
 
-  stream << R"(<p>
-  <a href="https://forum.cockos.com/showthread.php?t=250419">Forum thread</a>
-  · <a href="https://github.com/cfillion/reaimgui">Source repository</a>
-  </p><hr/>)";
+    <p>
+      <a href="https://forum.cockos.com/showthread.php?t=250419">Forum thread</a>
+      &middot; <a href="https://github.com/cfillion/reaimgui">Source repository</a>
+      &middot; <a href="https://github.com/cfillion/reaimgui/issues">Issue tracker</a>
+    </p><hr/>)";
 
   std::vector<const API::Section *> sections;
   stream << "<h2 id=\"toc\">Table of Contents</h2>";
@@ -1060,7 +1062,7 @@ static void humanBinding(std::ostream &stream)
               "<a href=\"https://github.com/cfillion/reaimgui/blob/v"
               REAIMGUI_VERSION "/api/" << func.section->file << ".cpp#L"
            << func.line << "\">View source</a>"
-           << " ・ v" << func.version.toString() << "+</p>";
+           << " &middot; v" << func.version.toString() << "+</p>";
 
     stream << "</details>\n";
   }
