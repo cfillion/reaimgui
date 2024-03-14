@@ -31,7 +31,7 @@ static void assertVersion(const VerNum requested)
     return;
 
   throw reascript_error {
-    "ReaImGui {} is too old (action requires {} or newer)",
+    "ReaImGui {} is too old (action requires API {} or newer)",
     REAIMGUI_VERSION, requested.toString()
   };
 }
@@ -43,7 +43,13 @@ DO_NOT_USE)
   assertVersion(vernum);
   if(auto callable { API::Callable::lookup(vernum, symbol_name) })
     return callable->safeImpl();
-  return nullptr;
+  throw reascript_error { "function '{}' not found or missing shim for v{}",
+    symbol_name, vernum.toString() };
+}
+
+API_FUNC(0_9, const char*, _geterr, NO_ARGS, DO_NOT_USE)
+{
+  return API::lastError();
 }
 
 API_FUNC(0_9, void, _init, (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf)), DO_NOT_USE)

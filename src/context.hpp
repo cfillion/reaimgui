@@ -50,6 +50,7 @@ constexpr const char *REAIMGUI_PAYLOAD_TYPE_FILES { "_FILES" };
 class Context final : public Resource {
 public:
   static Context *current();
+  static void clearCurrent();
 
   Context(const char *label, int userConfigFlags = ImGuiConfigFlags_None);
   ~Context();

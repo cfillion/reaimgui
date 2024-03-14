@@ -27,6 +27,9 @@ namespace API {
   void setup();
   void teardown();
   VerNum version();
+
+  void clearError();
+  const char *lastError();
   void handleError(const char *fnName, const reascript_error &);
   void handleError(const char *fnName, const imgui_error &);
 

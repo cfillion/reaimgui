@@ -85,6 +85,11 @@ Context *Context::current()
     return nullptr;
 }
 
+void Context::clearCurrent()
+{
+  ImGui::SetCurrentContext(nullptr);
+}
+
 Context::Context(const char *label, const int userConfigFlags)
   : m_dndWasActive { false }, m_cursor {},
     m_lastFrame       { decltype(m_lastFrame)::clock::now()                },

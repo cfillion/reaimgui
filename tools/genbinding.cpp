@@ -251,6 +251,7 @@ static void cppBinding(std::ostream &stream)
 #ifndef REAPER_IMGUI_FUNCTIONS_H
 #define REAPER_IMGUI_FUNCTIONS_H
 
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 
@@ -265,6 +266,10 @@ class ImGui_ListClipper;
 class ImGui_Resource;
 class ImGui_TextFilter;
 class ImGui_Viewport;
+
+struct ImGui_Error : std::runtime_error {
+  using runtime_error::runtime_error;
+};
 
 struct reaper_array;
 
@@ -287,6 +292,14 @@ namespace ImGui {
   constexpr details::nullopt_t nullopt { 0 };
 
   namespace details {
+    REAIMGUIAPI_EXTERN const char *(*last_error)() noexcept;
+
+    inline void check_error()
+    {
+      if(const char *err { last_error() })
+        throw ImGui_Error { err };
+    }
+
     template<typename T, typename E = void>
     class optional {
     public:
@@ -329,7 +342,7 @@ namespace ImGui {
       operator bool() const { return m_proc != nullptr; }
 
       template<typename... CallArgs>
-      R operator()(CallArgs... args) const noexcept
+      R operator()(CallArgs... args) const
       {
         if constexpr(sizeof...(CallArgs) < sizeof...(Args))
           return (*this)(std::forward<CallArgs>(args)..., nullopt);
@@ -344,7 +357,15 @@ namespace ImGui {
     private:
       R invoke(Args... args) const
       {
-        return m_proc(std::forward<Args>(args)...);
+        if constexpr(std::is_void_v<R>) {
+          m_proc(std::forward<Args>(args)...);
+          check_error();
+        }
+        else {
+          const R rv { m_proc(std::forward<Args>(args)...) };
+          check_error();
+          return rv;
+        }
       }
 
       Proc m_proc;
@@ -395,9 +416,10 @@ namespace ImGui {
 #ifdef REAIMGUIAPI_IMPLEMENT
 void ImGui::init(void *(*plugin_getapi)(const char *))
 {
-  void *(*get_func)(const char *v, const char *n) = reinterpret_cast<decltype(get_func)>(plugin_getapi("ImGui__getapi"));
-  if(!get_func)
-    return;
+  void *(*get_func)(const char *v, const char *n) noexcept = reinterpret_cast<decltype(get_func)>(plugin_getapi("ImGui__getapi"));
+  details::last_error = reinterpret_cast<decltype(details::last_error)>(plugin_getapi("ImGui__geterr"));
+  if(!get_func || !details::last_error)
+    throw ImGui_Error { "ReaImGui is not installed or too old" };
 )";
 
   for(const Function &func : g_funcs) {
@@ -410,7 +432,7 @@ void ImGui::init(void *(*plugin_getapi)(const char *))
     stream << "get_func(version, \"" << func.name << "\")";
     if(func.isEnum())
       stream << ')';
-    stream << ';';
+    stream << "; details::check_error();";
   }
 
   stream << R"(

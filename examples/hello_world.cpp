@@ -54,8 +54,14 @@ constexpr const char *g_name { "ReaImGui C++ example" };
 static int g_actionId;
 std::unique_ptr<Example> Example::s_inst;
 
+static void reportError(const ImGui_Error &e)
+{
+  ShowMessageBox(e.what(), g_name, 0);
+}
+
 Example::Example()
-  : m_ctx {}, m_click_count {}, m_text { "The quick brown fox jumps over the lazy dog" }
+  : m_ctx {}, m_click_count {},
+    m_text { "The quick brown fox jumps over the lazy dog" }
 {
   ImGui::init(plugin_getapi);
   m_ctx = ImGui::CreateContext(g_name);
@@ -68,16 +74,24 @@ Example::~Example()
 }
 
 void Example::start()
-{
+try {
   if(s_inst)
     ImGui::SetNextWindowFocus(s_inst->m_ctx);
   else
     s_inst.reset(new Example);
 }
+catch(const ImGui_Error &e) {
+  reportError(e);
+  s_inst.reset();
+}
 
 void Example::loop()
-{
+try {
   s_inst->frame();
+}
+catch(const ImGui_Error &e) {
+  reportError(e);
+  s_inst.reset();
 }
 
 void Example::frame()
@@ -127,6 +141,8 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
     (rec->GetFunc("plugin_getapi"));
   plugin_register = reinterpret_cast<decltype(plugin_register)>
     (rec->GetFunc("plugin_register"));
+  ShowMessageBox  = reinterpret_cast<decltype(ShowMessageBox)>
+    (rec->GetFunc("ShowMessageBox"));
 
   custom_action_register_t action { 0, "REAIMGUI_CPP", "ReaImGui C++ example" };
   g_actionId = plugin_register("custom_action", &action);

@@ -83,7 +83,7 @@ struct Safe<fn, name>
 {
   static R invoke(Args... args) noexcept
   try {
-    // TODO: API::clearError() for C++, clearContext for correct destruction?
+    API::clearError();
     return std::invoke(fn, args...);
   }
   catch(const imgui_error &e) { // TODO: recoverable_error base class
