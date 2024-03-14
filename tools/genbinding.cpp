@@ -275,17 +275,55 @@ struct reaper_array;
 #endif
 
 namespace ImGui {
+  namespace details {
+    struct nullopt_t {
+      constexpr explicit nullopt_t(int) {}
+      operator std::nullptr_t() const { return nullptr; }
+    };
+  }
+
   constexpr const char *version = ")" << API_VERSION << R"(";
   void init(void *(*plugin_getapi)(const char *));
+  constexpr details::nullopt_t nullopt { 0 };
 
   namespace details {
+    template<typename T, typename E = void>
+    class optional {
+    public:
+      using value_type = T*;
+      optional(nullopt_t) : m_present { false } {}
+      optional(const T v) : m_value { v }, m_present { true } {}
+      operator value_type() { return m_present ? &m_value : nullptr; }
+
+    private:
+      T m_value;
+      bool m_present;
+    };
+
+    template<typename T>
+    class optional<T, typename std::enable_if_t<std::is_pointer_v<T>>> {
+    public:
+      using value_type = T;
+      optional(nullopt_t) : optional { nullptr } {}
+      optional(T ptr) : m_value { ptr } {}
+      operator value_type() { return m_value; }
+
+    private:
+      T m_value;
+    };
+
+    template<typename T> struct param { using value_type = T; };
+    template<typename T> struct param<optional<T>> {
+      using value_type = typename optional<T>::value_type;
+    };
+
     template<typename T>
     class function;
 
     template<typename R, typename... Args>
     class function<R(Args...)> {
     public:
-      using Proc = R(*)(Args...) noexcept;
+      using Proc = R(*)(typename param<Args>::value_type...) noexcept;
       function() : m_proc { nullptr } {}
       function(Proc proc) : m_proc { proc } {}
       operator bool() const { return m_proc != nullptr; }
@@ -294,7 +332,7 @@ namespace ImGui {
       R operator()(CallArgs... args) const noexcept
       {
         if constexpr(sizeof...(CallArgs) < sizeof...(Args))
-          return (*this)(std::forward<CallArgs>(args)..., nullptr);
+          return (*this)(std::forward<CallArgs>(args)..., nullopt);
         else
           return invoke(std::forward<CallArgs>(args)...);
       }
@@ -330,8 +368,19 @@ namespace ImGui {
     else {
       stream << "details::function<" << func.type << '(';
       CommaSep cs { stream };
-      for(const Argument &arg : func.args)
-        cs << arg.type << ' ' << arg.name;
+      for(const Argument &arg : func.args) {
+        if(arg.isOptional() && !arg.isOutput()) {
+          cs << "details::optional<";
+          if(arg.type.isScalarPtr())
+            stream << arg.type.removePtr();
+          else
+            stream << arg.type;
+          stream << '>';
+        }
+        else
+          cs << arg.type;
+        stream << ' ' << arg.name;
+      }
       stream << ")> ";
     }
 
@@ -456,7 +505,12 @@ void Function::cppSignature(std::ostream &stream) const
   stream << '(';
   CommaSep cs { stream };
   for(const Argument &arg : args) {
-    cs << hl(Highlight::Type) << arg.type << hl() << ' ' << arg.name;
+    cs << hl(Highlight::Type);
+    if(arg.isOptional() && !arg.isOutput() && arg.type.isScalarPtr())
+      stream << arg.type.removePtr();
+    else
+      stream << arg.type;
+    stream << hl() << ' ' << arg.name;
     if(arg.isOptional()) {
       stream << " = ";
       arg.defaultValue(stream, "nullptr");

@@ -67,8 +67,7 @@ static void frame()
 
 void loop()
 {
-  int cond { ImGui::Cond_FirstUseEver };
-  ImGui::SetNextWindowSize(g_ctx, 400, 80, &cond);
+  ImGui::SetNextWindowSize(g_ctx, 400, 80, ImGui::Cond_FirstUseEver);
 
   bool open { true };
   if(ImGui::Begin(g_ctx, "ReaImGui C++ example", &open)) {
