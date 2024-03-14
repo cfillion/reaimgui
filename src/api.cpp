@@ -118,6 +118,8 @@ std::string Callable::serializeAll(const VerNum version)
   enum Flags { IsConst = 1<<0, IsShim = 1<<1 };
   std::string out;
   for(const auto &pair : callables()) {
+    if(pair.first[0] == '_')
+      continue;
     const Callable *match { pair.second->rollback(version) };
     if(!match)
       continue;
