@@ -71,6 +71,8 @@ Callable::Callable(const VerNum since, const VerNum until, const char *name)
 {
   if(since > latestVersion())
     latestVersion() = since;
+  if(until != VerNum::MAX && until > latestVersion())
+    latestVersion() = until;
 
   auto [it, isNew] { callables().try_emplace(name, this) };
   if(isNew)
