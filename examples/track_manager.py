@@ -33,7 +33,7 @@ def trackRow(ti):
     selected = RPR_IsTrackSelected(track)
     selectable = ImGui.Selectable(ctx, ti + 1, selected,
       ImGui.SelectableFlags_SpanAllColumns() |
-      ImGui.SelectableFlags_AllowItemOverlap())
+      ImGui.SelectableFlags_AllowOverlap())
     if selectable[0]:
       if ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl()):
         RPR_SetTrackSelected(track, not selected)

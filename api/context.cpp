@@ -91,7 +91,7 @@ ValidatePtr.)")
 API_SUBSECTION("Options");
 
 template<typename... T>
-using IOFields = std::variant<T ImGuiIO::*...>;
+using IOFields = std::variant<T ImGuiIO::*..., T ImGuiStyle::*...>;
 
 // expose most settings from ImGuiIO
 // ITEM ORDER MUST MATCH WITH THE API_CONFIGVAR() BELOW!
@@ -103,8 +103,6 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   &ImGuiIO::MouseDragThreshold,
   &ImGuiIO::KeyRepeatDelay,
   &ImGuiIO::KeyRepeatRate,
-  &ImGuiIO::HoverDelayNormal,
-  &ImGuiIO::HoverDelayShort,
 
   // &ImGuiIO::FontGlobalScale,
   // &ImGuiIO::FontAllowUserScaling,
@@ -129,6 +127,12 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
 
   &ImGuiIO::ConfigDebugBeginReturnValueOnce,
   &ImGuiIO::ConfigDebugBeginReturnValueLoop,
+
+  &ImGuiStyle::HoverStationaryDelay,
+  &ImGuiStyle::HoverDelayShort,
+  &ImGuiStyle::HoverDelayNormal,
+  &ImGuiStyle::HoverFlagsForTooltipMouse,
+  &ImGuiStyle::HoverFlagsForTooltipNav,
 };
 
 #define API_CONFIGVAR(vernum, name, doc) \
@@ -148,10 +152,6 @@ R"(When holding a key/button, time before it starts repeating, in seconds
    (for buttons in Repeat mode, etc.).)");
 API_CONFIGVAR(0_7, KeyRepeatRate,
   "When holding a key/button, rate at which it repeats, in seconds.");
-API_CONFIGVAR(0_8, HoverDelayNormal,
-  "Delay on hovering before IsItemHovered(HoveredFlags_DelayNormal) returns true.");
-API_CONFIGVAR(0_8, HoverDelayShort,
-  "Delay on hovering before IsItemHovered(HoveredFlags_DelayShort) returns true.");
 
 API_CONFIGVAR(0_7, DockingNoSplit,
 R"(Simplified docking mode: disable window splitting, so docking is limited to
@@ -203,8 +203,27 @@ Will cycle through window depths then repeat. Suggested use: add
 in your main loop then occasionally press SHIFT.
 Windows should be flickering while running.)");
 
+API_CONFIGVAR(0_9, HoverStationaryDelay,
+R"(Delay for IsItemHovered(HoveredFlags_Stationary).
+   Time required to consider mouse stationary.)");
+API_CONFIGVAR(0_8, HoverDelayShort,
+R"(Delay for IsItemHovered(HoveredFlags_DelayShort).
+   Usually used along with ConfigVar_HoverStationaryDelay.)");
+API_CONFIGVAR(0_8, HoverDelayNormal,
+R"(Delay for IsItemHovered(HoveredFlags_DelayNormal).
+   Usually used along with ConfigVar_HoverStationaryDelay.)");
+API_CONFIGVAR(0_9, HoverFlagsForTooltipMouse,
+R"(Default flags when using IsItemHovered(HoveredFlags_ForTooltip) or
+   BeginItemTooltip()/SetItemTooltip() while using mouse.)");
+API_CONFIGVAR(0_9, HoverFlagsForTooltipNav,
+R"(Default flags when using IsItemHovered(HoveredFlags_ForTooltip) or
+   BeginItemTooltip()/SetItemTooltip() while using keyboard/gamepad.)");
+
 static_assert(__COUNTER__ - baseConfigVar - 1 == std::size(g_configVars),
   "forgot to API_CONFIGVAR() a config var?");
+
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 API_FUNC(0_7, double, GetConfigVar, (ImGui_Context*,ctx)
 (int,var_idx),
@@ -214,16 +233,19 @@ API_FUNC(0_7, double, GetConfigVar, (ImGui_Context*,ctx)
   if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
     throw reascript_error { "unknown config variable" };
 
-  return std::visit([ctx](auto ImGuiIO::*field) -> double {
-    const ImGuiIO &io { ctx->IO() };
+  return std::visit(overloaded {
+    [ctx](auto ImGuiIO::*field) -> double {
+      const ImGuiIO &io { ctx->IO() };
 
-    if constexpr(std::is_same_v<decltype(ImGuiIO::ConfigFlags),
-                                std::decay_t<decltype(io.*field)>>) {
-      if(field == &ImGuiIO::ConfigFlags)
-        return ctx->userConfigFlags();
-    }
+      if constexpr(std::is_same_v<decltype(ImGuiIO::ConfigFlags),
+                   std::decay_t<decltype(io.*field)>>) {
+        if(field == &ImGuiIO::ConfigFlags)
+          return ctx->userConfigFlags();
+      }
 
-    return io.*field;
+      return io.*field;
+    },
+    [ctx](auto ImGuiStyle::*field) -> double { return ctx->style().*field; },
   }, g_configVars[var_idx]);
 }
 
@@ -235,18 +257,21 @@ API_FUNC(0_7, void, SetConfigVar, (ImGui_Context*,ctx)
   if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
     throw reascript_error { "unknown config variable" };
 
-  std::visit([ctx, value](auto ImGuiIO::*field) {
-    ImGuiIO &io { ctx->IO() };
+  std::visit(overloaded {
+    [ctx, value](auto ImGuiIO::*field) {
+      ImGuiIO &io { ctx->IO() };
 
-    if constexpr(std::is_same_v<decltype(ImGuiIO::ConfigFlags),
-                                std::decay_t<decltype(io.*field)>>) {
-      if(field == &ImGuiIO::ConfigFlags) {
-        ctx->setUserConfigFlags(value);
-        return;
+      if constexpr(std::is_same_v<decltype(ImGuiIO::ConfigFlags),
+                   std::decay_t<decltype(io.*field)>>) {
+        if(field == &ImGuiIO::ConfigFlags) {
+          ctx->setUserConfigFlags(value);
+          return;
+        }
       }
-    }
 
-    io.*field = value;
+      io.*field = value;
+    },
+    [ctx, value](auto ImGuiStyle::*field) { ctx->style().*field = value; },
   }, g_configVars[var_idx]);
 }
 
@@ -254,7 +279,7 @@ API_SUBSECTION("Flags", "For CreateContext and SetConfigVar(ConfigVar_Flags())."
 API_ENUM(0_1, ImGui, ConfigFlags_None, "");
 API_ENUM(0_1, ImGui, ConfigFlags_NavEnableKeyboard,
 R"(Master keyboard navigation enable flag.
-Enable full Tabbing + directional arrows + space/enter to activate.)");
+   Enable full Tabbing + directional arrows + space/enter to activate.)");
 // API_ENUM(ImGui, ConfigFlags_NavEnableGamepad,
 //"Master gamepad navigation enable flag.");
 API_ENUM(0_1, ImGui, ConfigFlags_NavEnableSetMousePos,
@@ -266,8 +291,7 @@ API_ENUM(0_1, ImGui, ConfigFlags_NoMouse,
   "Instruct imgui to ignore mouse position/buttons.");
 API_ENUM(0_1, ImGui, ConfigFlags_NoMouseCursorChange,
   "Instruct backend to not alter mouse cursor shape and visibility.");
-API_ENUM(0_5, ImGui, ConfigFlags_DockingEnable,
-  "[BETA] Enable docking functionality.");
+API_ENUM(0_5, ImGui, ConfigFlags_DockingEnable, "Enable docking functionality.");
 
 API_ENUM(0_4, ReaImGui, ConfigFlags_NoSavedSettings,
   "Disable state restoration and persistence for the whole context.");

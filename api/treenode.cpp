@@ -107,7 +107,7 @@ API_ENUM(0_1, ImGui, TreeNodeFlags_None,     "");
 API_ENUM(0_1, ImGui, TreeNodeFlags_Selected, "Draw as selected.");
 API_ENUM(0_1, ImGui, TreeNodeFlags_Framed,
   "Draw frame with background (e.g. for CollapsingHeader).");
-API_ENUM(0_1, ImGui, TreeNodeFlags_AllowItemOverlap,
+API_ENUM(0_9, ImGui, TreeNodeFlags_AllowOverlap,
   "Hit testing to allow subsequent widgets to overlap this one.");
 API_ENUM(0_1, ImGui, TreeNodeFlags_NoTreePushOnOpen,
 R"(Don't do a TreePush when open (e.g. for CollapsingHeader)

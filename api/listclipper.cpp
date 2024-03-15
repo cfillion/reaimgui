@@ -23,7 +23,10 @@
 #include <reaper_plugin_functions.h>
 
 // ImGuiListClipper initializes itself for the current context
-ListClipper::ListClipper() {}
+ListClipper::ListClipper(Context *ctx)
+{
+  m_imlc.Ctx = ctx->imgui();
+}
 
 ListClipper::~ListClipper()
 {
@@ -115,8 +118,7 @@ R"(The returned clipper object is only valid for the given context and is valid
 as long as it is used in each defer cycle unless attached (see Attach).)")
 {
   assertValid(ctx);
-  ctx->setCurrent();
-  return new ListClipper {};
+  return new ListClipper { ctx };
 }
 
 API_FUNC(0_1, void, ListClipper_Begin, (ImGui_ListClipper*,clipper)

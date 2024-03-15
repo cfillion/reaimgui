@@ -189,27 +189,46 @@ API_FUNC(0_1, bool, BeginPopupContextWindow, (ImGui_Context*,ctx)
 }
 
 API_SUBSECTION("Tooltips",
-  "Tooltip are windows following the mouse. They do not take focus away.");
+R"(Tooltips are windows following the mouse. They do not take focus away.
+A tooltip window can contain items of any type.)");
 
 API_FUNC(0_1, bool, BeginTooltip, (ImGui_Context*,ctx),
-R"(Begin/append a tooltip window.
-To create full-featured tooltip (with any kind of items).)")
+"Begin/append a tooltip window.")
 {
   FRAME_GUARD;
   return ImGui::BeginTooltip();
 }
 
 API_FUNC(0_8, void, EndTooltip, (ImGui_Context*,ctx),
-"Only call EndTooltip() if BeginTooltip() returns true.")
+"Only call EndTooltip() if BeginTooltip()/BeginItemTooltip() returns true.")
 {
   FRAME_GUARD;
   ImGui::EndTooltip();
 }
 
 API_FUNC(0_1, void, SetTooltip, (ImGui_Context*,ctx)(const char*,text),
-R"(Set a text-only tooltip, typically use with IsItemHovered. override any
-previous call to SetTooltip.)")
+R"(Set a text-only tooltip. Often used after a IsItemHovered() check.
+Override any previous call to SetTooltip.
+
+Shortcut for `if (BeginTooltip()) { Text(...); EndTooltip(); }`.)")
 {
   FRAME_GUARD;
   ImGui::SetTooltip("%s", text);
+}
+
+API_FUNC(0_9, bool, BeginItemTooltip, (ImGui_Context*,ctx),
+R"(Begin/append a tooltip window if preceding item was hovered. Shortcut for
+`IsItemHovered(HoveredFlags_ForTooltip) && BeginTooltip()`.)")
+{
+  FRAME_GUARD;
+  return ImGui::BeginItemTooltip();
+}
+
+API_FUNC(0_9, void, SetItemTooltip, (ImGui_Context*,ctx)(const char*,text),
+R"(Set a text-only tooltip if preceeding item was hovered.
+Override any previous call to SetTooltip(). Shortcut for
+`if (IsItemHovered(HoveredFlags_ForTooltip)) { SetTooltip(...); }`.)")
+{
+  FRAME_GUARD;
+  ImGui::SetItemTooltip("%s", text);
 }

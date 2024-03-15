@@ -19,12 +19,14 @@
 
 API_SECTION("Item & Status");
 
-API_FUNC(0_1, void, SetItemAllowOverlap, (ImGui_Context*,ctx),
-R"(Allow last item to be overlapped by a subsequent item. sometimes useful with
-invisible buttons, selectables, etc. to catch unused area.)")
+API_FUNC(0_9, void, SetNextItemAllowOverlap, (ImGui_Context*,ctx),
+R"(Allow next item to be overlapped by a subsequent item.
+Useful with invisible buttons, selectable, treenode covering an area where
+subsequent items may need to be added. Note that both Selectable() and TreeNode()
+have dedicated flags doing this.)")
 {
   FRAME_GUARD;
-  ImGui::SetItemAllowOverlap();
+  ImGui::SetNextItemAllowOverlap();
 }
 
 API_FUNC(0_5_5, void, BeginDisabled, (ImGui_Context*,ctx)
@@ -162,7 +164,7 @@ R"(Most of the functions are referring to the previous Item that has been submit
 See Demo Window under "Widgets->Querying Item Status" for an interactive
 visualization of most of those functions.)");
 
-API_FUNC(0_1, bool, IsItemHovered, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsItemHovered, (ImGui_Context*,ctx)
 (int*,API_RO(flags),ImGuiHoveredFlags_None),
 R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.).
 See HoveredFlags_* for more options.)")
@@ -262,49 +264,75 @@ API_FUNC(0_1, bool, IsAnyItemFocused, (ImGui_Context*,ctx),
   return ImGui::IsAnyItemFocused();
 }
 
-API_SECTION_DEF(hoveredFlags, ROOT_SECTION,
-               "Hovered Flags", "For IsItemHovered(), IsWindowHovered() etc.");
+API_SECTION_DEF(hoveredFlags, ROOT_SECTION, "Hovered Flags",
+  "For IsItemHovered and IsWindowHovered.");
 API_ENUM(0_1, ImGui, HoveredFlags_None,
-  R"(Return true if directly over the item/window, not obstructed by another
-  window, not obstructed by an active popup or modal blocking inputs under them.)");
+R"(Return true if directly over the item/window, not obstructed by another
+   window, not obstructed by an active popup or modal blocking inputs under them.)");
 API_ENUM(0_1, ImGui, HoveredFlags_AllowWhenBlockedByPopup,
   "Return true even if a popup window is normally blocking access to this item/window.");
 API_ENUM(0_1, ImGui, HoveredFlags_AllowWhenBlockedByActiveItem,
-  R"(Return true even if an active item is blocking access to this item/window.
-  Useful for Drag and Drop patterns.)");
+R"(Return true even if an active item is blocking access to this item/window.
+   Useful for Drag and Drop patterns.)");
 API_ENUM(0_7, ImGui, HoveredFlags_NoNavOverride,
   "Disable using gamepad/keyboard navigation state when active, always query mouse.");
+API_ENUM(0_9, ImGui, HoveredFlags_ForTooltip,
+R"(Shortcut for standard flags when using IsItemHovered() + SetTooltip() sequence.
 
-API_ENUM(0_8, ImGui, HoveredFlags_DelayNormal,
-  "Return true after ConfigVar_HoverDelayNormal elapsed (~0.30 sec)");
-API_ENUM(0_8, ImGui, HoveredFlags_DelayShort,
-  "Return true after ConfigVar_HoverDelayShort elapsed (~0.10 sec)");
-API_ENUM(0_8, ImGui, HoveredFlags_NoSharedDelay,
-  R"(Disable shared delay system where moving from one item to the next keeps
-  the previous timer for a short time (standard for tooltips with long delays)");
+   For frequently actioned or hovered items providing a tooltip, you want may to use
+   HoveredFlags_ForTooltip (stationary + delay) so the tooltip doesn't show too often.
 
-API_SECTION_P(hoveredFlags, "IsItemHovered only");
+   For items which main purpose is to be hovered, or items with low affordance,
+   or in less consistent apps, prefer no delay or shorter delay.)");
+
+API_ENUM(0_9, ImGui, HoveredFlags_Stationary,
+R"(Require mouse to be stationary for ConfigVar_HoverStationaryDelay (~0.15 sec)
+   _at least one time_. After this, can move on same item/window.
+   Using the stationary test tends to reduces the need for a long delay.)");
+
+API_SECTION_DEF(itemHoveredFlags, hoveredFlags, "For IsItemHovered");
+API_ENUM(0_9, ImGui, HoveredFlags_AllowWhenOverlappedByItem,
+R"(Return true even if the item uses AllowOverlap mode and is overlapped by
+   another hoverable item.)");
+API_ENUM(0_9, ImGui, HoveredFlags_AllowWhenOverlappedByWindow,
+  "Return true even if the position is obstructed or overlapped by another window.");
 API_ENUM(0_1, ImGui, HoveredFlags_AllowWhenOverlapped,
-  R"(IsItemHovered only: Return true even if the position is obstructed or
-  overlapped by another window.)");
+  "HoveredFlags_AllowWhenOverlappedByItem | HoveredFlags_AllowWhenOverlappedByWindow");
 API_ENUM(0_1, ImGui, HoveredFlags_AllowWhenDisabled,
-  "IsItemHovered only: Return true even if the item is disabled.");
+  "Return true even if the item is disabled.");
 API_ENUM(0_1, ImGui, HoveredFlags_RectOnly,
-  R"(HoveredFlags_AllowWhenBlockedByPopup |
-  HoveredFlags_AllowWhenBlockedByActiveItem | HoveredFlags_AllowWhenOverlapped)");
+R"(HoveredFlags_AllowWhenBlockedByPopup |
+   HoveredFlags_AllowWhenBlockedByActiveItem | HoveredFlags_AllowWhenOverlapped)");
 
-API_SECTION_P(hoveredFlags, "IsWindowHovered only");
+API_SECTION_P(itemHoveredFlags, "Mouse Hovering Delays",
+R"(Generally you can use HoveredFlags_ForTooltip to use application-standardized flags.
+  Use those if you need specific overrides. See also HoveredFlags_Stationary.)");
+API_ENUM(0_9, ImGui, HoveredFlags_DelayNone,
+  "Return true immediately (default). As this is the default you generally ignore this.");
+API_ENUM(0_8, ImGui, HoveredFlags_DelayShort,
+R"(Return true after ConfigVar_HoverDelayShort elapsed (~0.15 sec)
+   (shared between items) + requires mouse to be stationary for
+   ConfigVar_HoverStationaryDelay (once per item).)");
+API_ENUM(0_8, ImGui, HoveredFlags_DelayNormal,
+R"(Return true after ConfigVar_HoverDelayNormal elapsed (~0.40 sec)
+   (shared between items) + requires mouse to be stationary for
+   ConfigVar_HoverStationaryDelay (once per item).)");
+API_ENUM(0_8, ImGui, HoveredFlags_NoSharedDelay,
+R"(Disable shared delay system where moving from one item to the next keeps
+   the previous timer for a short time (standard for tooltips with long delays)");
+
+API_SECTION_P(hoveredFlags, "For IsWindowHovered");
 API_ENUM(0_1, ImGui, HoveredFlags_ChildWindows,
-  "IsWindowHovered only: Return true if any children of the window is hovered.");
+  "Return true if any children of the window is hovered.");
 API_ENUM(0_1, ImGui, HoveredFlags_RootWindow,
-  "IsWindowHovered only: Test from root window (top most parent of the current hierarchy).");
+  "Test from root window (top most parent of the current hierarchy).");
 API_ENUM(0_1, ImGui, HoveredFlags_AnyWindow,
-  "IsWindowHovered only: Return true if any window is hovered.");
+  "Return true if any window is hovered.");
 API_ENUM(0_5_10, ImGui, HoveredFlags_NoPopupHierarchy,
-  R"(IsWindowHovered only: Do not consider popup hierarchy (do not treat popup
+  R"(Do not consider popup hierarchy (do not treat popup
   emitter as parent of popup) (when used with _ChildWindows or _RootWindow).)");
 API_ENUM(0_5_10, ImGui, HoveredFlags_DockHierarchy,
-  R"(IsWindowHovered only: Consider docking hierarchy (treat dockspace host as
+  R"(Consider docking hierarchy (treat dockspace host as
   parent of docked window) (when used with _ChildWindows or _RootWindow).)");
 API_ENUM(0_1, ImGui, HoveredFlags_RootAndChildWindows,
   "HoveredFlags_RootWindow | HoveredFlags_ChildWindows");

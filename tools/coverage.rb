@@ -102,6 +102,7 @@ NATIVE_ONLY = [
   'bool ImGui::TreeNodeExV(const char*, ImGuiTreeNodeFlags, const char*, va_list)',
   'bool ImGui::TreeNodeExV(const void*, ImGuiTreeNodeFlags, const char*, va_list)',
   'void ImGui::SetTooltipV(const char*, va_list)',
+  'void ImGui::SetItemTooltipV(const char*, va_list)',
   'void ImGui::TextV(const char*, va_list)',
   'void ImGui::TextColoredV(const ImVec4&, const char*, va_list)',
   'void ImGui::TextDisabledV(const char*, va_list)',

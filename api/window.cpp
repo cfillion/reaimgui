@@ -174,7 +174,7 @@ See flags for options.)")
   return ImGui::IsWindowFocused(API_RO_GET(flags));
 }
 
-API_FUNC(0_1, bool, IsWindowHovered, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsWindowHovered, (ImGui_Context*,ctx)
 (int*,API_RO(flags),ImGuiHoveredFlags_None),
 R"(Is current window hovered (and typically: not blocked by a popup/modal)?
 See flags for options.)")
@@ -205,14 +205,14 @@ API_FUNC(0_1, void, GetWindowSize, (ImGui_Context*,ctx)
 }
 
 API_FUNC(0_1, double, GetWindowWidth, (ImGui_Context*,ctx),
-"Get current window width (shortcut for (select(1, GetWindowSize())).")
+"Get current window width (shortcut for (GetWindowSize().w).")
 {
   FRAME_GUARD;
   return ImGui::GetWindowWidth();
 }
 
 API_FUNC(0_1, double, GetWindowHeight, (ImGui_Context*,ctx),
-"Get current window height (shortcut for (select(2, GetWindowSize())).")
+"Get current window height (shortcut for (GetWindowSize().h).")
 {
   FRAME_GUARD;
   return ImGui::GetWindowHeight();

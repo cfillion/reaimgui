@@ -162,5 +162,5 @@ API_ENUM(0_1, ImGui, SelectableFlags_AllowDoubleClick,
   "Generate press events on double clicks too.");
 API_ENUM(0_1, ImGui, SelectableFlags_Disabled,
   "Cannot be selected, display grayed out text.");
-API_ENUM(0_1, ImGui, SelectableFlags_AllowItemOverlap,
+API_ENUM(0_9, ImGui, SelectableFlags_AllowOverlap,
   "Hit testing to allow subsequent widgets to overlap this one.");

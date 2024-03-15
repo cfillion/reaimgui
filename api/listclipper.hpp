@@ -22,7 +22,7 @@
 
 class ListClipper final : public Resource {
 public:
-  ListClipper();
+  ListClipper(Context *);
   ~ListClipper();
   ImGuiListClipper *operator->();
 

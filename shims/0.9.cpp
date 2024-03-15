@@ -24,6 +24,8 @@
 #include "../src/function.hpp"
 #include "../src/image.hpp"
 
+#include <imgui/imgui_internal.h>
+
 SHIM("0.9",
   (DrawListSplitter*, CreateDrawListSplitter, DrawListProxy*)
   (Font*,        CreateFont, const char*, int, RO<int*>)
@@ -35,6 +37,13 @@ SHIM("0.9",
   (TextFilter*,  CreateTextFilter, RO<const char*>)
 
   (bool, TableGetColumnSortSpecs, Context*, int, W<int*>, W<int*>, W<int*>)
+
+  (int, SelectableFlags_AllowOverlap)
+  (int, TreeNodeFlags_AllowOverlap)
+
+  (int, HoveredFlags_AllowWhenOverlappedByItem)
+  (bool, IsItemHovered,   Context*, RO<int*>)
+  (bool, IsWindowHovered, Context*, RO<int*>)
 );
 
 SHIM_PROXY_BEGIN(CreateExemptGCCheck, func, args)
@@ -63,4 +72,23 @@ SHIM_FUNC(0_1, bool, TableGetColumnSortSpecs, (Context*,ctx)
   if(sort_order) *sort_order = id;
   return api.TableGetColumnSortSpecs(ctx, id,
     column_index, column_user_id, sort_direction);
+}
+
+// dear imgui 1.89.7
+SHIM_FUNC(0_1, void, SetItemAllowOverlap, (Context*,ctx)) {} // always been broken
+SHIM_ALIAS(0_1, SelectableFlags_AllowItemOverlap, SelectableFlags_AllowOverlap)
+SHIM_ALIAS(0_1, TreeNodeFlags_AllowItemOverlap,   TreeNodeFlags_AllowOverlap)
+SHIM_FUNC(0_1, bool, IsItemHovered, (Context*,ctx) (RO<int*>,flags))
+{
+  if(flags) {
+    *flags &= ImGuiHoveredFlags_AllowedMaskForIsItemHovered;
+    *flags |= api.HoveredFlags_AllowWhenOverlappedByItem();
+  }
+  return api.IsItemHovered(ctx, flags);
+}
+SHIM_FUNC(0_1, bool, IsWindowHovered, (Context*,ctx) (RO<int*>,flags))
+{
+  if(flags)
+    *flags &= ImGuiHoveredFlags_AllowedMaskForIsWindowHovered;
+  return api.IsWindowHovered(ctx, flags);
 }

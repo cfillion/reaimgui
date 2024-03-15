@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.6)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.7)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -147,7 +147,7 @@ end
 -- In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
 function demo.HelpMarker(desc)
   ImGui.TextDisabled(ctx, '(?)')
-  if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayShort) and ImGui.BeginTooltip(ctx) then
+  if ImGui.BeginItemTooltip(ctx) then
     ImGui.PushTextWrapPos(ctx, ImGui.GetFontSize(ctx) * 35.0)
     ImGui.Text(ctx, desc)
     ImGui.PopTextWrapPos(ctx)
@@ -498,6 +498,23 @@ function demo.ShowDemoWindow(open)
       ImGui.SameLine(ctx); demo.HelpMarker('Some calls to Begin()/BeginChild() will return false.\n\nWill cycle through window depths then repeat. Windows should be flickering while running.')
       -- configVarCheckbox('ConfigVar_DebugIgnoreFocusLoss')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Option to deactivate io.AddFocusEvent(false) handling. May facilitate interactions with a debugger when focus loss leads to clearing inputs data.')
+      -- configVarCheckbox('ConfigVar_DebugIniSettings')
+      -- ImGui.SameLine(ctx); demo.HelpMarker('Option to save .ini data with extra comments (particularly helpful for Docking, but makes saving slower).')
+
+      ImGui.SeparatorText(ctx, 'Tooltips')
+      for n = 0, 1 do
+        if ImGui.TreeNode(ctx, n == 0 and 'HoverFlagsForTooltipMouse' or 'HoverFlagsForTooltipNav') then
+          local var = n == 0 and ImGui.ConfigVar_HoverFlagsForTooltipMouse or ImGui.ConfigVar_HoverFlagsForTooltipNav
+          local val = ImGui.GetConfigVar(ctx, var)
+          rv, val = ImGui.CheckboxFlags(ctx, 'HoveredFlags_DelayNone',     val, ImGui.HoveredFlags_DelayNone)
+          rv, val = ImGui.CheckboxFlags(ctx, 'HoveredFlags_DelayShort',    val, ImGui.HoveredFlags_DelayShort)
+          rv, val = ImGui.CheckboxFlags(ctx, 'HoveredFlags_DelayNormal',   val, ImGui.HoveredFlags_DelayNormal)
+          rv, val = ImGui.CheckboxFlags(ctx, 'HoveredFlags_Stationary',    val, ImGui.HoveredFlags_Stationary)
+          rv, val = ImGui.CheckboxFlags(ctx, 'HoveredFlags_NoSharedDelay', val, ImGui.HoveredFlags_NoSharedDelay)
+          ImGui.SetConfigVar(ctx, var, val)
+          ImGui.TreePop(ctx)
+        end
+      end
 
       ImGui.SetConfigVar(ctx, ImGui.ConfigVar_Flags, config.flags)
       ImGui.TreePop(ctx)
@@ -652,7 +669,6 @@ function demo.ShowDemoWindowWidgets()
         check   = true,
         radio   = 0,
         counter = 0,
-        tooltip = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 }),
         curitem = 0,
         str0    = 'Hello, world!',
         str1    = '',
@@ -725,35 +741,8 @@ function demo.ShowDemoWindowWidgets()
     ImGui.SameLine(ctx)
     ImGui.Text(ctx, ('%d'):format(widgets.basic.counter))
 
-    do
-      -- Tooltips
-      -- ImGui.AlignTextToFramePadding(ctx)
-      ImGui.Text(ctx, 'Tooltips:')
-
-      ImGui.SameLine(ctx)
-      ImGui.Button(ctx, 'Basic')
-      if ImGui.IsItemHovered(ctx) then
-        ImGui.SetTooltip(ctx, 'I am a tooltip')
-      end
-
-      ImGui.SameLine(ctx)
-      ImGui.Button(ctx, 'Fancy')
-      if ImGui.IsItemHovered(ctx) and ImGui.BeginTooltip(ctx) then
-        ImGui.Text(ctx, 'I am a fancy tooltip')
-        ImGui.PlotLines(ctx, 'Curve', widgets.basic.tooltip)
-        ImGui.Text(ctx, ('Sin(time) = %f'):format(math.sin(ImGui.GetTime(ctx))))
-        ImGui.EndTooltip(ctx)
-      end
-
-      ImGui.SameLine(ctx)
-      ImGui.Button(ctx, 'Delayed')
-      if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNormal) then -- With a delay
-        ImGui.SetTooltip(ctx, 'I am a tooltip with a delay.')
-      end
-
-      ImGui.SameLine(ctx)
-      demo.HelpMarker('Tooltip are created by using the IsItemHovered() function over any kind of item.')
-    end
+    ImGui.Button(ctx, 'Tooltip')
+    ImGui.SetItemTooltip(ctx, 'I am a tooltip')
 
     ImGui.LabelText(ctx, 'label', 'Value')
 
@@ -855,6 +844,89 @@ function demo.ShowDemoWindowWidgets()
         'Using the simplified one-liner ListBox API here.\n\z
         Refer to the "List boxes" section below for an explanation of how to use\z
         the more flexible and general BeginListBox/EndListBox API.')
+    end
+
+    ImGui.TreePop(ctx)
+  end
+
+  if ImGui.TreeNode(ctx, 'Tooltips') then
+    if not widgets.tooltips then
+      widgets.tooltips = {
+        curve = reaper.new_array({ 0.6, 0.1, 1.0, 0.5, 0.92, 0.1, 0.2 }),
+        always_on = 0,
+      }
+    end
+
+    ImGui.SeparatorText(ctx, 'General')
+
+    -- Typical use cases:
+    -- - Short-form (text only):      SetItemTooltip("Hello");
+    -- - Short-form (any contents):   if (BeginItemTooltip()) { Text("Hello"); EndTooltip(); }
+
+    -- - Full-form (text only):       if (IsItemHovered(...)) { SetTooltip("Hello"); }
+    -- - Full-form (any contents):    if (IsItemHovered(...) && BeginTooltip()) { Text("Hello"); EndTooltip(); }
+
+    demo.HelpMarker(
+      'Tooltip are typically created by using a IsItemHovered() + SetTooltip() sequence.\n\n\z
+       We provide a helper SetItemTooltip() function to perform the two with standards flags.')
+
+    local sz_w, sz_h = -FLT_MIN, 0.0
+    ImGui.Button(ctx, 'Basic', sz_w, sz_h)
+    ImGui.SetItemTooltip(ctx, 'I am a tooltip')
+
+    ImGui.Button(ctx, 'Fancy', sz_w, sz_h)
+    if ImGui.BeginItemTooltip(ctx) then
+      ImGui.Text(ctx, 'I am a fancy tooltip')
+      ImGui.PlotLines(ctx, 'Curve', widgets.tooltips.curve)
+      ImGui.Text(ctx, ('Sin(time) = %f'):format(math.sin(ImGui.GetTime(ctx))))
+      ImGui.EndTooltip(ctx)
+    end
+
+    ImGui.SeparatorText(ctx, 'Always On')
+
+    -- Showcase NOT relying on a IsItemHovered() to emit a tooltip.
+    -- Here the tooltip is always emitted when 'always_on == true'.
+    rv, widgets.tooltips.always_on = ImGui.RadioButtonEx(ctx, 'Off', widgets.tooltips.always_on, 0)
+    ImGui.SameLine(ctx)
+    rv, widgets.tooltips.always_on = ImGui.RadioButtonEx(ctx, 'Always On (Simple)', widgets.tooltips.always_on, 1)
+    ImGui.SameLine(ctx)
+    rv, widgets.tooltips.always_on = ImGui.RadioButtonEx(ctx, 'Always On (Advanced)', widgets.tooltips.always_on, 2)
+    if widgets.tooltips.always_on == 1 then
+      ImGui.SetTooltip(ctx, 'I am following you around.')
+    elseif widgets.tooltips.always_on == 2 and ImGui.BeginTooltip(ctx) then
+      ImGui.ProgressBar(ctx, math.sin(ImGui.GetTime(ctx)) * 0.5 + 0.5, ImGui.GetFontSize(ctx) * 25, 0.0)
+      ImGui.EndTooltip(ctx)
+    end
+
+    ImGui.SeparatorText(ctx, 'Custom')
+
+    -- The following examples are passed for documentation purpose but may not be useful to most users.
+    -- Passing HoveredFlags_Tooltip to IsItemHovered() will pull HoveredFlags flags values from
+    -- ConfigVar_HoverFlagsForTooltipMouse or ConfigVar_HoverFlagsForTooltipNav depending on whether mouse or gamepad/keyboard is being used.
+    -- With default settings, HoveredFlags_ForTooltip is equivalent to HoveredFlags_DelayShort + HoveredFlags_Stationary.
+    ImGui.Button(ctx, 'Manual', sz_w, sz_h)
+    if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_ForTooltip) then
+      ImGui.SetTooltip(ctx, 'I am a manually emitted tooltip')
+    end
+
+    ImGui.Button(ctx, 'DelayNone', sz_w, sz_h)
+    if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNone) then
+      ImGui.SetTooltip(ctx, 'I am a tooltip with no delay.')
+    end
+
+    ImGui.Button(ctx, 'DelayShort', sz_w, sz_h)
+    if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayShort | ImGui.HoveredFlags_NoSharedDelay) then
+      ImGui.SetTooltip(ctx, ('I am a tooltip with a short delay (%0.2f sec).'):format(ImGui.GetConfigVar(ctx, ImGui.ConfigVar_HoverDelayShort)))
+    end
+
+    ImGui.Button(ctx, 'DelayLong', sz_w, sz_h)
+    if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNormal | ImGui.HoveredFlags_NoSharedDelay) then
+      ImGui.SetTooltip(ctx, ('I am a tooltip with a long delay (%0.2f sec)'):format(ImGui.GetConfigVar(ctx, ImGui.ConfigVar_HoverDelayNormal)))
+    end
+
+    ImGui.Button(ctx, 'Stationary', sz_w, sz_h)
+    if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_Stationary) then
+      ImGui.SetTooltip(ctx, 'I am a tooltip requiring mouse to be stationary before activating.')
     end
 
     ImGui.TreePop(ctx)
@@ -1227,7 +1299,7 @@ function demo.ShowDemoWindowWidgets()
       local border_col = ImGui.GetStyleColor(ctx, ImGui.Col_Border)
       ImGui.Image(ctx, widgets.images.bitmap, my_tex_w, my_tex_h,
         uv_min_x, uv_min_y, uv_max_x, uv_max_y, tint_col, border_col)
-      if ImGui.IsItemHovered(ctx) and ImGui.BeginTooltip(ctx) then
+      if ImGui.BeginItemTooltip(ctx) then
         local region_sz = 32.0
         local mouse_x, mouse_y = ImGui.GetMousePos(ctx)
         local region_x = mouse_x - pos_x - region_sz * 0.5
@@ -2662,38 +2734,43 @@ label:
     end
 
     local hovered_delay_none = ImGui.IsItemHovered(ctx)
+    local hovered_delay_stationary = ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_Stationary)
     local hovered_delay_short = ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayShort)
     local hovered_delay_normal = ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_DelayNormal)
+    local hovered_delay_tooltip = ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_ForTooltip) -- = Normal + Stationary
 
     -- Display the values of IsItemHovered() and other common item state functions.
     -- Note that the ImGuiHoveredFlags_XXX flags can be combined.
     -- Because BulletText is an item itself and that would affect the output of IsItemXXX functions,
     -- we query every state in a single call to avoid storing them and to simplify the code.
-    ImGui.BulletText(ctx, ([[Return value = %s
-IsItemFocused() = %s
-IsItemHovered() = %s
-IsItemHovered(_AllowWhenBlockedByPopup) = %s
-IsItemHovered(_AllowWhenBlockedByActiveItem) = %s
-IsItemHovered(_AllowWhenOverlapped) = %s
-IsItemHovered(_AllowWhenDisabled) = %s
-IsItemHovered(_RectOnly) = %s
-IsItemActive() = %s
-IsItemEdited() = %s
-IsItemActivated() = %s
-IsItemDeactivated() = %s
-IsItemDeactivatedAfterEdit() = %s
-IsItemVisible() = %s
-IsItemClicked() = %s
-IsItemToggledOpen() = %s
-GetItemRectMin() = (%.1f, %.1f)
-GetItemRectMax() = (%.1f, %.1f)
-GetItemRectSize() = (%.1f, %.1f)]]):format(
+    ImGui.BulletText(ctx,
+      ('Return value = %s\n\z
+        IsItemFocused() = %s\n\z
+        IsItemHovered() = %s\n\z
+        IsItemHovered(_AllowWhenBlockedByPopup) = %s\n\z
+        IsItemHovered(_AllowWhenBlockedByActiveItem) = %s\n\z
+        IsItemHovered(_AllowWhenOverlappedByItem) = %s\n\z
+        IsItemHovered(_AllowWhenOverlappedByWindow) = %s\n\z
+        IsItemHovered(_AllowWhenDisabled) = %s\n\z
+        IsItemHovered(_RectOnly) = %s\n\z
+        IsItemActive() = %s\n\z
+        IsItemEdited() = %s\n\z
+        IsItemActivated() = %s\n\z
+        IsItemDeactivated() = %s\n\z
+        IsItemDeactivatedAfterEdit() = %s\n\z
+        IsItemVisible() = %s\n\z
+        IsItemClicked() = %s\n\z
+        IsItemToggledOpen() = %s\n\z
+        GetItemRectMin() = (%.1f, %.1f)\n\z
+        GetItemRectMax() = (%.1f, %.1f)\n\z
+        GetItemRectSize() = (%.1f, %.1f)'):format(
       rv,
       ImGui.IsItemFocused(ctx),
       ImGui.IsItemHovered(ctx),
       ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByPopup),
       ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByActiveItem),
-      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenOverlapped),
+      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenOverlappedByItem),
+      ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenOverlappedByWindow),
       ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_AllowWhenDisabled),
       ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_RectOnly),
       ImGui.IsItemActive(ctx),
@@ -2709,8 +2786,13 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
       ImGui.GetItemRectSize(ctx), select(2, ImGui.GetItemRectSize(ctx))
     ))
     ImGui.BulletText(ctx,
-      ('w/ Hovering Delay: None = %s, Fast = %s, Normal = %s'):format
-      (hovered_delay_none, hovered_delay_short, hovered_delay_normal))
+      ('with Hovering Delay or Stationary test:\n\z
+        IsItemHovered() = %s\n\z
+        IsItemHovered(_Stationary) = %s\n\z
+        IsItemHovered(_DelayShort) = %s\n\z
+        IsItemHovered(_DelayNormal) = %s\n\z
+        IsItemHovered(_Tooltip) = %s'):format(
+      hovered_delay_none, hovered_delay_stationary, hovered_delay_short, hovered_delay_normal, hovered_delay_tooltip))
 
     if widgets.query_item.item_disabled then
       ImGui.EndDisabled(ctx)
@@ -2739,17 +2821,18 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
 
     if visible then
       -- Testing IsWindowFocused() function with its various flags.
-      ImGui.BulletText(ctx, ([[IsWindowFocused() = %s
-  IsWindowFocused(_ChildWindows) = %s
-  IsWindowFocused(_ChildWindows|_NoPopupHierarchy) = %s
-  IsWindowFocused(_ChildWindows|_DockHierarchy) = %s
-  IsWindowFocused(_ChildWindows|_RootWindow) = %s
-  IsWindowFocused(_ChildWindows|_RootWindow|_NoPopupHierarchy) = %s
-  IsWindowFocused(_ChildWindows|_RootWindow|_DockHierarchy) = %s
-  IsWindowFocused(_RootWindow) = %s
-  IsWindowFocused(_RootWindow|_NoPopupHierarchy) = %s
-  IsWindowFocused(_RootWindow|_DockHierarchy) = %s
-  IsWindowFocused(_AnyWindow) = %s]]):format(
+      ImGui.BulletText(ctx,
+        ('IsWindowFocused() = %s\n\z
+          IsWindowFocused(_ChildWindows) = %s\n\z
+          IsWindowFocused(_ChildWindows|_NoPopupHierarchy) = %s\n\z
+          IsWindowFocused(_ChildWindows|_DockHierarchy) = %s\n\z
+          IsWindowFocused(_ChildWindows|_RootWindow) = %s\n\z
+          IsWindowFocused(_ChildWindows|_RootWindow|_NoPopupHierarchy) = %s\n\z
+          IsWindowFocused(_ChildWindows|_RootWindow|_DockHierarchy) = %s\n\z
+          IsWindowFocused(_RootWindow) = %s\n\z
+          IsWindowFocused(_RootWindow|_NoPopupHierarchy) = %s\n\z
+          IsWindowFocused(_RootWindow|_DockHierarchy) = %s\n\z
+          IsWindowFocused(_AnyWindow) = %s'):format(
         ImGui.IsWindowFocused(ctx),
         ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows),
         ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_ChildWindows | ImGui.FocusedFlags_NoPopupHierarchy),
@@ -2763,20 +2846,22 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
         ImGui.IsWindowFocused(ctx, ImGui.FocusedFlags_AnyWindow)))
 
       -- Testing IsWindowHovered() function with its various flags.
-      ImGui.BulletText(ctx, ([[IsWindowHovered() = %s
-  IsWindowHovered(_AllowWhenBlockedByPopup) = %s
-  IsWindowHovered(_AllowWhenBlockedByActiveItem) = %s
-  IsWindowHovered(_ChildWindows) = %s
-  IsWindowHovered(_ChildWindows|_NoPopupHierarchy) = %s
-  IsWindowHovered(_ChildWindows|_DockHierarchy) = %s
-  IsWindowHovered(_ChildWindows|_RootWindow) = %s
-  IsWindowHovered(_ChildWindows|_RootWindow|_NoPopupHierarchy) = %s
-  IsWindowHovered(_ChildWindows|_RootWindow|_DockHierarchy) = %s
-  IsWindowHovered(_RootWindow) = %s
-  IsWindowHovered(_RootWindow|_NoPopupHierarchy) = %s
-  IsWindowHovered(_RootWindow|_DockHierarchy) = %s
-  IsWindowHovered(_ChildWindows|_AllowWhenBlockedByPopup) = %s
-  IsWindowHovered(_AnyWindow) = %s]]):format(
+      ImGui.BulletText(ctx,
+        ('IsWindowHovered() = %s\n\z
+          IsWindowHovered(_AllowWhenBlockedByPopup) = %s\n\z
+          IsWindowHovered(_AllowWhenBlockedByActiveItem) = %s\n\z
+          IsWindowHovered(_ChildWindows) = %s\n\z
+          IsWindowHovered(_ChildWindows|_NoPopupHierarchy) = %s\n\z
+          IsWindowHovered(_ChildWindows|_DockHierarchy) = %s\n\z
+          IsWindowHovered(_ChildWindows|_RootWindow) = %s\n\z
+          IsWindowHovered(_ChildWindows|_RootWindow|_NoPopupHierarchy) = %s\n\z
+          IsWindowHovered(_ChildWindows|_RootWindow|_DockHierarchy) = %s\n\z
+          IsWindowHovered(_RootWindow) = %s\n\z
+          IsWindowHovered(_RootWindow|_NoPopupHierarchy) = %s\n\z
+          IsWindowHovered(_RootWindow|_DockHierarchy) = %s\n\z
+          IsWindowHovered(_ChildWindows|_AllowWhenBlockedByPopup) = %s\n\z
+          IsWindowHovered(_AnyWindow) = %s\n\z
+          IsWindowHovered(_Stationary) = %s'):format(
         ImGui.IsWindowHovered(ctx),
         ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByPopup),
         ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AllowWhenBlockedByActiveItem),
@@ -2790,7 +2875,8 @@ GetItemRectSize() = (%.1f, %.1f)]]):format(
         ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_RootWindow | ImGui.HoveredFlags_NoPopupHierarchy),
         ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_RootWindow | ImGui.HoveredFlags_DockHierarchy),
         ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_ChildWindows | ImGui.HoveredFlags_AllowWhenBlockedByPopup),
-        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AnyWindow)))
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AnyWindow),
+        ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_Stationary)))
 
       if ImGui.BeginChild(ctx, 'child', 0, 50, true) then
         ImGui.Text(ctx, 'This is another child window for testing the _ChildWindows flag.')
@@ -3103,7 +3189,7 @@ function demo.ShowDemoWindowLayout()
       ImGui.PushID(ctx, i)
       rv,layout.horizontal.selection[i] = ImGui.ListBox(ctx, '', sel, items)
       ImGui.PopID(ctx)
-      --if ImGui.IsItemHovered(ctx) then ImGui.SetTooltip(ctx, ('ListBox %d hovered'):format(i)) end
+      -- ImGui.SetItemTooltip(ctx, ('ListBox %d hovered'):format(i))
     end
     ImGui.PopItemWidth(ctx)
 
@@ -3157,9 +3243,7 @@ function demo.ShowDemoWindowLayout()
     ImGui.SameLine(ctx)
     ImGui.Button(ctx, 'EEE')
     ImGui.EndGroup(ctx)
-    if ImGui.IsItemHovered(ctx) then
-      ImGui.SetTooltip(ctx, 'First group hovered')
-    end
+    ImGui.SetItemTooltip(ctx, 'First group hovered')
 
     -- Capture the group size and create widgets using the same size
     local size_w, size_h = ImGui.GetItemRectSize(ctx)
@@ -3749,9 +3833,7 @@ function demo.ShowDemoWindowPopups()
 
       ImGui.Separator(ctx)
       ImGui.Text(ctx, 'Tooltip here')
-      if ImGui.IsItemHovered(ctx) then
-        ImGui.SetTooltip(ctx, 'I am a tooltip over a popup')
-      end
+      ImGui.SetItemTooltip(ctx, 'I am a tooltip over a popup')
 
       if ImGui.Button(ctx, 'Stacked Popup') then
         ImGui.OpenPopup(ctx, 'another popup')
@@ -3837,9 +3919,7 @@ function demo.ShowDemoWindowPopups()
           end
           ImGui.EndPopup(ctx)
         end
-        if ImGui.IsItemHovered(ctx) then
-          ImGui.SetTooltip(ctx, 'Right-click to open popup')
-        end
+        ImGui.SetItemTooltip(ctx, 'Right-click to open popup')
       end
     end
 
@@ -4091,7 +4171,7 @@ function demo.EditTableSizingFlags(flags)
   end
   ImGui.SameLine(ctx)
   ImGui.TextDisabled(ctx, '(?)')
-  if ImGui.IsItemHovered(ctx) and ImGui.BeginTooltip(ctx) then
+  if ImGui.BeginItemTooltip(ctx) then
     ImGui.PushTextWrapPos(ctx, ImGui.GetFontSize(ctx) * 50.0)
     for m,policy in ipairs(policies) do
       ImGui.Separator(ctx)
@@ -5567,6 +5647,7 @@ function demo.ShowDemoWindowTables()
   -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once) -- [DEBUG]
   DoOpenAction()
   if ImGui.TreeNode(ctx, 'Advanced') then
+    local CT_Text, CT_Button, CT_SmallButton, CT_FillButton, CT_Selectable, CT_SelectableSpanRow = 0, 1, 2, 3, 4, 5
     if not tables.advanced then
       tables.advanced = {
         items = {},
@@ -5581,7 +5662,7 @@ function demo.ShowDemoWindowTables()
                 ImGui.TableFlags_ScrollX         |
                 ImGui.TableFlags_ScrollY         |
                 ImGui.TableFlags_SizingFixedFit,
-        contents_type           = 5, -- selectable span row
+        contents_type           = CT_SelectableSpanRow,
         freeze_cols             = 1,
         freeze_rows             = 1,
         items_count             = #template_items_names * 2,
@@ -5776,16 +5857,16 @@ function demo.ShowDemoWindowTables()
           ImGui.TableSetColumnIndex(ctx, 0)
           local label = ('%04d'):format(item.id)
           local contents_type = tables.advanced.contents_type
-          if contents_type == 0 then -- text
+          if contents_type == CT_Text then
               ImGui.Text(ctx, label)
-          elseif contents_type == 1 then -- button
+          elseif contents_type == CT_Button then
               ImGui.Button(ctx, label)
-          elseif contents_type == 2 then -- small button
+          elseif contents_type == CT_SmallButton then
               ImGui.SmallButton(ctx, label)
-          elseif contents_type == 3 then -- fill button
+          elseif contents_type == CT_FillButton then
               ImGui.Button(ctx, label, -FLT_MIN, 0.0)
-          elseif contents_type == 4 or contents_type == 5 then -- selectable/selectable (span row)
-            local selectable_flags = contents_type == 5 and ImGui.SelectableFlags_SpanAllColumns | ImGui.SelectableFlags_AllowItemOverlap or ImGui.SelectableFlags_None
+          elseif contents_type == CT_Selectable or contents_type == CT_SelectableSpanRow then
+            local selectable_flags = contents_type == CT_SelectableSpanRow and ImGui.SelectableFlags_SpanAllColumns | ImGui.SelectableFlags_AllowOverlap or ImGui.SelectableFlags_None
             if ImGui.Selectable(ctx, label, item.is_selected, selectable_flags, 0, tables.advanced.row_min_height) then
               if ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl) then
                 item.is_selected = not item.is_selected
