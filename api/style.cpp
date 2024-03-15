@@ -68,6 +68,7 @@ static constexpr StyleFields<float, ImVec2> g_styleVars[] {
   STYLEVAR(SeparatorTextBorderSize),
   STYLEVAR(SeparatorTextAlign),
   STYLEVAR(SeparatorTextPadding),
+  STYLEVAR(DockingSeparatorSize),
 };
 
 static_assert(std::size(g_styleVars) == ImGuiStyleVar_COUNT);

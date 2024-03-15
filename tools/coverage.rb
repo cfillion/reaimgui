@@ -188,6 +188,7 @@ NATIVE_ONLY_ENUMS = [
   /\AConfigFlags_(IsSRGB|IsTouchScreen|ViewportsEnable|DpiEnableScale(Viewports|Fonts))\z/, # backend internal flags
   'WindowFlags_NoBringToFrontOnFocus', # not supported with per-window viewports
   /\AMouseSource_/, # for backends (io.AddMouseSoruceEvent)
+  'StyleVar_DockingSeparatorSize', # only applicable mid-frame to DockSpace
 
   # only for dear imgui's internal use
   /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu|DockNodeHost)\z/,

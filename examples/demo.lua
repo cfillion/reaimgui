@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.7)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.8)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -1455,7 +1455,7 @@ function demo.ShowDemoWindowWidgets()
   if ImGui.TreeNode(ctx, 'Selectables') then
     if not widgets.selectables then
       widgets.selectables = {
-        basic    = { false, false, false, false, false },
+        basic    = { false, false, false, false },
         single   = -1,
         multiple = { false, false, false, false, false },
         sameline = { false, false, false },
@@ -1483,11 +1483,10 @@ function demo.ShowDemoWindowWidgets()
     if ImGui.TreeNode(ctx, 'Basic') then
       rv,widgets.selectables.basic[1] = ImGui.Selectable(ctx, '1. I am selectable', widgets.selectables.basic[1])
       rv,widgets.selectables.basic[2] = ImGui.Selectable(ctx, '2. I am selectable', widgets.selectables.basic[2])
-      ImGui.Text(ctx, '(I am not selectable)')
-      rv,widgets.selectables.basic[4] = ImGui.Selectable(ctx, '4. I am selectable', widgets.selectables.basic[4])
-      if ImGui.Selectable(ctx, '5. I am double clickable', widgets.selectables.basic[5], ImGui.SelectableFlags_AllowDoubleClick) then
+      rv,widgets.selectables.basic[3] = ImGui.Selectable(ctx, '3. I am selectable', widgets.selectables.basic[3])
+      if ImGui.Selectable(ctx, '4. I am double clickable', widgets.selectables.basic[4], ImGui.SelectableFlags_AllowDoubleClick) then
         if ImGui.IsMouseDoubleClicked(ctx, 0) then
-          widgets.selectables.basic[5] = not widgets.selectables.basic[5]
+          widgets.selectables.basic[4] = not widgets.selectables.basic[4]
         end
       end
       ImGui.TreePop(ctx)
@@ -1517,10 +1516,15 @@ function demo.ShowDemoWindowWidgets()
       ImGui.TreePop(ctx)
     end
 
-    if ImGui.TreeNode(ctx, 'Rendering more text into the same line') then
-      rv,widgets.selectables.sameline[1] = ImGui.Selectable(ctx, 'main.c',    widgets.selectables.sameline[1]); ImGui.SameLine(ctx, 300); ImGui.Text(ctx, ' 2,345 bytes')
-      rv,widgets.selectables.sameline[2] = ImGui.Selectable(ctx, 'Hello.cpp', widgets.selectables.sameline[2]); ImGui.SameLine(ctx, 300); ImGui.Text(ctx, '12,345 bytes')
-      rv,widgets.selectables.sameline[3] = ImGui.Selectable(ctx, 'Hello.h',   widgets.selectables.sameline[3]); ImGui.SameLine(ctx, 300); ImGui.Text(ctx, ' 2,345 bytes')
+    if ImGui.TreeNode(ctx, 'Rendering more items on the same line') then
+      -- (1) Using SetNextItemAllowOverlap()
+      -- (2) Using the Selectable() override that takes "bool* p_selected" parameter, the bool value is toggled automatically.
+      ImGui.SetNextItemAllowOverlap(ctx); rv,widgets.selectables.sameline[1] = ImGui.Selectable(ctx, 'main.c',    widgets.selectables.sameline[1])
+      ImGui.SameLine(ctx); ImGui.SmallButton(ctx, 'Link 1')
+      ImGui.SetNextItemAllowOverlap(ctx); rv,widgets.selectables.sameline[2] = ImGui.Selectable(ctx, 'Hello.cpp', widgets.selectables.sameline[2])
+      ImGui.SameLine(ctx); ImGui.SmallButton(ctx, 'Link 2')
+      ImGui.SetNextItemAllowOverlap(ctx); rv,widgets.selectables.sameline[3] = ImGui.Selectable(ctx, 'Hello.h',   widgets.selectables.sameline[3])
+      ImGui.SameLine(ctx); ImGui.SmallButton(ctx, 'Link 3')
       ImGui.TreePop(ctx)
     end
     if ImGui.TreeNode(ctx, 'In columns') then
@@ -1736,6 +1740,21 @@ label:
       local edit_count = ImGui.Function_GetValue(widgets.input.callback, 'edit_count')
       ImGui.SameLine(ctx); ImGui.Text(ctx, ('(%d)'):format(edit_count))
 
+      ImGui.TreePop(ctx)
+    end
+
+    if ImGui.TreeNode(ctx, 'Miscellaneous') then
+      if not widgets.input.misc then
+        widgets.input.misc = {
+          buf = '',
+          flags = ImGui.InputTextFlags_EscapeClearsAll,
+        }
+      end
+
+      rv, widgets.input.misc.flags = ImGui.CheckboxFlags(ctx, 'InputTextFlags_EscapeClearsAll', widgets.input.misc.flags, ImGui.InputTextFlags_EscapeClearsAll)
+      rv, widgets.input.misc.flags = ImGui.CheckboxFlags(ctx, 'InputTextFlags_ReadOnly', widgets.input.misc.flags, ImGui.InputTextFlags_ReadOnly)
+      rv, widgets.input.misc.flags = ImGui.CheckboxFlags(ctx, 'InputTextFlags_NoUndoRedo', widgets.input.misc.flags, ImGui.InputTextFlags_NoUndoRedo)
+      rv, widgets.input.misc.buf   = ImGui.InputText(ctx, 'Hello', widgets.input.misc.buf, widgets.input.misc.flags)
       ImGui.TreePop(ctx)
     end
 
@@ -3757,6 +3776,40 @@ function demo.ShowDemoWindowLayout()
         end
       end
     end
+
+    ImGui.TreePop(ctx)
+  end
+
+  if ImGui.TreeNode(ctx, 'Overlap Mode') then
+    if not layout.overlap then
+      layout.overlap = {
+        enable_allow_overlap = true,
+      }
+    end
+
+    demo.HelpMarker(
+      "Hit-testing is by default performed in item submission order, which generally is perceived as 'back-to-front'.\n\n\z
+       By using SetNextItemAllowOverlap() you can notify that an item may be overlapped by another. Doing so alters the hovering logic: items using AllowOverlap mode requires an extra frame to accept hovered state.")
+    rv, layout.overlap.enable_allow_overlap = ImGui.Checkbox(ctx, 'Enable AllowOverlap', layout.overlap.enable_allow_overlap)
+
+    local button1_pos_x, button1_pos_y = ImGui.GetCursorScreenPos(ctx)
+    local button2_pos_x, button2_pos_y = button1_pos_x + 50.0, button1_pos_y + 50.0
+    if layout.overlap.enable_allow_overlap then
+      ImGui.SetNextItemAllowOverlap(ctx)
+    end
+    ImGui.Button(ctx, 'Button 1', 80, 80)
+    ImGui.SetCursorScreenPos(ctx, button2_pos_x, button2_pos_y)
+    ImGui.Button(ctx, 'Button 2', 80, 80)
+
+    -- This is typically used with width-spanning items.
+    -- (note that Selectable() has a dedicated flag SelectableFlags_AllowOverlap, which is a shortcut
+    -- for using SetNextItemAllowOverlap(). For demo purpose we use SetNextItemAllowOverlap() here.)
+    if layout.overlap.enable_allow_overlap then
+      ImGui.SetNextItemAllowOverlap(ctx)
+    end
+    ImGui.Selectable(ctx, 'Some Selectable', false)
+    ImGui.SameLine(ctx)
+    ImGui.SmallButton(ctx, '++')
 
     ImGui.TreePop(ctx)
   end
@@ -6642,6 +6695,9 @@ function demo.ShowStyleEditor()
       slider('SeparatorTextPadding',    0.0, 40.0, '%.0f')
       -- slider('LogSliderDeadzone', 0.0, 12.0, '%.0f')
 
+      -- ImGui.SeparatorText(ctx, 'Docking')
+      -- slider('DockingSeparatorSize', 0.0, 12.0, '%.0f')
+
       -- ImGui.SeparatorText(ctx, 'Misc')
       -- ImGui.Text(ctx, 'Safe Area Padding')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Adjust if you cannot see the edges of your screen (ctx, e.g. on a TV where scaling has not been configured).')
@@ -8230,17 +8286,19 @@ end
 -- location for your application.
 -- void ShowExampleAppDockSpace(bool* p_open)
 -- {
---     // In 99% case you should be able to just call DockSpaceOverViewport() and ignore all the code below!
---     // In this specific demo, we are not using DockSpaceOverViewport() because:
---     // - we allow the host window to be floating/moveable instead of filling the viewport (when opt_fullscreen == false)
---     // - we allow the host window to have padding (when opt_padding == true)
---     // - we have a local menu bar in the host window (vs. you could use BeginMainMenuBar() + DockSpaceOverViewport() in your code!)
---     // TL;DR; this demo is more complicated than what you would normally use.
---     // If we removed all the options we are showcasing, this demo would become:
+--     // TL;DR; this demo is more complicated than what most users would normally use.
+--     // If we remove all options we are showcasing, this demo would become:
 --     //     void ShowExampleAppDockSpace()
 --     //     {
 --     //         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 --     //     }
+--     // In most cases you should be able to just call DockSpaceOverViewport() and ignore all the code below!
+--     // In this specific demo, we are not using DockSpaceOverViewport() because:
+--     // - (1) we allow the host window to be floating/moveable instead of filling the viewport (when opt_fullscreen == false)
+--     // - (2) we allow the host window to have padding (when opt_padding == true)
+--     // - (3) we expose many flags and need a way to have them visible.
+--     // - (4) we have a local menu bar in the host window (vs. you could use BeginMainMenuBar() + DockSpaceOverViewport()
+--     //      in your code, but we don't here because we allow the window to be floating)
 --
 --     static bool opt_fullscreen = true;
 --     static bool opt_padding = false;
