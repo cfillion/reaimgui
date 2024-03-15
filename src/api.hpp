@@ -19,6 +19,7 @@
 #define REAIMGUI_API_HPP
 
 #include "error.hpp"
+#include "plugin_register.hpp"
 #include "vernum.hpp"
 
 #define API_PREFIX "ImGui_"
@@ -41,11 +42,6 @@ namespace API {
       const char *title, const char *help = nullptr);
     const Section *parent;
     const char *file, *title, *help;
-  };
-
-  struct PluginRegister {
-    const char *key; void *value;
-    void announce(bool) const;
   };
 
   class Callable { // all instances must be mutable (not in .rodata)!
@@ -94,23 +90,23 @@ namespace API {
   class ReaScriptFunc final : public Callable, public Symbol {
   public:
     ReaScriptFunc(VerNum availableSince, void *impl,
-                  const PluginRegister &native,
-                  const PluginRegister &reascript,
-                  const PluginRegister &desc);
+                  const PluginRegisterBase &native,
+                  const PluginRegisterBase &reascript,
+                  const PluginRegisterBase &desc);
     void announce(bool) const override;
 
-    void *safeImpl()   const override { return m_regs[0].value; }
+    void *safeImpl()   const override { return m_regs[0].value(); }
     void *unsafeImpl() const override { return m_impl; }
 
     const char *name() const override;
     const char *definition() const override {
-      return static_cast<const char *>(m_regs[2].value); }
+      return static_cast<const char *>(m_regs[2].value()); }
     VerNum version()  const override { return Callable::version(); }
     bool isConstant() const override { return m_flags & Constant;  }
 
   private:
     void *m_impl;
-    PluginRegister m_regs[3]; // native, reascript, definition
+    PluginRegisterBase m_regs[3]; // native, reascript, definition
   };
 
   class ShimFunc final : public Callable {

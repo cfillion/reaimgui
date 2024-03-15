@@ -160,16 +160,9 @@ Symbol::Symbol(const int flags)
 //   lastSymbol() = const_cast<Symbol *>(m_next);
 // }
 
-void PluginRegister::announce(const bool init) const
+static const char *extractRegName(const PluginRegisterBase &reg)
 {
-  // the original key string must remain valid even when unregistering
-  // in REAPER < 6.67 (see reapack#56)
-  plugin_register(key + init, value);
-}
-
-static const char *extractRegName(const PluginRegister &reg)
-{
-  return &reg.key[strlen("-API_" API_PREFIX)];
+  return &reg.key()[strlen("-API_" API_PREFIX)];
 }
 
 constexpr bool isDefConstant(const char *definition)
@@ -180,19 +173,19 @@ constexpr bool isDefConstant(const char *definition)
 }
 
 ReaScriptFunc::ReaScriptFunc(const VerNum version, void *impl,
-                             const PluginRegister &native,
-                             const PluginRegister &reascript,
-                             const PluginRegister &desc)
+                             const PluginRegisterBase &native,
+                             const PluginRegisterBase &reascript,
+                             const PluginRegisterBase &desc)
   : Callable { version, VerNum::MAX, extractRegName(native) },
     Symbol { TargetNative | TargetScript |
-      (isDefConstant(static_cast<const char *>(desc.value)) ? Constant : 0) },
+      (isDefConstant(desc.value<const char *>()) ? Constant : 0) },
     m_impl { impl }, m_regs { native, reascript, desc }
 {
 }
 
 void ReaScriptFunc::announce(const bool init) const
 {
-  for(const PluginRegister &reg : m_regs)
+  for(const PluginRegisterBase &reg : m_regs)
     reg.announce(init);
 }
 

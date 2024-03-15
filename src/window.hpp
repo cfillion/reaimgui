@@ -24,6 +24,7 @@
 
 #include <memory>
 #include <optional>
+#include <reaper_plugin.h>
 
 class DockerHost;
 class Renderer;

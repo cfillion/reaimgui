@@ -25,6 +25,7 @@
 #include "window.hpp"
 
 #include <imgui/imgui.h>
+#include <reaper_plugin_functions.h>
 
 class MainViewport final : public Viewport {
 public:

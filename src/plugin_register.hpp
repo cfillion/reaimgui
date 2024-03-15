@@ -15,24 +15,54 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <reaper_plugin_functions.h>
+#ifndef REAIMGUI_PLUGIN_REGISTER_HPP
+#define REAIMGUI_PLUGIN_REGISTER_HPP
 
-class PluginRegister {
+class PluginRegisterBase {
 public:
-  PluginRegister(const char *key, void *value)
-    : m_key { key }, m_value { value }
+  template<typename T>
+  PluginRegisterBase(const char *key, T value)
+    : m_key { key }, m_value { (void *)value }
   {
     // assert(m_key[0] == '-');
-    plugin_register(m_key + 1, m_value);
   }
 
-  ~PluginRegister()
+  void announce(const bool init) const
   {
-    // the original m_key passed when registering must remain valid in REAPER < 6.67
-    plugin_register(m_key, m_value);
+    // don't include reaper_plugin_functions.h here to avoid pulling in
+    // SWELL/Win32 and their macro pollution
+    extern int (*plugin_register)(const char *, void *);
+
+    // the original key string must remain valid even when unregistering
+    // in REAPER < 6.67 (see reapack#56)
+    plugin_register(m_key + init, m_value);
   }
+
+  const char *key() const { return m_key; }
+  template<typename T = void *>
+  T value() const { return reinterpret_cast<T>(m_value); }
 
 private:
   const char *m_key;
   void *m_value;
 };
+
+class PluginRegister : private PluginRegisterBase {
+public:
+  template<typename T>
+  PluginRegister(const char *key, T value)
+    : PluginRegisterBase { key, value }
+  {
+    announce(true);
+  }
+
+  ~PluginRegister()
+  {
+    announce(false);
+  }
+
+  using PluginRegisterBase::key;
+  using PluginRegisterBase::value;
+};
+
+#endif

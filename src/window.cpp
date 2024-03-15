@@ -27,6 +27,7 @@
 #include <cassert>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
+#include <reaper_plugin_functions.h>
 
 #ifdef _WIN32
 #  include <windowsx.h> // GET_[XY]_LPARAM
@@ -156,7 +157,7 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
 
   if(g_hwndInfo.expired())
     g_hwndInfo = m_hwndInfo = std::make_shared<PluginRegister>
-      ("-hwnd_info", reinterpret_cast<void *>(&Window::hwndInfo));
+      ("-hwnd_info", &Window::hwndInfo);
   else
     m_hwndInfo = g_hwndInfo.lock();
 

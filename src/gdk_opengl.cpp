@@ -24,6 +24,7 @@
 #include <epoxy/gl.h>
 #include <gtk/gtk.h>
 #include <imgui/imgui.h>
+#include <reaper_plugin_functions.h>
 
 struct LICEDeleter {
   void operator()(LICE_IBitmap *bm) { LICE__Destroy(bm); }
