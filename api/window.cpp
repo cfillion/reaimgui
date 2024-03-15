@@ -603,7 +603,8 @@ Display ReaImGui version, Dear ImGui version, credits and build/system informati
   DecorationBehavior dec { ctx, &flags };
   if(ImGui::Begin("About Dear ImGui", openPtrBehavior(API_RWO(p_open)), flags)) {
     ImGui::Separator();
-    ImGui::Text("reaper_imgui %s", REAIMGUI_VERSION);
+    ImGui::Text("reaper_imgui %s (API %s)",
+      REAIMGUI_VERSION, API::version().toString().c_str());
     ImGui::Separator();
     ImGui::TextUnformatted("By Christian Fillion and contributors.");
     ImGui::TextUnformatted("ReaImGui is licensed under the LGPL.");
