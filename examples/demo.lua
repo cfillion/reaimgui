@@ -295,8 +295,8 @@ function demo.ShowDemoWindow(open)
   -- We specify a default position/size in case there's no data in the .ini file.
   -- We only do it to make the demo applications a little more welcoming, but typically this isn't required.
   local main_viewport = ImGui.GetMainViewport(ctx)
-  local work_pos = {ImGui.Viewport_GetWorkPos(main_viewport)}
-  ImGui.SetNextWindowPos(ctx, work_pos[1] + 20, work_pos[2] + 20, ImGui.Cond_FirstUseEver)
+  local work_pos_x, work_pos_y = ImGui.Viewport_GetWorkPos(main_viewport)
+  ImGui.SetNextWindowPos(ctx, work_pos_x + 20, work_pos_y + 20, ImGui.Cond_FirstUseEver)
   ImGui.SetNextWindowSize(ctx, 550, 680, ImGui.Cond_FirstUseEver)
 
   if demo.set_dock_id then
@@ -3108,10 +3108,10 @@ function demo.ShowDemoWindowLayout()
     ImGui.PopItemWidth(ctx)
 
     -- Dummy
-    local button_sz = { 40, 40 }
-    ImGui.Button(ctx, 'A', table.unpack(button_sz)); ImGui.SameLine(ctx)
-    ImGui.Dummy(ctx, table.unpack(button_sz)); ImGui.SameLine(ctx)
-    ImGui.Button(ctx,'B', table.unpack(button_sz))
+    local button_sz_w, button_sz_h = 40, 40
+    ImGui.Button(ctx, 'A', button_sz_w, button_sz_h); ImGui.SameLine(ctx)
+    ImGui.Dummy(ctx, button_sz_w, button_sz_h); ImGui.SameLine(ctx)
+    ImGui.Button(ctx,'B', button_sz_w, button_sz_h)
 
     -- Manually wrapping
     -- (we should eventually provide this as an automatic layout feature, but for now you can do it manually)
@@ -3121,9 +3121,9 @@ function demo.ShowDemoWindowLayout()
     local window_visible_x2 = ImGui.GetWindowPos(ctx) + ImGui.GetWindowContentRegionMax(ctx)
     for n = 0, buttons_count - 1 do
       ImGui.PushID(ctx, n)
-      ImGui.Button(ctx, 'Box', table.unpack(button_sz))
+      ImGui.Button(ctx, 'Box', button_sz_w, button_sz_h)
       local last_button_x2 = ImGui.GetItemRectMax(ctx)
-      local next_button_x2 = last_button_x2 + item_spacing_x + button_sz[1] -- Expected position if next button was on same line
+      local next_button_x2 = last_button_x2 + item_spacing_x + button_sz_w -- Expected position if next button was on same line
       if n + 1 < buttons_count and next_button_x2 < window_visible_x2 then
         ImGui.SameLine(ctx)
       end
@@ -3162,14 +3162,14 @@ function demo.ShowDemoWindowLayout()
     end
 
     -- Capture the group size and create widgets using the same size
-    local size = {ImGui.GetItemRectSize(ctx)}
+    local size_w, size_h = ImGui.GetItemRectSize(ctx)
     local item_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)
 
     ImGui.PlotHistogram(ctx, '##values', widgets.groups.values, 0, nil, 0.0, 1.0, table.unpack(size))
 
-    ImGui.Button(ctx, 'ACTION', (size[1] - item_spacing_x) * 0.5, size[2])
+    ImGui.Button(ctx, 'ACTION', (size_w - item_spacing_x) * 0.5, size_h)
     ImGui.SameLine(ctx)
-    ImGui.Button(ctx, 'REACTION', (size[1] - item_spacing_x) * 0.5, size[2])
+    ImGui.Button(ctx, 'REACTION', (size_w - item_spacing_x) * 0.5, size_h)
     ImGui.EndGroup(ctx)
     ImGui.SameLine(ctx)
 
@@ -3615,13 +3615,13 @@ function demo.ShowDemoWindowLayout()
   if ImGui.TreeNode(ctx, 'Clipping') then
     if not layout.clipping then
       layout.clipping = {
-        size   = { 100.0, 100.0 },
-        offset = {  30.0,  30.0 },
+        size_w   = 100.0, size_h   = 100.0,
+        offset_x =  30.0, offset_y =  30.0,
       }
     end
 
-    rv,layout.clipping.size[1],layout.clipping.size[2] =
-      ImGui.DragDouble2(ctx, 'size', layout.clipping.size[1], layout.clipping.size[2],
+    rv,layout.clipping.size_w,layout.clipping.size_h =
+      ImGui.DragDouble2(ctx, 'size', layout.clipping.size_w, layout.clipping.size_h,
       0.5, 1.0, 200.0, '%.0f')
     ImGui.TextWrapped(ctx, '(Click and drag to scroll)')
 
@@ -3640,11 +3640,11 @@ function demo.ShowDemoWindowLayout()
       if n > 0 then ImGui.SameLine(ctx) end
 
       ImGui.PushID(ctx, n)
-      ImGui.InvisibleButton(ctx, '##canvas', table.unpack(layout.clipping.size))
+      ImGui.InvisibleButton(ctx, '##canvas', layout.clipping.size_w, layout.clipping.size_h)
       if ImGui.IsItemActive(ctx) and ImGui.IsMouseDragging(ctx, ImGui.MouseButton_Left) then
-        local mouse_delta = {ImGui.GetMouseDelta(ctx)}
-        layout.clipping.offset[1] = layout.clipping.offset[1] + mouse_delta[1]
-        layout.clipping.offset[2] = layout.clipping.offset[2] + mouse_delta[2]
+        local mouse_delta_x, mouse_delta_y = ImGui.GetMouseDelta(ctx)
+        layout.clipping.offset_x = layout.clipping.offset_x + mouse_delta_x
+        layout.clipping.offset_y = layout.clipping.offset_y + mouse_delta_y
       end
       ImGui.PopID(ctx)
 
@@ -3652,24 +3652,24 @@ function demo.ShowDemoWindowLayout()
         local p0_x, p0_y = ImGui.GetItemRectMin(ctx)
         local p1_x, p1_y = ImGui.GetItemRectMax(ctx)
         local text_str = 'Line 1 hello\nLine 2 clip me!'
-        local text_pos = { p0_x + layout.clipping.offset[1], p0_y + layout.clipping.offset[2] }
+        local text_pos_x, text_pos_y = p0_x + layout.clipping.offset_x, p0_y + layout.clipping.offset_y
 
         local draw_list = ImGui.GetWindowDrawList(ctx)
         if n == 0 then
           ImGui.PushClipRect(ctx, p0_x, p0_y, p1_x, p1_y, true)
           ImGui.DrawList_AddRectFilled(draw_list, p0_x, p0_y, p1_x, p1_y, 0x5a5a78ff)
-          ImGui.DrawList_AddText(draw_list, text_pos[1], text_pos[2], 0xffffffff, text_str)
+          ImGui.DrawList_AddText(draw_list, text_pos_x, text_pos_y, 0xffffffff, text_str)
           ImGui.PopClipRect(ctx)
         elseif n == 1 then
           ImGui.DrawList_PushClipRect(draw_list, p0_x, p0_y, p1_x, p1_y, true)
           ImGui.DrawList_AddRectFilled(draw_list, p0_x, p0_y, p1_x, p1_y, 0x5a5a78ff)
-          ImGui.DrawList_AddText(draw_list, text_pos[1], text_pos[2], 0xffffffff, text_str)
+          ImGui.DrawList_AddText(draw_list, text_pos_x, text_pos_y, 0xffffffff, text_str)
           ImGui.DrawList_PopClipRect(draw_list)
         elseif n == 2 then
-          local clip_rect = { p0_x, p0_y, p1_x, p1_y }
           ImGui.DrawList_AddRectFilled(draw_list, p0_x, p0_y, p1_x, p1_y, 0x5a5a78ff)
           ImGui.DrawList_AddTextEx(draw_list, ImGui.GetFont(ctx), ImGui.GetFontSize(ctx),
-            text_pos[1], text_pos[2], 0xffffffff, text_str, 0.0, table.unpack(clip_rect))
+            text_pos_x, text_pos_y, 0xffffffff, text_str, 0.0,
+            p0_x, p0_y, p1_x, p1_y)
         end
       end
     end
@@ -3906,8 +3906,8 @@ function demo.ShowDemoWindowPopups()
     end
 
     -- Always center this window when appearing
-    local center = {ImGui.Viewport_GetCenter(ImGui.GetWindowViewport(ctx))}
-    ImGui.SetNextWindowPos(ctx, center[1], center[2], ImGui.Cond_Appearing, 0.5, 0.5)
+    local center_x, center_y = ImGui.Viewport_GetCenter(ImGui.GetWindowViewport(ctx))
+    ImGui.SetNextWindowPos(ctx, center_x, center_y, ImGui.Cond_Appearing, 0.5, 0.5)
 
     if ImGui.BeginPopupModal(ctx, 'Delete?', nil, ImGui.WindowFlags_AlwaysAutoResize) then
       ImGui.Text(ctx, 'All those beautiful files will be deleted.\nThis operation cannot be undone!')
@@ -4739,8 +4739,8 @@ function demo.ShowDemoWindowTables()
 
     -- When using ScrollX or ScrollY we need to specify a size for our table container!
     -- Otherwise by default the table will fit all available space, like a BeginChild() call.
-    local outer_size = { 0.0, TEXT_BASE_HEIGHT * 8 }
-    if ImGui.BeginTable(ctx, 'table_scrolly', 3, tables.vertical.flags, table.unpack(outer_size)) then
+    local outer_size_w, outer_size_h = 0.0, TEXT_BASE_HEIGHT * 8
+    if ImGui.BeginTable(ctx, 'table_scrolly', 3, tables.vertical.flags, outer_size_w, outer_size_h) then
       ImGui.TableSetupScrollFreeze(ctx, 0, 1); -- Make top row always visible
       ImGui.TableSetupColumn(ctx, 'One', ImGui.TableColumnFlags_None)
       ImGui.TableSetupColumn(ctx, 'Two', ImGui.TableColumnFlags_None)
@@ -4807,8 +4807,8 @@ function demo.ShowDemoWindowTables()
 
     -- When using ScrollX or ScrollY we need to specify a size for our table container!
     -- Otherwise by default the table will fit all available space, like a BeginChild() call.
-    local outer_size = { 0.0, TEXT_BASE_HEIGHT * 8 }
-    if ImGui.BeginTable(ctx, 'table_scrollx', 7, tables.horizontal.flags1, table.unpack(outer_size)) then
+    local outer_size_w, outer_size_h = 0.0, TEXT_BASE_HEIGHT * 8
+    if ImGui.BeginTable(ctx, 'table_scrollx', 7, tables.horizontal.flags1, outer_size_w, outer_size_h) then
       ImGui.TableSetupScrollFreeze(ctx, tables.horizontal.freeze_cols, tables.horizontal.freeze_rows)
       ImGui.TableSetupColumn(ctx, 'Line #', ImGui.TableColumnFlags_NoHide) -- Make the first column not hideable to match our use of TableSetupScrollFreeze()
       ImGui.TableSetupColumn(ctx, 'One')
@@ -4845,7 +4845,7 @@ function demo.ShowDemoWindowTables()
     demo.HelpMarker(
       "Showcase using Stretch columns + ScrollX together: \z
        this is rather unusual and only makes sense when specifying an 'inner_width' for the table!\n\z
-       Without an explicit value, inner_width is == outer_size.x and therefore using Stretch columns + ScrollX together doesn't make sense.")
+       Without an explicit value, inner_width is == outer_size_w and therefore using Stretch columns + ScrollX together doesn't make sense.")
     demo.PushStyleCompact()
     ImGui.PushID(ctx, 'flags3')
     ImGui.PushItemWidth(ctx, TEXT_BASE_WIDTH * 30)
@@ -4854,7 +4854,7 @@ function demo.ShowDemoWindowTables()
     ImGui.PopItemWidth(ctx)
     ImGui.PopID(ctx)
     demo.PopStyleCompact()
-    if ImGui.BeginTable(ctx, 'table2', 7, tables.horizontal.flags2, outer_size[1], outer_size[2], tables.horizontal.inner_width) then
+    if ImGui.BeginTable(ctx, 'table2', 7, tables.horizontal.flags2, outer_size_w, outer_size_h, tables.horizontal.inner_width) then
       for cell = 1, 20 * 7 do
         ImGui.TableNextColumn(ctx)
         ImGui.Text(ctx, ('Hello world %d,%d'):format(ImGui.TableGetColumnIndex(ctx), ImGui.TableGetRowIndex(ctx)))
@@ -4911,8 +4911,8 @@ function demo.ShowDemoWindowTables()
                   ImGui.TableFlags_Reorderable    |
                   ImGui.TableFlags_Hideable       |
                   ImGui.TableFlags_Sortable
-    local outer_size = { 0.0, TEXT_BASE_HEIGHT * 9 }
-    if ImGui.BeginTable(ctx, 'table_columns_flags', #tables.col_flags.columns, flags, table.unpack(outer_size)) then
+    local outer_size_w, outer_size_h = 0.0, TEXT_BASE_HEIGHT * 9
+    if ImGui.BeginTable(ctx, 'table_columns_flags', #tables.col_flags.columns, flags, outer_size_w, outer_size_h) then
       for i,column in ipairs(tables.col_flags.columns) do
         ImGui.TableSetupColumn(ctx, column.name, column.flags)
       end
@@ -5074,13 +5074,13 @@ function demo.ShowDemoWindowTables()
     ImGui.Text(ctx, 'Using NoHostExtendX and NoHostExtendY:')
     demo.PushStyleCompact()
     rv,tables.outer_sz.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.outer_sz.flags, ImGui.TableFlags_NoHostExtendX)
-    ImGui.SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.')
+    ImGui.SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size_w value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.')
     rv,tables.outer_sz.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendY', tables.outer_sz.flags, ImGui.TableFlags_NoHostExtendY)
-    ImGui.SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.')
+    ImGui.SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size_h (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.')
     demo.PopStyleCompact()
 
-    local outer_size = { 0.0, TEXT_BASE_HEIGHT * 5.5 }
-    if ImGui.BeginTable(ctx, 'table1', 3, tables.outer_sz.flags, table.unpack(outer_size)) then
+    local outer_size_w, outer_size_h = 0.0, TEXT_BASE_HEIGHT * 5.5
+    if ImGui.BeginTable(ctx, 'table1', 3, tables.outer_sz.flags, outer_size_w, outer_size_h) then
       for row = 0, 9 do
         ImGui.TableNextRow(ctx)
         for column = 0, 2 do
@@ -5585,7 +5585,8 @@ function demo.ShowDemoWindowTables()
         freeze_cols             = 1,
         freeze_rows             = 1,
         items_count             = #template_items_names * 2,
-        outer_size_value        = { 0.0, TEXT_BASE_HEIGHT * 12 },
+        outer_size_value_w      = 0.0,
+        outer_size_value_h      = TEXT_BASE_HEIGHT * 12,
         row_min_height          = 0.0, -- Auto
         inner_width_with_scroll = 0.0, -- Auto-extend
         outer_size_enabled      = true,
@@ -5629,9 +5630,9 @@ function demo.ShowDemoWindowTables()
         tables.advanced.flags = demo.EditTableSizingFlags(tables.advanced.flags)
         ImGui.SameLine(ctx); demo.HelpMarker('In the Advanced demo we override the policy of each column so those table-wide settings have less effect that typical.')
         rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendX', tables.advanced.flags, ImGui.TableFlags_NoHostExtendX)
-        ImGui.SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size.x value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.')
+        ImGui.SameLine(ctx); demo.HelpMarker('Make outer width auto-fit to columns, overriding outer_size_w value.\n\nOnly available when ScrollX/ScrollY are disabled and Stretch columns are not used.')
         rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoHostExtendY', tables.advanced.flags, ImGui.TableFlags_NoHostExtendY)
-        ImGui.SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.')
+        ImGui.SameLine(ctx); demo.HelpMarker('Make outer height stop exactly at outer_size_h (prevent auto-extending table past the limit).\n\nOnly available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.')
         rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_NoKeepColumnsVisible', tables.advanced.flags, ImGui.TableFlags_NoKeepColumnsVisible)
         ImGui.SameLine(ctx); demo.HelpMarker('Only available if ScrollX is disabled.')
         rv,tables.advanced.flags = ImGui.CheckboxFlags(ctx, 'ImGuiTableFlags_PreciseWidths', tables.advanced.flags, ImGui.TableFlags_PreciseWidths)
@@ -5672,17 +5673,17 @@ function demo.ShowDemoWindowTables()
         rv,tables.advanced.show_headers = ImGui.Checkbox(ctx, 'show_headers', tables.advanced.show_headers)
         rv,tables.advanced.show_wrapped_text = ImGui.Checkbox(ctx, 'show_wrapped_text', tables.advanced.show_wrapped_text)
 
-        rv,tables.advanced.outer_size_value[1],tables.advanced.outer_size_value[2] =
-          ImGui.DragDouble2(ctx, '##OuterSize', table.unpack(tables.advanced.outer_size_value))
+        rv,tables.advanced.outer_size_value_w,tables.advanced.outer_size_value_h =
+          ImGui.DragDouble2(ctx, '##OuterSize', tables.advanced.outer_size_value_w, tables.advanced.outer_size_value_h)
         ImGui.SameLine(ctx, 0.0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)))
         rv,tables.advanced.outer_size_enabled = ImGui.Checkbox(ctx, 'outer_size', tables.advanced.outer_size_enabled)
         ImGui.SameLine(ctx)
         demo.HelpMarker(
           'If scrolling is disabled (ScrollX and ScrollY not set):\n\z
            - The table is output directly in the parent window.\n\z
-           - OuterSize.x < 0.0 will right-align the table.\n\z
-           - OuterSize.x = 0.0 will narrow fit the table unless there are any Stretch columns.\n\z
-           - OuterSize.y then becomes the minimum size for the table, which will extend vertically if there are more rows (unless NoHostExtendY is set).')
+           - OuterSize_w < 0.0 will right-align the table.\n\z
+           - OuterSize_w = 0.0 will narrow fit the table unless there are any Stretch columns.\n\z
+           - OuterSize_h then becomes the minimum size for the table, which will extend vertically if there are more rows (unless NoHostExtendY is set).')
 
         -- From a user point of view we will tend to use 'inner_width' differently depending on whether our table is embedding scrolling.
         -- To facilitate toying with this demo we will actually pass 0.0 to the BeginTable() when ScrollX is disabled.
@@ -5726,7 +5727,7 @@ function demo.ShowDemoWindowTables()
     local inner_width_to_use = (tables.advanced.flags & ImGui.TableFlags_ScrollX) ~= 0 and tables.advanced.inner_width_with_scroll or 0.0
     local w, h = 0, 0
     if tables.advanced.outer_size_enabled then
-      w, h = table.unpack(tables.advanced.outer_size_value)
+      w, h = tables.advanced.outer_size_value_w, tables.advanced.outer_size_value_h
     end
     if ImGui.BeginTable(ctx, 'table_advanced', 6, tables.advanced.flags, w, h, inner_width_to_use) then
       -- Declare columns
@@ -5833,8 +5834,8 @@ function demo.ShowDemoWindowTables()
       ImGui.PopButtonRepeat(ctx)
 
       -- Store some info to display debug details below
-      -- table_scroll_cur = { ImGui.GetScrollX(ctx), ImGui.GetScrollY(ctx) }
-      -- table_scroll_max = { ImGui.GetScrollMaxX(ctx), ImGui.GetScrollMaxY(ctx) }
+      -- table_scroll_cur_x, table_scroll_cur_y = ImGui.GetScrollX(ctx), ImGui.GetScrollY(ctx)
+      -- table_scroll_max_x, table_scroll_max_y = ImGui.GetScrollMaxX(ctx), ImGui.GetScrollMaxY(ctx)
       -- table_draw_list  = ImGui.GetWindowDrawList(ctx)
       ImGui.EndTable(ctx)
     end
@@ -5849,7 +5850,7 @@ function demo.ShowDemoWindowTables()
     --             table_draw_list_draw_cmd_count - parent_draw_list_draw_cmd_count);
     --     else
     --         ImGui.Text(": DrawCmd: +%d (in child window), Scroll: (%.f/%.f) (%.f/%.f)",
-    --             table_draw_list_draw_cmd_count - 1, table_scroll_cur.x, table_scroll_max.x, table_scroll_cur.y, table_scroll_max.y);
+    --             table_draw_list_draw_cmd_count - 1, table_scroll_cur_x, table_scroll_max_x, table_scroll_cur_y, table_scroll_max_y);
     -- }
     ImGui.TreePop(ctx)
   end
@@ -6271,22 +6272,22 @@ function demo.ShowDemoWindowInputs()
       if ImGui.IsItemActive(ctx) then
         -- Draw a line between the button and the mouse cursor
         local draw_list = ImGui.GetForegroundDrawList(ctx)
-        local mouse_pos = { ImGui.GetMousePos(ctx) }
-        local click_pos = { ImGui.GetMouseClickedPos(ctx, 0) }
+        local mouse_pos_x, mouse_pos_y = ImGui.GetMousePos(ctx)
+        local click_pos_x, click_pos_y = ImGui.GetMouseClickedPos(ctx, 0)
         local color = ImGui.GetColor(ctx, ImGui.Col_Button)
-        ImGui.DrawList_AddLine(draw_list, click_pos[1], click_pos[2], mouse_pos[1], mouse_pos[2], color, 4.0)
+        ImGui.DrawList_AddLine(draw_list, click_pos_x, click_pos_y, mouse_pos_x, mouse_pos_y, color, 4.0)
       end
 
       -- Drag operations gets "unlocked" when the mouse has moved past a certain threshold
       -- (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
       -- threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
-      local value_raw = { ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left, 0.0) }
-      local value_with_lock_threshold = { ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left) }
-      local mouse_delta = { ImGui.GetMouseDelta(ctx) }
+      local value_raw_x, value_raw_y = ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left, 0.0)
+      local value_with_lock_threshold_x, value_with_lock_threshold_y = ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left)
+      local mouse_delta_x, mouse_delta_y = ImGui.GetMouseDelta(ctx)
       ImGui.Text(ctx, 'GetMouseDragDelta(0):')
-      ImGui.Text(ctx, ('  w/ default threshold: (%.1f, %.1f)'):format(table.unpack(value_with_lock_threshold)))
-      ImGui.Text(ctx, ('  w/ zero threshold: (%.1f, %.1f)'):format(table.unpack(value_raw)))
-      ImGui.Text(ctx, ('GetMouseDelta() (%.1f, %.1f)'):format(table.unpack(mouse_delta)))
+      ImGui.Text(ctx, ('  w/ default threshold: (%.1f, %.1f)'):format(value_with_lock_threshold_x, value_with_lock_threshold_y))
+      ImGui.Text(ctx, ('  w/ zero threshold: (%.1f, %.1f)'):format(value_raw_x, value_raw_y))
+      ImGui.Text(ctx, ('GetMouseDelta() (%.1f, %.1f)'):format(mouse_delta_x, mouse_delta_y))
       ImGui.TreePop(ctx)
     end
   end
@@ -6354,7 +6355,7 @@ function demo.GetStyleData()
   }
 
   for i, name in demo.EachEnum('StyleVar') do
-    local rv = {ImGui.GetStyleVar(ctx, i)}
+    local x, y = ImGui.GetStyleVar(ctx, i)
     local is_vec2 = false
     for _, vec2_name in ipairs(vec2) do
       if vec2_name == name then
@@ -6362,7 +6363,7 @@ function demo.GetStyleData()
         break
       end
     end
-    data.vars[i] = is_vec2 and rv or rv[1]
+    data.vars[i] = is_vec2 and {x, y} or x
   end
   for i in demo.EachEnum('Col') do
     data.colors[i] = ImGui.GetStyleColor(ctx, i)
@@ -7849,26 +7850,26 @@ end
 -- Read FAQ section "How can I have multiple widgets with the same label?" for details.
 function demo.ShowExampleAppWindowTitles()
   local viewport = ImGui.GetMainViewport(ctx)
-  local base_pos = {ImGui.Viewport_GetPos(viewport)}
+  local base_pos_x, base_pos_y = ImGui.Viewport_GetPos(viewport)
 
   -- By default, Windows are uniquely identified by their title.
   -- You can use the "##" and "###" markers to manipulate the display/ID.
 
   -- Using "##" to display same title but have unique identifier.
-  ImGui.SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 100, ImGui.Cond_FirstUseEver)
+  ImGui.SetNextWindowPos(ctx, base_pos_x + 100, base_pos_y + 100, ImGui.Cond_FirstUseEver)
   if ImGui.Begin(ctx, 'Same title as another window##1') then
     ImGui.Text(ctx, 'This is window 1.\nMy title is the same as window 2, but my identifier is unique.')
     ImGui.End(ctx)
   end
 
-  ImGui.SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 200, ImGui.Cond_FirstUseEver)
+  ImGui.SetNextWindowPos(ctx, base_pos_x + 100, base_pos_y + 200, ImGui.Cond_FirstUseEver)
   if ImGui.Begin(ctx, 'Same title as another window##2') then
     ImGui.Text(ctx, 'This is window 2.\nMy title is the same as window 1, but my identifier is unique.')
     ImGui.End(ctx)
   end
 
   -- Using "###" to display a changing title but keep a static identifier "AnimatedTitle"
-  ImGui.SetNextWindowPos(ctx, base_pos[1] + 100, base_pos[2] + 300, ImGui.Cond_FirstUseEver)
+  ImGui.SetNextWindowPos(ctx, base_pos_x + 100, base_pos_y + 300, ImGui.Cond_FirstUseEver)
   spinners = { '|', '/', '-', '\\' }
   local spinner = math.floor(ImGui.GetTime(ctx) / 0.25) & 3
   if ImGui.Begin(ctx, ('Animated title %s %d###AnimatedTitle'):format(spinners[spinner+1], ImGui.GetFrameCount(ctx))) then
@@ -7894,14 +7895,14 @@ function demo.ShowExampleAppCustomRendering()
       curve_segments_override_v  = 8,
       col                        = 0xffff66ff,
 
-      points                     = {},
-      scrolling                  = {0.0, 0.0},
-      opt_enable_grid            = true,
-      opt_enable_context_menu    = true,
-      adding_line                = false,
+      points = {},
+      scrolling_x  = 0.0, scrolling_y = 0,0,
+      opt_enable_grid         = true,
+      opt_enable_context_menu = true,
+      adding_line             = false,
 
-      draw_bg                    = true,
-      draw_fg                    = true,
+      draw_bg = true,
+      draw_fg = true,
     }
   end
 
@@ -7917,21 +7918,21 @@ function demo.ShowExampleAppCustomRendering()
       -- (note that those are currently exacerbating our sRGB/Linear issues)
       -- Calling ImGui.GetColor[Ex]() multiplies the given colors by the current Style Alpha
       ImGui.Text(ctx, 'Gradients')
-      local gradient_size = {ImGui.CalcItemWidth(ctx), ImGui.GetFrameHeight(ctx)}
+      local gradient_size_w, gradient_size_h = ImGui.CalcItemWidth(ctx), ImGui.GetFrameHeight(ctx)
 
-      local p0 = {ImGui.GetCursorScreenPos(ctx)}
-      local p1 = {p0[1] + gradient_size[1], p0[2] + gradient_size[2]}
+      local p0_x, p0_y = ImGui.GetCursorScreenPos(ctx)
+      local p1_x, p1_y = p0_x + gradient_size_w, p0_y + gradient_size_h
       local col_a = ImGui.GetColorEx(ctx, 0x000000FF)
       local col_b = ImGui.GetColorEx(ctx, 0xFFFFFFFF)
-      ImGui.DrawList_AddRectFilledMultiColor(draw_list, p0[1], p0[2], p1[1], p1[2], col_a, col_b, col_b, col_a)
-      ImGui.InvisibleButton(ctx, '##gradient1', gradient_size[1], gradient_size[2])
+      ImGui.DrawList_AddRectFilledMultiColor(draw_list, p0_x, p0_y, p1_x, p1_y, col_a, col_b, col_b, col_a)
+      ImGui.InvisibleButton(ctx, '##gradient1', gradient_size_w, gradient_size_h)
 
-      local p0 = {ImGui.GetCursorScreenPos(ctx)}
-      local p1 = {p0[1] + gradient_size[1], p0[2] + gradient_size[2]}
+      local p0_x, p0_y = ImGui.GetCursorScreenPos(ctx)
+      local p1_x, p1_y = p0_x + gradient_size_w, p0_y + gradient_size_h
       local col_a = ImGui.GetColorEx(ctx, 0x00FF00FF)
       local col_b = ImGui.GetColorEx(ctx, 0xFF0000FF)
-      ImGui.DrawList_AddRectFilledMultiColor(draw_list, p0[1], p0[2], p1[1], p1[2], col_a, col_b, col_b, col_a)
-      ImGui.InvisibleButton(ctx, '##gradient2', gradient_size[1], gradient_size[2])
+      ImGui.DrawList_AddRectFilledMultiColor(draw_list, p0_x, p0_y, p1_x, p1_y, col_a, col_b, col_b, col_a)
+      ImGui.InvisibleButton(ctx, '##gradient2', gradient_size_w, gradient_size_h)
 
       -- Draw a bunch of primitives
       local item_inner_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
@@ -7949,7 +7950,7 @@ function demo.ShowExampleAppCustomRendering()
       if rv then app.rendering.curve_segments_override = true end
       rv,app.rendering.col = ImGui.ColorEdit4(ctx, 'Color', app.rendering.col)
 
-      local p = {ImGui.GetCursorScreenPos(ctx)}
+      local p_x, p_y = ImGui.GetCursorScreenPos(ctx)
       local spacing = 10.0
       local corners_tl_br = ImGui.DrawFlags_RoundCornersTopLeft | ImGui.DrawFlags_RoundCornersBottomRight
       local col = app.rendering.col
@@ -7957,8 +7958,8 @@ function demo.ShowExampleAppCustomRendering()
       local rounding = sz / 5.0
       local circle_segments = app.rendering.circle_segments_override and app.rendering.circle_segments_override_v or 0
       local curve_segments  = app.rendering.curve_segments_override  and app.rendering.curve_segments_override_v  or 0
-      local x = p[1] + 4.0
-      local y = p[2] + 4.0
+      local x = p_x + 4.0
+      local y = p_y + 4.0
       for n = 1, 2 do
         -- First line uses a thickness of 1.0, second line uses the configurable thickness
         local th = n == 1 and 1.0 or app.rendering.thickness
@@ -7986,7 +7987,7 @@ function demo.ShowExampleAppCustomRendering()
           cp4[1][1], cp4[1][2], cp4[2][1], cp4[2][2], cp4[3][1], cp4[3][2], cp4[4][1], cp4[4][2],
           col, th, curve_segments)
 
-        x = p[1] + 4
+        x = p_x + 4
         y = y + sz + spacing
       end
       ImGui.DrawList_AddNgonFilled(draw_list, x + sz * 0.5, y + sz * 0.5, sz*0.5, col, app.rendering.ngon_sides); x = x + sz + spacing  -- N-gon
@@ -8026,24 +8027,24 @@ function demo.ShowExampleAppCustomRendering()
       --   end
 
       -- Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
-      local canvas_p0 = {ImGui.GetCursorScreenPos(ctx)}      -- ImDrawList API uses screen coordinates!
-      local canvas_sz = {ImGui.GetContentRegionAvail(ctx)}   -- Resize canvas to what's available
-      if canvas_sz[1] < 50.0 then canvas_sz[1] = 50.0 end
-      if canvas_sz[2] < 50.0 then canvas_sz[2] = 50.0 end
-      local canvas_p1 = {canvas_p0[1] + canvas_sz[1], canvas_p0[2] + canvas_sz[2]}
+      local canvas_p0_x, canvas_p0_y = ImGui.GetCursorScreenPos(ctx)      -- DrawList API uses screen coordinates!
+      local canvas_sz_w, canvas_sz_h = ImGui.GetContentRegionAvail(ctx)   -- Resize canvas to what's available
+      if canvas_sz_w < 50.0 then canvas_sz_w = 50.0 end
+      if canvas_sz_h < 50.0 then canvas_sz_h = 50.0 end
+      local canvas_p1_x, canvas_p1_y = canvas_p0_x + canvas_sz_w, canvas_p0_y + canvas_sz_h
 
       -- Draw border and background color
-      local mouse_pos = {ImGui.GetMousePos(ctx)}
+      local mouse_pos_x, mouse_pos_y = ImGui.GetMousePos(ctx)
       local draw_list = ImGui.GetWindowDrawList(ctx)
-      ImGui.DrawList_AddRectFilled(draw_list, canvas_p0[1], canvas_p0[2], canvas_p1[1], canvas_p1[2], 0x323232ff)
-      ImGui.DrawList_AddRect(draw_list, canvas_p0[1], canvas_p0[2], canvas_p1[1], canvas_p1[2], 0xffffffff)
+      ImGui.DrawList_AddRectFilled(draw_list, canvas_p0_x, canvas_p0_y, canvas_p1_x, canvas_p1_y, 0x323232ff)
+      ImGui.DrawList_AddRect(draw_list, canvas_p0_x, canvas_p0_y, canvas_p1_x, canvas_p1_y, 0xffffffff)
 
       -- This will catch our interactions
-      ImGui.InvisibleButton(ctx, 'canvas', canvas_sz[1], canvas_sz[2], ImGui.ButtonFlags_MouseButtonLeft | ImGui.ButtonFlags_MouseButtonRight)
+      ImGui.InvisibleButton(ctx, 'canvas', canvas_sz_w, canvas_sz_h, ImGui.ButtonFlags_MouseButtonLeft | ImGui.ButtonFlags_MouseButtonRight)
       local is_hovered = ImGui.IsItemHovered(ctx) -- Hovered
-      local is_active = ImGui.IsItemActive(ctx)   -- Held
-      local origin = {canvas_p0[1] + app.rendering.scrolling[1], canvas_p0[2] + app.rendering.scrolling[2]} -- Lock scrolled origin
-      local mouse_pos_in_canvas = {mouse_pos[1] - origin[1], mouse_pos[2] - origin[2]}
+      local is_active  = ImGui.IsItemActive(ctx)  -- Held
+      local origin_x, origin_y = canvas_p0_x + app.rendering.scrolling_x, canvas_p0_y + app.rendering.scrolling_y -- Lock scrolled origin
+      local mouse_pos_in_canvas = { mouse_pos_x - origin_x, mouse_pos_y - origin_y }
 
       -- Add first and second point
       if is_hovered and not app.rendering.adding_line and ImGui.IsMouseClicked(ctx, ImGui.MouseButton_Left) then
@@ -8062,9 +8063,9 @@ function demo.ShowExampleAppCustomRendering()
       -- You may decide to make that threshold dynamic based on whether the mouse is hovering something etc.
       local mouse_threshold_for_pan = app.rendering.opt_enable_context_menu and -1.0 or 0.0
       if is_active and ImGui.IsMouseDragging(ctx, ImGui.MouseButton_Right, mouse_threshold_for_pan) then
-        local mouse_delta = {ImGui.GetMouseDelta(ctx)}
-        app.rendering.scrolling[1] = app.rendering.scrolling[1] + mouse_delta[1]
-        app.rendering.scrolling[2] = app.rendering.scrolling[2] + mouse_delta[2]
+        local mouse_delta_x, mouse_delta_y = ImGui.GetMouseDelta(ctx)
+        app.rendering.scrolling_x = app.rendering.scrolling_x + mouse_delta_x
+        app.rendering.scrolling_y = app.rendering.scrolling_y + mouse_delta_y
       end
 
       local removeLastLine = function()
@@ -8073,8 +8074,8 @@ function demo.ShowExampleAppCustomRendering()
       end
 
       -- Context menu (under default mouse threshold)
-      local drag_delta = {ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Right)}
-      if app.rendering.opt_enable_context_menu and drag_delta[1] == 0.0 and drag_delta[2] == 0.0 then
+      local drag_delta_x, drag_delta_y = ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Right)
+      if app.rendering.opt_enable_context_menu and drag_delta_x == 0.0 and drag_delta_y == 0.0 then
         ImGui.OpenPopupOnItemClick(ctx, 'context', ImGui.PopupFlags_MouseButtonRight)
       end
       if ImGui.BeginPopup(ctx, 'context') then
@@ -8088,20 +8089,20 @@ function demo.ShowExampleAppCustomRendering()
       end
 
       -- Draw grid + all lines in the canvas
-      ImGui.DrawList_PushClipRect(draw_list, canvas_p0[1], canvas_p0[2], canvas_p1[1], canvas_p1[2], true)
+      ImGui.DrawList_PushClipRect(draw_list, canvas_p0_x, canvas_p0_y, canvas_p1_x, canvas_p1_y, true)
       if app.rendering.opt_enable_grid then
         local GRID_STEP = 64.0
-        for x = math.fmod(app.rendering.scrolling[1], GRID_STEP), canvas_sz[1], GRID_STEP do
-          ImGui.DrawList_AddLine(draw_list, canvas_p0[1] + x, canvas_p0[2], canvas_p0[1] + x, canvas_p1[2], 0xc8c8c828)
+        for x = math.fmod(app.rendering.scrolling_x, GRID_STEP), canvas_sz_w, GRID_STEP do
+          ImGui.DrawList_AddLine(draw_list, canvas_p0_x + x, canvas_p0_y, canvas_p0_x + x, canvas_p1_y, 0xc8c8c828)
         end
-        for y = math.fmod(app.rendering.scrolling[2], GRID_STEP), canvas_sz[2], GRID_STEP do
-          ImGui.DrawList_AddLine(draw_list, canvas_p0[1], canvas_p0[2] + y, canvas_p1[1], canvas_p0[2] + y, 0xc8c8c828)
+        for y = math.fmod(app.rendering.scrolling_y, GRID_STEP), canvas_sz_h, GRID_STEP do
+          ImGui.DrawList_AddLine(draw_list, canvas_p0_x, canvas_p0_y + y, canvas_p1_x, canvas_p0_y + y, 0xc8c8c828)
         end
       end
       for n = 1, #app.rendering.points, 2 do
         ImGui.DrawList_AddLine(draw_list,
-          origin[1] + app.rendering.points[n  ][1], origin[2] + app.rendering.points[n  ][2],
-          origin[1] + app.rendering.points[n+1][1], origin[2] + app.rendering.points[n+1][2],
+          origin_x + app.rendering.points[n  ][1], origin_y + app.rendering.points[n  ][2],
+          origin_x + app.rendering.points[n+1][1], origin_y + app.rendering.points[n+1][2],
           0xffff00ff, 2.0)
       end
       ImGui.DrawList_PopClipRect(draw_list)
@@ -8114,17 +8115,17 @@ function demo.ShowExampleAppCustomRendering()
       ImGui.SameLine(ctx); demo.HelpMarker('The Background draw list will be rendered below every Dear ImGui windows.')
       rv,app.rendering.draw_fg = ImGui.Checkbox(ctx, 'Draw in Foreground draw list', app.rendering.draw_fg)
       ImGui.SameLine(ctx); demo.HelpMarker('The Foreground draw list will be rendered over every Dear ImGui windows.')
-      local window_pos = {ImGui.GetWindowPos(ctx)}
-      local window_size = {ImGui.GetWindowSize(ctx)}
-      local window_center = {window_pos[1] + window_size[1] * 0.5, window_pos[2] + window_size[2] * 0.5}
+      local window_pos_x, window_pos_y = ImGui.GetWindowPos(ctx)
+      local window_size_w, window_size_h = ImGui.GetWindowSize(ctx)
+      local window_center_x, window_center_y = window_pos_x + window_size_w * 0.5, window_pos_y + window_size_h * 0.5
       if app.rendering.draw_bg then
         ImGui.DrawList_AddCircle(ImGui.GetBackgroundDrawList(ctx),
-          window_center[1], window_center[2], window_size[1] * 0.6,
+          window_center_x, window_center_y, window_size_w * 0.6,
           0xFF0000c8, nil, 10 + 4)
       end
       if app.rendering.draw_fg then
         ImGui.DrawList_AddCircle(ImGui.GetForegroundDrawList(ctx),
-          window_center[1], window_center[2], window_size[2] * 0.6,
+          window_center_x, window_center_y, window_size_w * 0.6,
           0x00FF00c8, nil, 10)
       end
       ImGui.EndTabItem(ctx)
