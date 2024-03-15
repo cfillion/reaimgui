@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.8)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.89.9)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -81,21 +81,21 @@ local demo = {
 local show_app = {
   -- Examples Apps (accessible from the "Examples" menu)
   -- main_menu_bar      = false,
+  console            = false,
+  custom_rendering   = false,
   -- dockspace          = false,
   documents          = false,
-  console            = false,
   log                = false,
   layout             = false,
   property_editor    = false,
-  long_text          = false,
+  simple_overlay     = false,
   auto_resize        = false,
   constrained_resize = false,
-  simple_overlay     = false,
   fullscreen         = false,
+  long_text          = false,
   window_titles      = false,
-  custom_rendering   = false,
 
-  -- Dear ImGui Tools/Apps (accessible from the "Tools" menu)
+  -- Dear ImGui Tools (accessible from the "Tools" menu)
   metrics      = false,
   debug_log    = false,
   stack_tool   = false,
@@ -253,16 +253,16 @@ function demo.ShowDemoWindow(open)
   -- if show_app.dockspace          then show_app.dockspace          = demo.ShowExampleAppDockSpace()         end -- Process the Docking app first, as explicit DockSpace() nodes needs to be submitted early (read comments near the DockSpace function)
   if show_app.documents          then show_app.documents          = demo.ShowExampleAppDocuments()         end -- Process the Document app next, as it may also use a DockSpace()
   if show_app.console            then show_app.console            = demo.ShowExampleAppConsole()           end
+  if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
   if show_app.log                then show_app.log                = demo.ShowExampleAppLog()               end
   if show_app.layout             then show_app.layout             = demo.ShowExampleAppLayout()            end
   if show_app.property_editor    then show_app.property_editor    = demo.ShowExampleAppPropertyEditor()    end
-  if show_app.long_text          then show_app.long_text          = demo.ShowExampleAppLongText()          end
+  if show_app.simple_overlay     then show_app.simple_overlay     = demo.ShowExampleAppSimpleOverlay()     end
   if show_app.auto_resize        then show_app.auto_resize        = demo.ShowExampleAppAutoResize()        end
   if show_app.constrained_resize then show_app.constrained_resize = demo.ShowExampleAppConstrainedResize() end
-  if show_app.simple_overlay     then show_app.simple_overlay     = demo.ShowExampleAppSimpleOverlay()     end
   if show_app.fullscreen         then show_app.fullscreen         = demo.ShowExampleAppFullscreen()        end
+  if show_app.long_text          then show_app.long_text          = demo.ShowExampleAppLongText()          end
   if show_app.window_titles      then                               demo.ShowExampleAppWindowTitles()      end
-  if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
 
   if show_app.metrics    then show_app.metrics    = ImGui.ShowMetricsWindow(ctx,   show_app.metrics)    end
   if show_app.debug_log  then show_app.debug_log  = ImGui.ShowDebugLogWindow(ctx,  show_app.debug_log)  end
@@ -340,32 +340,24 @@ function demo.ShowDemoWindow(open)
     if ImGui.BeginMenu(ctx, 'Examples') then
       -- rv,show_app.main_menu_bar =
       --   ImGui.MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
-      rv,show_app.console =
-        ImGui.MenuItem(ctx, 'Console', nil, show_app.console)
-      rv,show_app.log =
-        ImGui.MenuItem(ctx, 'Log', nil, show_app.log)
-      rv,show_app.layout =
-        ImGui.MenuItem(ctx, 'Simple layout', nil, show_app.layout)
-      rv,show_app.property_editor =
-        ImGui.MenuItem(ctx, 'Property editor', nil, show_app.property_editor)
-      rv,show_app.long_text =
-        ImGui.MenuItem(ctx, 'Long text display', nil, show_app.long_text)
-      rv,show_app.auto_resize =
-        ImGui.MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize)
-      rv,show_app.constrained_resize =
-        ImGui.MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize)
-      rv,show_app.simple_overlay =
-        ImGui.MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay)
-      rv,show_app.fullscreen =
-        ImGui.MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen)
-      rv,show_app.window_titles =
-        ImGui.MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
-      rv,show_app.custom_rendering =
-        ImGui.MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
-      -- rv,show_app.dockspace =
-      --   ImGui.MenuItem(ctx, 'Dockspace', nil, show_app.dockspace, false)
-      rv,show_app.documents =
-        ImGui.MenuItem(ctx, 'Documents', nil, show_app.documents, false)
+
+      ImGui.SeparatorText(ctx, 'Mini apps')
+      rv,show_app.console          = ImGui.MenuItem(ctx, 'Console', nil, show_app.console)
+      rv,show_app.custom_rendering = ImGui.MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
+      -- rv,show_app.dockspace     = ImGui.MenuItem(ctx, 'Dockspace', nil, show_app.dockspace, false)
+      rv,show_app.documents        = ImGui.MenuItem(ctx, 'Documents', nil, show_app.documents, false)
+      rv,show_app.log              = ImGui.MenuItem(ctx, 'Log', nil, show_app.log)
+      rv,show_app.property_editor  = ImGui.MenuItem(ctx, 'Property editor', nil, show_app.property_editor)
+      rv,show_app.layout           = ImGui.MenuItem(ctx, 'Simple layout', nil, show_app.layout)
+      rv,show_app.simple_overlay   = ImGui.MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay)
+
+      ImGui.SeparatorText(ctx, 'Concepts')
+      rv,show_app.auto_resize        = ImGui.MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize)
+      rv,show_app.constrained_resize = ImGui.MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize)
+      rv,show_app.fullscreen         = ImGui.MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen)
+      rv,show_app.long_text          = ImGui.MenuItem(ctx, 'Long text display', nil, show_app.long_text)
+      rv,show_app.window_titles      = ImGui.MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
+
       ImGui.EndMenu(ctx)
     end
     -- if ImGui.MenuItem(ctx, 'MenuItem') then end -- You can also use MenuItem() inside a menu bar!
@@ -5177,15 +5169,54 @@ function demo.ShowDemoWindowTables()
   DoOpenAction()
   if ImGui.TreeNode(ctx, 'Row height') then
     demo.HelpMarker("You can pass a 'min_row_height' to TableNextRow().\n\nRows are padded with 'ImGui_StyleVar_CellPadding.y' on top and bottom, so effectively the minimum row height will always be >= 'ImGui_StyleVar_CellPadding.y * 2.0'.\n\nWe cannot honor a _maximum_ row height as that would require a unique clipping rectangle per row.")
-    if ImGui.BeginTable(ctx, 'table_row_height', 1, ImGui.TableFlags_BordersOuter | ImGui.TableFlags_BordersInnerV) then
-      for row = 0, 9 do
-        local min_row_height = TEXT_BASE_HEIGHT * 0.30 * row
+    if ImGui.BeginTable(ctx, 'table_row_height', 1, ImGui.TableFlags_Borders) then
+      for row = 0, 7 do
+        local min_row_height = TEXT_BASE_HEIGHT * 0.30 * row // 1
         ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None, min_row_height)
         ImGui.TableNextColumn(ctx)
         ImGui.Text(ctx, ('min_row_height = %.2f'):format(min_row_height))
       end
       ImGui.EndTable(ctx)
     end
+
+    demo.HelpMarker('Showcase using SameLine(0,0) to share Current Line Height between cells.\n\nPlease note that Tables Row Height is not the same thing as Current Line Height, as a table cell may contains multiple lines.')
+    if ImGui.BeginTable(ctx, 'table_share_lineheight', 2, ImGui.TableFlags_Borders) then
+      ImGui.TableNextRow(ctx)
+      ImGui.TableNextColumn(ctx)
+      ImGui.ColorButton(ctx, '##1', 0x214266FF, ImGui.ColorEditFlags_None, 40, 40)
+      ImGui.TableNextColumn(ctx)
+      ImGui.Text(ctx, 'Line 1')
+      ImGui.Text(ctx, 'Line 2')
+
+      ImGui.TableNextRow(ctx)
+      ImGui.TableNextColumn(ctx)
+      ImGui.ColorButton(ctx, '##2', 0x214266FF, ImGui.ColorEditFlags_None, 40, 40)
+      ImGui.TableNextColumn(ctx)
+      ImGui.SameLine(ctx, 0.0, 0.0) -- Reuse line height from previous column
+      ImGui.Text(ctx, 'Line 1, with SameLine(0,0)')
+      ImGui.Text(ctx, 'Line 2')
+
+      ImGui.EndTable(ctx)
+    end
+
+    demo.HelpMarker('Showcase altering CellPadding.y between rows. Note that CellPadding.x is locked for the entire table.')
+    if ImGui.BeginTable(ctx, 'table_changing_cellpadding_y', 1, ImGui.TableFlags_Borders) then
+      for row = 0, 7 do
+        local cell_padding_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_CellPadding)
+        if (row % 3) == 2 then
+          ImGui.PushStyleVar(ctx, ImGui.StyleVar_CellPadding, cell_padding_x, 20.0)
+        end
+        ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None)
+        ImGui.TableNextColumn(ctx)
+        local cell_padding_y = select(2, ImGui.GetStyleVar(ctx, ImGui.StyleVar_CellPadding))
+        ImGui.Text(ctx, ('CellPadding.y = %.2f'):format(cell_padding_y))
+        if (row % 3) == 2 then
+          ImGui.PopStyleVar(ctx)
+        end
+      end
+      ImGui.EndTable(ctx)
+    end
+
     ImGui.TreePop(ctx)
   end
 
@@ -6443,7 +6474,7 @@ end
 --     ImFont* font_current = ImGui.GetFont();
 --     if (ImGui.BeginCombo(label, font_current->GetDebugName()))
 --     {
---         for (int n = 0; n < io.Fonts->Fonts.Size; n++)
+--         for (ImFont* font : io.Fonts->Fonts)
 --         {
 --             ImFont* font = io.Fonts->Fonts[n];
 --             ImGui.PushID((void*)font);
@@ -7660,16 +7691,18 @@ function demo.ShowExampleAppPropertyEditor()
 
   demo.HelpMarker(
     'This example shows how you may implement a property editor using two columns.\n\z
-     All objects/fields data are dummies here.\n\z
-     Remember that in many simple cases, you can use ImGui.SameLine(xxx) to position\n\z
-     your cursor horizontally instead of using the Columns() API.')
+     All objects/fields data are dummies here.')
 
   ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, 2, 2)
-  if ImGui.BeginTable(ctx, 'split', 2, ImGui.TableFlags_BordersOuter | ImGui.TableFlags_Resizable) then
+  if ImGui.BeginTable(ctx, '##split', 2, ImGui.TableFlags_BordersOuter | ImGui.TableFlags_Resizable | ImGui.TableFlags_ScrollY) then
+    ImGui.TableSetupScrollFreeze(ctx, 0, 1)
+    ImGui.TableSetupColumn(ctx, 'Object')
+    ImGui.TableSetupColumn(ctx, 'Contents')
+    ImGui.TableHeadersRow(ctx)
+
     -- Iterate placeholder objects (all the same data)
     for obj_i = 0, 4 - 1 do
       demo.ShowPlaceholderObject('Object', obj_i)
-      -- ImGui.Separator(ctx)
     end
     ImGui.EndTable(ctx)
   end
@@ -8268,6 +8301,45 @@ function demo.ShowExampleAppCustomRendering()
       ImGui.EndTabItem(ctx)
     end
 
+    -- Demonstrate out-of-order rendering via channels splitting
+    -- We use functions in ImDrawList as each draw list contains a convenience splitter,
+    -- but you can also instantiate your own ImDrawListSplitter if you need to nest them.
+    if ImGui.BeginTabItem(ctx, 'Draw Channels') then
+      local draw_list = ImGui.GetWindowDrawList(ctx)
+      if not ImGui.ValidatePtr(app.rendering.splitter, 'ImGui_DrawListSplitter*') then
+        app.rendering.splitter = ImGui.CreateDrawListSplitter(draw_list)
+      end
+      do
+        ImGui.Text(ctx, 'Blue shape is drawn first: appears in back')
+        ImGui.Text(ctx, 'Red shape is drawn after: appears in front')
+        local p0_x, p0_y = ImGui.GetCursorScreenPos(ctx)
+        ImGui.DrawList_AddRectFilled(draw_list, p0_x, p0_y, p0_x + 50, p0_y + 50, 0x0000FFFF) -- Blue
+        ImGui.DrawList_AddRectFilled(draw_list, p0_x + 25, p0_y + 25, p0_x + 75, p0_y + 75, 0xFF0000FF) -- Red
+        ImGui.Dummy(ctx, 75, 75)
+      end
+      ImGui.Separator(ctx)
+      do
+        ImGui.Text(ctx, 'Blue shape is drawn first, into channel 1: appears in front')
+        ImGui.Text(ctx, 'Red shape is drawn after, into channel 0: appears in back')
+        local p1_x, p1_y = ImGui.GetCursorScreenPos(ctx)
+
+        -- Create 2 channels and draw a Blue shape THEN a Red shape.
+        -- You can create any number of channels. Tables API use 1 channel per column in order to better batch draw calls.
+        ImGui.DrawListSplitter_Split(app.rendering.splitter, 2)
+        ImGui.DrawListSplitter_SetCurrentChannel(app.rendering.splitter, 1)
+        ImGui.DrawList_AddRectFilled(draw_list, p1_x, p1_y, p1_x + 50, p1_y + 50, 0x0000FFFF) -- Blue
+        ImGui.DrawListSplitter_SetCurrentChannel(app.rendering.splitter, 0)
+        ImGui.DrawList_AddRectFilled(draw_list, p1_x + 25, p1_y + 25, p1_x + 75, p1_y + 75, 0xFF0000FF) -- Red
+
+        -- Flatten/reorder channels. Red shape is in channel 0 and it appears below the Blue shape in channel 1.
+        -- This works by copying draw indices only (vertices are not copied).
+        ImGui.DrawListSplitter_Merge(app.rendering.splitter)
+        ImGui.Dummy(ctx, 75, 75)
+        ImGui.Text(ctx, 'After reordering, contents of channel 0 appears below channel 1.')
+      end
+      ImGui.EndTabItem(ctx)
+    end
+
     ImGui.EndTabBar(ctx)
   end
 
@@ -8478,12 +8550,11 @@ end
 -- // Note that this completely optional, and only affect tab bars with the ImGuiTabBarFlags_Reorderable flag.
 -- static void NotifyOfDocumentsClosedElsewhere(ExampleAppDocuments& app)
 -- {
---     for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+--     for (MyDocument& doc : app.Documents)
 --     {
---         MyDocument* doc = &app.Documents[doc_n];
---         if (!doc->Open && doc->OpenPrev)
---             ImGui.SetTabItemClosed(doc->Name);
---         doc->OpenPrev = doc->Open;
+--         if (!doc.Open && doc.OpenPrev)
+--             ImGui.SetTabItemClosed(doc.Name);
+--         doc.OpenPrev = doc.Open;
 --     }
 -- }
 --
@@ -8522,23 +8593,22 @@ end
 --         if (ImGui.BeginMenu("File"))
 --         {
 --             int open_count = 0;
---             for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
---                 open_count += app.Documents[doc_n].Open ? 1 : 0;
+--             for (MyDocument& doc : app.Documents)
+--                 open_count += doc.Open ? 1 : 0;
 --
 --             if (ImGui.BeginMenu("Open", open_count < app.Documents.Size))
 --             {
---                 for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+--                 for (MyDocument& doc : app.Documents)
 --                 {
---                     MyDocument* doc = &app.Documents[doc_n];
---                     if (!doc->Open)
---                         if (ImGui.MenuItem(doc->Name))
---                             doc->DoOpen();
+--                     if (!doc.Open)
+--                         if (ImGui.MenuItem(doc.Name))
+--                             doc.DoOpen();
 --                 }
 --                 ImGui.EndMenu();
 --             }
 --             if (ImGui.MenuItem("Close All Documents", NULL, false, open_count > 0))
---                 for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
---                     app.Documents[doc_n].DoQueueClose();
+--                 for (MyDocument& doc : app.Documents)
+--                     doc.DoQueueClose();
 --             if (ImGui.MenuItem("Exit", "Ctrl+F4") && p_open)
 --                 *p_open = false;
 --             ImGui.EndMenu();
@@ -8549,13 +8619,13 @@ end
 --     // [Debug] List documents with one checkbox for each
 --     for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
 --     {
---         MyDocument* doc = &app.Documents[doc_n];
+--         MyDocument& doc = app.Documents[doc_n];
 --         if (doc_n > 0)
 --             ImGui.SameLine();
---         ImGui.PushID(doc);
---         if (ImGui.Checkbox(doc->Name, &doc->Open))
---             if (!doc->Open)
---                 doc->DoForceClose();
+--         ImGui.PushID(&doc);
+--         if (ImGui.Checkbox(doc.Name, &doc.Open))
+--             if (!doc.Open)
+--                 doc.DoForceClose();
 --         ImGui.PopID();
 --     }
 --     ImGui.PushItemWidth(ImGui.GetFontSize() * 12);
@@ -8591,26 +8661,25 @@ end
 --             //if (ImGui.GetIO().KeyCtrl) ImGui.SetTabItemSelected(docs[1].Name);  // [DEBUG] Test SetTabItemSelected(), probably not very useful as-is anyway..
 --
 --             // Submit Tabs
---             for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+--             for (MyDocument& doc : app.Documents)
 --             {
---                 MyDocument* doc = &app.Documents[doc_n];
---                 if (!doc->Open)
+--                 if (!doc.Open)
 --                     continue;
 --
---                 ImGuiTabItemFlags tab_flags = (doc->Dirty ? ImGuiTabItemFlags_UnsavedDocument : 0);
---                 bool visible = ImGui.BeginTabItem(doc->Name, &doc->Open, tab_flags);
+--                 ImGuiTabItemFlags tab_flags = (doc.Dirty ? ImGuiTabItemFlags_UnsavedDocument : 0);
+--                 bool visible = ImGui.BeginTabItem(doc.Name, &doc.Open, tab_flags);
 --
 --                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
---                 if (!doc->Open && doc->Dirty)
+--                 if (!doc.Open && doc.Dirty)
 --                 {
---                     doc->Open = true;
---                     doc->DoQueueClose();
+--                     doc.Open = true;
+--                     doc.DoQueueClose();
 --                 }
 --
---                 MyDocument::DisplayContextMenu(doc);
+--                 MyDocument::DisplayContextMenu(&doc);
 --                 if (visible)
 --                 {
---                     MyDocument::DisplayContents(doc);
+--                     MyDocument::DisplayContents(&doc);
 --                     ImGui.EndTabItem();
 --                 }
 --             }
@@ -8629,26 +8698,25 @@ end
 --             ImGui.DockSpace(dockspace_id);
 --
 --             // Create Windows
---             for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+--             for (MyDocument& doc : app.Documents)
 --             {
---                 MyDocument* doc = &app.Documents[doc_n];
---                 if (!doc->Open)
+--                 if (!doc.Open)
 --                     continue;
 --
 --                 ImGui.SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
---                 ImGuiWindowFlags window_flags = (doc->Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
---                 bool visible = ImGui.Begin(doc->Name, &doc->Open, window_flags);
+--                 ImGuiWindowFlags window_flags = (doc.Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
+--                 bool visible = ImGui.Begin(doc.Name, &doc.Open, window_flags);
 --
 --                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
---                 if (!doc->Open && doc->Dirty)
+--                 if (!doc.Open && doc.Dirty)
 --                 {
---                     doc->Open = true;
---                     doc->DoQueueClose();
+--                     doc.Open = true;
+--                     doc.DoQueueClose();
 --                 }
 --
---                 MyDocument::DisplayContextMenu(doc);
+--                 MyDocument::DisplayContextMenu(&doc);
 --                 if (visible)
---                     MyDocument::DisplayContents(doc);
+--                     MyDocument::DisplayContents(&doc);
 --
 --                 ImGui.End();
 --             }
@@ -8671,13 +8739,12 @@ end
 --     if (close_queue.empty())
 --     {
 --         // Close queue is locked once we started a popup
---         for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+--         for (MyDocument& doc : app.Documents)
 --         {
---             MyDocument* doc = &app.Documents[doc_n];
---             if (doc->WantClose)
+--             if (doc.WantClose)
 --             {
---                 doc->WantClose = false;
---                 close_queue.push_back(doc);
+--                 doc.WantClose = false;
+--                 close_queue.push_back(&doc);
 --             }
 --         }
 --     }

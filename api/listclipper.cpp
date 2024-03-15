@@ -154,15 +154,23 @@ API_FUNC(0_3, void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
   if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
 }
 
-API_FUNC(0_8_7, void, ListClipper_IncludeRangeByIndices,
-(ImGui_ListClipper*,clipper)(int,item_begin)(int,item_end),
-R"(Call ListClipper_IncludeRangeByIndices before first call to
-ListClipper_Step if you need a range of items to be displayed regardless of
-visibility.
+API_FUNC(0_9, void, ListClipper_IncludeItemByIndex,
+(ImGui_ListClipper*,clipper)(int,item_index),
+R"(Call ListClipper_IncludeItemByIndex or ListClipper_IncludeItemsByIndex before
+the first call to ListClipper_Step if you need a range of items to be displayed
+regardless of visibility.
 
-(Due to alignment / padding of certain items it is possible that an extra item may be included on either end of the display range).
+(Due to alignment / padding of certain items it is possible that an extra item
+may be included on either end of the display range).)")
+{
+  (*clipper)->IncludeItemByIndex(item_index);
+}
+
+API_FUNC(0_9, void, ListClipper_IncludeItemsByIndex,
+(ImGui_ListClipper*,clipper)(int,item_begin)(int,item_end),
+R"(See ListClipper_IncludeItemByIndex.
 
 item_end is exclusive e.g. use (42, 42+1) to make item 42 never clipped.)")
 {
-  (*clipper)->IncludeRangeByIndices(item_begin, item_end);
+  (*clipper)->IncludeItemsByIndex(item_begin, item_end);
 }

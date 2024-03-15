@@ -124,7 +124,8 @@ R"(Only open when clicking on the arrow part.
 API_ENUM(0_1, ImGui, TreeNodeFlags_Leaf,
   "No collapsing, no arrow (use as a convenience for leaf nodes).");
 API_ENUM(0_1, ImGui, TreeNodeFlags_Bullet,
-  "Display a bullet instead of arrow.");
+R"(Display a bullet instead of arrow. IMPORTANT: node can still be marked
+   open/close if you don't set the _Leaf flag!)");
 API_ENUM(0_1, ImGui, TreeNodeFlags_FramePadding,
 R"(Use FramePadding (even for an unframed text node) to vertically align text
    baseline to regular widget height.

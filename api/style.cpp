@@ -173,7 +173,8 @@ R"(Horizontal and vertical spacing between within elements of a composed widget
 API_ENUM(0_1, ImGui, StyleVar_IndentSpacing,
 R"(Horizontal indentation when e.g. entering a tree node.
    Generally == (GetFontSize + StyleVar_FramePadding.x*2).)");
-API_ENUM(0_1, ImGui, StyleVar_CellPadding, "Padding within a table cell.");
+API_ENUM(0_1, ImGui, StyleVar_CellPadding,
+  "Padding within a table cell. CellPadding.y may be altered between different rows.");
 API_ENUM(0_1, ImGui, StyleVar_ScrollbarSize,
   "Width of the vertical scrollbar, Height of the horizontal scrollbar.");
 API_ENUM(0_1, ImGui, StyleVar_ScrollbarRounding,

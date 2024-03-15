@@ -264,7 +264,7 @@ OVERRIDES = {
 
   'bool ImGuiTextFilter::Draw(const char*, float)' => 'bool TextFilter_Draw(ImGui_Context*, const char*, double*)',
 
-  # previnting crashes when calling ImDrawListSplitter::Merge on a blank,
+  # preventing crashes when calling ImDrawListSplitter::Merge on a blank,
   # unused DrawList different from the one given to Split/SetCurrentChannel
   'void ImDrawListSplitter::Split(ImDrawList*, int)' => 'void DrawListSplitter_Split(int)',
   'void ImDrawListSplitter::Merge(ImDrawList*)'      => 'void DrawListSplitter_Merge()',

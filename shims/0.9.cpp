@@ -40,10 +40,11 @@ SHIM("0.9",
 
   (int, SelectableFlags_AllowOverlap)
   (int, TreeNodeFlags_AllowOverlap)
-
   (int, HoveredFlags_AllowWhenOverlappedByItem)
   (bool, IsItemHovered,   Context*, RO<int*>)
   (bool, IsWindowHovered, Context*, RO<int*>)
+
+  (void, ListClipper_IncludeItemsByIndex, ListClipper*, int, int)
 );
 
 SHIM_PROXY_BEGIN(CreateExemptGCCheck, func, args)
@@ -92,3 +93,6 @@ SHIM_FUNC(0_1, bool, IsWindowHovered, (Context*,ctx) (RO<int*>,flags))
     *flags &= ImGuiHoveredFlags_AllowedMaskForIsWindowHovered;
   return api.IsWindowHovered(ctx, flags);
 }
+
+// dear imgui 1.89.9
+SHIM_ALIAS(0_8_7, ListClipper_IncludeRangeByIndices, ListClipper_IncludeItemsByIndex);

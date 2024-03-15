@@ -185,8 +185,8 @@ See flags for options.)")
 
 API_FUNC(0_1, void, GetWindowPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
-R"(Get current window position in screen space (useful if you want to do your own
-drawing via the DrawList API).)")
+R"(Get current window position in screen space (note: it is unlikely you need to
+use this. Consider using current layout pos instead, GetScreenCursorPos()).)")
 {
   FRAME_GUARD;
   const ImVec2 &vec { ImGui::GetWindowPos() };
