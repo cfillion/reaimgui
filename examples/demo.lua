@@ -199,10 +199,10 @@ function demo.EachEnum(enum)
     enum_cache = {}
     cache[enum] = enum_cache
 
-    for func_name, func in pairs(reaper) do
-      local enum_name = func_name:match(('^ImGui_%s_(.+)$'):format(enum))
+    for func_name, value in pairs(ImGui) do
+      local enum_name = func_name:match(('^%s_(.+)$'):format(enum))
       if enum_name then
-        table.insert(enum_cache, { func(), enum_name })
+        enum_cache[#enum_cache + 1] = { value, enum_name }
       end
     end
     table.sort(enum_cache, function(a, b) return a[1] < b[1] end)
