@@ -28,14 +28,13 @@ TEST(CompStrTest, Version) {
   EXPECT_STREQ(CompStr::version<&g_return_asis>, "0.8.7");
 }
 
-static int func1(reaper_array *, int, W<double*>) { return 0; }
-
 TEST(CompStrTest, APIDef) {
   using namespace std::literals;
+  using F1 = int (*)(reaper_array *, int, W<double*>);
 
   constexpr std::string_view def1 {
-    CompStr::APIDef<&func1>::value.data(),
-    CompStr::APIDef<&func1>::value.size()
+    CompStr::APIDef<F1>::value.data(),
+    CompStr::APIDef<F1>::value.size()
   };
   EXPECT_EQ(def1,
     "int\0reaper_array*,int,double*\0_,_,_Out\0Internal use only.\0"sv);

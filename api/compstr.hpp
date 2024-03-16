@@ -67,11 +67,11 @@ public:
 template<auto input>
 static constexpr const char *version { Version<input>::value.data() };
 
-template<auto fn>
+template<typename fn>
 class APIDef;
 
-template<typename R, typename... Args, R (*fn)(Args...)>
-class APIDef<fn>
+template<typename R, typename... Args>
+class APIDef<R(*)(Args...)>
 {
   static constexpr auto compute()
   {
@@ -104,8 +104,12 @@ public:
   static constexpr auto value { compute() };
 };
 
+template<typename R, typename... Args>
+class APIDef<R(*)(Args...) noexcept> : public APIDef<R(*)(Args...)> {};
+
+
 template<auto func>
-static constexpr const char *apidef { APIDef<func>::value.data() };
+static constexpr const char *apidef { APIDef<decltype(func)>::value.data() };
 
 }
 
