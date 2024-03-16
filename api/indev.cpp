@@ -248,7 +248,7 @@ API_ENUM(0_1, ImGui, MouseCursor_NotAllowed,
 
 API_SECTION_DEF(keyboard, ROOT_SECTION, "Keyboard");
 
-API_FUNC(0_1, bool, IsKeyDown, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsKeyDown, (ImGui_Context*,ctx)
 (int,key),
 "Is key being held.")
 {
@@ -256,7 +256,7 @@ API_FUNC(0_1, bool, IsKeyDown, (ImGui_Context*,ctx)
   return ImGui::IsKeyDown(static_cast<ImGuiKey>(key));
 }
 
-API_FUNC(0_1, double, GetKeyDownDuration, (ImGui_Context*,ctx)
+API_FUNC(0_9, double, GetKeyDownDuration, (ImGui_Context*,ctx)
 (int,key),
 "Duration the keyboard key has been down (0.0 == just pressed)")
 {
@@ -264,7 +264,7 @@ API_FUNC(0_1, double, GetKeyDownDuration, (ImGui_Context*,ctx)
   return ImGui::GetKeyData(static_cast<ImGuiKey>(key))->DownDuration;
 }
 
-API_FUNC(0_1, bool, IsKeyPressed, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsKeyPressed, (ImGui_Context*,ctx)
 (int,key)(bool*,API_RO(repeat),true),
 R"(Was key pressed (went from !Down to Down)?
 If repeat=true, uses ConfigVar_KeyRepeatDelay / ConfigVar_KeyRepeatRate.)")
@@ -273,7 +273,7 @@ If repeat=true, uses ConfigVar_KeyRepeatDelay / ConfigVar_KeyRepeatRate.)")
   return ImGui::IsKeyPressed(static_cast<ImGuiKey>(key), API_RO_GET(repeat));
 }
 
-API_FUNC(0_1, bool, IsKeyReleased, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsKeyReleased, (ImGui_Context*,ctx)
 (int,key),
 "Was key released (went from Down to !Down)?")
 {
@@ -281,7 +281,17 @@ API_FUNC(0_1, bool, IsKeyReleased, (ImGui_Context*,ctx)
   return ImGui::IsKeyReleased(static_cast<ImGuiKey>(key));
 }
 
-API_FUNC(0_1, int, GetKeyPressedAmount, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsKeyChordPressed, (ImGui_Context*,ctx)
+(int,key_chord),
+R"(Was key chord (mods + key) pressed, e.g. you can pass `Mod_Ctrl | ImGuiKey_S`
+as a key-chord. This doesn't do any routing or focus check,
+please consider using Shortcut() function instead.)")
+{
+  FRAME_GUARD;
+  return ImGui::IsKeyChordPressed(key_chord);
+}
+
+API_FUNC(0_9, int, GetKeyPressedAmount, (ImGui_Context*,ctx)
 (int,key)(double,repeat_delay)(double,rate),
 R"(Uses provided repeat rate/delay. Return a count, most often 0 or 1 but might
 be >1 if ConfigVar_RepeatRate is small enough that GetDeltaTime > RepeatRate.)")
@@ -395,6 +405,18 @@ API_ENUM(0_6, ImGui, Key_F9,  "");
 API_ENUM(0_6, ImGui, Key_F10, "");
 API_ENUM(0_6, ImGui, Key_F11, "");
 API_ENUM(0_6, ImGui, Key_F12, "");
+API_ENUM(0_9, ImGui, Key_F13, "");
+API_ENUM(0_9, ImGui, Key_F14, "");
+API_ENUM(0_9, ImGui, Key_F15, "");
+API_ENUM(0_9, ImGui, Key_F16, "");
+API_ENUM(0_9, ImGui, Key_F17, "");
+API_ENUM(0_9, ImGui, Key_F18, "");
+API_ENUM(0_9, ImGui, Key_F19, "");
+API_ENUM(0_9, ImGui, Key_F20, "");
+API_ENUM(0_9, ImGui, Key_F21, "");
+API_ENUM(0_9, ImGui, Key_F22, "");
+API_ENUM(0_9, ImGui, Key_F23, "");
+API_ENUM(0_9, ImGui, Key_F24, "");
 API_ENUM(0_6, ImGui, Key_Apostrophe,   "'");
 API_ENUM(0_6, ImGui, Key_Comma,        ",");
 API_ENUM(0_6, ImGui, Key_Minus,        "-");
@@ -428,6 +450,9 @@ API_ENUM(0_6, ImGui, Key_KeypadSubtract, "");
 API_ENUM(0_6, ImGui, Key_KeypadAdd,      "");
 API_ENUM(0_6, ImGui, Key_KeypadEnter,    "");
 API_ENUM(0_6, ImGui, Key_KeypadEqual,    "");
+API_ENUM(0_9, ImGui, Key_AppBack,
+R"(Available on some keyboard/mouses. Often referred as "Browser Back".)");
+API_ENUM(0_9, ImGui, Key_AppForward, "");
 API_SECTION_P(namedKeys, "Gamepad");
 // TODO
 API_SECTION_P(namedKeys, "Mouse Buttons",

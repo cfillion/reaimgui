@@ -156,20 +156,28 @@ API_FUNC(0_1, void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
   ImGui::TableSetupScrollFreeze(cols, rows);
 }
 
-API_FUNC(0_1, void, TableHeadersRow, (ImGui_Context*,ctx),
-R"(Submit all headers cells based on data provided to TableSetupColumn +
-submit context menu.)")
-{
-  FRAME_GUARD;
-  ImGui::TableHeadersRow();
-}
-
 API_FUNC(0_1, void, TableHeader, (ImGui_Context*,ctx)
 (const char*,label),
 "Submit one header cell manually (rarely used). See TableSetupColumn.")
 {
   FRAME_GUARD;
   ImGui::TableHeader(label);
+}
+
+API_FUNC(0_1, void, TableHeadersRow, (ImGui_Context*,ctx),
+R"(Submit a row with headers cells based on data provided to TableSetupColumn
++ submit context menu.)")
+{
+  FRAME_GUARD;
+  ImGui::TableHeadersRow();
+}
+
+API_FUNC(0_1, void, TableAngledHeadersRow, (ImGui_Context*,ctx),
+R"(Submit a row with angled headers for every column with the
+TableColumnFlags_AngledHeader flag. MUST BE FIRST ROW.)")
+{
+  FRAME_GUARD;
+  ImGui::TableAngledHeadersRow();
 }
 
 API_FUNC(0_1, const char*, TableGetColumnName, (ImGui_Context*,ctx)
@@ -240,8 +248,9 @@ API_ENUM(0_1, ImGui, TableColumnFlags_NoSortAscending,
 API_ENUM(0_1, ImGui, TableColumnFlags_NoSortDescending,
   "Disable ability to sort in the descending direction.");
 API_ENUM(0_5_5, ImGui, TableColumnFlags_NoHeaderLabel,
-R"(TableHeadersRow will not submit label for this column.
-   Convenient for some small columns. Name will still appear in context menu.)");
+R"(TableHeadersRow will not submit horizontal label for this column.
+   Convenient for some small columns. Name will still appear in context menu
+   or in angled headers.)");
 API_ENUM(0_1, ImGui, TableColumnFlags_NoHeaderWidth,
   "Disable header text width contribution to automatic column width.");
 API_ENUM(0_1, ImGui, TableColumnFlags_PreferSortAscending,
@@ -253,6 +262,9 @@ API_ENUM(0_1, ImGui, TableColumnFlags_IndentEnable,
 API_ENUM(0_1, ImGui, TableColumnFlags_IndentDisable,
 R"(Ignore current Indent value when entering cell (default for columns > 0).
    Indentation changes _within_ the cell will still be honored.)");
+API_ENUM(0_9, ImGui, TableColumnFlags_AngledHeader,
+R"(TableHeadersRow will submit an angled header row for this column.
+   Note this will add an extra row.)");
 API_SECTION_P(columnFlags, "Output Status", "Read-only via TableGetColumnFlags");
 API_ENUM(0_1, ImGui, TableColumnFlags_IsEnabled,
 R"(Status: is enabled == not hidden by user/api (referred to as "Hide" in
@@ -262,7 +274,6 @@ API_ENUM(0_1, ImGui, TableColumnFlags_IsVisible,
 API_ENUM(0_1, ImGui, TableColumnFlags_IsSorted,
   "Status: is currently part of the sort specs.");
 API_ENUM(0_1, ImGui, TableColumnFlags_IsHovered, "Status: is hovered by mouse.");
-
 
 API_SUBSECTION("Sorting");
 
@@ -494,3 +505,7 @@ R"(Hold shift when clicking headers to sort on multiple column.
 API_ENUM(0_1, ImGui, TableFlags_SortTristate,
 R"(Allow no sorting, disable default sorting.
    TableGetColumnSortSpecs may return specs where (SpecsCount == 0).)");
+
+API_SECTION_P(tableFlags, "Miscellaneous");
+API_ENUM(0_9, ImGui, TableFlags_HighlightHoveredColumn,
+  "Highlight column headers when hovered (may evolve into a fuller highlight)");

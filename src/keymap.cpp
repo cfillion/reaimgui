@@ -27,6 +27,13 @@
 
 ImGuiKey KeyMap::translateVirtualKey(const int vkey)
 {
+  if(vkey >= '0' && vkey <= '9')
+    return static_cast<ImGuiKey>(ImGuiKey_0 + (vkey - '0'));
+  if(vkey >= 'A' && vkey <= 'Z')
+    return static_cast<ImGuiKey>(ImGuiKey_A + (vkey - 'A'));
+  if(vkey >= VK_F1 && vkey <= VK_F24)
+    return static_cast<ImGuiKey>(ImGuiKey_F1 + (vkey - VK_F1));
+
   switch(vkey) {
   case VK_TAB:        return ImGuiKey_Tab;
   case VK_LEFT:       return ImGuiKey_LeftArrow;
@@ -75,54 +82,8 @@ ImGuiKey KeyMap::translateVirtualKey(const int vkey)
   case VK_SUBTRACT:   return ImGuiKey_KeypadSubtract;
   case VK_ADD:        return ImGuiKey_KeypadAdd;
   case VK_APPS:       return ImGuiKey_Menu;
-  case '0':           return ImGuiKey_0;
-  case '1':           return ImGuiKey_1;
-  case '2':           return ImGuiKey_2;
-  case '3':           return ImGuiKey_3;
-  case '4':           return ImGuiKey_4;
-  case '5':           return ImGuiKey_5;
-  case '6':           return ImGuiKey_6;
-  case '7':           return ImGuiKey_7;
-  case '8':           return ImGuiKey_8;
-  case '9':           return ImGuiKey_9;
-  case 'A':           return ImGuiKey_A;
-  case 'B':           return ImGuiKey_B;
-  case 'C':           return ImGuiKey_C;
-  case 'D':           return ImGuiKey_D;
-  case 'E':           return ImGuiKey_E;
-  case 'F':           return ImGuiKey_F;
-  case 'G':           return ImGuiKey_G;
-  case 'H':           return ImGuiKey_H;
-  case 'I':           return ImGuiKey_I;
-  case 'J':           return ImGuiKey_J;
-  case 'K':           return ImGuiKey_K;
-  case 'L':           return ImGuiKey_L;
-  case 'M':           return ImGuiKey_M;
-  case 'N':           return ImGuiKey_N;
-  case 'O':           return ImGuiKey_O;
-  case 'P':           return ImGuiKey_P;
-  case 'Q':           return ImGuiKey_Q;
-  case 'R':           return ImGuiKey_R;
-  case 'S':           return ImGuiKey_S;
-  case 'T':           return ImGuiKey_T;
-  case 'U':           return ImGuiKey_U;
-  case 'V':           return ImGuiKey_V;
-  case 'W':           return ImGuiKey_W;
-  case 'X':           return ImGuiKey_X;
-  case 'Y':           return ImGuiKey_Y;
-  case 'Z':           return ImGuiKey_Z;
-  case VK_F1:         return ImGuiKey_F1;
-  case VK_F2:         return ImGuiKey_F2;
-  case VK_F3:         return ImGuiKey_F3;
-  case VK_F4:         return ImGuiKey_F4;
-  case VK_F5:         return ImGuiKey_F5;
-  case VK_F6:         return ImGuiKey_F6;
-  case VK_F7:         return ImGuiKey_F7;
-  case VK_F8:         return ImGuiKey_F8;
-  case VK_F9:         return ImGuiKey_F9;
-  case VK_F10:        return ImGuiKey_F10;
-  case VK_F11:        return ImGuiKey_F11;
-  case VK_F12:        return ImGuiKey_F12;
+  case VK_BROWSER_BACK:    return ImGuiKey_AppBack;
+  case VK_BROWSER_FORWARD: return ImGuiKey_AppForward;
   default:            return ImGuiKey_None;
   }
 }

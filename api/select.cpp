@@ -84,10 +84,11 @@ API_ENUM(0_1, ImGui, ComboFlags_HeightLargest,  "As many fitting items as possib
 API_ENUM(0_1, ImGui, ComboFlags_NoArrowButton,
   "Display on the preview box without the square arrow button.");
 API_ENUM(0_1, ImGui, ComboFlags_NoPreview,      "Display only a square arrow button.");
+API_ENUM(0_9, ImGui, ComboFlags_WidthFitPreview,"Width dynamically calculated from preview contents");
 
 API_SUBSECTION("List Boxes",
-R"(This is essentially a thin wrapper to using BeginChild/EndChild with some
-stylistic changes.)");
+R"(This is essentially a thin wrapper to using BeginChild/EndChild with the
+ChildFlags_FrameStyle flag for stylistic changes + displaying a label.)");
 
 API_FUNC(0_7, bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
 (int*,API_RW(current_item))(const char*,items)(int,items_sz)
@@ -105,11 +106,10 @@ Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lu
 
 API_FUNC(0_1, bool, BeginListBox, (ImGui_Context*,ctx)
 (const char*,label)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
-R"(Open a framed scrolling region. This is essentially a thin wrapper to using
-BeginChild/EndChild with some stylistic changes.
+R"(Open a framed scrolling region.
 
-The BeginListBox/EndListBox API allows you to manage your contents and selection
-state however you want it, by creating e.g. Selectable or any items.
+You can submit contents and manage your selection state however you want it,
+by creating e.g. Selectable or any other items.
 
 - Choose frame width:
   - width  > 0.0: custom
@@ -157,7 +157,7 @@ API_ENUM(0_1, ImGui, SelectableFlags_None, "");
 API_ENUM(0_1, ImGui, SelectableFlags_DontClosePopups,
   "Clicking this doesn't close parent popup window.");
 API_ENUM(0_1, ImGui, SelectableFlags_SpanAllColumns,
-  "Selectable frame can span all columns (text will still fit in current column).");
+  "Frame will span all columns of its container table (text will still fit in current column).");
 API_ENUM(0_1, ImGui, SelectableFlags_AllowDoubleClick,
   "Generate press events on double clicks too.");
 API_ENUM(0_1, ImGui, SelectableFlags_Disabled,

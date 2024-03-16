@@ -396,7 +396,7 @@ void Context::mouseWheel(const bool horizontal, float delta)
     m_imgui->IO.AddMouseWheelEvent(0.0f, delta);
 }
 
-void Context::keyInput(const ImGuiKey key, const bool down)
+void Context::keyInput(ImGuiKey key, const bool down)
 {
 #ifdef __APPLE__
   // Preferences > Editing Behavior > Mouse >
@@ -415,13 +415,8 @@ void Context::keyInput(const ImGuiKey key, const bool down)
   }
 #endif
 
-  if(ImGui::IsLegacyKey(key)) {
-    // AddKeyEvent must be called before SetKeyEventNativeData
-    const ImGuiKey imKey { KeyMap::translateVirtualKey(key) };
-    m_imgui->IO.AddKeyEvent(imKey, down);
-    m_imgui->IO.SetKeyEventNativeData(imKey, key, -1);
-    return;
-  }
+  if(ImGui::IsLegacyKey(key))
+    key = KeyMap::translateVirtualKey(key);
 
   m_imgui->IO.AddKeyEvent(key, down);
 }

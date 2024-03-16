@@ -170,7 +170,8 @@ API_FUNC(0_1, bool, GetDragDropPayload, (ImGui_Context*,ctx)
 (char*,API_W(type))(int,API_W_SZ(type))
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
 (bool*,API_W(is_preview))(bool*,API_W(is_delivery)),
-"Peek directly into the current payload from anywhere.")
+R"(Peek directly into the current payload from anywhere.
+Returns false when drag and drop is finished or inactive.)")
 {
   FRAME_GUARD;
 

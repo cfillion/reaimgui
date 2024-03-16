@@ -132,11 +132,11 @@ D3D10Renderer::Shared::Shared()
 
   constexpr D3D10_INPUT_ELEMENT_DESC vertexInputs[] {
     { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0,
-      IM_OFFSETOF(ImDrawVert, pos), D3D10_INPUT_PER_VERTEX_DATA, 0 },
+      offsetof(ImDrawVert, pos), D3D10_INPUT_PER_VERTEX_DATA, 0 },
     { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0,
-      IM_OFFSETOF(ImDrawVert, uv),  D3D10_INPUT_PER_VERTEX_DATA, 0 },
+      offsetof(ImDrawVert, uv),  D3D10_INPUT_PER_VERTEX_DATA, 0 },
     { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0,
-      IM_OFFSETOF(ImDrawVert, col), D3D10_INPUT_PER_VERTEX_DATA, 0 },
+      offsetof(ImDrawVert, col), D3D10_INPUT_PER_VERTEX_DATA, 0 },
   };
   if(FAILED(m_device->CreateInputLayout(vertexInputs, std::size(vertexInputs),
                                         VERTEX_SHADER, sizeof(VERTEX_SHADER),

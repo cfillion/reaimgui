@@ -33,7 +33,7 @@ API_FUNC(0_1, bool, Button, (ImGui_Context*,ctx)
 
 API_FUNC(0_1, bool, SmallButton, (ImGui_Context*,ctx)
 (const char*,label),
-"Button with StyleVar_FramePadding=(0,0) to easily embed within text.")
+"Button with StyleVar_FramePadding.y == 0 to easily embed within text.")
 {
   FRAME_GUARD;
   return ImGui::SmallButton(label);

@@ -41,7 +41,9 @@ constexpr int
   VK_RCONTROL   { 0xA3 },
   VK_LMENU      { 0xA4 },
   VK_RMENU      { 0xA5 },
-  VK_RWIN       { 0x5C };
+  VK_RWIN       { 0x5C },
+  VK_BROWSER_BACK    { 0xA6 },
+  VK_BROWSER_FORWARD { 0xA7 };
 #endif
 
 namespace KeyMap {

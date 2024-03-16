@@ -94,27 +94,33 @@ R"(Pop window from the stack. See Begin.)")
   ImGui::End();
 }
 
-API_SUBSECTION("Child Windows",
+API_SECTION_DEF(childs, ROOT_SECTION, "Child Windows",
 R"(Use child windows to begin into a self-contained independent
 scrolling/clipping regions within a host window.
 Child windows can embed their own child.)");
 
-API_FUNC(0_1, bool, BeginChild, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, BeginChild, (ImGui_Context*,ctx)
 (const char*,str_id)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0)
-(bool*,API_RO(border),false)(int*,API_RO(flags),ImGuiWindowFlags_None),
-R"(For each independent axis of 'size':
-- \> 0.0: fixed size
-- = 0.0: use remaining host window size
-- < 0.0: use remaining window size minus abs(size)
-(Each axis can use a different mode, e.g. size = 0x400.)
+(int*,API_RO(child_flags),ImGuiChildFlags_None)
+(int*,API_RO(window_flags),ImGuiWindowFlags_None),
+R"(Manual sizing (each axis can use a different setting e.g. ImVec2(0.0f, 400.0f)):
+- = 0.0: use remaining parent window size for this axis
+- \> 0.0: use specified size for this axis
+- < 0.0: right/bottom-align to specified distance from available content boundaries
 
-Returns false to indicate the window is collapsed or fully clipped, so you may early out and omit submitting anything to the window.)")
+Specifying ChildFlags_AutoResizeX or ChildFlags_AutoResizeY makes the sizing
+automatic based on child contents.
+
+Combining both ChildFlags_AutoResizeX _and_ ChildFlags_AutoResizeY defeats
+purpose of a scrolling region and is NOT recommended.
+
+Returns false to indicate the window is collapsed or fully clipped.)")
 {
   FRAME_GUARD;
   const bool rv {
     ImGui::BeginChild(str_id,
       ImVec2(API_RO_GET(size_w), API_RO_GET(size_h)),
-      API_RO_GET(border), API_RO_GET(flags))
+      API_RO_GET(child_flags), API_RO_GET(window_flags))
   };
   if(!rv)
     ImGui::EndChild();
@@ -128,28 +134,43 @@ API_FUNC(0_8, void, EndChild, (ImGui_Context*,ctx),
   ImGui::EndChild();
 }
 
-API_FUNC(0_3, bool, BeginChildFrame, (ImGui_Context*,ctx)
-(const char*,str_id)(double,size_w)(double,size_h)
-(int*,API_RO(flags),ImGuiWindowFlags_None),
-R"(Helper to create a child window / scrolling region that looks like a normal
-widget frame. See BeginChild.)")
-{
-  FRAME_GUARD;
-  const ImGuiID id { ImGui::GetID(str_id) };
-  const bool rv {
-    ImGui::BeginChildFrame(id, ImVec2(size_w, size_h), API_RO_GET(flags))
-  };
-  if(!rv)
-    ImGui::EndChildFrame();
-  return rv;
-}
+API_SECTION_P(childs, "Child Flags",
+R"(About using AutoResizeX/AutoResizeY flags:
+- May be combined with SetNextWindowSizeConstraints to set a min/max size for
+  each axis (see Demo > Child > Auto-resize with Constraints).
+- Size measurement for a given axis is only performed when the child window is
+  within visible boundaries, or is just appearing.
+  - This allows BeginChild to return false when not within boundaries
+    (e.g. when scrolling), which is more optimal. BUT it won't update its
+    auto-size while clipped. While not perfect, it is a better default behavior
+    as the always-on performance gain is more valuable than the occasional
+    "resizing after becoming visible again" glitch.
+  - You may also use ChildFlags_AlwaysAutoResize to force an update even when
+    child window is not in view. HOWEVER PLEASE UNDERSTAND THAT DOING SO WILL
+    PREVENT BeginChild FROM EVER RETURNING FALSE, disabling benefits of coarse
+    clipping.)");
 
-API_FUNC(0_8, void, EndChildFrame, (ImGui_Context*,ctx),
-"See BeginChildFrame.")
-{
-  FRAME_GUARD;
-  ImGui::EndChildFrame();
-}
+API_ENUM(0_9, ImGui, ChildFlags_None, "");
+API_ENUM(0_9, ImGui, ChildFlags_Border, "Show an outer border and enable WindowPadding.");
+API_ENUM(0_9, ImGui, ChildFlags_AlwaysUseWindowPadding,
+R"(Pad with StyleVar_WindowPadding even if no border are drawn (no padding by
+default for non-bordered child windows because it makes more sense)");
+API_ENUM(0_9, ImGui, ChildFlags_ResizeX,
+R"(Allow resize from right border (layout direction).
+Enables .ini saving (unless WindowFlags_NoSavedSettings passed to window flags))");
+API_ENUM(0_9, ImGui, ChildFlags_ResizeY,
+R"(Allow resize from bottom border (layout direction).
+Enables .ini saving (unless WindowFlags_NoSavedSettings passed to window flags))");
+API_ENUM(0_9, ImGui, ChildFlags_AutoResizeX, "Enable auto-resizing width. Read notes above.");
+API_ENUM(0_9, ImGui, ChildFlags_AutoResizeY, "Enable auto-resizing height. Read notes above.");
+API_ENUM(0_9, ImGui, ChildFlags_AlwaysAutoResize,
+R"(Combined with AutoResizeX/AutoResizeY. Always measure size even when child
+is hidden, always return true, always disable clipping optimization! NOT RECOMMENDED.)");
+API_ENUM(0_9, ImGui, ChildFlags_FrameStyle,
+R"("Style the child window like a framed item: use Col_FrameBg,
+StyleVar_FrameRounding, StyleVar_FrameBorderSize, StyleVar_FramePadding instead
+of Col_ChildBg, StyleVar_ChildRounding, StyleVar_ChildBorderSize,
+StyleVar_WindowPadding.)");
 
 API_SECTION_DEF(properties, ROOT_SECTION, "Properties",
 R"(Prefer using SetNextWindow* functions (before Begin) rather that SetWindow* functions
@@ -176,8 +197,8 @@ See flags for options.)")
 
 API_FUNC(0_9, bool, IsWindowHovered, (ImGui_Context*,ctx)
 (int*,API_RO(flags),ImGuiHoveredFlags_None),
-R"(Is current window hovered (and typically: not blocked by a popup/modal)?
-See flags for options.)")
+R"(Is current window hovered and hoverable (e.g. not blocked by a popup/modal)?
+See HoveredFlags_* for options.)")
 {
   FRAME_GUARD;
   return ImGui::IsWindowHovered(API_RO_GET(flags));
@@ -186,7 +207,7 @@ See flags for options.)")
 API_FUNC(0_1, void, GetWindowPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 R"(Get current window position in screen space (note: it is unlikely you need to
-use this. Consider using current layout pos instead, GetScreenCursorPos()).)")
+use this. Consider using current layout pos instead, GetCursorScreenPos()).)")
 {
   FRAME_GUARD;
   const ImVec2 &vec { ImGui::GetWindowPos() };
@@ -196,7 +217,8 @@ use this. Consider using current layout pos instead, GetScreenCursorPos()).)")
 
 API_FUNC(0_1, void, GetWindowSize, (ImGui_Context*,ctx)
 (double*,API_W(w))(double*,API_W(h)),
-"Get current window size")
+R"(Get current window size (note: it is unlikely you need to use this.
+Consider using GetCursorScreenPos() and e.g. GetContentRegionAvail() instead))")
 {
   FRAME_GUARD;
   const ImVec2 &vec { ImGui::GetWindowSize() };
@@ -247,9 +269,13 @@ API_FUNC(0_1, void, SetNextWindowSize, (ImGui_Context*,ctx)
 API_FUNC(0_8_5, void, SetNextWindowSizeConstraints, (ImGui_Context*,ctx)
 (double,size_min_w)(double,size_min_h)(double,size_max_w)(double,size_max_h)
 (ImGui_Function*,API_RO(custom_callback)),
-R"(Set next window size limits. Use -1,-1 on either X/Y axis to preserve the
-current size. Use FLT_MAX (second return value of NumericLimits_Float) for no
-maximum size. Sizes will be rounded down.)")
+R"(Set next window size limits. Use 0.0 or FLT_MAX (second return value of
+NumericLimits_Float) if you don't want limits.
+
+Use -1 for both min and max of same axis to preserve current size (which itself
+is a constraint).
+
+Use callback to apply non-trivial programmatic constraints.)")
 {
   FRAME_GUARD;
   ImGui::SetNextWindowSizeConstraints(
@@ -423,9 +449,9 @@ Dock IDs are:
 - -1 to -16 = REAPER docker index
 - \> 0 = Dear ImGui dockspace ID (when the user docked the window into another one).
 
-Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking/undocking.
+Drag from window title bar or their tab to dock/undock. Hold SHIFT to disable docking.
 Drag from window menu button (upper-left button) to undock an entire node (all windows).
-DockingWithShift == true, you instead need to hold SHIFT to _enable_ docking/undocking.)");
+DockingWithShift == true, you instead need to hold SHIFT to _enable_ docking.)");
 
 API_FUNC(0_5, bool, IsWindowDocked, (ImGui_Context*,ctx),
 "Is current window docked into another window or a REAPER docker?")
@@ -637,15 +663,15 @@ API_FUNC(0_7, void, ShowDebugLogWindow, (ImGui_Context*,ctx)
     ImGui::ShowDebugLogWindow();
 }
 
-API_FUNC(0_5_10, void, ShowStackToolWindow, (ImGui_Context*,ctx)
+API_FUNC(0_9, void, ShowIDStackToolWindow, (ImGui_Context*,ctx)
 (bool*,API_RWO(p_open)),
 R"(Create Stack Tool window. Hover items with mouse to query information about
 the source of their unique ID.)")
 {
   FRAME_GUARD;
 
-  if(nativeWindowBehavior("Dear ImGui Stack Tool", API_RWO(p_open)))
-    ImGui::ShowStackToolWindow();
+  if(nativeWindowBehavior("Dear ImGui ID Stack Tool", API_RWO(p_open)))
+    ImGui::ShowIDStackToolWindow();
 }
 
 API_SUBSECTION("Flags",
@@ -690,9 +716,6 @@ API_ENUM(0_1, ImGui, WindowFlags_AlwaysVerticalScrollbar,
   "Always show vertical scrollbar (even if ContentSize.y < Size.y).");
 API_ENUM(0_1, ImGui, WindowFlags_AlwaysHorizontalScrollbar,
   "Always show horizontal scrollbar (even if ContentSize.x < Size.x).");
-API_ENUM(0_1, ImGui, WindowFlags_AlwaysUseWindowPadding,
-R"(Ensure child windows without border uses StyleVar_WindowPadding
-   (ignored by default for non-bordered child windows, because more convenient).)");
 API_ENUM(0_1, ImGui, WindowFlags_NoNavInputs,
   "No gamepad/keyboard navigation within the window.");
 API_ENUM(0_1, ImGui, WindowFlags_NoNavFocus,

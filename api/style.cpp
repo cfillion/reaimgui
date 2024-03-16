@@ -63,6 +63,7 @@ static constexpr StyleFields<float, ImVec2> g_styleVars[] {
   STYLEVAR(GrabMinSize),
   STYLEVAR(GrabRounding),
   STYLEVAR(TabRounding),
+  STYLEVAR(TabBarBorderSize),
   STYLEVAR(ButtonTextAlign),
   STYLEVAR(SelectableTextAlign),
   STYLEVAR(SeparatorTextBorderSize),
@@ -185,6 +186,8 @@ API_ENUM(0_1, ImGui, StyleVar_GrabRounding,
   "Radius of grabs corners rounding. Set to 0.0 to have rectangular slider grabs.");
 API_ENUM(0_1, ImGui, StyleVar_TabRounding,
   "Radius of upper corners of a tab. Set to 0.0 to have rectangular tabs.");
+API_ENUM(0_9, ImGui, StyleVar_TabBarBorderSize,
+  "Thickness of tab-bar separator, which takes on the tab active color to denote focus.");
 API_ENUM(0_1, ImGui, StyleVar_ButtonTextAlign,
 R"(Alignment of button text when button is larger than text.
    Defaults to (0.5, 0.5) (centered).)");

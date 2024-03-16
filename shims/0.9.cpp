@@ -23,6 +23,7 @@
 #include "../src/font.hpp"
 #include "../src/function.hpp"
 #include "../src/image.hpp"
+#include "../src/keymap.hpp"
 
 #include <imgui/imgui_internal.h>
 
@@ -38,13 +39,26 @@ SHIM("0.9",
 
   (bool, TableGetColumnSortSpecs, Context*, int, W<int*>, W<int*>, W<int*>)
 
-  (int, SelectableFlags_AllowOverlap)
-  (int, TreeNodeFlags_AllowOverlap)
-  (int, HoveredFlags_AllowWhenOverlappedByItem)
+  (int,  SelectableFlags_AllowOverlap)
+  (int,  TreeNodeFlags_AllowOverlap)
+  (int,  HoveredFlags_AllowWhenOverlappedByItem)
   (bool, IsItemHovered,   Context*, RO<int*>)
   (bool, IsWindowHovered, Context*, RO<int*>)
 
   (void, ListClipper_IncludeItemsByIndex, ListClipper*, int, int)
+  (void, ShowIDStackToolWindow, Context*, RWO<bool*>)
+
+  (int,  ChildFlags_Border)
+  (int,  ChildFlags_FrameStyle)
+  (bool, BeginChild, Context*,
+    const char*, RO<double*>, RO<double*>, RO<int*>, RO<int*>)
+  (void, EndChild, Context*)
+
+  (bool,   IsKeyDown, Context*, int)
+  (double, GetKeyDownDuration, Context*, int)
+  (bool,   IsKeyPressed, Context*, int, RO<bool*>)
+  (bool,   IsKeyReleased, Context*, int)
+  (int,    GetKeyPressedAmount, Context*, int, double, double)
 );
 
 SHIM_PROXY_BEGIN(CreateExemptGCCheck, func, args)
@@ -96,3 +110,38 @@ SHIM_FUNC(0_1, bool, IsWindowHovered, (Context*,ctx) (RO<int*>,flags))
 
 // dear imgui 1.89.9
 SHIM_ALIAS(0_8_7, ListClipper_IncludeRangeByIndices, ListClipper_IncludeItemsByIndex);
+
+// dear imgui 1.90
+SHIM_ALIAS(0_5_10, ShowStackToolWindow, ShowIDStackToolWindow);
+SHIM_FUNC(0_1, bool, BeginChild, (Context*,ctx) (const char*,str_id)
+  (RO<double*>,size_w) (RO<double*>,size_h) (RO<bool*>,border) (RO<int*>,flags))
+{
+  int child_flags {};
+  if(border && *border)
+    child_flags |= api.ChildFlags_Border();
+  return api.BeginChild(ctx, str_id, size_w, size_h, &child_flags, flags);
+}
+SHIM_FUNC(0_3, bool, BeginChildFrame, (Context*,ctx) (const char*,str_id)
+  (double,size_w) (double,size_h) (RO<int*>,window_flags))
+{
+  int child_flags { api.ChildFlags_FrameStyle() };
+  return api.BeginChild(ctx, str_id, &size_w, &size_h, &child_flags, window_flags);
+}
+SHIM_FUNC(0_8, void, EndChildFrame, (Context*,ctx))
+{
+  api.EndChild(ctx);
+}
+SHIM_CONST(0_1, WindowFlags_AlwaysUseWindowPadding, 0)
+SHIM_PROXY_BEGIN(ShimVirtualKeys, func, args)
+{
+  int &key { std::get<1>(args) };
+  if(ImGui::IsLegacyKey(static_cast<ImGuiKey>(key)))
+    key = KeyMap::translateVirtualKey(key);
+  return std::apply(api.*func, args);
+}
+SHIM_PROXY_END()
+SHIM_PROXY(0_1, IsKeyDown,           ShimVirtualKeys)
+SHIM_PROXY(0_1, GetKeyDownDuration,  ShimVirtualKeys)
+SHIM_PROXY(0_1, IsKeyPressed,        ShimVirtualKeys)
+SHIM_PROXY(0_1, IsKeyReleased,       ShimVirtualKeys)
+SHIM_PROXY(0_1, GetKeyPressedAmount, ShimVirtualKeys)

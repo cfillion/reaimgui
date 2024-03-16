@@ -35,14 +35,6 @@ API_FUNC(0_8_4, void, SeparatorText, (ImGui_Context*,ctx)
   ImGui::SeparatorText(label);
 }
 
-API_SUBSECTION("Cursor",
-R"(By "cursor" we mean the current output position.
-The typical widget behavior is to output themselves at the current cursor
-position, then move the cursor one line down.
-
-You can call SameLine() between widgets to undo the last carriage return and
-output at the right of the preceding widget.)");
-
 API_FUNC(0_1, void, SameLine, (ImGui_Context*,ctx)
 (double*,API_RO(offset_from_start_x),0.0)(double*,API_RO(spacing),-1.0),
 R"(Call between widgets or groups to layout them horizontally.
@@ -107,6 +99,14 @@ See BeginGroup.)")
   FRAME_GUARD;
   ImGui::EndGroup();
 }
+
+API_SUBSECTION("Layout Cursor Positioning",
+R"(By "cursor" we mean the current output position.
+The typical widget behavior is to output themselves at the current cursor
+position, then move the cursor one line down.
+
+You can call SameLine() between widgets to undo the last carriage return and
+output at the right of the preceding widget.)");
 
 API_FUNC(0_1, void, GetCursorPos, (ImGui_Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),

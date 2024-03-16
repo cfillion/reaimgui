@@ -338,6 +338,10 @@ std::optional<LRESULT> GDKWindow::handleMessage
 
 static ImGuiKey translateGdkKey(const GdkEventKey *event)
 {
+  // SWELL only translates F1-F12
+  if(event->keyval >= GDK_KEY_F1 && event->keyval <= GDK_KEY_F24)
+    return static_cast<ImGuiKey>(ImGuiKey_F1 + (event->keyval - GDK_KEY_F1));
+
   switch(event->keyval) {
   case GDK_KEY_Control_L: return ImGuiKey_LeftCtrl;
   case GDK_KEY_Control_R: return ImGuiKey_RightCtrl;
@@ -348,6 +352,8 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
   case GDK_KEY_Super_L:   return ImGuiKey_LeftSuper;
   case GDK_KEY_Super_R:   return ImGuiKey_RightSuper;
   case GDK_KEY_KP_Enter:  return ImGuiKey_KeypadEnter;
+  case GDK_KEY_Back:      return ImGuiKey_AppBack;
+  case GDK_KEY_Forward:   return ImGuiKey_AppForward;
   default:                return ImGuiKey_None;
   }
 }

@@ -238,6 +238,25 @@ API_FUNC(0_1, void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
     radius, Color::fromBigEndian(col_rgba), num_segments);
 }
 
+API_FUNC(0_9, void, DrawList_AddEllipse, (ImGui_DrawList*,draw_list)
+(double,center_x)(double,center_y)(double,radius_x)(double,radius_y)(int,col_rgba)
+(double*,API_RO(rot),0.0)(int*,API_RO(num_segments),0)(double*,API_RO(thickness),1.0),
+"")
+{
+  draw_list->get()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y,
+    Color::fromBigEndian(col_rgba), API_RO_GET(rot), API_RO_GET(num_segments),
+    API_RO_GET(thickness));
+}
+
+API_FUNC(0_9, void, DrawList_AddEllipseFilled, (ImGui_DrawList*,draw_list)
+(double,center_x)(double,center_y)(double,radius_x)(double,radius_y)(int,col_rgba)
+(double*,API_RO(rot),0.0)(int*,API_RO(num_segments),0),
+"")
+{
+  draw_list->get()->AddEllipseFilled(ImVec2(center_x, center_y), radius_x, radius_y,
+    Color::fromBigEndian(col_rgba), API_RO_GET(rot), API_RO_GET(num_segments));
+}
+
 API_FUNC(0_1, void, DrawList_AddText, (ImGui_DrawList*,draw_list)
 (double,x)(double,y)(int,col_rgba)(const char*,text),
 "")
@@ -438,6 +457,15 @@ API_FUNC(0_1, void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
 {
   draw_list->get()->PathArcToFast(
     ImVec2(center_x, center_y), radius, a_min_of_12, a_max_of_12);
+}
+
+API_FUNC(0_9, void, DrawList_PathEllipticalArcTo, (ImGui_DrawList*,draw_list)
+(double,center_x)(double,center_y)(double,radius_x)(double,radius_y)
+(double,rot)(double,a_min)(double,a_max)(int*,API_RO(num_segments),0),
+"Ellipse")
+{
+  draw_list->get()->PathEllipticalArcTo(ImVec2(center_x, center_y),
+    radius_x, radius_y, rot, a_min, a_max, API_RO_GET(num_segments));
 }
 
 API_FUNC(0_1, void, DrawList_PathBezierCubicCurveTo, (ImGui_DrawList*,draw_list)

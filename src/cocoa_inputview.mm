@@ -123,6 +123,9 @@ static int translateKeyCode(NSEvent *event)
   case 0x59: return VK_NUMPAD7;
   case 0x5b: return VK_NUMPAD8;
   case 0x5c: return VK_NUMPAD9;
+
+  // case ??: return ImGuiKey_AppBack;
+  // case ??: return ImGuiKey_AppForward;
   }
 
   // obey keyboard layout for other keys (ASCII virtual key code)
@@ -139,7 +142,7 @@ static int translateKeyCode(NSEvent *event)
   if(charValue >= NSF1FunctionKey && charValue <= NSF24FunctionKey)
     charValue += VK_F1 - NSF1FunctionKey;
   else if(charValue >= 'a' && charValue <= 'z')
-    charValue += 'A'-'a';
+    charValue += 'A' - 'a';
 
   // attempt to be compatible with QWERTY/AZERTY, may be inaccurate
   switch(charValue) {

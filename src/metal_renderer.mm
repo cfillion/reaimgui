@@ -138,13 +138,13 @@ MetalRenderer::Shared::Shared()
   if(!_MTLVertexDescriptor)
     throw backend_error { "failed to import MTLVertexDescriptor" };
   MTLVertexDescriptor *vertexDesc = [_MTLVertexDescriptor vertexDescriptor];
-  vertexDesc.attributes[0].offset = IM_OFFSETOF(ImDrawVert, pos);
+  vertexDesc.attributes[0].offset = offsetof(ImDrawVert, pos);
   vertexDesc.attributes[0].format = MTLVertexFormatFloat2;
   vertexDesc.attributes[0].bufferIndex = 0;
-  vertexDesc.attributes[1].offset = IM_OFFSETOF(ImDrawVert, uv);
+  vertexDesc.attributes[1].offset = offsetof(ImDrawVert, uv);
   vertexDesc.attributes[1].format = MTLVertexFormatFloat2;
   vertexDesc.attributes[1].bufferIndex = 0;
-  vertexDesc.attributes[2].offset = IM_OFFSETOF(ImDrawVert, col);
+  vertexDesc.attributes[2].offset = offsetof(ImDrawVert, col);
   vertexDesc.attributes[2].format = MTLVertexFormatUChar4;
   vertexDesc.attributes[2].bufferIndex = 0;
   vertexDesc.layouts[0].stepRate = 1;

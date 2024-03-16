@@ -73,7 +73,7 @@ NATIVE_ONLY = [
   'void ImGui::PushID(int)',
   'void ImGui::PushID(const void*)',
   'void ImGui::PushID(const char*, const char*)',
-  'bool ImGui::BeginChild(ImGuiID, const ImVec2&, bool, ImGuiWindowFlags)',
+  'bool ImGui::BeginChild(ImGuiID, const ImVec2&, ImGuiChildFlags, ImGuiWindowFlags)',
   'void ImGui::OpenPopup(ImGuiID, ImGuiPopupFlags)',
 
   'ImGuiID ImGui::GetID(const char*)',
@@ -85,10 +85,10 @@ NATIVE_ONLY = [
   'bool ImGui::TreeNodeEx(const void*, ImGuiTreeNodeFlags, const char*, ...)',
 
   # item getter callback overloads
-  'bool ImGui::Combo(const char*, int*, bool(*items_getter)(void* data, int idx, const char** out_text), void*, int, int)',
-  'bool ImGui::ListBox(const char*, int*, bool (*items_getter)(void* data, int idx, const char** out_text), void*, int, int)',
+  'bool ImGui::Combo(const char*, int*, const char* (*getter)(void* user_data, int idx), void*, int, int)',
+  'bool ImGui::ListBox(const char*, int*, const char* (*getter)(void* user_data, int idx), void*, int, int)',
   'void ImGui::PlotLines(const char*, float(*values_getter)(void* data, int idx), void*, int, int, const char*, float, float, ImVec2)',
-  'void ImGui::PlotHistogram(const char*, float(*values_getter)(void* data, int idx), void*, int, int, const char*, float, float, ImVec2)',
+  'void ImGui::PlotHistogram(const char*, float (*values_getter)(void* data, int idx), void*, int, int, const char*, float, float, ImVec2)',
 
   # float/ImVec2 overloads
   'void ImGui::PushStyleVar(ImGuiStyleVar, float)',

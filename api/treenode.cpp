@@ -137,6 +137,8 @@ R"(Extend hit box to the right-most edge, even if not framed.
    allowing natural overlaps and then this can become the default.)");
 API_ENUM(0_1, ImGui, TreeNodeFlags_SpanFullWidth,
   "Extend hit box to the left-most and right-most edges (bypass the indented area).");
+API_ENUM(0_9, ImGui, TreeNodeFlags_SpanAllColumns,
+  "Frame will span all columns of its container table (text will still fit in current column).");
 // API_ENUM(ImGui, TreeNodeFlags_NavLeftJumpsBackHere,
 // R"((WIP) Nav: left direction may move to this TreeNode() from any of its child
 //    (items submitted between TreeNode and TreePop).)");

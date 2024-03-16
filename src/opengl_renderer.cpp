@@ -175,15 +175,15 @@ void OpenGLRenderer::setup()
   glEnableVertexAttribArray(m_shared->m_locations[VtxPosAttrLoc]);
   glVertexAttribPointer(m_shared->m_locations[VtxPosAttrLoc],
     2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
-    reinterpret_cast<void *>(IM_OFFSETOF(ImDrawVert, pos)));
+    reinterpret_cast<void *>(offsetof(ImDrawVert, pos)));
   glEnableVertexAttribArray(m_shared->m_locations[VtxUVAttrLoc]);
   glVertexAttribPointer(m_shared->m_locations[VtxUVAttrLoc],
     2, GL_FLOAT, GL_FALSE, sizeof(ImDrawVert),
-    reinterpret_cast<void *>(IM_OFFSETOF(ImDrawVert, uv)));
+    reinterpret_cast<void *>(offsetof(ImDrawVert, uv)));
   glEnableVertexAttribArray(m_shared->m_locations[VtxColorAttrLoc]);
   glVertexAttribPointer(m_shared->m_locations[VtxColorAttrLoc],
     4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ImDrawVert),
-    reinterpret_cast<void *>(IM_OFFSETOF(ImDrawVert, col)));
+    reinterpret_cast<void *>(offsetof(ImDrawVert, col)));
 
   glEnable(GL_BLEND);
   glBlendEquation(GL_FUNC_ADD);
