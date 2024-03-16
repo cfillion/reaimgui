@@ -352,6 +352,7 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
   case GDK_KEY_Super_L:   return ImGuiKey_LeftSuper;
   case GDK_KEY_Super_R:   return ImGuiKey_RightSuper;
   case GDK_KEY_KP_Enter:  return ImGuiKey_KeypadEnter;
+  case GDK_KEY_Print:     return ImGuiKey_PrintScreen;
   case GDK_KEY_Back:      return ImGuiKey_AppBack;
   case GDK_KEY_Forward:   return ImGuiKey_AppForward;
   default:                return ImGuiKey_None;

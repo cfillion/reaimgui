@@ -139,10 +139,6 @@ static int translateKeyCode(NSEvent *event)
     return keyCode & 0xFF;
 
   uint16_t charValue { [chars characterAtIndex:0] };
-  if(charValue >= NSF1FunctionKey && charValue <= NSF24FunctionKey)
-    charValue += VK_F1 - NSF1FunctionKey;
-  else if(charValue >= 'a' && charValue <= 'z')
-    charValue += 'A' - 'a';
 
   // attempt to be compatible with QWERTY/AZERTY, may be inaccurate
   switch(charValue) {
@@ -156,7 +152,13 @@ static int translateKeyCode(NSEvent *event)
   case '[':  return VK_OEM_4;
   case ']': case ')': return VK_OEM_6;
   case '\'': return VK_OEM_7;
+  case NSPrintScreenFunctionKey: return VK_SNAPSHOT;
   }
+
+  if(charValue >= NSF1FunctionKey && charValue <= NSF24FunctionKey)
+    charValue += VK_F1 - NSF1FunctionKey;
+  else if(charValue >= 'a' && charValue <= 'z')
+    charValue += 'A' - 'a';
 
   return charValue & 0xFF;
 }

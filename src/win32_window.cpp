@@ -445,6 +445,10 @@ void Win32Window::keyEvent(unsigned int msg,
 
   const bool down { msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN };
 
+  // Windows doesn't send a WM_KEYDOWN for Print Screen
+  if(vk == VK_SNAPSHOT && !down)
+    m_ctx->keyInput(ImGuiKey_PrintScreen, true);
+
   if(vk == VK_RETURN && (HIWORD(lParam) & KF_EXTENDED))
     m_ctx->keyInput(ImGuiKey_KeypadEnter, down);
   else if(!modKeyEvent(vk, down))
