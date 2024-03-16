@@ -152,7 +152,9 @@ static int translateKeyCode(NSEvent *event)
   case '[':  return VK_OEM_4;
   case ']': case ')': return VK_OEM_6;
   case '\'': return VK_OEM_7;
+
   case NSPrintScreenFunctionKey: return VK_SNAPSHOT;
+  case NSPauseFunctionKey:       return VK_PAUSE;
   }
 
   if(charValue >= NSF1FunctionKey && charValue <= NSF24FunctionKey)

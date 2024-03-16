@@ -343,19 +343,34 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
     return static_cast<ImGuiKey>(ImGuiKey_F1 + (event->keyval - GDK_KEY_F1));
 
   switch(event->keyval) {
-  case GDK_KEY_Control_L: return ImGuiKey_LeftCtrl;
-  case GDK_KEY_Control_R: return ImGuiKey_RightCtrl;
-  case GDK_KEY_Shift_L:   return ImGuiKey_LeftShift;
-  case GDK_KEY_Shift_R:   return ImGuiKey_RightShift;
-  case GDK_KEY_Alt_L:     return ImGuiKey_LeftAlt;
-  case GDK_KEY_Alt_R:     return ImGuiKey_RightAlt;
-  case GDK_KEY_Super_L:   return ImGuiKey_LeftSuper;
-  case GDK_KEY_Super_R:   return ImGuiKey_RightSuper;
-  case GDK_KEY_KP_Enter:  return ImGuiKey_KeypadEnter;
-  case GDK_KEY_Print:     return ImGuiKey_PrintScreen;
-  case GDK_KEY_Back:      return ImGuiKey_AppBack;
-  case GDK_KEY_Forward:   return ImGuiKey_AppForward;
-  default:                return ImGuiKey_None;
+  case GDK_KEY_Control_L:    return ImGuiKey_LeftCtrl;
+  case GDK_KEY_Control_R:    return ImGuiKey_RightCtrl;
+  case GDK_KEY_Shift_L:      return ImGuiKey_LeftShift;
+  case GDK_KEY_Shift_R:      return ImGuiKey_RightShift;
+  case GDK_KEY_Alt_L:        return ImGuiKey_LeftAlt;
+  case GDK_KEY_Alt_R:        return ImGuiKey_RightAlt;
+  case GDK_KEY_Super_L:      return ImGuiKey_LeftSuper;
+  case GDK_KEY_Super_R:      return ImGuiKey_RightSuper;
+  case GDK_KEY_KP_Enter:     return ImGuiKey_KeypadEnter;
+  case GDK_KEY_apostrophe:   return ImGuiKey_Apostrophe;
+  case GDK_KEY_comma:        return ImGuiKey_Comma;
+  case GDK_KEY_minus:        return ImGuiKey_Minus;
+  case GDK_KEY_period:       return ImGuiKey_Period;
+  case GDK_KEY_slash:        return ImGuiKey_Slash;
+  case GDK_KEY_semicolon:    return ImGuiKey_Semicolon;
+  case GDK_KEY_equal:        return ImGuiKey_Equal;
+  case GDK_KEY_bracketleft:  return ImGuiKey_LeftBracket;
+  case GDK_KEY_backslash:    return ImGuiKey_Backslash;
+  case GDK_KEY_bracketright: return ImGuiKey_RightBracket;
+  case GDK_KEY_grave:        return ImGuiKey_GraveAccent;
+  case GDK_KEY_Caps_Lock:    return ImGuiKey_CapsLock;
+  case GDK_KEY_Scroll_Lock:  return ImGuiKey_ScrollLock;
+  case GDK_KEY_Num_Lock:     return ImGuiKey_NumLock;
+  case GDK_KEY_Print:        return ImGuiKey_PrintScreen;
+  case GDK_KEY_Pause:        return ImGuiKey_Pause;
+  case GDK_KEY_Back:         return ImGuiKey_AppBack;
+  case GDK_KEY_Forward:      return ImGuiKey_AppForward;
+  default:                   return ImGuiKey_None;
   }
 }
 
