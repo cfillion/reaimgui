@@ -210,7 +210,7 @@ TableFlags_ContextMenuInBody).
 
 API_SECTION_DEF(columnFlags, columns, "Column Flags", "For TableSetupColumn.");
 API_ENUM(0_1, ImGui, TableColumnFlags_None, "");
-API_SECTION_P(columnFlags, "Input configuration");
+API_SECTION_P(columnFlags, "Input Configuration");
 API_ENUM(0_5_5, ImGui, TableColumnFlags_Disabled,
 R"(Overriding/master disable flag: hide column, won't show in context menu
    (unlike calling TableSetColumnEnabled which manipulates the user accessible state).)");
@@ -253,7 +253,7 @@ API_ENUM(0_1, ImGui, TableColumnFlags_IndentEnable,
 API_ENUM(0_1, ImGui, TableColumnFlags_IndentDisable,
 R"(Ignore current Indent value when entering cell (default for columns > 0).
    Indentation changes _within_ the cell will still be honored.)");
-API_SECTION_P(columnFlags, "Output status", "Read-only via TableGetColumnFlags");
+API_SECTION_P(columnFlags, "Output Status", "Read-only via TableGetColumnFlags");
 API_ENUM(0_1, ImGui, TableColumnFlags_IsEnabled,
 R"(Status: is enabled == not hidden by user/api (referred to as "Hide" in
    _DefaultHide and _NoHide) flags.)");

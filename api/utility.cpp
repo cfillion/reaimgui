@@ -135,7 +135,7 @@ NUMERIC_LIMITS(0_8_4, Double, double, DBL_MIN, DBL_MAX);
 NUMERIC_LIMITS(0_4,   Float,  double, FLT_MIN, FLT_MAX);
 NUMERIC_LIMITS(0_8_4, Int,    int,    INT_MIN, INT_MAX);
 
-API_SUBSECTION("ID stack/scope",
+API_SUBSECTION("ID Stack/Scope",
 R"(Read the [FAQ](https://dearimgui.com/faq) for more details about how IDs are
 handled in dear imgui.
 

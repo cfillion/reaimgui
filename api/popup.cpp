@@ -147,7 +147,7 @@ R"(For IsPopupOpen: search/test at any level of the popup stack
 API_ENUM(0_1, ImGui, PopupFlags_AnyPopup,
   "PopupFlags_AnyPopupId | PopupFlags_AnyPopupLevel");
 
-API_SUBSECTION("Open+begin combined helpers", R"(
+API_SUBSECTION("Open+Begin Combined Helpers", R"(
 Helpers to do OpenPopup+BeginPopup where the Open action is triggered by e.g.
 hovering an item and right-clicking. They are convenient to easily create
 context menus, hence the name.

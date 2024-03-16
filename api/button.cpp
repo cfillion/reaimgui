@@ -119,7 +119,7 @@ API_ENUM(0_1, ImGui, ButtonFlags_MouseButtonRight,
 API_ENUM(0_1, ImGui, ButtonFlags_MouseButtonMiddle,
   "React on center mouse button.");
 
-API_SUBSECTION("Cardinal directions", "For ArrowButton.");
+API_SUBSECTION("Cardinal Directions", "For ArrowButton.");
 API_ENUM(0_1, ImGui, Dir_None,  "");
 API_ENUM(0_1, ImGui, Dir_Left,  "");
 API_ENUM(0_1, ImGui, Dir_Right, "");
