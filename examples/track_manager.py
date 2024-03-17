@@ -6,8 +6,10 @@ import imgui as ImGui
 FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
 
 def init():
-  global ctx
+  global ctx, clipper
   ctx = ImGui.CreateContext("Track manager")
+  clipper = ImGui.CreateListClipper(ctx)
+  ImGui.Attach(ctx, clipper)
   loop()
 
 def paramCheckbox(track, param):
@@ -103,7 +105,6 @@ def trackTable():
   ImGui.TableHeadersRow(ctx)
 
   trackCount = RPR_CountTracks(None)
-  clipper = ImGui.CreateListClipper(ctx)
   ImGui.ListClipper_Begin(clipper, trackCount)
   while ImGui.ListClipper_Step(clipper):
     displayStart, displayEnd = ImGui.ListClipper_GetDisplayRange(clipper)
