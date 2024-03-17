@@ -6926,14 +6926,16 @@ function demo.ShowStyleEditor()
 
   if ImGui.BeginTabBar(ctx, '##tabs', ImGui.TabBarFlags_None) then
     if ImGui.BeginTabItem(ctx, 'Sizes') then
-      local slider = function(varname, min, max, format)
+      local slider = function(varname, min, max, format, sliderFunc)
         local var = ImGui['StyleVar_' .. varname]
         assert(var, ('%s is not exposed as a StyleVar'):format(varname))
         if type(app.style_editor.style.vars[var]) == 'table' then
-          local rv,val1,val2 = ImGui.SliderDouble2(ctx, varname, app.style_editor.style.vars[var][1], app.style_editor.style.vars[var][2], min, max, format)
+          if not sliderFunc then sliderFunc = ImGui.SliderDouble2 end
+          local rv,val1,val2 = sliderFunc(ctx, varname, app.style_editor.style.vars[var][1], app.style_editor.style.vars[var][2], min, max, format)
           if rv then app.style_editor.style.vars[var] = { val1, val2 } end
         else
-          local rv,val = ImGui.SliderDouble(ctx, varname, app.style_editor.style.vars[var], min, max, format)
+          if not sliderFunc then sliderFunc = ImGui.SliderDouble end
+          local rv,val = sliderFunc(ctx, varname, app.style_editor.style.vars[var], min, max, format)
           if rv then app.style_editor.style.vars[var] = val end
         end
       end
@@ -6953,7 +6955,7 @@ function demo.ShowStyleEditor()
       slider('ChildBorderSize',  0.0, 1.0, '%.0f')
       slider('PopupBorderSize',  0.0, 1.0, '%.0f')
       slider('FrameBorderSize',  0.0, 1.0, '%.0f')
-      -- slider('TabBorderSize',    0.0, 1.0, '%.0f')
+      slider('TabBorderSize',    0.0, 1.0, '%.0f')
       slider('TabBarBorderSize', 0.0, 2.0, '%.0f')
 
       ImGui.SeparatorText(ctx, 'Rounding')
@@ -6967,7 +6969,7 @@ function demo.ShowStyleEditor()
 
       ImGui.SeparatorText(ctx, 'Tables')
       slider('CellPadding',       0.0, 20.0, '%.0f')
-      -- sliderAngle('TableAngledHeadersAngle', -50.0, 50.0)
+      slider('TableAngledHeadersAngle', -50.0, 50.0, nil, ImGui.SliderAngle)
 
       ImGui.SeparatorText(ctx, 'Widgets')
       slider('WindowTitleAlign', 0.0, 1.0, '%.2f')
@@ -6991,6 +6993,7 @@ function demo.ShowStyleEditor()
       -- ImGui.Text(ctx, 'Safe Area Padding')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Adjust if you cannot see the edges of your screen (ctx, e.g. on a TV where scaling has not been configured).')
       -- slider('DisplaySafeAreaPadding', 0.0, 30.0, '%.0f')
+
       ImGui.EndTabItem(ctx)
     end
 
