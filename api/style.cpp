@@ -213,15 +213,19 @@ multiplier, packed as a 32-bit value (RGBA). See Col_* for available style color
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
-  return Color::toBigEndian(ImGui::GetColorU32(idx, API_RO_GET(alpha_mul)));
+  const ImGuiCol col { idx };
+  return Color::toBigEndian(ImGui::GetColorU32(col, API_RO_GET(alpha_mul)));
 }
 
 API_FUNC(0_1, int, GetColorEx, (ImGui_Context*,ctx)
-(int,col_rgba),
+(int,col_rgba)(double*,API_RO(alpha_mul),1.0),
 "Retrieve given color with style alpha applied, packed as a 32-bit value (RGBA).")
 {
   FRAME_GUARD;
-  return Color::toBigEndian(ImGui::GetColorU32(Color::fromBigEndian(col_rgba)));
+  col_rgba = Color::fromBigEndian(col_rgba);
+  col_rgba = ImGui::GetColorU32(static_cast<ImU32>(col_rgba), API_RO_GET(alpha_mul));
+  col_rgba = Color::toBigEndian(col_rgba);
+  return col_rgba;
 }
 
 API_FUNC(0_1, int, GetStyleColor, (ImGui_Context*,ctx)

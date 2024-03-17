@@ -49,6 +49,13 @@ API_FUNC(0_5_5, void, EndDisabled, (ImGui_Context*,ctx),
   ImGui::EndDisabled();
 }
 
+API_FUNC(0_9, void, DebugStartItemPicker, (ImGui_Context*,ctx),
+"")
+{
+  FRAME_GUARD;
+  ImGui::DebugStartItemPicker();
+}
+
 API_SUBSECTION("Focus & Activation",
 R"~(Prefer using "SetItemDefaultFocus()" over
 "if(IsWindowAppearing()) SetScrollHereY()" when applicable to signify

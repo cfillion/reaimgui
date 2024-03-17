@@ -107,8 +107,11 @@ API_ENUM(0_2, Im, DrawFlags_RoundCornersRight,  "");
 API_ENUM(0_2, Im, DrawFlags_RoundCornersAll,    "");
 
 API_SUBSECTION("Primitives",
-R"(Filled shapes must always use clockwise winding order. The anti-aliasing
+R"(Filled shapes must always use clockwise winding order! The anti-aliasing
 fringe depends on it. Counter-clockwise shapes will have "inward" anti-aliasing.
+So e.g. `DrawList_PathArcTo(center, radius, PI * -0.5, PI)` is ok, whereas
+`DrawList_PathArcTo(center, radius, PI, PI * -0.5)` won't have correct
+anti-aliasing when followed by DrawList_PathFillConvex.
 
 For rectangular primitives, "p_min" and "p_max" represent the upper-left and
 lower-right corners.

@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.2)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.4)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -366,7 +366,15 @@ function demo.ShowDemoWindow(open)
       rv,show_app.debug_log     = ImGui.MenuItem(ctx, 'Debug Log',        nil, show_app.debug_log)
       rv,show_app.id_stack_tool = ImGui.MenuItem(ctx, 'ID Stack Tool',    nil, show_app.id_stack_tool)
       rv,show_app.style_editor  = ImGui.MenuItem(ctx, 'Style Editor',     nil, show_app.style_editor)
-      rv,show_app.about         = ImGui.MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
+      local is_debugger_present = true -- ImGui::GetIO().ConfigDebugIsDebuggerPresent
+      if ImGui.MenuItem(ctx, 'Item Picker', nil, false, is_debugger_present) then
+        ImGui.DebugStartItemPicker(ctx)
+      end
+      -- if !is_debugger_present then
+      --   ImGui.SetItemTooltip(ctx, 'Requires io.ConfigDebugIsDebuggerPresent=true to be set.\n\nWe otherwise disable the menu option to avoid casual users crashing the application.\n\nYou can however always access the Item Picker in Metrics->Tools.')
+      -- end
+      ImGui.Separator(ctx)
+      rv,show_app.about = ImGui.MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
       ImGui.EndMenu(ctx)
     end
     ImGui.EndMenuBar(ctx)
@@ -5656,7 +5664,7 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Angled headers') then
     if not tables.angled then
       tables.angled = {
-        flags = ImGui.TableFlags_SizingFixedFit |
+        table_flags = ImGui.TableFlags_SizingFixedFit |
                       ImGui.TableFlags_ScrollX        |
                       ImGui.TableFlags_ScrollY        |
                       ImGui.TableFlags_BordersOuter   |
@@ -5665,6 +5673,7 @@ function demo.ShowDemoWindowTables()
                       ImGui.TableFlags_Resizable      |
                       ImGui.TableFlags_Reorderable    |
                       ImGui.TableFlags_HighlightHoveredColumn,
+        column_flags = ImGui.TableColumnFlags_AngledHeader | ImGui.TableColumnFlags_WidthFixed,
         bools = {}, -- Dummy storage selection storage
         frozen_cols = 1,
         frozen_rows = 2,
@@ -5675,19 +5684,21 @@ function demo.ShowDemoWindowTables()
     local columns_count = #column_names
     local rows_count = 12
 
-    rv,tables.angled.flags = ImGui.CheckboxFlags(ctx, '_ScrollX', tables.angled.flags, ImGui.TableFlags_ScrollX)
-    rv,tables.angled.flags = ImGui.CheckboxFlags(ctx, '_ScrollY', tables.angled.flags, ImGui.TableFlags_ScrollY)
-    -- rv,tables.angled.flags = ImGui.CheckboxFlags(ctx, '_NoBordersInBody', tables.angled.flags, ImGui.TableFlags_NoBordersInBody)
-    rv,tables.angled.flags = ImGui.CheckboxFlags(ctx, '_HighlightHoveredColumn', tables.angled.flags, ImGui.TableFlags_HighlightHoveredColumn)
+    rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_ScrollX',   tables.angled.table_flags, ImGui.TableFlags_ScrollX)
+    rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_ScrollY',   tables.angled.table_flags, ImGui.TableFlags_ScrollY)
+    rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_Resizable', tables.angled.table_flags, ImGui.TableFlags_Resizable)
+    -- rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_NoBordersInBody', tables.angled.table_flags, ImGui.TableFlags_NoBordersInBody)
+    rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_HighlightHoveredColumn', tables.angled.table_flags, ImGui.TableFlags_HighlightHoveredColumn)
     ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 8)
     rv,tables.angled.frozen_cols = ImGui.SliderInt(ctx, 'Frozen columns', tables.angled.frozen_cols, 0, 2)
     ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 8)
     rv,tables.angled.frozen_rows = ImGui.SliderInt(ctx, 'Frozen rows', tables.angled.frozen_rows, 0, 2)
+    rv,tables.angled.column_flags = ImGui.CheckboxFlags(ctx, 'Disable header contributing to column width', tables.angled.column_flags, ImGui.TableColumnFlags_NoHeaderWidth)
 
-    if ImGui.BeginTable(ctx, 'table_angled_headers', columns_count, tables.angled.flags, 0.0, TEXT_BASE_HEIGHT * 12) then
+    if ImGui.BeginTable(ctx, 'table_angled_headers', columns_count, tables.angled.table_flags, 0.0, TEXT_BASE_HEIGHT * 12) then
       ImGui.TableSetupColumn(ctx, column_names[1], ImGui.TableColumnFlags_NoHide | ImGui.TableColumnFlags_NoReorder)
       for n = 2, columns_count do
-        ImGui.TableSetupColumn(ctx, column_names[n], ImGui.TableColumnFlags_AngledHeader | ImGui.TableColumnFlags_WidthFixed)
+        ImGui.TableSetupColumn(ctx, column_names[n], tables.angled.column_flags)
       end
       ImGui.TableSetupScrollFreeze(ctx, tables.angled.frozen_cols, tables.angled.frozen_rows)
 
@@ -8384,6 +8395,9 @@ function demo.ShowExampleAppCustomRendering()
       local rounding = sz / 5.0
       local circle_segments = app.rendering.circle_segments_override and app.rendering.circle_segments_override_v or 0
       local curve_segments  = app.rendering.curve_segments_override  and app.rendering.curve_segments_override_v  or 0
+      local cp3 = { { 0.0, sz * 0.6 }, { sz * 0.5, -sz * 0.4 }, { sz, sz } } -- Control points for curves
+      local cp4 = { { 0.0, 0.0 }, { sz * 1.3, sz * 0.3 }, { sz - sz * 1.3, sz - sz * 0.3 }, { sz, sz } }
+
       local x = p_x + 4.0
       local y = p_y + 4.0
       for n = 1, 2 do
@@ -8401,22 +8415,28 @@ function demo.ShowExampleAppCustomRendering()
         ImGui.DrawList_AddLine(draw_list, x, y, x, y + sz, col, th);                                          x = x +      spacing  -- Vertical line (note: drawing a filled rectangle will be faster!)
         ImGui.DrawList_AddLine(draw_list, x, y, x + sz, y + sz, col, th);                                     x = x + sz + spacing  -- Diagonal line
 
+        -- Path
+        ImGui.DrawList_PathArcTo(draw_list, x + sz*0.5, y + sz*0.5, sz*0.5, 3.141592, 3.141592 * -0.5)
+        ImGui.DrawList_PathStroke(draw_list, col, ImGui.DrawFlags_None, th)
+        x = x + sz + spacing
+
         -- Quadratic Bezier Curve (3 control points)
-        local cp3 = {{x, y + sz * 0.6}, {x + sz * 0.5, y - sz * 0.4}, {x + sz, y + sz}}
         ImGui.DrawList_AddBezierQuadratic(draw_list,
-          cp3[1][1], cp3[1][2], cp3[2][1], cp3[2][2], cp3[3][1], cp3[3][2],
+          x + cp3[1][1], y + cp3[1][2], x + cp3[2][1], y + cp3[2][2], x + cp3[3][1], y + cp3[3][2],
           col, th, curve_segments)
         x = x + sz + spacing
 
         -- Cubic Bezier Curve (4 control points)
-        local cp4 = {{x, y}, {x + sz * 1.3, y + sz * 0.3}, {x + sz - sz * 1.3, y + sz - sz * 0.3}, {x + sz, y + sz}}
         ImGui.DrawList_AddBezierCubic(draw_list,
-          cp4[1][1], cp4[1][2], cp4[2][1], cp4[2][2], cp4[3][1], cp4[3][2], cp4[4][1], cp4[4][2],
+          x + cp4[1][1], y + cp4[1][2], x + cp4[2][1], y + cp4[2][2],
+          x + cp4[3][1], y + cp4[3][2], x + cp4[4][1], y + cp4[4][2],
           col, th, curve_segments)
 
         x = p_x + 4
         y = y + sz + spacing
       end
+
+      -- Filled shapes
       ImGui.DrawList_AddNgonFilled(draw_list, x + sz * 0.5, y + sz * 0.5, sz*0.5, col, app.rendering.ngon_sides); x = x + sz + spacing  -- N-gon
       ImGui.DrawList_AddCircleFilled(draw_list, x + sz*0.5, y + sz*0.5, sz*0.5, col, circle_segments);            x = x + sz + spacing  -- Circle
       ImGui.DrawList_AddEllipseFilled(draw_list, x + sz * 0.5, y + sz * 0.5, sz * 0.5, sz * 0.3, col, -0.3, circle_segments); x = x + sz + spacing -- Ellipse
@@ -8428,9 +8448,27 @@ function demo.ShowExampleAppCustomRendering()
       ImGui.DrawList_AddRectFilled(draw_list, x, y, x + sz, y + app.rendering.thickness, col);                    x = x + sz + spacing  -- Horizontal line (faster than AddLine, but only handle integer thickness)
       ImGui.DrawList_AddRectFilled(draw_list, x, y, x + app.rendering.thickness, y + sz, col);                    x = x + spacing * 2.0 -- Vertical line (faster than AddLine, but only handle integer thickness)
       ImGui.DrawList_AddRectFilled(draw_list, x, y, x + 1, y + 1, col);                                           x = x + sz            -- Pixel (faster than AddLine)
+
+      -- Path
+      ImGui.DrawList_PathArcTo(draw_list, x + sz * 0.5, y + sz * 0.5, sz * 0.5, 3.141592 * -0.5, 3.141592)
+      ImGui.DrawList_PathFillConvex(draw_list, col)
+      x = x + sz + spacing
+
+      -- Quadratic Bezier Curve (3 control points)
+      ImGui.DrawList_PathLineTo(draw_list, x + cp3[1][1], y + cp3[1][2])
+      ImGui.DrawList_PathBezierQuadraticCurveTo(draw_list, x + cp3[2][1], y + cp3[2][2], x + cp3[3][1], y + cp3[3][2], curve_segments)
+      ImGui.DrawList_PathFillConvex(draw_list, col)
+      x = x + sz + spacing
+
+      -- Cubic Bezier Curve (4 control points): this is concave so not drawing it yet
+      -- ImGui.DrawList_PathLineTo(draw_list, x + cp4[1][1], y + cp4[1][2])
+      -- ImGui.DrawList_PathBezierCubicCurveTo(draw_list, x + cp4[2][1], y + cp4[2][2], x + cp4[3][1], y + cp4[3][2], x + cp4[4][1], y + cp4[4][2], curve_segments)
+      -- ImGui.DrawList_PathFillConvex(draw_list, col)
+      -- x = x + sz + spacing
+
       ImGui.DrawList_AddRectFilledMultiColor(draw_list, x, y, x + sz, y + sz, 0x000000ff, 0xff0000ff, 0xffff00ff, 0x00ff00ff)
 
-      ImGui.Dummy(ctx, (sz + spacing) * 11.2, (sz + spacing) * 3.0)
+      ImGui.Dummy(ctx, (sz + spacing) * 12.2, (sz + spacing) * 3.0)
       ImGui.PopItemWidth(ctx)
       ImGui.EndTabItem(ctx)
     end
