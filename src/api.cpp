@@ -326,18 +326,27 @@ const char *API::lastError() noexcept
   return g_lastError.empty() ? nullptr : &g_lastError[1];
 }
 
+template<typename... Args>
+void setError(std::format_string<Args...> fmt, Args&&... args)
+{
+  // only report the first error per CallConv::Safe API call
+  // so that EEL callback errors are not masked by later ones
+  if(!g_lastError.empty())
+    return;
+
+  g_lastError = std::vformat(fmt.get(), std::make_format_args(args...));
+  ReaScriptError(g_lastError.c_str());
+}
+
 // REAPER 6.29+ uses the '!' prefix to abort the calling Lua script's execution
 void API::handleError(const char *fnName, const reascript_error &e)
 {
-  g_lastError = std::format("!" API_PREFIX "{}: {}", fnName, e.what());
-  ReaScriptError(g_lastError.c_str());
+  setError("!" API_PREFIX "{}: {}", fnName, e.what());
 }
 
 void API::handleError(const char *fnName, const imgui_error &e)
 {
-  g_lastError = std::format("!" API_PREFIX "{}: ImGui assertion failed: {}", fnName, e.what());
-  ReaScriptError(g_lastError.c_str());
-
+  setError("!" API_PREFIX "{}: ImGui assertion failed: {}", fnName, e.what());
   assert(Context::current());
   delete Context::current();
 }
