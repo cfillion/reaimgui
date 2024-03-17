@@ -21,7 +21,6 @@
 #include "error.hpp"
 
 #include <reaper_plugin_secrets.h> // reaper_array
-#include <string>
 
 // WDL_FastString is missing a copy constructor/assignment operator
 #ifdef HAS_DEPRECATED_COPY // GCC 12
@@ -54,8 +53,6 @@ static void EEL_STRING_DEBUGOUT(const char *fmt, ...) noexcept
 #  pragma GCC diagnostic pop
 #endif
 
-using namespace std::string_literals;
-
 void Function::setup()
 {
   EEL_string_register();
@@ -76,7 +73,7 @@ Function::Function(const char *eel2Code)
     m_strings->update_named_vars(m_vm.get());
   else {
     if(const char *err { NSEEL_code_getcodeerror(m_vm.get()) })
-      throw reascript_error { "failed to compile EEL code: "s + err };
+      throw reascript_error { "failed to compile EEL code: {}", err };
     else
       throw reascript_error { "failed to compile EEL code" };
   }
