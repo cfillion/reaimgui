@@ -66,6 +66,7 @@ ImFont *Font::load(ImFontAtlas *atlas, const float scale)
   cfg.FontNo = m_index;
 
   const int scaledSize { static_cast<int>(m_size * scale) };
+  cfg.RasterizerDensity = static_cast<float>(scaledSize) / m_size;
 
   ImFont *font;
   if(const std::string *path { std::get_if<std::string>(&m_data) })
@@ -75,7 +76,6 @@ ImFont *Font::load(ImFontAtlas *atlas, const float scale)
     auto &data { std::get<std::vector<unsigned char>>(m_data) };
     font = atlas->AddFontFromMemoryTTF(data.data(), data.size(), scaledSize, &cfg);
   }
-
   font->Scale = static_cast<float>(m_size) / scaledSize;
 
   return font;
