@@ -254,6 +254,14 @@ API_FUNC(0_1, void, PopStyleColor, (ImGui_Context*,ctx)
   ImGui::PopStyleColor(API_RO_GET(count));
 }
 
+API_FUNC(0_9, void, DebugFlashStyleColor, (ImGui_Context*,ctx)
+(int,idx),
+"")
+{
+  FRAME_GUARD;
+  ImGui::DebugFlashStyleColor(idx);
+}
+
 API_ENUM(0_1, ImGui, Col_Text,                  "");
 API_ENUM(0_1, ImGui, Col_TextDisabled,          "");
 API_ENUM(0_1, ImGui, Col_WindowBg,
@@ -268,15 +276,15 @@ API_ENUM(0_1, ImGui, Col_FrameBg,
   "Background of checkbox, radio button, plot, slider, text input.");
 API_ENUM(0_1, ImGui, Col_FrameBgHovered,        "");
 API_ENUM(0_1, ImGui, Col_FrameBgActive,         "");
-API_ENUM(0_1, ImGui, Col_TitleBg,               "");
-API_ENUM(0_1, ImGui, Col_TitleBgActive,         "");
-API_ENUM(0_1, ImGui, Col_TitleBgCollapsed,      "");
+API_ENUM(0_1, ImGui, Col_TitleBg,               "Title bar");
+API_ENUM(0_1, ImGui, Col_TitleBgActive,         "Title bar when focused");
+API_ENUM(0_1, ImGui, Col_TitleBgCollapsed,      "Title bar when collapsed");
 API_ENUM(0_1, ImGui, Col_MenuBarBg,             "");
 API_ENUM(0_1, ImGui, Col_ScrollbarBg,           "");
 API_ENUM(0_1, ImGui, Col_ScrollbarGrab,         "");
 API_ENUM(0_1, ImGui, Col_ScrollbarGrabHovered,  "");
 API_ENUM(0_1, ImGui, Col_ScrollbarGrabActive,   "");
-API_ENUM(0_1, ImGui, Col_CheckMark,             "");
+API_ENUM(0_1, ImGui, Col_CheckMark,             "Checkbox tick and RadioButton circle");
 API_ENUM(0_1, ImGui, Col_SliderGrab,            "");
 API_ENUM(0_1, ImGui, Col_SliderGrabActive,      "");
 API_ENUM(0_1, ImGui, Col_Button,                "");

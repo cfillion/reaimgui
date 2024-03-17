@@ -39,7 +39,7 @@ and BeginPopup generally needs to be at the same level of the stack.)");
 API_FUNC(0_1, bool, BeginPopup, (ImGui_Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags),ImGuiWindowFlags_None),
 R"(Query popup state, if open start appending into the window. Call EndPopup
-afterwards. WindowFlags* are forwarded to the window.
+afterwards if returned true. WindowFlags* are forwarded to the window.
 
 Return true if the popup is open, and you can start outputting to it.)")
 {

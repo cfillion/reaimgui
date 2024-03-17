@@ -52,44 +52,43 @@ CreateImage or explicitely specify data_sz if supporting older versions.)")
   return Image::fromMemory(data, data_sz);
 }
 
-API_FUNC(0_8, void, Image_GetSize, (ImGui_Image*,img)
+API_FUNC(0_8, void, Image_GetSize, (ImGui_Image*,image)
 (double*,API_W(w))(double*,API_W(h)),
 "")
 {
-  assertValid(img);
-  if(API_W(w)) *API_W(w) = img->width();
-  if(API_W(h)) *API_W(h) = img->height();
+  assertValid(image);
+  if(API_W(w)) *API_W(w) = image->width();
+  if(API_W(h)) *API_W(h) = image->height();
 }
 
 API_FUNC(0_8, void, Image, (ImGui_Context*,ctx)
-(ImGui_Image*,img)(double,size_w)(double,size_h)
+(ImGui_Image*,image)(double,image_size_w)(double,image_size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
 (int*,API_RO(tint_col_rgba),0xFFFFFFFF)(int*,API_RO(border_col_rgba),0x00000000),
-"")
+"Adds 2.0 to the provided size if a border is visible.")
 {
   FRAME_GUARD;
-  assertValid(img);
+  assertValid(image);
 
-  const ImTextureID tex { img->makeTexture(ctx->textureManager()) };
-  ImGui::Image(tex, ImVec2(size_w, size_h),
+  const ImTextureID tex { image->makeTexture(ctx->textureManager()) };
+  ImGui::Image(tex, ImVec2(image_size_w, image_size_h),
     ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
     ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
     Color(API_RO_GET(tint_col_rgba)), Color(API_RO_GET(border_col_rgba)));
 }
 
 API_FUNC(0_8, bool, ImageButton, (ImGui_Context*,ctx)
-(const char*,str_id)(ImGui_Image*,img)(double,image_size_w)(double,image_size_h)
+(const char*,str_id)(ImGui_Image*,image)(double,image_size_w)(double,image_size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
 (int*,API_RO(bg_col_rgba),0x00000000)(int*,API_RO(tint_col_rgba),0xFFFFFFFF),
-R"(Adds StyleVar_FramePadding*2.0 to provided size.
-This is in order to facilitate fitting an image in a button.)")
+"Adds StyleVar_FramePadding*2.0 to provided size.")
 {
   FRAME_GUARD;
-  assertValid(img);
+  assertValid(image);
 
-  const ImTextureID tex { img->makeTexture(ctx->textureManager()) };
+  const ImTextureID tex { image->makeTexture(ctx->textureManager()) };
   return ImGui::ImageButton(str_id, tex, ImVec2(image_size_w, image_size_h),
     ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
     ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
@@ -121,10 +120,10 @@ API_FUNC(0_9, ImGui_ImageSet*, CreateImageSet, NO_ARGS,
 }
 
 API_FUNC(0_8, void, ImageSet_Add, (ImGui_ImageSet*,set)
-(double,scale)(ImGui_Image*,img),
+(double,scale)(ImGui_Image*,image),
 "'img' cannot be another ImageSet.")
 {
   assertValid(set);
-  assertValid(img);
-  set->add(scale, img);
+  assertValid(image);
+  set->add(scale, image);
 }

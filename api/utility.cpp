@@ -287,7 +287,7 @@ or easily output text data to the clipboard.)")
 }
 
 API_SUBSECTION("Conditions",
-  "Used for many SetNextWindow*() and SetWindow*() functions.");
+  "Used for SetNextWindow*(), SetWindow*() and SetNextItem*() functions.");
 API_ENUM(0_1, ImGui, Cond_Always,
   "No condition (always set the variable).");
 API_ENUM(0_1, ImGui, Cond_Once,

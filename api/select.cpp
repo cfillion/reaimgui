@@ -72,7 +72,7 @@ null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)")
     strings.data(), strings.size(), API_RO_GET(popup_max_height_in_items));
 }
 
-API_ENUM(0_1, ImGui, ComboFlags_None,           "");
+API_ENUM(0_1, ImGui, ComboFlags_None, "");
 API_ENUM(0_1, ImGui, ComboFlags_PopupAlignLeft,
   "Align the popup toward the left by default.");
 API_ENUM(0_1, ImGui, ComboFlags_HeightSmall,

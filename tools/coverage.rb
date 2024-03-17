@@ -278,7 +278,7 @@ RESOURCES = {
   'ImGui_DrawListSplitter*' => 'splitter',
   'ImGui_Font*'             => 'font',
   'ImGui_Function*'         => 'func',
-  'ImGui_Image*'            => 'img',
+  'ImGui_Image*'            => 'image',
   'ImGui_ImageSet*'         => 'set',
   'ImGui_ListClipper*'      => 'clipper',
   'ImGui_Resource*'         => 'obj',
@@ -403,7 +403,7 @@ private
     arg.name += '_rgba' if arg.type == 'ImU32' && %[col color].include?(arg.name)
     arg.type = cpp_type_to_reascript_type arg.type
     arg.name = arg.name[4..-1] if arg.name =~ /\Aout_.+/ && arg.type.end_with?('*')
-    arg.name = 'img' if arg.type == 'ImGui_Image*'
+    arg.name = RESOURCES[arg.type] if arg.type == 'ImGui_Image*'
 
     if arg.type.include? 'ImVec2'
       null_optional = arg.type.end_with? '*'

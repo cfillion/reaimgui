@@ -355,7 +355,7 @@ API_FUNC(0_1, void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
 }
 
 API_FUNC(0_8, void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
-(ImGui_Image*,img)
+(ImGui_Image*,image)
 (double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
 (double*,API_RO(uv_min_x),0.0)(double*,API_RO(uv_min_y),0.0)
 (double*,API_RO(uv_max_x),1.0)(double*,API_RO(uv_max_y),1.0)
@@ -364,8 +364,8 @@ API_FUNC(0_8, void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
 {
   Context *ctx;
   ImDrawList *dl { draw_list->get(&ctx) };
-  assertValid(img);
-  dl->AddImage(img->makeTexture(ctx->textureManager()),
+  assertValid(image);
+  dl->AddImage(image->makeTexture(ctx->textureManager()),
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     ImVec2(API_RO_GET(uv_min_x), API_RO_GET(uv_min_y)),
     ImVec2(API_RO_GET(uv_max_x), API_RO_GET(uv_max_y)),
@@ -373,7 +373,7 @@ API_FUNC(0_8, void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
 }
 
 API_FUNC(0_8, void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
-(ImGui_Image*,img)(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
+(ImGui_Image*,image)(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
 (double*,API_RO(uv1_x),0.0)(double*,API_RO(uv1_y),0.0)
 (double*,API_RO(uv2_x),1.0)(double*,API_RO(uv2_y),0.0)
@@ -384,8 +384,8 @@ API_FUNC(0_8, void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
 {
   Context *ctx;
   ImDrawList *dl { draw_list->get(&ctx) };
-  assertValid(img);
-  dl->AddImageQuad(img->makeTexture(ctx->textureManager()),
+  assertValid(image);
+  dl->AddImageQuad(image->makeTexture(ctx->textureManager()),
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
     ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
     ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
@@ -396,15 +396,16 @@ API_FUNC(0_8, void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
 }
 
 API_FUNC(0_8, void, DrawList_AddImageRounded, (ImGui_DrawList*,draw_list)
-(ImGui_Image*,img)(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
+(ImGui_Image*,image)
+(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
 (double,uv_min_x)(double,uv_min_y)(double,uv_max_x)(double,uv_max_y)
 (int,col_rgba)(double,rounding)(int*,API_RO(flags),ImDrawFlags_None),
 "")
 {
   Context *ctx;
   ImDrawList *dl { draw_list->get(&ctx) };
-  assertValid(img);
-  dl->AddImageRounded(img->makeTexture(ctx->textureManager()),
+  assertValid(image);
+  dl->AddImageRounded(image->makeTexture(ctx->textureManager()),
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     ImVec2(uv_min_x, uv_min_y), ImVec2(uv_max_x, uv_max_y),
     Color::fromBigEndian(col_rgba), rounding, API_RO_GET(flags));

@@ -481,7 +481,7 @@ API_FUNC(0_1, bool, VSliderDouble, (ImGui_Context*,ctx)
 API_SUBSECTION("Flags",
 R"(For DragDouble, DragInt, SliderDouble, SliderInt etc. (Those are per-item
 flags. There are shared flags in SetConfigVar: ConfigVar_DragClickToInputText)");
-API_ENUM(0_1, ImGui, SliderFlags_None,            "");
+API_ENUM(0_1, ImGui, SliderFlags_None, "");
 API_ENUM(0_1, ImGui, SliderFlags_AlwaysClamp,
 R"(Clamp value to min/max bounds when input manually with CTRL+Click.
    By default CTRL+Click allows going out of bounds.)");

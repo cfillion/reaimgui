@@ -44,8 +44,8 @@ API_ENUM(0_1, ImGui, TabBarFlags_TabListPopupButton,
   "Disable buttons to open the tab list popup.");
 API_ENUM(0_1, ImGui, TabBarFlags_NoCloseWithMiddleMouseButton,
 R"(Disable behavior of closing tabs (that are submitted with p_open != nil)
-   with middle mouse button. You can still repro this behavior on user's side
-   with if(IsItemHovered() && IsMouseClicked(2)) p_open = false.)");
+   with middle mouse button. You may handle this behavior manually on user's
+   side with if(IsItemHovered() && IsMouseClicked(2)) p_open = false.)");
 API_ENUM(0_1, ImGui, TabBarFlags_NoTabListScrollingButtons,
 R"(Disable scrolling buttons (apply when fitting policy is
    TabBarFlags_FittingPolicyScroll).)");
@@ -96,11 +96,9 @@ Otherwise call with a window name.)")
   ImGui::SetTabItemClosed(tab_or_docked_window_label);
 }
 
-API_ENUM(0_1, ImGui, TabItemFlags_None,                         "");
+API_ENUM(0_1, ImGui, TabItemFlags_None, "");
 API_ENUM(0_1, ImGui, TabItemFlags_UnsavedDocument,
-R"(Append '*' to title without affecting the ID, as a convenience to avoid using
-   the ### operator. Also: tab is selected on closure and closure is deferred by
-   one frame to allow code to undo it without flicker.)");
+  "Display a dot next to the title + set TabItemFlags_NoAssumedClosure.");
 API_ENUM(0_1, ImGui, TabItemFlags_SetSelected,
   "Trigger flag to programmatically make the tab selected when calling BeginTabItem.");
 API_ENUM(0_1, ImGui, TabItemFlags_NoCloseWithMiddleMouseButton,
@@ -108,7 +106,7 @@ R"(Disable behavior of closing tabs (that are submitted with p_open != nil) with
    middle mouse button. You can still repro this behavior on user's side with
    if(IsItemHovered() && IsMouseClicked(2)) p_open = false.)");
 API_ENUM(0_1, ImGui, TabItemFlags_NoPushId,
-  "Don't call PushID(tab->ID)/PopID() on BeginTabItem/EndTabItem.");
+  "Don't call PushID()/PopID() on BeginTabItem/EndTabItem.");
 API_ENUM(0_1, ImGui, TabItemFlags_NoTooltip,
   "Disable tooltip for the given tab.");
 API_ENUM(0_1, ImGui, TabItemFlags_NoReorder,
@@ -117,3 +115,8 @@ API_ENUM(0_1, ImGui, TabItemFlags_Leading,
   "Enforce the tab position to the left of the tab bar (after the tab list popup button).");
 API_ENUM(0_1, ImGui, TabItemFlags_Trailing,
   "Enforce the tab position to the right of the tab bar (before the scrolling buttons).");
+API_ENUM(0_9, ImGui, TabItemFlags_NoAssumedClosure,
+R"(Tab is selected when trying to close + closure is not immediately assumed
+   (will wait for user to stop submitting the tab).
+   Otherwise closure is assumed when pressing the X, so if you keep submitting
+   the tab may reappear at end of tab bar.)");
