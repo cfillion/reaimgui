@@ -118,32 +118,32 @@ popup stack.
   return ImGui::IsPopupOpen(str_id, API_RO_GET(flags));
 }
 
-API_SECTION_DEF(flags, ROOT_SECTION, "Flags",
-  "For OpenPopup*(), BeginPopupContext*() and IsPopupOpen.");
-
+API_SECTION_DEF(flags, ROOT_SECTION, "Flags");
 API_ENUM(0_1, ImGui, PopupFlags_None, "");
+API_SECTION_P(flags, "For OpenPopup* and BeginPopupContext*");
 API_ENUM(0_1, ImGui, PopupFlags_NoOpenOverExistingPopup,
-R"(For OpenPopup*(), BeginPopupContext*(): don't open if there's already a popup
-   at the same level of the popup stack.)");
-API_SECTION_P(flags, "BeginPopupContext*");
+  "Don't open if there's already a popup at the same level of the popup stack.");
+API_ENUM(0_9, ImGui, PopupFlags_NoReopen,
+R"(Don't reopen same popup if already open
+   (won't reposition, won't reinitialize navigation))");
+API_SECTION_P(flags, "For BeginPopupContext*");
 API_ENUM(0_1, ImGui, PopupFlags_NoOpenOverItems,
 R"(For BeginPopupContextWindow: don't return true when hovering items,
    only when hovering empty space.)");
 API_ENUM(0_1, ImGui, PopupFlags_MouseButtonLeft,
-R"(For BeginPopupContext*(): open on Left Mouse release.
+R"(Open on Left Mouse release.
    Guaranteed to always be == 0 (same as MouseButton_Left).)");
 API_ENUM(0_1, ImGui, PopupFlags_MouseButtonRight,
-R"(For BeginPopupContext*(): open on Right Mouse release.
+R"(Open on Right Mouse release.
    Guaranteed to always be == 1 (same as MouseButton_Right).)");
 API_ENUM(0_1, ImGui, PopupFlags_MouseButtonMiddle,
-R"(For BeginPopupContext*(): open on Middle Mouse release.
+R"(Open on Middle Mouse release.
    Guaranteed to always be == 2 (same as MouseButton_Middle).)");
-API_SECTION_P(flags, "IsPopupOpen");
+API_SECTION_P(flags, "For IsPopupOpen");
 API_ENUM(0_1, ImGui, PopupFlags_AnyPopupId,
-  "For IsPopupOpen: ignore the str_id parameter and test for any popup.");
+  "Ignore the str_id parameter and test for any popup.");
 API_ENUM(0_1, ImGui, PopupFlags_AnyPopupLevel,
-R"(For IsPopupOpen: search/test at any level of the popup stack
-  (default test in the current level).)");
+  "Search/test at any level of the popup stack (default test in the current level).");
 API_ENUM(0_1, ImGui, PopupFlags_AnyPopup,
   "PopupFlags_AnyPopupId | PopupFlags_AnyPopupLevel");
 

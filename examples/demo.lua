@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.1)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.2)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -424,9 +424,17 @@ function demo.ShowDemoWindow(open)
       end
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', config.flags, ImGui.ConfigFlags_NoMouseCursorChange)
       ImGui.SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
+
+      configVarCheckbox('ConfigVar_InputTrickleEventQueue')
+      ImGui.SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
+      -- ImGui.Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
+      -- ImGui.SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
+
+      -- ReaImGui
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, ImGui.ConfigFlags_NoSavedSettings)
       ImGui.SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
 
+      ImGui.SeparatorText(ctx, 'Docking')
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_DockingEnable', config.flags, ImGui.ConfigFlags_DockingEnable)
       ImGui.SameLine(ctx)
       if ImGui.GetConfigVar(ctx, ImGui.ConfigVar_DockingWithShift) then
@@ -447,6 +455,7 @@ function demo.ShowDemoWindow(open)
         ImGui.Unindent(ctx)
       end
 
+      ImGui.SeparatorText(ctx, 'Multi-viewports')
       -- ImGui::CheckboxFlags("io.ConfigFlags: ViewportsEnable", &io.ConfigFlags, ImGuiConfigFlags_ViewportsEnable);
       -- ImGui::SameLine(); HelpMarker("[beta] Enable beta multi-viewports support. See ImGuiPlatformIO for details.");
       -- if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -461,11 +470,6 @@ function demo.ShowDemoWindow(open)
       --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the parenting right away).");
       --     ImGui::Unindent();
       -- }
-
-      configVarCheckbox('ConfigVar_InputTrickleEventQueue')
-      ImGui.SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
-      -- ImGui.Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
-      -- ImGui.SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
 
       ImGui.SeparatorText(ctx, 'Widgets')
       configVarCheckbox('ConfigVar_InputTextCursorBlink')
