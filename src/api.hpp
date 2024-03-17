@@ -34,6 +34,11 @@ namespace API {
   void handleError(const char *fnName, const reascript_error &);
   void handleError(const char *fnName, const imgui_error &);
 
+  struct ErrorClearer {
+    ErrorClearer();
+    ~ErrorClearer();
+  };
+
   using LineNumber = unsigned short;
   struct StoreLineNumber { StoreLineNumber(LineNumber val); };
 

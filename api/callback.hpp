@@ -35,7 +35,7 @@ public:
     {
       // prevent use-after-free if the context got destroyed during
       // this or a previous data access
-      return !!s_data && Resource::isValid(Context::current());
+      return !!s_data && !API::lastError();
     }
 
     Data *operator->() const { return Callback<Data>::s_data; }
@@ -63,7 +63,7 @@ public:
     // prevent accessing the context after it has been destructed
     // after handling an exception during execution of the callback
     // (exceptions cannot cross EEL's boundary so they're handled earlier)
-    if(!Resource::isValid(Context::current()))
+    if(API::lastError())
       throw reascript_error { "an error occurred during callback execution" };
 
     if constexpr(!std::is_void_v<T>)

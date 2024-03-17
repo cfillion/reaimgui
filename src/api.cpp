@@ -308,6 +308,19 @@ void API::clearError()
 #endif
 }
 
+static unsigned int g_reentrant;
+
+ErrorClearer::ErrorClearer()
+{
+  if(!g_reentrant++)
+    clearError();
+}
+
+ErrorClearer::~ErrorClearer()
+{
+  --g_reentrant;
+}
+
 const char *API::lastError() noexcept
 {
   return g_lastError.empty() ? nullptr : &g_lastError[1];

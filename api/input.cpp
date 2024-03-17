@@ -322,7 +322,7 @@ local reverseAlphabet = ImGui.CreateFunctionFromEEL([[
 
 local function frame()
   rv, text = ImGui.InputText(ctx, 'Lowercase reversed', text,
-    ImGui.InputTextFlags_CallbackCharFilter(), reverseAlphabet)
+    ImGui.InputTextFlags_CallbackCharFilter, reverseAlphabet)
 end
 ```
 

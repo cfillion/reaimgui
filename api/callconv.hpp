@@ -83,10 +83,13 @@ struct Safe<fn, name>
 {
   static R invoke(Args... args) noexcept
   try {
-    API::clearError();
+    // only clear errors when first entering into an API function
+    // not when reentering (eg. EEL Function callback) so that we can still
+    // check for previous failure using API::lastError
+    API::ErrorClearer reentrant {};
     return std::invoke(fn, args...);
   }
-  catch(const imgui_error &e) { // TODO: recoverable_error base class
+  catch(const imgui_error &e) {
     API::handleError(*name, e);
     return static_cast<R>(0);
   }
