@@ -402,33 +402,32 @@ API_EELFUNC(0_8_5, void, InputTextCallback_DeleteChars,
 (int,pos)(int,bytes_count),
 "")
 {
-  if(InputTextCallback::DataAccess data {})
-    data->DeleteChars(pos, bytes_count);
+  InputTextCallback::DataAccess data {};
+  data->DeleteChars(pos, bytes_count);
 }
 
 API_EELFUNC(0_8_5, void, InputTextCallback_InsertChars,
 (int,pos)(std::string_view,new_text),
 "")
 {
-  if(InputTextCallback::DataAccess data {})
-    data->InsertChars(pos, &new_text.front(), &*new_text.end());
+  InputTextCallback::DataAccess data {};
+  data->InsertChars(pos, &new_text.front(), &*new_text.end());
 }
 
 API_EELFUNC(0_8_5, void, InputTextCallback_SelectAll, NO_ARGS, "")
 {
-  if(InputTextCallback::DataAccess data {})
-    data->SelectAll();
+  InputTextCallback::DataAccess data {};
+  data->SelectAll();
 }
 
 API_EELFUNC(0_8_5, void, InputTextCallback_ClearSelection, NO_ARGS, "")
 {
-  if(InputTextCallback::DataAccess data {})
-    data->ClearSelection();
+  InputTextCallback::DataAccess data {};
+  data->ClearSelection();
 }
 
 API_EELFUNC(0_8_5, bool, InputTextCallback_HasSelection, NO_ARGS, "")
 {
-  if(InputTextCallback::DataAccess data {})
-    return data->HasSelection();
-  return false;
+  InputTextCallback::DataAccess data {};
+  return data->HasSelection();
 }

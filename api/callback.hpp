@@ -28,15 +28,8 @@ template<typename Data>
 class Callback {
 public:
   struct DataAccess {
-    DataAccess()  { if(*this) loadVars(function());  }
-    ~DataAccess() { if(*this) storeVars(function()); }
-
-    operator bool() const
-    {
-      // prevent use-after-free if the context got destroyed during
-      // this or a previous data access
-      return !!s_data && !API::lastError();
-    }
+    DataAccess()  { assertValid(); loadVars(function()); }
+    ~DataAccess() { storeVars(function()); }
 
     Data *operator->() const { return Callback<Data>::s_data; }
   };
@@ -47,36 +40,47 @@ public:
     if(!func)
       return nullptr;
 
-    assertValid(func);
+    ::assertValid(func);
     return &invoke<T>;
   }
 
   template<typename T = void>
   static T invoke(Data *data)
   {
-    s_data = data;
+    SetData raii { data };
     storeVars(function());
     function()->execute();
     loadVars(function());
-    s_data = nullptr;
 
     // prevent accessing the context after it has been destructed
     // after handling an exception during execution of the callback
     // (exceptions cannot cross EEL's boundary so they're handled earlier)
-    if(API::lastError())
-      throw reascript_error { "an error occurred during callback execution" };
+    assertValid();
 
     if constexpr(!std::is_void_v<T>)
       return {};
   }
 
-private:
-  static Function *function()
-    { return static_cast<Function *>(s_data->UserData); }
+protected:
+  static Data *s_data;
   static void storeVars(Function *);
   static void loadVars(const Function *);
 
-  static Data *s_data;
+private:
+  struct SetData {
+    SetData(Data *data) { s_data = data; }
+    ~SetData() { s_data = nullptr; }
+  };
+
+  static Function *function()
+    { return static_cast<Function *>(s_data->UserData); }
+  static void assertValid()
+  {
+    if(!s_data)
+      throw reascript_error { "cannot be used outside of a callback" };
+    if(API::lastError())
+      throw reascript_error { "an error occurred during callback execution" };
+  }
 };
 
 template<typename Data>
