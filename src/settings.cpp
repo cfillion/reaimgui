@@ -96,7 +96,7 @@ constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
     Checkbox { IDC_SAVEDSETTINGS, Checkbox::Invert },
   },
   { &Settings::DockingEnable, true, TEXT("dockingenable"),
-    TEXT("Enable docking"),
+    TEXT("Enable docking by default"),
     TEXT("Drag the titlebar to dock windows into REAPER dockers or into other "
          "windows of the same script instance."),
     Checkbox { IDC_DOCKINGENABLE },
