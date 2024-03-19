@@ -27,19 +27,17 @@
 #include "function.hpp"
 #include "resource.hpp"
 #include "settings.hpp"
+#include "win32_unicode.hpp"
 #include "window.hpp"
 
 #include <imgui/imgui.h>
-
-#ifdef MessageBox
-#  undef MessageBox
-#  define MessageBox MessageBoxA
-#endif
+#include <WDL/wdltypes.h> // WDL_DIRCHAR_STR
 
 static void fatalError(const char *message)
 {
   HWND parent { Splash_GetWnd ? Splash_GetWnd() : nullptr };
-  MessageBox(parent, message, "ReaImGui (reaper_imgui)", MB_OK);
+  MessageBox(parent, WIDEN(message), TEXT("ReaImGui (reaper_imgui)"),
+    MB_OK | MB_ICONERROR);
 }
 
 struct ApiImport {
@@ -145,8 +143,8 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
     Action::teardown();
     return 0;
   }
-  else if(rec->caller_version != REAPER_PLUGIN_VERSION
-      || !loadAPI(rec->GetFunc) || isAlreadyLoaded())
+  else if(rec->caller_version != REAPER_PLUGIN_VERSION ||
+      !loadAPI(rec->GetFunc) || isAlreadyLoaded())
     return 0;
 
   IMGUI_CHECKVERSION();
@@ -156,6 +154,12 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
   Action::setup();
   Settings::setup();
   Function::setup();
+
+  new Action { "DOCUMENTATION", "Open ReaScript documentation (HTML)...", [] {
+    const auto path { widen(GetResourcePath()) + TEXT(WDL_DIRCHAR_STR)
+      TEXT("Data") TEXT(WDL_DIRCHAR_STR) TEXT("reaper_imgui_doc.html") };
+    ShellExecute(nullptr, TEXT("open"), path.c_str(), nullptr, nullptr, SW_SHOW);
+  }};
 
   return 1;
 }

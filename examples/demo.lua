@@ -325,12 +325,7 @@ function demo.ShowDemoWindow(open)
     end
     if ImGui.BeginMenu(ctx, 'ReaImGui') then
       if ImGui.MenuItem(ctx, 'Documentation') then
-        local doc = ('%s/Data/reaper_imgui_doc.html'):format(reaper.GetResourcePath())
-        if reaper.CF_ShellExecute then
-          reaper.CF_ShellExecute(doc)
-        else
-          reaper.MB(doc, 'ReaImGui Documentation', 0)
-        end
+        reaper.Main_OnCommand(reaper.NamedCommandLookup('_REAIMGUI_DOCUMENTATION'), 0)
       end
       if ImGui.MenuItem(ctx, 'Preferences...') then
         reaper.ViewPrefs(0, 'reaimgui')

@@ -57,6 +57,8 @@ inline std::wstring widen(const std::string_view &input,
 #  define NARROW(cstr) cstr
 inline const std::string &narrow(const std::string &input,
   const unsigned int = 0) { return input; }
+inline const std::string &widen(const std::string &input,
+  const unsigned int = 0) { return input; }
 #endif
 
 #endif
