@@ -1,7 +1,8 @@
 -- Translation layer for running gfx code in ReaImGui
 -- Made for fun. Not recommended for use in new (or old) designs.
 --
--- gfx = dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/gfx2imgui.lua')
+-- package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
+-- gfx = require 'gfx2imgui'
 -- gfx.init('My window', 200, 100)
 -- local function loop()
 --   gfx.x = 0
@@ -30,8 +31,8 @@
 -- GFX2IMGUI_PROFILER = dofile('cfillion_Lua profiler.lua')
 -- GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE = 8
 
-local ImGui = dofile(reaper.GetResourcePath() ..
-  '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.9')
+package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
+local ImGui = require 'imgui' '0.9'
 
 local reaper, ogfx, print, tonumber = reaper, gfx, print, tonumber
 local debug, math, string, table, utf8 = debug, math, string, table, utf8

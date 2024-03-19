@@ -3,7 +3,7 @@
 --[[
 This file can be imported in other scripts to help during development:
 
-local demo = dofile(reaper.GetResourcePath() .. '/Scripts/ReaTeam Extensions/API/ReaImGui_Demo.lua')
+local demo = require 'ReaImGui_Demo'
 local ctx = ImGui.CreateContext('My script')
 local function loop()
   demo.PushStyle(ctx)
@@ -47,8 +47,8 @@ Index of this file:
 // [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
 --]]
 
-local ImGui = dofile(reaper.GetResourcePath() ..
-  '/Scripts/ReaTeam Extensions/API/imgui.lua')('0.9')
+package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
+local ImGui = require 'imgui' '0.9'
 
 local ctx, clipper
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()

@@ -30,6 +30,8 @@
 #include "../src/platform.hpp"
 
 #include <climits>
+#include <reaper_plugin_functions.h>
+#include <WDL/wdltypes.h> // WDL_DIRCHAR_STR
 
 API_SECTION("Utility");
 
@@ -87,6 +89,16 @@ types (indentation represents inheritance):
 
 #undef RESOURCE_ISVALID
 #undef RESOURCEPROXY_ISVALID
+
+API_FUNC(0_9, const char*, GetBuiltinPath, NO_ARGS,
+"Returns the path to the directory containing imgui.lua, imgui.py and gfx2imgui.lua.")
+{
+  static const std::string output { std::string { GetResourcePath() } +
+    WDL_DIRCHAR_STR "Scripts" WDL_DIRCHAR_STR "ReaTeam Extensions"
+    WDL_DIRCHAR_STR "API" };
+
+  return output.c_str();
+}
 
 API_FUNC(0_1, void, ProgressBar, (ImGui_Context*,ctx)
 (double,fraction)
