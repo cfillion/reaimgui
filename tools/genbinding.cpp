@@ -280,16 +280,8 @@ struct reaper_array;
 #endif
 
 namespace ImGui {
-  namespace details {
-    struct nullopt_t {
-      constexpr explicit nullopt_t(int) {}
-      operator std::nullptr_t() const { return nullptr; }
-    };
-  }
-
   constexpr const char *version = ")" << API_VERSION << R"(";
   void init(void *(*plugin_getapi)(const char *));
-  constexpr details::nullopt_t nullopt { 0 };
 
   namespace details {
     REAIMGUIAPI_EXTERN const char *(*last_error)() noexcept;
@@ -299,6 +291,12 @@ namespace ImGui {
       if(const char *err { last_error() })
         throw ImGui_Error { err };
     }
+
+    struct nullopt_t {
+      constexpr explicit nullopt_t(int) {}
+      operator std::nullptr_t() const { return nullptr; }
+    };
+    constexpr details::nullopt_t nullopt { 0 };
 
     template<typename T, typename E = void>
     class optional {
