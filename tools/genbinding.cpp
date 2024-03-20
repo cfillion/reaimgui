@@ -557,8 +557,11 @@ void Function::luaSignature(std::ostream &stream) const
   {
     CommaSep cs { stream };
     if(!type.isVoid()) {
-      cs << hl(Highlight::Type) << luaType(type) << hl() << " retval";
-      hasReturns = true;
+      cs << hl(Highlight::Type) << luaType(type) << hl() << ' ';
+      if(!isEnum()) {
+        stream << "retval";
+        hasReturns = true;
+      }
     }
     for(const Argument &arg : args) {
       if(arg.isOutput() && !arg.isBufSize()) {
