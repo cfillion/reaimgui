@@ -882,7 +882,7 @@ setmetatable(gfx, {
       return rawset(gfx, key, value)
     elseif t ~= 'number' then
       -- same behavior as gfx
-      error(('bad argument: expected number, got %s'):format(t))
+      error(('bad argument: expected number, got %s'):format(t), 2)
     end
 
     if value ~= value or value == 1/0 or -value == 1/0 then
@@ -1742,13 +1742,16 @@ end
 
 function gfx.triangle(...)
   local c, n_coords = color(), select('#', ...)
-  assert(n_coords >= 6, 'gfx.triangle requires 6 or more parameters')
+  if n_coords < 6 then
+    error('gfx.triangle requires 6 or more parameters', 2)
+  end
 
   -- rounding up to nearest even point count
   local has_even = (n_coords & 1) == 0
   local points = reaper.new_array(has_even and n_coords or n_coords + 1)
   for i = 1, n_coords, 2 do
-    points[i], points[i + 1] = toint(select(i, ...)), toint(select(i + 1, ...))
+    local x, y = select(i, ...)
+    points[i], points[i + 1] = toint(x), toint(y)
   end
   local first, second = points[1], points[2]
   if not has_even then
@@ -1767,14 +1770,16 @@ function gfx.triangle(...)
     -- gfx.triangle(0,0, 0,10, 0,20)
     local min_y, max_y = 1/0, -1/0
     for i = 2, n_coords, 2 do
-      min_y, max_y = math.min(min_y, points[i]), math.max(max_y, points[i])
+      local p = points[i]
+      min_y, max_y = math.min(min_y, p), math.max(max_y, p)
     end
     return drawCall(drawLine, center_x, min_y, center_x, max_y, c, 0, 0)
   elseif is_hline then
     -- gfx.triangle(0,0, 10,0, 20,0)
     local min_x, max_x = 1/0, -1/0
     for i = 1, n_coords, 2 do
-      min_x, max_x = math.min(min_x, points[i]), math.max(max_x, points[i])
+      local p = points[i]
+      min_x, max_x = math.min(min_x, p), math.max(max_x, p)
     end
     return drawCall(drawLine, min_x, center_y, max_x, center_y, c, 0, 0)
   end
@@ -1926,7 +1931,7 @@ end
 
 if DEBUG then
   local function errorHandler(status, err, ...)
-    if not status then error(err) end
+    if not status then error(err, 2) end
     return err, ...
   end
 
