@@ -422,6 +422,7 @@ local function updateDropFiles()
 
     -- reset cursor pos for when gfx.update() is run more than once per frame
     ImGui.SetCursorScreenPos(state.ctx, state.screen_x, state.screen_y)
+    ImGui.Dummy(state.ctx, 0, 0) -- validate cursor move extents
 
     if ImGui.BeginDragDropTarget(state.ctx) then
       local rv, count = ImGui.AcceptDragDropPayloadFiles(state.ctx)
@@ -471,8 +472,7 @@ local function warn(message, ...)
 end
 
 local function showLog()
-  local flags =
-    ImGui.WindowFlags_NoDocking | ImGui.WindowFlags_NoFocusOnAppearing
+  local flags = ImGui.WindowFlags_NoDocking | ImGui.WindowFlags_NoFocusOnAppearing
   ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_ViewportsNoDecoration, 1)
   ImGui.SetNextWindowSize(state.ctx, 800, 300, ImGui.Cond_Once)
   local visible, open = ImGui.Begin(state.ctx, 'gfx2imgui [Log]', true, flags)
