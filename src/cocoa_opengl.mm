@@ -125,6 +125,11 @@ CocoaOpenGL::~CocoaOpenGL()
     MakeCurrent cur { gl };
     teardown();
   }
+
+  // Prevent m_layer from using m_renderer (this) after free
+  // in openGLContextForPixelFormat when an error occurs in another window's
+  // render() before it had a chance to initialize.
+  [[m_layer view] setLayer:nil];
 }
 
 void CocoaOpenGL::setSize(ImVec2)
