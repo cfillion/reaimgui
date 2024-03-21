@@ -1784,7 +1784,8 @@ end
 
 
 function gfx.triangle(...)
-  local n_coords = select('#', ...)
+  local points = {...}
+  local n_coords = #points
   if n_coords < 6 then
     error('gfx.triangle requires 6 or more parameters', 2)
   end
@@ -1792,18 +1793,18 @@ function gfx.triangle(...)
 
   -- rounding up to nearest even point count
   local has_even = (n_coords & 1) == 0
-  local points = reaper.new_array(has_even and n_coords or n_coords + 1)
   for i = 1, n_coords, 2 do
-    local x, y = select(i, ...)
+    local x, y = points[i], points[i + 1]
     points[i], points[i + 1] = $toint(x), $toint(y)
   end
-  local first, second = points[1], points[2]
+  local first, second = ...
   if not has_even then
     n_coords = n_coords + 1
-    points[n_coords] = second
+    points[n_coords] = $toint(second)
   end
 
-  local center_x, center_y = center2D(points)
+  local points_arr = reaper.new_array(points)
+  local center_x, center_y = center2D(points_arr)
 
   -- pixel and line triangle abuse heuristic
   local is_vline, is_hline = center_x == first, center_y == second
@@ -1831,8 +1832,8 @@ function gfx.triangle(...)
     return 0
   end
 
-  sort2D(points, center_x, center_y) -- sort clockwise for antialiasing
-  n_coords = uniq2D(points)
+  sort2D(points_arr, center_x, center_y) -- sort clockwise for antialiasing
+  n_coords = uniq2D(points_arr)
 
   if DEBUG then assert(n_coords >= 4) end
 
@@ -1844,8 +1845,7 @@ function gfx.triangle(...)
     $drawCall(drawTriangle6, points, center_x, center_y, c)
     return 0
   else
-    local screen_points = reaper.new_array(n_coords)
-    $drawCall(drawTriangleN, points, screen_points, n_coords, center_x, center_y, c)
+    $drawCall(drawTriangleN, points, points_arr, n_coords, center_x, center_y, c)
     return 0
   end
 end
