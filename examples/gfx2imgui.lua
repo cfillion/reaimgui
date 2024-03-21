@@ -1913,20 +1913,12 @@ function gfx.update()
 end
 
 if PROFILER then
-  PROFILER.attachToLocals({ search_above = false, recursive = false })
+  -- PROFILER.attachToLocals({ search_above = false, recursive = false })
   PROFILER.attachTo('gfx')
 
   -- avoid profiler overhead for hot functions
-  PROFILER.detachFrom('color')
-  PROFILER.detachFrom('makeColor')
-  PROFILER.detachFrom('packSigned')
-  PROFILER.detachFrom('unpackSigned')
-  PROFILER.detachFrom('tobool')
-  PROFILER.detachFrom('tofloat')
-  PROFILER.detachFrom('toint')
-  PROFILER.detachFrom('tonumber')
-  PROFILER.detachFrom('transformColor')
-  PROFILER.detachFrom('transformPoint')
+  -- PROFILER.detachFrom('packSigned')
+  -- PROFILER.detachFrom('unpackSigned')
 end
 
 if DEBUG then
