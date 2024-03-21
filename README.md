@@ -15,9 +15,10 @@ https://forum.cockos.com/showthread.php?t=250419
 Software requirements:
 
 - [Meson](https://mesonbuild.com/) (1.1 or newer)
-- C++20 compiler* (C++17 supported for Linux and macOS builds)
+- C++20 compiler* (C++17 is supported for Linux and macOS builds)
+- PHP (optional, for preprocessing of gfx2imgui.lua)
 
-(* Compiler must be ABI-compatible with MSVC on Windows)
+(* The C++ compiler must be ABI-compatible with MSVC on Windows)
 
 Library requirements:
 

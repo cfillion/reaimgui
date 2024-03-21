@@ -31,10 +31,25 @@
 -- GFX2IMGUI_PROFILER = dofile('cfillion_Lua profiler.lua')
 -- GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE = 8
 
+<?php
+include dirname(__DIR__) . '/tools/preprocess.php';
+
+$DRAW_CALL_SIZE = 8;
+
+// gfx.mode bits
+$BLIT_NO_SOURCE_ALPHA = 2;
+
+// transformPoint flags
+$TP_NO_ORIGIN = 1<<0;
+$TP_NO_FLOOR  = 1<<1;
+$TP_NO_SCALE  = 1<<2;
+$TP_NO_ROTATE = 1<<3;
+?>
+
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
 local ImGui = require 'imgui' '0.9'
 
-local reaper, ogfx, print, tonumber = reaper, gfx, print, tonumber
+local reaper, ogfx, print = reaper, gfx, print
 local debug, math, string, table, utf8 = debug, math, string, table, utf8
 
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
@@ -66,7 +81,7 @@ local KEY_MODS = {
 local CHAR_MOD_MASK = ImGui.Mod_Ctrl | ImGui.Mod_Alt
 local CHAR_MOD_BASE = {
   [ImGui.Mod_Ctrl] = 0x001,
-  [CHAR_MOD_MASK   ] = 0x101,
+  [CHAR_MOD_MASK ] = 0x101,
   [ImGui.Mod_Alt ] = 0x141,
 }
 local MW_TICK = 6 -- gfx.mouse_[h]wheel increments per wheel tick
@@ -106,7 +121,6 @@ local FONT_FLAGS = {
 }
 local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
-local DRAW_CALL_SIZE = 8
 
 -- settings
 local BLIT_NO_PREMULTIPLY          = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
@@ -116,15 +130,6 @@ local MAX_DRAW_CALLS               = GFX2IMGUI_MAX_DRAW_CALLS      or 1<<13
 local PROFILER                     = GFX2IMGUI_PROFILER
 local THROTTLE_FONT_LOADING_FRAMES = 16
 local UNUSED_FONTS_CACHE_SIZE      = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
-
--- gfx.mode bits
-local BLIT_NO_SOURCE_ALPHA = 2
-
--- transformPoint flags
-local TP_NO_ORIGIN = 1<<0
-local TP_NO_FLOOR  = 1<<1
-local TP_NO_SCALE  = 1<<2
-local TP_NO_ROTATE = 1<<3
 
 local DL_AddCircle               = ImGui.DrawList_AddCircle
 local DL_AddCircleFilled         = ImGui.DrawList_AddCircleFilled
@@ -166,31 +171,52 @@ local gfx_vars = {
 }
 
 -- internal functions
-local function tobool(v, default)
-  if default ~= nil and v == nil then return default end
-  return v ~= false and v ~= 0 and v ~= nil
-end
+local INF, MINF = math.huge, -math.huge
 
-local function toint(v)
-  if not v or v ~= v or v == 1/0 or v == -1/0 then return 0 end
-  return v // 1 -- faster than floor
-end
+<? macro('tonumber', 'v') ?>
+  ($v and $v + 0)
+<? endmacro() ?>
 
-local function tofloat(v)
-  if not v or v ~= v or v == 1/0 or v == -1/0 then return 0 end
-  return v
-end
+<? macro('tobool', 'v', 'default') ?>
+  (($v ~= nil and $v ~= 0) or ($default ~= nil and $v == nil and $default))
+<? endmacro() ?>
 
-local function ringReserve(buffer, want_size)
-  local ptr = buffer.ptr + 1
-  local size, max_size = buffer.size + want_size, buffer.max_size
-  buffer.ptr = (buffer.ptr + want_size) % buffer.max_size
-  if size < max_size then buffer.size = size end
-  return ptr
+<? macro('toint', 'v') ?>
+  ((not $v or $v ~= $v or $v == INF or $v == MINF) and 0 or ($v // 1))
+<? endmacro() ?>
+
+<? macro('tofloat', 'v') ?>
+  ((not $v or $v ~= $v or $v == INF or $v == MINF) and 0 or $v)
+<? endmacro() ?>
+
+<? macro('tocolor', 'r', 'g', 'b', 'a=1') ?>
+  (((($r) * 0xFF) // 1) << 24 |
+   ((($g) * 0xFF) // 1) << 16 |
+   ((($b) * 0xFF) // 1) <<  8 |
+  (((($a) * 0xFF) // 1) & 0xFF))
+<? endmacro() ?>
+
+<? macro('min', 'a', 'b') ?>
+  ($a < $b and $a or $b)
+<? endmacro() ?>
+
+<? macro('max', 'a', 'b') ?>
+  ($a < $b and $b or $a)
+<? endmacro() ?>
+
+<? macro('ringReserve', 'ptr', 'buffer', 'want_size') ?>
+do
+  $ptr = $buffer.ptr + 1
+  local size, max_size = $buffer.size + $want_size, $buffer.max_size
+  $buffer.ptr = ($buffer.ptr + $want_size) % $buffer.max_size
+  if size < max_size then $buffer.size = size end
 end
+<? endmacro() ?>
 
 local function ringInsert(buffer, value)
-  buffer[ringReserve(buffer, 1)] = value
+  local ptr
+  $ringReserve(ptr, buffer, 1)
+  buffer[ptr] = value
 end
 
 local function ringEnum(buffer)
@@ -205,49 +231,51 @@ local function ringEnum(buffer)
   end
 end
 
-local function drawCall(...)
+<? macro('drawCall', 'a=0', 'b=0', 'c=0', 'd=0', 'e=0', 'f=0', 'g=0', 'h=0') ?>
+do
   local list = global_state.commands[gfx_vars.dest]
   if not list then
-    list = { ptr=0, size=0, max_size=MAX_DRAW_CALLS * DRAW_CALL_SIZE }
+    list = { ptr=0, size=0, max_size=MAX_DRAW_CALLS * $DRAW_CALL_SIZE }
     global_state.commands[gfx_vars.dest] = list
   elseif list.want_clear then
     list.size, list.ptr, list.rendered_frame, list.want_clear = 0, 0, 0, false
   end
 
-  local ptr = ringReserve(list, DRAW_CALL_SIZE)
+  local ptr; $ringReserve(ptr, list, $DRAW_CALL_SIZE)
   list[ptr  ], list[ptr+1], list[ptr+2], list[ptr+3],
-  list[ptr+4], list[ptr+5], list[ptr+6], list[ptr+7] = ...
+  list[ptr+4], list[ptr+5], list[ptr+6], list[ptr+7] =
+    $a, $b, $c, $d, $e, $f, $g, $h
 
+  <% ob_start() // comment out block %>
   if DEBUG then
     assert(type((...)) == 'function', 'uncallable draw command')
-    assert(select('#', ...) == DRAW_CALL_SIZE, 'incorrect argument count')
-    for i = 1, DRAW_CALL_SIZE do
-      assert(select(i, ...) ~= nil, 'nils holes degrade copy performance')
+    assert(select('#', ...) == $DRAW_CALL_SIZE, 'incorrect argument count')
+    for i = 0, $DRAW_CALL_SIZE - 1 do
+      assert(list[ptr+i] ~= nil, 'nils holes degrade copy performance')
     end
   end
-
-  return 0
+  <% ob_end_clean() %>
 end
+<? endmacro(); ?>
+
+<? macro('drawValues', 'n') ?> <%
+for($i = 0; $i < $n; ++$i) {
+  if($i > 0) echo ', ';
+  echo "cmd[i+$i]";
+}
+%> <? endmacro() ?>
 
 local function render(draw_list, commands, opts)
   local ptr, size = commands.ptr, commands.size
-  for i = 0, size - DRAW_CALL_SIZE, DRAW_CALL_SIZE do
+  for i = 0, size - $DRAW_CALL_SIZE, $DRAW_CALL_SIZE do
     local j = ((ptr + i) % size) + 1
     commands[j](draw_list, commands, j + 1, opts)
   end
   commands.want_clear = true
 end
 
-local function makeColor(r, g, b, a)
-  return ((r * 0xFF) // 1) << 24 |
-         ((g * 0xFF) // 1) << 16 |
-         ((b * 0xFF) // 1) << 8  |
-        (((a * 0xFF) // 1) & 0xFF)
-end
-
-local function color()
-  -- gfx.a is reset to nil every frame (initialized to 1 on access)
-  -- this is a hot path, accessing gfx.a (calls __index) is too slow here
+<? macro('color', 'c') ?>
+do
   local r, g, b, a = gfx_vars.r, gfx_vars.g, gfx_vars.b, gfx_vars.a or 1
   if r > 1 then r = 1 elseif r < 0 then r = 0 end
   if g > 1 then g = 1 elseif g < 0 then g = 0 end
@@ -256,67 +284,68 @@ local function color()
     -- gfx does not clamp alpha when blitting (it wraps around)
     if a > 1 then a = 1 elseif a < 0 then a = 0 end
   end
-  return makeColor(r, g, b, a)
+  $c = $tocolor(r, g, b, a)
 end
+<? endmacro() ?>
 
-local function transformColor(c, opts)
-  if not opts.mode or BLIT_NO_PREMULTIPLY then
-    return (c & ~0xff) | ((c & 0xff) * opts.alpha // 1 & 0xFF)
-  end
-
-  -- premultiply alpha when rendering from an offscreen buffer
-  local a, a_blend = (c & 0xFF) / 0xFF
-  if (opts.mode & BLIT_NO_SOURCE_ALPHA) ~= 0 then
-    a, a_blend = a * opts.alpha, opts.alpha
+<? macro('transformColor', 'c', 'opts') ?>
+  if not $opts.mode or BLIT_NO_PREMULTIPLY then
+    $c = ($c & ~0xff) | (($c & 0xff) * opts.alpha // 1 & 0xFF)
   else
-    a_blend = a * opts.alpha
-  end
-
-  local mask_r, mask_g, mask_b = 0xFF000000, 0x00FF0000, 0x0000FF00
-  return ((c & mask_r) * a // 1 & mask_r) |
-         ((c & mask_g) * a // 1 & mask_g) |
-         ((c & mask_b) * a // 1 & mask_b) |
-         ((0xFF * a_blend) // 1 & 0xFF)
-end
-
-local function transformPoint(x, y, opts, flags)
-  flags = flags or 0
-
-  if flags & TP_NO_SCALE == 0 then
-    x, y = x * opts.scale_x, y * opts.scale_y
-  end
-
-  if flags & TP_NO_ORIGIN == 0 then
-    x, y = x + opts.screen_x, y + opts.screen_y
-  end
-
-  if flags & TP_NO_FLOOR == 0 then
-    x, y = x // 1, y // 1
-  end
-
-  if flags & TP_NO_ROTATE == 0 and opts.angle then
-    if flags & TP_NO_ORIGIN ~= 0 then
-      x, y = opts.screen_x + x, opts.screen_y + y
+    -- premultiply alpha when rendering from an offscreen buffer
+    local a, a_blend = ($c & 0xFF) / 0xFF
+    if (opts.mode & $BLIT_NO_SOURCE_ALPHA) ~= 0 then
+      a, a_blend = a * opts.alpha, opts.alpha
+    else
+      a_blend = a * opts.alpha
     end
+
+    local mask_r, mask_g, mask_b = 0xFF000000, 0x00FF0000, 0x0000FF00
+    $c = (($c & mask_r) * a // 1 & mask_r) |
+         (($c & mask_g) * a // 1 & mask_g) |
+         (($c & mask_b) * a // 1 & mask_b) |
+         ((0xFF * a_blend)  // 1 & 0xFF)
+  end
+<? endmacro() ?>
+
+<? macro('transformPoint', 'x', 'y', 'opts', 'flags=0') ?>
+  -- transformPoint($x, $y, $opts, $flags)
+  <% if(!($flags & $TP_NO_SCALE)): %>
+  $x, $y = $x * opts.scale_x, $y * opts.scale_y
+  <% endif %>
+
+  <% if(!($flags & $TP_NO_ORIGIN)): %>
+  $x, $y = $x + opts.screen_x, $y + opts.screen_y
+  <% endif %>
+
+  <% if(!($flags & $TP_NO_FLOOR)): %>
+  $x, $y = $x // 1, $y // 1
+  <% endif %>
+
+  <% if(!($flags & $TP_NO_ROTATE)): %>
+  if opts.angle then
+    <% if($flags & $TP_NO_ORIGIN): %>
+    $x, $y = opts.screen_x + $x, opts.screen_y + $y
+    <% endif %>
     local matrix = opts.rotation
     local m1, m2, m3 = matrix[1], matrix[2], matrix[3]
-    x, y = m1[1]*x + m1[2]*y + m1[3],
-           m2[1]*x + m2[2]*y + m2[3]
-    if flags & TP_NO_ORIGIN ~= 0 then
-      x, y = x - opts.screen_x, y - opts.screen_y
-    end
+    $x, $y = m1[1]*$x + m1[2]*$y + m1[3],
+             m2[1]*$x + m2[2]*$y + m2[3]
+    <% if($flags & $TP_NO_ORIGIN): %>
+    $x, $y = $x - opts.screen_x, $y - opts.screen_y
+    <% endif %>
   end
+  <% endif %>
+<? endmacro() ?>
 
-  return x, y
-end
-
-local function transformRectToQuad(x1, y1, x2, y2, opts)
-  local x4, y4 = transformPoint(x1, y2, opts)
-  local x3, y3 = transformPoint(x2, y2, opts)
-        x2, y2 = transformPoint(x2, y1, opts)
-        x1, y1 = transformPoint(x1, y1, opts)
-  return x1, y1, x2, y2, x3, y3, x4, y4
-end
+<? macro('transformRectToQuad', 'x1', 'y1', 'x2', 'y2', 'x3', 'y3', 'x4', 'y4') ?>
+  $x4, $y4, $x3, $y3 = $x1, $y2, $x2, $y2
+  $x2, $y2, $x1, $y1 = $x2, $y1, $x1, $y1
+  $transformPoint($x1, $y2, opts)
+  $transformPoint($x2, $y2, opts)
+  $transformPoint($x2, $y1, opts)
+  $transformPoint($x1, $y1, opts)
+<? endmacro() ?>
 
 local function alignText(flags, pos, size, limit)
   local offset = 0
@@ -795,35 +824,12 @@ local function combineMatrix(matrix,
 end
 
 local function drawPixel(draw_list, cmd, i, opts)
-  local x, y, c = cmd[i], cmd[i+1], cmd[i+2]
-  c = transformColor(c, opts)
-  x, y = transformPoint(x, y, opts)
-  w, h = transformPoint(1, 1, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
+  local x, y, c = $drawValues(3)
+  $transformColor(c, opts)
+  $transformPoint(x, y, opts)
+  local w, h = 1, 1
+  $transformPoint(w, h, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
   DL_AddRectFilled(draw_list, x, y, x + w, y + h, c)
-end
-
-local function drawLine(draw_list, cmd, i, opts)
-  local x1, y1, x2, y2, c = cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4]
-  c = transformColor(c, opts)
-
-  -- workarounds to avoid gaps due to rounding in vertical/horizontal lines
-  local scaled = opts.scale_x ~= 1 and opts.scale_y ~= 1
-  if scaled and (x1 == x2 or y1 == y2) then
-    x1, y1 = transformPoint(x1, y1, opts, TP_NO_FLOOR)
-    x2, y2 = transformPoint(x2, y2, opts, TP_NO_FLOOR)
-    if x1 == x2 then
-      x2 = x2 + opts.scale_x
-    elseif y1 == y2 then
-      y2 = y2 + opts.scale_y
-    end
-
-    DL_AddRectFilled(draw_list, x1, y1, x2, y2, c)
-    return
-  end
-
-  x1, y1 = transformPoint(x1, y1, opts)
-  x2, y2 = transformPoint(x2, y2, opts)
-  DL_AddLine(draw_list, x1, y1, x2, y2, c, (opts.scale_x + opts.scale_y) * .5)
 end
 
 -- variables to reset on the first access of every frame via gfx.__index
@@ -895,30 +901,30 @@ setmetatable(gfx, {
 
 -- translation functions
 local function drawArc(draw_list, cmd, i, opts)
-  local x, y, r, c, ang1, ang2 =
-    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
-  x, y = transformPoint(x, y, opts)
+  local x, y, r, c, ang1, ang2 = $drawValues(6)
+  $transformPoint(x, y, opts)
   r = r * opts.scale_y -- FIXME: scale_x
-  c = transformColor(c, opts)
+  $transformColor(c, opts)
   DL_PathArcTo(draw_list, x, y, r, ang1, ang2)
   DL_PathStroke(draw_list, c)
 end
 
 function gfx.arc(x, y, r, ang1, ang2, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
-  local quarter = math.pi * .5
-  return drawCall(drawArc, toint(x) + 1, toint(y), r, color(),
-    ang1 - quarter, ang2 - quarter, 0)
+  local quarter, c = math.pi * .5; $color(c)
+  $drawCall(drawArc, $toint(x) + 1, $toint(y), r, c,
+    ang1 - quarter, ang2 - quarter)
+  return 0
 end
 
 local function drawBlit(draw_list, cmd, i, opts)
   local commands, sourceCommands, alpha, mode, scale_x, scale_y, more =
-    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5], cmd[i+6]
+    $drawValues(7)
   local srcx, srcy, srcw, srch, dstx, dsty, dstw, dsth,
         angle, angle_sin, angle_cos, rotxoffs, rotyoffs = table.unpack(more)
 
-  dstx, dsty = transformPoint(dstx, dsty, opts)
-  dstw, dsth = transformPoint(dstw, dsth, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
+  $transformPoint(dstx, dsty, opts)
+  $transformPoint(dstw, dsth, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
 
   sourceCommands.want_clear = true
 
@@ -930,8 +936,8 @@ local function drawBlit(draw_list, cmd, i, opts)
   old_scale_x, opts.scale_x = opts.scale_x, opts.scale_x * scale_x
   old_scale_y, opts.scale_y = opts.scale_y, opts.scale_y * scale_y
   -- after the new scale is set in opts
-  srcx, srcy = transformPoint(srcx, srcy, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
-  srcw, srch = transformPoint(srcw, srch, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
+  $transformPoint(srcx, srcy, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
+  $transformPoint(srcw, srch, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
   old_screen_x, opts.screen_x = opts.screen_x, dstx - srcx
   old_screen_y, opts.screen_y = opts.screen_y, dsty - srcy
   old_x1, opts.x1, old_y1, opts.y1 = opts.x1, srcx,        opts.y1, srcy
@@ -947,8 +953,8 @@ local function drawBlit(draw_list, cmd, i, opts)
     local old_rm31, old_rm32, old_rm33 = rotmtx3[1], rotmtx3[2], rotmtx3[3]
 
     if old_angle then
-      local diffx, diffy =
-        transformPoint(srcx, srcy, opts, TP_NO_ORIGIN | TP_NO_SCALE)
+      local diffx, diffy = srcx, srcy
+      $transformPoint(diffx, diffy, opts, <?= $TP_NO_ORIGIN | $TP_NO_SCALE ?>)
       combineMatrix(rotmtx,
         1, 0, -diffx + srcx,
         0, 1, -diffy + srcy,
@@ -961,8 +967,7 @@ local function drawBlit(draw_list, cmd, i, opts)
       -- scaled srcw/srch may be smaller if the source image is smaller than
       -- the requested blit size.
       local cx, cy = dstx + (dstw * .5), dsty + (dsth * .5)
-      rotxoffs, rotyoffs =
-        transformPoint(rotxoffs, rotyoffs, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
+      $transformPoint(rotxoffs, rotyoffs, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
       combineMatrix(rotmtx,
         angle_cos, -angle_sin, cx,
         angle_sin,  angle_cos, cy,
@@ -1003,11 +1008,11 @@ function gfx.blit(source, ...)
   local scale, rotation, srcx, srcy, srcw, srch,
         destx, desty, destw, desth, rotxoffs, rotyoffs = ...
 
-  source = toint(source)
+  source = $toint(source)
   scale, rotation = scale or 0, rotation or 0
   srcx, srcy, srcw, srch, destx, desty, destw, desth =
-    toint(srcx),  toint(srcy),  toint(srcw),  toint(srch),
-    toint(destx), toint(desty), toint(destw), toint(desth)
+    $toint(srcx),  $toint(srcy),  $toint(srcw),  $toint(srch),
+    $toint(destx), $toint(desty), $toint(destw), $toint(desth)
   rotxoffs, rotyoffs = rotxoffs or 0, rotyoffs or 0
 
   local dim = global_state.images[source]
@@ -1029,7 +1034,7 @@ function gfx.blit(source, ...)
     rotation = nil
   end
 
-  if gfx_vars.mode ~= 0 and (gfx_vars.mode & ~BLIT_NO_SOURCE_ALPHA) ~= 0 then
+  if gfx_vars.mode ~= 0 and (gfx_vars.mode & ~$BLIT_NO_SOURCE_ALPHA) ~= 0 then
     warn('mode %d not implemented', gfx_vars.mode)
   end
 
@@ -1057,10 +1062,11 @@ function gfx.blit(source, ...)
     if srch > maxh then srch = maxh end
   end
 
-  drawCall(drawBlit, commands, sourceCommands,
-    gfx.a, gfx_vars.mode, scale_x, scale_y,
+  local payload =
     { srcx, srcy, srcw, srch, destx, desty, destw, desth,
-    rotation, rotation_sin, rotation_cos, rotxoffs, rotyoffs })
+      rotation, rotation_sin, rotation_cos, rotxoffs, rotyoffs }
+  $drawCall(drawBlit, commands, sourceCommands,
+    gfx_vars.a, gfx_vars.mode, scale_x, scale_y, payload)
 
   return source
 end
@@ -1076,18 +1082,19 @@ function gfx.blurto()
 end
 
 local function drawCircle(draw_list, cmd, i, opts)
-  local circleFunc, x, y, r, c = cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4]
-  c = transformColor(c, opts)
-  x, y = transformPoint(x, y, opts)
+  local circleFunc, x, y, r, c = $drawValues(5)
+  $transformColor(c, opts)
+  $transformPoint(x, y, opts)
   r = r * opts.scale_y -- FIXME: draw ellipse if x/y scale mismatch
   circleFunc(draw_list, x + .5, y + .5, r + .5, c)
 end
 
 function gfx.circle(x, y, r, fill, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
-  local circleFunc = tobool(fill, false) and DL_AddCircleFilled or DL_AddCircle
-  return drawCall(drawCircle, circleFunc, toint(x), toint(y), toint(r), color(),
-    0, 0)
+  local circleFunc = $tobool(fill, false) and DL_AddCircleFilled or DL_AddCircle
+  local c; $color(c)
+  $drawCall(drawCircle, circleFunc, $toint(x), $toint(y), $toint(r), c)
+  return 0
 end
 
 function gfx.clienttoscreen(x, y)
@@ -1102,7 +1109,7 @@ end
 
 function gfx.dock(v, ...) -- v[,wx,wy,ww,wh]
   local n, rv = select('#', ...), {}
-  v = tonumber(v)
+  v = $tonumber(v)
 
   if v >= 0 then
     if not state then
@@ -1127,14 +1134,13 @@ function gfx.drawchar(char)
 end
 
 function gfx.drawnumber(n, ndigits)
-  ndigits = math.floor((tonumber(ndigits) or 0) + 0.5)
+  ndigits = (($tonumber(ndigits) or 0) + 0.5) // 1
   gfx.drawstr(('%%.%df'):format(ndigits):format(n))
   return n
 end
 
 local function drawString(draw_list, cmd, i, opts)
-  local c, str, size, xy, xy_off, rb, font =
-    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5], cmd[i+6]
+  local c, str, size, xy, xy_off, rb, font = $drawValues(7)
   local x,     y      = unpackSigned(xy)
   local x_off, y_off  = unpackSigned(xy_off)
   local right, bottom = unpackSigned(rb)
@@ -1154,12 +1160,12 @@ local function drawString(draw_list, cmd, i, opts)
     font.cache.last_use = state.frame_count
   end
 
-  c = transformColor(c, opts)
-  x, y = transformPoint(x, y, opts)
-  x_off, y_off = transformPoint(x_off, y_off, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
+  $transformColor(c, opts)
+  $transformPoint(x, y, opts)
+  $transformPoint(x_off, y_off, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
   size = size * opts.scale_y -- height only, cannot stretch width
   if right and bottom then
-    right, bottom = transformPoint(right, bottom, opts)
+    $transformPoint(right, bottom, opts)
   end
   DL_AddTextEx(
     draw_list, font.inst, size, x + x_off, y + y_off, c, str, 0, x, y, right, bottom)
@@ -1169,13 +1175,14 @@ function gfx.drawstr(str, flags, right, bottom)
   if not state then return end
   str = str or FALLBACK_STRING
 
-  local x, y, c = toint(gfx_vars.x), toint(gfx_vars.y), color()
+  local x, y, c = gfx_vars.x, gfx_vars.y; $color(c)
+  x, y = $toint(x), $toint(y)
   local w, h = gfx.measurestr(str) -- calls beginFrame()
   local f = global_state.fonts[global_state.font]
   local f_sz = f and f.size or DEFAULT_FONT_SIZE
   local f_cache, f_inst = getNearestCachedFont(f)
-  if right  then right  = toint(right) end
-  if bottom then bottom = toint(bottom) end
+  if right  then right  = $toint(right) end
+  if bottom then bottom = $toint(bottom) end
 
   gfx_vars.x, gfx_vars.y = gfx_vars.x + w, gfx_vars.y + h - gfx_vars.texth
 
@@ -1187,10 +1194,12 @@ function gfx.drawstr(str, flags, right, bottom)
   end
 
   -- passing f_{cache,inst} as a table to be read/writeable
-  return drawCall(drawString, c, str, f_sz,
+  local xy, xy_off, rb =
     packSigned(x, y), packSigned(x_off, y_off),
-    packSigned(right or 0x7FFFFFFF, bottom or 0x7FFFFFFF),
-    { cache = f_cache, inst = f_inst })
+    packSigned(right or 0x7FFFFFFF, bottom or 0x7FFFFFFF)
+  local payload = { cache = f_cache, inst = f_inst }
+  $drawCall(drawString, c, str, f_sz, xy, xy_off, rb, payload)
+  return 0
 end
 
 function gfx.getchar(char)
@@ -1235,7 +1244,7 @@ function gfx.getfont()
 end
 
 function gfx.getimgdim(image)
-  image = global_state.images[toint(image)]
+  image = global_state.images[$toint(image)]
   if not image then return 0, 0 end
   return image.w, image.h
 end
@@ -1246,52 +1255,52 @@ function gfx.getpixel()
 end
 
 local function drawGradRect(draw_list, cmd, i, opts)
-  local xy1, xy2, ctl, ctr, cbr, cbl =
-    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
+  local xy1, xy2, ctl, ctr, cbr, cbl = $drawValues(6)
   local x1, y1 = unpackSigned(xy1)
   local x2, y2 = unpackSigned(xy2)
-  ctl = transformColor(ctl, opts)
-  ctr = transformColor(ctr, opts)
-  cbr = transformColor(cbr, opts)
-  cbl = transformColor(cbl, opts)
+  $transformColor(ctl, opts)
+  $transformColor(ctr, opts)
+  $transformColor(cbr, opts)
+  $transformColor(cbl, opts)
 
   -- FIXME: no AddQuadFilledMultiColor for rotation (ocornut/imgui#4495)
   if opts.angle then
     local x3, y3, x4, y4
-    x1, y1, x2, y2, x3, y3, x4, y4 = transformRectToQuad(x1, y1, x2, y2, opts)
+    $transformRectToQuad(x1, y1, x2, y2, x3, y3, x4, y4, opts)
     DL_AddQuadFilled(draw_list, x1, y1, x2, y2, x3, y3, x4, y4, ctl)
     return
   end
 
-  x1, y1 = transformPoint(x1, y1, opts)
-  x2, y2 = transformPoint(x2, y2, opts)
+  $transformPoint(x1, y1, opts)
+  $transformPoint(x2, y2, opts)
   DL_AddRectFilledMultiColor(draw_list, x1, y1, x2, y2, ctl, ctr, cbr, cbl)
 end
 
 function gfx.gradrect(x, y, w, h, r, g, b, a, drdx, dgdx, dbdx, dadx, drdy, dgdy, dbdy, dady)
   -- FIXME: support colors growing to > 1 or < 0 before the end of the rect
-  x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  drdx = w * tofloat(drdx)
-  dgdx = w * tofloat(dgdx)
-  dbdx = w * tofloat(dbdx)
-  dadx = w * tofloat(dadx)
-  drdy = h * tofloat(drdy)
-  dgdy = h * tofloat(dgdy)
-  dbdy = h * tofloat(dbdy)
-  dady = h * tofloat(dady) -- some scripts pass Infinity...
-  local ctl = makeColor(r, g, b, a)
-  local ctr = makeColor(r + drdx, g + dgdx, b + dbdx, a + dadx)
-  local cbl = makeColor(r + drdy, g + dgdy, b + dbdy, a + dady)
-  local cbr = makeColor(
+  x, y, w, h = $toint(x), $toint(y), $toint(w), $toint(h)
+  drdx = w * $tofloat(drdx)
+  dgdx = w * $tofloat(dgdx)
+  dbdx = w * $tofloat(dbdx)
+  dadx = w * $tofloat(dadx)
+  drdy = h * $tofloat(drdy)
+  dgdy = h * $tofloat(dgdy)
+  dbdy = h * $tofloat(dbdy)
+  dady = h * $tofloat(dady) -- some scripts pass Infinity...
+  local ctl = $tocolor(r, g, b, a)
+  local ctr = $tocolor(r + drdx, g + dgdx, b + dbdx, a + dadx)
+  local cbl = $tocolor(r + drdy, g + dgdy, b + dbdy, a + dady)
+  local cbr = $tocolor(
     r + drdx + drdy, g + dgdx + dgdy,
     b + dbdx + dbdy, a + dadx + dady)
-  return drawCall(drawGradRect, packSigned(x, y), packSigned(x + w, y + h),
-    ctl, ctr, cbr, cbl, 0)
+  local xy, wh = packSigned(x, y), packSigned(x + w, y + h)
+  $drawCall(drawGradRect, xy, wh, ctl, ctr, cbr, cbl)
+  return 0
 end
 
 local function drawImGui(draw_list, cmd, i, opts)
-  local callback, x, y = cmd[i], cmd[i+1], cmd[i+2]
-  x, y = transformPoint(x, y, opts)
+  local callback, x, y = $drawValues(3)
+  $transformPoint(x, y, opts)
   ImGui.SetCursorScreenPos(state.ctx, x, y)
   ImGui.BeginGroup(state.ctx)
   callback(state.ctx, draw_list, opts)
@@ -1299,8 +1308,9 @@ local function drawImGui(draw_list, cmd, i, opts)
 end
 
 function gfx.imgui(callback)
-  return drawCall(drawImGui, callback, toint(gfx_vars.x), toint(gfx_vars.y),
-    0, 0, 0, 0)
+  local x, y = gfx_vars.x, gfx_vars.y
+  $drawCall(drawImGui, callback, $toint(x), $toint(y))
+  return 0
 end
 
 function gfx.init(name, width, height, dockstate, xpos, ypos)
@@ -1343,7 +1353,9 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     end
 
     -- always update global_state.dock with the current value
-    setDock(toint(tonumber(dockstate)))
+    dockstate = $tonumber(dockstate)
+    dockstate = $toint(dockstate)
+    setDock(dockstate)
 
     gfx_vars.ext_retina = 1 -- ReaImGui scales automatically
   elseif name and name:len() > 0 then
@@ -1352,31 +1364,60 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
   end
 
   if width and height then
-    gfx_vars.w = math.max(16, toint(tonumber(width)))
-    gfx_vars.h = math.max(16, toint(tonumber(height)))
+    width, height = $tonumber(width), $tonumber(height)
+    width, height = $toint(width),    $toint(height)
+    gfx_vars.w, gfx_vars.h = math.max(16, width), math.max(16, height)
     state.want_size = { w=gfx_vars.w, h=gfx_vars.h }
   end
 
   if xpos and ypos then
-    global_state.pos_x = toint(tonumber(xpos))
-    global_state.pos_y = toint(tonumber(ypos))
+    xpos, ypos = $tonumber(xpos), $tonumber(ypos)
+    xpos, ypos = $toint(xpos),    $toint(ypos)
+    global_state.pos_x, global_state.pos_y = xpos, ypos
     state.want_pos = { x=global_state.pos_x, y=global_state.pos_y }
   end
 
   return 1
 end
 
+local function drawLine(draw_list, cmd, i, opts)
+  local x1, y1, x2, y2, c = $drawValues(5)
+  $transformColor(c, opts)
+
+  -- workarounds to avoid gaps due to rounding in vertical/horizontal lines
+  local scaled = opts.scale_x ~= 1 and opts.scale_y ~= 1
+  if scaled and (x1 == x2 or y1 == y2) then
+    $transformPoint(x1, y1, opts, $TP_NO_FLOOR)
+    $transformPoint(x2, y2, opts, $TP_NO_FLOOR)
+    if x1 == x2 then
+      x2 = x2 + opts.scale_x
+    elseif y1 == y2 then
+      y2 = y2 + opts.scale_y
+    end
+
+    DL_AddRectFilled(draw_list, x1, y1, x2, y2, c)
+    return
+  end
+
+  $transformPoint(x1, y1, opts)
+  $transformPoint(x2, y2, opts)
+  DL_AddLine(draw_list, x1, y1, x2, y2, c, (opts.scale_x + opts.scale_y) * .5)
+end
+
 function gfx.line(x1, y1, x2, y2, aa)
   -- if aa then warn('ignoring parameter aa') end
-  x1, y1, x2, y2 = toint(x1), toint(y1), toint(x2), toint(y2)
+  x1, y1, x2, y2 = $toint(x1), $toint(y1), $toint(x2), $toint(y2)
+  local c; $color(c)
 
   -- gfx.line(10, 30, 10, 30)
   if x1 == x2 and y1 == y2 then
     -- faster than 1px lines according to dear imgui
-    return drawCall(drawPixel, x1, y1, color(), 0, 0, 0, 0)
+    $drawCall(drawPixel, x1, y1, c)
   else
-    return drawCall(drawLine, x1, y1, x2, y2, color(), 0, 0)
+    $drawCall(drawLine, x1, y1, x2, y2, c)
   end
+
+  return 0
 end
 
 function gfx.lineto(x, y, aa)
@@ -1386,8 +1427,7 @@ function gfx.lineto(x, y, aa)
 end
 
 local function drawImage(draw_list, cmd, i, opts)
-  local filename, imageState, x, y, w, h =
-    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
+  local filename, imageState, x, y, w, h = $drawValues(6)
 
   if not imageState.attached then
     -- could not attach before in loadimg, as it can be called before gfx.init
@@ -1398,34 +1438,34 @@ local function drawImage(draw_list, cmd, i, opts)
     imageState.attached = true
   end
 
-  w, h = transformPoint(w, h, opts, TP_NO_ORIGIN | TP_NO_ROTATE)
+  $transformPoint(w, h, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
   local uv0_x, uv0_y = opts.x1 / w, opts.y1 / h
   local uv1_x, uv1_y = opts.x2 / w, opts.y2 / h
-  local tint = transformColor(0xFFFFFFFF, opts)
+  local tint = 0xFFFFFFFF
+  $transformColor(tint, opts)
 
   if opts.angle then
-    local x1, y1 =
-      transformPoint(opts.x1, opts.y1, opts, TP_NO_SCALE)
-    local x2, y2 =
-      transformPoint(opts.x2, opts.y1, opts, TP_NO_SCALE)
-    local x3, y3 =
-      transformPoint(opts.x2, opts.y2, opts, TP_NO_SCALE)
-    local x4, y4 =
-      transformPoint(opts.x1, opts.y2, opts, TP_NO_SCALE)
+    local x1, y1 = opts.x1, opts.y1
+    local x2, y2 = opts.x2, y1
+    local x3, y3 = x2, opts.y2
+    local x4, y4 = x1, y3
+    $transformPoint(x1, y1, opts, $TP_NO_SCALE)
+    $transformPoint(x2, y2, opts, $TP_NO_SCALE)
+    $transformPoint(x3, y3, opts, $TP_NO_SCALE)
+    $transformPoint(x4, y4, opts, $TP_NO_SCALE)
     DL_AddImageQuad(draw_list, imageState.inst,
       x1, y1, x2, y2, x3, y3, x4, y4,
       uv0_x, uv0_y, uv1_x, uv0_y, uv1_x, uv1_y, uv0_x, uv1_y, tint)
-    return
+  else
+    DL_AddImage(draw_list, imageState.inst,
+      opts.screen_x + opts.x1, opts.screen_y + opts.y1,
+      opts.screen_x + opts.x2, opts.screen_y + opts.y2,
+      uv0_x, uv0_y, uv1_x, uv1_y, tint)
   end
-
-  DL_AddImage(draw_list, imageState.inst,
-    opts.screen_x + opts.x1, opts.screen_y + opts.y1,
-    opts.screen_x + opts.x2, opts.screen_y + opts.y2,
-    uv0_x, uv0_y, uv1_x, uv1_y, tint)
 end
 
 function gfx.loadimg(image, filename)
-  image = toint(image)
+  image = $toint(image)
 
   local bitmap
   if not pcall(function() bitmap = ImGui.CreateImage(filename) end) then
@@ -1452,7 +1492,7 @@ function gfx.loadimg(image, filename)
   gfx_vars.dest = image
   local commands = global_state.commands[gfx_vars.dest]
   if commands then commands.want_clear = true end
-  drawCall(drawImage, filename, imageState, x, y, w, h, 0)
+  $drawCall(drawImage, filename, imageState, x, y, w, h)
   gfx_vars.dest = dest_backup
 
   return image
@@ -1505,29 +1545,29 @@ function gfx.quit()
 end
 
 local function drawRect(draw_list, cmd, i, opts)
-  local rectFunc, quadFunc, x1, y1, x2, y2, c =
-    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5], cmd[i+6]
-  c = transformColor(c, opts)
+  local rectFunc, quadFunc, x1, y1, x2, y2, c = $drawValues(7)
+  $transformColor(c, opts)
   -- FIXME: scale thickness
 
   if opts.angle then
     local x3, y3, x4, y4
-    x1, y1, x2, y2, x3, y3, x4, y4 = transformRectToQuad(x1, y1, x2, y2, opts)
+    $transformRectToQuad(x1, y1, x2, y2, x3, y3, x4, y4, opts)
     quadFunc(draw_list, x1, y1, x2, y2, x3, y3, x4, y4, c)
-    return
+  else
+    $transformPoint(x1, y1, opts)
+    $transformPoint(x2, y2, opts)
+    rectFunc(draw_list, x1, y1, x2, y2, c)
   end
-
-  x1, y1 = transformPoint(x1, y1, opts)
-  x2, y2 = transformPoint(x2, y2, opts)
-  rectFunc(draw_list, x1, y1, x2, y2, c)
 end
 
 function gfx.rect(x, y, w, h, filled)
-  x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  filled = tobool(filled, true)
+  x, y, w, h = $toint(x), $toint(y), $toint(w), $toint(h)
+  filled = $tobool(filled, true)
   local rectFunc = filled and DL_AddRectFilled or DL_AddRect
   local quadFunc = filled and DL_AddQuadFilled or DL_AddQuad
-  return drawCall(drawRect, rectFunc, quadFunc, x, y, x+w, y+h, color())
+  local c; $color(c)
+  $drawCall(drawRect, rectFunc, quadFunc, x, y, x+w, y+h, c)
+  return 0
 end
 
 function gfx.rectto(x, y)
@@ -1537,35 +1577,34 @@ function gfx.rectto(x, y)
 end
 
 local function drawRoundRect(draw_list, cmd, i, opts)
-  local x1, y1, x2, y2, c, radius =
-    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
-  c = transformColor(c, opts)
+  local x1, y1, x2, y2, c, radius = $drawValues(6)
+  $transformColor(c, opts)
   -- FIXME: scale thickness
 
   local a = opts.angle
   if a then
     local quarter, x3, y3, x4, y4 = math.pi * .5
     x1, y1, x2, y2 = x1 + radius, y1 + radius, x2 - radius, y2 - radius
-    x1, y1, x2, y2, x3, y3, x4, y4 = transformRectToQuad(x1, y1, x2, y2, opts)
+    $transformRectToQuad(x1, y1, x2, y2, x3, y3, x4, y4, opts)
     radius = radius * opts.scale_y -- FIXME: scale_x
     DL_PathArcTo(draw_list, x1, y1, radius, a + math.pi, a + quarter*3)
     DL_PathArcTo(draw_list, x2, y2, radius, a - quarter, a          )
     DL_PathArcTo(draw_list, x3, y3, radius, a          , a + quarter)
     DL_PathArcTo(draw_list, x4, y4, radius, a + quarter, a + math.pi)
     DL_PathStroke(draw_list, c, 1) -- 1 = always DrawFlags_Closed
-    return
+  else
+    $transformPoint(x1, y1, opts)
+    $transformPoint(x2, y2, opts)
+    radius = radius * opts.scale_y -- FIXME: scale_x
+    DL_AddRect(draw_list, x1, y1, x2 + 1, y2 + 1, c, radius, ROUND_CORNERS)
   end
-
-  x1, y1 = transformPoint(x1, y1, opts)
-  x2, y2 = transformPoint(x2, y2, opts)
-  radius = radius * opts.scale_y -- FIXME: scale_x
-  DL_AddRect(draw_list, x1, y1, x2 + 1, y2 + 1, c, radius, ROUND_CORNERS)
 end
 
 function gfx.roundrect(x, y, w, h, radius, antialias)
   -- if antialias then warn('ignoring parameter antialias') end
-  x, y, w, h = toint(x), toint(y), toint(w), toint(h)
-  return drawCall(drawRoundRect, x, y, x + w, y + h, color(), radius, 0)
+  x, y, w, h = $toint(x), $toint(y), $toint(w), $toint(h)
+  local c; $color(c)
+  $drawCall(drawRoundRect, x, y, x + w, y + h, c, radius)
 end
 
 function gfx.screentoclient(x, y)
@@ -1582,12 +1621,12 @@ function gfx.set(...)
   if n < 3 then b = r end
 
   -- using gfx`meta.__newindex for validation is too slow
-  gfx_vars.r, gfx_vars.g, gfx_vars.b =
-    tofloat(tonumber(r)), tofloat(tonumber(g)), tofloat(tonumber(b))
-  if n >= 4 then gfx_vars.a    = tofloat(tonumber(a))    end
-  if n >= 5 then gfx_vars.mode = tofloat(tonumber(mode)) end
-  if n >= 6 then gfx_vars.dest = tofloat(tonumber(dest)) end
-  if n >= 7 then gfx_vars.a2   = tofloat(tonumber(a2))   end
+  r, g, b = $tonumber(r), $tonumber(g), $tonumber(b)
+  gfx_vars.r, gfx_vars.g, gfx_vars.b = $tofloat(r), $tofloat(g), $tofloat(b)
+  if n >= 4 then a    = $tonumber(a);    gfx_vars.a    = $tofloat(a)    end
+  if n >= 5 then mode = $tonumber(mode); gfx_vars.mode = $tofloat(mode) end
+  if n >= 6 then dest = $tonumber(dest); gfx_vars.dest = $tofloat(dest) end
+  if n >= 7 then a2   = $tonumber(a2);   gfx_vars.a2   = $tofloat(a2)   end
 
   return 0
 end
@@ -1601,7 +1640,7 @@ function gfx.setcursor(resource_id, custom_cursor_name)
 end
 
 function gfx.setfont(idx, fontface, sz, flag)
-  idx = tonumber(idx) -- Default_6.0_theme_adjuster.lua gives a string sometimes
+  idx = $tonumber(idx) -- Default_6.0_theme_adjuster.lua gives a string sometimes
 
   local font = global_state.fonts[idx]
 
@@ -1610,7 +1649,7 @@ function gfx.setfont(idx, fontface, sz, flag)
     if not fontface or fontface:len() == 0 then
       fontface = 'Arial'
     end
-    sz = toint(sz)
+    sz = $toint(sz)
     if sz < 2 then
       sz = 10
     end
@@ -1651,7 +1690,7 @@ function gfx.setfont(idx, fontface, sz, flag)
 end
 
 function gfx.setimgdim(image, w, h)
-  image = toint(image)
+  image = $toint(image)
 
   local dim = global_state.images[image]
   if not dim then
@@ -1659,7 +1698,7 @@ function gfx.setimgdim(image, w, h)
     global_state.images[image] = dim
   end
 
-  dim.w, dim.h = math.max(0, toint(w)), math.max(0, toint(h))
+  dim.w, dim.h = math.max(0, $toint(w)), math.max(0, $toint(h))
 
   local commands = global_state.commands[image]
   if commands and dim.w == 0 and dim.h == 0 then
@@ -1670,7 +1709,7 @@ function gfx.setimgdim(image, w, h)
 end
 
 function gfx.setpixel(r, g, b)
-  drawCall(drawPixel, gfx_vars.x, gfx_vars.y, makeColor(r, g, b, 1), 0, 0, 0, 0)
+  $drawCall(drawPixel, gfx_vars.x, gfx_vars.y, $tocolor(r, g, b))
   return r
 end
 
@@ -1709,11 +1748,14 @@ function gfx.transformblit()
 end
 
 local function drawTriangle6(draw_list, cmd, i, opts)
-  local points, center_x, center_y, c = cmd[i], cmd[i+1], cmd[i+2], cmd[i+3]
-  c = transformColor(c, opts)
-  local x1, y1 = transformPoint(points[1], points[2], opts)
-  local x2, y2 = transformPoint(points[3], points[4], opts)
-  local x3, y3 = transformPoint(points[5], points[6], opts)
+  local points, center_x, center_y, c = $drawValues(4)
+  $transformColor(c, opts)
+  local x1, y1 = points[1], points[2]
+  local x2, y2 = points[3], points[4]
+  local x3, y3 = points[5], points[6]
+  $transformPoint(x1, y1, opts)
+  $transformPoint(x2, y2, opts)
+  $transformPoint(x3, y3, opts)
   if points[1] > center_x then x1 = x1 + 1 end
   if points[2] > center_y then y1 = y1 + 1 end
   if points[3] > center_x then x2 = x2 + 1 end
@@ -1724,14 +1766,14 @@ local function drawTriangle6(draw_list, cmd, i, opts)
 end
 
 local function drawTriangleN(draw_list, cmd, i, opts)
-  local points, screen_points, n_coords, center_x, center_y, c =
-    cmd[i], cmd[i+1], cmd[i+2], cmd[i+3], cmd[i+4], cmd[i+5]
-  c = transformColor(c, opts)
+  local points, screen_points, n_coords, center_x, center_y, c = $drawValues(6)
+  $transformColor(c, opts)
   for i = 1, n_coords, 2 do
-    screen_points[i], screen_points[i + 1] =
-      transformPoint(points[i], points[i + 1], opts)
-    if points[i]     > center_x then
-      screen_points[i]     = screen_points[i]     + 1
+    local x, y = points[i], points[i + 1]
+    $transformPoint(x, y, opts)
+    screen_points[i], screen_points[i + 1] = x, y
+    if points[i] > center_x then
+      screen_points[i] = screen_points[i] + 1
     end
     if points[i + 1] > center_y then
       screen_points[i + 1] = screen_points[i + 1] + 1
@@ -1740,18 +1782,20 @@ local function drawTriangleN(draw_list, cmd, i, opts)
   DL_AddConvexPolyFilled(draw_list, screen_points, c)
 end
 
+
 function gfx.triangle(...)
-  local c, n_coords = color(), select('#', ...)
+  local n_coords = select('#', ...)
   if n_coords < 6 then
     error('gfx.triangle requires 6 or more parameters', 2)
   end
+  local c; $color(c)
 
   -- rounding up to nearest even point count
   local has_even = (n_coords & 1) == 0
   local points = reaper.new_array(has_even and n_coords or n_coords + 1)
   for i = 1, n_coords, 2 do
     local x, y = select(i, ...)
-    points[i], points[i + 1] = toint(x), toint(y)
+    points[i], points[i + 1] = $toint(x), $toint(y)
   end
   local first, second = points[1], points[2]
   if not has_even then
@@ -1765,23 +1809,26 @@ function gfx.triangle(...)
   local is_vline, is_hline = center_x == first, center_y == second
   if is_vline and is_hline then
     -- gfx.triangle(0,10, 0,10, 0,10, 0,10)
-    return drawCall(drawPixel, center_x, center_y, c, 0, 0, 0, 0)
+    $drawCall(drawPixel, center_x, center_y, c)
+    return 0
   elseif is_vline then
     -- gfx.triangle(0,0, 0,10, 0,20)
     local min_y, max_y = 1/0, -1/0
     for i = 2, n_coords, 2 do
       local p = points[i]
-      min_y, max_y = math.min(min_y, p), math.max(max_y, p)
+      min_y, max_y = $min(min_y, p), $max(max_y, p)
     end
-    return drawCall(drawLine, center_x, min_y, center_x, max_y, c, 0, 0)
+    $drawCall(drawLine, center_x, min_y, center_x, max_y, c)
+    return 0
   elseif is_hline then
     -- gfx.triangle(0,0, 10,0, 20,0)
     local min_x, max_x = 1/0, -1/0
     for i = 1, n_coords, 2 do
       local p = points[i]
-      min_x, max_x = math.min(min_x, p), math.max(max_x, p)
+      min_x, max_x = $min(min_x, p), $max(max_x, p)
     end
-    return drawCall(drawLine, min_x, center_y, max_x, center_y, c, 0, 0)
+    $drawCall(drawLine, min_x, center_y, max_x, center_y, c)
+    return 0
   end
 
   sort2D(points, center_x, center_y) -- sort clockwise for antialiasing
@@ -1791,15 +1838,15 @@ function gfx.triangle(...)
 
   if n_coords == 4 then
     -- diagonal line gfx.triangle(0,0, 0,0, 10,10, 10,10)
-    return drawCall(drawLine, points[1], points[2], points[3], points[4], c,
-      0, 0)
+    $drawCall(drawLine, points[1], points[2], points[3], points[4], c)
+    return 0
   elseif n_coords == 6 then
-    return drawCall(drawTriangle6, points, center_x, center_y, c,
-      0, 0, 0)
+    $drawCall(drawTriangle6, points, center_x, center_y, c)
+    return 0
   else
     local screen_points = reaper.new_array(n_coords)
-    return drawCall(drawTriangleN, points, screen_points, n_coords,
-       center_x, center_y, c, 0)
+    $drawCall(drawTriangleN, points, screen_points, n_coords, center_x, center_y, c)
+    return 0
   end
 end
 
