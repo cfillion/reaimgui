@@ -194,8 +194,6 @@ void CocoaOpenGL::swapBuffers(void *)
 
 - (NSOpenGLContext *)openGLContextForPixelFormat:(NSOpenGLPixelFormat *)fmt
 {
-  // increases the reference count so that teardown() below doesn't incorrectly
-  // frees shared OpenGL resources
   auto globalShared { m_renderer->m_shared };
 
   CocoaOpenGLShared *shared
@@ -205,20 +203,29 @@ void CocoaOpenGL::swapBuffers(void *)
 
   if(m_oldGlCtx) {
     MakeCurrent cur { m_oldGlCtx };
-    if(!gl)
-      globalShared.reset(); // teardown shared state if new context failed
+
+    // increases the reference count so that teardown() below doesn't incorrectly
+    // frees shared OpenGL resources and setup() doesn't re-initializes it
+    if(gl)
+      ++globalShared->m_setupCount;
+    else
+      m_oldGlCtx = nil;
+
     m_renderer->teardown();
-    m_oldGlCtx = nil;
   }
 
   if(!gl)
-    return nil; // CocoaOpenGl::render(void*) will report the error
+    return nil; // CocoaOpenGl::render(void*) will report the situation
   if(!shared->ctx)
     shared->ctx = gl;
 
   MakeCurrent cur { gl };
-  globalShared.reset(); // decrease ref count to initialize shared resources
   m_renderer->setup();
+
+  if(m_oldGlCtx) {
+    --globalShared->m_setupCount;
+    m_oldGlCtx = nil;
+  }
 
   return gl;
 }

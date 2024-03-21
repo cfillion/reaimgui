@@ -35,10 +35,12 @@ protected:
   void render(bool flip);
 
   struct Shared {
+    Shared();
     void setup();
     void teardown();
     void textureCommand(const TextureCmd &);
 
+    unsigned int m_setupCount;
     unsigned int m_program;
     TextureCookie m_cookie;
     std::vector<unsigned int> m_textures;

@@ -80,6 +80,11 @@ enum Textures  { FontTex };
 enum Locations { ProjMtxUniLoc, TexUniLoc,
                  VtxColorAttrLoc, VtxPosAttrLoc, VtxUVAttrLoc };
 
+OpenGLRenderer::Shared::Shared()
+  : m_setupCount {}
+{
+}
+
 void OpenGLRenderer::Shared::setup()
 {
   unsigned int vertShader { glCreateShader(GL_VERTEX_SHADER) };
@@ -160,7 +165,7 @@ OpenGLRenderer::OpenGLRenderer
 
 void OpenGLRenderer::setup()
 {
-  if(m_shared.use_count() == 1)
+  if(++m_shared->m_setupCount == 1)
     m_shared->setup();
 
   glUseProgram(m_shared->m_program);
@@ -192,11 +197,11 @@ void OpenGLRenderer::setup()
 
 void OpenGLRenderer::teardown()
 {
-  if(m_shared.use_count() == 1)
-    m_shared->teardown();
-
   glDeleteBuffers(m_buffers.size(), m_buffers.data());
   glDeleteVertexArrays(1, &m_vbo);
+
+  if(m_shared->m_setupCount-- == 1)
+    m_shared->teardown();
 }
 
 void OpenGLRenderer::render(const bool flip)
