@@ -15,16 +15,17 @@ https://forum.cockos.com/showthread.php?t=250419
 Software requirements:
 
 - [Meson](https://mesonbuild.com/) (1.1 or newer)
-- C++20 compiler* (C++17 supported for Linux and macOS builds)
+- C++20 compiler* (C++17 is supported for Linux and macOS builds)
+- PHP (optional, for preprocessing of gfx2imgui.lua)
 
-(* Compiler must be ABI-compatible with MSVC on Windows)
+(* The C++ compiler must be ABI-compatible with MSVC on Windows)
 
 Library requirements:
 
 By default these will be picked up from the system or downloaded if missing.
 
 - [Boost](https://www.boost.org/) (1.81 or newer)
-- [fmt](https://fmt.dev/) (if C++17 only)
+- [fmt](https://fmt.dev/) (only if C++20 is not available)
 - [FreeType](https://www.freetype.org/)
 - [GoogleTest](https://github.com/google/googletest)
 - [libjpeg-turbo](https://www.libjpeg-turbo.org/)
