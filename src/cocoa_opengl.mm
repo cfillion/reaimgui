@@ -35,7 +35,7 @@ class CocoaOpenGL;
 @private
   NSOpenGLContext *m_oldGlCtx;
   CocoaOpenGL *m_renderer;
-  bool m_inRender;
+  bool m_inRender, m_didInit;
 }
 
 - (instancetype)initWithRenderer:(CocoaOpenGL *)renderer;
@@ -139,9 +139,6 @@ void CocoaOpenGL::setSize(ImVec2)
 void CocoaOpenGL::render(void *)
 {
   [m_layer render];
-
-  if(![m_layer openGLContext])
-    throw backend_error { "failed to initialize a OpenGL 3.2 context" };
 }
 
 void CocoaOpenGL::swapBuffers(void *)
@@ -156,7 +153,7 @@ void CocoaOpenGL::swapBuffers(void *)
   [self setContentsGravity:kCAGravityBottomLeft]; // don't stretch when resizing
   m_oldGlCtx = nil;
   m_renderer = renderer;
-  m_inRender = false;
+  m_inRender = m_didInit = false;
   return self;
 }
 
@@ -175,6 +172,9 @@ void CocoaOpenGL::swapBuffers(void *)
   [super setNeedsDisplay];
   [super displayIfNeeded];
   m_inRender = false;
+
+  if(m_didInit && ![self openGLContext])
+    throw backend_error { "failed to initialize a OpenGL 3.2 context" };
 }
 
 - (NSOpenGLPixelFormat *)openGLPixelFormatForDisplayMask:(uint32_t)mask
@@ -193,6 +193,9 @@ void CocoaOpenGL::swapBuffers(void *)
 
     0
   };
+
+  // OK to report lack of OpenGL context as initialization failure after this point
+  m_didInit = true;
 
   return [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
 }
