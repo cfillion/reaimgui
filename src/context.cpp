@@ -534,6 +534,8 @@ ImGuiViewport *Context::viewportUnder(const ImVec2 pos) const
 #ifdef __APPLE__
   target = GetParent(target);
 #endif
+  if(!target)
+    return nullptr;
 
   ImGuiViewport *viewport { ImGui::FindViewportByPlatformHandle(target) };
   if(viewport && ImGui::GetMainViewport() != viewport)
