@@ -46,6 +46,7 @@ private:
 
   GdkGLContext *m_gl;
   unsigned int m_tex, m_fbo;
+  bool m_skipFrame;
 
   // for docking
   std::unique_ptr<LICE_IBitmap, LICEDeleter> m_pixels;
@@ -75,7 +76,7 @@ decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
 // GdkGLContext cannot share ressources: they're already shared with the
 // window's paint context (which itself isn't shared with anything).
 GDKOpenGL::GDKOpenGL(RendererFactory *factory, Window *window)
-  : OpenGLRenderer(factory, window, false)
+  : OpenGLRenderer(factory, window, false), m_skipFrame { false }
 {
   GdkWindow *osWindow;
 
@@ -119,9 +120,21 @@ GDKOpenGL::GDKOpenGL(RendererFactory *factory, Window *window)
 
   setup();
 
+  if(m_window->isDocked())
+    return;
+
   // prevent invalidation (= displaying garbage) when moving another window over
-  if(!m_window->isDocked())
-    gdk_window_freeze_updates(osWindow);
+  gdk_window_freeze_updates(osWindow);
+
+  // Opening a non-override-redirect window on KDE + Wayland + an Intel GPU
+  // hangs for about 1s on the second frame's gdk_gl_context_end_frame. Skipping
+  // the first frame or disabling hardware acceleration works around this.
+  // Mesa waits for swap buffers to complete in loader_dri3_wait_for_sbc
+  // called from st_glFinish.
+  if(!(m_window->viewport()->Flags & ImGuiViewportFlags_NoTaskBarIcon)) {
+    const char *gpuVendor { reinterpret_cast<const char *>(glGetString(GL_VENDOR)) };
+    m_skipFrame = !strcmp(gpuVendor, "Intel");
+  }
 }
 
 GDKOpenGL::~GDKOpenGL()
@@ -183,6 +196,11 @@ void GDKOpenGL::render(void *userData)
 {
   if(userData && m_pixels)
     return softwareBlit();
+
+  if(m_skipFrame) {
+    m_skipFrame = false;
+    return;
+  }
 
   MakeCurrent cur { m_gl };
 
