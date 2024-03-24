@@ -382,8 +382,13 @@ void Button::output(const Box &box) const
             << StringLiteral(m_label) << ", " << m_id << ", " << box << '\n';
 }
 
+#ifdef _WIN32
+constexpr int comboBoxHeight { 14 };
+#else
+constexpr int comboBoxHeight { 12 }; // special case for SWELL
+#endif
 ComboBox::ComboBox(const int id, const int w)
-  : m_id { id }, m_size { w, 14 }
+  : m_id { id }, m_size { w, comboBoxHeight }
 {
 }
 
