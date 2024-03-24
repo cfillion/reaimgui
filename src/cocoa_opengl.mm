@@ -35,10 +35,10 @@ class CocoaOpenGL;
 @private
   NSOpenGLContext *m_oldGlCtx;
   CocoaOpenGL *m_renderer;
-  bool m_inRender, m_didInit;
+  bool m_inRender, m_didInit, m_forceSoftware;
 }
 
-- (instancetype)initWithRenderer:(CocoaOpenGL *)renderer;
+- (instancetype)initWithRenderer:(CocoaOpenGL *)renderer forceSoftware:(bool)f;
 - (void)setContentsScale:(CGFloat)scale;
 - (void)render;
 
@@ -100,6 +100,8 @@ private:
 
 decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
   { &Renderer::create<CocoaOpenGL> };
+decltype(OpenGLRenderer::flags) OpenGLRenderer::flags
+  { RendererType::Available | RendererType::CanForceSoftware };
 
 CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
   : OpenGLRenderer { factory, window }
@@ -107,7 +109,8 @@ CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
   if(!m_shared->m_platform)
     m_shared->m_platform = std::make_shared<CocoaOpenGLShared>();
 
-  m_layer = [[OpenGLLayer alloc] initWithRenderer:this];
+  m_layer = [[OpenGLLayer alloc] initWithRenderer:this
+                                    forceSoftware:factory->wantSoftware()];
 
   HWND hwnd { m_window->nativeHandle() };
   SetOpaque(hwnd, false);
@@ -147,6 +150,7 @@ void CocoaOpenGL::swapBuffers(void *)
 
 @implementation OpenGLLayer
 - (instancetype)initWithRenderer:(CocoaOpenGL *)renderer
+                   forceSoftware:(bool)forceSoftware
 {
   self = [super init];
   [self setOpaque:NO];
@@ -154,6 +158,7 @@ void CocoaOpenGL::swapBuffers(void *)
   m_oldGlCtx = nil;
   m_renderer = renderer;
   m_inRender = m_didInit = false;
+  m_forceSoftware = forceSoftware;
   return self;
 }
 
@@ -179,20 +184,27 @@ void CocoaOpenGL::swapBuffers(void *)
 
 - (NSOpenGLPixelFormat *)openGLPixelFormatForDisplayMask:(uint32_t)mask
 {
-  const NSOpenGLPixelFormatAttribute attrs[] {
-    NSOpenGLPFAOpenGLProfile, NSOpenGLProfileVersion3_2Core,
-    kCGLPFASupportsAutomaticGraphicsSwitching,
-    NSOpenGLPFAScreenMask, mask,
-    NSOpenGLPFADoubleBuffer,
+  size_t attrc {};
+  NSOpenGLPixelFormatAttribute attrs[16];
+  attrs[attrc++] = NSOpenGLPFAOpenGLProfile;
+  attrs[attrc++] = NSOpenGLProfileVersion3_2Core;
 
-    NSOpenGLPFAClosestPolicy,
-    NSOpenGLPFAColorSize, 24,
-    NSOpenGLPFAAlphaSize, 8,
+  attrs[attrc++] = NSOpenGLPFAScreenMask; attrs[attrc++] = mask;
+  attrs[attrc++] = kCGLPFASupportsAutomaticGraphicsSwitching;
+  attrs[attrc++] = NSOpenGLPFADoubleBuffer;
 
-    // NSOpenGLPFARendererID, kCGLRendererGenericFloatID, // Apple Software Renderer
+  attrs[attrc++] = NSOpenGLPFAClosestPolicy;
+  attrs[attrc++] = NSOpenGLPFAColorSize; attrs[attrc++] = 24;
+  attrs[attrc++] = NSOpenGLPFAAlphaSize; attrs[attrc++] = 8;
 
-    0
-  };
+  if(m_forceSoftware) {
+    attrs[attrc++] = NSOpenGLPFARendererID;
+    attrs[attrc++] = kCGLRendererGenericFloatID; // Apple Software Renderer
+  }
+
+  attrs[attrc++] = 0;
+  assert(attrc < std::size(attrs));
+
 
   // OK to report lack of OpenGL context as initialization failure after this point
   m_didInit = true;

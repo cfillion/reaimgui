@@ -75,6 +75,7 @@ struct GLDeleter {
 
 decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
   { &Renderer::create<Win32OpenGL> };
+decltype(RendererType::flags) OpenGLRenderer::flags { RendererType::Available };
 
 Win32OpenGL::Win32OpenGL(RendererFactory *factory, Window *window)
   : OpenGLRenderer(factory, window), m_dc { GetDC(window->nativeHandle()) }

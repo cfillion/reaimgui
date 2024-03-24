@@ -29,7 +29,8 @@
 #include <vector>
 
 class D3D10Renderer;
-REGISTER_RENDERER(10, d3d10, "Direct3D 10", &Renderer::create<D3D10Renderer>);
+REGISTER_RENDERER(10, d3d10, "Direct3D 10", &Renderer::create<D3D10Renderer>,
+  RendererType::Available | RendererType::CanForceSoftware);
 
 constexpr uint8_t VERTEX_SHADER[] {
 #  include "d3d10_vertex.hlsl.ipp"
@@ -52,7 +53,7 @@ public:
 
 private:
   struct Shared {
-    Shared();
+    Shared(bool forceSoftware);
     ~Shared();
 
     void textureCommand(const TextureCmd &);
@@ -90,22 +91,19 @@ private:
   std::array<Buffer, 3> m_buffers;
 };
 
-D3D10Renderer::Shared::Shared()
-{
-  constexpr D3D10_DRIVER_TYPE drivers[] {
-    D3D10_DRIVER_TYPE_HARDWARE,
-    D3D10_DRIVER_TYPE_WARP, // software rasterizer
-  };
 
+D3D10Renderer::Shared::Shared(const bool forceSoftware)
+{
   static FuncImport<decltype(D3D10CreateDevice)>
     _D3D10CreateDevice { L"D3D10", "D3D10CreateDevice" };
   if(!_D3D10CreateDevice)
     throw backend_error { "Direct3D 10 is not installed on this system" };
-  for(const D3D10_DRIVER_TYPE driver : drivers) {
-    if(SUCCEEDED(_D3D10CreateDevice(nullptr, driver, nullptr, 0,
-                                    D3D10_SDK_VERSION, &m_device)))
-      break;
-  }
+  const auto createDevice = [&](const D3D10_DRIVER_TYPE driver) {
+    return SUCCEEDED(_D3D10CreateDevice(
+      nullptr, driver, nullptr, 0, D3D10_SDK_VERSION, &m_device));
+  };
+  if(forceSoftware || !createDevice(D3D10_DRIVER_TYPE_HARDWARE))
+    createDevice(D3D10_DRIVER_TYPE_WARP); // software rasterizer
   if(!m_device)
     throw backend_error { "failed to create Direct3D 10 device" };
 
@@ -258,7 +256,7 @@ D3D10Renderer::D3D10Renderer(RendererFactory *factory, Window *window)
 {
   m_shared = factory->getSharedData<Shared>();
   if(!m_shared) {
-    m_shared = std::make_shared<Shared>();
+    m_shared = std::make_shared<Shared>(factory->wantSoftware());
     factory->setSharedData(m_shared);
   }
 

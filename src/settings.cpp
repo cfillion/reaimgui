@@ -35,7 +35,7 @@ template<typename T>
 struct Setting;
 
 struct Checkbox {
-  enum Flags { None = 0, Invert = 1<<0 };
+  enum Flags { None = 0, Invert = 1<<0, NoAction = 1<<1 };
   int box, flags = None;
 
   void setup(const Setting<bool> &) const;
@@ -123,6 +123,12 @@ constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
     TEXT("Graphics renderer (advanced):"),
     TEXT("Select a different renderer if you encounter compatibility problems."),
     Combobox { IDC_RENDERER, IDC_RENDERERTXT },
+  },
+  { &Settings::ForceSoftware, false, TEXT("forcecpu") PLATFORM_SUFFIX,
+    TEXT("Disable hardware acceleration"),
+    TEXT("Enable this option force the use of software rendering. May improve "
+         "compatibility at the cost of potentially higher CPU usage."),
+    Checkbox { IDC_FORCESOFTWARE, Checkbox::NoAction }
   },
 };
 
@@ -248,6 +254,9 @@ static std::string makeActionName(const TCHAR *key)
 
 void Checkbox::setup(const Setting<bool> &setting) const
 {
+  if(flags & NoAction)
+    return;
+
   const bool invert { (flags & Invert) != 0 };
   new Action {
     makeActionName(setting.key), narrow(setting.label),
@@ -302,6 +311,30 @@ static bool isChangeEvent(const short control, const short notification)
   return false;
 }
 
+template<typename T>
+static const Setting<T> *findSetting(T *value)
+{
+  for(const auto &variant : SETTINGS) {
+    const auto setting { std::get_if<Setting<T>>(&variant) };
+    if(setting && setting->value == value)
+      return setting;
+  }
+
+  return nullptr;
+}
+
+static void updateRendererOptions(HWND hwnd)
+{
+  static auto renderer      { findSetting(&Settings::Renderer) };
+  static auto forceSoftware { findSetting(&Settings::ForceSoftware) };
+
+  const RendererType *type;
+  renderer->control.apply(hwnd, &type);
+
+  EnableWindow(GetDlgItem(hwnd, forceSoftware->control.box),
+    type->flags & RendererType::CanForceSoftware);
+}
+
 static void resetDefaults(HWND hwnd)
 {
   if(IDOK != MessageBox(hwnd,
@@ -319,6 +352,7 @@ static void resetDefaults(HWND hwnd)
 
   Settings::save();
   Action::refreshAll();
+  updateRendererOptions(hwnd);
 }
 
 static void processCommand(HWND hwnd,
@@ -327,6 +361,8 @@ static void processCommand(HWND hwnd,
   if(isChangeEvent(control, notification)) {
     constexpr int IDC_PREFS_APPLY { 0x478 };
     EnableWindow(GetDlgItem(GetParent(hwnd), IDC_PREFS_APPLY), true);
+    if(control == IDC_RENDERER)
+      updateRendererOptions(hwnd);
     return;
   }
 
@@ -350,6 +386,7 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
         setting.control.setValue(hwnd, *setting.value);
       }, setting);
     }
+    updateRendererOptions(hwnd);
     return 0; // don't focus the first control
   }
   case WM_SIZE: {

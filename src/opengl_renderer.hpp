@@ -26,6 +26,7 @@
 class OpenGLRenderer : public Renderer {
 public:
   static std::unique_ptr<Renderer>(*creator)(RendererFactory *, Window *);
+  static decltype(RendererType::flags) flags;
 
   OpenGLRenderer(RendererFactory *, Window *, bool share = true);
 

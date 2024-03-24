@@ -36,7 +36,8 @@ constexpr int GL_TEXTURE_WRAP_S { 0x2802 },
 
 #include <imgui/imgui.h>
 
-REGISTER_RENDERER(90, opengl3, "OpenGL 3.2", OpenGLRenderer::creator);
+REGISTER_RENDERER(90, opengl3, "OpenGL 3.2",
+  OpenGLRenderer::creator, OpenGLRenderer::flags);
 
 constexpr const char *VERTEX_SHADER { R"(
 #version 150

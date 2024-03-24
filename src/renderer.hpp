@@ -28,6 +28,11 @@ struct ImVec2;
 struct ImVec4;
 
 struct RendererType {
+  enum Flags {
+    Available        = 1<<0,
+    CanForceSoftware = 1<<1,
+  };
+
   struct Register {
     Register(RendererType *);
   };
@@ -35,7 +40,7 @@ struct RendererType {
   static const RendererType *bestMatch(const char *id);
   static const RendererType *head();
 
-  char priority;
+  char priority, flags;
   const char *id, *name, *displayName;
   std::unique_ptr<Renderer>(*creator)(RendererFactory *, Window *);
   RendererType *next;
@@ -54,9 +59,12 @@ public:
   template<typename T>
   void setSharedData(T d) { m_shared = d; }
 
-protected:
+  bool wantSoftware() const { return m_forceSoftware; }
+
+private:
   const RendererType *m_type;
   std::weak_ptr<void> m_shared;
+  bool m_forceSoftware;
 };
 
 class Renderer {
@@ -96,9 +104,9 @@ protected:
   Window *m_window;
 };
 
-#define REGISTER_RENDERER(priority, id, name, creator)     \
-  static RendererType rendererType_##id                    \
-    { priority, #id, "reaper_imgui_" #id, name, creator }; \
+#define REGISTER_RENDERER(priority, id, name, creator, flags)     \
+  static RendererType rendererType_##id                           \
+    { priority, flags, #id, "reaper_imgui_" #id, name, creator }; \
   RendererType::Register regRenderer_##id { &rendererType_##id };
 
 #endif

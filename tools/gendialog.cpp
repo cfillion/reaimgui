@@ -357,7 +357,7 @@ public:
 
 class Text : public NamedWidget {
 public:
-  Text(int id, const char *label);
+  Text(int id, const char *label, int width = 0);
   void output(const Box &) const;
 };
 
@@ -559,8 +559,8 @@ static int countLines(const char *label)
 }
 
 // recommended spacing between paragraphs is 8 but that's a bit too much
-Text::Text(const int id, const char *label)
-  : NamedWidget { id, label, { 0, 8 * countLines(label) } }
+Text::Text(const int id, const char *label, int width)
+  : NamedWidget { id, label, { width, 8 * countLines(label) } }
 {
 }
 
@@ -640,7 +640,7 @@ int main()
     GroupBox { IDC_GROUPBOX, "ReaImGui settings", VLayout {
       CheckBox { IDC_SAVEDSETTINGS, "" },
       Spacing {},
-      CheckBox { IDC_DOCKINGENABLE,   "" },
+      CheckBox { IDC_DOCKINGENABLE, "" },
       Indent { VLayout {
         CheckBox { IDC_DOCKWITHSHIFT,   "" },
         CheckBox { IDC_DOCKSPLIT,       "" },
@@ -649,9 +649,9 @@ int main()
       Spacing {},
 
       HLayout { Align::Middle, {
-        Text { IDC_RENDERERTXT, "" },
-        ComboBox { IDC_RENDERER, 0 },
-        Dummy { 0, 1 },
+        Text { IDC_RENDERERTXT, "", 98 },
+        ComboBox { IDC_RENDERER, 72 },
+        CheckBox { IDC_FORCESOFTWARE, "" },
       }},
       Spacing {},
 

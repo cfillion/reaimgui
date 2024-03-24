@@ -36,6 +36,7 @@ namespace Settings {
   SETTING bool DockingEnable,
                DockingNoSplit, DockingWithShift, DockingTransparentPayload;
   SETTING const RendererType *Renderer;
+  SETTING bool ForceSoftware;
 }
 
 #undef SETTING

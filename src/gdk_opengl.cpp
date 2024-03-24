@@ -72,6 +72,7 @@ private:
 
 decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
   { &Renderer::create<GDKOpenGL> };
+decltype(RendererType::flags) OpenGLRenderer::flags { RendererType::Available };
 
 // GdkGLContext cannot share ressources: they're already shared with the
 // window's paint context (which itself isn't shared with anything).

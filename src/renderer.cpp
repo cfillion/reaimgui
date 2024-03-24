@@ -53,7 +53,7 @@ const RendererType *RendererType::bestMatch(const char *id)
 
 RendererType::Register::Register(RendererType *type)
 {
-  if(!type->creator)
+  if(!(type->flags & RendererType::Available))
     return;
   RendererType **insertionPoint { &typeHead() };
   while(*insertionPoint && **insertionPoint < *type)
@@ -62,8 +62,9 @@ RendererType::Register::Register(RendererType *type)
   *insertionPoint = type;
 }
 
+// Caches the renderer settings for the entire lifetime of the Context
 RendererFactory::RendererFactory()
-  : m_type { Settings::Renderer }
+  : m_type { Settings::Renderer }, m_forceSoftware { Settings::ForceSoftware }
 {
   assert(m_type);
 }
