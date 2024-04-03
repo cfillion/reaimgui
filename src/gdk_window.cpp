@@ -111,6 +111,9 @@ void GDKWindow::show()
   Window::show();
   initIME();
   m_renderer = m_ctx->rendererFactory()->create(this);
+
+  // To read the actual position the window manager placed the window at
+  m_eatNextMove = false;
 }
 
 ImVec2 GDKWindow::getPosition() const
@@ -140,7 +143,7 @@ void GDKWindow::setPosition(ImVec2 pos)
   SetWindowPos(m_hwnd, nullptr, pos.x, pos.y, 0, 0,
     SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
 
-  // Don't set viewport->PlatformRequsetMove in response to SWELL's WM_MOVE
+  // Don't set viewport->PlatformRequestMove in response to SWELL's WM_MOVE
   // to have imgui fetch the actual position the window manager applied
   // (which may differ from the position we requested above)
   m_eatNextMove = true;
