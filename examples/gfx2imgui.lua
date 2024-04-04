@@ -331,7 +331,7 @@ local function alignText(flags, pos, size, limit)
     offset = diff
   end
 
-  return pos, offset
+  return pos // 1, offset // 1
 end
 
 local function packSigned(a, b)
