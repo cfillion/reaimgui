@@ -77,6 +77,8 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(ReaScriptError),
     IMPORT(RecursiveCreateDirectory),
     IMPORT(RefreshToolbar),
+    IMPORT(screenset_registerNew), // v4
+    IMPORT(screenset_unregister),
     IMPORT(ViewPrefs),
 
     IMPORT(LICE_CreateBitmap),

@@ -89,6 +89,7 @@ private:
   accelerator_register_t m_accel;
   PluginRegister m_accelReg;
   std::shared_ptr<PluginRegister> m_hwndInfo;
+  std::string m_screensetKey;
 
   int m_mouseDown;
   bool m_noFocus;

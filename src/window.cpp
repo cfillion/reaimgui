@@ -25,6 +25,7 @@
 #include "renderer.hpp"
 
 #include <cassert>
+#include <format>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <reaper_plugin_functions.h>
@@ -37,6 +38,18 @@
 #endif
 
 HINSTANCE Window::s_instance;
+
+static LRESULT screensetProc(const int action, const char *id,
+  void *user, void *param, const int paramSize)
+{
+  switch(action) {
+  case SCREENSET_ACTION_GETHWND:
+    // required for storing the selected docker tab and last window focus
+    return reinterpret_cast<LRESULT>(user);
+  }
+
+  return 0;
+}
 
 LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   const WPARAM wParam, const LPARAM lParam)
@@ -54,6 +67,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self->m_hwnd = handle;
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
     SetProp(handle, CLASS_NAME, self->m_ctx);
+    screenset_registerNew(self->m_screensetKey.data(), screensetProc, handle);
   }
   else {
     self = reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA));
@@ -91,6 +105,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     break;
   case WM_DESTROY:
     RemoveProp(handle, CLASS_NAME);
+    screenset_unregister(self->m_screensetKey.data());
     // Disable message passing to the derived class (not available at this point)
     SetWindowLongPtr(handle, GWLP_USERDATA, 0);
     // Announce to REAPER the window is no longer going to be valid
@@ -161,6 +176,9 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
   else
     m_hwndInfo = g_hwndInfo.lock();
 
+  m_screensetKey = std::format("{}:{:0{}X}",
+    m_ctx->screensetKey(), m_viewport->ID, sizeof(m_viewport->ID) * 2);
+
   // HACK: See Window::show. Not using ViewportFlags because it would always be
   // set when using BeginPopup.
   ImGuiViewportP *viewportPrivate { static_cast<ImGuiViewportP *>(viewport) };
@@ -168,7 +186,7 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
     m_noFocus = userWindow->Flags & ImGuiWindowFlags_NoFocusOnAppearing;
 
   // Cannot initialize m_hwnd during construction due to handleMessage being
-  // virtual. This task is delayed to created() called once fully constructed.
+  // virtual. This task is delayed to create() called once fully constructed.
 }
 
 Window::~Window()
