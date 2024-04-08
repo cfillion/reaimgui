@@ -655,6 +655,7 @@ void Context::invalidateViewportsPos()
 LRESULT Context::screensetProc(const int action, const char *id,
   void *user, void *param, const int paramSize)
 {
+  constexpr int SCREENSET_ACTION_GET_STATE_SIZE { 0x102 }; // v7.15+
   auto *self { static_cast<Context *>(user) };
 
   switch(action) {
@@ -662,6 +663,9 @@ LRESULT Context::screensetProc(const int action, const char *id,
     if(param) // null if save returned 0
       self->loadScreenset(static_cast<char *>(param), paramSize);
     return 0;
+  case SCREENSET_ACTION_GET_STATE_SIZE:
+    param = nullptr;
+    [[fallthrough]];
   case SCREENSET_ACTION_SAVE_STATE:
     return self->saveScreenset(static_cast<char *>(param), paramSize);
   }
@@ -702,9 +706,17 @@ void Context::loadScreenset(const char *buffer, unsigned long bufferSize)
 
 long Context::saveScreenset(char *buffer, unsigned long bufferSize)
 {
-  size_t dataSize {};
-  TempCurrent cur { this };
-  const char *data { ImGui::SaveIniSettingsToMemory(&dataSize) };
+  if(m_imgui->SettingsDirtyTimer > 0.0f) {
+    TempCurrent cur { this };
+    [[maybe_unused]] const char *data { ImGui::SaveIniSettingsToMemory() };
+    assert(data == m_imgui->SettingsIniData.c_str());
+  }
+
+  const char *data { m_imgui->SettingsIniData.c_str() };
+  const unsigned long dataSize { m_imgui->SettingsIniData.size() + 0ul };
+
+  if(!buffer) // SCREENSET_ACTION_GET_STATE_SIZE
+    return compressBound(dataSize);
 
   if(bufferSize < sizeof(ScreensetHeader))
     return 0;
