@@ -284,11 +284,12 @@ R"(Return true even if an active item is blocking access to this item/window.
 API_ENUM(0_7, ImGui, HoveredFlags_NoNavOverride,
   "Disable using gamepad/keyboard navigation state when active, always query mouse.");
 API_ENUM(0_9, ImGui, HoveredFlags_ForTooltip,
-R"(Shortcut for standard flags when using IsItemHovered() + SetTooltip() sequence.
+R"(Typically used with IsItemHovered() before SetTooltip().
+   This is a shortcut to pull flags from ConfigVar_HoverFlagsForTooltip* where
+   you can reconfigure the desired behavior.
 
    For frequently actioned or hovered items providing a tooltip, you want may to use
-   HoveredFlags_ForTooltip (stationary + delay) so the tooltip doesn't show too often.
-
+   this (defaults to stationary + delay) so the tooltip doesn't show too often.
    For items which main purpose is to be hovered, or items with low affordance,
    or in less consistent apps, prefer no delay or shorter delay.)");
 
