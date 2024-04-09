@@ -1639,7 +1639,7 @@ function gfx.setcursor(resource_id, custom_cursor_name)
   return 0
 end
 
-function gfx.setfont(idx, fontface, sz, flag)
+function gfx.setfont(idx, fontface, sz, flags)
   idx = $tonumber(idx) -- Default_6.0_theme_adjuster.lua gives a string sometimes
 
   local font = global_state.fonts[idx]
@@ -1654,16 +1654,21 @@ function gfx.setfont(idx, fontface, sz, flag)
       sz = 10
     end
 
-    local flags = FONT_FLAGS[flag or 0]
-    if not flags then
-      flags = 0
-      warn("unknown font flag '%s'", flag)
+    local imflags = 0
+    while flags and flags ~= 0 do
+      local imflag = FONT_FLAGS[flags & 0xFF]
+      if imflag then
+        imflags = imflags | imflag
+      else
+        warn("unknown font flag '%s'", flags & 0xFF)
+      end
+      flags = flags >> 8
     end
 
     local is_new
 
     if font then
-      is_new = font.family ~= fontface or font.size ~= sz or font.flags ~= flags
+      is_new = font.family ~= fontface or font.size ~= sz or font.flags ~= imflags
       if is_new and state then
         local cache = getCachedFont(font)
         if cache then cache.keep_alive = false end
@@ -1673,7 +1678,7 @@ function gfx.setfont(idx, fontface, sz, flag)
     end
 
     if is_new then
-      font = { family = fontface, size = sz, flags = flags }
+      font = { family = fontface, size = sz, flags = imflags }
       global_state.fonts[idx] = font
     end
 
