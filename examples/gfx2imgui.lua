@@ -401,8 +401,11 @@ local function updateKeyboard()
     state.wnd_flags = state.wnd_flags | 2
   end
   -- if not ImGui.IsWindowCollapsed(state.ctx) then
-  if state.collapsed then
+  if not state.collapsed then
     state.wnd_flags = state.wnd_flags | 4
+  end
+  if ImGui.IsWindowHovered(state.ctx, ImGui.HoveredFlags_RootAndChildWindows) then
+    state.wnd_flags = state.wnd_flags | 8
   end
 
   local uni_mark = string.byte('u') << 24
@@ -1217,8 +1220,10 @@ function gfx.getchar(char)
     state.charqueue.rptr = (state.charqueue.rptr + 1) % state.charqueue.max_size
     state.charqueue.ptr = wptr
     return char & (2^32-1), char >> 32
-  elseif char == 2^16 then
+  elseif char == 65536 then
     return state.wnd_flags
+  elseif char == 65537 then
+    return state.wnd_flags & ~8
   elseif type(char) == 'string' then
     char = string.byte(char)
   end
