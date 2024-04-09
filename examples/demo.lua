@@ -2695,7 +2695,7 @@ label:
     end
 
     if ImGui.TreeNode(ctx, 'Drag and drop files') then
-      if ImGui.BeginChildFrame(ctx, '##drop_files', -FLT_MIN, 100) then
+      if ImGui.BeginChild(ctx, '##drop_files', -FLT_MIN, 100, ImGui.ChildFlags_FrameStyle) then
         if #widgets.dragdrop.files == 0 then
           ImGui.Text(ctx, 'Drag and drop files here...')
         else
@@ -2709,7 +2709,7 @@ label:
           ImGui.Bullet(ctx)
           ImGui.TextWrapped(ctx, file)
         end
-        ImGui.EndChildFrame(ctx)
+        ImGui.EndChild(ctx)
       end
 
       if ImGui.BeginDragDropTarget(ctx) then
