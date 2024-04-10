@@ -402,7 +402,6 @@ void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
     break;
   }
 
-
   if(gdkEvent) {
     gtk_im_context_filter_keypress(m_ime, gdkEvent);
 

@@ -30,17 +30,17 @@ return function(api_version)
   while i < #api do
     local flags, name
     flags, name, i = unpack('Bz', api, i)
-    local full_name = 'ImGui_' .. name
-    local unshimed  = '__' .. full_name
+    local fullname = 'ImGui_' .. name
+    local unshimed = '__' .. fullname
 
     if flags & 2 ~= 0 then
-      ImGui[name] = makeShim(api_version, name)
       if not reaper[unshimed] then
-        reaper[unshimed] = reaper[full_name]
+        reaper[unshimed] = reaper[fullname]
       end
-      reaper[full_name] = ImGui[name]
+      local shim = makeShim(api_version, name)
+      ImGui[name], reaper[fullname] = shim, shim
     else
-      ImGui[name] = reaper[unshimed] or reaper[full_name]
+      ImGui[name] = reaper[unshimed] or reaper[fullname]
     end
 
     if flags & 1 ~= 0 then
