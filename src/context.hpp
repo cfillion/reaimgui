@@ -20,7 +20,6 @@
 
 #include "resource.hpp"
 
-#include <bitset>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -110,11 +109,8 @@ private:
   void dragSources();
   void clearFocus();
 
+  char m_stateFlags;
   HCURSOR m_cursor;
-  std::bitset<2> m_dndState;
-#ifdef __APPLE__
-  std::bitset<2> m_rightClickEmulation;
-#endif
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
   std::vector<std::string> m_draggedFiles;
   std::vector<Resource *> m_attachments;

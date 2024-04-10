@@ -38,8 +38,16 @@
 #  include "win32_unicode.hpp"
 #endif
 
-enum DnDState { Cancelled, WasActive };
-enum RightClickEmulation { Armed, Active };
+enum StateFlags {
+  DnD_Cancelled = 1<<0,
+  DnD_WasActive = 1<<1,
+
+#ifdef __APPLE__
+  // Right Click Emulation
+  RCE_Armed  = 1<<2,
+  RCE_Active = 1<<3,
+#endif
+};
 
 constexpr ImGuiMouseButton DND_MouseButton { ImGuiMouseButton_Left };
 constexpr ImGuiConfigFlags PRIVATE_CONFIG_FLAGS
@@ -92,7 +100,7 @@ void Context::clearCurrent()
 }
 
 Context::Context(const char *label, const int userConfigFlags)
-  : m_cursor {},
+  : m_stateFlags {}, m_cursor {},
     m_lastFrame       { decltype(m_lastFrame)::clock::now()                },
     m_name            { label, ImGui::FindRenderedTextEnd(label)           },
     m_iniFilename     { generateIniFilename(label)                         },
@@ -355,7 +363,7 @@ void Context::updateMouseData()
   io.AddMouseViewportEvent(hoveredViewport);
 
   if(viewportForPos && ImGui::GetMainViewport() != viewportForPos &&
-      !m_dndState.test(DnDState::Cancelled))
+      !(m_stateFlags & DnD_Cancelled))
     Platform::scalePosition(&pos, false, viewportForPos);
   else
     pos.x = pos.y = -FLT_MAX;
@@ -366,9 +374,12 @@ void Context::updateMouseData()
 void Context::mouseInput(int button, const bool down)
 {
 #ifdef __APPLE__
-  if(button == ImGuiMouseButton_Left && m_rightClickEmulation.any()) {
+  if(button == ImGuiMouseButton_Left && m_stateFlags & (RCE_Armed | RCE_Active)) {
     button = ImGuiMouseButton_Right;
-    m_rightClickEmulation.set(RightClickEmulation::Active, down);
+    if(down)
+      m_stateFlags |= RCE_Active;
+    else
+      m_stateFlags &= ~RCE_Active;
   }
 #endif
 
@@ -406,7 +417,10 @@ void Context::keyInput(ImGuiKey key, const bool down)
     case ImGuiMod_Ctrl:
     case ImGuiKey_LeftCtrl:
     case ImGuiKey_RightCtrl:
-      m_rightClickEmulation.set(RightClickEmulation::Armed, down);
+      if(down)
+        m_stateFlags |= RCE_Armed;
+      else
+        m_stateFlags &= ~RCE_Armed;
       return;
     default:
       break;
@@ -449,12 +463,12 @@ void Context::updateDragDrop()
   // allowing beginDrag+endDrag to be called on the same frame on systems
   // that only notify on drop (SWELL-GDK)
   const bool active_now { ImGui::IsDragDropActive() };
-  if(m_dndState.test(DnDState::WasActive) && !active_now) {
+  if(m_stateFlags & DnD_WasActive && !active_now) {
     m_draggedFiles.clear();
-    m_dndState.reset();
+    m_stateFlags &= ~(DnD_WasActive | DnD_Cancelled);
   }
   else if(active_now)
-    m_dndState.set(DnDState::WasActive);
+    m_stateFlags |= DnD_WasActive;
 }
 
 void Context::dragSources()
@@ -467,9 +481,9 @@ void Context::dragSources()
   if(m_draggedFiles.empty())
     return;
 
-  // Checking m_dndState&WasActive is required to support single-frame drag/drop
+  // Checking &DnD_WasActive is required to support single-frame drag/drop
   // when input queue tickling is disabled
-  if(m_dndState.test(DnDState::WasActive) &&
+  if(m_stateFlags & DnD_WasActive &&
       !ImGui::IsMouseDown(DND_MouseButton) &&
       !ImGui::IsMouseReleased(DND_MouseButton))
     return;
@@ -526,7 +540,7 @@ void Context::endDrag(const bool drop)
     // to prevent accidental drop (IDropSource may call endDrag(false)
     // while the mouse is still over our window, but near another app's
     // window border or title bar).
-    m_dndState.set(DnDState::Cancelled);
+    m_stateFlags |= DnD_Cancelled;
 
     m_imgui->IO.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
   }
