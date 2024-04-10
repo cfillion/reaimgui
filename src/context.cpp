@@ -374,7 +374,8 @@ void Context::updateMouseData()
 void Context::mouseInput(int button, const bool down)
 {
 #ifdef __APPLE__
-  if(button == ImGuiMouseButton_Left && m_stateFlags & (RCE_Armed | RCE_Active)) {
+  if(button == ImGuiMouseButton_Left &&
+      m_stateFlags & (down ? RCE_Armed : RCE_Active)) {
     button = ImGuiMouseButton_Right;
     if(down)
       m_stateFlags |= RCE_Active;
