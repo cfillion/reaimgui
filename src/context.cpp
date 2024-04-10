@@ -341,7 +341,7 @@ void Context::updateMouseData()
 
   ImGuiID hoveredViewport { 0 };
   ImGuiViewport *viewportForPos { nullptr };
-  HWND capture { Platform::getCapture() };
+  HWND capture { m_draggedFiles.empty() ? Platform::getCapture() : nullptr };
   if(ImGuiViewport *viewportForInput { viewportUnder(pos) }) {
     if(!capture || Window::contextFromHwnd(capture) == this) {
       viewportForPos = viewportForInput;
@@ -353,12 +353,12 @@ void Context::updateMouseData()
 
   io.AddMouseViewportEvent(hoveredViewport);
 
-  if(viewportForPos && ImGui::GetMainViewport() != viewportForPos) {
+  if(viewportForPos && ImGui::GetMainViewport() != viewportForPos)
     Platform::scalePosition(&pos, false, viewportForPos);
-    io.AddMousePosEvent(pos.x, pos.y);
-  }
   else
-    io.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+    pos.x = pos.y = -FLT_MAX;
+
+  io.AddMousePosEvent(pos.x, pos.y);
 }
 
 void Context::mouseInput(int button, const bool down)
