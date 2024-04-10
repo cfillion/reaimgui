@@ -38,6 +38,7 @@
 #  include "win32_unicode.hpp"
 #endif
 
+enum DnDState { Cancelled, WasActive };
 enum RightClickEmulation { Armed, Active };
 
 constexpr ImGuiMouseButton DND_MouseButton { ImGuiMouseButton_Left };
@@ -91,7 +92,7 @@ void Context::clearCurrent()
 }
 
 Context::Context(const char *label, const int userConfigFlags)
-  : m_dndWasActive { false }, m_cursor {},
+  : m_cursor {},
     m_lastFrame       { decltype(m_lastFrame)::clock::now()                },
     m_name            { label, ImGui::FindRenderedTextEnd(label)           },
     m_iniFilename     { generateIniFilename(label)                         },
@@ -353,7 +354,8 @@ void Context::updateMouseData()
 
   io.AddMouseViewportEvent(hoveredViewport);
 
-  if(viewportForPos && ImGui::GetMainViewport() != viewportForPos)
+  if(viewportForPos && ImGui::GetMainViewport() != viewportForPos &&
+      !m_dndState.test(DnDState::Cancelled))
     Platform::scalePosition(&pos, false, viewportForPos);
   else
     pos.x = pos.y = -FLT_MAX;
@@ -447,12 +449,12 @@ void Context::updateDragDrop()
   // allowing beginDrag+endDrag to be called on the same frame on systems
   // that only notify on drop (SWELL-GDK)
   const bool active_now { ImGui::IsDragDropActive() };
-  if(m_dndWasActive && !active_now) {
+  if(m_dndState.test(DnDState::WasActive) && !active_now) {
     m_draggedFiles.clear();
-    m_dndWasActive = false;
+    m_dndState.reset();
   }
   else if(active_now)
-    m_dndWasActive = true;
+    m_dndState.set(DnDState::WasActive);
 }
 
 void Context::dragSources()
@@ -465,9 +467,9 @@ void Context::dragSources()
   if(m_draggedFiles.empty())
     return;
 
-  // Checking m_dndWasActive is required to support single-frame drag/drop
+  // Checking m_dndState&WasActive is required to support single-frame drag/drop
   // when input queue tickling is disabled
-  if(m_dndWasActive &&
+  if(m_dndState.test(DnDState::WasActive) &&
       !ImGui::IsMouseDown(DND_MouseButton) &&
       !ImGui::IsMouseReleased(DND_MouseButton))
     return;
@@ -519,8 +521,16 @@ void Context::beginDrag(HDROP drop)
 
 void Context::endDrag(const bool drop)
 {
-  if(!drop)
+  if(!drop) {
+    // Keep the mouse position invalid until m_draggedFiles is cleared
+    // to prevent accidental drop (IDropSource may call endDrag(false)
+    // while the mouse is still over our window, but near another app's
+    // window border or title bar).
+    m_dndState.set(DnDState::Cancelled);
+
     m_imgui->IO.AddMousePosEvent(-FLT_MAX, -FLT_MAX);
+  }
+
   m_imgui->IO.AddMouseButtonEvent(DND_MouseButton, false);
 }
 

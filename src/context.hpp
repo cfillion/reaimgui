@@ -110,8 +110,8 @@ private:
   void dragSources();
   void clearFocus();
 
-  bool m_dndWasActive;
   HCURSOR m_cursor;
+  std::bitset<2> m_dndState;
 #ifdef __APPLE__
   std::bitset<2> m_rightClickEmulation;
 #endif
