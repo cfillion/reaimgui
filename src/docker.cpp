@@ -179,12 +179,11 @@ void DockerList::drawAll()
 
   const ImGuiPayload *payload { ImGui::GetDragDropPayload() };
   if(payload && payload->IsDataType(IMGUI_PAYLOAD_TYPE_WINDOW)) {
-    POINT point;
-    GetCursorPos(&point);
-    HWND target { Platform::windowFromPoint(ImVec2(point.x, point.y)) };
+    const ImVec2 cursorPos { Platform::getCursorPos() };
+    HWND target { Platform::windowFromPoint(cursorPos) };
     m_dropTarget = findByChildHwnd(target);
     if(!m_dropTarget && IsChild(GetMainHwnd(), target))
-      m_dropTarget = findNearby(point);
+      m_dropTarget = findNearby(cursorPos);
   }
   else
     m_dropTarget = nullptr;
@@ -315,16 +314,16 @@ static RECT closedDockersHitBox()
   return rect;
 }
 
-const Docker *DockerList::findNearby(const POINT point) const
+const Docker *DockerList::findNearby(const ImVec2 point) const
 {
   constexpr int HANDLE_SIZE { 32 }; // * Platform::scaleForWindow(main)?
 
-  struct Side { LONG RECT::*dir; LONG POINT::*coord; DockPos::Pos dockPos; };
+  struct Side { LONG RECT::*dir; float ImVec2::*coord; DockPos::Pos dockPos; };
   constexpr Side sides[] {
-    { &RECT::left,   &POINT::x, DockPos::Left   },
-    { &RECT::top,    &POINT::y, DockPos::Top    },
-    { &RECT::right,  &POINT::x, DockPos::Right  },
-    { &RECT::bottom, &POINT::y, DockPos::Bottom },
+    { &RECT::left,   &ImVec2::x, DockPos::Left   },
+    { &RECT::top,    &ImVec2::y, DockPos::Top    },
+    { &RECT::right,  &ImVec2::x, DockPos::Right  },
+    { &RECT::bottom, &ImVec2::y, DockPos::Bottom },
   };
 
   const RECT rect { closedDockersHitBox() };

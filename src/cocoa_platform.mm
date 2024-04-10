@@ -69,9 +69,17 @@ void Platform::updateMonitors()
   }
 }
 
+ImVec2 Platform::getCursorPos()
+{
+  // SWELL's GetCursorPos returns Y from 0-1080 instead of 0-1079 on a 1080p
+  // monitor. Doing ceil(Y) - 1 here to workaround that.
+  const NSPoint loc { [NSEvent mouseLocation] };
+  return { floorf(loc.x), ceilf(loc.y) - 1 };
+}
+
 void Platform::scalePosition(ImVec2 *pos, bool, const ImGuiViewport *)
 {
-  pos->y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - pos->y;
+  pos->y = ImGui::GetPlatformIO().Monitors[0].MainSize.y - 1 - pos->y;
 }
 
 HWND Platform::windowFromPoint(const ImVec2 nativePoint)

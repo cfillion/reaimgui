@@ -132,6 +132,13 @@ HWND Platform::windowFromPoint(const ImVec2 nativePoint)
   return window;
 }
 
+ImVec2 Platform::getCursorPos()
+{
+  POINT point;
+  GetCursorPos(&point);
+  return ImVec2(point.x, point.y);
+}
+
 void Platform::scalePosition(ImVec2 *pos, const bool toHiDpi, const ImGuiViewport *)
 {
   float scale { GDKWindow::globalScaleFactor() };

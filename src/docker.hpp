@@ -72,7 +72,7 @@ public:
 
 private:
   Docker *findByChildHwnd(HWND);
-  const Docker *findNearby(POINT) const;
+  const Docker *findNearby(ImVec2) const;
   std::array<Docker, DOCKER_COUNT> m_dockers;
   const Docker *m_dropTarget;
 };

@@ -337,11 +337,7 @@ void Context::updateMouseData()
     return;
   }
 
-  POINT point;
-  GetCursorPos(&point);
-  ImVec2 pos;
-  pos.x = point.x;
-  pos.y = point.y;
+  ImVec2 pos { Platform::getCursorPos() };
 
   ImGuiID hoveredViewport { 0 };
   ImGuiViewport *viewportForPos { nullptr };
@@ -528,9 +524,9 @@ void Context::endDrag(const bool drop)
   m_imgui->IO.AddMouseButtonEvent(DND_MouseButton, false);
 }
 
-ImGuiViewport *Context::viewportUnder(const ImVec2 pos) const
+ImGuiViewport *Context::viewportUnder(const ImVec2 nativePos) const
 {
-  HWND target { Platform::windowFromPoint(pos) };
+  HWND target { Platform::windowFromPoint(nativePos) };
 #ifdef __APPLE__
   target = GetParent(target);
 #endif
