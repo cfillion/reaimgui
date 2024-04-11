@@ -85,35 +85,68 @@ local CHAR_MOD_BASE = {
   [ImGui.Mod_Alt ] = 0x141,
 }
 local MW_TICK = 6 -- gfx.mouse_[h]wheel increments per wheel tick
-local KEYS = {
-  [ImGui.Key_Backspace]   = 0x00000008,
-  [ImGui.Key_Delete]      = 0x0064656c,
-  [ImGui.Key_DownArrow]   = 0x646f776e,
-  [ImGui.Key_End]         = 0x00656e64,
-  [ImGui.Key_Enter]       = 0x0000000d,
-  [ImGui.Key_Escape]      = 0x0000001b,
-  [ImGui.Key_F1]          = 0x00006631,
-  [ImGui.Key_F2]          = 0x00006632,
-  [ImGui.Key_F3]          = 0x00006633,
-  [ImGui.Key_F4]          = 0x00006634,
-  [ImGui.Key_F5]          = 0x00006635,
-  [ImGui.Key_F6]          = 0x00006636,
-  [ImGui.Key_F7]          = 0x00006637,
-  [ImGui.Key_F8]          = 0x00006638,
-  [ImGui.Key_F9]          = 0x00006639,
-  [ImGui.Key_F10]         = 0x00663130,
-  [ImGui.Key_F11]         = 0x00663131,
-  [ImGui.Key_F12]         = 0x00663132,
-  [ImGui.Key_Home]        = 0x686f6d65,
-  [ImGui.Key_Insert]      = 0x00696e73,
-  [ImGui.Key_KeypadEnter] = 0x0000000d,
-  [ImGui.Key_LeftArrow]   = 0x6c656674,
-  [ImGui.Key_PageDown]    = 0x7067646e,
-  [ImGui.Key_PageUp]      = 0x70677570,
-  [ImGui.Key_RightArrow]  = 0x72676874,
-  [ImGui.Key_Tab]         = 0x00000009,
-  [ImGui.Key_UpArrow]     = 0x00007570,
-}
+local KEYMAP = (function()
+  local function c(name)
+    local char, len = 0, math.min(4, #name)
+    for i = 1, len do
+      char = char | (name:sub(i, i):byte() << (len - i) * 8)
+    end
+    return char
+  end
+  local a = string.byte
+
+  local map = {
+    -- special keys without no character input
+    [0x000008] = { ImGui.Key_Backspace  },
+    [0x00000d] = { ImGui.Key_Enter, ImGui.Key_KeypadEnter },
+    [0x00001b] = { ImGui.Key_Escape     },
+    [0x000009] = { ImGui.Key_Tab        },
+    -- eel_lice_key_xlate
+    [c 'home'] = { ImGui.Key_Home       },
+    [c 'up'  ] = { ImGui.Key_UpArrow    },
+    [c 'pgup'] = { ImGui.Key_PageUp     },
+    [c 'left'] = { ImGui.Key_LeftArrow  },
+    [c 'rght'] = { ImGui.Key_RightArrow },
+    [c 'end' ] = { ImGui.Key_End        },
+    [c 'down'] = { ImGui.Key_DownArrow  },
+    [c 'pgdn'] = { ImGui.Key_PageDown   },
+    [c 'ins' ] = { ImGui.Key_Insert     },
+    [c 'del' ] = { ImGui.Key_Delete     },
+
+    -- regular keys for querying via gfx.getchar(key)
+    -- (usually masked by GetInputQueueCharacter)
+    [a "'" ] = { ImGui.Key_Apostrophe     },
+    [a '\\'] = { ImGui.Key_Backslash      },
+    [a ',' ] = { ImGui.Key_Comma          },
+    [a '`' ] = { ImGui.Key_GraveAccent    },
+    [a '+' ] = { ImGui.Key_KeypadAdd      },
+    [a '*' ] = { ImGui.Key_KeypadMultiply },
+    [a '[' ] = { ImGui.Key_LeftBracket    },
+    [a '.' ] = { ImGui.Key_Period         },
+    [a ']' ] = { ImGui.Key_RightBracket   },
+    [a ';' ] = { ImGui.Key_Semicolon      },
+    [a ' ' ] = { ImGui.Key_Space          },
+    [a '=' ] = { ImGui.Key_Equal,  ImGui.Key_KeypadEqual    },
+    [a '.' ] = { ImGui.Key_Period, ImGui.Key_KeypadDecimal  },
+    [a '/' ] = { ImGui.Key_Slash,  ImGui.Key_KeypadDivide   },
+    [a '-' ] = { ImGui.Key_Minus,  ImGui.Key_KeypadSubtract },
+  }
+
+  for i = 1, 12 do -- gfx does not support F13-24
+    map[c('f'..i)] = { ImGui['Key_F'..i] }
+  end
+
+  for i = 0, 25 do
+    local v = a('a') + i
+    map[v] = { ImGui['Key_' .. string.char(v):upper()] }
+  end
+
+  for i = 0, 9 do
+    map[a('0') + i] = { ImGui['Key_'..i], ImGui['Key_Keypad'..i] }
+  end
+
+  return map
+end)()
 local FONT_FLAGS = {
   [0]                = ImGui.FontFlags_None,
   [string.byte('b')] = ImGui.FontFlags_Bold,
@@ -423,23 +456,18 @@ local function updateKeyboard()
     return
   end
 
-  for k, c in pairs(KEYS) do
-    if ImGui.IsKeyPressed(state.ctx, k) then
-      ringInsert(state.charqueue, c)
-    end
-  end
-
   local mods = ImGui.GetKeyMods(state.ctx)
   if MACOS and mods & ImGui.Mod_Super ~= 0 then
     mods = mods | ImGui.Mod_Ctrl
   end
   local mod_base = CHAR_MOD_BASE[mods & CHAR_MOD_MASK]
-  if mod_base then
-    local a, z = ImGui.Key_A, ImGui.Key_Z
-    for k = a, z do
+  for c, ks in pairs(KEYMAP) do
+    for i, k in ipairs(ks) do
       if ImGui.IsKeyPressed(state.ctx, k) then
-        local char = mod_base + (k - a)
-        ringInsert(state.charqueue, char)
+        if mod_base and k >= ImGui.Key_A and k <= ImGui.Key_Z then
+          c = mod_base + (k - ImGui.Key_A)
+        end
+        ringInsert(state.charqueue, c)
       end
     end
   end
@@ -1207,7 +1235,7 @@ end
 
 function gfx.getchar(char)
   if not state then return -1, 0 end
-  if not char or char <= 0 then
+  if not char or char < 2 then
     if state.want_close then
       return -1
     end
@@ -1224,12 +1252,17 @@ function gfx.getchar(char)
     return state.wnd_flags
   elseif char == 65537 then
     return state.wnd_flags & ~8
-  elseif type(char) == 'string' then
-    char = string.byte(char)
   end
 
+  local keys = KEYMAP[char]
+  if not keys then return 0, 0 end
   if not beginFrame() then return -1, 0 end
-  return ImGui.IsKeyDown(state.ctx, char), 0
+  for i, k in ipairs(keys) do
+    if ImGui.IsKeyDown(state.ctx, k) then
+      return 1, 0
+    end
+  end
+  return 0, 0
 end
 
 function gfx.getdropfile(idx)
