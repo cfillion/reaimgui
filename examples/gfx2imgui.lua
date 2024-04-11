@@ -1237,17 +1237,10 @@ end
 function gfx.getchar(char)
   if not state then return -1, 0 end
   if not char or char < 2 then
-    if state.want_close then
-      return -1
-    end
-
-    local wptr
-    wptr, state.charqueue.ptr = state.charqueue.ptr, state.charqueue.rptr
-    if wptr == state.charqueue.rptr then return 0, 0 end
-
-    local char = ringEnum(state.charqueue)()
+    if state.want_close then return -1 end
+    if state.charqueue.ptr == state.charqueue.rptr then return 0, 0 end
+    local char = state.charqueue[state.charqueue.rptr + 1]
     state.charqueue.rptr = (state.charqueue.rptr + 1) % state.charqueue.max_size
-    state.charqueue.ptr = wptr
     return char & (2^32-1), char >> 32
   elseif char == 65536 then
     return state.wnd_flags
