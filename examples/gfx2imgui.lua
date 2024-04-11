@@ -163,6 +163,7 @@ local MAX_DRAW_CALLS               = GFX2IMGUI_MAX_DRAW_CALLS      or 1<<13
 local PROFILER                     = GFX2IMGUI_PROFILER
 local THROTTLE_FONT_LOADING_FRAMES = 16
 local UNUSED_FONTS_CACHE_SIZE      = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
+assert(MAX_DRAW_CALLS / $DRAW_CALL_SIZE % 1 == 0)
 
 local DL_AddCircle               = ImGui.DrawList_AddCircle
 local DL_AddCircleFilled         = ImGui.DrawList_AddCircleFilled
@@ -240,9 +241,9 @@ local INF, MINF = math.huge, -math.huge
 <? macro('ringReserve', 'ptr', 'buffer', 'want_size') ?>
 do
   $ptr = $buffer.ptr + 1
-  local size, max_size = $buffer.size + $want_size, $buffer.max_size
+  local size, max_size = $buffer.size, $buffer.max_size
   $buffer.ptr = ($buffer.ptr + $want_size) % $buffer.max_size
-  if size < max_size then $buffer.size = size end
+  if size < max_size then $buffer.size = size + $want_size end
 end
 <? endmacro() ?>
 
