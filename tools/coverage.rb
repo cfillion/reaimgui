@@ -243,6 +243,7 @@ OVERRIDES = {
   'void ImGui::PlotHistogram(const char*, const float*, int, int, const char*, float, float, ImVec2, int)' => 'void PlotHistogram(const char*, reaper_array*, int*, const char*, double*, double*, double*, double*)',
   'void ImDrawList::AddPolyline(const ImVec2*, int, ImU32, ImDrawFlags, float)' => 'void DrawList_AddPolyline(reaper_array*, int, int, double)',
   'void ImDrawList::AddConvexPolyFilled(const ImVec2*, int, ImU32)'      => 'void DrawList_AddConvexPolyFilled(reaper_array*, int)',
+  'void ImDrawList::AddConcavePolyFilled(const ImVec2*, int, ImU32)'      => 'void DrawList_AddConcavePolyFilled(reaper_array*, int)',
 
   # additional string buffer size argument
   'bool ImGui::Combo(const char*, int*, const char*, int)' => 'bool Combo(const char*, int*, const char*, int, int*)',

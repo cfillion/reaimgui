@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.4)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.5)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -1464,6 +1464,7 @@ function demo.ShowDemoWindowWidgets()
       end
       ImGui.EndListBox(ctx)
     end
+    ImGui.SameLine(ctx); demo.HelpMarker('Here we are sharing selection state between both boxes.')
 
     -- Custom size: use all width, 5 items tall
     ImGui.Text(ctx, 'Full-width:')
@@ -1982,6 +1983,7 @@ label:
     -- Plot as lines and plot as histogram
     ImGui.PlotLines(ctx, 'Frame Times', widgets.plots.frame_times)
     ImGui.PlotHistogram(ctx, 'Histogram', widgets.plots.frame_times, 0, nil, 0.0, 1.0, 0, 80.0)
+    -- ImGui.SameLine(ctx); demo.HelpMarker('Consider using ImPlot instead!')
 
     -- Fill an array of contiguous float values to plot
     if not widgets.plots.animate or widgets.plots.plot1.refresh_time == 0.0 then
@@ -5851,6 +5853,7 @@ function demo.ShowDemoWindowTables()
       }
     end
     demo.HelpMarker('Multiple tables with the same identifier will share their settings, width, visibility, order etc.')
+    rv,tables.synced.flags = ImGui.CheckboxFlags(ctx, 'TableFlags_Resizable', tables.synced.flags, ImGui.TableFlags_Resizable)
     rv,tables.synced.flags = ImGui.CheckboxFlags(ctx, 'TableFlags_ScrollY', tables.synced.flags, ImGui.TableFlags_ScrollY)
     rv,tables.synced.flags = ImGui.CheckboxFlags(ctx, 'TableFlags_SizingFixedFit', tables.synced.flags, ImGui.TableFlags_SizingFixedFit)
     rv,tables.synced.flags = ImGui.CheckboxFlags(ctx, 'TableFlags_HighlightHoveredColumn', tables.synced.flags, ImGui.TableFlags_HighlightHoveredColumn)
@@ -8317,6 +8320,14 @@ end
 -- [SECTION] Example App: Custom Rendering using ImDrawList API / ShowExampleAppCustomRendering()
 -------------------------------------------------------------------------------
 
+-- Add a |_| looking shape
+local function PathConcaveShape(draw_list, x, y, sz)
+  local pos_norms = { { 0.0, 0.0 }, { 0.3, 0.0 }, { 0.3, 0.7 }, { 0.7, 0.7 }, { 0.7, 0.0 }, { 1.0, 0.0 }, { 1.0, 1.0 }, { 0.0, 1.0 } }
+  for i, p in ipairs(pos_norms) do
+    ImGui.DrawList_PathLineTo(draw_list, x + 0.5 + (sz * p[1] // 1), y + 0.5 + (sz * p[2] // 1))
+  end
+end
+
 -- Demonstrate using the low-level ImDrawList to draw custom shapes.
 function demo.ShowExampleAppCustomRendering()
   if not app.rendering then
@@ -8409,6 +8420,8 @@ function demo.ShowExampleAppCustomRendering()
         ImGui.DrawList_AddRect(draw_list, x, y, x + sz, y + sz, col, rounding, corners_tl_br, th);            x = x + sz + spacing  -- Square with two rounded corners
         ImGui.DrawList_AddTriangle(draw_list, x+sz*0.5, y, x+sz, y+sz-0.5, x, y+sz-0.5, col, th);             x = x + sz + spacing  -- Triangle
         -- ImGui.DrawList_AddTriangle(draw_list, x+sz*0.2, y, x, y+sz-0.5, x+sz*0.4, y+sz-0.5, col, th);      x = x + sz*0.4 + spacing -- Thin triangle
+        PathConcaveShape(draw_list, x, y, sz); ImGui.DrawList_PathStroke(draw_list, col, ImGui.DrawFlags_Closed, th); x = x + sz + spacing -- Concave shape
+        -- ImGui.DrawList_AddPolyline(draw_list, concave_shape, col, ImGui.DrawFlags_Closed, th)
         ImGui.DrawList_AddLine(draw_list, x, y, x + sz, y, col, th);                                          x = x + sz + spacing  -- Horizontal line (note: drawing a filled rectangle will be faster!)
         ImGui.DrawList_AddLine(draw_list, x, y, x, y + sz, col, th);                                          x = x +      spacing  -- Vertical line (note: drawing a filled rectangle will be faster!)
         ImGui.DrawList_AddLine(draw_list, x, y, x + sz, y + sz, col, th);                                     x = x + sz + spacing  -- Diagonal line
@@ -8443,6 +8456,7 @@ function demo.ShowExampleAppCustomRendering()
       ImGui.DrawList_AddRectFilled(draw_list, x, y, x + sz, y + sz, col, 10.0, corners_tl_br);                    x = x + sz + spacing  -- Square with two rounded corners
       ImGui.DrawList_AddTriangleFilled(draw_list, x+sz*0.5, y, x+sz, y+sz-0.5, x, y+sz-0.5, col);                 x = x + sz + spacing  -- Triangle
       -- ImGui.DrawList_AddTriangleFilled(draw_list, x+sz*0.2, y, x, y+sz-0.5, x+sz*0.4, y+sz-0.5, col);          x = x + sz*0.4 + spacing -- Thin triangle
+      PathConcaveShape(draw_list, x, y, sz); ImGui.DrawList_PathFillConcave(draw_list, col);                      x = x + sz + spacing  -- Concave shape
       ImGui.DrawList_AddRectFilled(draw_list, x, y, x + sz, y + app.rendering.thickness, col);                    x = x + sz + spacing  -- Horizontal line (faster than AddLine, but only handle integer thickness)
       ImGui.DrawList_AddRectFilled(draw_list, x, y, x + app.rendering.thickness, y + sz, col);                    x = x + spacing * 2.0 -- Vertical line (faster than AddLine, but only handle integer thickness)
       ImGui.DrawList_AddRectFilled(draw_list, x, y, x + 1, y + 1, col);                                           x = x + sz            -- Pixel (faster than AddLine)
@@ -8458,15 +8472,10 @@ function demo.ShowExampleAppCustomRendering()
       ImGui.DrawList_PathFillConvex(draw_list, col)
       x = x + sz + spacing
 
-      -- Cubic Bezier Curve (4 control points): this is concave so not drawing it yet
-      -- ImGui.DrawList_PathLineTo(draw_list, x + cp4[1][1], y + cp4[1][2])
-      -- ImGui.DrawList_PathBezierCubicCurveTo(draw_list, x + cp4[2][1], y + cp4[2][2], x + cp4[3][1], y + cp4[3][2], x + cp4[4][1], y + cp4[4][2], curve_segments)
-      -- ImGui.DrawList_PathFillConvex(draw_list, col)
-      -- x = x + sz + spacing
-
       ImGui.DrawList_AddRectFilledMultiColor(draw_list, x, y, x + sz, y + sz, 0x000000ff, 0xff0000ff, 0xffff00ff, 0x00ff00ff)
+      x = x + sz + spacing
 
-      ImGui.Dummy(ctx, (sz + spacing) * 12.2, (sz + spacing) * 3.0)
+      ImGui.Dummy(ctx, (sz + spacing) * 13.2, (sz + spacing) * 3.0)
       ImGui.PopItemWidth(ctx)
       ImGui.EndTabItem(ctx)
     end

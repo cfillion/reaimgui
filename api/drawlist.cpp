@@ -246,7 +246,8 @@ API_FUNC(0_9, void, DrawList_AddEllipse, (ImGui_DrawList*,draw_list)
 (double*,API_RO(rot),0.0)(int*,API_RO(num_segments),0)(double*,API_RO(thickness),1.0),
 "")
 {
-  draw_list->get()->AddEllipse(ImVec2(center_x, center_y), radius_x, radius_y,
+  draw_list->get()->AddEllipse(
+    ImVec2(center_x, center_y), ImVec2(radius_x, radius_y),
     Color::fromBigEndian(col_rgba), API_RO_GET(rot), API_RO_GET(num_segments),
     API_RO_GET(thickness));
 }
@@ -256,7 +257,8 @@ API_FUNC(0_9, void, DrawList_AddEllipseFilled, (ImGui_DrawList*,draw_list)
 (double*,API_RO(rot),0.0)(int*,API_RO(num_segments),0),
 "")
 {
-  draw_list->get()->AddEllipseFilled(ImVec2(center_x, center_y), radius_x, radius_y,
+  draw_list->get()->AddEllipseFilled(
+    ImVec2(center_x, center_y), ImVec2(radius_x, radius_y),
     Color::fromBigEndian(col_rgba), API_RO_GET(rot), API_RO_GET(num_segments));
 }
 
@@ -316,25 +318,6 @@ static std::vector<ImVec2> makePointsArray(const reaper_array *points)
   return out;
 }
 
-API_FUNC(0_2, void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
-(reaper_array*,points)(int,col_rgba)(int,flags)(double,thickness),
-"Points is a list of x,y coordinates.")
-{
-  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
-  draw_list->get()->AddPolyline(
-    vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba),
-    flags, thickness);
-}
-
-API_FUNC(0_6, void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
-(reaper_array*,points)(int,col_rgba),
-"Note: Anti-aliased filling requires points to be in clockwise order.")
-{
-  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
-  draw_list->get()->AddConvexPolyFilled(
-    vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
-}
-
 API_FUNC(0_1, void, DrawList_AddBezierCubic, (ImGui_DrawList*,draw_list)
 (double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
 (double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
@@ -355,6 +338,34 @@ API_FUNC(0_1, void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
   draw_list->get()->AddBezierQuadratic(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
     Color::fromBigEndian(col_rgba), thickness, API_RO_GET(num_segments));
+}
+
+API_FUNC(0_2, void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
+(reaper_array*,points)(int,col_rgba)(int,flags)(double,thickness),
+"Points is a list of x,y coordinates.")
+{
+  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
+  draw_list->get()->AddPolyline(
+    vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba),
+    flags, thickness);
+}
+
+API_FUNC(0_6, void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
+(reaper_array*,points)(int,col_rgba),
+"Note: Anti-aliased filling requires points to be in clockwise order.")
+{
+  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
+  draw_list->get()->AddConvexPolyFilled(
+    vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
+}
+
+API_FUNC(0_9, void, DrawList_AddConcavePolyFilled, (ImGui_DrawList*,draw_list)
+(reaper_array*,points)(int,col_rgba),
+"Concave polygon fill is more expensive than convex one: it has O(N^2) complexity.")
+{
+  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
+  draw_list->get()->AddConcavePolyFilled(
+    vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
 }
 
 API_FUNC(0_8, void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
@@ -432,9 +443,16 @@ API_FUNC(0_1, void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
 
 API_FUNC(0_5_1, void, DrawList_PathFillConvex, (ImGui_DrawList*,draw_list)
 (int,col_rgba),
-"Note: Anti-aliased filling requires points to be in clockwise order.")
+"")
 {
   draw_list->get()->PathFillConvex(Color::fromBigEndian(col_rgba));
+}
+
+API_FUNC(0_9, void, DrawList_PathFillConcave, (ImGui_DrawList*,draw_list)
+(int,col_rgba),
+"")
+{
+  draw_list->get()->PathFillConcave(Color::fromBigEndian(col_rgba));
 }
 
 API_FUNC(0_2, void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
@@ -468,8 +486,9 @@ API_FUNC(0_9, void, DrawList_PathEllipticalArcTo, (ImGui_DrawList*,draw_list)
 (double,rot)(double,a_min)(double,a_max)(int*,API_RO(num_segments),0),
 "Ellipse")
 {
-  draw_list->get()->PathEllipticalArcTo(ImVec2(center_x, center_y),
-    radius_x, radius_y, rot, a_min, a_max, API_RO_GET(num_segments));
+  draw_list->get()->PathEllipticalArcTo(
+    ImVec2(center_x, center_y), ImVec2(radius_x, radius_y),
+    rot, a_min, a_max, API_RO_GET(num_segments));
 }
 
 API_FUNC(0_1, void, DrawList_PathBezierCubicCurveTo, (ImGui_DrawList*,draw_list)
