@@ -49,7 +49,7 @@ The typical call flow is:
 5. Call EndTable.
 )");
 
-API_FUNC(0_1, bool, BeginTable, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, BeginTable, (ImGui_Context*,ctx)
 (const char*,str_id)(int,column)(int*,API_RO(flags),ImGuiTableFlags_None)
 (double*,API_RO(outer_size_w),0.0)(double*,API_RO(outer_size_h),0.0)
 (double*,API_RO(inner_width),0.0),
@@ -69,7 +69,7 @@ API_FUNC(0_8, void, EndTable, (ImGui_Context*,ctx),
   ImGui::EndTable();
 }
 
-API_FUNC(0_8, void, TableNextRow, (ImGui_Context*,ctx)
+API_FUNC(0_9, void, TableNextRow, (ImGui_Context*,ctx)
 (int*,API_RO(row_flags),ImGuiTableRowFlags_None)
 (double*,API_RO(min_row_height),0.0),
 "Append into the first cell of a new row.")

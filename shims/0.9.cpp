@@ -46,6 +46,10 @@ SHIM("0.9",
   (bool, IsWindowHovered, Context*, RO<int*>)
 
   (void, ListClipper_IncludeItemsByIndex, ListClipper*, int, int)
+  (bool, BeginTable, Context*, const char*, int,
+    RO<int*>, RO<double*>, RO<double*>, RO<double*>)
+  (void, TableNextRow, Context*, RO<int*>, RO<double*>)
+
   (void, ShowIDStackToolWindow, Context*, RWO<bool*>)
 
   (int,  ChildFlags_Border)
@@ -110,6 +114,30 @@ SHIM_FUNC(0_1, bool, IsWindowHovered, (Context*,ctx) (RO<int*>,flags))
 
 // dear imgui 1.89.9
 SHIM_ALIAS(0_8_7, ListClipper_IncludeRangeByIndices, ListClipper_IncludeItemsByIndex);
+
+// disable per-row CellPadding.y because it breaks existing layouts
+SHIM_FUNC(0_1, bool, BeginTable, (Context*,ctx) (const char*,str_id)
+  (int,column) (RO<int*>,flags) (RO<double*>,outer_size_w)
+  (RO<double*>,outer_size_h) (RO<double*>,inner_width))
+{
+  if(!api.BeginTable(ctx, str_id, column, flags,
+      outer_size_w, outer_size_h, inner_width))
+    return false;
+  if(ImGuiTable *table { ctx->imgui()->CurrentTable })
+    table->RowCellPaddingY = ctx->style().CellPadding.y;
+  return true;
+}
+SHIM_FUNC(0_8, void, TableNextRow, (Context*,ctx) (RO<int*>,row_flags)
+  (RO<double*>,min_row_height))
+{
+  FRAME_GUARD;
+  ImGuiStyle &style { ctx->style() };
+  const float backup_y { style.CellPadding.y };
+  if(ImGuiTable *table { ctx->imgui()->CurrentTable })
+    style.CellPadding.y = table->RowCellPaddingY;
+  api.TableNextRow(ctx, row_flags, min_row_height);
+  style.CellPadding.y = backup_y;
+}
 
 // dear imgui 1.90
 SHIM_ALIAS(0_5_10, ShowStackToolWindow, ShowIDStackToolWindow);

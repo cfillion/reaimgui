@@ -178,7 +178,7 @@ R"(Horizontal indentation when e.g. entering a tree node.
    Generally == (GetFontSize + StyleVar_FramePadding.x*2).)");
 API_ENUM(0_1, ImGui, StyleVar_CellPadding,
 R"(Padding within a table cell.
-   Cellpadding.x is locked for entire table.
+   CellPadding.x is locked for entire table.
    CellPadding.y may be altered between different rows.)");
 API_ENUM(0_1, ImGui, StyleVar_ScrollbarSize,
   "Width of the vertical scrollbar, Height of the horizontal scrollbar.");
