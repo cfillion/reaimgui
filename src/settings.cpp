@@ -387,6 +387,7 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
       }, setting);
     }
     updateRendererOptions(hwnd);
+    EnableWindow(GetDlgItem(hwnd, IDC_VERSION), false);
     return 0; // don't focus the first control
   }
   case WM_SIZE: {

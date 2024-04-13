@@ -13,9 +13,6 @@ else
   dl_dep = dependency('dl')
 endif
 
-gendialog = executable('gendialog', 'gendialog.cpp', native: native,
-  dependencies: [boost_native_dep, compat_dep, swell_native_dep])
-
 genversion_src = vcs_tag(
   command: [find_program('git'), 'describe', '--match=v*', '--dirty=+'],
   input: 'genversion.cpp.in', output: 'genversion.cpp', fallback: '0.0-nogit')
@@ -26,6 +23,8 @@ version = custom_target('version.hpp',
 genbinding = executable('genbinding',
   ['genbinding.cpp', version],
   dependencies: [boost_dep, compat_dep, dl_dep, md4c_html_dep])
+gendialog = executable('gendialog', ['gendialog.cpp', version], native: native,
+  dependencies: [boost_native_dep, compat_dep, swell_native_dep])
 
 if host_machine.system() == 'windows'
   d3dcompiler_dep = cpp_native.find_library('D3DCompiler')

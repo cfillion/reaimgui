@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <variant>
+#include <version.hpp>
 #include <vector>
 
 // Using this instead of hand-written .rc files for:
@@ -656,7 +657,9 @@ int main()
       Spacing {},
 
       Dummy { 0, 0 },
+
       HLayout { Align::End, {
+        Text { IDC_VERSION, "v" REAIMGUI_VERSION }, // no WS_DISABLED for SWELL
         Button { IDC_RESETDEFAULTS, "Restore defaults", 70 },
       }},
     }},
@@ -672,7 +675,7 @@ int main()
         Button { IDC_PREV, "←" },
         Button { IDC_NEXT, "→" },
         Spacing {},
-        Button { IDOK,     "&Close", 50, true },
+        Button { IDOK, "&Close", 50, true },
       }},
     },
   }};

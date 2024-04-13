@@ -29,6 +29,7 @@
 #define IDC_DOCKINGENABLE   207
 #define IDC_RESETDEFAULTS   208
 #define IDC_FORCESOFTWARE   209
+#define IDC_VERSION         210
 
 #define IDD_ERROR    101
 #define IDC_MESSAGE  200
