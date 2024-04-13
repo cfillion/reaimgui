@@ -163,7 +163,6 @@ local MAX_DRAW_CALLS               = GFX2IMGUI_MAX_DRAW_CALLS      or 1<<13
 local PROFILER                     = GFX2IMGUI_PROFILER
 local THROTTLE_FONT_LOADING_FRAMES = 16
 local UNUSED_FONTS_CACHE_SIZE      = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
-assert(MAX_DRAW_CALLS / $DRAW_CALL_SIZE % 1 == 0)
 
 local DL_AddCircle               = ImGui.DrawList_AddCircle
 local DL_AddCircleFilled         = ImGui.DrawList_AddCircleFilled
@@ -212,7 +211,7 @@ local INF, MINF = math.huge, -math.huge
 <? endmacro() ?>
 
 <? macro('tobool', 'v', 'default') ?>
-  (($v ~= nil and $v ~= 0) or ($default ~= nil and $v == nil and $default))
+  (($v ~= nil and $v ~= 0 and $v ~= false) or ($v == nil and $default))
 <? endmacro() ?>
 
 <? macro('toint', 'v') ?>
@@ -1637,6 +1636,7 @@ function gfx.roundrect(x, y, w, h, radius, antialias)
   x, y, w, h = $toint(x), $toint(y), $toint(w), $toint(h)
   local c; $color(c)
   $drawCall(drawRoundRect, x, y, x + w, y + h, c, radius)
+  return 0
 end
 
 function gfx.screentoclient(x, y)
