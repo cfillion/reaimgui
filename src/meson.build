@@ -23,7 +23,7 @@ src_sources = files([
 ])
 
 src_args = []
-src_dependencies = [common_dep, libjpeg_dep, libpng_dep]
+src_dependencies = [common_dep, libjpeg_dep, libpng_dep, zlib_dep]
 
 dialog = custom_target('dialog.rc',
   command: [gendialog], capture: true, output: 'dialog.rc')

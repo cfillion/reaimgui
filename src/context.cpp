@@ -17,6 +17,7 @@
 
 #include "context.hpp"
 
+#include "color.hpp"
 #include "configvar.hpp"
 #include "docker.hpp"
 #include "error.hpp"
@@ -33,6 +34,7 @@
 #include <imgui/imgui_internal.h>
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h>
+#include <zlib/zlib.h>
 
 #ifdef _WIN32
 #  include "win32_unicode.hpp"
@@ -66,24 +68,24 @@ private:
   ImGuiContext *m_old;
 };
 
-static std::string generateIniFilename(const char *label)
+static std::string generateIniFilename(const ImGuiID id)
 {
   std::string filename { GetResourcePath() };
-
-  if(!label[0]) // does not prohibit empty window titles
-    throw reascript_error { "context label is required" };
 
   filename += WDL_DIRCHAR_STR "ReaImGui";
   RecursiveCreateDirectory(filename.c_str(), 0);
 
-  const size_t pathSize { filename.size() };
-  filename.resize(pathSize +
-    (sizeof(ImGuiID) * 2) + strlen(WDL_DIRCHAR_STR ".ini"));
+  const size_t pathSize { filename.size() }, idSize { sizeof(id) * 2 };
+  filename.resize(pathSize + idSize + strlen(WDL_DIRCHAR_STR ".ini"));
   snprintf(&filename[pathSize], (filename.size() - pathSize) + 1,
-    WDL_DIRCHAR_STR "%0*X.ini",
-    static_cast<int>(sizeof(ImGuiID) * 2), ImHashStr(label));
+    WDL_DIRCHAR_STR "%0*X.ini", static_cast<int>(idSize), id);
 
   return filename;
+}
+
+static std::string generateScreensetID(const ImGuiID id)
+{
+  return std::format("reaimgui:{:0{}X}", id, sizeof(id) * 2);
 }
 
 Context *Context::current()
@@ -100,16 +102,25 @@ void Context::clearCurrent()
 }
 
 Context::Context(const char *label, const int userConfigFlags)
+  : Context { ImHashStr(label), label, userConfigFlags }
+{
+}
+
+Context::Context(const ImGuiID id, const char *label, const int userConfigFlags)
   : m_stateFlags {}, m_cursor {},
     m_lastFrame       { decltype(m_lastFrame)::clock::now()                },
     m_name            { label, ImGui::FindRenderedTextEnd(label)           },
-    m_iniFilename     { generateIniFilename(label)                         },
+    m_iniFilename     { generateIniFilename(id)                            },
+    m_screensetID     { generateScreensetID(id)                            },
     m_imgui           { ImGui::CreateContext(NO_DEFAULT_ATLAS)             },
     m_dockers         { std::make_unique<DockerList>()                     },
     m_textureManager  { std::make_unique<TextureManager>()                 },
     m_fonts           { std::make_unique<FontList>(m_textureManager.get()) },
     m_rendererFactory { std::make_unique<RendererFactory>()                }
 {
+  if(!*label) // does not prohibit empty window titles
+    throw reascript_error { "context label is required" };
+
   static const std::string logFn
     { std::string { GetResourcePath() } + WDL_DIRCHAR_STR "imgui_log.txt" };
 
@@ -142,11 +153,14 @@ Context::Context(const char *label, const int userConfigFlags)
   // (so that the saved state is reset to defaults)
   if(Settings::NoSavedSettings)
     m_imgui->SettingsLoaded = true;
+
+  screenset_registerNew(m_screensetID.data(), &screensetProc, this);
 }
 
 Context::~Context()
 {
   setCurrent();
+  screenset_unregister(m_screensetID.data());
 
   if(m_imgui->WithinFrameScope)
     endFrame(false);
@@ -636,4 +650,84 @@ void Context::invalidateViewportsPos()
   const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
   for(int i {}; i < pio.Viewports.Size; ++i)
     pio.Viewports[i]->PlatformRequestMove = true;
+}
+
+LRESULT Context::screensetProc(const int action, const char *id,
+  void *user, void *param, const int paramSize)
+{
+  constexpr int SCREENSET_ACTION_GET_STATE_SIZE { 0x102 }; // v7.15+
+  auto *self { static_cast<Context *>(user) };
+
+  switch(action) {
+  case SCREENSET_ACTION_LOAD_STATE:
+    if(param) // null if save returned 0
+      self->loadScreenset(static_cast<char *>(param), paramSize);
+    return 0;
+  case SCREENSET_ACTION_GET_STATE_SIZE:
+    param = nullptr;
+    [[fallthrough]];
+  case SCREENSET_ACTION_SAVE_STATE:
+    return self->saveScreenset(static_cast<char *>(param), paramSize);
+  }
+
+  return 0;
+}
+
+struct ScreensetHeader {
+  uint32_t version, size;
+};
+
+void Context::loadScreenset(const char *buffer, unsigned long bufferSize)
+{
+  if(bufferSize < sizeof(ScreensetHeader))
+    return;
+
+  auto header { reinterpret_cast<const ScreensetHeader *>(buffer) };
+  buffer += sizeof(*header), bufferSize -= sizeof(*header);
+
+  if(Color::fromBigEndian(header->version) != 0)
+    return;
+
+  unsigned long dataSize { Color::fromBigEndian(header->size) };
+  std::unique_ptr<char[]> data { new(std::nothrow) char[dataSize] };
+  if(!data)
+    return;
+
+  if(Z_OK != uncompress(reinterpret_cast<unsigned char *>(data.get()), &dataSize,
+      reinterpret_cast<const unsigned char *>(buffer), bufferSize))
+    return;
+
+  if(!dataSize || dataSize != Color::fromBigEndian(header->size))
+    return;
+
+  TempCurrent cur { this };
+  ImGui::LoadIniSettingsFromMemory(data.get(), dataSize);
+}
+
+long Context::saveScreenset(char *buffer, unsigned long bufferSize)
+{
+  if(m_imgui->SettingsDirtyTimer > 0.0f) {
+    TempCurrent cur { this };
+    [[maybe_unused]] const char *data { ImGui::SaveIniSettingsToMemory() };
+    assert(data == m_imgui->SettingsIniData.c_str());
+  }
+
+  const char *data { m_imgui->SettingsIniData.c_str() };
+  const unsigned long dataSize { m_imgui->SettingsIniData.size() + 0ul };
+
+  if(!buffer) // SCREENSET_ACTION_GET_STATE_SIZE
+    return compressBound(dataSize);
+
+  if(bufferSize < sizeof(ScreensetHeader))
+    return 0;
+
+  new(buffer) ScreensetHeader
+    { Color::toBigEndian(0), Color::toBigEndian(dataSize) };
+  buffer += sizeof(ScreensetHeader), bufferSize -= sizeof(ScreensetHeader);
+
+  if(Z_OK != compress(reinterpret_cast<unsigned char *>(buffer), &bufferSize,
+      reinterpret_cast<const unsigned char *>(data), dataSize))
+    return 0;
+
+  return sizeof(ScreensetHeader) + bufferSize;
 }

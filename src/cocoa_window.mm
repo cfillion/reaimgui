@@ -167,7 +167,9 @@ void CocoaWindow::update()
   if(diff & ImGuiViewportFlags_NoDecoration) {
     if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration) {
       DetachWindowTopmostButton(m_hwnd, false);
-      [window setStyleMask:NSWindowStyleMaskBorderless];
+      NSString *title { [window title] };
+      [window setStyleMask:NSWindowStyleMaskBorderless]; // also clears the title
+      [window setTitle: title];
     }
     else {
       [window setStyleMask:m_defaultStyleMask];

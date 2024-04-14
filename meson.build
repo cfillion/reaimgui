@@ -134,6 +134,7 @@ libjpeg_dep    = dependency('libjpeg')
 libpng_dep     = dependency('libpng')
 reaper_sdk_dep = dependency('reaper-sdk')
 wdl_dep        = dependency('WDL')
+zlib_dep       = dependency('zlib')
 
 if host_machine.system() == 'windows'
   swell_dep = dependency('', required: false)

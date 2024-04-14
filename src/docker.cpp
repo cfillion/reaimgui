@@ -391,48 +391,53 @@ static void DockWindowActivate2(HWND window, const bool allowStealFocus)
 }
 
 DockerHost::DockerHost(Docker *docker, ImGuiViewport *viewport)
-  : Viewport { viewport }, m_docker { docker }
+  : Viewport { viewport }, m_docker { docker },
+    m_window { Platform::createWindow(viewport, this) }
 {
 }
 
-void DockerHost::activate()
+void DockerHost::create()
 {
-  m_window.reset(Platform::createWindow(m_viewport, this));
   m_window->create();
   m_window->setTitle(m_ctx->name()); // for p=2649553
 
   HWND hwnd { m_window->nativeHandle() };
   m_viewport->PlatformHandle = hwnd;
 
-  constexpr const char *INI_KEY { "reaimgui" };
-  Dock_UpdateDockID(INI_KEY, m_docker->id());
-  DockWindowAddEx(hwnd, m_ctx->name(), INI_KEY, true);
+  const char *key { m_ctx->screensetKey() };
+  Dock_UpdateDockID(key, m_docker->id());
+  DockWindowAddEx(hwnd, m_ctx->name(), key, true);
 
   // ImGuiViewportFlags_NoFocusOnAppearing is not inherited from the
   // docked windows, but would from the Begin in Docker::draw
   if(!m_docker->isNoFocus())
     DockWindowActivate2(hwnd, !m_docker->isDropTarget());
-
-  m_window->show();
-}
-
-void DockerHost::create()
-{
-}
-
-void DockerHost::destroy()
-{
-  if(m_window)
-    m_window->destroy();
-}
-
-HWND DockerHost::nativeHandle() const
-{
-  return m_window ? m_window->nativeHandle() : nullptr;
 }
 
 void DockerHost::show()
 {
+  m_window->show();
+}
+
+void DockerHost::destroy()
+{
+  m_viewport->PlatformHandle = nullptr;
+  m_window->destroy();
+  restoreMovingWindowFocus();
+
+  // Required for dear imgui to create a new viewport for windows
+  // that switched from this docker to an newly created node
+  // eg. SetNextWindowDockID(-1) then later SetNextWindowDockID(1)
+  //
+  // Begin() creates a new viewport if the current does not fit the contents
+  // and is not minimized. It can be minimized if the docker tab was not
+  // the active one at the time of the DockID(1).
+  m_viewport->Size = {}, m_viewport->Flags &= ~ImGuiViewportFlags_IsMinimized;
+}
+
+HWND DockerHost::nativeHandle() const
+{
+  return m_window->nativeHandle();
 }
 
 void DockerHost::setPosition(ImVec2)
@@ -441,7 +446,7 @@ void DockerHost::setPosition(ImVec2)
 
 ImVec2 DockerHost::getPosition() const
 {
-  return m_window ? m_window->getPosition() : ImVec2{};
+  return m_window->getPosition();
 }
 
 void DockerHost::setSize(ImVec2)
@@ -450,23 +455,22 @@ void DockerHost::setSize(ImVec2)
 
 ImVec2 DockerHost::getSize() const
 {
-  return m_window ? m_window->getSize() : ImVec2{};
+  return m_window->getSize();
 }
 
 void DockerHost::setFocus()
 {
-  if(m_window)
-    m_window->setFocus();
+  m_window->setFocus();
 }
 
 bool DockerHost::hasFocus() const
 {
-  return m_window ? m_window->hasFocus() : false;
+  return m_window->hasFocus();
 }
 
 bool DockerHost::isMinimized() const
 {
-  return m_window ? m_window->isMinimized() : true;
+  return m_window->isMinimized();
 }
 
 void DockerHost::setTitle(const char *)
@@ -479,22 +483,14 @@ void DockerHost::setAlpha(float)
 
 float DockerHost::scaleFactor() const
 {
-  return m_window ? m_window->scaleFactor() : 1.f;
+  return m_window->scaleFactor();
 }
 
 void DockerHost::onChanged()
 {
-  if(m_docker->isActive()) {
-    if(!m_window)
-      activate();
-    m_window->onChanged();
-  }
-  else if(m_window) {
-    m_viewport->PlatformHandle = nullptr;
-    m_window->destroy();
-    m_window.reset();
-    restoreMovingWindowFocus();
-  }
+  // can be briefly false after switching to a new imgui node with SetDockID(>0)
+  if(!m_docker->isActive())
+    return;
 
   ImGuiViewportP *viewport { static_cast<ImGuiViewportP *>(m_viewport) };
   if(ImGuiWindow *userWindow { viewport->Window }) {

@@ -102,8 +102,6 @@ public:
   void setIME(ImGuiPlatformImeData *) override;
 
 private:
-  void activate();
-
   Docker *m_docker;
   std::unique_ptr<Window> m_window;
 };

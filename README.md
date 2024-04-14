@@ -31,6 +31,7 @@ By default these will be picked up from the system or downloaded if missing.
 - [libjpeg-turbo](https://www.libjpeg-turbo.org/)
 - [libpng](http://www.libpng.org/pub/png/libpng.html)
 - [md4c](https://github.com/mity/md4c)
+- [zlib](https://www.zlib.net/)
 
 Additional system dependencies on Linux:
 
