@@ -231,10 +231,14 @@ void Win32Window::show()
   if(!isDocked() && !(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
     AttachWindowTopmostButton(m_hwnd);
 
-  // temporarily clear the parent to prevent ShowWindow from bringing it to front
-  const LONG_PTR parent { SetWindowLongPtr(m_hwnd, GWLP_HWNDPARENT, 0) };
-  Window::show();
-  SetWindowLongPtr(m_hwnd, GWLP_HWNDPARENT, parent);
+  if(isDocked())
+    Window::show();
+  else {
+    // prevent ShowWindow from bringing the parent window to the front
+    const LONG_PTR parent { SetWindowLongPtr(m_hwnd, GWLP_HWNDPARENT, 0) };
+    Window::show();
+    SetWindowLongPtr(m_hwnd, GWLP_HWNDPARENT, parent);
+  }
 
   // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
   // Unsetting it after the window is visible disables the border (+ no icon)

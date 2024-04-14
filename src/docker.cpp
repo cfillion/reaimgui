@@ -508,9 +508,6 @@ void DockerHost::update()
   // dropped (when a dock request is created).
   m_docker->update(true);
 
-  if(!m_window)
-    return;
-
   m_window->update();
 
   // Checking m_window->isMinimized here would prevent restoring
@@ -525,6 +522,5 @@ void DockerHost::update()
 
 void DockerHost::setIME(ImGuiPlatformImeData *data)
 {
-  if(m_window)
-    m_window->setIME(data);
+  m_window->setIME(data);
 }
