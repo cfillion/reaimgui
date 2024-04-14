@@ -125,7 +125,7 @@ API_ENUM(0_1, ImGui, PopupFlags_NoOpenOverExistingPopup,
   "Don't open if there's already a popup at the same level of the popup stack.");
 API_ENUM(0_9, ImGui, PopupFlags_NoReopen,
 R"(Don't reopen same popup if already open
-   (won't reposition, won't reinitialize navigation))");
+   (won't reposition, won't reinitialize navigation).)");
 API_SECTION_P(flags, "For BeginPopupContext*");
 API_ENUM(0_1, ImGui, PopupFlags_NoOpenOverItems,
 R"(For BeginPopupContextWindow: don't return true when hovering items,

@@ -194,7 +194,7 @@ API_ENUM(0_9, ImGui, StyleVar_TabBorderSize, "Thickness of border around tabs.")
 API_ENUM(0_9, ImGui, StyleVar_TabBarBorderSize,
   "Thickness of tab-bar separator, which takes on the tab active color to denote focus.");
 API_ENUM(0_9, ImGui, StyleVar_TableAngledHeadersAngle,
-  "Angle of angled headers (supported values range from -50.0f degrees to +50.0f degrees).");
+  "Angle of angled headers (supported values range from -50.0 degrees to +50.0 degrees).");
 API_ENUM(0_1, ImGui, StyleVar_ButtonTextAlign,
 R"(Alignment of button text when button is larger than text.
    Defaults to (0.5, 0.5) (centered).)");

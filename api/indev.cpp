@@ -283,9 +283,9 @@ API_FUNC(0_9, bool, IsKeyReleased, (ImGui_Context*,ctx)
 
 API_FUNC(0_9, bool, IsKeyChordPressed, (ImGui_Context*,ctx)
 (int,key_chord),
-R"(Was key chord (mods + key) pressed, e.g. you can pass `Mod_Ctrl | ImGuiKey_S`
-as a key-chord. This doesn't do any routing or focus check,
-please consider using Shortcut() function instead.)")
+R"(Was key chord (mods + key) pressed? You can pass e.g. `Mod_Shortcut | Key_S`
+as a key chord.)") // This doesn't do any routing or focus check,
+// please consider using the Shortcut() function instead.)")
 {
   FRAME_GUARD;
   return ImGui::IsKeyChordPressed(key_chord);

@@ -174,7 +174,7 @@ R"(Submit a row with headers cells based on data provided to TableSetupColumn
 
 API_FUNC(0_1, void, TableAngledHeadersRow, (ImGui_Context*,ctx),
 R"(Submit a row with angled headers for every column with the
-TableColumnFlags_AngledHeader flag. MUST BE FIRST ROW.)")
+TableColumnFlags_AngledHeader flag. Must be the first row.)")
 {
   FRAME_GUARD;
   ImGui::TableAngledHeadersRow();
@@ -508,4 +508,4 @@ R"(Allow no sorting, disable default sorting.
 
 API_SECTION_P(tableFlags, "Miscellaneous");
 API_ENUM(0_9, ImGui, TableFlags_HighlightHoveredColumn,
-  "Highlight column headers when hovered (may evolve into a fuller highlight)");
+  "Highlight column headers when hovered (may evolve into a fuller highlight.)");

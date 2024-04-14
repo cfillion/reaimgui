@@ -154,20 +154,20 @@ API_ENUM(0_9, ImGui, ChildFlags_None, "");
 API_ENUM(0_9, ImGui, ChildFlags_Border, "Show an outer border and enable WindowPadding.");
 API_ENUM(0_9, ImGui, ChildFlags_AlwaysUseWindowPadding,
 R"(Pad with StyleVar_WindowPadding even if no border are drawn (no padding by
-default for non-bordered child windows because it makes more sense)");
+default for non-bordered child windows because it makes more sense).)");
 API_ENUM(0_9, ImGui, ChildFlags_ResizeX,
 R"(Allow resize from right border (layout direction).
-Enables .ini saving (unless WindowFlags_NoSavedSettings passed to window flags))");
+Enables .ini saving (unless WindowFlags_NoSavedSettings passed to window flags).)");
 API_ENUM(0_9, ImGui, ChildFlags_ResizeY,
 R"(Allow resize from bottom border (layout direction).
-Enables .ini saving (unless WindowFlags_NoSavedSettings passed to window flags))");
+Enables .ini saving (unless WindowFlags_NoSavedSettings passed to window flags).)");
 API_ENUM(0_9, ImGui, ChildFlags_AutoResizeX, "Enable auto-resizing width. Read notes above.");
 API_ENUM(0_9, ImGui, ChildFlags_AutoResizeY, "Enable auto-resizing height. Read notes above.");
 API_ENUM(0_9, ImGui, ChildFlags_AlwaysAutoResize,
 R"(Combined with AutoResizeX/AutoResizeY. Always measure size even when child
 is hidden, always return true, always disable clipping optimization! NOT RECOMMENDED.)");
 API_ENUM(0_9, ImGui, ChildFlags_FrameStyle,
-R"("Style the child window like a framed item: use Col_FrameBg,
+R"(Style the child window like a framed item: use Col_FrameBg,
 StyleVar_FrameRounding, StyleVar_FrameBorderSize, StyleVar_FramePadding instead
 of Col_ChildBg, StyleVar_ChildRounding, StyleVar_ChildBorderSize,
 StyleVar_WindowPadding.)");

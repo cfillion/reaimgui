@@ -84,7 +84,8 @@ API_ENUM(0_1, ImGui, ComboFlags_HeightLargest,  "As many fitting items as possib
 API_ENUM(0_1, ImGui, ComboFlags_NoArrowButton,
   "Display on the preview box without the square arrow button.");
 API_ENUM(0_1, ImGui, ComboFlags_NoPreview,      "Display only a square arrow button.");
-API_ENUM(0_9, ImGui, ComboFlags_WidthFitPreview,"Width dynamically calculated from preview contents");
+API_ENUM(0_9, ImGui, ComboFlags_WidthFitPreview,
+  "Width dynamically calculated from preview contents.");
 
 API_SUBSECTION("List Boxes",
 R"(This is essentially a thin wrapper to using BeginChild/EndChild with the
