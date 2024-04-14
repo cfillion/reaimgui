@@ -47,8 +47,7 @@ static T *currentEvent(const int expectedType)
 }
 
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }, m_ime { nullptr }, m_imeOpen { false },
-    m_eatNextMove { false }
+  : Window { viewport, dockerHost }, m_ime { nullptr }, m_imeOpen { false }
 {
 }
 
@@ -111,30 +110,6 @@ void GDKWindow::show()
   Window::show();
   initIME();
   m_renderer = m_ctx->rendererFactory()->create(this);
-
-  // To read the actual position the window manager placed the window at
-  m_eatNextMove = false;
-}
-
-ImVec2 GDKWindow::getPosition() const
-{
-  GdkWindow *native { getOSWindow() };
-  if(!native)
-    return Viewport::getPosition();
-
-  // SWELL caches the position requested via SetWindowPos and uses that for
-  // GetWindowRect/ClientToScreen/etc instead of the actual position of the
-  // window on the user's screen as determined by the window manager
-  GdkRectangle rect;
-  gdk_window_get_frame_extents(native, &rect);
-
-  // FIXME: have setPosition set the client area to match macOS/Windows backends
-  // int x, y;
-  // gdk_window_get_position(native, &x, &y);
-
-  ImVec2 pos(rect.x, rect.y);
-  Platform::scalePosition(&pos, false);
-  return pos;
 }
 
 void GDKWindow::setPosition(ImVec2 pos)
@@ -142,11 +117,6 @@ void GDKWindow::setPosition(ImVec2 pos)
   Platform::scalePosition(&pos, true);
   SetWindowPos(m_hwnd, nullptr, pos.x, pos.y, 0, 0,
     SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
-
-  // Don't set viewport->PlatformRequestMove in response to SWELL's WM_MOVE
-  // to have imgui fetch the actual position the window manager applied
-  // (which may differ from the position we requested above)
-  m_eatNextMove = true;
 }
 
 void GDKWindow::setSize(const ImVec2 size)
@@ -327,12 +297,6 @@ std::optional<LRESULT> GDKWindow::handleMessage
   case WM_PAINT:
     if(m_renderer) // do software blit
       m_renderer->render(reinterpret_cast<void *>(1));
-    break;
-  case WM_MOVE:
-    if(m_eatNextMove) {
-      m_eatNextMove = false;
-      return 0;
-    }
     break;
   }
 
