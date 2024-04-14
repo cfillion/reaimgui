@@ -51,7 +51,8 @@ class Version {
   static constexpr auto compute()
   {
     constexpr const char *start { **ver == 'v' ? *ver + 1 : *ver },
-                         *end   { lfind<ver>('-', start, *ver + sizeof(*ver)) };
+                         *dirty { lfind<ver>('+', start, *ver + sizeof(*ver)) },
+                         *end   { lfind<ver>('-', start, dirty) };
     std::array<char, end - start> version {};
     for(size_t i {}; i < version.size() - 1; ++i) {
       const char c { start[i] };

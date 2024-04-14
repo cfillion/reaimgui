@@ -21,10 +21,12 @@ TEST(CompStrTest, Version) {
   static constexpr const char
     g_underscores[] { "1_20_3" },
     g_gitdescribe[] { "v0.8.7.4-41-g6d2c9f5" },
+    g_dirtygittag[] { "v0.9+" },
     g_return_asis[] { "0.8.7" };
 
   EXPECT_STREQ(CompStr::version<&g_underscores>, "1.20.3");
   EXPECT_STREQ(CompStr::version<&g_gitdescribe>, "0.8.7.4");
+  EXPECT_STREQ(CompStr::version<&g_dirtygittag>, "0.9");
   EXPECT_STREQ(CompStr::version<&g_return_asis>, "0.8.7");
 }
 
