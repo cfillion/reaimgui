@@ -117,10 +117,13 @@ Renderer::ProjMtx::ProjMtx(const ImVec2 &pos, const ImVec2 &size, const bool fli
   }};
 }
 
+// The top/left point must be clamped for Metal because it limits the total
+// width and height to the viewport's. When top/left is negative the effective
+// clipping area does not cover the entire window anymore.
 Renderer::ClipRect::ClipRect
     (const ImVec4 &rect, const ImVec2 &offset, const ImVec2 &scale)
-  : left   { static_cast<long>((rect.x - offset.x) * scale.x) },
-    top    { static_cast<long>((rect.y - offset.y) * scale.y) },
+  : left   { std::max(0l, static_cast<long>((rect.x - offset.x) * scale.x)) },
+    top    { std::max(0l, static_cast<long>((rect.y - offset.y) * scale.y)) },
     right  { static_cast<long>((rect.z - offset.x) * scale.x) },
     bottom { static_cast<long>((rect.w - offset.y) * scale.y) }
 {
