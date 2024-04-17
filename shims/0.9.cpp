@@ -163,8 +163,10 @@ SHIM_CONST(0_1, WindowFlags_AlwaysUseWindowPadding, 0)
 SHIM_PROXY_BEGIN(ShimVirtualKeys, func, args)
 {
   int &key { std::get<1>(args) };
-  if(ImGui::IsLegacyKey(static_cast<ImGuiKey>(key)))
-    key = KeyMap::translateVirtualKey(key);
+  if(ImGui::IsLegacyKey(static_cast<ImGuiKey>(key))) {
+    if(!(key = KeyMap::translateVirtualKey(key)))
+      return decltype(std::apply(api.*func, args)) {};
+  }
   return std::apply(api.*func, args);
 }
 SHIM_PROXY_END()
