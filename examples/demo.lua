@@ -3382,7 +3382,7 @@ function demo.ShowDemoWindowLayout()
     local size_w, size_h = ImGui.GetItemRectSize(ctx)
     local item_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)
 
-    ImGui.PlotHistogram(ctx, '##values', widgets.groups.values, 0, nil, 0.0, 1.0, table.unpack(size))
+    ImGui.PlotHistogram(ctx, '##values', widgets.groups.values, 0, nil, 0.0, 1.0, size_w, size_h)
 
     ImGui.Button(ctx, 'ACTION', (size_w - item_spacing_x) * 0.5, size_h)
     ImGui.SameLine(ctx)
@@ -3390,10 +3390,10 @@ function demo.ShowDemoWindowLayout()
     ImGui.EndGroup(ctx)
     ImGui.SameLine(ctx)
 
-    ImGui.Button(ctx, 'LEVERAGE\nBUZZWORD', table.unpack(size))
+    ImGui.Button(ctx, 'LEVERAGE\nBUZZWORD', size_w, size_h)
     ImGui.SameLine(ctx)
 
-    if ImGui.BeginListBox(ctx, 'List', table.unpack(size)) then
+    if ImGui.BeginListBox(ctx, 'List', size_w, size_h) then
       ImGui.Selectable(ctx, 'Selected', true)
       ImGui.Selectable(ctx, 'Not Selected', false)
       ImGui.EndListBox(ctx)
