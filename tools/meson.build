@@ -16,7 +16,8 @@ endif
 genversion_src = vcs_tag(
   command: [find_program('git'), 'describe', '--match=v*', '--dirty=+'],
   input: 'genversion.cpp.in', output: 'genversion.cpp', fallback: '0.0-nogit')
-genversion = executable('genversion', genversion_src, native: native)
+genversion = executable('genversion', genversion_src, native: native,
+  dependencies: [compat_dep])
 version = custom_target('version.hpp',
   command: [genversion], capture: true, output: 'version.hpp')
 

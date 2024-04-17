@@ -28,3 +28,18 @@ TEST(VerNumTest, FormatString) {
   EXPECT_EQ(VerNum { "1.2.3.4" }.toString(), "1.2.3.4");
   EXPECT_EQ(VerNum { "016.032.064.128" }.toString(), "16.32.64.128");
 }
+
+static void expectSegments(const VerNum &ver,
+  const std::array<decltype(ver[0]), 4> &segs)
+{
+  for(size_t i {}; i < segs.size(); ++i)
+    EXPECT_EQ(ver[i], segs[i]);
+}
+
+TEST(VerNumTest, SegmentAccess) {
+ expectSegments("0",     { 0, 0, 0, 0 });
+ expectSegments("1",     { 1, 0, 0, 0 });
+ expectSegments("1.2",   { 1, 2, 0, 0 });
+ expectSegments("1.2.3", { 1, 2, 3, 0 });
+ expectSegments("016.032.064.128", { 16, 32, 64, 128 });
+}

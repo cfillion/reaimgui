@@ -85,6 +85,13 @@ public:
     return vernum;
   }
 
+  constexpr ValT operator[](const unsigned char seg) const
+  {
+    if(seg >= MAX_SEGS)
+      throw reascript_error { "out of range segment" };
+    return (m_value >> ((MAX_SEGS - seg - 1) * SEG_BITS)) & SEG_MASK;
+  }
+
 private:
   ValT m_value;
 };
