@@ -361,14 +361,17 @@ static void restoreMovingWindowFocus()
   }
 }
 
-static void DockWindowActivate2(HWND window, const bool allowStealFocus)
+static void DockWindowActivate2(HWND window)
 {
+  const ImGuiContext *ctx { ImGui::GetCurrentContext() };
+  const bool allowStealFocus { !ctx->MovingWindow };
+
 #ifdef _WIN32
   // Workaround for DockWindowActivate stealing focus from the moving window
   HWND dockerWindow;
   bool wasEnabled;
   if(!allowStealFocus) {
-    dockerWindow = GetMainHwnd();
+    dockerWindow = GetParent(window);
     wasEnabled = IsWindowEnabled(dockerWindow);
     EnableWindow(dockerWindow, false);
   }
@@ -380,13 +383,15 @@ static void DockWindowActivate2(HWND window, const bool allowStealFocus)
   // window is the only tab in the docker (the docker was not already open)
   if(allowStealFocus)
     SetFocus(window);
+#ifndef _WIN32
+  // Bring back to front on macOS and Linux when moving over over floating dockers
+  else
+    restoreMovingWindowFocus();
+#endif
 
-  restoreMovingWindowFocus();
 #ifdef _WIN32
   if(!allowStealFocus)
     EnableWindow(dockerWindow, wasEnabled);
-#else
-  (void)allowStealFocus;
 #endif
 }
 
@@ -411,7 +416,7 @@ void DockerHost::create()
   // ImGuiViewportFlags_NoFocusOnAppearing is not inherited from the
   // docked windows, but would from the Begin in Docker::draw
   if(!m_docker->isNoFocus())
-    DockWindowActivate2(hwnd, !m_docker->isDropTarget());
+    DockWindowActivate2(hwnd);
 }
 
 void DockerHost::show()
@@ -517,7 +522,7 @@ void DockerHost::update()
   // Checking m_window->isMinimized here would prevent restoring
   // the moving window to the foreground over floating dockers on macOS
   if(m_docker->isDropTarget())
-    DockWindowActivate2(m_window->nativeHandle(), false);
+    DockWindowActivate2(m_window->nativeHandle());
 
   const int dockIndex { DockIsChildOfDock(m_window->nativeHandle(), nullptr) };
   if(static_cast<ReaDockID>(dockIndex) != m_docker->id())
