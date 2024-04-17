@@ -488,9 +488,13 @@ float DockerHost::scaleFactor() const
 
 void DockerHost::onChanged()
 {
-  // can be briefly false after switching to a new imgui node with SetDockID(>0)
+  // Can briefly be false after switching to a new imgui node with SetDockID(>0)
+  // Viewport size must not be updated so that the window can be un-docked.
+  // Otherwise it would stay attached to the viewport and be invisible.
   if(!m_docker->isActive())
     return;
+
+  m_window->onChanged();
 
   ImGuiViewportP *viewport { static_cast<ImGuiViewportP *>(m_viewport) };
   if(ImGuiWindow *userWindow { viewport->Window }) {
