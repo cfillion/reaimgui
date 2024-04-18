@@ -180,7 +180,7 @@ bool FontList::removeAtlas(const float scale)
 }
 
 void FontList::build(const float scale)
-{
+try {
   auto &atlas { m_atlases.at(scale) }; // don't insert
   atlas->ClearFonts();
 
@@ -195,6 +195,9 @@ void FontList::build(const float scale)
   atlas->Flags |= ImFontAtlasFlags_NoMouseCursors;
   atlas->Build();
   atlas->ClearInputData();
+}
+catch(const imgui_error &e) {
+  throw imgui_error { "cannot build the font atlas: {}", e.what() };
 }
 
 void FontList::migrateActiveFonts()
