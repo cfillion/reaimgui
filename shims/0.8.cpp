@@ -53,9 +53,9 @@ enum ModFlags {
 };
 SHIM_CONST(0_7, ModFlags_None,  ::ModFlags_None)
 SHIM_CONST(0_7, ModFlags_Ctrl,  ::ModFlags_Ctrl)
-SHIM_CONST(0_7, ModFlags_Shift, ::ModFlags_Ctrl)
-SHIM_CONST(0_7, ModFlags_Alt,   ::ModFlags_Ctrl)
-SHIM_CONST(0_7, ModFlags_Super, ::ModFlags_Ctrl)
+SHIM_CONST(0_7, ModFlags_Shift, ::ModFlags_Shift)
+SHIM_CONST(0_7, ModFlags_Alt,   ::ModFlags_Alt)
+SHIM_CONST(0_7, ModFlags_Super, ::ModFlags_Super)
 SHIM_ALIAS(0_6, Key_ModCtrl,  Mod_Ctrl)
 SHIM_ALIAS(0_6, Key_ModShift, Mod_Shift)
 SHIM_ALIAS(0_6, Key_ModAlt,   Mod_Alt)
