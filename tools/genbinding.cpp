@@ -543,7 +543,9 @@ static std::string_view luaType(const Type type)
 {
   if(type.isString())
     return "string";
-  else if(type.removePtr().isNumber())
+  else if(type.removePtr().isInt())
+    return "integer";
+  else if(type.removePtr().isDouble())
     return "number";
   else if(type.removePtr().isBool())
     return "boolean";
