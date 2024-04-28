@@ -142,14 +142,14 @@ no gap between them. This is so a series of selected Selectable appear
 contiguous.)");
 
 API_FUNC(0_1, bool, Selectable, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_RW(p_selected))
+(const char*,label)(bool*,API_RWO(p_selected))
 (int*,API_RO(flags),ImGuiSelectableFlags_None)
 (double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
 "")
 {
   FRAME_GUARD;
   bool selectedOmitted {};
-  bool *selected { API_RW(p_selected) ? API_RW(p_selected) : &selectedOmitted };
+  bool *selected { API_RWO(p_selected) ? API_RWO(p_selected) : &selectedOmitted };
   const ImVec2 size (API_RO_GET(size_w), API_RO_GET(size_h));
   return ImGui::Selectable(label, selected, API_RO_GET(flags), size);
 }
