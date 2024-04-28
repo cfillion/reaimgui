@@ -1282,7 +1282,7 @@ end
 
 function gfx.getpixel()
   warn('not supported')
-  return 0
+  return 0, 0, 0
 end
 
 local function drawGradRect(draw_list, cmd, i, opts)
