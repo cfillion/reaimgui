@@ -63,8 +63,14 @@ Data is copied and held by imgui.)")
   if(!isUserType(type))
     return false;
 
-  return ImGui::SetDragDropPayload(
-    type, data, data ? strlen(data) : 0, API_RO_GET(cond));
+  size_t dataSize {};
+  if(data) {
+    dataSize = strlen(data);
+    if(!dataSize)
+      data = nullptr; // imgui asserts if data != null && size == 0
+  }
+
+  return ImGui::SetDragDropPayload(type, data, dataSize, API_RO_GET(cond));
 }
 
 API_FUNC(0_1, void, EndDragDropSource, (ImGui_Context*,ctx),
@@ -96,13 +102,15 @@ you can peek into the payload before the mouse button is released.)")
 
   const ImGuiDragDropFlags flags { API_RO_GET(flags) };
   const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
+  if(!payload)
+    return false;
 
-  if(payload && API_WBIG(payload)) {
+  if(API_WBIG(payload) && payload->Data) {
     copyToBigBuf(API_WBIG(payload), API_WBIG_SZ(payload),
       payload->Data, payload->DataSize);
   }
 
-  return payload;
+  return true;
 }
 
 static bool AcceptDragDropPayloadColor(int *color, bool alpha,
@@ -181,7 +189,7 @@ Returns false when drag and drop is finished or inactive.)")
 
   if(API_W(type))
     snprintf(API_W(type), API_W_SZ(type), "%s", payload->DataType);
-  if(API_WBIG(payload)) {
+  if(API_WBIG(payload) && payload->Data) {
     copyToBigBuf(API_WBIG(payload), API_WBIG_SZ(payload),
       payload->Data, payload->DataSize);
   }
