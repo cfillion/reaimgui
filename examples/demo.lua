@@ -1020,7 +1020,7 @@ function demo.ShowDemoWindowWidgets()
             node_clicked = i
           end
           if widgets.trees.test_drag_and_drop and ImGui.BeginDragDropSource(ctx) then
-            ImGui.SetDragDropPayload(ctx, '_TREENODE', nil, 0)
+            ImGui.SetDragDropPayload(ctx, 'TREENODE', '')
             ImGui.Text(ctx, 'This is a drag and drop source')
             ImGui.EndDragDropSource(ctx)
           end
@@ -1038,7 +1038,7 @@ function demo.ShowDemoWindowWidgets()
             node_clicked = i
           end
           if widgets.trees.test_drag_and_drop and ImGui.BeginDragDropSource(ctx) then
-            ImGui.SetDragDropPayload(ctx, '_TREENODE', nil, 0)
+            ImGui.SetDragDropPayload(ctx, 'TREENODE', '')
             ImGui.Text(ctx, 'This is a drag and drop source')
             ImGui.EndDragDropSource(ctx)
           end
@@ -2662,7 +2662,7 @@ label:
         ImGui.Selectable(ctx, item)
 
         if ImGui.IsItemActive(ctx) and not ImGui.IsItemHovered(ctx) then
-          local mouse_delta = select(2, ImGui.GetMouseDragDelta(ctx, ImGui.MouseButton_Left))
+          local mouse_delta = select(2, ImGui.GetMouseDragDelta(ctx, nil, nil, ImGui.MouseButton_Left))
           local n_next = n + (mouse_delta < 0 and -1 or 1)
           if n_next >= 1 and n_next <= #widgets.dragdrop.items then
             widgets.dragdrop.items[n] = widgets.dragdrop.items[n_next]
@@ -6698,8 +6698,8 @@ function demo.ShowDemoWindowInputs()
       -- Drag operations gets "unlocked" when the mouse has moved past a certain threshold
       -- (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
       -- threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
-      local value_raw_x, value_raw_y = ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left, 0.0)
-      local value_with_lock_threshold_x, value_with_lock_threshold_y = ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Left)
+      local value_raw_x, value_raw_y = ImGui.GetMouseDragDelta(ctx, nil, nil, ImGui.MouseButton_Left, 0.0)
+      local value_with_lock_threshold_x, value_with_lock_threshold_y = ImGui.GetMouseDragDelta(ctx, nil, nil, ImGui.MouseButton_Left)
       local mouse_delta_x, mouse_delta_y = ImGui.GetMouseDelta(ctx)
       ImGui.Text(ctx, 'GetMouseDragDelta(0):')
       ImGui.Text(ctx, ('  w/ default threshold: (%.1f, %.1f)'):format(value_with_lock_threshold_x, value_with_lock_threshold_y))
@@ -8547,7 +8547,7 @@ function demo.ShowExampleAppCustomRendering()
       end
 
       -- Context menu (under default mouse threshold)
-      local drag_delta_x, drag_delta_y = ImGui.GetMouseDragDelta(ctx, 0, 0, ImGui.MouseButton_Right)
+      local drag_delta_x, drag_delta_y = ImGui.GetMouseDragDelta(ctx, nil, nil, ImGui.MouseButton_Right)
       if app.rendering.opt_enable_context_menu and drag_delta_x == 0.0 and drag_delta_y == 0.0 then
         ImGui.OpenPopupOnItemClick(ctx, 'context', ImGui.PopupFlags_MouseButtonRight)
       end
