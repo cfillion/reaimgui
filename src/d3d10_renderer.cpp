@@ -271,7 +271,7 @@ D3D10Renderer::D3D10Renderer(RendererFactory *factory, Window *window)
     .OutputWindow = window->nativeHandle(),
     .Windowed     = true,
     .SwapEffect   = DXGI_SWAP_EFFECT_DISCARD,
-    .Flags        = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH,
+    .Flags        = 0,
   };
   if(FAILED(m_shared->m_factory->CreateSwapChain(m_shared->m_device, &swapChainDesc, &m_swapChain)))
     throw backend_error { "failed to create DXGI swap chain" };
