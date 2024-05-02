@@ -114,6 +114,7 @@ private:
   ImGuiViewport *focusedViewport() const;
   void dragSources();
   void clearFocus();
+  bool isAnyKeyDown() const;
 
   void loadScreenset(const char *data, unsigned long);
   long saveScreenset(char *data, unsigned long);

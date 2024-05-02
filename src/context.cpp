@@ -335,6 +335,12 @@ void Context::updateFrameInfo()
   const auto now { decltype(m_lastFrame)::clock::now() };
   io.DeltaTime = std::chrono::duration<float> { now - m_lastFrame }.count();
   m_lastFrame = now;
+
+  // Workaround to prevent stuck keys when keyboard capture is released in
+  // reaction to pressing down an action's global shortcut key
+  // (REAPER won't send the key up event to us)
+  if(io.WantCaptureKeyboard && isAnyKeyDown())
+    ImGui::SetNextFrameWantCaptureKeyboard(true);
 }
 
 void Context::updateCursor()
@@ -650,6 +656,15 @@ void Context::invalidateViewportsPos()
   const ImGuiPlatformIO &pio { m_imgui->PlatformIO };
   for(int i {}; i < pio.Viewports.Size; ++i)
     pio.Viewports[i]->PlatformRequestMove = true;
+}
+
+bool Context::isAnyKeyDown() const
+{
+  for(const ImGuiKeyData &keyData : m_imgui->IO.KeysData) {
+    if(keyData.Down)
+      return true;
+  }
+  return false;
 }
 
 LRESULT Context::screensetProc(const int action, const char *id,
