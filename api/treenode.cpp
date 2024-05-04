@@ -64,7 +64,7 @@ R"(Horizontal distance preceding label when using TreeNode*() or Bullet()
 }
 
 API_FUNC(0_1, bool, CollapsingHeader, (ImGui_Context*,ctx)
-(const char*,label)(bool*,API_RW(p_visible))
+(const char*,label)(bool*,API_RWO(p_visible))
 (int*,API_RO(flags),ImGuiTreeNodeFlags_None),
 R"(Returns true when opened but do not indent nor push into the ID stack
 (because of the TreeNodeFlags_NoTreePushOnOpen flag).
@@ -82,7 +82,7 @@ if 'false' don't display the header.)")
   // as NULL. This is because EEL doesn't have a NULL (0 = false), API_W never
   // receives a NULL, and API_RWO aren't listed in the output values list.
   return ImGui::CollapsingHeader(label,
-    openPtrBehavior(API_RW(p_visible)), API_RO_GET(flags));
+    openPtrBehavior(API_RWO(p_visible)), API_RO_GET(flags));
 }
 
 API_FUNC(0_1, void, SetNextItemOpen, (ImGui_Context*,ctx)

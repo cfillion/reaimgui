@@ -16,6 +16,7 @@ test_script:
 artifacts:
   - path: build/examples/gfx2imgui.lua
   - path: build/imgui.py
+  - path: build/imgui_defs.lua
   - path: build/reaper_imgui*.*
 
 for:
@@ -166,6 +167,6 @@ deploy:
   force_update: true
   auth_token:
     secure: 6dgJUqO2qAwADLQuvONd+mD5esFPBws7RA/3RSiEjrmquCsWpidm4ayawCPSEtfQ
-  artifact: /.*\.(dll|dylib|so)|reaper_imgui_(doc\.html|functions\.h)|imgui\.(lua|py)|gfx2imgui\.lua/
+  artifact: /.*\.(dll|dylib|so)|reaper_imgui_(doc\.html|functions\.h)|imgui.*\.(lua|py)|gfx2imgui\.lua/
   on:
     APPVEYOR_REPO_TAG: true

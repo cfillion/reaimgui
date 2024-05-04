@@ -51,8 +51,7 @@ struct Type {
   bool isString()    const { return m_value == "const char*" || m_value == "char*"; }
   bool isPointer()   const { return m_value.size() >= 1 && m_value.back() == '*'; }
   bool isConst()     const { return m_value.find("const ") == 0; }
-  bool isNumber()    const { return isInt() || isDouble(); };
-  bool isScalar()    const { return isBool() || isNumber(); }
+  bool isScalar()    const { return isBool() || isInt() || isDouble(); }
   bool isScalarPtr() const { return isPointer() && removePtr().isScalar(); }
   bool isImVec2()    const { return m_value == "ImVec2"; }
 
@@ -71,6 +70,7 @@ struct Type {
   }
 
   operator const std::string_view &() const { return m_value; }
+  bool operator==(const std::string_view &o) const { return m_value == o; }
 
 private:
   std::string_view m_value;
@@ -114,6 +114,11 @@ struct Function {
 
   bool isVar()  const { return flags & API::Symbol::Variable; }
   bool isEnum() const { return flags & API::Symbol::Constant; }
+  bool isNoDiscard() const
+  {
+    return (type.isBool() && name.substr(0, 5) == "Begin") ||
+      name.substr(0, 6) == "Create";
+  }
   bool hasOutputArgs() const;
   bool hasOptionalArgs() const;
 
@@ -225,15 +230,16 @@ Function::Function(const API::Symbol *api)
 }
 
 struct CommaSep {
-  CommaSep(std::ostream &stream) : m_stream { stream }, m_sep { false } {}
+  CommaSep(std::ostream &stream, const char *sep = ", ")
+    : m_stream { stream }, m_sep { sep }, m_printSep { false } {}
 
   template<typename T>
   std::ostream &operator<<(const T rhs)
   {
-    if(m_sep)
-      m_stream << ", ";
+    if(m_printSep)
+      m_stream << m_sep;
     else
-      m_sep = true;
+      m_printSep = true;
 
     m_stream << rhs;
     return m_stream;
@@ -241,7 +247,8 @@ struct CommaSep {
 
 private:
   std::ostream &m_stream;
-  bool m_sep;
+  const char *m_sep;
+  bool m_printSep;
 };
 
 static void cppBinding(std::ostream &stream)
@@ -403,7 +410,7 @@ namespace ImGui {
       stream << ")> ";
     }
 
-    stream << func.name << ";";
+    stream << func.name << ';';
   }
 
   stream << R"(
@@ -543,10 +550,16 @@ static std::string_view luaType(const Type type)
 {
   if(type.isString())
     return "string";
-  else if(type.removePtr().isNumber())
+  else if(type.removePtr().isInt())
+    return "integer";
+  else if(type.removePtr().isDouble())
     return "number";
   else if(type.removePtr().isBool())
     return "boolean";
+  else if(type == "reaper_array*")
+    return "reaper.array";
+  else if(type.isPointer() && type.removePtr().isVoid())
+    return "userdata"; // ValidatePtr
   else
     return type.removePtr();
 }
@@ -1127,6 +1140,177 @@ static void humanBinding(std::ostream &stream)
 )";
 }
 
+static void outputEscapedMarkdown(std::ostream &stream, const std::string_view &text)
+{
+  for(const char c : text) {
+    if(ispunct(c))
+      stream << '\\';
+    stream << c;
+  }
+}
+
+static void luaLSBlock(std::ostream &stream, std::string_view markdown)
+{
+  while(!markdown.empty()) {
+    size_t endl { markdown.find('\n') };
+    const std::string_view line { markdown.substr(0, endl) };
+    if(line.empty())
+      stream << "---";
+    else
+      stream << "--- " << line;
+    if(endl == std::string_view::npos || endl == markdown.size() - 1)
+      break;
+    stream << '\n';
+    markdown.remove_prefix(endl + 1);
+  }
+}
+
+static void luaLSAnnotate(std::ostream &stream, const Function &func)
+{
+  constexpr const char *separator { "\n---\n--- ---\n---\n" };
+
+  stream << "--- **";
+  CommaSep heading { stream, " > " };
+  for(const API::Section *section : func.sections) {
+    heading << "";
+    outputEscapedMarkdown(stream, section->title);
+  }
+  heading << "";
+  outputEscapedMarkdown(stream, func.name);
+  stream << "**";
+
+  if(!func.doc.empty()) {
+    stream << "\n---\n";
+    luaLSBlock(stream, func.doc);
+  }
+  stream << separator;
+
+  for(auto it = func.sections.rbegin(); it < func.sections.rend(); ++it) {
+    const API::Section *section { *it };
+    if(!section->help)
+      continue;
+    stream << "--- **";
+    CommaSep heading { stream, " > " };
+    for(const API::Section *parent : func.sections) {
+      heading << "";
+      outputEscapedMarkdown(stream, parent->title);
+      if(parent == section)
+        break;
+    }
+    stream << "**\n---\n";
+    luaLSBlock(stream, section->help);
+    stream << separator;
+  }
+
+  // @since is not a standard annotation
+  stream << "--- @since " << func.version.toString() << '\n';
+
+  if(func.isEnum())
+    return;
+
+  const bool listOutputs { func.hasOptionalArgs() };
+  size_t skipCount {};
+  for(const Argument &arg : func.args) {
+    if(arg.isBufSize())
+      continue;
+    else if(!arg.isInput()) {
+      // '?' required to enable type validation (accepts anything otherwise)
+      // zero-width space trick required to not display 'any' as the param type
+      if(listOutputs)
+        stream << "--- @param _" << ++skipCount << "? nil​\n";
+      continue;
+    }
+
+    stream << "--- @param " << arg.humanName();
+    if(arg.isOptional())
+      stream << '?';
+    stream << ' ' << luaType(arg.type);
+    if(arg.isOptional()) {
+      const std::string_view defv { arg.defv.empty() ? "nil" : arg.defv };
+      stream << " default value = `" << defv << '`';
+    }
+    else if(arg.type == "ImGui_Font*")
+      stream << "|nil"; // default font special case
+    stream << '\n';
+  }
+
+  if(!func.type.isVoid()) {
+    if(func.isNoDiscard())
+      stream << "--- @nodiscard\n";
+    stream << "--- @return " << luaType(func.type) << " retval\n";
+  }
+  for(const Argument &arg : func.args) {
+    if(!arg.isOutput() || arg.isBufSize())
+      continue;
+    stream << "--- @return " << luaType(arg.type) << ' ' << arg.humanName() << '\n';
+  }
+}
+
+static void luaLSBinding(std::ostream &stream)
+{
+  stream << "--- ReaImGui LuaCATS definitions\n---\n"
+         << "--- Generated for version " REAIMGUI_VERSION
+         << " - API version " << API_VERSION << "\n---\n"
+         << "--- @meta  imgui\n--- @class ImGui\n";
+
+  for(const Function &func : g_funcs) {
+    if(!(func.flags & API::Symbol::TargetScript) | !func.isEnum())
+      continue;
+
+    stream << "---\n";
+    luaLSAnnotate(stream, func);
+    stream << "--- @field " << func.name << ' ' << luaType(func.type) << '\n';
+  }
+
+  // Disabling keyword diagnostics because some parameter names are
+  // reserved Lua keywords (eg. 'repeat')
+  stream << R"(local ImGui = {}
+
+--- @alias nil​ nil
+--- @class (exact) ImGui_Resource         : userdata
+--- @class (exact) ImGui_DrawList         : userdata
+--- @class (exact) ImGui_Viewport         : userdata
+--- @class (exact) ImGui_Context          : ImGui_Resource
+--- @class (exact) ImGui_DrawListSplitter : ImGui_Resource
+--- @class (exact) ImGui_Font             : ImGui_Resource
+--- @class (exact) ImGui_Function         : ImGui_Resource
+--- @class (exact) ImGui_Image            : ImGui_Resource
+--- @class (exact) ImGui_ImageSet         : ImGui_Image
+--- @class (exact) ImGui_ListClipper      : ImGui_Resource
+--- @class (exact) ImGui_TextFilter       : ImGui_Resource
+--- @diagnostic disable: keyword
+)";
+
+  for(const Function &func : g_funcs) {
+    if(!(func.flags & API::Symbol::TargetScript) || func.isEnum())
+      continue;
+
+    stream << '\n';
+    luaLSAnnotate(stream, func);
+    stream << "function ImGui." << func.name << '(';
+    const bool listOutputs { func.hasOptionalArgs() };
+    size_t skipCount {};
+    CommaSep cs { stream };
+    for(const Argument &arg : func.args) {
+      if(arg.isBufSize())
+        continue;
+      else if(!arg.isInput()) {
+        if(listOutputs)
+          cs << '_' << ++skipCount;
+        continue;
+      }
+      cs << arg.humanName();
+    }
+    stream << ") end\n";
+  }
+
+  stream << R"(
+--- @param api_version string
+--- @return ImGui
+return function(api_version) end
+)";
+}
+
 static const char *pythonCType(const Type &type)
 {
   static const std::unordered_map<std::string_view, const char *> ctypes {
@@ -1267,7 +1451,7 @@ static void pythonBinding(std::ostream &stream)
         if(arg.isOptional())
           stream << " if " << arg.name << " != None else None";
       }
-      stream << "\n";
+      stream << '\n';
     }
   }
 }
@@ -1300,6 +1484,8 @@ int main(int argc, const char *argv[])
     cppBinding(std::cout);
   else if(lang == "human")
     humanBinding(std::cout);
+  else if(lang == "luals")
+    luaLSBinding(std::cout);
   else if(lang == "python")
     pythonBinding(std::cout);
   else {
