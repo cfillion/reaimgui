@@ -104,7 +104,8 @@ API_FUNC(0_1, void, ProgressBar, (ImGui_Context*,ctx)
 (double,fraction)
 (double*,API_RO(size_arg_w),-FLT_MIN)(double*,API_RO(size_arg_h),0.0)
 (const char*,API_RO(overlay)),
-"")
+R"(Fraction < 0.0 displays an indeterminate progress bar animation since v0.9.1.
+The value must be animated along with time, for example `-1.0 * ImGui.GetTime()`.)")
 {
   FRAME_GUARD;
   nullIfEmpty(API_RO(overlay));

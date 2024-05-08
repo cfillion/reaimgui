@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.5)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.6)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -19,6 +19,10 @@ reaper.defer(loop)
 --]]
 
 --[[
+How to easily locate code?
+- Use the Item Picker to debug break in code by clicking any widgets: https://github.com/ocornut/imgui/wiki/Debug-Tools
+- Find a visible string and search for it in the code!
+
 Index of this file:
 
 // [SECTION] Helpers
@@ -48,7 +52,7 @@ Index of this file:
 --]]
 
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-local ImGui = require 'imgui' '0.9'
+local ImGui = require 'imgui' '0.9.1'
 
 local ctx, clipper
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
@@ -991,7 +995,10 @@ function demo.ShowDemoWindowWidgets()
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_OpenOnDoubleClick', widgets.trees.base_flags, ImGui.TreeNodeFlags_OpenOnDoubleClick)
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAvailWidth',    widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanAvailWidth); ImGui.SameLine(ctx); demo.HelpMarker('Extend hit area to all available width instead of allowing more items to be laid out after the node.')
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanFullWidth',     widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanFullWidth)
+      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanTextWidth',     widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanTextWidth); ImGui.SameLine(ctx); demo.HelpMarker('Reduce hit area to the text label and a bit of margin.')
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAllColumns',    widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanAllColumns); ImGui.SameLine(ctx); demo.HelpMarker('For use in Tables only.')
+      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_AllowOverlap',     widgets.trees.base_flags, ImGui.TreeNodeFlags_AllowOverlap);
+      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_Framed',           widgets.trees.base_flags, ImGui.TreeNodeFlags_Framed); ImGui.SameLine(ctx); demo.HelpMarker('Draw frame with background (e.g. for CollapsingHeader)')
       rv,widgets.trees.align_label_with_current_x_position = ImGui.Checkbox(ctx, 'Align label with current X position', widgets.trees.align_label_with_current_x_position)
       rv,widgets.trees.test_drag_and_drop = ImGui.Checkbox(ctx, 'Test tree node as drag source',      widgets.trees.test_drag_and_drop)
       ImGui.Text(ctx, 'Hello!')
@@ -1023,6 +1030,11 @@ function demo.ShowDemoWindowWidgets()
             ImGui.SetDragDropPayload(ctx, 'TREENODE', '')
             ImGui.Text(ctx, 'This is a drag and drop source')
             ImGui.EndDragDropSource(ctx)
+          end
+          if i == 2 then
+             -- Item 2 has an additional inline button to help demonstrate SpanTextWidth.
+             ImGui.SameLine(ctx)
+             if ImGui.SmallButton(ctx, 'button') then end
           end
           if node_open then
             ImGui.BulletText(ctx, 'Blah blah\nBlah Blah')
@@ -1972,8 +1984,6 @@ label:
           fill = true,
           data = reaper.new_array(1),
         },
-        progress     = 0.0,
-        progress_dir = 1,
       }
       widgets.plots.plot1.data.clear()
     end
@@ -2027,30 +2037,44 @@ label:
 
     ImGui.PlotLines(ctx, 'Lines', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
     ImGui.PlotHistogram(ctx, 'Histogram', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
-    ImGui.Separator(ctx)
+
+    ImGui.TreePop(ctx)
+  end
+
+  if ImGui.TreeNode(ctx, 'Progress Bars') then
+    if not widgets.progress_bars then
+      widgets.progress_bars = {
+        progress     = 0.0,
+        progress_dir = 1,
+      }
+    end
 
     -- Animate a simple progress bar
-    if widgets.plots.animate then
-      widgets.plots.progress = widgets.plots.progress +
-        (widgets.plots.progress_dir * 0.4 * ImGui.GetDeltaTime(ctx))
-      if widgets.plots.progress >= 1.1 then
-        widgets.plots.progress = 1.1
-        widgets.plots.progress_dir = widgets.plots.progress_dir * -1
-      elseif widgets.plots.progress <= -0.1 then
-        widgets.plots.progress = -0.1
-        widgets.plots.progress_dir = widgets.plots.progress_dir * -1
-      end
+    widgets.progress_bars.progress = widgets.progress_bars.progress +
+      (widgets.progress_bars.progress_dir * 0.4 * ImGui.GetDeltaTime(ctx))
+    if widgets.progress_bars.progress >= 1.1 then
+      widgets.progress_bars.progress = 1.1
+      widgets.progress_bars.progress_dir = widgets.progress_bars.progress_dir * -1
+    elseif widgets.progress_bars.progress <= -0.1 then
+      widgets.progress_bars.progress = -0.1
+      widgets.progress_bars.progress_dir = widgets.progress_bars.progress_dir * -1
     end
 
     -- Typically we would use (-1.0,0.0) or (-FLT_MIN,0.0) to use all available width,
     -- or (width,0.0) for a specified width. (0.0,0.0) uses ItemWidth.
-    ImGui.ProgressBar(ctx, widgets.plots.progress, 0.0, 0.0)
+    ImGui.ProgressBar(ctx, widgets.progress_bars.progress, 0.0, 0.0)
     ImGui.SameLine(ctx, 0.0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)))
     ImGui.Text(ctx, 'Progress Bar')
 
-    local progress_saturated = demo.clamp(widgets.plots.progress, 0.0, 1.0);
+    local progress_saturated = demo.clamp(widgets.progress_bars.progress, 0.0, 1.0);
     local buf = ('%d/%d'):format(math.floor(progress_saturated * 1753), 1753)
-    ImGui.ProgressBar(ctx, widgets.plots.progress, 0.0, 0.0, buf);
+    ImGui.ProgressBar(ctx, widgets.progress_bars.progress, 0.0, 0.0, buf);
+
+    -- Pass an animated negative value, e.g. -1.0f * (float)ImGui::GetTime() is the recommended value.
+    -- Adjust the factor if you want to adjust the animation speed.
+    ImGui.ProgressBar(ctx, -1.0 * ImGui.GetTime(ctx), 0.0, 0.0, 'Searching...')
+    ImGui.SameLine(ctx, 0.0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)))
+    ImGui.Text(ctx, 'Indeterminate')
 
     ImGui.TreePop(ctx)
   end
@@ -5513,6 +5537,7 @@ function demo.ShowDemoWindowTables()
                   -- ImGui.TableFlags_NoBordersInBody
 
     rv,tables.tree_view.tree_node_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanFullWidth',  tables.tree_view.tree_node_flags, ImGui.TreeNodeFlags_SpanFullWidth)
+    rv,tables.tree_view.tree_node_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanTextWidth',  tables.tree_view.tree_node_flags, ImGui.TreeNodeFlags_SpanTextWidth)
     rv,tables.tree_view.tree_node_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAllColumns', tables.tree_view.tree_node_flags, ImGui.TreeNodeFlags_SpanAllColumns)
 
     demo.HelpMarker('See "Columns flags" section to configure how indentation is applied to individual columns.')
@@ -5674,6 +5699,8 @@ function demo.ShowDemoWindowTables()
         bools = {}, -- Dummy storage selection storage
         frozen_cols = 1,
         frozen_rows = 2,
+        angle = ImGui.GetStyleVar(ctx, ImGui.StyleVar_TableAngledHeadersAngle),
+        text_align = { ImGui.GetStyleVar(ctx, ImGui.StyleVar_TableAngledHeadersTextAlign) },
       }
     end
 
@@ -5691,6 +5718,20 @@ function demo.ShowDemoWindowTables()
     ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 8)
     rv,tables.angled.frozen_rows = ImGui.SliderInt(ctx, 'Frozen rows', tables.angled.frozen_rows, 0, 2)
     rv,tables.angled.column_flags = ImGui.CheckboxFlags(ctx, 'Disable header contributing to column width', tables.angled.column_flags, ImGui.TableColumnFlags_NoHeaderWidth)
+
+    if ImGui.TreeNode(ctx, 'Style settings') then
+      ImGui.SameLine(ctx)
+      demo.HelpMarker('Giving access to some ImGuiStyle value in this demo for convenience.')
+      ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 8)
+      rv,tables.angled.angle = ImGui.SliderAngle(ctx, 'StyleVar_TableAngledHeadersAngle', tables.angled.angle, -50.0, 50.0)
+      ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 8)
+      rv,tables.angled.text_align[1],tables.angled.text_align[2] =
+        ImGui.SliderDouble2(ctx, 'StyleVar_TableAngledHeadersTextAlign', tables.angled.text_align[1], tables.angled.text_align[2], 0.0, 1.0, "%.2f")
+      ImGui.TreePop(ctx)
+    end
+
+    ImGui.PushStyleVar(ctx, ImGui.StyleVar_TableAngledHeadersAngle, tables.angled.angle)
+    ImGui.PushStyleVar(ctx, ImGui.StyleVar_TableAngledHeadersTextAlign, table.unpack(tables.angled.text_align))
 
     if ImGui.BeginTable(ctx, 'table_angled_headers', columns_count, tables.angled.table_flags, 0.0, TEXT_BASE_HEIGHT * 12) then
       ImGui.TableSetupColumn(ctx, column_names[1], ImGui.TableColumnFlags_NoHide | ImGui.TableColumnFlags_NoReorder)
@@ -5719,6 +5760,8 @@ function demo.ShowDemoWindowTables()
       end
       ImGui.EndTable(ctx)
     end
+
+    ImGui.PopStyleVar(ctx, 2)
     ImGui.TreePop(ctx)
   end
 
@@ -6769,6 +6812,7 @@ function demo.GetStyleData()
     'ButtonTextAlign', 'SelectableTextAlign', 'CellPadding', 'ItemSpacing',
     'ItemInnerSpacing', 'FramePadding', 'WindowPadding', 'WindowMinSize',
     'WindowTitleAlign', 'SeparatorTextAlign', 'SeparatorTextPadding',
+    'TableAngledHeadersTextAlign',
   }
 
   for i, name in demo.EachEnum('StyleVar') do
@@ -6968,6 +7012,7 @@ function demo.ShowStyleEditor()
       ImGui.SeparatorText(ctx, 'Tables')
       slider('CellPadding',       0.0, 20.0, '%.0f')
       slider('TableAngledHeadersAngle', -50.0, 50.0, nil, ImGui.SliderAngle)
+      slider('TableAngledHeadersTextAlign', 0.0, 1.0, '%.2f')
 
       ImGui.SeparatorText(ctx, 'Widgets')
       slider('WindowTitleAlign', 0.0, 1.0, '%.2f')
