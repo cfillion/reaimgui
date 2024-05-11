@@ -28,7 +28,7 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
   flags &= ~ImGuiColorEditFlags_HDR; // enforce 0.0..1.0 limits
 }
 
-API_FUNC(0_1, bool, ColorEdit4, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorEdit4, (Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgba))
 (int*,API_RO(flags),ImGuiColorEditFlags_None),
 R"(Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xXXRRGGBB
@@ -51,7 +51,7 @@ R"(Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xXXRRGGBB
   return false;
 }
 
-API_FUNC(0_1, bool, ColorEdit3, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorEdit3, (Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgb))
 (int*,API_RO(flags),ImGuiColorEditFlags_None),
 "Color is in 0xXXRRGGBB. XX is ignored and will not be modified.")
@@ -62,7 +62,7 @@ API_FUNC(0_1, bool, ColorEdit3, (ImGui_Context*,ctx)
   return ColorEdit4::impl(ctx, label, API_RW(col_rgb), &flags);
 }
 
-API_FUNC(0_1, bool, ColorPicker4, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorPicker4, (Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgba))
 (int*,API_RO(flags),ImGuiColorEditFlags_None)(int*,API_RO(ref_col)),
 "")
@@ -88,7 +88,7 @@ API_FUNC(0_1, bool, ColorPicker4, (ImGui_Context*,ctx)
   return false;
 }
 
-API_FUNC(0_1, bool, ColorPicker3, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorPicker3, (Context*,ctx)
 (const char*,label)(int*,API_RW(col_rgb))
 (int*,API_RO(flags),ImGuiColorEditFlags_None),
 R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.)")
@@ -99,7 +99,7 @@ R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.)")
   return ColorPicker4::impl(ctx, label, API_RW(col_rgb), &flags, nullptr);
 }
 
-API_FUNC(0_1, bool, ColorButton, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ColorButton, (Context*,ctx)
 (const char*,desc_id)(int,col_rgba)(int*,API_RO(flags),ImGuiColorEditFlags_None)
 (double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
 R"(Display a color square/button, hover for details, return true when pressed.
@@ -117,7 +117,7 @@ Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xRRGGBB.)")
   return ImGui::ColorButton(desc_id, col, flags, size);
 }
 
-API_FUNC(0_1, void, SetColorEditOptions, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetColorEditOptions, (Context*,ctx)
 (int,flags),
 R"(Picker type, etc. User will be able to change many settings, unless you pass
 the _NoOptions flag to your calls.)")

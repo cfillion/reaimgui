@@ -38,7 +38,7 @@ static bool isUserType(const char *type)
   return type && *type && type[0] != '_';
 }
 
-API_FUNC(0_1, bool, BeginDragDropSource, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginDragDropSource, (Context*,ctx)
 (int*,API_RO(flags),ImGuiDragDropFlags_None),
 R"(Call after submitting an item which may be dragged. when this return true,
 you can call SetDragDropPayload() + EndDragDropSource()
@@ -51,7 +51,7 @@ as replacement).)")
   return ImGui::BeginDragDropSource(API_RO_GET(flags));
 }
 
-API_FUNC(0_1, bool, SetDragDropPayload, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SetDragDropPayload, (Context*,ctx)
 (const char*,type)(const char*,data)(int*,API_RO(cond),ImGuiCond_Always),
 R"(The type is a user defined string of maximum 32 characters.
 Strings starting with '_' are reserved for dear imgui internal types.
@@ -73,14 +73,14 @@ Data is copied and held by imgui.)")
   return ImGui::SetDragDropPayload(type, data, dataSize, API_RO_GET(cond));
 }
 
-API_FUNC(0_1, void, EndDragDropSource, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndDragDropSource, (Context*,ctx),
 "Only call EndDragDropSource() if BeginDragDropSource returns true!")
 {
   FRAME_GUARD;
   ImGui::EndDragDropSource();
 }
 
-API_FUNC(0_1, bool, BeginDragDropTarget, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, BeginDragDropTarget, (Context*,ctx),
 R"(Call after submitting an item that may receive a payload.
 If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.)")
 {
@@ -88,7 +88,7 @@ If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.)")
   return ImGui::BeginDragDropTarget();
 }
 
-API_FUNC(0_1, bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, AcceptDragDropPayload, (Context*,ctx)
 (const char*,type)
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
 (int*,API_RO(flags),ImGuiDragDropFlags_None),
@@ -134,7 +134,7 @@ static bool AcceptDragDropPayloadColor(int *color, bool alpha,
   return true;
 }
 
-API_FUNC(0_1, bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, AcceptDragDropPayloadRGB, (Context*,ctx)
 (int*,API_W(rgb))(int*,API_RO(flags),ImGuiDragDropFlags_None),
 "Accept a RGB color. See AcceptDragDropPayload.")
 {
@@ -142,7 +142,7 @@ API_FUNC(0_1, bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
   return AcceptDragDropPayloadColor(API_W(rgb), false, API_RO_GET(flags));
 }
 
-API_FUNC(0_1, bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, AcceptDragDropPayloadRGBA, (Context*,ctx)
 (int*,API_W(rgba))(int*,API_RO(flags),ImGuiDragDropFlags_None),
 "Accept a RGBA color. See AcceptDragDropPayload.")
 {
@@ -150,7 +150,7 @@ API_FUNC(0_1, bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
   return AcceptDragDropPayloadColor(API_W(rgba), true, API_RO_GET(flags));
 }
 
-API_FUNC(0_1, bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, AcceptDragDropPayloadFiles, (Context*,ctx)
 (int*,API_W(count))(int*,API_RO(flags),ImGuiDragDropFlags_None),
 R"(Accept a list of dropped files. See AcceptDragDropPayload and GetDragDropPayloadFile.)")
 {
@@ -167,14 +167,14 @@ R"(Accept a list of dropped files. See AcceptDragDropPayload and GetDragDropPayl
   return payload;
 }
 
-API_FUNC(0_1, void, EndDragDropTarget, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndDragDropTarget, (Context*,ctx),
 "Only call EndDragDropTarget() if BeginDragDropTarget returns true!")
 {
   FRAME_GUARD;
   ImGui::EndDragDropTarget();
 }
 
-API_FUNC(0_1, bool, GetDragDropPayload, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, GetDragDropPayload, (Context*,ctx)
 (char*,API_W(type))(int,API_W_SZ(type))
 (char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
 (bool*,API_W(is_preview))(bool*,API_W(is_delivery)),
@@ -199,7 +199,7 @@ Returns false when drag and drop is finished or inactive.)")
   return true;
 }
 
-API_FUNC(0_1, bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, GetDragDropPayloadFile, (Context*,ctx)
 (int,index)(char*,API_W(filename))(int,API_W_SZ(filename)),
 R"(Get a filename from the list of dropped files.
 Returns false if index is out of bounds.)")

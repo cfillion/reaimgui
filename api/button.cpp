@@ -23,7 +23,7 @@ R"(Most widgets return true when the value has been changed or when pressed/sele
 You may also use one of the many IsItem* functions (e.g. IsItemActive,
 IsItemHovered, etc.) to query widget state.)");
 
-API_FUNC(0_1, bool, Button, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, Button, (Context*,ctx)
 (const char*,label)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
 "")
 {
@@ -31,7 +31,7 @@ API_FUNC(0_1, bool, Button, (ImGui_Context*,ctx)
   return ImGui::Button(label, ImVec2(API_RO_GET(size_w), API_RO_GET(size_h)));
 }
 
-API_FUNC(0_1, bool, SmallButton, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, SmallButton, (Context*,ctx)
 (const char*,label),
 "Button with StyleVar_FramePadding.y == 0 to easily embed within text.")
 {
@@ -39,7 +39,7 @@ API_FUNC(0_1, bool, SmallButton, (ImGui_Context*,ctx)
   return ImGui::SmallButton(label);
 }
 
-API_FUNC(0_1, bool, InvisibleButton, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, InvisibleButton, (Context*,ctx)
 (const char*,str_id)(double,size_w)(double,size_h)
 (int*,API_RO(flags),ImGuiButtonFlags_None),
 R"(Flexible button behavior without the visuals, frequently useful to build
@@ -49,7 +49,7 @@ custom behaviors using the public api (along with IsItemActive, IsItemHovered, e
   return ImGui::InvisibleButton(str_id, ImVec2(size_w, size_h), API_RO_GET(flags));
 }
 
-API_FUNC(0_1, bool, ArrowButton, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, ArrowButton, (Context*,ctx)
 (const char*,str_id)(int,dir),
 "Square button with an arrow shape. 'dir' is one of the Dir_* values")
 {
@@ -57,7 +57,7 @@ API_FUNC(0_1, bool, ArrowButton, (ImGui_Context*,ctx)
   return ImGui::ArrowButton(str_id, dir);
 }
 
-API_FUNC(0_1, bool, Checkbox, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, Checkbox, (Context*,ctx)
 (const char*,label)(bool*,API_RW(v)),
 "")
 {
@@ -67,7 +67,7 @@ API_FUNC(0_1, bool, Checkbox, (ImGui_Context*,ctx)
   return ImGui::Checkbox(label, API_RW(v));
 }
 
-API_FUNC(0_1, bool, CheckboxFlags, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, CheckboxFlags, (Context*,ctx)
 (const char*,label)(int*,API_RW(flags))(int,flags_value),
 "")
 {
@@ -75,7 +75,7 @@ API_FUNC(0_1, bool, CheckboxFlags, (ImGui_Context*,ctx)
   return ImGui::CheckboxFlags(label, API_RW(flags), flags_value);
 }
 
-API_FUNC(0_1, bool, RadioButton, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, RadioButton, (Context*,ctx)
 (const char*,label)(bool,active),
 R"(Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })")
 {
@@ -83,7 +83,7 @@ R"(Use with e.g. if (RadioButton("one", my_value==1)) { my_value = 1; })")
   return ImGui::RadioButton(label, active);
 }
 
-API_FUNC(0_1, bool, RadioButtonEx, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, RadioButtonEx, (Context*,ctx)
 (const char*,label)(int*,API_RW(v))(int,v_button),
 "Shortcut to handle RadioButton's example pattern when value is an integer")
 {
@@ -91,7 +91,7 @@ API_FUNC(0_1, bool, RadioButtonEx, (ImGui_Context*,ctx)
   return ImGui::RadioButton(label, API_RW(v), v_button);
 }
 
-API_FUNC(0_1, void, PushButtonRepeat, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, PushButtonRepeat, (Context*,ctx)
 (bool,repeat),
 R"(In 'repeat' mode, Button*() functions return repeated true in a typematic
 manner (using ConfigVar_KeyRepeatDelay/ConfigVar_KeyRepeatRate settings).
@@ -103,7 +103,7 @@ held in the current frame.)")
   ImGui::PushButtonRepeat(repeat);
 }
 
-API_FUNC(0_1, void, PopButtonRepeat, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, PopButtonRepeat, (Context*,ctx),
 "See PushButtonRepeat")
 {
   FRAME_GUARD;

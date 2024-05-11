@@ -100,7 +100,7 @@ API_FUNC(0_9, const char*, GetBuiltinPath, NO_ARGS,
   return output.c_str();
 }
 
-API_FUNC(0_1, void, ProgressBar, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, ProgressBar, (Context*,ctx)
 (double,fraction)
 (double*,API_RO(size_arg_w),-FLT_MIN)(double*,API_RO(size_arg_h),0.0)
 (const char*,API_RO(overlay)),
@@ -113,7 +113,7 @@ The value must be animated along with time, for example `-1.0 * ImGui.GetTime()`
   ImGui::ProgressBar(fraction, size, API_RO(overlay));
 }
 
-API_FUNC(0_5_1, void, PointConvertNative, (ImGui_Context*,ctx)
+API_FUNC(0_5_1, void, PointConvertNative, (Context*,ctx)
 (double*,API_RW(x))(double*,API_RW(y))(bool*,API_RO(to_native),false),
 R"(Convert a position from the current platform's native coordinate position
 system to ReaImGui global coordinates (or vice versa).
@@ -165,7 +165,7 @@ handled in dear imgui.
   displayed + used as an ID, whereas "str_id" denote a string that is only used
   as an ID and not normally displayed.)");
 
-API_FUNC(0_1, void, PushID, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, PushID, (Context*,ctx)
 (const char*,str_id),
 "Push string into the ID stack.")
 {
@@ -173,7 +173,7 @@ API_FUNC(0_1, void, PushID, (ImGui_Context*,ctx)
   ImGui::PushID(str_id);
 }
 
-API_FUNC(0_1, void, PopID, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, PopID, (Context*,ctx),
 "Pop from the ID stack.")
 {
   FRAME_GUARD;
@@ -237,7 +237,7 @@ API_SUBSECTION("Logging/Capture",
 R"(All text output from the interface can be captured into tty/file/clipboard.
 By default, tree nodes are automatically opened during logging.)");
 
-API_FUNC(0_1, void, LogToTTY, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, LogToTTY, (Context*,ctx)
 (int*,API_RO(auto_open_depth),-1),
 "Start logging all text output from the interface to the TTY (stdout).")
 {
@@ -245,7 +245,7 @@ API_FUNC(0_1, void, LogToTTY, (ImGui_Context*,ctx)
   ImGui::LogToTTY(API_RO_GET(auto_open_depth));
 }
 
-API_FUNC(0_1, void, LogToFile, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, LogToFile, (Context*,ctx)
 (int*,API_RO(auto_open_depth),-1)(const char*,API_RO(filename)),
 R"(Start logging all text output from the interface to a file.
 The data is saved to $resource_path/imgui_log.txt if filename is nil.)")
@@ -255,7 +255,7 @@ The data is saved to $resource_path/imgui_log.txt if filename is nil.)")
   ImGui::LogToFile(API_RO_GET(auto_open_depth), API_RO(filename));
 }
 
-API_FUNC(0_1, void, LogToClipboard, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, LogToClipboard, (Context*,ctx)
 (int*,API_RO(auto_open_depth),-1),
 R"(Start logging all text output from the interface to the OS clipboard.
 See also SetClipboardText.)")
@@ -264,14 +264,14 @@ See also SetClipboardText.)")
   ImGui::LogToClipboard(API_RO_GET(auto_open_depth));
 }
 
-API_FUNC(0_1, void, LogFinish, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, LogFinish, (Context*,ctx),
 "Stop logging (close file, etc.)")
 {
   FRAME_GUARD;
   ImGui::LogFinish();
 }
 
-API_FUNC(0_1, void, LogText, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, LogText, (Context*,ctx)
 (const char*,text),
 "Pass text data straight to log (without being displayed)")
 {
@@ -281,7 +281,7 @@ API_FUNC(0_1, void, LogText, (ImGui_Context*,ctx)
 
 API_SUBSECTION("Clipboard");
 
-API_FUNC(0_1, const char*, GetClipboardText, (ImGui_Context*,ctx),
+API_FUNC(0_1, const char*, GetClipboardText, (Context*,ctx),
 "")
 {
   assertValid(ctx);
@@ -289,7 +289,7 @@ API_FUNC(0_1, const char*, GetClipboardText, (ImGui_Context*,ctx),
   return ImGui::GetClipboardText();
 }
 
-API_FUNC(0_1, void, SetClipboardText, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetClipboardText, (Context*,ctx)
 (const char*,text),
 R"(See also the LogToClipboard function to capture GUI into clipboard,
 or easily output text data to the clipboard.)")

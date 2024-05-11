@@ -75,7 +75,6 @@ private:
   unsigned char m_keepAlive, m_flags;
 };
 
-using ImGui_Resource = Resource;
 API_REGISTER_OBJECT_TYPE(Resource);
 
 #endif

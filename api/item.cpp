@@ -19,7 +19,7 @@
 
 API_SECTION("Item & Status");
 
-API_FUNC(0_9, void, SetNextItemAllowOverlap, (ImGui_Context*,ctx),
+API_FUNC(0_9, void, SetNextItemAllowOverlap, (Context*,ctx),
 R"(Allow next item to be overlapped by a subsequent item.
 Useful with invisible buttons, selectable, treenode covering an area where
 subsequent items may need to be added. Note that both Selectable() and TreeNode()
@@ -29,7 +29,7 @@ have dedicated flags doing this.)")
   ImGui::SetNextItemAllowOverlap();
 }
 
-API_FUNC(0_5_5, void, BeginDisabled, (ImGui_Context*,ctx)
+API_FUNC(0_5_5, void, BeginDisabled, (Context*,ctx)
 (bool*,API_RO(disabled),true),
 R"(Disable all user interactions and dim items visuals
 (applying StyleVar_DisabledAlpha over current colors).
@@ -42,14 +42,14 @@ If you can avoid calling BeginDisabled(false)/EndDisabled() best to avoid it.)")
   ImGui::BeginDisabled(API_RO_GET(disabled));
 }
 
-API_FUNC(0_5_5, void, EndDisabled, (ImGui_Context*,ctx),
+API_FUNC(0_5_5, void, EndDisabled, (Context*,ctx),
 "See BeginDisabled.")
 {
   FRAME_GUARD;
   ImGui::EndDisabled();
 }
 
-API_FUNC(0_9, void, DebugStartItemPicker, (ImGui_Context*,ctx),
+API_FUNC(0_9, void, DebugStartItemPicker, (Context*,ctx),
 "")
 {
   FRAME_GUARD;
@@ -61,14 +61,14 @@ R"~(Prefer using "SetItemDefaultFocus()" over
 "if(IsWindowAppearing()) SetScrollHereY()" when applicable to signify
 "this is the default item".)~");
 
-API_FUNC(0_1, void, SetItemDefaultFocus, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, SetItemDefaultFocus, (Context*,ctx),
 "Make last item the default focused item of a window.")
 {
   FRAME_GUARD;
   ImGui::SetItemDefaultFocus();
 }
 
-API_FUNC(0_1, void, SetKeyboardFocusHere, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetKeyboardFocusHere, (Context*,ctx)
 (int*,API_RO(offset),0),
 R"(Focus keyboard on the next widget. Use positive 'offset' to access sub
 components of a multiple component widget. Use -1 to access previous widget.)")
@@ -77,7 +77,7 @@ components of a multiple component widget. Use -1 to access previous widget.)")
   ImGui::SetKeyboardFocusHere(API_RO_GET(offset));
 }
 
-API_FUNC(0_8_5, void, PushTabStop, (ImGui_Context*,ctx)
+API_FUNC(0_8_5, void, PushTabStop, (Context*,ctx)
 (bool,tab_stop),
 R"(Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it
 for certain widgets)")
@@ -86,7 +86,7 @@ for certain widgets)")
   ImGui::PushTabStop(tab_stop);
 }
 
-API_FUNC(0_8_5, void, PopTabStop, (ImGui_Context*,ctx),
+API_FUNC(0_8_5, void, PopTabStop, (Context*,ctx),
 "See PushTabStop")
 {
   FRAME_GUARD;
@@ -95,7 +95,7 @@ API_FUNC(0_8_5, void, PopTabStop, (ImGui_Context*,ctx),
 
 API_SUBSECTION("Dimensions");
 
-API_FUNC(0_1, void, GetItemRectMin, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, GetItemRectMin, (Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 "Get upper-left bounding rectangle of the last item (screen space)")
 {
@@ -105,7 +105,7 @@ API_FUNC(0_1, void, GetItemRectMin, (ImGui_Context*,ctx)
   if(API_W(y)) *API_W(y) = rect.y;
 }
 
-API_FUNC(0_1, void, GetItemRectMax, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, GetItemRectMax, (Context*,ctx)
 (double*,API_W(x))(double*,API_W(y)),
 "Get lower-right bounding rectangle of the last item (screen space)")
 {
@@ -115,7 +115,7 @@ API_FUNC(0_1, void, GetItemRectMax, (ImGui_Context*,ctx)
   if(API_W(y)) *API_W(y) = rect.y;
 }
 
-API_FUNC(0_1, void, GetItemRectSize, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, GetItemRectSize, (Context*,ctx)
 (double*,API_W(w))(double*,API_W(h)),
 "Get size of last item")
 {
@@ -125,7 +125,7 @@ API_FUNC(0_1, void, GetItemRectSize, (ImGui_Context*,ctx)
   if(API_W(h)) *API_W(h) = rect.y;
 }
 
-API_FUNC(0_1, void, PushItemWidth, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, PushItemWidth, (Context*,ctx)
 (double,item_width),
 R"(Push width of items for common large "item+label" widgets.
 
@@ -138,14 +138,14 @@ R"(Push width of items for common large "item+label" widgets.
   ImGui::PushItemWidth(item_width);
 }
 
-API_FUNC(0_1, void, PopItemWidth, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, PopItemWidth, (Context*,ctx),
 "See PushItemWidth")
 {
   FRAME_GUARD;
   ImGui::PopItemWidth();
 }
 
-API_FUNC(0_1, void, SetNextItemWidth, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetNextItemWidth, (Context*,ctx)
 (double,item_width),
 R"(Set width of the _next_ common large "item+label" widget.
 
@@ -157,7 +157,7 @@ R"(Set width of the _next_ common large "item+label" widget.
   ImGui::SetNextItemWidth(item_width);
 }
 
-API_FUNC(0_1, double, CalcItemWidth, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, CalcItemWidth, (Context*,ctx),
 R"(Width of item given pushed settings and current cursor position.
 NOT necessarily the width of last item unlike most 'Item' functions.)")
 {
@@ -171,7 +171,7 @@ R"(Most of the functions are referring to the previous Item that has been submit
 See Demo Window under "Widgets->Querying Item Status" for an interactive
 visualization of most of those functions.)");
 
-API_FUNC(0_9, bool, IsItemHovered, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsItemHovered, (Context*,ctx)
 (int*,API_RO(flags),ImGuiHoveredFlags_None),
 R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.).
 See HoveredFlags_* for more options.)")
@@ -180,7 +180,7 @@ See HoveredFlags_* for more options.)")
   return ImGui::IsItemHovered(API_RO_GET(flags));
 }
 
-API_FUNC(0_1, bool, IsItemActive, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsItemActive, (Context*,ctx),
 R"(Is the last item active? (e.g. button being held, text field being edited.
 This will continuously return true while holding mouse button on an item.
 Items that don't interact will always return false.)")
@@ -189,14 +189,14 @@ Items that don't interact will always return false.)")
   return ImGui::IsItemActive();
 }
 
-API_FUNC(0_1, bool, IsItemFocused, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsItemFocused, (Context*,ctx),
 "Is the last item focused for keyboard/gamepad navigation?")
 {
   FRAME_GUARD;
   return ImGui::IsItemFocused();
 }
 
-API_FUNC(0_1, bool, IsItemClicked, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, IsItemClicked, (Context*,ctx)
 (int*,API_RO(mouse_button),ImGuiMouseButton_Left),
 R"(Is the last item clicked? (e.g. button/node just clicked on)
 == IsMouseClicked(mouse_button) && IsItemHovered().
@@ -208,14 +208,14 @@ Most widgets have specific reactions based on mouse-up/down state, mouse positio
   return ImGui::IsItemClicked(API_RO_GET(mouse_button));
 }
 
-API_FUNC(0_1, bool, IsItemVisible, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsItemVisible, (Context*,ctx),
 "Is the last item visible? (items may be out of sight because of clipping/scrolling)")
 {
   FRAME_GUARD;
   return ImGui::IsItemVisible();
 }
 
-API_FUNC(0_1, bool, IsItemEdited, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsItemEdited, (Context*,ctx),
 R"(Did the last item modify its underlying value this frame? or was pressed?
 This is generally the same as the "bool" return value of many widgets.)")
 {
@@ -223,14 +223,14 @@ This is generally the same as the "bool" return value of many widgets.)")
   return ImGui::IsItemEdited();
 }
 
-API_FUNC(0_1, bool, IsItemActivated, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsItemActivated, (Context*,ctx),
 "Was the last item just made active (item was previously inactive).")
 {
   FRAME_GUARD;
   return ImGui::IsItemActivated();
 }
 
-API_FUNC(0_1, bool, IsItemDeactivated, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsItemDeactivated, (Context*,ctx),
 R"(Was the last item just made inactive (item was previously active).
 Useful for Undo/Redo patterns with widgets that require continuous editing.)")
 {
@@ -238,7 +238,7 @@ Useful for Undo/Redo patterns with widgets that require continuous editing.)")
   return ImGui::IsItemDeactivated();
 }
 
-API_FUNC(0_1, bool, IsItemDeactivatedAfterEdit, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsItemDeactivatedAfterEdit, (Context*,ctx),
 R"(Was the last item just made inactive and made a value change when it was
 active? (e.g. Slider/Drag moved).
 
@@ -250,21 +250,21 @@ will return true even when clicking an already selected item).)")
   return ImGui::IsItemDeactivatedAfterEdit();
 }
 
-API_FUNC(0_1, bool, IsAnyItemHovered, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsAnyItemHovered, (Context*,ctx),
 "")
 {
   FRAME_GUARD;
   return ImGui::IsAnyItemHovered();
 }
 
-API_FUNC(0_1, bool, IsAnyItemActive, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsAnyItemActive, (Context*,ctx),
 "")
 {
   FRAME_GUARD;
   return ImGui::IsAnyItemActive();
 }
 
-API_FUNC(0_1, bool, IsAnyItemFocused, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsAnyItemFocused, (Context*,ctx),
 "")
 {
   FRAME_GUARD;

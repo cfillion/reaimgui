@@ -21,7 +21,7 @@
 
 API_SECTION("Context");
 
-API_FUNC(0_5, ImGui_Context*, CreateContext,
+API_FUNC(0_5, Context*, CreateContext,
 (const char*,label)(int*,API_RO(config_flags),ImGuiConfigFlags_None),
 R"(Create a new ReaImGui context.
 The context will remain valid as long as it is used in each defer cycle.
@@ -32,28 +32,28 @@ and also as a unique identifier for storing settings.)")
   return new Context { label, API_RO_GET(config_flags) };
 }
 
-API_FUNC(0_1, double, GetTime, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetTime, (Context*,ctx),
 "Get global imgui time. Incremented every frame.")
 {
   FRAME_GUARD;
   return ImGui::GetTime();
 }
 
-API_FUNC(0_1, double, GetDeltaTime, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetDeltaTime, (Context*,ctx),
 "Time elapsed since last frame, in seconds.")
 {
   FRAME_GUARD;
   return ctx->IO().DeltaTime;
 }
 
-API_FUNC(0_1, int, GetFrameCount, (ImGui_Context*,ctx),
+API_FUNC(0_1, int, GetFrameCount, (Context*,ctx),
 "Get global imgui frame count. incremented by 1 every frame.")
 {
   FRAME_GUARD;
   return ImGui::GetFrameCount();
 }
 
-API_FUNC(0_8, double, GetFramerate, (ImGui_Context*,ctx),
+API_FUNC(0_8, double, GetFramerate, (Context*,ctx),
 R"(Estimate of application framerate (rolling average over 60 frames, based on
 GetDeltaTime), in frame per second. Solely for convenience.)")
 {
@@ -61,7 +61,7 @@ GetDeltaTime), in frame per second. Solely for convenience.)")
   return ctx->IO().Framerate;
 }
 
-API_FUNC(0_8, void, Attach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
+API_FUNC(0_8, void, Attach, (Context*,ctx)(Resource*,obj),
 R"(Link the object's lifetime to the given context.
 Objects can be draw list splitters, fonts, images, list clippers, etc.
 Call Detach to let the object be garbage-collected after unuse again.
@@ -78,7 +78,7 @@ context per defer cycle. See "limitations" in the font API documentation.)")
   ctx->attach(obj);
 }
 
-API_FUNC(0_8, void, Detach, (ImGui_Context*,ctx)(ImGui_Resource*,obj),
+API_FUNC(0_8, void, Detach, (Context*,ctx)(Resource*,obj),
 R"(Unlink the object's lifetime. Unattached objects are automatically destroyed
 when left unused. You may check whether an object has been destroyed using
 ValidatePtr.)")
@@ -225,7 +225,7 @@ static_assert(__COUNTER__ - baseConfigVar - 1 == std::size(g_configVars),
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
-API_FUNC(0_7, double, GetConfigVar, (ImGui_Context*,ctx)
+API_FUNC(0_7, double, GetConfigVar, (Context*,ctx)
 (int,var_idx),
 "")
 {
@@ -249,7 +249,7 @@ API_FUNC(0_7, double, GetConfigVar, (ImGui_Context*,ctx)
   }, g_configVars[var_idx]);
 }
 
-API_FUNC(0_7, void, SetConfigVar, (ImGui_Context*,ctx)
+API_FUNC(0_7, void, SetConfigVar, (Context*,ctx)
 (int,var_idx)(double,value),
 "")
 {

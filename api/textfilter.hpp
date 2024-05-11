@@ -32,7 +32,6 @@ private:
   ImGuiTextFilter m_filter;
 };
 
-using ImGui_TextFilter = TextFilter;
 API_REGISTER_OBJECT_TYPE(TextFilter);
 
 #endif

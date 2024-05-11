@@ -79,7 +79,7 @@ static_assert(std::size(g_styleVars) == ImGuiStyleVar_COUNT);
 
 API_SUBSECTION("Variables");
 
-API_FUNC(0_1, void, PushStyleVar, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, PushStyleVar, (Context*,ctx)
 (int,var_idx)(double,val1)(double*,API_RO(val2)),
 R"(Temporarily modify a style variable.
 Call PopStyleVar to undo after use (before the end of the frame).
@@ -104,7 +104,7 @@ See StyleVar_* for possible values of 'var_idx'.)")
   }, g_styleVars[var_idx]);
 }
 
-API_FUNC(0_1, void, PopStyleVar, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, PopStyleVar, (Context*,ctx)
 (int*,API_RO(count),1),
 "Reset a style variable.")
 {
@@ -112,7 +112,7 @@ API_FUNC(0_1, void, PopStyleVar, (ImGui_Context*,ctx)
   ImGui::PopStyleVar(API_RO_GET(count));
 }
 
-API_FUNC(0_1, void, GetStyleVar, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, GetStyleVar, (Context*,ctx)
 (int,var_idx)(double*,API_W(val1))(double*,API_W(val2)),
 "")
 {
@@ -216,7 +216,7 @@ axis. Generally small values. .y is recommended to be == StyleVar_FramePadding.y
 
 API_SUBSECTION("Colors");
 
-API_FUNC(0_1, int, GetColor, (ImGui_Context*,ctx)
+API_FUNC(0_1, int, GetColor, (Context*,ctx)
 (int,idx)(double*,API_RO(alpha_mul),1.0),
 R"(Retrieve given style color with style alpha applied and optional extra alpha
 multiplier, packed as a 32-bit value (RGBA). See Col_* for available style colors.)")
@@ -227,7 +227,7 @@ multiplier, packed as a 32-bit value (RGBA). See Col_* for available style color
   return Color::toBigEndian(ImGui::GetColorU32(col, API_RO_GET(alpha_mul)));
 }
 
-API_FUNC(0_1, int, GetColorEx, (ImGui_Context*,ctx)
+API_FUNC(0_1, int, GetColorEx, (Context*,ctx)
 (int,col_rgba)(double*,API_RO(alpha_mul),1.0),
 "Retrieve given color with style alpha applied, packed as a 32-bit value (RGBA).")
 {
@@ -238,7 +238,7 @@ API_FUNC(0_1, int, GetColorEx, (ImGui_Context*,ctx)
   return col_rgba;
 }
 
-API_FUNC(0_1, int, GetStyleColor, (ImGui_Context*,ctx)
+API_FUNC(0_1, int, GetStyleColor, (Context*,ctx)
 (int,idx),
 R"(Retrieve style color as stored in ImGuiStyle structure.
 Use to feed back into PushStyleColor, Otherwise use GetColor to get style color
@@ -249,7 +249,7 @@ with style alpha baked in. See Col_* for available style colors.)")
   return Color { ImGui::GetStyleColorVec4(idx) }.pack(true);
 }
 
-API_FUNC(0_1, void, PushStyleColor, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, PushStyleColor, (Context*,ctx)
 (int,idx)(int,col_rgba),
 R"(Temporarily modify a style color.
 Call PopStyleColor to undo after use (before the end of the frame).
@@ -260,7 +260,7 @@ See Col_* for available style colors.)")
   ImGui::PushStyleColor(idx, Color(col_rgba));
 }
 
-API_FUNC(0_1, void, PopStyleColor, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, PopStyleColor, (Context*,ctx)
 (int*,API_RO(count),1),
 "")
 {
@@ -268,7 +268,7 @@ API_FUNC(0_1, void, PopStyleColor, (ImGui_Context*,ctx)
   ImGui::PopStyleColor(API_RO_GET(count));
 }
 
-API_FUNC(0_9, void, DebugFlashStyleColor, (ImGui_Context*,ctx)
+API_FUNC(0_9, void, DebugFlashStyleColor, (Context*,ctx)
 (int,idx),
 "")
 {

@@ -19,7 +19,7 @@
 
 API_SECTION("Tab Bar");
 
-API_FUNC(0_1, bool, BeginTabBar, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginTabBar, (Context*,ctx)
 (const char*,str_id)(int*,API_RO(flags),ImGuiTabBarFlags_None),
 "Create and append into a TabBar.")
 {
@@ -27,7 +27,7 @@ API_FUNC(0_1, bool, BeginTabBar, (ImGui_Context*,ctx)
   return ImGui::BeginTabBar(str_id, API_RO_GET(flags));
 }
 
-API_FUNC(0_1, void, EndTabBar, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndTabBar, (Context*,ctx),
 "Only call EndTabBar() if BeginTabBar() returns true!")
 {
   FRAME_GUARD;
@@ -58,7 +58,7 @@ API_ENUM(0_1, ImGui, TabBarFlags_FittingPolicyScroll,
 
 API_SUBSECTION("Tab Item");
 
-API_FUNC(0_1, bool, BeginTabItem, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginTabItem, (Context*,ctx)
 (const char*,label)(bool*,API_RWO(p_open))
 (int*,API_RO(flags),ImGuiTabItemFlags_None),
 R"(Create a Tab. Returns true if the Tab is selected.
@@ -69,14 +69,14 @@ Set 'p_open' to true to enable the close button.)")
     openPtrBehavior(API_RWO(p_open)), API_RO_GET(flags));
 }
 
-API_FUNC(0_1, void, EndTabItem, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndTabItem, (Context*,ctx),
 "Only call EndTabItem() if BeginTabItem() returns true!")
 {
   FRAME_GUARD;
   ImGui::EndTabItem();
 }
 
-API_FUNC(0_1, bool, TabItemButton, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, TabItemButton, (Context*,ctx)
 (const char*,label)(int*,API_RO(flags),ImGuiTabItemFlags_None),
 R"(Create a Tab behaving like a button. Return true when clicked.
 Cannot be selected in the tab bar.)")
@@ -85,7 +85,7 @@ Cannot be selected in the tab bar.)")
   return ImGui::TabItemButton(label, API_RO_GET(flags));
 }
 
-API_FUNC(0_1, void, SetTabItemClosed, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetTabItemClosed, (Context*,ctx)
 (const char*,tab_or_docked_window_label),
 R"(Notify TabBar or Docking system of a closed tab/window ahead
 (useful to reduce visual flicker on reorderable tab bars).

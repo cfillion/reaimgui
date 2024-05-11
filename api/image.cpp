@@ -32,7 +32,7 @@ Width/height are limited to 8192 pixels.
 There are also image functions in the DrawList API such as
 DrawList_AddImageQuad and DrawList_AddImageRounded.)");
 
-API_FUNC(0_9, ImGui_Image*, CreateImage,
+API_FUNC(0_9, Image*, CreateImage,
 (const char*,file)(int*,API_RO(flags)),
 R"(The returned object is valid as long as it is used in each defer cycle
 unless attached to a context (see Attach).
@@ -43,7 +43,7 @@ unless attached to a context (see Attach).
   return Image::fromFile(file);
 }
 
-API_FUNC(0_9, ImGui_Image*, CreateImageFromMem,
+API_FUNC(0_9, Image*, CreateImageFromMem,
 (const char*,data)(int,data_sz),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Load from a file using
 CreateImage or explicitely specify data_sz if supporting older versions.)")
@@ -52,7 +52,7 @@ CreateImage or explicitely specify data_sz if supporting older versions.)")
   return Image::fromMemory(data, data_sz);
 }
 
-API_FUNC(0_8, void, Image_GetSize, (ImGui_Image*,image)
+API_FUNC(0_8, void, Image_GetSize, (class Image*,image)
 (double*,API_W(w))(double*,API_W(h)),
 "")
 {
@@ -61,8 +61,8 @@ API_FUNC(0_8, void, Image_GetSize, (ImGui_Image*,image)
   if(API_W(h)) *API_W(h) = image->height();
 }
 
-API_FUNC(0_8, void, Image, (ImGui_Context*,ctx)
-(ImGui_Image*,image)(double,image_size_w)(double,image_size_h)
+API_FUNC(0_8, void, Image, (Context*,ctx)
+(class Image*,image)(double,image_size_w)(double,image_size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
 (int*,API_RO(tint_col_rgba),0xFFFFFFFF)(int*,API_RO(border_col_rgba),0x00000000),
@@ -78,8 +78,8 @@ API_FUNC(0_8, void, Image, (ImGui_Context*,ctx)
     Color(API_RO_GET(tint_col_rgba)), Color(API_RO_GET(border_col_rgba)));
 }
 
-API_FUNC(0_8, bool, ImageButton, (ImGui_Context*,ctx)
-(const char*,str_id)(ImGui_Image*,image)(double,image_size_w)(double,image_size_h)
+API_FUNC(0_8, bool, ImageButton, (Context*,ctx)
+(const char*,str_id)(class Image*,image)(double,image_size_w)(double,image_size_h)
 (double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
 (double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
 (int*,API_RO(bg_col_rgba),0x00000000)(int*,API_RO(tint_col_rgba),0xFFFFFFFF),
@@ -99,8 +99,7 @@ API_SUBSECTION("Image Set",
 R"(Helper to automatically select and scale an image to the DPI scale of
 the current window upon usage.
 
-ImGui_ImageSet objects can be given to any function that expect an image as
-parameter.
+ImageSet objects may be used in any function that expect an image as parameter.
 
 Usage:
 
@@ -113,14 +112,14 @@ Usage:
       -- ...
     end)");
 
-API_FUNC(0_9, ImGui_ImageSet*, CreateImageSet, NO_ARGS,
+API_FUNC(0_9, ImageSet*, CreateImageSet, NO_ARGS,
 "")
 {
   return new ImageSet;
 }
 
-API_FUNC(0_8, void, ImageSet_Add, (ImGui_ImageSet*,set)
-(double,scale)(ImGui_Image*,image),
+API_FUNC(0_8, void, ImageSet_Add, (class ImageSet*,set)
+(double,scale)(class Image*,image),
 "'img' cannot be another ImageSet.")
 {
   assertValid(set);

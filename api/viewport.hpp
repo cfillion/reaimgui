@@ -40,7 +40,6 @@ struct ViewportProxy
   using Decoder = MakeDecoder<Main, Window>;
 };
 
-using ImGui_Viewport = ViewportProxy;
 API_REGISTER_TYPE(ViewportProxy*, "ImGui_Viewport*");
 
 #endif

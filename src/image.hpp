@@ -49,7 +49,6 @@ public:
   bool attachable(const Context *) const override { return true; }
 };
 
-using ImGui_Image = Image;
 API_REGISTER_OBJECT_TYPE(Image);
 
 class Bitmap : public Image {
@@ -97,7 +96,6 @@ private:
   std::vector<Item> m_images;
 };
 
-using ImGui_ImageSet = ImageSet;
 API_REGISTER_OBJECT_TYPE(ImageSet);
 
 #endif

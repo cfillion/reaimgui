@@ -251,7 +251,7 @@ OVERRIDES = {
   # no text_end argument
   'ImVec2 ImGui::CalcTextSize(const char*, const char*, bool, float)'        => 'void CalcTextSize(const char*, double*, double*, bool*, double*)',
   'void ImDrawList::AddText(const ImVec2&, ImU32, const char*, const char*)' => 'void DrawList_AddText(double, double, int, const char*)',
-  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'void DrawList_AddTextEx(ImGui_Font*, double, double, double, int, const char*, double*, double*, double*, double*, double*)',
+  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'void DrawList_AddTextEx(Font*, double, double, double, int, const char*, double*, double*, double*, double*, double*)',
 
   'bool ImGui::DragScalarN(const char*, ImGuiDataType, void*, int, float, const void*, const void*, const char*, ImGuiSliderFlags)' => 'bool DragDoubleN(const char*, reaper_array*, double*, double*, double*, const char*, int*)',
   'bool ImGui::SliderScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiSliderFlags)'      => 'bool SliderDoubleN(const char*, reaper_array*, double, double, const char*, int*)',
@@ -263,7 +263,7 @@ OVERRIDES = {
   # ImGuiID -> str_id
   'bool ImGui::BeginChildFrame(ImGuiID, const ImVec2&, ImGuiWindowFlags)' => 'bool BeginChildFrame(const char*, double, double, int*)',
 
-  'bool ImGuiTextFilter::Draw(const char*, float)' => 'bool TextFilter_Draw(ImGui_Context*, const char*, double*)',
+  'bool ImGuiTextFilter::Draw(const char*, float)' => 'bool TextFilter_Draw(Context*, const char*, double*)',
 
   # preventing crashes when calling ImDrawListSplitter::Merge on a blank,
   # unused DrawList different from the one given to Split/SetCurrentChannel
@@ -274,17 +274,17 @@ OVERRIDES = {
 
 # argument position & name are checked
 RESOURCES = {
-  'ImGui_Context*'          => 'ctx',
-  'ImGui_DrawList*'         => 'draw_list',
-  'ImGui_DrawListSplitter*' => 'splitter',
-  'ImGui_Font*'             => 'font',
-  'ImGui_Function*'         => 'func',
-  'ImGui_Image*'            => 'image',
-  'ImGui_ImageSet*'         => 'set',
-  'ImGui_ListClipper*'      => 'clipper',
-  'ImGui_Resource*'         => 'obj',
-  'ImGui_TextFilter*'       => 'filter',
-  'ImGui_Viewport*'         => 'viewport',
+  'Context*'          => 'ctx',
+  'DrawListProxy*'    => 'draw_list',
+  'DrawListSplitter*' => 'splitter',
+  'Font*'             => 'font',
+  'Function*'         => 'func',
+  'Image*'            => 'image',
+  'ImageSet*'         => 'set',
+  'ListClipper*'      => 'clipper',
+  'Resource*'         => 'obj',
+  'TextFilter*'       => 'filter',
+  'ViewportProxy*'    => 'viewport',
 }
 
 # types REAPER's parser knows about
@@ -364,15 +364,17 @@ private
     when /unsigned int(\*)?/, /size_t(\*)?/
       "int#{$~[1]}"
     when 'ImTextureID'
-      'ImGui_Image*'
+      'Image*'
     when /Callback\z/
-      "ImGui_Function*"
+      "Function*"
     when /\AIm(?:Gui|Draw)[^\*]+(?:Flags\*)?\z/, 'ImU32'
       'int'
     when 'const char* const'
       'const char*'
+    when /\AIm(?:Gui)?(DrawList|Viewport)\*\z/
+      "#{$1}Proxy*"
     when /\A(?:const )?Im(?:Gui)?(?!Vec)(\w+)\*\z/
-      "ImGui_#{$1}*"
+      "#{$1}*"
     else
       type
     end
@@ -404,7 +406,7 @@ private
     arg.name += '_rgba' if arg.type == 'ImU32' && %[col color].include?(arg.name)
     arg.type = cpp_type_to_reascript_type arg.type
     arg.name = arg.name[4..-1] if arg.name =~ /\Aout_.+/ && arg.type.end_with?('*')
-    arg.name = RESOURCES[arg.type] if arg.type == 'ImGui_Image*'
+    arg.name = RESOURCES[arg.type] if arg.type == 'Image*'
 
     if arg.type.include? 'ImVec2'
       null_optional = arg.type.end_with? '*'
@@ -550,6 +552,7 @@ def split_reaimgui_args(args)
 
   args.map do |arg|
     type, name, default = arg.split /\s*,\s*/
+    type.delete_prefix! 'class '
     default.gsub! /\AIm(Gui)?/, '' if default
     Argument.new type, name, default, 0
   end

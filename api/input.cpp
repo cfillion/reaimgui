@@ -50,10 +50,10 @@ public:
 #define CALLBACK_ARGS \
   InputTextCallback::use<int>(API_RO(callback)), API_RO(callback)
 
-API_FUNC(0_8_5, bool, InputText, (ImGui_Context*,ctx)
+API_FUNC(0_8_5, bool, InputText, (Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags),ImGuiInputTextFlags_None)
-(ImGui_Function*,API_RO(callback)),
+(Function*,API_RO(callback)),
 "")
 {
   FRAME_GUARD;
@@ -73,11 +73,11 @@ API_FUNC(0_8_5, bool, InputText, (ImGui_Context*,ctx)
   return false;
 }
 
-API_FUNC(0_8_5, bool, InputTextMultiline, (ImGui_Context*,ctx)
+API_FUNC(0_8_5, bool, InputTextMultiline, (Context*,ctx)
 (const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0)
 (int*,API_RO(flags),ImGuiInputTextFlags_None)
-(ImGui_Function*,API_RO(callback)),
+(Function*,API_RO(callback)),
 "")
 {
   FRAME_GUARD;
@@ -94,11 +94,11 @@ API_FUNC(0_8_5, bool, InputTextMultiline, (ImGui_Context*,ctx)
   return false;
 }
 
-API_FUNC(0_8_5, bool, InputTextWithHint, (ImGui_Context*,ctx)
+API_FUNC(0_8_5, bool, InputTextWithHint, (Context*,ctx)
 (const char*,label)(const char*,hint)
 (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
 (int*,API_RO(flags),ImGuiInputTextFlags_None)
-(ImGui_Function*,API_RO(callback)),
+(Function*,API_RO(callback)),
 "")
 {
   FRAME_GUARD;
@@ -114,7 +114,7 @@ API_FUNC(0_8_5, bool, InputTextWithHint, (ImGui_Context*,ctx)
   return false;
 }
 
-API_FUNC(0_1, bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputInt, (Context*,ctx)(const char*,label)
 (int*,API_RW(v))(int*,API_RO(step),1)(int*,API_RO(step_fast),100)
 (int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -126,7 +126,7 @@ API_FUNC(0_1, bool, InputInt, (ImGui_Context*,ctx)(const char*,label)
     API_RO_GET(step), API_RO_GET(step_fast), flags);
 }
 
-API_FUNC(0_1, bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputInt2, (Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
 {
@@ -141,7 +141,7 @@ API_FUNC(0_1, bool, InputInt2, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(0_1, bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputInt3, (Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -157,7 +157,7 @@ API_FUNC(0_1, bool, InputInt3, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(0_1, bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputInt4, (Context*,ctx)(const char*,label)
 (int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
 (int*,API_RW(v4))(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -174,7 +174,7 @@ API_FUNC(0_1, bool, InputInt4, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(0_1, bool, InputDouble, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDouble, (Context*,ctx)(const char*,label)
 (double*,API_RW(v))(double*,API_RO(step),0.0)(double*,API_RO(step_fast),0.0)
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -195,7 +195,7 @@ static bool inputDoubleN(const char *label, double *data, const size_t size,
     nullptr, nullptr, format, flags);
 }
 
-API_FUNC(0_1, bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDouble2, (Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -212,7 +212,7 @@ API_FUNC(0_1, bool, InputDouble2, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(0_1, bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDouble3, (Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -229,7 +229,7 @@ API_FUNC(0_1, bool, InputDouble3, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(0_1, bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDouble4, (Context*,ctx)(const char*,label)
 (double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))(double*,API_RW(v4))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")
@@ -247,7 +247,7 @@ API_FUNC(0_1, bool, InputDouble4, (ImGui_Context*,ctx)(const char*,label)
     return false;
 }
 
-API_FUNC(0_1, bool, InputDoubleN, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, InputDoubleN, (Context*,ctx)(const char*,label)
 (reaper_array*,values)(double*,API_RO(step))(double*,API_RO(step_fast))
 (const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
 "")

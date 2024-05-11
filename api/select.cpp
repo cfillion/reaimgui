@@ -42,7 +42,7 @@ static std::vector<const char *> splitList(const char *buf, const int size)
 
 API_SUBSECTION("Combo Box (Dropdown)");
 
-API_FUNC(0_1, bool, BeginCombo, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_1, bool, BeginCombo, (Context*,ctx)(const char*,label)
 (const char*,preview_value)(int*,API_RO(flags),ImGuiComboFlags_None),
 R"(The BeginCombo/EndCombo API allows you to manage your contents and selection
 state however you want it, by creating e.g. Selectable items.)")
@@ -52,14 +52,14 @@ state however you want it, by creating e.g. Selectable items.)")
   return ImGui::BeginCombo(label, preview_value, API_RO_GET(flags));
 }
 
-API_FUNC(0_1, void, EndCombo, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndCombo, (Context*,ctx),
 "Only call EndCombo() if BeginCombo returns true!")
 {
   FRAME_GUARD;
   ImGui::EndCombo();
 }
 
-API_FUNC(0_7, bool, Combo, (ImGui_Context*,ctx)
+API_FUNC(0_7, bool, Combo, (Context*,ctx)
 (const char*,label)(int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(popup_max_height_in_items),-1),
 R"(Helper over BeginCombo/EndCombo for convenience purpose. Each item must be
@@ -91,7 +91,7 @@ API_SUBSECTION("List Boxes",
 R"(This is essentially a thin wrapper to using BeginChild/EndChild with the
 ChildFlags_FrameStyle flag for stylistic changes + displaying a label.)");
 
-API_FUNC(0_7, bool, ListBox, (ImGui_Context*,ctx)(const char*,label)
+API_FUNC(0_7, bool, ListBox, (Context*,ctx)(const char*,label)
 (int*,API_RW(current_item))(const char*,items)(int,items_sz)
 (int*,API_RO(height_in_items),-1),
 R"(This is an helper over BeginListBox/EndListBox for convenience purpose.
@@ -105,7 +105,7 @@ Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lu
     strings.data(), strings.size(), API_RO_GET(height_in_items));
 }
 
-API_FUNC(0_1, bool, BeginListBox, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, BeginListBox, (Context*,ctx)
 (const char*,label)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
 R"(Open a framed scrolling region.
 
@@ -128,7 +128,7 @@ See EndListBox.)")
   return ImGui::BeginListBox(label, size);
 }
 
-API_FUNC(0_1, void, EndListBox, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndListBox, (Context*,ctx),
 "Only call EndListBox() if BeginListBox returned true!")
 {
   FRAME_GUARD;
@@ -141,7 +141,7 @@ selected. Neighbors selectable extend their highlight bounds in order to leave
 no gap between them. This is so a series of selected Selectable appear
 contiguous.)");
 
-API_FUNC(0_1, bool, Selectable, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, Selectable, (Context*,ctx)
 (const char*,label)(bool*,API_RWO(p_selected))
 (int*,API_RO(flags),ImGuiSelectableFlags_None)
 (double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),

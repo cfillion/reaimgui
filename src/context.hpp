@@ -134,7 +134,6 @@ private:
   std::unique_ptr<RendererFactory> m_rendererFactory;
 };
 
-using ImGui_Context = Context; // user-facing alias
 API_REGISTER_OBJECT_TYPE(Context);
 
 #endif
