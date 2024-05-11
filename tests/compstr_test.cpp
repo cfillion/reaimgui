@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 TEST(CompStrTest, Basename) {
-  static constexpr const char
+  static constexpr char
     g_foo[] { "foo" },
     g_ext[] { "foo.bar" },
     g_dir[] { "foo/bar" },
@@ -18,7 +18,7 @@ TEST(CompStrTest, Basename) {
 }
 
 TEST(CompStrTest, Version) {
-  static constexpr const char
+  static constexpr char
     g_underscores[] { "1_20_3" },
     g_gitdescribe[] { "v0.8.7.4-41-g6d2c9f5" },
     g_dirtygittag[] { "v0.9+" },
@@ -30,14 +30,37 @@ TEST(CompStrTest, Version) {
   EXPECT_STREQ(CompStr::version<&g_return_asis>, "0.8.7");
 }
 
-TEST(CompStrTest, APIDef) {
-  using namespace std::literals;
-  using F1 = int (*)(reaper_array *, int, W<double*>);
+using F1 = int (*)(reaper_array *, int, W<double*>);
+struct F1_Meta {
+  static constexpr std::string_view help { "Lorem ipsum" };
+  static constexpr std::string_view argn[] { "foo", "bar", "baz" };
+};
+using F2 = void (*)();
+struct F2_Meta {
+  static constexpr std::string_view help { "Lorem ipsum" };
+  static constexpr std::string_view argn[] {};
+};
 
-  constexpr std::string_view def1 {
-    CompStr::APIDef<F1>::value.data(),
-    CompStr::APIDef<F1>::value.size()
+TEST(CompStrTest, APIDef) {
+  using namespace std::string_view_literals;
+
+  const std::string_view def1 {
+    CompStr::APIDef<F1, F1_Meta>::value.data(),
+    CompStr::APIDef<F1, F1_Meta>::value.size()
   };
   EXPECT_EQ(def1,
-    "int\0reaper_array*,int,double*\0_,_,_Out\0Internal use only.\0"sv);
+    "int\0reaper_array*,int,double*\0foo,bar,bazOut\0Lorem ipsum\0"sv);
+
+  const std::string_view def1_anon {
+    CompStr::APIDef<F1, F1_Meta, false>::value.data(),
+    CompStr::APIDef<F1, F1_Meta, false>::value.size()
+  };
+  EXPECT_EQ(def1_anon,
+    "int\0reaper_array*,int,double*\0_,_,_Out\0Lorem ipsum\0"sv);
+
+  const std::string_view def2 {
+    CompStr::APIDef<F2, F2_Meta>::value.data(),
+    CompStr::APIDef<F2, F2_Meta>::value.size()
+  };
+  EXPECT_EQ(def2, "void\0\0\0Lorem ipsum\0"sv);
 }

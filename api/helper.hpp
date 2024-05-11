@@ -48,15 +48,14 @@ DECLARE_HANDLE(HDROP);
 #define _API_ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
 #define _API_ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
 #define _API_ARG_DEFV(arg) BOOST_PP_TUPLE_ELEM(2, arg)
-#define _API_ARG_DEFV_T(arg) decltype(_API_ARG_DEFV(arg))
 
 #define _API_FOREACH_ARG(macro, data, args) \
   BOOST_PP_SEQ_FOR_EACH_I(macro, data, BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))
 #define _API_SIGARG(r, data, i, arg) \
   BOOST_PP_COMMA_IF(i) _API_ARG_TYPE(arg) _API_ARG_NAME(arg)
-#define _API_STRARG(r, macro, i, arg) \
-  BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
-#define _API_STRARGUS(r, macro, i, arg) \
+#define _API_STRARR(r, macro, i, arg) \
+  BOOST_PP_COMMA_IF(i) BOOST_PP_STRINGIZE(macro(arg))
+#define _API_STRARR_US(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, "\31") BOOST_PP_STRINGIZE(macro(arg))
 
 template<typename T>
@@ -75,26 +74,26 @@ using DefArgVal = std::conditional_t<
 // error out if API_SECTION() was not used in the file
 #define _API_CHECKROOTSECTION static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);
 
-#define _API_DEF(type, args, help)            \
-  #type                                  "\0" \
-  _API_FOREACH_ARG(_API_STRARG, _API_ARG_TYPE, args) "\0" \
-  _API_FOREACH_ARG(_API_STRARG, _API_ARG_NAME, args) "\0" \
-  help                                   "\0" \
-  _API_FOREACH_ARG(_API_STRARGUS, _API_ARG_DEFV, args)
-
 #define _API_STORE_LINE \
   static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) { __LINE__ };
 
-#define _API_FUNC_DECL(vernum, type, name, args)                       \
+#define _API_FUNC_DECL(vernum, type, name, args, help)                 \
   namespace API::v##vernum::name {                                     \
     namespace defaults {                                               \
       _API_FOREACH_ARG(_API_DEFARG, name, args)                        \
     }                                                                  \
-    namespace meta {                                                   \
-      constexpr char id[] { #name }, vn[] { #vernum };                 \
-      constexpr VerNum version { CompStr::version<&vn> };              \
-    }                                                                  \
     static type impl(_API_FOREACH_ARG(_API_SIGARG, _, args));          \
+    struct meta {                                                      \
+      static constexpr char na##me[] { #name }, vn[] { #vernum };      \
+      static constexpr std::string_view he##lp { [] {                  \
+        using namespace std::string_view_literals;                     \
+        return help "\0"                                               \
+          _API_FOREACH_ARG(_API_STRARR_US, _API_ARG_DEFV, args) ""sv;  \
+      }() };                                                           \
+      static constexpr VerNum version { CompStr::version<&vn> };       \
+      static constexpr std::string_view argn[]                         \
+        { _API_FOREACH_ARG(_API_STRARR, _API_ARG_NAME, args) };        \
+    };                                                                 \
   }
 
 #define _API_FUNC_DEF(vernum, type, name, args) \
@@ -106,21 +105,26 @@ using DefArgVal = std::conditional_t<
   namespace API::v##vernum::name { extern API::type symbol; } \
   API::type API::v##vernum::name::symbol
 
-#define _API_SAFECALL(vernum, apiName) &CallConv::Safe< \
-  &API::v##vernum::apiName::impl, &API::v##vernum::apiName::meta::id>::invoke
+#define _API_SAFECALL(vernum, name) &CallConv::Safe< \
+  &API::v##vernum::name::impl, API::v##vernum::name::meta>::invoke
+
+#define _API_DEF(vernum, name, named) \
+  CompStr::apidef<&API::v##vernum::name::impl, API::v##vernum::name::meta, named>
+
+#define API_DO_NOT_USE "Internal use only."
 
 #define API_FUNC _API_STORE_LINE _API_FUNC
-#define _API_FUNC(vernum, type, name, args, help)                 \
-  _API_CHECKROOTSECTION                                           \
-  _API_FUNC_DECL(vernum, type, name, args)                        \
-  _API_EXPORT(ReaScriptFunc, vernum, name) {                      \
-    API::v##vernum::name::meta::version,                          \
-    reinterpret_cast<void *>(&API::v##vernum::name::impl),        \
-    { "-API_" API_PREFIX #name, _API_SAFECALL(vernum, name) },    \
-    { "-APIvararg_" API_PREFIX #name,                             \
-      CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply },  \
-    { "-APIdef_" API_PREFIX #name, _API_DEF(type, args, help) },  \
-  };                                                              \
+#define _API_FUNC(vernum, type, name, args, help)                   \
+  _API_CHECKROOTSECTION                                             \
+  _API_FUNC_DECL(vernum, type, name, args, help)                    \
+  _API_EXPORT(ReaScriptFunc, vernum, name) {                        \
+    API::v##vernum::name::meta::version,                            \
+    reinterpret_cast<void *>(&API::v##vernum::name::impl),          \
+    { "-API_" API_PREFIX #name, _API_SAFECALL(vernum, name) },      \
+    { "-APIvararg_" API_PREFIX #name,                               \
+      CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply },    \
+    { "-APIdef_" API_PREFIX #name, _API_DEF(vernum, name, true) },  \
+  };                                                                \
   _API_FUNC_DEF(vernum, type, name, args)
 
 #define API_ENUM _API_STORE_LINE _API_ENUM
@@ -130,10 +134,10 @@ using DefArgVal = std::conditional_t<
 #define API_EELFUNC _API_STORE_LINE _API_EELFUNC
 #define _API_EELFUNC(vernum, type, name, args, help)    \
   _API_CHECKROOTSECTION                                 \
-  _API_FUNC_DECL(vernum, type, name, args)              \
+  _API_FUNC_DECL(vernum, type, name, args, help)        \
   _API_EXPORT(EELFunc, vernum, name) {                  \
     API::v##vernum::name::meta::version,                \
-    #name, _API_DEF(type, args, help),                  \
+    #name, _API_DEF(vernum, name, true),                \
     &CallConv::EEL<_API_SAFECALL(vernum, name)>::apply, \
      CallConv::EEL<_API_SAFECALL(vernum, name)>::ARGC,  \
   };                                                    \
@@ -143,7 +147,7 @@ using DefArgVal = std::conditional_t<
 #define _API_EELVAR(vernum, type, name, help)            \
   _API_CHECKROOTSECTION                                  \
   namespace API::v##vernum::EELVar_##name {              \
-    constexpr const char vn[] { #vernum };               \
+    constexpr char vn[] { #vernum };                     \
     constexpr VerNum version  { CompStr::version<&vn> }; \
   }                                                      \
   const API::EELVar EELVar_##name {                      \
@@ -155,7 +159,7 @@ using DefArgVal = std::conditional_t<
 // shortcuts with auto-generated identifier name for the section object
 #define _API_UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
 #define API_SECTION(...)                                      \
-  constexpr const char FILE_PATH[] { __FILE__ };              \
+  constexpr char FILE_PATH[] { __FILE__ };                    \
   constexpr auto ROOT_FILE { CompStr::basename<&FILE_PATH> }; \
   static const API::Section ROOT_SECTION                      \
     { nullptr, ROOT_FILE, __VA_ARGS__ }

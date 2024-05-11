@@ -77,7 +77,7 @@ template<typename T, typename = void>
 struct TypeInfo;
 
 template<typename T>
-struct TypeInfo<T, typename std::enable_if_t<std::is_pointer_v<T>> >
+struct TypeInfo<T, typename std::enable_if_t<std::is_pointer_v<T>>>
 {
   using underlying = std::remove_pointer_t<T>;
   static constexpr auto type()
@@ -88,19 +88,27 @@ struct TypeInfo<T, typename std::enable_if_t<std::is_pointer_v<T>> >
     CompStr::append(p, name, '*');
     return out;
   }
-  static constexpr std::string_view name() { return TypeInfo<underlying>::name(); }
+
+  template<const auto &Names, size_t I>
+  static constexpr auto name()
+  {
+    return TypeInfo<underlying>::template name<Names, I>();
+  }
 };
 
 template<typename T, auto tags>
 struct TypeInfo<Tag<T, tags>>
 {
   static constexpr auto type() { return TypeInfo<T>::type(); }
+
+  template<const auto &Names, size_t I>
   static constexpr auto name()
   {
-    constexpr size_t length { TypeInfo<T>::name().size() + suffixesLength() };
+    constexpr auto resolvedName { TypeInfo<T>::template name<Names, I>() };
+    constexpr size_t length { resolvedName.size() + suffixesLength() };
     std::array<char, length> decorated {};
     char *p { decorated.data() };
-    CompStr::append(p, TypeInfo<T>::name());
+    CompStr::append(p, resolvedName);
     for(size_t bit {}; bit < sizeof(tags) * CHAR_BIT; ++bit)
       CompStr::append(p, suffixFor(tags & (1 << bit)));
     return decorated;
@@ -130,8 +138,10 @@ private:
 
 #define API_REGISTER_TYPE(T, N)   \
   template<> struct TypeInfo<T> { \
-    static constexpr std::string_view type() { return N;   } \
-    static constexpr std::string_view name() { return "_"; } \
+    static constexpr std::string_view type() { return N; } \
+                                                           \
+    template<const auto &Names, size_t I>                  \
+    static constexpr auto name() { return Names[I]; }      \
   }
 
 #define API_REGISTER_BASIC_TYPE(T)  API_REGISTER_TYPE(T, #T)
@@ -143,6 +153,7 @@ API_REGISTER_BASIC_TYPE(const char*);
 API_REGISTER_BASIC_TYPE(double);
 API_REGISTER_BASIC_TYPE(int);
 API_REGISTER_BASIC_TYPE(void);
+API_REGISTER_TYPE(std::string_view, "const char*"); // EEL strings
 
 // https://forum.cockos.com/showthread.php?t=211620
 struct reaper_array {

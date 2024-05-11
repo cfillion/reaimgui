@@ -22,7 +22,8 @@ TEST(TypesTest, Builtins) {
   EXPECT_EQ(TypeInfo<char*      >::type(), "char*");
   EXPECT_EQ(TypeInfo<const char*>::type(), "const char*");
 
-  EXPECT_EQ(TypeInfo<int>::name(), "_");
+  static constexpr std::string_view names[] { "foo" };
+  EXPECT_EQ((TypeInfo<int>::name<names, 0>()), "foo");
 }
 
 struct MyObjectA; struct MyObjectB;
@@ -34,21 +35,24 @@ TEST(TypesTest, Objects) {
   EXPECT_EQ(TypeInfo<MyObjectB   *>::type(), "ChunkyBacon*");
   EXPECT_EQ(TypeInfo<reaper_array*>::type(), "reaper_array*");
 
-  EXPECT_EQ(TypeInfo<MyObjectA   *>::name(), "_");
+  static constexpr std::string_view names[] { "foo" };
+  EXPECT_EQ((TypeInfo<MyObjectA   *>::name<names, 0>()), "foo");
 }
 
 TEST(TypesTest, Tags) {
   EXPECT_EQ(TypeInfo<W<int*    >>::type(), "int*");
   EXPECT_EQ(TypeInfo<W<double* >>::type(), "double*");
 
-  EXPECT_EQ(TypeInfo<RO  <int*>>::name(), "_InOptional");
-  EXPECT_EQ(TypeInfo<RW  <int*>>::name(), "_InOut");
-  EXPECT_EQ(TypeInfo<RWO <int*>>::name(), "_InOutOptional");
-  EXPECT_EQ(TypeInfo<W   <int*>>::name(), "_Out");
-  EXPECT_EQ(TypeInfo<WS  <int*>>::name(), "_Out_sz");
-  EXPECT_EQ(TypeInfo<RWB <int*>>::name(), "_InOutNeedBig");
-  EXPECT_EQ(TypeInfo<RWBS<int*>>::name(), "_InOutNeedBig_sz");
-  EXPECT_EQ(TypeInfo<WB  <int*>>::name(), "_OutNeedBig");
-  EXPECT_EQ(TypeInfo<WBS <int*>>::name(), "_OutNeedBig_sz");
-  EXPECT_EQ(TypeInfo<S   <int*>>::name(), "__sz");
+  static constexpr std::string_view names[]
+    { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j" };
+  EXPECT_EQ((TypeInfo<RO  <int*>>::name<names, 0>()), "aInOptional");
+  EXPECT_EQ((TypeInfo<RW  <int*>>::name<names, 1>()), "bInOut");
+  EXPECT_EQ((TypeInfo<RWO <int*>>::name<names, 2>()), "cInOutOptional");
+  EXPECT_EQ((TypeInfo<W   <int*>>::name<names, 3>()), "dOut");
+  EXPECT_EQ((TypeInfo<WS  <int*>>::name<names, 4>()), "eOut_sz");
+  EXPECT_EQ((TypeInfo<RWB <int*>>::name<names, 5>()), "fInOutNeedBig");
+  EXPECT_EQ((TypeInfo<RWBS<int*>>::name<names, 6>()), "gInOutNeedBig_sz");
+  EXPECT_EQ((TypeInfo<WB  <int*>>::name<names, 7>()), "hOutNeedBig");
+  EXPECT_EQ((TypeInfo<WBS <int*>>::name<names, 8>()), "iOutNeedBig_sz");
+  EXPECT_EQ((TypeInfo<S   <int*>>::name<names, 9>()), "j_sz");
 }

@@ -75,11 +75,11 @@ private:
   }
 };
 
-template<auto fn, auto name>
+template<auto fn, typename Meta>
 struct Safe;
 
-template<typename R, typename... Args, R (*fn)(Args...), auto name>
-struct Safe<fn, name>
+template<typename R, typename... Args, R (*fn)(Args...), typename Meta>
+struct Safe<fn, Meta>
 {
   static R invoke(Args... args) noexcept
   try {
@@ -90,11 +90,11 @@ struct Safe<fn, name>
     return std::invoke(fn, args...);
   }
   catch(const imgui_error &e) {
-    API::handleError(*name, e);
+    API::handleError(Meta::name, e);
     return static_cast<R>(0);
   }
   catch(const reascript_error &e) {
-    API::handleError(*name, e);
+    API::handleError(Meta::name, e);
     return static_cast<R>(0);
   }
 };
