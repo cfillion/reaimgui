@@ -108,7 +108,6 @@ public:
 template<typename R, typename... Args>
 class APIDef<R(*)(Args...) noexcept> : public APIDef<R(*)(Args...)> {};
 
-
 template<auto func>
 static constexpr const char *apidef { APIDef<decltype(func)>::value.data() };
 

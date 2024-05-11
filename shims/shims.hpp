@@ -49,7 +49,7 @@
 #define SHIM_FUNC(vernum, type, name, args)                     \
   _API_FUNC_DECL(vernum, type, name, args)                      \
   _API_EXPORT(ShimFunc, version, name) {                        \
-    API::v##vernum::name::version, api_version, #name,          \
+    API::v##vernum::name::meta::version, api_version, #name,    \
     CompStr::apidef<&API::v##vernum::name::impl>,               \
     reinterpret_cast<void *>(_API_SAFECALL(vernum, name)),      \
     reinterpret_cast<void *>(                                   \
@@ -63,9 +63,8 @@
 
 #define _SHIM_EXPORT(vernum, name, func)                   \
   namespace API::v##vernum::name {                         \
-    constexpr const char id[] { #name   };                 \
-    constexpr const char vn[] { #vernum };                 \
-    constexpr VerNum version  { CompStr::version<&vn> };   \
+    constexpr char id[] { #name }, vn[] { #vernum };       \
+    constexpr VerNum version { CompStr::version<&vn> };    \
   }                                                        \
   _API_EXPORT(ShimFunc, vernum, name) {                    \
     API::v##vernum::name::version,                         \

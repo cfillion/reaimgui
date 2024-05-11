@@ -69,7 +69,7 @@ using DefArgVal = std::conditional_t<
   BOOST_PP_EXPR_IF(                                           \
     BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3),      \
     constexpr DefArgVal<_API_ARG_TYPE(arg)>                   \
-      _API_DEFARG_ID(_API_ARG_NAME(arg))(_API_ARG_DEFV(arg)); \
+      _API_ARG_NAME(arg)(_API_ARG_DEFV(arg)); \
   )
 
 // error out if API_SECTION() was not used in the file
@@ -87,10 +87,13 @@ using DefArgVal = std::conditional_t<
 
 #define _API_FUNC_DECL(vernum, type, name, args)                       \
   namespace API::v##vernum::name {                                     \
-    _API_FOREACH_ARG(_API_DEFARG, name, args) /* default arg values */ \
-    constexpr const char id[] { #name   };                             \
-    constexpr const char vn[] { #vernum };                             \
-    constexpr VerNum version  { CompStr::version<&vn> };               \
+    namespace defaults {                                               \
+      _API_FOREACH_ARG(_API_DEFARG, name, args)                        \
+    }                                                                  \
+    namespace meta {                                                   \
+      constexpr char id[] { #name }, vn[] { #vernum };                 \
+      constexpr VerNum version { CompStr::version<&vn> };              \
+    }                                                                  \
     static type impl(_API_FOREACH_ARG(_API_SIGARG, _, args));          \
   }
 
@@ -104,14 +107,14 @@ using DefArgVal = std::conditional_t<
   API::type API::v##vernum::name::symbol
 
 #define _API_SAFECALL(vernum, apiName) &CallConv::Safe< \
-  &API::v##vernum::apiName::impl, &API::v##vernum::apiName::id>::invoke
+  &API::v##vernum::apiName::impl, &API::v##vernum::apiName::meta::id>::invoke
 
 #define API_FUNC _API_STORE_LINE _API_FUNC
 #define _API_FUNC(vernum, type, name, args, help)                 \
   _API_CHECKROOTSECTION                                           \
   _API_FUNC_DECL(vernum, type, name, args)                        \
   _API_EXPORT(ReaScriptFunc, vernum, name) {                      \
-    API::v##vernum::name::version,                                \
+    API::v##vernum::name::meta::version,                          \
     reinterpret_cast<void *>(&API::v##vernum::name::impl),        \
     { "-API_" API_PREFIX #name, _API_SAFECALL(vernum, name) },    \
     { "-APIvararg_" API_PREFIX #name,                             \
@@ -129,7 +132,7 @@ using DefArgVal = std::conditional_t<
   _API_CHECKROOTSECTION                                 \
   _API_FUNC_DECL(vernum, type, name, args)              \
   _API_EXPORT(EELFunc, vernum, name) {                  \
-    API::v##vernum::name::version,                      \
+    API::v##vernum::name::meta::version,                \
     #name, _API_DEF(type, args, help),                  \
     &CallConv::EEL<_API_SAFECALL(vernum, name)>::apply, \
      CallConv::EEL<_API_SAFECALL(vernum, name)>::ARGC,  \
@@ -179,7 +182,7 @@ using DefArgVal = std::conditional_t<
     return v ?  v : d;                                 \
   else                                                 \
     return v ? *v : d;                                 \
-}(var, _API_DEFARG_ID(var))
+}(var, defaults::var)
 #define API_RO_GET(var)  _API_GET(API_RO(var))
 #define API_RWO_GET(var) _API_GET(API_RWO(var))
 
