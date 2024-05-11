@@ -453,6 +453,218 @@ void ImGui::init(void *(*plugin_getapi)(const char *))
 )";
 }
 
+static std::string zigType(const Type type, bool isOptional = false)
+{
+  const auto noptr { type.removePtr() };
+
+  std::string base;
+  if(type.isString())
+    base = type.isConst() ? "[*:0]const u8" : "[*]u8";
+  else if(type.isPointer() && noptr.isVoid())
+    base = "anyopaque";
+  else if(noptr.isInt())
+    base = "c_int";
+  else if(noptr.isDouble())
+    base = "f64";
+  else if(noptr.isBool())
+    base = "bool";
+  else
+    base = noptr;
+
+  if(type.isPointer() && !type.isString()) {
+    constexpr std::string_view prefix { "ImGui_" };
+    if(base.substr(0, prefix.size()) == prefix) {
+      base = base.substr(prefix.size()) + "Ptr";
+      isOptional = false;
+    }
+    else
+      base.insert(0, "*");
+  }
+
+  if(isOptional)
+    base.insert(0, "?");
+
+  return base;
+}
+
+static void zigBinding(std::ostream &stream)
+{
+  stream << "// " << GENERATED_FOR << R"(
+
+const std = @import("std");
+
+pub const api_version = ")" << API_VERSION << R"(";
+
+pub const ContextPtr          = ?*opaque {};
+pub const DrawListPtr         = ?*opaque {};
+pub const DrawListSplitterPtr = ?*opaque {};
+pub const FontPtr             = ?*opaque {};
+pub const FunctionPtr         = ?*opaque {};
+pub const ImagePtr            = ?*opaque {};
+pub const ImageSetPtr         = ?*opaque {};
+pub const ListClipperPtr      = ?*opaque {};
+pub const ResourcePtr         = ?*opaque {};
+pub const TextFilterPtr       = ?*opaque {};
+pub const ViewportPtr         = ?*opaque {};
+pub const LICE_IBitmap        =   anyopaque;
+pub const reaper_array        =   anyopaque;
+
+pub const Error = error { ImGui };
+pub var last_error: ?[*:0]const u8 = null;
+
+const API = struct {
+)";
+
+  for(const Function &func : g_funcs) {
+    if(!(func.flags & API::Symbol::TargetNative) || func.isEnum())
+      continue;
+
+    stream << "  " << func.name << ": ";
+    stream << "*fn(";
+    CommaSep cs { stream };
+    for(const Argument &arg : func.args)
+      cs << zigType(arg.type, arg.isOptional());
+    stream << ") callconv(.C) " << zigType(func.type) << ",\n";
+  }
+
+  stream << "\n";
+
+  for(const Function &func : g_funcs) {
+    if((func.flags & API::Symbol::TargetNative) && func.isEnum())
+      stream << "  pub var " << func.name << ": c_int = undefined;\n";
+  }
+
+  stream << "};\n\nvar api: API = undefined;\npub usingnamespace API;\n\n";
+
+  for(const Function &func : g_funcs) {
+    if(!(func.flags & API::Symbol::TargetNative) || func.isEnum())
+      continue;
+
+    size_t minArgc {};
+    for(const Argument &arg : func.args) {
+      if(arg.isOptional())
+        break;
+      ++minArgc;
+    }
+
+    stream << "pub const " << func.name << " = function("
+           << "&api." << func.name << ", " << minArgc << ", &.{";
+    if(!func.args.empty())
+      stream << ' ';
+    CommaSep cs { stream };
+    for(const Argument &arg : func.args) {
+      if(arg.isOptional()) {
+        if(!arg.isOutput() && arg.type.isScalarPtr())
+          cs << zigType(arg.type.removePtr(), true);
+        else
+          cs << zigType(arg.type, true);
+      }
+      else
+        cs << zigType(arg.type);
+    }
+    if(!func.args.empty())
+      stream << ' ';
+    stream << "});\n";
+  }
+
+  stream << R"(
+var getError: ?*fn() callconv(.C) ?[*:0]const u8 = undefined;
+
+inline fn checkError() Error!void {
+  @setRuntimeSafety(false);
+  last_error = getError.?();
+  if(last_error != null)
+    return error.ImGui;
+}
+
+inline fn getEnum(func: ?*fn() callconv(.C) c_int) c_int {
+  return if(func) |f| f() else 0;
+}
+
+pub fn init(plugin_getapi: *fn(name: [*:0]const u8) callconv(.C) ?*anyopaque) !void {
+  @setEvalBranchQuota(0x1000);
+  @setRuntimeSafety(false);
+
+  const getFunc: ?*fn(v: [*:0]const u8, n: [*:0]const u8) *anyopaque =
+    @ptrCast(plugin_getapi("ImGui__getapi"));
+  getError = @ptrCast(plugin_getapi("ImGui__geterr"));
+
+  if(getFunc == null or getError == null) {
+    last_error = "ReaImGui is not installed or too old";
+    return error.ImGui;
+  }
+
+  inline for(@typeInfo(API).Struct.fields) |field| {
+    @field(api, field.name) = @ptrCast(getFunc.?(api_version, field.name));
+    try checkError();
+  }
+
+  inline for(@typeInfo(API).Struct.decls) |decl| {
+    @field(API, decl.name) = getEnum(@ptrCast(getFunc.?(api_version, decl.name)));
+    try checkError();
+  }
+}
+
+fn funcType(comptime func: anytype) type {
+  return @typeInfo(@TypeOf(func.*)).Pointer.child;
+}
+
+fn returnType(comptime func: anytype) type {
+  return Error!@typeInfo(funcType(func)).Fn.return_type.?;
+}
+
+fn function(comptime func: anytype, min_argc: comptime_int,
+    comptime arg_types: []const type)
+    fn(args: anytype) callconv(.Inline) returnType(func) {
+  return struct {
+    inline fn wrapper(args: anytype) returnType(func) {
+      var cast_args: std.meta.Tuple(arg_types) = undefined;
+      if(args.len < min_argc) {
+        @compileError(std.fmt.comptimePrint("expected {}..{} arguments, got {}",
+          .{ min_argc, cast_args.len, args.len }));
+      }
+      inline for(0..cast_args.len) |i| {
+        if(i >= args.len) {
+          cast_args[i] = null;
+          continue;
+        }
+        const arg_type = @typeInfo(@TypeOf(args[i]));
+        comptime var cast_arg_type = @typeInfo(@TypeOf(cast_args[i]));
+        if(cast_arg_type == .Optional)
+          cast_arg_type = @typeInfo(cast_arg_type.Optional.child);
+        cast_args[i] = if(cast_arg_type == .Int and (
+            (arg_type == .ComptimeInt and args[i] > std.math.maxInt(c_int)) or
+            (arg_type == .Int and arg_type.Int.signedness == .unsigned)))
+          @bitCast(@as(c_uint, args[i]))
+        else
+          args[i];
+      }
+
+      var call_args: std.meta.ArgsTuple(funcType(func)) = undefined;
+      inline for(0..call_args.len) |i| {
+        const cast_arg_type = @typeInfo(@TypeOf(cast_args[i]));
+        call_args[i] =
+          if(cast_arg_type == .Optional)
+            if(cast_args[i]) |*arg_val|
+              if(@typeInfo(cast_arg_type.Optional.child) == .Pointer)
+                arg_val.*
+              else
+                arg_val
+            else
+              null
+          else
+            cast_args[i];
+      }
+
+      const rv = @call(.auto, func.*, call_args);
+      try checkError();
+      return rv;
+    }
+  }.wrapper;
+}
+)";
+}
+
 std::string_view Argument::humanName() const
 {
   size_t pos;
@@ -1488,6 +1700,8 @@ int main(int argc, const char *argv[])
 
   if(lang == "cpp")
     cppBinding(std::cout);
+  else if(lang == "zig")
+    zigBinding(std::cout);
   else if(lang == "human")
     humanBinding(std::cout);
   else if(lang == "luals")

@@ -201,6 +201,7 @@ if bindings.length() > 0 and not meson.can_run_host_binaries()
 endif
 binding_targets = {
   'cpp':    { 'output': 'reaper_imgui_functions.h' },
+  'zig':    { 'output': 'reaper_imgui.zig' },
   'human':  { 'output': 'reaper_imgui_doc.html', 'install_dir': data_dir    },
   'python': { 'output': 'imgui.py',              'install_dir': scripts_dir },
   'luals':  { 'output': 'imgui_defs.lua' },
