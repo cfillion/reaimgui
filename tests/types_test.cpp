@@ -43,7 +43,7 @@ TEST(TypesTest, Tags) {
   EXPECT_EQ(TypeInfo<W<int*    >>::type(), "int*");
   EXPECT_EQ(TypeInfo<W<double* >>::type(), "double*");
 
-  static constexpr std::string_view names[]
+  static constexpr std::array<std::string_view, 10> names
     { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j" };
   EXPECT_EQ((TypeInfo<RO  <int*>>::name<names, 0>()), "aInOptional");
   EXPECT_EQ((TypeInfo<RW  <int*>>::name<names, 1>()), "bInOut");

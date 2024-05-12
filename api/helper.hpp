@@ -84,14 +84,15 @@ using DefArgVal = std::conditional_t<
     }                                                                  \
     static type impl(_API_FOREACH_ARG(_API_SIGARG, _, args));          \
     struct meta {                                                      \
-      static constexpr char na##me[] { #name }, vn[] { #vernum };      \
+      static constexpr char na##me[] = #name, vn[] = #vernum;          \
       static constexpr std::string_view he##lp { [] {                  \
         using namespace std::string_view_literals;                     \
         return help "\0"                                               \
           _API_FOREACH_ARG(_API_STRARR_US, _API_ARG_DEFV, args) ""sv;  \
       }() };                                                           \
       static constexpr VerNum version { CompStr::version<&vn> };       \
-      static constexpr std::string_view argn[]                         \
+      static constexpr std::array<std::string_view,                    \
+        BOOST_PP_SEQ_SIZE(BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))> argn    \
         { _API_FOREACH_ARG(_API_STRARR, _API_ARG_NAME, args) };        \
     };                                                                 \
   }

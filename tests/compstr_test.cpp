@@ -38,7 +38,7 @@ struct F1_Meta {
 using F2 = void (*)();
 struct F2_Meta {
   static constexpr std::string_view help { "Lorem ipsum" };
-  static constexpr std::string_view argn[] {};
+  static constexpr std::array<std::string_view, 0> argn {};
 };
 
 TEST(CompStrTest, APIDef) {

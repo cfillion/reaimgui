@@ -48,7 +48,7 @@ API_DO_NOT_USE)
 // special definition to not have CallConv::Safe clear the last error
 struct GetErrMeta {
   static constexpr std::string_view help { API_DO_NOT_USE };
-  static constexpr std::string_view argn[] {};
+  static constexpr std::array<std::string_view, 0> argn {};
 };
 _API_EXPORT(ReaScriptFunc, 0_9, _geterr) {
   {}, reinterpret_cast<void *>(&API::lastError),
