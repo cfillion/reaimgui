@@ -59,7 +59,7 @@
   _API_FUNC_DEF(vernum, type, name, args)
 
 #define SHIM_CONST(version, name, value) \
-  SHIM_FUNC(version, int, name, NO_ARGS) { return value; }
+  SHIM_FUNC(version, int, name, API_NO_ARGS) { return value; }
 
 #define _SHIM_EXPORT(vernum, name, func)                          \
   namespace API::v##vernum::name {                                \

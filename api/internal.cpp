@@ -34,7 +34,7 @@ static void assertVersion(const VerNum requested)
   };
 }
 
-API_FUNC(0_9, void*, _getapi, (const char*,version)(const char*,symbol_name),
+API_FUNC(0_9, void*, _getapi, (const char*,version) (const char*,symbol_name),
 API_DO_NOT_USE)
 {
   const VerNum vernum { version };
@@ -59,15 +59,16 @@ _API_EXPORT(ReaScriptFunc, 0_9, _geterr) {
     CompStr::apidef<&API::lastError, GetErrMeta> },
 };
 
-API_FUNC(0_9, void, _init, (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf)), API_DO_NOT_USE)
+API_FUNC(0_9, void, _init, (RWB<char*>,buf) (RWBS<int>,buf_sz),
+API_DO_NOT_USE)
 {
-  assertValid(API_RWBIG(buf));
-  const VerNum version { API_RWBIG(buf) };
+  assertValid(buf);
+  const VerNum version { buf };
   assertVersion(version);
-  copyToBigBuf(API_RWBIG(buf), API_RWBIG_SZ(buf), API::Callable::serializeAll(version));
+  copyToBigBuf(buf, buf_sz, API::Callable::serializeAll(version));
 }
 
-API_FUNC(0_9, void, _setshim, (const char*,version)(const char*,symbol_name),
+API_FUNC(0_9, void, _setshim, (const char*,version) (const char*,symbol_name),
 API_DO_NOT_USE)
 {
   auto shim { API::Callable::lookup(version, symbol_name) };
@@ -77,4 +78,4 @@ API_DO_NOT_USE)
   throw reascript_error { "no suitable implementation available" };
 }
 
-API_FUNC(0_9, void, _shim, NO_ARGS, API_DO_NOT_USE) {}
+API_FUNC(0_9, void, _shim, API_NO_ARGS, API_DO_NOT_USE) {}

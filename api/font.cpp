@@ -35,7 +35,7 @@ This API currently has multiple limitations (v1.0 blockers):
   of the defer loop.))");
 
 API_FUNC(0_9, Font*, CreateFont,
-(const char*,family_or_file)(int,size)(int*,API_RO(flags),ReaImGuiFontFlags_None),
+(const char*,family_or_file) (int,size) (RO<int*>,flags,ReaImGuiFontFlags_None),
 R"(Load a font matching a font family name or from a font file.
 The font will remain valid while it's attached to a context. See Attach.
 
@@ -46,7 +46,7 @@ If 'family_or_file' specifies a path to a font file (contains a / or \\):
 - The first byte of 'flags' is used as the font index within the file
 - The font styles in 'flags' are simulated by the font renderer)")
 {
-  return new Font { family_or_file, size, API_RO_GET(flags) };
+  return new Font { family_or_file, size, API_GET(flags) };
 }
 
 API_FUNC(0_4, Font*, GetFont, (Context*,ctx),

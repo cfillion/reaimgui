@@ -30,7 +30,7 @@ have dedicated flags doing this.)")
 }
 
 API_FUNC(0_5_5, void, BeginDisabled, (Context*,ctx)
-(bool*,API_RO(disabled),true),
+(RO<bool*>,disabled,true),
 R"(Disable all user interactions and dim items visuals
 (applying StyleVar_DisabledAlpha over current colors).
 
@@ -39,7 +39,7 @@ facilitate use of boolean expressions.
 If you can avoid calling BeginDisabled(false)/EndDisabled() best to avoid it.)")
 {
   FRAME_GUARD;
-  ImGui::BeginDisabled(API_RO_GET(disabled));
+  ImGui::BeginDisabled(API_GET(disabled));
 }
 
 API_FUNC(0_5_5, void, EndDisabled, (Context*,ctx),
@@ -69,12 +69,12 @@ API_FUNC(0_1, void, SetItemDefaultFocus, (Context*,ctx),
 }
 
 API_FUNC(0_1, void, SetKeyboardFocusHere, (Context*,ctx)
-(int*,API_RO(offset),0),
+(RO<int*>,offset,0),
 R"(Focus keyboard on the next widget. Use positive 'offset' to access sub
 components of a multiple component widget. Use -1 to access previous widget.)")
 {
   FRAME_GUARD;
-  ImGui::SetKeyboardFocusHere(API_RO_GET(offset));
+  ImGui::SetKeyboardFocusHere(API_GET(offset));
 }
 
 API_FUNC(0_8_5, void, PushTabStop, (Context*,ctx)
@@ -96,33 +96,33 @@ API_FUNC(0_8_5, void, PopTabStop, (Context*,ctx),
 API_SUBSECTION("Dimensions");
 
 API_FUNC(0_1, void, GetItemRectMin, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "Get upper-left bounding rectangle of the last item (screen space)")
 {
   FRAME_GUARD;
   const ImVec2 &rect { ImGui::GetItemRectMin() };
-  if(API_W(x)) *API_W(x) = rect.x;
-  if(API_W(y)) *API_W(y) = rect.y;
+  if(x) *x = rect.x;
+  if(y) *y = rect.y;
 }
 
 API_FUNC(0_1, void, GetItemRectMax, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "Get lower-right bounding rectangle of the last item (screen space)")
 {
   FRAME_GUARD;
   const ImVec2 &rect { ImGui::GetItemRectMax() };
-  if(API_W(x)) *API_W(x) = rect.x;
-  if(API_W(y)) *API_W(y) = rect.y;
+  if(x) *x = rect.x;
+  if(y) *y = rect.y;
 }
 
 API_FUNC(0_1, void, GetItemRectSize, (Context*,ctx)
-(double*,API_W(w))(double*,API_W(h)),
+(W<double*>,w) (W<double*>,h),
 "Get size of last item")
 {
   FRAME_GUARD;
   const ImVec2 &rect { ImGui::GetItemRectSize() };
-  if(API_W(w)) *API_W(w) = rect.x;
-  if(API_W(h)) *API_W(h) = rect.y;
+  if(w) *w = rect.x;
+  if(h) *h = rect.y;
 }
 
 API_FUNC(0_1, void, PushItemWidth, (Context*,ctx)
@@ -172,12 +172,12 @@ See Demo Window under "Widgets->Querying Item Status" for an interactive
 visualization of most of those functions.)");
 
 API_FUNC(0_9, bool, IsItemHovered, (Context*,ctx)
-(int*,API_RO(flags),ImGuiHoveredFlags_None),
+(RO<int*>,flags,ImGuiHoveredFlags_None),
 R"(Is the last item hovered? (and usable, aka not blocked by a popup, etc.).
 See HoveredFlags_* for more options.)")
 {
   FRAME_GUARD;
-  return ImGui::IsItemHovered(API_RO_GET(flags));
+  return ImGui::IsItemHovered(API_GET(flags));
 }
 
 API_FUNC(0_1, bool, IsItemActive, (Context*,ctx),
@@ -197,7 +197,7 @@ API_FUNC(0_1, bool, IsItemFocused, (Context*,ctx),
 }
 
 API_FUNC(0_1, bool, IsItemClicked, (Context*,ctx)
-(int*,API_RO(mouse_button),ImGuiMouseButton_Left),
+(RO<int*>,mouse_button,ImGuiMouseButton_Left),
 R"(Is the last item clicked? (e.g. button/node just clicked on)
 == IsMouseClicked(mouse_button) && IsItemHovered().
 
@@ -205,7 +205,7 @@ This is NOT equivalent to the behavior of e.g. Button.
 Most widgets have specific reactions based on mouse-up/down state, mouse position etc.)")
 {
   FRAME_GUARD;
-  return ImGui::IsItemClicked(API_RO_GET(mouse_button));
+  return ImGui::IsItemClicked(API_GET(mouse_button));
 }
 
 API_FUNC(0_1, bool, IsItemVisible, (Context*,ctx),

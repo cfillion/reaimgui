@@ -28,35 +28,35 @@ static float getArrayValue(void *data, const int index)
 }
 
 API_FUNC(0_1, void, PlotLines, (Context*,ctx)
-(const char*,label)(reaper_array*,values)(int*,API_RO(values_offset),0)
-(const char*,API_RO(overlay_text))
-(double*,API_RO(scale_min),FLT_MAX)(double*,API_RO(scale_max),FLT_MAX)
-(double*,API_RO(graph_size_w),0.0)(double*,API_RO(graph_size_h),0.0),
+(const char*,label) (reaper_array*,values) (RO<int*>,values_offset,0)
+(RO<const char*>,overlay_text)
+(RO<double*>,scale_min,FLT_MAX) (RO<double*>,scale_max,FLT_MAX)
+(RO<double*>,graph_size_w,0.0) (RO<double*>,graph_size_h,0.0),
 "")
 {
   FRAME_GUARD;
   assertValid(values);
-  nullIfEmpty(API_RO(overlay_text));
+  nullIfEmpty(overlay_text);
 
   ImGui::PlotLines(label, &getArrayValue, values->data, values->size,
-    API_RO_GET(values_offset), API_RO(overlay_text),
-    API_RO_GET(scale_min), API_RO_GET(scale_max),
-    ImVec2(API_RO_GET(graph_size_w), API_RO_GET(graph_size_h)));
+    API_GET(values_offset), overlay_text,
+    API_GET(scale_min), API_GET(scale_max),
+    ImVec2(API_GET(graph_size_w), API_GET(graph_size_h)));
 }
 
 API_FUNC(0_1, void, PlotHistogram, (Context*,ctx)
-(const char*,label)(reaper_array*,values)(int*,API_RO(values_offset),0)
-(const char*,API_RO(overlay_text))
-(double*,API_RO(scale_min),FLT_MAX)(double*,API_RO(scale_max),FLT_MAX)
-(double*,API_RO(graph_size_w),0.0)(double*,API_RO(graph_size_h),0.0),
+(const char*,label) (reaper_array*,values) (RO<int*>,values_offset,0)
+(RO<const char*>,overlay_text)
+(RO<double*>,scale_min,FLT_MAX) (RO<double*>,scale_max,FLT_MAX)
+(RO<double*>,graph_size_w,0.0) (RO<double*>,graph_size_h,0.0),
 "")
 {
   FRAME_GUARD;
   assertValid(values);
-  nullIfEmpty(API_RO(overlay_text));
+  nullIfEmpty(overlay_text);
 
   ImGui::PlotHistogram(label, &getArrayValue, values->data, values->size,
-    API_RO_GET(values_offset), API_RO(overlay_text),
-    API_RO_GET(scale_min), API_RO_GET(scale_max),
-    ImVec2(API_RO_GET(graph_size_w), API_RO_GET(graph_size_h)));
+    API_GET(values_offset), overlay_text,
+    API_GET(scale_min), API_GET(scale_max),
+    ImVec2(API_GET(graph_size_w), API_GET(graph_size_h)));
 }

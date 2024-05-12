@@ -21,6 +21,8 @@ API_SECTION("Combo & List");
 
 static std::vector<const char *> splitList(const char *buf, const int size)
 {
+  assertValid(buf);
+
   // REAPER's buf, buf_sz mechanism did not handle strings containing null
   // bytes (and len was inaccurate) prior to v6.44.
   if(size < 1 || buf[size - 1] != '\0') {
@@ -42,14 +44,14 @@ static std::vector<const char *> splitList(const char *buf, const int size)
 
 API_SUBSECTION("Combo Box (Dropdown)");
 
-API_FUNC(0_1, bool, BeginCombo, (Context*,ctx)(const char*,label)
-(const char*,preview_value)(int*,API_RO(flags),ImGuiComboFlags_None),
+API_FUNC(0_1, bool, BeginCombo, (Context*,ctx) (const char*,label)
+(const char*,preview_value) (RO<int*>,flags,ImGuiComboFlags_None),
 R"(The BeginCombo/EndCombo API allows you to manage your contents and selection
 state however you want it, by creating e.g. Selectable items.)")
 {
   FRAME_GUARD;
 
-  return ImGui::BeginCombo(label, preview_value, API_RO_GET(flags));
+  return ImGui::BeginCombo(label, preview_value, API_GET(flags));
 }
 
 API_FUNC(0_1, void, EndCombo, (Context*,ctx),
@@ -60,16 +62,17 @@ API_FUNC(0_1, void, EndCombo, (Context*,ctx),
 }
 
 API_FUNC(0_7, bool, Combo, (Context*,ctx)
-(const char*,label)(int*,API_RW(current_item))(const char*,items)(int,items_sz)
-(int*,API_RO(popup_max_height_in_items),-1),
+(const char*,label) (RW<int*>,current_item) (const char*,items) (int,items_sz)
+(RO<int*>,popup_max_height_in_items,-1),
 R"(Helper over BeginCombo/EndCombo for convenience purpose. Each item must be
 null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)")
 {
   FRAME_GUARD;
+  assertValid(current_item);
 
   const auto &strings { splitList(items, items_sz) };
-  return ImGui::Combo(label, API_RW(current_item),
-    strings.data(), strings.size(), API_RO_GET(popup_max_height_in_items));
+  return ImGui::Combo(label, current_item,
+    strings.data(), strings.size(), API_GET(popup_max_height_in_items));
 }
 
 API_ENUM(0_1, ImGui, ComboFlags_None, "");
@@ -91,22 +94,23 @@ API_SUBSECTION("List Boxes",
 R"(This is essentially a thin wrapper to using BeginChild/EndChild with the
 ChildFlags_FrameStyle flag for stylistic changes + displaying a label.)");
 
-API_FUNC(0_7, bool, ListBox, (Context*,ctx)(const char*,label)
-(int*,API_RW(current_item))(const char*,items)(int,items_sz)
-(int*,API_RO(height_in_items),-1),
+API_FUNC(0_7, bool, ListBox, (Context*,ctx) (const char*,label)
+(RW<int*>,current_item) (const char*,items) (int,items_sz)
+(RO<int*>,height_in_items,-1),
 R"(This is an helper over BeginListBox/EndListBox for convenience purpose.
 
 Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)")
 {
   FRAME_GUARD;
+  assertValid(current_item);
 
   const auto &strings { splitList(items, items_sz) };
-  return ImGui::ListBox(label, API_RW(current_item),
-    strings.data(), strings.size(), API_RO_GET(height_in_items));
+  return ImGui::ListBox(label, current_item,
+    strings.data(), strings.size(), API_GET(height_in_items));
 }
 
 API_FUNC(0_1, bool, BeginListBox, (Context*,ctx)
-(const char*,label)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
+(const char*,label) (RO<double*>,size_w,0.0) (RO<double*>,size_h,0.0),
 R"(Open a framed scrolling region.
 
 You can submit contents and manage your selection state however you want it,
@@ -124,8 +128,7 @@ by creating e.g. Selectable or any other items.
 See EndListBox.)")
 {
   FRAME_GUARD;
-  const ImVec2 size(API_RO_GET(size_w), API_RO_GET(size_h));
-  return ImGui::BeginListBox(label, size);
+  return ImGui::BeginListBox(label, ImVec2(API_GET(size_w), API_GET(size_h)));
 }
 
 API_FUNC(0_1, void, EndListBox, (Context*,ctx),
@@ -142,16 +145,17 @@ no gap between them. This is so a series of selected Selectable appear
 contiguous.)");
 
 API_FUNC(0_1, bool, Selectable, (Context*,ctx)
-(const char*,label)(bool*,API_RWO(p_selected))
-(int*,API_RO(flags),ImGuiSelectableFlags_None)
-(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
+(const char*,label) (RWO<bool*>,p_selected)
+(RO<int*>,flags,ImGuiSelectableFlags_None)
+(RO<double*>,size_w,0.0) (RO<double*>,size_h,0.0),
 "")
 {
   FRAME_GUARD;
-  bool selectedOmitted {};
-  bool *selected { API_RWO(p_selected) ? API_RWO(p_selected) : &selectedOmitted };
-  const ImVec2 size (API_RO_GET(size_w), API_RO_GET(size_h));
-  return ImGui::Selectable(label, selected, API_RO_GET(flags), size);
+  bool dummy_selected {};
+  if(!p_selected)
+    p_selected = &dummy_selected;
+  return ImGui::Selectable(label, p_selected, API_GET(flags),
+    ImVec2(API_GET(size_w), API_GET(size_h)));
 }
 
 API_ENUM(0_1, ImGui, SelectableFlags_None, "");

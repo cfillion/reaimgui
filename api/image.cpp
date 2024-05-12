@@ -33,18 +33,18 @@ There are also image functions in the DrawList API such as
 DrawList_AddImageQuad and DrawList_AddImageRounded.)");
 
 API_FUNC(0_9, Image*, CreateImage,
-(const char*,file)(int*,API_RO(flags)),
+(const char*,file) (RO<int*>,flags),
 R"(The returned object is valid as long as it is used in each defer cycle
 unless attached to a context (see Attach).
 
 ('flags' currently unused and reserved for future expansion))")
 {
-  (void)API_RO(flags);
+  (void)flags;
   return Image::fromFile(file);
 }
 
 API_FUNC(0_9, Image*, CreateImageFromMem,
-(const char*,data)(int,data_sz),
+(const char*,data) (int,data_sz),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Load from a file using
 CreateImage or explicitely specify data_sz if supporting older versions.)")
 {
@@ -53,19 +53,19 @@ CreateImage or explicitely specify data_sz if supporting older versions.)")
 }
 
 API_FUNC(0_8, void, Image_GetSize, (class Image*,image)
-(double*,API_W(w))(double*,API_W(h)),
+(W<double*>,w) (W<double*>,h),
 "")
 {
   assertValid(image);
-  if(API_W(w)) *API_W(w) = image->width();
-  if(API_W(h)) *API_W(h) = image->height();
+  if(w) *w = image->width();
+  if(h) *h = image->height();
 }
 
 API_FUNC(0_8, void, Image, (Context*,ctx)
-(class Image*,image)(double,image_size_w)(double,image_size_h)
-(double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
-(double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
-(int*,API_RO(tint_col_rgba),0xFFFFFFFF)(int*,API_RO(border_col_rgba),0x00000000),
+(class Image*,image) (double,image_size_w) (double,image_size_h)
+(RO<double*>,uv0_x,0.0) (RO<double*>,uv0_y,0.0)
+(RO<double*>,uv1_x,1.0) (RO<double*>,uv1_y,1.0)
+(RO<int*>,tint_col_rgba,0xFFFFFFFF) (RO<int*>,border_col_rgba,0x00000000),
 "Adds 2.0 to the provided size if a border is visible.")
 {
   FRAME_GUARD;
@@ -73,16 +73,16 @@ API_FUNC(0_8, void, Image, (Context*,ctx)
 
   const ImTextureID tex { image->makeTexture(ctx->textureManager()) };
   ImGui::Image(tex, ImVec2(image_size_w, image_size_h),
-    ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
-    ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
-    Color(API_RO_GET(tint_col_rgba)), Color(API_RO_GET(border_col_rgba)));
+    ImVec2(API_GET(uv0_x), API_GET(uv0_y)),
+    ImVec2(API_GET(uv1_x), API_GET(uv1_y)),
+    Color(API_GET(tint_col_rgba)), Color(API_GET(border_col_rgba)));
 }
 
 API_FUNC(0_8, bool, ImageButton, (Context*,ctx)
-(const char*,str_id)(class Image*,image)(double,image_size_w)(double,image_size_h)
-(double*,API_RO(uv0_x),0.0)(double*,API_RO(uv0_y),0.0)
-(double*,API_RO(uv1_x),1.0)(double*,API_RO(uv1_y),1.0)
-(int*,API_RO(bg_col_rgba),0x00000000)(int*,API_RO(tint_col_rgba),0xFFFFFFFF),
+(const char*,str_id) (class Image*,image) (double,image_size_w) (double,image_size_h)
+(RO<double*>,uv0_x,0.0) (RO<double*>,uv0_y,0.0)
+(RO<double*>,uv1_x,1.0) (RO<double*>,uv1_y,1.0)
+(RO<int*>,bg_col_rgba,0x00000000) (RO<int*>,tint_col_rgba,0xFFFFFFFF),
 "Adds StyleVar_FramePadding*2.0 to provided size.")
 {
   FRAME_GUARD;
@@ -90,9 +90,9 @@ API_FUNC(0_8, bool, ImageButton, (Context*,ctx)
 
   const ImTextureID tex { image->makeTexture(ctx->textureManager()) };
   return ImGui::ImageButton(str_id, tex, ImVec2(image_size_w, image_size_h),
-    ImVec2(API_RO_GET(uv0_x), API_RO_GET(uv0_y)),
-    ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
-    Color(API_RO_GET(bg_col_rgba)), Color(API_RO_GET(tint_col_rgba)));
+    ImVec2(API_GET(uv0_x), API_GET(uv0_y)),
+    ImVec2(API_GET(uv1_x), API_GET(uv1_y)),
+    Color(API_GET(bg_col_rgba)), Color(API_GET(tint_col_rgba)));
 }
 
 API_SUBSECTION("Image Set",
@@ -112,14 +112,14 @@ Usage:
       -- ...
     end)");
 
-API_FUNC(0_9, ImageSet*, CreateImageSet, NO_ARGS,
+API_FUNC(0_9, ImageSet*, CreateImageSet, API_NO_ARGS,
 "")
 {
   return new ImageSet;
 }
 
 API_FUNC(0_8, void, ImageSet_Add, (class ImageSet*,set)
-(double,scale)(class Image*,image),
+(double,scale) (class Image*,image),
 "'img' cannot be another ImageSet.")
 {
   assertValid(set);

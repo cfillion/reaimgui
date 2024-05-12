@@ -10,8 +10,8 @@ namespace std {
   }
 }
 
-constexpr std::array<std::string_view, 11> names // global for GCC 7
-  { "foo", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j" };
+constexpr std::array<std::string_view, 12> names // global for GCC 7
+  { "foo", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "norepeat_sz" };
 
 TEST(TypesTest, Builtins) {
   EXPECT_EQ(TypeInfo<void       >::type(), "void");
@@ -54,4 +54,5 @@ TEST(TypesTest, Tags) {
   EXPECT_EQ((TypeInfo<WB  <int*>>::name<names,  8>()), "hOutNeedBig");
   EXPECT_EQ((TypeInfo<WBS <int*>>::name<names,  9>()), "iOutNeedBig_sz");
   EXPECT_EQ((TypeInfo<S   <int*>>::name<names, 10>()), "j_sz");
+  EXPECT_EQ((TypeInfo<S   <int*>>::name<names, 11>()), "norepeat_sz");
 }

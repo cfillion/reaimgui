@@ -443,7 +443,7 @@ private
     elsif arg.type == 'void*' && ['user_data', 'custom_callback_data'].include?(arg.name) # callbacks
       return []
     elsif arg.name == 'buf_size'
-      arg.name = 'buf' # API_RWBIG_SZ?
+      arg.name = 'buf_sz'
     end
 
     if (matches = arg.default.to_s.scan(/(?:ImVec2\(|\G(?!\A))\s*([^f,\)]+)f?\s*,?/)) && !matches.empty?
@@ -489,7 +489,7 @@ private
   end
 end
 
-Argument = Struct.new :type, :name, :default, :size
+Argument = Struct.new :type, :name, :default, :size, :decoration
 
 # load ImGui definitions
 IMGUI_FUNC_R  = /IMGUI_API \s+ (?:(?<type>[\w\*\&\s]+?) \s*)? (?<=\b) (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
@@ -540,11 +540,11 @@ puts "imgui:    found %d functions, %d enums (total: %d symbols)" %
 REAIMGUI_FUNC_R = /\AAPI_FUNC \s*\(\s* (?<version>[0-9_]+) \s*,\s* (?<type>[\w\s\*]+) \s*,\s* (?<name>[\w]+) \s*,\s* (?<args>.*?) \s*(?<arg_end>,)?\s*(\/|\Z)/x
 REAIMGUI_ENUM_R = /\AAPI_ENUM \s*\(\s* (?<version>[0-9_]+) \s*,\s* (?<prefix>\w+) \s*,\s* (?<name>\w+) \s*,\s*/x
 REAIMGUI_ARGS_R = /\A\s* (?<args>\(.+?\)) \s*(?<arg_end>,)?\s*(\/|\Z)/x
-REAIMGUI_ARGN_R = /\A(?:(?<raw_name>[^\(\)]+)|(?<decoration>[^\(]+)\((?<raw_name>[^\)]+)\))\z/
+REAIMGUI_ARGT_R = /\A(?<decoration>[A-Z]+)\s*<\s*(?<type>.+)\s*>\z/
 
 def split_reaimgui_args(args)
-  return [] if args == 'NO_ARGS'
-  args = args.split ')('
+  return [] if args == 'API_NO_ARGS'
+  args = args.split /\)\s*\(/
   return args if args.size < 1
 
   args.first[0] = '' # remove leading (
@@ -552,9 +552,12 @@ def split_reaimgui_args(args)
 
   args.map do |arg|
     type, name, default = arg.split /\s*,\s*/
+    if type =~ REAIMGUI_ARGT_R
+      type, decoration = $~[:type], $~[:decoration]
+    end
     type.delete_prefix! 'class '
     default.gsub! /\AIm(Gui)?/, '' if default
-    Argument.new type, name, default, 0
+    Argument.new type, name, default, 0, decoration
   end
 end
 
@@ -688,28 +691,25 @@ end
 reaimgui_funcs.each do |func|
   found_optional = false
   func.args.each_with_index do |rea_arg, i|
-    unless rea_arg.name =~ REAIMGUI_ARGN_R
-      warn "#{func.name}: invalid argument ##{i+1} '#{rea_arg.name}'"
+    unless rea_arg.name =~ /\A[a-z0-9_]+\z/
+      warn "#{func.name}: invalid argument ##{i+1} name '#{rea_arg.name}' (not snake case?)"
       next
     end
 
-    raw_name, decoration = $~[:raw_name], $~[:decoration]
-
-    unless raw_name =~ /\A[a-z0-9_]+\z/
-      warn "#{func.name}: invalid argument ##{i+1} name '#{raw_name}' (not snake case?)"
-      next
-    end
-
-    if decoration == 'API_RO'
+    if rea_arg.decoration == 'RO'
       found_optional = true
-    elsif found_optional && decoration.start_with?('API_W')
-      warn "#{func.name}: output argument '#{raw_name}' after input values"
+    elsif found_optional && rea_arg.decoration.start_with?('W')
+      warn "#{func.name}: output argument '#{rea_arg.name}' is after input values"
+    end
+
+    if rea_arg.decoration&.include?('S') && !rea_arg.name.end_with?('_sz')
+      warn "#{func.name}: argument ##{i+1} of type '*S<#{rea_arg.type}>' is named '#{rea_arg.name}', expected to end with '_sz'"
     end
 
     unless func.match
       # no default value = nil
       # if decoration && decoration[-1] == 'O' && rea_arg.default.nil?
-      #   warn "#{func.name}: argument ##{i+1} '#{raw_name}' has no documented default value"
+      #   warn "#{func.name}: argument ##{i+1} '#{rea_arg.name}' has no documented default value"
       # end
       next
     end
@@ -717,16 +717,12 @@ reaimgui_funcs.each do |func|
     imgui_arg = func.match.normalized.args[i]
 
     rename = ARG_RENAMES[func.name]&.[](imgui_arg.name)
-    unless raw_name == imgui_arg.name || raw_name == rename
-      warn "#{func.name}: argument ##{i+1} of type '#{rea_arg.type}' (#{decoration}) is named '#{raw_name}', expected '#{rename || imgui_arg.name}'"
+    unless rea_arg.name == imgui_arg.name || rea_arg.name == rename
+      warn "#{func.name}: argument ##{i+1} of type '#{rea_arg.type}' is named '#{rea_arg.name}', expected '#{rename || imgui_arg.name}'"
     end
 
     unless rea_arg.default == imgui_arg.default
-      if rea_arg.default.nil?
-        warn "#{func.name}: argument ##{i+1} '#{raw_name}' has no documented default value, expected #{imgui_arg.default}"
-      else
-        warn "#{func.name}: argument ##{i+1} '#{raw_name}' has documented default value #{rea_arg.default}, expected #{imgui_arg.default}"
-      end
+      warn "#{func.name}: argument ##{i+1} '#{rea_arg.name}' has documented default value '#{rea_arg.default}', expected '#{imgui_arg.default}'"
     end
   end
 end

@@ -65,8 +65,7 @@ static bool nativeWindowBehavior(const char *name, bool *p_open)
 }
 
 API_FUNC(0_5, bool, Begin, (Context*,ctx)
-(const char*,name)(bool*,API_RWO(p_open))
-(int*,API_RO(flags),ImGuiWindowFlags_None),
+(const char*,name) (RWO<bool*>,p_open) (RO<int*>,flags,ImGuiWindowFlags_None),
 R"(Push window to the stack and start appending to it.
 
 - Passing true to 'p_open' shows a window-closing widget in the upper-right
@@ -79,9 +78,9 @@ R"(Push window to the stack and start appending to it.
 {
   FRAME_GUARD;
 
-  WindowFlags flags { API_RO_GET(flags) };
-  DecorationBehavior dec { ctx, *flags };
-  const bool rv { ImGui::Begin(name, openPtrBehavior(API_RWO(p_open)), flags) };
+  WindowFlags clean_flags { API_GET(flags) };
+  DecorationBehavior dec { ctx, *clean_flags };
+  const bool rv { ImGui::Begin(name, openPtrBehavior(p_open), clean_flags) };
   if(!rv)
     ImGui::End();
   return rv;
@@ -100,9 +99,9 @@ scrolling/clipping regions within a host window.
 Child windows can embed their own child.)");
 
 API_FUNC(0_9, bool, BeginChild, (Context*,ctx)
-(const char*,str_id)(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0)
-(int*,API_RO(child_flags),ImGuiChildFlags_None)
-(int*,API_RO(window_flags),ImGuiWindowFlags_None),
+(const char*,str_id) (RO<double*>,size_w,0.0) (RO<double*>,size_h,0.0)
+(RO<int*>,child_flags,ImGuiChildFlags_None)
+(RO<int*>,window_flags,ImGuiWindowFlags_None),
 R"(Manual sizing (each axis can use a different setting e.g. ImVec2(0.0f, 400.0f)):
 - = 0.0: use remaining parent window size for this axis
 - \> 0.0: use specified size for this axis
@@ -118,9 +117,8 @@ Returns false to indicate the window is collapsed or fully clipped.)")
 {
   FRAME_GUARD;
   const bool rv {
-    ImGui::BeginChild(str_id,
-      ImVec2(API_RO_GET(size_w), API_RO_GET(size_h)),
-      API_RO_GET(child_flags), API_RO_GET(window_flags))
+    ImGui::BeginChild(str_id, ImVec2(API_GET(size_w), API_GET(size_h)),
+      API_GET(child_flags), API_GET(window_flags))
   };
   if(!rv)
     ImGui::EndChild();
@@ -187,43 +185,43 @@ API_FUNC(0_1, bool, IsWindowAppearing, (Context*,ctx),
 }
 
 API_FUNC(0_1, bool, IsWindowFocused, (Context*,ctx)
-(int*,API_RO(flags),ImGuiFocusedFlags_None),
+(RO<int*>,flags,ImGuiFocusedFlags_None),
 R"(Is current window focused? or its root/child, depending on flags.
 See flags for options.)")
 {
   FRAME_GUARD;
-  return ImGui::IsWindowFocused(API_RO_GET(flags));
+  return ImGui::IsWindowFocused(API_GET(flags));
 }
 
 API_FUNC(0_9, bool, IsWindowHovered, (Context*,ctx)
-(int*,API_RO(flags),ImGuiHoveredFlags_None),
+(RO<int*>,flags,ImGuiHoveredFlags_None),
 R"(Is current window hovered and hoverable (e.g. not blocked by a popup/modal)?
 See HoveredFlags_* for options.)")
 {
   FRAME_GUARD;
-  return ImGui::IsWindowHovered(API_RO_GET(flags));
+  return ImGui::IsWindowHovered(API_GET(flags));
 }
 
 API_FUNC(0_1, void, GetWindowPos, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 R"(Get current window position in screen space (note: it is unlikely you need to
 use this. Consider using current layout pos instead, GetCursorScreenPos()).)")
 {
   FRAME_GUARD;
   const ImVec2 &vec { ImGui::GetWindowPos() };
-  if(API_W(x)) *API_W(x) = vec.x;
-  if(API_W(y)) *API_W(y) = vec.y;
+  if(x) *x = vec.x;
+  if(y) *y = vec.y;
 }
 
 API_FUNC(0_1, void, GetWindowSize, (Context*,ctx)
-(double*,API_W(w))(double*,API_W(h)),
+(W<double*>,w) (W<double*>,h),
 R"(Get current window size (note: it is unlikely you need to use this.
 Consider using GetCursorScreenPos() and e.g. GetContentRegionAvail() instead))")
 {
   FRAME_GUARD;
   const ImVec2 &vec { ImGui::GetWindowSize() };
-  if(API_W(w)) *API_W(w) = vec.x;
-  if(API_W(h)) *API_W(h) = vec.y;
+  if(w) *w = vec.x;
+  if(h) *h = vec.y;
 }
 
 API_FUNC(0_1, double, GetWindowWidth, (Context*,ctx),
@@ -249,26 +247,26 @@ R"(Get DPI scale currently associated to the current window's viewport
 }
 
 API_FUNC(0_1, void, SetNextWindowPos, (Context*,ctx)
-(double,pos_x)(double,pos_y)(int*,API_RO(cond),ImGuiCond_Always)
-(double*,API_RO(pivot_x),0.0)(double*,API_RO(pivot_y),0.0),
+(double,pos_x) (double,pos_y) (RO<int*>,cond,ImGuiCond_Always)
+(RO<double*>,pivot_x,0.0) (RO<double*>,pivot_y,0.0),
 "Set next window position. Use pivot=(0.5,0.5) to center on given point, etc.")
 {
   FRAME_GUARD;
-  ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y), API_RO_GET(cond),
-    ImVec2(API_RO_GET(pivot_x), API_RO_GET(pivot_y)));
+  ImGui::SetNextWindowPos(ImVec2(pos_x, pos_y), API_GET(cond),
+    ImVec2(API_GET(pivot_x), API_GET(pivot_y)));
 }
 
 API_FUNC(0_1, void, SetNextWindowSize, (Context*,ctx)
-(double,size_w)(double,size_h)(int*,API_RO(cond),ImGuiCond_Always),
+(double,size_w) (double,size_h) (RO<int*>,cond,ImGuiCond_Always),
 "Set next window size. set axis to 0.0 to force an auto-fit on this axis.")
 {
   FRAME_GUARD;
-  ImGui::SetNextWindowSize(ImVec2(size_w, size_h), API_RO_GET(cond));
+  ImGui::SetNextWindowSize(ImVec2(size_w, size_h), API_GET(cond));
 }
 
 API_FUNC(0_8_5, void, SetNextWindowSizeConstraints, (Context*,ctx)
-(double,size_min_w)(double,size_min_h)(double,size_max_w)(double,size_max_h)
-(Function*,API_RO(custom_callback)),
+(double,size_min_w) (double,size_min_h) (double,size_max_w) (double,size_max_h)
+(RO<Function*>,custom_callback),
 R"(Set next window size limits. Use 0.0 or FLT_MAX (second return value of
 NumericLimits_Float) if you don't want limits.
 
@@ -280,11 +278,11 @@ Use callback to apply non-trivial programmatic constraints.)")
   FRAME_GUARD;
   ImGui::SetNextWindowSizeConstraints(
     ImVec2(size_min_w, size_min_h), ImVec2(size_max_w, size_max_h),
-    SizeCallback::use(API_RO(custom_callback)), API_RO(custom_callback));
+    SizeCallback::use(custom_callback), custom_callback);
 }
 
 API_FUNC(0_1, void, SetNextWindowContentSize, (Context*,ctx)
-(double,size_w)(double,size_h),
+(double,size_w) (double,size_h),
 R"(Set next window content size (~ scrollable client area, which enforce the
 range of scrollbars). Not including window decorations (title bar, menu bar,
 etc.) nor StyleVar_WindowPadding. set an axis to 0.0 to leave it automatic.)")
@@ -294,11 +292,11 @@ etc.) nor StyleVar_WindowPadding. set an axis to 0.0 to leave it automatic.)")
 }
 
 API_FUNC(0_1, void, SetNextWindowCollapsed, (Context*,ctx)
-(bool,collapsed)(int*,API_RO(cond),ImGuiCond_Always),
+(bool,collapsed) (RO<int*>,cond,ImGuiCond_Always),
 "Set next window collapsed state.")
 {
   FRAME_GUARD;
-  ImGui::SetNextWindowCollapsed(collapsed, API_RO_GET(cond));
+  ImGui::SetNextWindowCollapsed(collapsed, API_GET(cond));
 }
 
 API_FUNC(0_1, void, SetNextWindowFocus, (Context*,ctx),
@@ -309,7 +307,7 @@ API_FUNC(0_1, void, SetNextWindowFocus, (Context*,ctx),
 }
 
 API_FUNC(0_1, void, SetNextWindowScroll, (Context*,ctx)
-(double,scroll_x)(double,scroll_y),
+(double,scroll_x) (double,scroll_y),
 "Set next window scrolling value (use < 0.0 to not affect a given axis).")
 {
   FRAME_GUARD;
@@ -327,31 +325,31 @@ You may also use WindowFlags_NoBackground for a fully transparent window.)")
 }
 
 API_FUNC(0_5, void, SetWindowPos, (Context*,ctx)
-(double,pos_x)(double,pos_y)(int*,API_RO(cond),ImGuiCond_Always),
+(double,pos_x) (double,pos_y) (RO<int*>,cond,ImGuiCond_Always),
 R"((Not recommended) Set current window position - call within Begin/End.
 Prefer using SetNextWindowPos, as this may incur tearing and minor side-effects.)")
 {
   FRAME_GUARD;
-  ImGui::SetWindowPos(ImVec2(pos_x, pos_y), API_RO_GET(cond));
+  ImGui::SetWindowPos(ImVec2(pos_x, pos_y), API_GET(cond));
 }
 
 API_FUNC(0_5, void, SetWindowSize, (Context*,ctx)
-(double,size_w)(double,size_h)(int*,API_RO(cond),ImGuiCond_Always),
+(double,size_w) (double,size_h) (RO<int*>,cond,ImGuiCond_Always),
 R"((Not recommended) Set current window size - call within Begin/End.
 Set size_w and size_h to 0 to force an auto-fit.
 Prefer using SetNextWindowSize, as this may incur tearing and minor side-effects.)")
 {
   FRAME_GUARD;
-  ImGui::SetWindowSize(ImVec2(size_w, size_h), API_RO_GET(cond));
+  ImGui::SetWindowSize(ImVec2(size_w, size_h), API_GET(cond));
 }
 
 API_FUNC(0_5, void, SetWindowCollapsed, (Context*,ctx)
-(bool,collapsed)(int*,API_RO(cond),ImGuiCond_Always),
+(bool,collapsed) (RO<int*>,cond,ImGuiCond_Always),
 R"((Not recommended) Set current window collapsed state.
 Prefer using SetNextWindowCollapsed.)")
 {
   FRAME_GUARD;
-  ImGui::SetWindowCollapsed(collapsed, API_RO_GET(cond));
+  ImGui::SetWindowCollapsed(collapsed, API_GET(cond));
 }
 
 API_FUNC(0_5, void, SetWindowFocus, (Context*,ctx),
@@ -363,29 +361,28 @@ Prefer using SetNextWindowFocus.)")
 }
 
 API_FUNC(0_5, void, SetWindowPosEx, (Context*,ctx)
-(const char*,name)(double,pos_x)(double,pos_y)
-(int*,API_RO(cond),ImGuiCond_Always),
+(const char*,name) (double,pos_x) (double,pos_y) (RO<int*>,cond,ImGuiCond_Always),
 "Set named window position.")
 {
   FRAME_GUARD;
-  ImGui::SetWindowPos(name, ImVec2(pos_x, pos_y), API_RO_GET(cond));
+  ImGui::SetWindowPos(name, ImVec2(pos_x, pos_y), API_GET(cond));
 }
 
 API_FUNC(0_5, void, SetWindowSizeEx, (Context*,ctx)
-(const char*,name)(double,size_w)(double,size_h)
-(int*,API_RO(cond),ImGuiCond_Always),
+(const char*,name) (double,size_w) (double,size_h)
+(RO<int*>,cond,ImGuiCond_Always),
 "Set named window size. Set axis to 0.0 to force an auto-fit on this axis.")
 {
   FRAME_GUARD;
-  ImGui::SetWindowSize(name, ImVec2(size_w, size_h), API_RO_GET(cond));
+  ImGui::SetWindowSize(name, ImVec2(size_w, size_h), API_GET(cond));
 }
 
 API_FUNC(0_5, void, SetWindowCollapsedEx, (Context*,ctx)
-(const char*,name)(bool,collapsed)(int*,API_RO(cond),ImGuiCond_Always),
+(const char*,name) (bool,collapsed) (RO<int*>,cond,ImGuiCond_Always),
 "Set named window collapsed state.")
 {
   FRAME_GUARD;
-  ImGui::SetWindowCollapsed(name, collapsed, API_RO_GET(cond));
+  ImGui::SetWindowCollapsed(name, collapsed, API_GET(cond));
 }
 
 API_FUNC(0_5, void, SetWindowFocusEx, (Context*,ctx)
@@ -468,11 +465,11 @@ API_FUNC(0_5, int, GetWindowDockID, (Context*,ctx),
 }
 
 API_FUNC(0_5, void, SetNextWindowDockID, (Context*,ctx)
-(int,dock_id)(int*,API_RO(cond),ImGuiCond_Always),
+(int,dock_id) (RO<int*>,cond,ImGuiCond_Always),
 "")
 {
   FRAME_GUARD;
-  ImGui::SetNextWindowDockID(dock_id, API_RO_GET(cond));
+  ImGui::SetNextWindowDockID(dock_id, API_GET(cond));
 }
 
 API_SUBSECTION("Content Region",
@@ -480,49 +477,49 @@ R"(Retrieve available space from a given point.
 GetContentRegionAvail() is frequently useful.)");
 
 API_FUNC(0_1, void, GetContentRegionAvail, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "== GetContentRegionMax() - GetCursorPos()")
 {
   FRAME_GUARD;
 
   const ImVec2 &vec { ImGui::GetContentRegionAvail() };
-  if(API_W(x)) *API_W(x) = vec.x;
-  if(API_W(y)) *API_W(y) = vec.y;
+  if(x) *x = vec.x;
+  if(y) *y = vec.y;
 }
 
 API_FUNC(0_1, void, GetContentRegionMax, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 R"(Current content boundaries (typically window boundaries including scrolling,
 or current column boundaries), in windows coordinates.)")
 {
   FRAME_GUARD;
 
   const ImVec2 &vec { ImGui::GetContentRegionMax() };
-  if(API_W(x)) *API_W(x) = vec.x;
-  if(API_W(y)) *API_W(y) = vec.y;
+  if(x) *x = vec.x;
+  if(y) *y = vec.y;
 }
 
 API_FUNC(0_1, void, GetWindowContentRegionMin, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "Content boundaries min (roughly (0,0)-Scroll), in window coordinates.")
 {
   FRAME_GUARD;
 
   const ImVec2 &vec { ImGui::GetWindowContentRegionMin() };
-  if(API_W(x)) *API_W(x) = vec.x;
-  if(API_W(y)) *API_W(y) = vec.y;
+  if(x) *x = vec.x;
+  if(y) *y = vec.y;
 }
 
 API_FUNC(0_1, void, GetWindowContentRegionMax, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 R"(Content boundaries max (roughly (0,0)+Size-Scroll) where Size can be
 overridden with SetNextWindowContentSize, in window coordinates.)")
 {
   FRAME_GUARD;
 
   const ImVec2 &vec { ImGui::GetWindowContentRegionMax() };
-  if(API_W(x)) *API_W(x) = vec.x;
-  if(API_W(y)) *API_W(y) = vec.y;
+  if(x) *x = vec.x;
+  if(y) *y = vec.y;
 }
 
 API_SUBSECTION("Scrolling",
@@ -577,49 +574,49 @@ API_FUNC(0_1, double, GetScrollMaxY, (Context*,ctx),
 }
 
 API_FUNC(0_1, void, SetScrollHereX, (Context*,ctx)
-(double*,API_RO(center_x_ratio),0.5),
+(RO<double*>,center_x_ratio,0.5),
 R"(Adjust scrolling amount to make current cursor position visible.
 center_x_ratio=0.0: left, 0.5: center, 1.0: right.
 When using to make a "default/current item" visible,
 consider using SetItemDefaultFocus instead.)")
 {
   FRAME_GUARD;
-  ImGui::SetScrollHereX(API_RO_GET(center_x_ratio));
+  ImGui::SetScrollHereX(API_GET(center_x_ratio));
 }
 
 API_FUNC(0_1, void, SetScrollHereY, (Context*,ctx)
-(double*,API_RO(center_y_ratio),0.5),
+(RO<double*>,center_y_ratio,0.5),
 R"(Adjust scrolling amount to make current cursor position visible.
 center_y_ratio=0.0: top, 0.5: center, 1.0: bottom.
 When using to make a "default/current item" visible,
 consider using SetItemDefaultFocus instead.)")
 {
   FRAME_GUARD;
-  ImGui::SetScrollHereY(API_RO_GET(center_y_ratio));
+  ImGui::SetScrollHereY(API_GET(center_y_ratio));
 }
 
 API_FUNC(0_1, void, SetScrollFromPosX, (Context*,ctx)
-(double,local_x)(double*,API_RO(center_x_ratio),0.5),
+(double,local_x) (RO<double*>,center_x_ratio,0.5),
 R"(Adjust scrolling amount to make given position visible.
 Generally GetCursorStartPos() + offset to compute a valid position.)")
 {
   FRAME_GUARD;
-  ImGui::SetScrollFromPosX(local_x, API_RO_GET(center_x_ratio));
+  ImGui::SetScrollFromPosX(local_x, API_GET(center_x_ratio));
 }
 
 API_FUNC(0_1, void, SetScrollFromPosY, (Context*,ctx)
-(double,local_y)(double*,API_RO(center_y_ratio),0.5),
+(double,local_y) (RO<double*>,center_y_ratio,0.5),
 R"(Adjust scrolling amount to make given position visible.
 Generally GetCursorStartPos() + offset to compute a valid position.)")
 {
   FRAME_GUARD;
-  ImGui::SetScrollFromPosY(local_y, API_RO_GET(center_y_ratio));
+  ImGui::SetScrollFromPosY(local_y, API_GET(center_y_ratio));
 }
 
 API_SUBSECTION("Debug Windows");
 
 API_FUNC(0_5_4, void, ShowAboutWindow, (Context*,ctx)
-(bool*,API_RWO(p_open)),
+(RWO<bool*>,p_open),
 R"(Create About window.
 Display ReaImGui version, Dear ImGui version, credits and build/system information.)")
 {
@@ -627,7 +624,7 @@ Display ReaImGui version, Dear ImGui version, credits and build/system informati
 
   ImGuiWindowFlags flags { ImGuiWindowFlags_AlwaysAutoResize };
   DecorationBehavior dec { ctx, &flags };
-  if(ImGui::Begin("About Dear ImGui", openPtrBehavior(API_RWO(p_open)), flags)) {
+  if(ImGui::Begin("About Dear ImGui", openPtrBehavior(p_open), flags)) {
     ImGui::Separator();
     ImGui::Text("reaper_imgui %s (API %s)",
       REAIMGUI_VERSION, API::version().toString().c_str());
@@ -643,34 +640,34 @@ Display ReaImGui version, Dear ImGui version, credits and build/system informati
 }
 
 API_FUNC(0_1, void, ShowMetricsWindow, (Context*,ctx)
-(bool*,API_RWO(p_open)),
+(RWO<bool*>,p_open),
 R"(Create Metrics/Debugger window.
 Display Dear ImGui internals: windows, draw commands, various internal state, etc.)")
 {
   FRAME_GUARD;
 
-  if(nativeWindowBehavior("Dear ImGui Metrics/Debugger", API_RWO(p_open)))
+  if(nativeWindowBehavior("Dear ImGui Metrics/Debugger", p_open))
     ImGui::ShowMetricsWindow();
 }
 
 API_FUNC(0_7, void, ShowDebugLogWindow, (Context*,ctx)
-(bool*,API_RWO(p_open)),
+(RWO<bool*>,p_open),
 "Create Debug Log window. display a simplified log of important dear imgui events.")
 {
   FRAME_GUARD;
 
-  if(nativeWindowBehavior("Dear ImGui Debug Log", API_RWO(p_open)))
+  if(nativeWindowBehavior("Dear ImGui Debug Log", p_open))
     ImGui::ShowDebugLogWindow();
 }
 
 API_FUNC(0_9, void, ShowIDStackToolWindow, (Context*,ctx)
-(bool*,API_RWO(p_open)),
+(RWO<bool*>,p_open),
 R"(Create Stack Tool window. Hover items with mouse to query information about
 the source of their unique ID.)")
 {
   FRAME_GUARD;
 
-  if(nativeWindowBehavior("Dear ImGui ID Stack Tool", API_RWO(p_open)))
+  if(nativeWindowBehavior("Dear ImGui ID Stack Tool", p_open))
     ImGui::ShowIDStackToolWindow();
 }
 

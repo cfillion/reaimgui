@@ -47,145 +47,138 @@ public:
   }
 };
 
-#define CALLBACK_ARGS \
-  InputTextCallback::use<int>(API_RO(callback)), API_RO(callback)
+#define CALLBACK_ARGS InputTextCallback::use<int>(callback), callback
 
 API_FUNC(0_8_5, bool, InputText, (Context*,ctx)
-(const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
-(int*,API_RO(flags),ImGuiInputTextFlags_None)
-(Function*,API_RO(callback)),
+(const char*,label) (RWB<char*>,buf) (RWBS<int>,buf_sz)
+(RO<int*>,flags,ImGuiInputTextFlags_None) (RO<Function*>,callback),
 "")
 {
   FRAME_GUARD;
-  assertValid(API_RWBIG(buf));
+  assertValid(buf);
 
-  std::string value { API_RWBIG(buf) };
-  const InputTextFlags flags { API_RO_GET(flags) };
+  std::string value { buf };
+  const InputTextFlags clean_flags { API_GET(flags) };
 
   // The output buffer is updated only when true is returned.
   // This differs from upstream Dear ImGui when InputTextFlags_EnterReturnsTrue
   // is used. However it makes the behavior consistent with the scalar input
   // functions (eg. InputDouble). https://github.com/ocornut/imgui/issues/3946
-  if(ImGui::InputText(label, &value, flags, CALLBACK_ARGS)) {
-    copyToBigBuf(API_RWBIG(buf), API_RWBIG_SZ(buf), value, false);
+  if(ImGui::InputText(label, &value, clean_flags, CALLBACK_ARGS)) {
+    copyToBigBuf(buf, buf_sz, value, false);
     return true;
   }
   return false;
 }
 
 API_FUNC(0_8_5, bool, InputTextMultiline, (Context*,ctx)
-(const char*,label)(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
-(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0)
-(int*,API_RO(flags),ImGuiInputTextFlags_None)
-(Function*,API_RO(callback)),
+(const char*,label) (RWB<char*>,buf) (RWBS<int>,buf_sz)
+(RO<double*>,size_w,0.0) (RO<double*>,size_h,0.0)
+(RO<int*>,flags,ImGuiInputTextFlags_None) (RO<Function*>,callback),
 "")
 {
   FRAME_GUARD;
-  assertValid(API_RWBIG(buf));
+  assertValid(buf);
 
-  std::string value { API_RWBIG(buf) };
-  const ImVec2 size(API_RO_GET(size_w), API_RO_GET(size_h));
-  const InputTextFlags flags { API_RO_GET(flags) };
+  std::string value { buf };
+  const ImVec2 size(API_GET(size_w), API_GET(size_h));
+  const InputTextFlags clean_flags { API_GET(flags) };
 
-  if(ImGui::InputTextMultiline(label, &value, size, flags, CALLBACK_ARGS)) {
-    copyToBigBuf(API_RWBIG(buf), API_RWBIG_SZ(buf), value, false);
+  if(ImGui::InputTextMultiline(label, &value, size, clean_flags, CALLBACK_ARGS)) {
+    copyToBigBuf(buf, buf_sz, value, false);
     return true;
   }
   return false;
 }
 
 API_FUNC(0_8_5, bool, InputTextWithHint, (Context*,ctx)
-(const char*,label)(const char*,hint)
-(char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf))
-(int*,API_RO(flags),ImGuiInputTextFlags_None)
-(Function*,API_RO(callback)),
+(const char*,label) (const char*,hint) (RWB<char*>,buf) (RWBS<int>,buf_sz)
+(RO<int*>,flags,ImGuiInputTextFlags_None) (RO<Function*>,callback),
 "")
 {
   FRAME_GUARD;
-  assertValid(API_RWBIG(buf));
+  assertValid(buf);
 
-  std::string value { API_RWBIG(buf) };
-  const InputTextFlags flags { API_RO_GET(flags) };
+  std::string value { buf };
+  const InputTextFlags clean_flags { API_GET(flags) };
 
-  if(ImGui::InputTextWithHint(label, hint, &value, flags, CALLBACK_ARGS)) {
-    copyToBigBuf(API_RWBIG(buf), API_RWBIG_SZ(buf), value, false);
+  if(ImGui::InputTextWithHint(label, hint, &value, clean_flags, CALLBACK_ARGS)) {
+    copyToBigBuf(buf, buf_sz, value, false);
     return true;
   }
   return false;
 }
 
-API_FUNC(0_1, bool, InputInt, (Context*,ctx)(const char*,label)
-(int*,API_RW(v))(int*,API_RO(step),1)(int*,API_RO(step_fast),100)
-(int*,API_RO(flags),ImGuiInputTextFlags_None),
+API_FUNC(0_1, bool, InputInt, (Context*,ctx) (const char*,label)
+(RW<int*>,v) (RO<int*>,step,1) (RO<int*>,step_fast,100)
+(RO<int*>,flags,ImGuiInputTextFlags_None),
 "")
 {
   FRAME_GUARD;
 
-  const InputTextFlags flags { API_RO_GET(flags) };
-  return ImGui::InputInt(label, API_RW(v),
-    API_RO_GET(step), API_RO_GET(step_fast), flags);
+  const InputTextFlags clean_flags { API_GET(flags) };
+  return ImGui::InputInt(label, v, API_GET(step), API_GET(step_fast), clean_flags);
 }
 
-API_FUNC(0_1, bool, InputInt2, (Context*,ctx)(const char*,label)
-(int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RO(flags),ImGuiInputTextFlags_None),
+API_FUNC(0_1, bool, InputInt2, (Context*,ctx) (const char*,label)
+(RW<int*>,v1) (RW<int*>,v2) (RO<int*>,flags,ImGuiInputTextFlags_None),
 "")
 {
   FRAME_GUARD;
 
-  ReadWriteArray<int, int, 2> values { API_RW(v1), API_RW(v2) };
-  const InputTextFlags flags { API_RO_GET(flags) };
+  ReadWriteArray<int, int, 2> values { v1, v2 };
+  const InputTextFlags clean_flags { API_GET(flags) };
 
-  if(ImGui::InputInt2(label, values.data(), flags))
+  if(ImGui::InputInt2(label, values.data(), clean_flags))
     return values.commit();
   else
     return false;
 }
 
-API_FUNC(0_1, bool, InputInt3, (Context*,ctx)(const char*,label)
-(int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
-(int*,API_RO(flags),ImGuiInputTextFlags_None),
+API_FUNC(0_1, bool, InputInt3, (Context*,ctx) (const char*,label)
+(RW<int*>,v1) (RW<int*>,v2) (RW<int*>,v3)
+(RO<int*>,flags,ImGuiInputTextFlags_None),
 "")
 {
   FRAME_GUARD;
 
-  ReadWriteArray<int, int, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
-  const InputTextFlags flags { API_RO_GET(flags) };
+  ReadWriteArray<int, int, 3> values { v1, v2, v3 };
+  const InputTextFlags clean_flags { API_GET(flags) };
 
-  if(ImGui::InputInt3(label, values.data(), flags))
+  if(ImGui::InputInt3(label, values.data(), clean_flags))
     return values.commit();
   else
     return false;
 }
 
-API_FUNC(0_1, bool, InputInt4, (Context*,ctx)(const char*,label)
-(int*,API_RW(v1))(int*,API_RW(v2))(int*,API_RW(v3))
-(int*,API_RW(v4))(int*,API_RO(flags),ImGuiInputTextFlags_None),
+API_FUNC(0_1, bool, InputInt4, (Context*,ctx) (const char*,label)
+(RW<int*>,v1) (RW<int*>,v2) (RW<int*>,v3)
+(RW<int*>,v4) (RO<int*>,flags,ImGuiInputTextFlags_None),
 "")
 {
   FRAME_GUARD;
 
-  ReadWriteArray<int, int, 4> values
-    { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
-  const InputTextFlags flags { API_RO_GET(flags) };
+  ReadWriteArray<int, int, 4> values { v1, v2, v3, v4 };
+  const InputTextFlags clean_flags { API_GET(flags) };
 
-  if(ImGui::InputInt4(label, values.data(), flags))
+  if(ImGui::InputInt4(label, values.data(), clean_flags))
     return values.commit();
   else
     return false;
 }
 
-API_FUNC(0_1, bool, InputDouble, (Context*,ctx)(const char*,label)
-(double*,API_RW(v))(double*,API_RO(step),0.0)(double*,API_RO(step_fast),0.0)
-(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+API_FUNC(0_1, bool, InputDouble, (Context*,ctx) (const char*,label)
+(RW<double*>,v) (RO<double*>,step,0.0) (RO<double*>,step_fast,0.0)
+(RO<const char*>,format,"%.3f") (RO<int*>,flags,ImGuiInputTextFlags_None),
 "")
 {
   FRAME_GUARD;
-  nullIfEmpty(API_RO(format));
+  nullIfEmpty(format);
 
-  const InputTextFlags flags { API_RO_GET(flags) };
+  const InputTextFlags clean_flags { API_GET(flags) };
 
-  return ImGui::InputDouble(label, API_RW(v),
-    API_RO_GET(step), API_RO_GET(step_fast), API_RO_GET(format), flags);
+  return ImGui::InputDouble(label, v,
+    API_GET(step), API_GET(step_fast), API_GET(format), clean_flags);
 }
 
 static bool inputDoubleN(const char *label, double *data, const size_t size,
@@ -195,70 +188,69 @@ static bool inputDoubleN(const char *label, double *data, const size_t size,
     nullptr, nullptr, format, flags);
 }
 
-API_FUNC(0_1, bool, InputDouble2, (Context*,ctx)(const char*,label)
-(double*,API_RW(v1))(double*,API_RW(v2))
-(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+API_FUNC(0_1, bool, InputDouble2, (Context*,ctx) (const char*,label)
+(RW<double*>,v1) (RW<double*>,v2)
+(RO<const char*>,format,"%.3f") (RO<int*>,flags,ImGuiInputTextFlags_None),
 "")
 {
   FRAME_GUARD;
-  nullIfEmpty(API_RO(format));
+  nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 2> values { API_RW(v1), API_RW(v2) };
-  const InputTextFlags flags { API_RO_GET(flags) };
+  ReadWriteArray<double, double, 2> values { v1, v2 };
+  const InputTextFlags clean_flags { API_GET(flags) };
 
-  if(inputDoubleN(label, values.data(), values.size(), API_RO_GET(format), flags))
+  if(inputDoubleN(label, values.data(), values.size(), API_GET(format), clean_flags))
     return values.commit();
   else
     return false;
 }
 
-API_FUNC(0_1, bool, InputDouble3, (Context*,ctx)(const char*,label)
-(double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))
-(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+API_FUNC(0_1, bool, InputDouble3, (Context*,ctx) (const char*,label)
+(RW<double*>,v1) (RW<double*>,v2) (RW<double*>,v3)
+(RO<const char*>,format,"%.3f") (RO<int*>,flags,ImGuiInputTextFlags_None),
 "")
 {
   FRAME_GUARD;
-  nullIfEmpty(API_RO(format));
+  nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 3> values { API_RW(v1), API_RW(v2), API_RW(v3) };
-  const InputTextFlags flags { API_RO_GET(flags) };
+  ReadWriteArray<double, double, 3> values { v1, v2, v3 };
+  const InputTextFlags clean_flags { API_GET(flags) };
 
-  if(inputDoubleN(label, values.data(), values.size(), API_RO_GET(format), flags))
+  if(inputDoubleN(label, values.data(), values.size(), API_GET(format), clean_flags))
     return values.commit();
   else
     return false;
 }
 
-API_FUNC(0_1, bool, InputDouble4, (Context*,ctx)(const char*,label)
-(double*,API_RW(v1))(double*,API_RW(v2))(double*,API_RW(v3))(double*,API_RW(v4))
-(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+API_FUNC(0_1, bool, InputDouble4, (Context*,ctx) (const char*,label)
+(RW<double*>,v1) (RW<double*>,v2) (RW<double*>,v3) (RW<double*>,v4)
+(RO<const char*>,format,"%.3f") (RO<int*>,flags,ImGuiInputTextFlags_None),
 "")
 {
   FRAME_GUARD;
-  nullIfEmpty(API_RO(format));
+  nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 4> values
-    { API_RW(v1), API_RW(v2), API_RW(v3), API_RW(v4) };
-  const InputTextFlags flags { API_RO_GET(flags) };
+  ReadWriteArray<double, double, 4> values { v1, v2, v3, v4 };
+  const InputTextFlags clean_flags { API_GET(flags) };
 
-  if(inputDoubleN(label, values.data(), values.size(), API_RO_GET(format), flags))
+  if(inputDoubleN(label, values.data(), values.size(), API_GET(format), clean_flags))
     return values.commit();
   else
     return false;
 }
 
-API_FUNC(0_1, bool, InputDoubleN, (Context*,ctx)(const char*,label)
-(reaper_array*,values)(double*,API_RO(step))(double*,API_RO(step_fast))
-(const char*,API_RO(format),"%.3f")(int*,API_RO(flags),ImGuiInputTextFlags_None),
+API_FUNC(0_1, bool, InputDoubleN, (Context*,ctx) (const char*,label)
+(reaper_array*,values) (RO<double*>,step) (RO<double*>,step_fast)
+(RO<const char*>,format,"%.3f") (RO<int*>,flags,ImGuiInputTextFlags_None),
 "")
 {
   FRAME_GUARD;
   assertValid(values);
-  nullIfEmpty(API_RO(format));
+  nullIfEmpty(format);
 
+  const InputTextFlags clean_flags { API_GET(flags) };
   return ImGui::InputScalarN(label, ImGuiDataType_Double,
-    values->data, values->size, API_RO(step), API_RO(step_fast),
-    API_RO_GET(format), InputTextFlags { API_RO_GET(flags) });
+    values->data, values->size, step, step_fast, API_GET(format), clean_flags);
 }
 
 API_SUBSECTION("Flags",
@@ -399,7 +391,7 @@ void InputTextCallback::loadVars(const Function *func)
 }
 
 API_EELFUNC(0_8_5, void, InputTextCallback_DeleteChars,
-(int,pos)(int,bytes_count),
+(int,pos) (int,bytes_count),
 "")
 {
   InputTextCallback::DataAccess data {};
@@ -407,26 +399,26 @@ API_EELFUNC(0_8_5, void, InputTextCallback_DeleteChars,
 }
 
 API_EELFUNC(0_8_5, void, InputTextCallback_InsertChars,
-(int,pos)(std::string_view,new_text),
+(int,pos) (std::string_view,new_text),
 "")
 {
   InputTextCallback::DataAccess data {};
   data->InsertChars(pos, &new_text.front(), &*new_text.end());
 }
 
-API_EELFUNC(0_8_5, void, InputTextCallback_SelectAll, NO_ARGS, "")
+API_EELFUNC(0_8_5, void, InputTextCallback_SelectAll, API_NO_ARGS, "")
 {
   InputTextCallback::DataAccess data {};
   data->SelectAll();
 }
 
-API_EELFUNC(0_8_5, void, InputTextCallback_ClearSelection, NO_ARGS, "")
+API_EELFUNC(0_8_5, void, InputTextCallback_ClearSelection, API_NO_ARGS, "")
 {
   InputTextCallback::DataAccess data {};
   data->ClearSelection();
 }
 
-API_EELFUNC(0_8_5, bool, InputTextCallback_HasSelection, NO_ARGS, "")
+API_EELFUNC(0_8_5, bool, InputTextCallback_HasSelection, API_NO_ARGS, "")
 {
   InputTextCallback::DataAccess data {};
   return data->HasSelection();

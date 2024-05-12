@@ -122,14 +122,14 @@ as long as it is used in each defer cycle unless attached (see Attach).)")
 }
 
 API_FUNC(0_1, void, ListClipper_Begin, (ListClipper*,clipper)
-(int,items_count)(double*,API_RO(items_height),-1.0),
+(int,items_count) (RO<double*>,items_height,-1.0),
 R"(- items_count: Use INT_MAX if you don't know how many items you have
 (in which case the cursor won't be advanced in the final step)
 - items_height: Use -1.0 to be calculated automatically on first step.
   Otherwise pass in the distance between your items, typically
   GetTextLineHeightWithSpacing or GetFrameHeightWithSpacing.)")
 {
-  (*clipper)->Begin(items_count, API_RO_GET(items_height));
+  (*clipper)->Begin(items_count, API_GET(items_height));
 }
 
 API_FUNC(0_1, bool, ListClipper_Step, (ListClipper*,clipper),
@@ -146,16 +146,16 @@ API_FUNC(0_1, void, ListClipper_End, (ListClipper*,clipper),
 }
 
 API_FUNC(0_3, void, ListClipper_GetDisplayRange, (ListClipper*,clipper)
-(int*,API_W(display_start))(int*,API_W(display_end)),
+(W<int*>,display_start) (W<int*>,display_end),
 "")
 {
   ImGuiListClipper *imclipper { (*clipper).operator->() };
-  if(API_W(display_start)) *API_W(display_start) = imclipper->DisplayStart;
-  if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
+  if(display_start) *display_start = imclipper->DisplayStart;
+  if(display_end)   *display_end   = imclipper->DisplayEnd;
 }
 
 API_FUNC(0_9, void, ListClipper_IncludeItemByIndex,
-(ListClipper*,clipper)(int,item_index),
+(ListClipper*,clipper) (int,item_index),
 R"(Call ListClipper_IncludeItemByIndex or ListClipper_IncludeItemsByIndex before
 the first call to ListClipper_Step if you need a range of items to be displayed
 regardless of visibility.
@@ -167,7 +167,7 @@ may be included on either end of the display range).)")
 }
 
 API_FUNC(0_9, void, ListClipper_IncludeItemsByIndex,
-(ListClipper*,clipper)(int,item_begin)(int,item_end),
+(ListClipper*,clipper) (int,item_begin) (int,item_end),
 R"(See ListClipper_IncludeItemByIndex.
 
 item_end is exclusive e.g. use (42, 42+1) to make item 42 never clipped.)")

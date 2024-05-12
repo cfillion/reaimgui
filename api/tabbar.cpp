@@ -20,11 +20,11 @@
 API_SECTION("Tab Bar");
 
 API_FUNC(0_1, bool, BeginTabBar, (Context*,ctx)
-(const char*,str_id)(int*,API_RO(flags),ImGuiTabBarFlags_None),
+(const char*,str_id) (RO<int*>,flags,ImGuiTabBarFlags_None),
 "Create and append into a TabBar.")
 {
   FRAME_GUARD;
-  return ImGui::BeginTabBar(str_id, API_RO_GET(flags));
+  return ImGui::BeginTabBar(str_id, API_GET(flags));
 }
 
 API_FUNC(0_1, void, EndTabBar, (Context*,ctx),
@@ -59,14 +59,12 @@ API_ENUM(0_1, ImGui, TabBarFlags_FittingPolicyScroll,
 API_SUBSECTION("Tab Item");
 
 API_FUNC(0_1, bool, BeginTabItem, (Context*,ctx)
-(const char*,label)(bool*,API_RWO(p_open))
-(int*,API_RO(flags),ImGuiTabItemFlags_None),
+(const char*,label) (RWO<bool*>,p_open) (RO<int*>,flags,ImGuiTabItemFlags_None),
 R"(Create a Tab. Returns true if the Tab is selected.
 Set 'p_open' to true to enable the close button.)")
 {
   FRAME_GUARD;
-  return ImGui::BeginTabItem(label,
-    openPtrBehavior(API_RWO(p_open)), API_RO_GET(flags));
+  return ImGui::BeginTabItem(label, openPtrBehavior(p_open), API_GET(flags));
 }
 
 API_FUNC(0_1, void, EndTabItem, (Context*,ctx),
@@ -77,12 +75,12 @@ API_FUNC(0_1, void, EndTabItem, (Context*,ctx),
 }
 
 API_FUNC(0_1, bool, TabItemButton, (Context*,ctx)
-(const char*,label)(int*,API_RO(flags),ImGuiTabItemFlags_None),
+(const char*,label) (RO<int*>,flags,ImGuiTabItemFlags_None),
 R"(Create a Tab behaving like a button. Return true when clicked.
 Cannot be selected in the tab bar.)")
 {
   FRAME_GUARD;
-  return ImGui::TabItemButton(label, API_RO_GET(flags));
+  return ImGui::TabItemButton(label, API_GET(flags));
 }
 
 API_FUNC(0_1, void, SetTabItemClosed, (Context*,ctx)

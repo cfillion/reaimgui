@@ -35,57 +35,57 @@ API_FUNC(0_7, ViewportProxy*, GetWindowViewport, (Context*,ctx),
 }
 
 API_FUNC(0_1, void, Viewport_GetPos, (ViewportProxy*,viewport)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "Main Area: Position of the viewport")
 {
   const ImVec2 &pos { viewport->get()->Pos };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
 API_FUNC(0_1, void, Viewport_GetSize, (ViewportProxy*,viewport)
-(double*,API_W(w))(double*,API_W(h)),
+(W<double*>,w) (W<double*>,h),
 "Main Area: Size of the viewport.")
 {
   const ImVec2 &size { viewport->get()->Size };
-  if(API_W(w)) *API_W(w) = size.x;
-  if(API_W(h)) *API_W(h) = size.y;
+  if(w) *w = size.x;
+  if(h) *h = size.y;
 }
 
 API_FUNC(0_1, void, Viewport_GetCenter, (ViewportProxy*,viewport)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "Center of the viewport.")
 {
   const ImVec2 &pos { viewport->get()->GetCenter() };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
 API_SUBSECTION("Work Area", "Viewport minus task bars, menu bars, status bars");
 
 API_FUNC(0_1, void, Viewport_GetWorkPos, (ViewportProxy*,viewport)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 ">= Viewport_GetPos")
 {
   const ImVec2 &pos { viewport->get()->WorkPos };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
 API_FUNC(0_1, void, Viewport_GetWorkSize, (ViewportProxy*,viewport)
-(double*,API_W(w))(double*,API_W(h)),
+(W<double*>,w) (W<double*>,h),
 "<= Viewport_GetSize")
 {
   const ImVec2 &size { viewport->get()->WorkSize };
-  if(API_W(w)) *API_W(w) = size.x;
-  if(API_W(h)) *API_W(h) = size.y;
+  if(w) *w = size.x;
+  if(h) *h = size.y;
 }
 
 API_FUNC(0_1, void, Viewport_GetWorkCenter, (ViewportProxy*,viewport)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "Center of the viewport's work area.")
 {
   const ImVec2 &pos { viewport->get()->GetWorkCenter() };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }

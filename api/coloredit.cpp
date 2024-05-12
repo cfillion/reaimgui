@@ -29,92 +29,92 @@ static void sanitizeColorEditFlags(ImGuiColorEditFlags &flags)
 }
 
 API_FUNC(0_1, bool, ColorEdit4, (Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgba))
-(int*,API_RO(flags),ImGuiColorEditFlags_None),
+(const char*,label) (RW<int*>,col_rgba)
+(RO<int*>,flags,ImGuiColorEditFlags_None),
 R"(Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xXXRRGGBB
 (XX is ignored and will not be modified).)")
 {
   FRAME_GUARD;
-  assertValid(API_RW(col_rgba));
+  assertValid(col_rgba);
 
-  ImGuiColorEditFlags flags { API_RO_GET(flags) };
-  sanitizeColorEditFlags(flags);
+  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  sanitizeColorEditFlags(clean_flags);
 
-  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+  const bool alpha { (clean_flags & ImGuiColorEditFlags_NoAlpha) == 0 };
   float col[4];
-  Color(*API_RW(col_rgba), alpha).unpack(col);
-  if(ImGui::ColorEdit4(label, col, flags)) {
+  Color(*col_rgba, alpha).unpack(col);
+  if(ImGui::ColorEdit4(label, col, clean_flags)) {
     // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
-    *API_RW(col_rgba) = Color{col}.pack(alpha, *API_RW(col_rgba));
+    *col_rgba = Color{col}.pack(alpha, *col_rgba);
     return true;
   }
   return false;
 }
 
 API_FUNC(0_1, bool, ColorEdit3, (Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgb))
-(int*,API_RO(flags),ImGuiColorEditFlags_None),
+(const char*,label) (RW<int*>,col_rgb)
+(RO<int*>,flags,ImGuiColorEditFlags_None),
 "Color is in 0xXXRRGGBB. XX is ignored and will not be modified.")
 {
   // Edit4 will take care of starting the frame and validating col_rgb
-  ImGuiColorEditFlags flags { API_RO_GET(flags) };
-  flags |= ImGuiColorEditFlags_NoAlpha;
-  return ColorEdit4::impl(ctx, label, API_RW(col_rgb), &flags);
+  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  clean_flags |= ImGuiColorEditFlags_NoAlpha;
+  return ColorEdit4::impl(ctx, label, col_rgb, &clean_flags);
 }
 
 API_FUNC(0_1, bool, ColorPicker4, (Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgba))
-(int*,API_RO(flags),ImGuiColorEditFlags_None)(int*,API_RO(ref_col)),
+(const char*,label) (RW<int*>,col_rgba)
+(RO<int*>,flags,ImGuiColorEditFlags_None) (RO<int*>,ref_col),
 "")
 {
   FRAME_GUARD;
-  assertValid(API_RW(col_rgba));
+  assertValid(col_rgba);
 
-  ImGuiColorEditFlags flags { API_RO_GET(flags) };
-  sanitizeColorEditFlags(flags);
+  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  sanitizeColorEditFlags(clean_flags);
 
-  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+  const bool alpha { (clean_flags & ImGuiColorEditFlags_NoAlpha) == 0 };
 
   float col[4], refCol[4];
-  Color(*API_RW(col_rgba), alpha).unpack(col);
-  if(API_RO(ref_col))
-    Color(*API_RO(ref_col), alpha).unpack(refCol);
+  Color(*col_rgba, alpha).unpack(col);
+  if(ref_col)
+    Color(*ref_col, alpha).unpack(refCol);
 
-  if(ImGui::ColorPicker4(label, col, flags, API_RO(ref_col) ? refCol : nullptr)) {
+  if(ImGui::ColorPicker4(label, col, clean_flags, refCol)) {
     // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
-    *API_RW(col_rgba) = Color{col}.pack(alpha, *API_RW(col_rgba));
+    *col_rgba = Color{col}.pack(alpha, *col_rgba);
     return true;
   }
   return false;
 }
 
 API_FUNC(0_1, bool, ColorPicker3, (Context*,ctx)
-(const char*,label)(int*,API_RW(col_rgb))
-(int*,API_RO(flags),ImGuiColorEditFlags_None),
+(const char*,label) (RW<int*>,col_rgb)
+(RO<int*>,flags,ImGuiColorEditFlags_None),
 R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.)")
 {
   // Picker4 will take care of starting the frame and validating col_rgb
-  ImGuiColorEditFlags flags { API_RO_GET(flags) };
-  flags |= ImGuiColorEditFlags_NoAlpha;
-  return ColorPicker4::impl(ctx, label, API_RW(col_rgb), &flags, nullptr);
+  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  clean_flags |= ImGuiColorEditFlags_NoAlpha;
+  return ColorPicker4::impl(ctx, label, col_rgb, &clean_flags, nullptr);
 }
 
 API_FUNC(0_1, bool, ColorButton, (Context*,ctx)
-(const char*,desc_id)(int,col_rgba)(int*,API_RO(flags),ImGuiColorEditFlags_None)
-(double*,API_RO(size_w),0.0)(double*,API_RO(size_h),0.0),
+(const char*,desc_id) (int,col_rgba) (RO<int*>,flags,ImGuiColorEditFlags_None)
+(RO<double*>,size_w,0.0) (RO<double*>,size_h,0.0),
 R"(Display a color square/button, hover for details, return true when pressed.
 Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xRRGGBB.)")
 {
   FRAME_GUARD;
 
-  ImGuiColorEditFlags flags { API_RO_GET(flags) };
-  sanitizeColorEditFlags(flags);
+  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  sanitizeColorEditFlags(clean_flags);
 
-  const bool alpha { (flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+  const bool alpha { (clean_flags & ImGuiColorEditFlags_NoAlpha) == 0 };
   const Color col(col_rgba, alpha);
-  const ImVec2 size(API_RO_GET(size_w), API_RO_GET(size_h));
+  const ImVec2 size(API_GET(size_w), API_GET(size_h));
 
-  return ImGui::ColorButton(desc_id, col, flags, size);
+  return ImGui::ColorButton(desc_id, col, clean_flags, size);
 }
 
 API_FUNC(0_1, void, SetColorEditOptions, (Context*,ctx)

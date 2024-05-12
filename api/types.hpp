@@ -51,7 +51,6 @@ namespace Tags {
 template<typename T, unsigned char TagV>
 class Tag {
 public:
-  static constexpr auto tags { TagV };
   Tag(T v) : m_val { v } {}
   operator T &() { return m_val; }
   operator const T &() const { return m_val; }
@@ -104,7 +103,22 @@ struct TypeInfo<Tag<T, tags>>
   template<const auto &Names, size_t I>
   static constexpr auto name()
   {
-    constexpr auto resolvedName { TypeInfo<T>::template name<Names, I>() };
+    constexpr auto resolvedName { [] {
+      constexpr auto name { TypeInfo<T>::template name<Names, I>() };
+
+      // do not append _sz again when Names[I] already ends with it
+      if constexpr(!!(tags & Tags::S)) {
+        constexpr auto sz { suffixFor(Tags::S) };
+        if constexpr(name.size() > sz.size() &&
+            name.substr(name.size() - sz.size()) == sz)
+          return name.substr(0, name.size() - sz.size());
+        else
+          return name;
+      }
+      else
+        return name;
+    }() };
+
     constexpr size_t length { resolvedName.size() + suffixesLength() };
     std::array<char, length> decorated {};
     char *p { decorated.data() };

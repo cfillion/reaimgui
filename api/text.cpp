@@ -30,7 +30,7 @@ API_FUNC(0_1, void, Text, (Context*,ctx)
 }
 
 API_FUNC(0_1, void, TextColored, (Context*,ctx)
-(int,col_rgba)(const char*,text),
+(int,col_rgba) (const char*,text),
 "Shortcut for PushStyleColor(Col_Text, color); Text(text); PopStyleColor();")
 {
   FRAME_GUARD;
@@ -66,7 +66,7 @@ SetNextWindowSize.)")
 }
 
 API_FUNC(0_1, void, LabelText, (Context*,ctx)
-(const char*,label)(const char*,text),
+(const char*,label) (const char*,text),
 "Display text+label aligned the same way as value+label widgets")
 {
   FRAME_GUARD;
@@ -92,7 +92,7 @@ API_FUNC(0_1, void, BulletText, (Context*,ctx)
 }
 
 API_FUNC(0_1, void, PushTextWrapPos, (Context*,ctx)
-(double*,API_RO(wrap_local_pos_x),0.0),
+(RO<double*>,wrap_local_pos_x,0.0),
 R"(Push word-wrapping position for Text*() commands.
 
 -  < 0.0: no wrapping
@@ -100,7 +100,7 @@ R"(Push word-wrapping position for Text*() commands.
 - \> 0.0: wrap at 'wrap_pos_x' position in window local space.)")
 {
   FRAME_GUARD;
-  ImGui::PushTextWrapPos(API_RO_GET(wrap_local_pos_x));
+  ImGui::PushTextWrapPos(API_GET(wrap_local_pos_x));
 }
 
 API_FUNC(0_1, void, PopTextWrapPos, (Context*,ctx),
@@ -150,18 +150,17 @@ R"(GetFontSize + StyleVar_FramePadding.y * 2 + StyleVar_ItemSpacing.y
 }
 
 API_FUNC(0_1, void, CalcTextSize, (Context*,ctx)
-(const char*,text)(double*,API_W(w))(double*,API_W(h))
-(bool*,API_RO(hide_text_after_double_hash),false)
-(double*,API_RO(wrap_width),-1.0),
+(const char*,text) (W<double*>,w) (W<double*>,h)
+(RO<bool*>,hide_text_after_double_hash,false) (RO<double*>,wrap_width,-1.0),
 "")
 {
   FRAME_GUARD;
   const ImVec2 &size {
     ImGui::CalcTextSize(text, nullptr,
-      API_RO_GET(hide_text_after_double_hash), API_RO_GET(wrap_width))
+      API_GET(hide_text_after_double_hash), API_GET(wrap_width))
   };
-  if(API_W(w)) *API_W(w) = size.x;
-  if(API_W(h)) *API_W(h) = size.y;
+  if(w) *w = size.x;
+  if(h) *h = size.y;
 }
 
 API_FUNC(0_7, void, DebugTextEncoding, (Context*,ctx)

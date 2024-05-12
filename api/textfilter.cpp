@@ -47,10 +47,10 @@ Filter usage:
 - "-xxx"     hide lines containing "xxx")");
 
 API_FUNC(0_9, TextFilter*, CreateTextFilter,
-(const char*,API_RO(default_filter),""),
+(RO<const char*>,default_filter,""),
 "Valid while used every frame unless attached to a context (see Attach).")
 {
-  return new TextFilter { API_RO_GET(default_filter) };
+  return new TextFilter { API_GET(default_filter) };
 }
 
 API_FUNC(0_5_6, void, TextFilter_Set, (TextFilter*,filter)
@@ -68,13 +68,13 @@ API_FUNC(0_5_6, const char*, TextFilter_Get, (TextFilter*,filter),
 }
 
 API_FUNC(0_5_6, bool, TextFilter_Draw, (TextFilter*,filter)
-(Context*,ctx)(const char*,API_RO(label),"Filter (inc,-exc)")
-(double*,API_RO(width),0.0),
+(Context*,ctx) (RO<const char*>,label,"Filter (inc,-exc)")
+(RO<double*>,width,0.0),
 "Helper calling InputText+TextFilter_Set")
 {
   FRAME_GUARD;
 
-  return (*filter)->Draw(API_RO_GET(label), API_RO_GET(width));
+  return (*filter)->Draw(API_GET(label), API_GET(width));
 }
 
 API_FUNC(0_5_6, bool, TextFilter_PassFilter, (TextFilter*,filter)

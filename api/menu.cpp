@@ -35,11 +35,11 @@ API_FUNC(0_1, void, EndMenuBar, (Context*,ctx),
 }
 
 API_FUNC(0_1, bool, BeginMenu, (Context*,ctx)
-(const char*,label)(bool*,API_RO(enabled),true),
+(const char*,label) (RO<bool*>,enabled,true),
 "Create a sub-menu entry. only call EndMenu if this returns true!")
 {
   FRAME_GUARD;
-  return ImGui::BeginMenu(label, API_RO_GET(enabled));
+  return ImGui::BeginMenu(label, API_GET(enabled));
 }
 
 API_FUNC(0_1, void, EndMenu, (Context*,ctx),
@@ -50,15 +50,13 @@ R"(Only call EndMenu() if BeginMenu returns true!)")
 }
 
 API_FUNC(0_1, bool, MenuItem, (Context*,ctx)
-(const char*,label)(const char*,API_RO(shortcut))
-(bool*,API_RWO(p_selected))(bool*,API_RO(enabled),true),
+(const char*,label) (RO<const char*>,shortcut)
+(RWO<bool*>,p_selected) (RO<bool*>,enabled,true),
 R"(Return true when activated. Shortcuts are displayed for convenience but not
 processed by ImGui at the moment. Toggle state is written to 'selected' when
 provided.)")
 {
   FRAME_GUARD;
-  nullIfEmpty(API_RO(shortcut));
-
-  return ImGui::MenuItem(label, API_RO(shortcut), API_RWO(p_selected),
-    API_RO_GET(enabled));
+  nullIfEmpty(shortcut);
+  return ImGui::MenuItem(label, shortcut, p_selected, API_GET(enabled));
 }

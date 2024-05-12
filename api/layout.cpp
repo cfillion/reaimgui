@@ -36,12 +36,12 @@ API_FUNC(0_8_4, void, SeparatorText, (Context*,ctx)
 }
 
 API_FUNC(0_1, void, SameLine, (Context*,ctx)
-(double*,API_RO(offset_from_start_x),0.0)(double*,API_RO(spacing),-1.0),
+(RO<double*>,offset_from_start_x,0.0) (RO<double*>,spacing,-1.0),
 R"(Call between widgets or groups to layout them horizontally.
 X position given in window coordinates.)")
 {
   FRAME_GUARD;
-  ImGui::SameLine(API_RO_GET(offset_from_start_x), API_RO_GET(spacing));
+  ImGui::SameLine(API_GET(offset_from_start_x), API_GET(spacing));
 }
 
 API_FUNC(0_1, void, NewLine, (Context*,ctx),
@@ -58,7 +58,7 @@ API_FUNC(0_1, void, Spacing, (Context*,ctx),
   ImGui::Spacing();
 }
 
-API_FUNC(0_1, void, Dummy, (Context*,ctx)(double,size_w)(double,size_h),
+API_FUNC(0_1, void, Dummy, (Context*,ctx) (double,size_w) (double,size_h),
 R"(Add a dummy item of given size. unlike InvisibleButton, Dummy() won't take the
 mouse click or be navigable into.)")
 {
@@ -66,20 +66,20 @@ mouse click or be navigable into.)")
   ImGui::Dummy(ImVec2(size_w, size_h));
 }
 
-API_FUNC(0_1, void, Indent, (Context*,ctx)(double*,API_RO(indent_w),0.0),
+API_FUNC(0_1, void, Indent, (Context*,ctx) (RO<double*>,indent_w,0.0),
 R"(Move content position toward the right, by 'indent_w', or
 StyleVar_IndentSpacing if 'indent_w' <= 0. See Unindent.)")
 {
   FRAME_GUARD;
-  ImGui::Indent(API_RO_GET(indent_w));
+  ImGui::Indent(API_GET(indent_w));
 }
 
-API_FUNC(0_1, void, Unindent, (Context*,ctx)(double*,API_RO(indent_w),0.0),
+API_FUNC(0_1, void, Unindent, (Context*,ctx) (RO<double*>,indent_w,0.0),
 R"(Move content position back to the left, by 'indent_w', or
 StyleVar_IndentSpacing if 'indent_w' <= 0)")
 {
   FRAME_GUARD;
-  ImGui::Unindent(API_RO_GET(indent_w));
+  ImGui::Unindent(API_GET(indent_w));
 }
 
 API_FUNC(0_1, void, BeginGroup, (Context*,ctx),
@@ -109,13 +109,13 @@ You can call SameLine() between widgets to undo the last carriage return and
 output at the right of the preceding widget.)");
 
 API_FUNC(0_1, void, GetCursorPos, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "Cursor position in window")
 {
   FRAME_GUARD;
   const ImVec2 &pos { ImGui::GetCursorPos() };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
 API_FUNC(0_1, double, GetCursorPosX, (Context*,ctx),
@@ -133,7 +133,7 @@ API_FUNC(0_1, double, GetCursorPosY, (Context*,ctx),
 }
 
 API_FUNC(0_1, void, SetCursorPos, (Context*,ctx)
-(double,local_pos_x)(double,local_pos_y),
+(double,local_pos_x) (double,local_pos_y),
 "Cursor position in window")
 {
   FRAME_GUARD;
@@ -157,27 +157,27 @@ API_FUNC(0_1, void, SetCursorPosY, (Context*,ctx)
 }
 
 API_FUNC(0_1, void, GetCursorStartPos, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "Initial cursor position in window coordinates.")
 {
   FRAME_GUARD;
   const ImVec2 &pos { ImGui::GetCursorStartPos() };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
 API_FUNC(0_1, void, GetCursorScreenPos, (Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+(W<double*>,x) (W<double*>,y),
 "Cursor position in absolute screen coordinates (useful to work with the DrawList API).")
 {
   FRAME_GUARD;
   const ImVec2 &pos { ImGui::GetCursorScreenPos() };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
 API_FUNC(0_1, void, SetCursorScreenPos, (Context*,ctx)
-(double,pos_x)(double,pos_y),
+(double,pos_x) (double,pos_y),
 "Cursor position in absolute screen coordinates.")
 {
   FRAME_GUARD;
@@ -189,8 +189,8 @@ R"(Mouse hovering is affected by PushClipRect() calls, unlike direct calls to
 DrawList_PushClipRect() which are render only. Coordinates are in screen space.)");
 
 API_FUNC(0_1, void, PushClipRect, (Context*,ctx)
-(double,clip_rect_min_x)(double,clip_rect_min_y)
-(double,clip_rect_max_x)(double,clip_rect_max_y)
+(double,clip_rect_min_x) (double,clip_rect_min_y)
+(double,clip_rect_max_x) (double,clip_rect_max_y)
 (bool,intersect_with_current_clip_rect),
 "")
 {
@@ -210,7 +210,7 @@ API_FUNC(0_1, void, PopClipRect, (Context*,ctx),
 }
 
 API_FUNC(0_1, bool, IsRectVisible, (Context*,ctx)
-(double,size_w)(double,size_h),
+(double,size_w) (double,size_h),
 R"(Test if rectangle (of given size, starting from cursor position) is
 visible / not clipped.)")
 {
@@ -219,7 +219,7 @@ visible / not clipped.)")
 }
 
 API_FUNC(0_1, bool, IsRectVisibleEx, (Context*,ctx)
-(double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y),
+(double,rect_min_x) (double,rect_min_y) (double,rect_max_x) (double,rect_max_y),
 R"(Test if rectangle (in screen space) is visible / not clipped. to perform
 coarse clipping on user's side.)")
 {

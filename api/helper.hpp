@@ -58,16 +58,20 @@ DECLARE_HANDLE(HDROP);
 #define _API_STRARR_US(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, "\31") BOOST_PP_STRINGIZE(macro(arg))
 
-template<typename T>
-using DefArgVal = std::conditional_t<
-  std::is_same_v<const char *, T>, T, std::remove_pointer_t<T>
->;
+template<typename T, typename = void>
+struct DefVal { using type = std::remove_pointer_t<T>; };
+
+template<>
+struct DefVal<const char *> { using type = const char *; };
+
+template<typename T, auto tags>
+struct DefVal<Tag<T, tags>> { using type = typename DefVal<T>::type; };
 
 #define _API_DEFARG_ID(argName) BOOST_PP_CAT(argName, Default)
 #define _API_DEFARG(r, name, i, arg)                          \
   BOOST_PP_EXPR_IF(                                           \
     BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3),      \
-    constexpr DefArgVal<_API_ARG_TYPE(arg)>                   \
+    constexpr DefVal<_API_ARG_TYPE(arg)>::type                \
       _API_ARG_NAME(arg)(_API_ARG_DEFV(arg)); \
   )
 
@@ -112,8 +116,6 @@ using DefArgVal = std::conditional_t<
 #define _API_DEF(vernum, name, named) \
   CompStr::apidef<&API::v##vernum::name::impl, API::v##vernum::name::meta, named>
 
-#define API_DO_NOT_USE "Internal use only."
-
 #define API_FUNC _API_STORE_LINE _API_FUNC
 #define _API_FUNC(vernum, type, name, args, help)                   \
   _API_CHECKROOTSECTION                                             \
@@ -130,7 +132,7 @@ using DefArgVal = std::conditional_t<
 
 #define API_ENUM _API_STORE_LINE _API_ENUM
 #define _API_ENUM(vernum, prefix, name, doc) \
-  _API_FUNC(vernum, int, name, NO_ARGS, doc) { return prefix##name; }
+  _API_FUNC(vernum, int, name, API_NO_ARGS, doc) { return prefix##name; }
 
 #define API_EELFUNC _API_STORE_LINE _API_EELFUNC
 #define _API_EELFUNC(vernum, type, name, args, help)    \
@@ -169,29 +171,15 @@ using DefArgVal = std::conditional_t<
 #define API_SECTION_P(parent, ...) \
   API_SECTION_DEF(_API_UNIQ_SEC_ID, parent,       __VA_ARGS__)
 
-// TODO: replace these in favor of the new type tags from types.hpp
-#define NO_ARGS (,)
-#define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
-#define API_RW(var)       var##InOut      // read/write
-#define API_RWO(var)      var##InOutOptional // documentation/python only
-#define API_W(var)        var##Out        // write
-#define API_W_SZ(var)     var##Out_sz     // write
-// Not using varInOutOptional because REAPER refuses to pass NULL to them
-#define API_RWBIG(var)    var##InOutNeedBig    // read/write, resizable (realloc_cmd_ptr)
-#define API_RWBIG_SZ(var) var##InOutNeedBig_sz // size of previous API_RWBIG buffer
-#define API_WBIG(var)     var##OutNeedBig
-#define API_WBIG_SZ(var)  var##OutNeedBig_sz
+#define API_DO_NOT_USE "Internal use only."
+#define API_NO_ARGS (,)
 
-#define _API_GET(var) [](const auto v, const auto d) { \
-  if constexpr(std::is_pointer_v<decltype(d)>)         \
-    return v ?  v : d;                                 \
-  else                                                 \
-    return v ? *v : d;                                 \
+#define API_GET(var) [](const auto &v, const auto &d) -> const auto & { \
+  if constexpr(std::is_pointer_v<std::remove_reference_t<decltype(d)>>) \
+    return v ? static_cast<decltype(d)>(v) : d; \
+  else                                          \
+    return v ? *v : d;                          \
 }(var, defaults::var)
-#define API_RO_GET(var)  _API_GET(API_RO(var))
-#define API_RWO_GET(var) _API_GET(API_RWO(var))
-
-#define FRAME_GUARD assertValid(ctx); assertFrame(ctx)
 
 // const char *foobarInOptional from REAPER are never null before 6.58
 inline void nullIfEmpty(const char *&string)
@@ -217,6 +205,12 @@ void assertValid(T *ptr)
   Error::invalidObject(ptr);
 }
 
+template<typename T, auto tags>
+void assertValid(Tag<T, tags> ptr)
+{
+  return assertValid(static_cast<T>(ptr));
+}
+
 inline void assertFrame(Context *ctx)
 {
   if(!ctx->enterFrame()) {
@@ -224,6 +218,8 @@ inline void assertFrame(Context *ctx)
     throw reascript_error { "frame initialization failed" };
   }
 }
+
+#define FRAME_GUARD assertValid(ctx); assertFrame(ctx)
 
 template <typename PtrType, typename ValType, size_t N>
 class ReadWriteArray {
