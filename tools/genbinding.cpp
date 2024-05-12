@@ -293,9 +293,8 @@ namespace ImGui {
 
     struct nullopt_t {
       constexpr explicit nullopt_t(int) {}
-      operator std::nullptr_t() const { return nullptr; }
     };
-    constexpr details::nullopt_t nullopt { 0 };
+    constexpr nullopt_t nullopt { 0 };
 
     template<typename T, typename E = void>
     class optional {
@@ -303,6 +302,7 @@ namespace ImGui {
       using value_type = T*;
       optional(nullopt_t) : m_present { false } {}
       optional(const T v) : m_value { v }, m_present { true } {}
+      optional(value_type) = delete;
       operator value_type() { return m_present ? &m_value : nullptr; }
 
     private:
@@ -396,9 +396,9 @@ namespace ImGui {
       stream << "details::function<" << func.type << '(';
       CommaSep cs { stream };
       for(const Argument &arg : func.args) {
-        if(arg.isOptional() && !arg.isOutput()) {
+        if(arg.isOptional()) {
           cs << "details::optional<";
-          if(arg.type.isScalarPtr())
+          if(!arg.isOutput() && arg.type.isScalarPtr())
             stream << arg.type.removePtr();
           else
             stream << arg.type;
