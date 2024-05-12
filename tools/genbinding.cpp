@@ -327,19 +327,28 @@ namespace ImGui {
       using value_type = typename optional<T>::value_type;
     };
 
-    template<typename T>
+    template<typename T, bool nodiscard = false>
     class function;
 
-    template<typename R, typename... Args>
-    class function<R(Args...)> {
+    template<typename R, typename... Args, bool nodiscard>
+    class function<R(Args...), nodiscard> {
     public:
       using Proc = R(*)(typename param<Args>::value_type...) noexcept;
       function() : m_proc { nullptr } {}
       function(Proc proc) : m_proc { proc } {}
       operator bool() const { return m_proc != nullptr; }
 
-      template<typename... CallArgs>
-      R operator()(CallArgs... args) const
+      template<typename... CallArgs, bool ND = nodiscard>
+      std::enable_if_t<!ND, R> operator()(CallArgs&&... args) const
+      {
+        if constexpr(sizeof...(CallArgs) < sizeof...(Args))
+          return (*this)(std::forward<CallArgs>(args)..., nullopt);
+        else
+          return invoke(std::forward<CallArgs>(args)...);
+      }
+
+      template<typename... CallArgs, bool ND = nodiscard> [[nodiscard]]
+      std::enable_if_t<ND, R> operator()(CallArgs&&... args) const
       {
         if constexpr(sizeof...(CallArgs) < sizeof...(Args))
           return (*this)(std::forward<CallArgs>(args)..., nullopt);
@@ -399,7 +408,10 @@ namespace ImGui {
           cs << arg.type;
         stream << ' ' << arg.name;
       }
-      stream << ")> ";
+      stream << ')';
+      if(func.isNoDiscard())
+        stream << ", true";
+      stream << "> ";
     }
 
     stream << func.name << ';';
