@@ -106,11 +106,12 @@ class APIDef<R(*)(Args...), Meta, UseArgNames>
     return def;
   }
 
-  static constexpr std::string_view noArgNames[] { "_" };
+  static constexpr std::array<std::string_view, 1> noArgNames { "_" };
 
   template<typename... ArgsPart, std::size_t... Is>
   static constexpr auto args(std::index_sequence<Is...>)
   {
+    [[maybe_unused]] // for GCC 7
     constexpr const auto &argn { []() -> const auto & {
       if constexpr(UseArgNames)
         return Meta::argn;
