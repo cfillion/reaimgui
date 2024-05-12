@@ -8,7 +8,7 @@
 #include <numeric>
 #include <reaper_plugin_secrets.h>
 
-using namespace std::literals;
+using namespace std::string_view_literals;
 
 constexpr const char *NO_CODE { "0;" };
 

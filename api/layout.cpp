@@ -19,7 +19,7 @@
 
 API_SECTION("Layout");
 
-API_FUNC(0_1, void, Separator, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, Separator, (Context*,ctx),
 R"(Separator, generally horizontal. inside a menu bar or in horizontal layout
 mode, this becomes a vertical separator.)")
 {
@@ -27,7 +27,7 @@ mode, this becomes a vertical separator.)")
   ImGui::Separator();
 }
 
-API_FUNC(0_8_4, void, SeparatorText, (ImGui_Context*,ctx)
+API_FUNC(0_8_4, void, SeparatorText, (Context*,ctx)
 (const char*,label),
 "Text formatted with an horizontal line")
 {
@@ -35,30 +35,30 @@ API_FUNC(0_8_4, void, SeparatorText, (ImGui_Context*,ctx)
   ImGui::SeparatorText(label);
 }
 
-API_FUNC(0_1, void, SameLine, (ImGui_Context*,ctx)
-(double*,API_RO(offset_from_start_x),0.0)(double*,API_RO(spacing),-1.0),
+API_FUNC(0_1, void, SameLine, (Context*,ctx)
+(RO<double*>,offset_from_start_x,0.0) (RO<double*>,spacing,-1.0),
 R"(Call between widgets or groups to layout them horizontally.
 X position given in window coordinates.)")
 {
   FRAME_GUARD;
-  ImGui::SameLine(API_RO_GET(offset_from_start_x), API_RO_GET(spacing));
+  ImGui::SameLine(API_GET(offset_from_start_x), API_GET(spacing));
 }
 
-API_FUNC(0_1, void, NewLine, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, NewLine, (Context*,ctx),
 "Undo a SameLine() or force a new line when in a horizontal-layout context.")
 {
   FRAME_GUARD;
   ImGui::NewLine();
 }
 
-API_FUNC(0_1, void, Spacing, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, Spacing, (Context*,ctx),
 "Add vertical spacing.")
 {
   FRAME_GUARD;
   ImGui::Spacing();
 }
 
-API_FUNC(0_1, void, Dummy, (ImGui_Context*,ctx)(double,size_w)(double,size_h),
+API_FUNC(0_1, void, Dummy, (Context*,ctx) (double,size_w) (double,size_h),
 R"(Add a dummy item of given size. unlike InvisibleButton, Dummy() won't take the
 mouse click or be navigable into.)")
 {
@@ -66,30 +66,30 @@ mouse click or be navigable into.)")
   ImGui::Dummy(ImVec2(size_w, size_h));
 }
 
-API_FUNC(0_1, void, Indent, (ImGui_Context*,ctx)(double*,API_RO(indent_w),0.0),
+API_FUNC(0_1, void, Indent, (Context*,ctx) (RO<double*>,indent_w,0.0),
 R"(Move content position toward the right, by 'indent_w', or
 StyleVar_IndentSpacing if 'indent_w' <= 0. See Unindent.)")
 {
   FRAME_GUARD;
-  ImGui::Indent(API_RO_GET(indent_w));
+  ImGui::Indent(API_GET(indent_w));
 }
 
-API_FUNC(0_1, void, Unindent, (ImGui_Context*,ctx)(double*,API_RO(indent_w),0.0),
+API_FUNC(0_1, void, Unindent, (Context*,ctx) (RO<double*>,indent_w,0.0),
 R"(Move content position back to the left, by 'indent_w', or
 StyleVar_IndentSpacing if 'indent_w' <= 0)")
 {
   FRAME_GUARD;
-  ImGui::Unindent(API_RO_GET(indent_w));
+  ImGui::Unindent(API_GET(indent_w));
 }
 
-API_FUNC(0_1, void, BeginGroup, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, BeginGroup, (Context*,ctx),
 "Lock horizontal starting position. See EndGroup.")
 {
   FRAME_GUARD;
   ImGui::BeginGroup();
 }
 
-API_FUNC(0_8, void, EndGroup, (ImGui_Context*,ctx),
+API_FUNC(0_8, void, EndGroup, (Context*,ctx),
 R"(Unlock horizontal starting position + capture the whole group bounding box
 into one "item" (so you can use IsItemHovered or layout primitives such as
 SameLine on whole group, etc.).
@@ -108,39 +108,39 @@ position, then move the cursor one line down.
 You can call SameLine() between widgets to undo the last carriage return and
 output at the right of the preceding widget.)");
 
-API_FUNC(0_1, void, GetCursorPos, (ImGui_Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+API_FUNC(0_1, void, GetCursorPos, (Context*,ctx)
+(W<double*>,x) (W<double*>,y),
 "Cursor position in window")
 {
   FRAME_GUARD;
   const ImVec2 &pos { ImGui::GetCursorPos() };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
-API_FUNC(0_1, double, GetCursorPosX, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetCursorPosX, (Context*,ctx),
 "Cursor X position in window")
 {
   FRAME_GUARD;
   return ImGui::GetCursorPosX();
 }
 
-API_FUNC(0_1, double, GetCursorPosY, (ImGui_Context*,ctx),
+API_FUNC(0_1, double, GetCursorPosY, (Context*,ctx),
 "Cursor Y position in window")
 {
   FRAME_GUARD;
   return ImGui::GetCursorPosY();
 }
 
-API_FUNC(0_1, void, SetCursorPos, (ImGui_Context*,ctx)
-(double,local_pos_x)(double,local_pos_y),
+API_FUNC(0_1, void, SetCursorPos, (Context*,ctx)
+(double,local_pos_x) (double,local_pos_y),
 "Cursor position in window")
 {
   FRAME_GUARD;
   ImGui::SetCursorPos(ImVec2(local_pos_x, local_pos_y));
 }
 
-API_FUNC(0_1, void, SetCursorPosX, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetCursorPosX, (Context*,ctx)
 (double,local_x),
 "Cursor X position in window")
 {
@@ -148,7 +148,7 @@ API_FUNC(0_1, void, SetCursorPosX, (ImGui_Context*,ctx)
   ImGui::SetCursorPosX(local_x);
 }
 
-API_FUNC(0_1, void, SetCursorPosY, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetCursorPosY, (Context*,ctx)
 (double,local_y),
 "Cursor Y position in window")
 {
@@ -156,28 +156,28 @@ API_FUNC(0_1, void, SetCursorPosY, (ImGui_Context*,ctx)
   ImGui::SetCursorPosY(local_y);
 }
 
-API_FUNC(0_1, void, GetCursorStartPos, (ImGui_Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+API_FUNC(0_1, void, GetCursorStartPos, (Context*,ctx)
+(W<double*>,x) (W<double*>,y),
 "Initial cursor position in window coordinates.")
 {
   FRAME_GUARD;
   const ImVec2 &pos { ImGui::GetCursorStartPos() };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
-API_FUNC(0_1, void, GetCursorScreenPos, (ImGui_Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+API_FUNC(0_1, void, GetCursorScreenPos, (Context*,ctx)
+(W<double*>,x) (W<double*>,y),
 "Cursor position in absolute screen coordinates (useful to work with the DrawList API).")
 {
   FRAME_GUARD;
   const ImVec2 &pos { ImGui::GetCursorScreenPos() };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
-API_FUNC(0_1, void, SetCursorScreenPos, (ImGui_Context*,ctx)
-(double,pos_x)(double,pos_y),
+API_FUNC(0_1, void, SetCursorScreenPos, (Context*,ctx)
+(double,pos_x) (double,pos_y),
 "Cursor position in absolute screen coordinates.")
 {
   FRAME_GUARD;
@@ -188,9 +188,9 @@ API_SUBSECTION("Clipping",
 R"(Mouse hovering is affected by PushClipRect() calls, unlike direct calls to
 DrawList_PushClipRect() which are render only. Coordinates are in screen space.)");
 
-API_FUNC(0_1, void, PushClipRect, (ImGui_Context*,ctx)
-(double,clip_rect_min_x)(double,clip_rect_min_y)
-(double,clip_rect_max_x)(double,clip_rect_max_y)
+API_FUNC(0_1, void, PushClipRect, (Context*,ctx)
+(double,clip_rect_min_x) (double,clip_rect_min_y)
+(double,clip_rect_max_x) (double,clip_rect_max_y)
 (bool,intersect_with_current_clip_rect),
 "")
 {
@@ -202,15 +202,15 @@ API_FUNC(0_1, void, PushClipRect, (ImGui_Context*,ctx)
   );
 }
 
-API_FUNC(0_1, void, PopClipRect, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, PopClipRect, (Context*,ctx),
 "See PushClipRect")
 {
   FRAME_GUARD;
   ImGui::PopClipRect();
 }
 
-API_FUNC(0_1, bool, IsRectVisible, (ImGui_Context*,ctx)
-(double,size_w)(double,size_h),
+API_FUNC(0_1, bool, IsRectVisible, (Context*,ctx)
+(double,size_w) (double,size_h),
 R"(Test if rectangle (of given size, starting from cursor position) is
 visible / not clipped.)")
 {
@@ -218,8 +218,8 @@ visible / not clipped.)")
   return ImGui::IsRectVisible(ImVec2(size_w, size_h));
 }
 
-API_FUNC(0_1, bool, IsRectVisibleEx, (ImGui_Context*,ctx)
-(double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y),
+API_FUNC(0_1, bool, IsRectVisibleEx, (Context*,ctx)
+(double,rect_min_x) (double,rect_min_y) (double,rect_max_x) (double,rect_max_y),
 R"(Test if rectangle (in screen space) is visible / not clipped. to perform
 coarse clipping on user's side.)")
 {

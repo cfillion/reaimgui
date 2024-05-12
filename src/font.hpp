@@ -41,8 +41,6 @@ struct ImFontAtlas;
 
 class Font final : public Resource {
 public:
-  static constexpr const char *api_type_name { "ImGui_Font" };
-
   // generic fonts
   static constexpr const char
     *CURSIVE    { "cursive" },
@@ -63,7 +61,6 @@ private:
   int m_index, m_size, m_missingStyles;
 };
 
-using ImGui_Font = Font; // user-facing alias
 API_REGISTER_OBJECT_TYPE(Font);
 
 class FontList {

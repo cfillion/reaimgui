@@ -24,6 +24,7 @@
 #include <array>
 #include <cstddef>
 #include <string_view>
+#include <tuple>
 
 namespace CompStr {
 
@@ -68,49 +69,73 @@ public:
 template<auto input>
 static constexpr const char *version { Version<input>::value.data() };
 
-template<typename fn>
+template<typename fn, typename Meta, bool UseArgNames = true>
 class APIDef;
 
-template<typename R, typename... Args>
-class APIDef<R(*)(Args...)>
+template<typename R, typename... Args, typename Meta, bool UseArgNames>
+class APIDef<R(*)(Args...), Meta, UseArgNames>
 {
+  using Is = std::make_index_sequence<sizeof...(Args)>;
+
   static constexpr auto compute()
   {
-    constexpr std::string_view help { "Internal use only." };
     constexpr auto length {
       TypeInfo<R>::type().size() + 1 +
-      [] {
-        if constexpr(sizeof...(Args) == 0)
+      std::apply([](auto... arg) {
+        if constexpr(sizeof...(arg) == 0)
           return 2;
         else
-         return (TypeInfo<Args>::type().size() + ...) + sizeof...(Args) +
-                (TypeInfo<Args>::name().size() + ...) + sizeof...(Args);
-      }() + help.size() + 1
+          return (std::get<0>(arg).size() + ...) + sizeof...(arg) +
+                 (std::get<1>(arg).size() + ...) + sizeof...(arg);
+      }, args<Args...>(Is{})) +
+      Meta::help.size() + 1
     };
     std::array<char, length> def {};
     char *p { def.data() };
     append(p, TypeInfo<R>::type(), '\0');
-    if constexpr(sizeof...(Args) == 0)
-      p += 2;
-    else {
-      ((append(p, TypeInfo<Args>::type(), ',')), ...) = '\0';
-      ((append(p, TypeInfo<Args>::name(), ',')), ...) = '\0';
-    }
-    append(p, help, '\0');
+    std::apply([&p](auto... arg) {
+      if constexpr(sizeof...(arg) == 0)
+        p += 2;
+      else {
+        ((append(p, std::get<0>(arg), ',')), ...) = '\0';
+        ((append(p, std::get<1>(arg), ',')), ...) = '\0';
+      }
+    }, args<Args...>(Is{}));
+    append(p, Meta::help, '\0');
 
     return def;
+  }
+
+  static constexpr std::array<std::string_view, 1> noArgNames { "_" };
+
+  template<typename... ArgsPart, std::size_t... Is>
+  static constexpr auto args(std::index_sequence<Is...>)
+  {
+    [[maybe_unused]] // for GCC 7
+    constexpr const auto &argn { []() -> const auto & {
+      if constexpr(UseArgNames)
+        return Meta::argn;
+      else
+        return noArgNames;
+    }() };
+
+    return std::make_tuple(std::make_tuple(
+      TypeInfo<ArgsPart>::type(),
+      TypeInfo<ArgsPart>::template name<argn, UseArgNames ? Is : 0>()
+    )...);
   }
 
 public:
   static constexpr auto value { compute() };
 };
 
-template<typename R, typename... Args>
-class APIDef<R(*)(Args...) noexcept> : public APIDef<R(*)(Args...)> {};
+template<typename R, typename... Args, typename Meta, bool UseArgNames>
+class APIDef<R(*)(Args...) noexcept, Meta, UseArgNames>
+  : public APIDef<R(*)(Args...), Meta, UseArgNames> {};
 
-
-template<auto func>
-static constexpr const char *apidef { APIDef<decltype(func)>::value.data() };
+template<auto func, typename Meta, bool UseArgNames = true>
+static constexpr const char *apidef
+  { APIDef<decltype(func), Meta, UseArgNames>::value.data() };
 
 }
 

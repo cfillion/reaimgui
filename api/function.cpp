@@ -28,7 +28,8 @@ such as InputText* and SetNextWindowSizeConstraints.
 They can also be used standalone with Function_Execute
 (eg. faster-than-Lua DSP processing).)");
 
-API_FUNC(0_9, ImGui_Function*, CreateFunctionFromEEL, (const char*,code),
+API_FUNC(0_9, Function*, CreateFunctionFromEEL,
+(const char*,code),
 R"(Compile an EEL program.
 
 Standard EEL [math](https://www.reaper.fm/sdk/js/basiccode.php#js_basicfunc)
@@ -39,14 +40,15 @@ functions are available in addition to callback-specific functions
   return new Function { code };
 }
 
-API_FUNC(0_8_5, void, Function_Execute, (ImGui_Function*,func),
+API_FUNC(0_8_5, void, Function_Execute, (Function*,func),
 "")
 {
   assertValid(func);
   func->execute();
 }
 
-API_FUNC(0_8_5, double, Function_GetValue, (ImGui_Function*,func)(const char*,name),
+API_FUNC(0_8_5, double, Function_GetValue, (Function*,func)
+(const char*,name),
 "")
 {
   assertValid(func);
@@ -55,8 +57,8 @@ API_FUNC(0_8_5, double, Function_GetValue, (ImGui_Function*,func)(const char*,na
   throw reascript_error { "could not read number value" };
 }
 
-API_FUNC(0_8_5, void, Function_SetValue, (ImGui_Function*,func)
-(const char*,name)(double,value),
+API_FUNC(0_8_5, void, Function_SetValue, (Function*,func)
+(const char*,name) (double,value),
 "")
 {
   assertValid(func);
@@ -64,8 +66,8 @@ API_FUNC(0_8_5, void, Function_SetValue, (ImGui_Function*,func)
     throw reascript_error { "could not write number value" };
 }
 
-API_FUNC(0_8_5, void, Function_GetValue_Array, (ImGui_Function*,func)
-(const char*,name)(reaper_array*,values),
+API_FUNC(0_8_5, void, Function_GetValue_Array, (Function*,func)
+(const char*,name) (reaper_array*,values),
 R"(Copy the values in the function's memory starting at the address stored
 in the given variable into the array.)")
 {
@@ -75,8 +77,8 @@ in the given variable into the array.)")
     throw reascript_error { "could not read array values" };
 }
 
-API_FUNC(0_8_5, void, Function_SetValue_Array, (ImGui_Function*,func)
-(const char*,name)(reaper_array*,values),
+API_FUNC(0_8_5, void, Function_SetValue_Array, (Function*,func)
+(const char*,name) (reaper_array*,values),
 R"(Copy the values in the array to the function's memory at the address stored
 in the given variable.)")
 {
@@ -86,21 +88,21 @@ in the given variable.)")
     throw reascript_error { "could not write array values" };
 }
 
-API_FUNC(0_8_5, void, Function_GetValue_String, (ImGui_Function*,func)
-(const char*,name)(char*,API_WBIG(value))(int,API_WBIG_SZ(value)),
+API_FUNC(0_8_5, void, Function_GetValue_String, (Function*,func)
+(const char*,name) (WB<char*>,value) (WBS<int>,value_sz),
 "Read from a string slot or a named string (when name starts with a `#`).")
 {
   assertValid(func);
-  assertValid(API_WBIG(value));
+  assertValid(value);
 
-  const auto &value { func->getString(name) };
-  if(!value)
+  const auto &string { func->getString(name) };
+  if(!string)
     throw reascript_error { "could not read string value" };
-  copyToBigBuf(API_WBIG(value), API_WBIG_SZ(value), *value);
+  copyToBigBuf(value, value_sz, *string);
 }
 
-API_FUNC(0_8_5, void, Function_SetValue_String, (ImGui_Function*,func)
-(const char*,name)(const char*,value)(int,value_sz),
+API_FUNC(0_8_5, void, Function_SetValue_String, (Function*,func)
+(const char*,name) (const char*,value) (int,value_sz),
 "Write to a string slot or a named string (when name starts with a `#`).")
 {
   assertValid(func);

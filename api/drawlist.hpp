@@ -43,12 +43,11 @@ struct DrawListProxy
   using Decoder = MakeDecoder<Window, Foreground, Background>;
 };
 
-using ImGui_DrawList = DrawListProxy;
 API_REGISTER_TYPE(DrawListProxy*, "ImGui_DrawList*");
 
 class DrawListSplitter : public Resource {
 public:
-  DrawListSplitter(ImGui_DrawList *);
+  DrawListSplitter(DrawListProxy *);
   ImDrawList *drawList() const;
   ImDrawListSplitter *operator->();
 
@@ -58,12 +57,11 @@ protected:
   bool isValid() const override;
 
 private:
-  ImGui_DrawList *m_drawlist;
+  DrawListProxy *m_drawlist;
   ImDrawList *m_lastList;
   ImDrawListSplitter m_splitter;
 };
 
-using ImGui_DrawListSplitter = DrawListSplitter;
 API_REGISTER_OBJECT_TYPE(DrawListSplitter);
 
 #endif

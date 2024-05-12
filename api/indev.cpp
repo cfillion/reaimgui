@@ -32,7 +32,7 @@ Dragging operations are only reported after mouse has moved a certain distance
 away from the initial clicking position (see 'lock_threshold' parameters and
 'ConfigVar_MouseDragThreshold').)");
 
-API_FUNC(0_1, bool, IsMouseDown, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, IsMouseDown, (Context*,ctx)
 (int,button),
 "Is mouse button held?")
 {
@@ -40,7 +40,7 @@ API_FUNC(0_1, bool, IsMouseDown, (ImGui_Context*,ctx)
   return ImGui::IsMouseDown(button);
 }
 
-API_FUNC(0_1, double, GetMouseDownDuration, (ImGui_Context*,ctx)
+API_FUNC(0_1, double, GetMouseDownDuration, (Context*,ctx)
 (int,button),
 "Duration the mouse button has been down (0.0 == just clicked)")
 {
@@ -49,27 +49,27 @@ API_FUNC(0_1, double, GetMouseDownDuration, (ImGui_Context*,ctx)
   return ctx->IO().MouseDownDuration[button];
 }
 
-API_FUNC(0_1, bool, IsMouseClicked, (ImGui_Context*,ctx)
-(int,button)(bool*,API_RO(repeat),false),
+API_FUNC(0_1, bool, IsMouseClicked, (Context*,ctx)
+(int,button) (RO<bool*>,repeat,false),
 R"(Did mouse button clicked? (went from !Down to Down).
 Same as GetMouseClickedCount() == 1.)")
 {
   FRAME_GUARD;
-  return ImGui::IsMouseClicked(button, API_RO_GET(repeat));
+  return ImGui::IsMouseClicked(button, API_GET(repeat));
 }
 
-API_FUNC(0_1, void, GetMouseClickedPos, (ImGui_Context*,ctx)
-(int,button)(double*,API_W(x))(double*,API_W(y)),
+API_FUNC(0_1, void, GetMouseClickedPos, (Context*,ctx)
+(int,button) (W<double*>,x) (W<double*>,y),
 "")
 {
   FRAME_GUARD;
   IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(ImGuiIO::MouseDownDuration));
   const ImVec2 &pos { ctx->IO().MouseClickedPos[button] };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
-API_FUNC(0_1, bool, IsMouseReleased, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, IsMouseReleased, (Context*,ctx)
 (int,button),
 "Did mouse button released? (went from Down to !Down)")
 {
@@ -77,7 +77,7 @@ API_FUNC(0_1, bool, IsMouseReleased, (ImGui_Context*,ctx)
   return ImGui::IsMouseReleased(button);
 }
 
-API_FUNC(0_1, bool, IsMouseDoubleClicked, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, IsMouseDoubleClicked, (Context*,ctx)
 (int,button),
 R"(Did mouse button double-clicked? Same as GetMouseClickedCount() == 2.
 (Note that a double-click will also report IsMouseClicked() == true))")
@@ -86,7 +86,7 @@ R"(Did mouse button double-clicked? Same as GetMouseClickedCount() == 2.
   return ImGui::IsMouseDoubleClicked(button);
 }
 
-API_FUNC(0_5_10, int, GetMouseClickedCount, (ImGui_Context*,ctx)
+API_FUNC(0_5_10, int, GetMouseClickedCount, (Context*,ctx)
 (int,button),
 "Return the number of successive mouse-clicks at the time where a click happen (otherwise 0).")
 {
@@ -94,64 +94,65 @@ API_FUNC(0_5_10, int, GetMouseClickedCount, (ImGui_Context*,ctx)
   return ImGui::GetMouseClickedCount(button);
 }
 
-API_FUNC(0_1, bool, IsMouseHoveringRect, (ImGui_Context*,ctx)
-(double,r_min_x)(double,r_min_y)(double,r_max_x)(double,r_max_y)
-(bool*,API_RO(clip),true),
+API_FUNC(0_1, bool, IsMouseHoveringRect, (Context*,ctx)
+(double,r_min_x) (double,r_min_y) (double,r_max_x) (double,r_max_y)
+(RO<bool*>,clip,true),
 R"(Is mouse hovering given bounding rect (in screen space).
 Clipped by current clipping settings, but disregarding of other consideration
 of focus/window ordering/popup-block.)")
 {
   FRAME_GUARD;
   return ImGui::IsMouseHoveringRect(
-    ImVec2(r_min_x, r_min_y), ImVec2(r_max_x, r_max_y), API_RO_GET(clip));
+    ImVec2(r_min_x, r_min_y), ImVec2(r_max_x, r_max_y), API_GET(clip));
 }
 
-API_FUNC(0_1, bool, IsMousePosValid, (ImGui_Context*,ctx)
-(double*,API_RO(mouse_pos_x))(double*,API_RO(mouse_pos_y)),
+API_FUNC(0_1, bool, IsMousePosValid, (Context*,ctx)
+(RO<double*>,mouse_pos_x) (RO<double*>,mouse_pos_y),
 "")
 {
   FRAME_GUARD;
 
-  ImVec2 pos;
-  const bool customPos { API_RO(mouse_pos_x) && API_RO(mouse_pos_y) };
-  if(customPos) {
-    pos.x = *API_RO(mouse_pos_x);
-    pos.y = *API_RO(mouse_pos_y);
+  ImVec2 custom_pos, *custom_pos_ptr;
+  if(mouse_pos_x && mouse_pos_y) {
+    custom_pos.x = *mouse_pos_x, custom_pos.y = *mouse_pos_y;
+    custom_pos_ptr = &custom_pos;
   }
+  else
+    custom_pos_ptr = nullptr;
 
-  return ImGui::IsMousePosValid(customPos ? &pos : nullptr);
+  return ImGui::IsMousePosValid(custom_pos_ptr);
 }
 
-API_FUNC(0_1, bool, IsAnyMouseDown, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, IsAnyMouseDown, (Context*,ctx),
 "Is any mouse button held?")
 {
   FRAME_GUARD;
   return ImGui::IsAnyMouseDown();
 }
 
-API_FUNC(0_1, void, GetMousePos, (ImGui_Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+API_FUNC(0_1, void, GetMousePos, (Context*,ctx)
+(W<double*>,x) (W<double*>,y),
 "")
 {
   FRAME_GUARD;
   const ImVec2 &pos { ctx->IO().MousePos };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
-API_FUNC(0_1, void, GetMousePosOnOpeningCurrentPopup, (ImGui_Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+API_FUNC(0_1, void, GetMousePosOnOpeningCurrentPopup, (Context*,ctx)
+(W<double*>,x) (W<double*>,y),
 R"(Retrieve mouse position at the time of opening popup we have BeginPopup()
 into (helper to avoid user backing that value themselves).)")
 {
   FRAME_GUARD;
   const ImVec2 &pos { ImGui::GetMousePosOnOpeningCurrentPopup() };
-  if(API_W(x)) *API_W(x) = pos.x;
-  if(API_W(y)) *API_W(y) = pos.y;
+  if(x) *x = pos.x;
+  if(y) *y = pos.y;
 }
 
-API_FUNC(0_1, void, GetMouseWheel, (ImGui_Context*,ctx)
-(double*,API_W(vertical))(double*,API_W(horizontal)),
+API_FUNC(0_1, void, GetMouseWheel, (Context*,ctx)
+(W<double*>,vertical) (W<double*>,horizontal),
 R"(Vertical: 1 unit scrolls about 5 lines text. >0 scrolls Up, <0 scrolls Down.
 Hold SHIFT to turn vertical scroll into horizontal scroll
 
@@ -160,32 +161,33 @@ Most users don't have a mouse with a horizontal wheel.)")
 {
   FRAME_GUARD;
   const ImGuiIO &io { ctx->IO() };
-  if(API_W(vertical))   *API_W(vertical)   = io.MouseWheel;
-  if(API_W(horizontal)) *API_W(horizontal) = io.MouseWheelH;
+  if(vertical)   *vertical   = io.MouseWheel;
+  if(horizontal) *horizontal = io.MouseWheelH;
 }
 
-API_FUNC(0_1, bool, IsMouseDragging, (ImGui_Context*,ctx)
-(int,button)(double*,API_RO(lock_threshold),-1.0),
+API_FUNC(0_1, bool, IsMouseDragging, (Context*,ctx)
+(int,button) (RO<double*>,lock_threshold,-1.0),
 "Is mouse dragging? (if lock_threshold < -1.0, uses ConfigVar_MouseDragThreshold)")
 {
   FRAME_GUARD;
-  return ImGui::IsMouseDragging(button, API_RO_GET(lock_threshold));
+  return ImGui::IsMouseDragging(button, API_GET(lock_threshold));
 }
 
-API_FUNC(0_1, void, GetMouseDelta, (ImGui_Context*,ctx)
-(double*,API_W(x))(double*,API_W(y)),
+API_FUNC(0_1, void, GetMouseDelta, (Context*,ctx)
+(W<double*>,x) (W<double*>,y),
 R"(Mouse delta. Note that this is zero if either current or previous position
 are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have
 a huge delta.)")
 {
   FRAME_GUARD;
   const ImVec2 &delta { ctx->IO().MouseDelta };
-  *API_W(x) = delta.x, *API_W(y) = delta.y;
+  if(x) *x = delta.x;
+  if(y) *y = delta.y;
 }
 
-API_FUNC(0_1, void, GetMouseDragDelta, (ImGui_Context*,ctx)
-(double*,API_W(x))(double*,API_W(y))
-(int*,API_RO(button),ImGuiMouseButton_Left)(double*,API_RO(lock_threshold),-1.0),
+API_FUNC(0_1, void, GetMouseDragDelta, (Context*,ctx)
+(W<double*>,x) (W<double*>,y)
+(RO<int*>,button,ImGuiMouseButton_Left) (RO<double*>,lock_threshold,-1.0),
 R"(Return the delta from the initial clicking position while the mouse button is
 pressed or was just released. This is locked and return 0.0 until the mouse
 moves past a distance threshold at least once (if lock_threshold < -1.0, uses
@@ -193,18 +195,18 @@ ConfigVar_MouseDragThreshold).)")
 {
   FRAME_GUARD;
   const ImVec2 &delta {
-    ImGui::GetMouseDragDelta(API_RO_GET(button), API_RO_GET(lock_threshold))
+    ImGui::GetMouseDragDelta(API_GET(button), API_GET(lock_threshold))
   };
-  if(API_W(x)) *API_W(x) = delta.x;
-  if(API_W(y)) *API_W(y) = delta.y;
+  if(x) *x = delta.x;
+  if(y) *y = delta.y;
 }
 
-API_FUNC(0_1, void, ResetMouseDragDelta, (ImGui_Context*,ctx)
-(int*,API_RO(button),ImGuiMouseButton_Left),
+API_FUNC(0_1, void, ResetMouseDragDelta, (Context*,ctx)
+(RO<int*>,button,ImGuiMouseButton_Left),
 "")
 {
   FRAME_GUARD;
-  ImGui::ResetMouseDragDelta(API_RO_GET(button));
+  ImGui::ResetMouseDragDelta(API_GET(button));
 }
 
 API_ENUM(0_1, ImGui, MouseButton_Left,   "");
@@ -213,14 +215,14 @@ API_ENUM(0_1, ImGui, MouseButton_Middle, "");
 
 API_SECTION_DEF(cursor, mouse, "Mouse Cursor");
 
-API_FUNC(0_1, int, GetMouseCursor, (ImGui_Context*,ctx),
+API_FUNC(0_1, int, GetMouseCursor, (Context*,ctx),
 "Get desired mouse cursor shape, reset every frame. This is updated during the frame.")
 {
   FRAME_GUARD;
   return ImGui::GetMouseCursor();
 }
 
-API_FUNC(0_1, void, SetMouseCursor, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, SetMouseCursor, (Context*,ctx)
 (int,cursor_type),
 "Set desired mouse cursor shape. See MouseCursor_* for possible values.")
 {
@@ -248,7 +250,7 @@ API_ENUM(0_1, ImGui, MouseCursor_NotAllowed,
 
 API_SECTION_DEF(keyboard, ROOT_SECTION, "Keyboard");
 
-API_FUNC(0_9, bool, IsKeyDown, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsKeyDown, (Context*,ctx)
 (int,key),
 "Is key being held.")
 {
@@ -256,7 +258,7 @@ API_FUNC(0_9, bool, IsKeyDown, (ImGui_Context*,ctx)
   return ImGui::IsKeyDown(static_cast<ImGuiKey>(key));
 }
 
-API_FUNC(0_9, double, GetKeyDownDuration, (ImGui_Context*,ctx)
+API_FUNC(0_9, double, GetKeyDownDuration, (Context*,ctx)
 (int,key),
 "Duration the keyboard key has been down (0.0 == just pressed)")
 {
@@ -264,16 +266,16 @@ API_FUNC(0_9, double, GetKeyDownDuration, (ImGui_Context*,ctx)
   return ImGui::GetKeyData(static_cast<ImGuiKey>(key))->DownDuration;
 }
 
-API_FUNC(0_9, bool, IsKeyPressed, (ImGui_Context*,ctx)
-(int,key)(bool*,API_RO(repeat),true),
+API_FUNC(0_9, bool, IsKeyPressed, (Context*,ctx)
+(int,key) (RO<bool*>,repeat,true),
 R"(Was key pressed (went from !Down to Down)?
 If repeat=true, uses ConfigVar_KeyRepeatDelay / ConfigVar_KeyRepeatRate.)")
 {
   FRAME_GUARD;
-  return ImGui::IsKeyPressed(static_cast<ImGuiKey>(key), API_RO_GET(repeat));
+  return ImGui::IsKeyPressed(static_cast<ImGuiKey>(key), API_GET(repeat));
 }
 
-API_FUNC(0_9, bool, IsKeyReleased, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsKeyReleased, (Context*,ctx)
 (int,key),
 "Was key released (went from Down to !Down)?")
 {
@@ -281,7 +283,7 @@ API_FUNC(0_9, bool, IsKeyReleased, (ImGui_Context*,ctx)
   return ImGui::IsKeyReleased(static_cast<ImGuiKey>(key));
 }
 
-API_FUNC(0_9, bool, IsKeyChordPressed, (ImGui_Context*,ctx)
+API_FUNC(0_9, bool, IsKeyChordPressed, (Context*,ctx)
 (int,key_chord),
 R"(Was key chord (mods + key) pressed? You can pass e.g. `Mod_Shortcut | Key_S`
 as a key chord.)") // This doesn't do any routing or focus check,
@@ -291,8 +293,8 @@ as a key chord.)") // This doesn't do any routing or focus check,
   return ImGui::IsKeyChordPressed(key_chord);
 }
 
-API_FUNC(0_9, int, GetKeyPressedAmount, (ImGui_Context*,ctx)
-(int,key)(double,repeat_delay)(double,rate),
+API_FUNC(0_9, int, GetKeyPressedAmount, (Context*,ctx)
+(int,key) (double,repeat_delay) (double,rate),
 R"(Uses provided repeat rate/delay. Return a count, most often 0 or 1 but might
 be >1 if ConfigVar_RepeatRate is small enough that GetDeltaTime > RepeatRate.)")
 {
@@ -300,30 +302,30 @@ be >1 if ConfigVar_RepeatRate is small enough that GetDeltaTime > RepeatRate.)")
   return ImGui::GetKeyPressedAmount(static_cast<ImGuiKey>(key), repeat_delay, rate);
 }
 
-API_FUNC(0_8, int, GetKeyMods, (ImGui_Context*,ctx),
+API_FUNC(0_8, int, GetKeyMods, (Context*,ctx),
 "Flags for the Ctrl/Shift/Alt/Super keys. Uses Mod_* values.")
 {
   FRAME_GUARD;
   return ctx->IO().KeyMods;
 }
 
-API_FUNC(0_1, bool, GetInputQueueCharacter, (ImGui_Context*,ctx)
-(int,idx)(int*,API_W(unicode_char)),
+API_FUNC(0_1, bool, GetInputQueueCharacter, (Context*,ctx)
+(int,idx) (W<int*>,unicode_char),
 R"(Read from ImGui's character input queue.
 Call with increasing idx until false is returned.)")
 {
   FRAME_GUARD;
   const ImGuiIO &io { ctx->IO() };
   if(idx >= 0 && idx < io.InputQueueCharacters.Size) {
-    if(API_W(unicode_char))
-      *API_W(unicode_char) = io.InputQueueCharacters[idx];
+    if(unicode_char)
+      *unicode_char = io.InputQueueCharacters[idx];
     return true;
   }
 
   return false;
 }
 
-API_FUNC(0_7, void, SetNextFrameWantCaptureKeyboard, (ImGui_Context*,ctx)
+API_FUNC(0_7, void, SetNextFrameWantCaptureKeyboard, (Context*,ctx)
 (bool,want_capture_keyboard),
 R"(Request capture of keyboard shortcuts in REAPER's global scope for the next frame.)")
 {

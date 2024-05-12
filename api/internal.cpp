@@ -21,11 +21,9 @@
 
 API_SECTION("Internal");
 
-#define DO_NOT_USE "Internal use only."
-
 static void assertVersion(const VerNum requested)
 {
-  static constexpr const char gitVersion[] { REAIMGUI_VERSION };
+  static constexpr char gitVersion[] { REAIMGUI_VERSION };
   constexpr VerNum current { CompStr::version<&gitVersion> };
   if(std::max(current, API::version()) >= requested)
     return;
@@ -36,8 +34,8 @@ static void assertVersion(const VerNum requested)
   };
 }
 
-API_FUNC(0_9, void*, _getapi, (const char*,version)(const char*,symbol_name),
-DO_NOT_USE)
+API_FUNC(0_9, void*, _getapi, (const char*,version) (const char*,symbol_name),
+API_DO_NOT_USE)
 {
   const VerNum vernum { version };
   assertVersion(vernum);
@@ -48,24 +46,30 @@ DO_NOT_USE)
 }
 
 // special definition to not have CallConv::Safe clear the last error
+struct GetErrMeta {
+  static constexpr std::string_view help { API_DO_NOT_USE };
+  static constexpr std::array<std::string_view, 0> argn {};
+};
 _API_EXPORT(ReaScriptFunc, 0_9, _geterr) {
   {}, reinterpret_cast<void *>(&API::lastError),
   { "-API_"       API_PREFIX "_geterr", &API::lastError },
   { "-APIvararg_" API_PREFIX "_geterr",
     CallConv::ReaScript<&API::lastError>::apply },
-  { "-APIdef_"    API_PREFIX "_geterr", CompStr::apidef<&API::lastError> },
+  { "-APIdef_"    API_PREFIX "_geterr",
+    CompStr::apidef<&API::lastError, GetErrMeta> },
 };
 
-API_FUNC(0_9, void, _init, (char*,API_RWBIG(buf))(int,API_RWBIG_SZ(buf)), DO_NOT_USE)
+API_FUNC(0_9, void, _init, (RWB<char*>,buf) (RWBS<int>,buf_sz),
+API_DO_NOT_USE)
 {
-  assertValid(API_RWBIG(buf));
-  const VerNum version { API_RWBIG(buf) };
+  assertValid(buf);
+  const VerNum version { buf };
   assertVersion(version);
-  copyToBigBuf(API_RWBIG(buf), API_RWBIG_SZ(buf), API::Callable::serializeAll(version));
+  copyToBigBuf(buf, buf_sz, API::Callable::serializeAll(version));
 }
 
-API_FUNC(0_9, void, _setshim, (const char*,version)(const char*,symbol_name),
-DO_NOT_USE)
+API_FUNC(0_9, void, _setshim, (const char*,version) (const char*,symbol_name),
+API_DO_NOT_USE)
 {
   auto shim { API::Callable::lookup(version, symbol_name) };
   if(shim && typeid(*shim) == typeid(ShimFunc))
@@ -74,4 +78,4 @@ DO_NOT_USE)
   throw reascript_error { "no suitable implementation available" };
 }
 
-API_FUNC(0_9, void, _shim, NO_ARGS, DO_NOT_USE) {}
+API_FUNC(0_9, void, _shim, API_NO_ARGS, API_DO_NOT_USE) {}

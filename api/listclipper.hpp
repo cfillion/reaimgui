@@ -36,7 +36,6 @@ private:
   ImGuiListClipper m_imlc;
 };
 
-using ImGui_ListClipper = ListClipper;
 API_REGISTER_OBJECT_TYPE(ListClipper);
 
 #endif

@@ -23,7 +23,7 @@
 int main()
 {
   // replaced by the output of `git describe`, eg. "v0.8.6.1-8-g19dcefc"
-  static constexpr const char gitDescribe[] { "@VCS_TAG@" };
+  static constexpr char gitDescribe[] { "@VCS_TAG@" };
   constexpr VerNum version { CompStr::version<&gitDescribe> };
 
   const char *tagVersion { gitDescribe };

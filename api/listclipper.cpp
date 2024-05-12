@@ -86,7 +86,7 @@ The clipper calculates the range of visible items and advance the cursor to
 compensate for the non-visible items we have skipped.
 (Dear ImGui already clip items based on their bounds but: it needs to first
 layout the item to do so, and generally fetching/submitting your own data incurs
-additional cost. Coarse clipping using ImGui_ListClipper allows you to easily
+additional cost. Coarse clipping using a list clipper allows you to easily
 scale using lists with tens of thousands of items without a problem.)
 
 Usage:
@@ -113,7 +113,7 @@ Generally what happens is:
 - The clipper also handles various subtleties related to keyboard/gamepad
   navigation, wrapping etc.)");
 
-API_FUNC(0_9, ImGui_ListClipper*, CreateListClipper, (ImGui_Context*,ctx),
+API_FUNC(0_9, ListClipper*, CreateListClipper, (Context*,ctx),
 R"(The returned clipper object is only valid for the given context and is valid
 as long as it is used in each defer cycle unless attached (see Attach).)")
 {
@@ -121,41 +121,41 @@ as long as it is used in each defer cycle unless attached (see Attach).)")
   return new ListClipper { ctx };
 }
 
-API_FUNC(0_1, void, ListClipper_Begin, (ImGui_ListClipper*,clipper)
-(int,items_count)(double*,API_RO(items_height),-1.0),
+API_FUNC(0_1, void, ListClipper_Begin, (ListClipper*,clipper)
+(int,items_count) (RO<double*>,items_height,-1.0),
 R"(- items_count: Use INT_MAX if you don't know how many items you have
 (in which case the cursor won't be advanced in the final step)
 - items_height: Use -1.0 to be calculated automatically on first step.
   Otherwise pass in the distance between your items, typically
   GetTextLineHeightWithSpacing or GetFrameHeightWithSpacing.)")
 {
-  (*clipper)->Begin(items_count, API_RO_GET(items_height));
+  (*clipper)->Begin(items_count, API_GET(items_height));
 }
 
-API_FUNC(0_1, bool, ListClipper_Step, (ImGui_ListClipper*,clipper),
+API_FUNC(0_1, bool, ListClipper_Step, (ListClipper*,clipper),
 R"(Call until it returns false. The display_start/display_end fields from
 ListClipper_GetDisplayRange will be set and you can process/draw those items.)")
 {
   return (*clipper)->Step();
 }
 
-API_FUNC(0_1, void, ListClipper_End, (ImGui_ListClipper*,clipper),
+API_FUNC(0_1, void, ListClipper_End, (ListClipper*,clipper),
 "Automatically called on the last call of ListClipper_Step that returns false.")
 {
   (*clipper)->End();
 }
 
-API_FUNC(0_3, void, ListClipper_GetDisplayRange, (ImGui_ListClipper*,clipper)
-(int*,API_W(display_start))(int*,API_W(display_end)),
+API_FUNC(0_3, void, ListClipper_GetDisplayRange, (ListClipper*,clipper)
+(W<int*>,display_start) (W<int*>,display_end),
 "")
 {
   ImGuiListClipper *imclipper { (*clipper).operator->() };
-  if(API_W(display_start)) *API_W(display_start) = imclipper->DisplayStart;
-  if(API_W(display_end))   *API_W(display_end)   = imclipper->DisplayEnd;
+  if(display_start) *display_start = imclipper->DisplayStart;
+  if(display_end)   *display_end   = imclipper->DisplayEnd;
 }
 
 API_FUNC(0_9, void, ListClipper_IncludeItemByIndex,
-(ImGui_ListClipper*,clipper)(int,item_index),
+(ListClipper*,clipper) (int,item_index),
 R"(Call ListClipper_IncludeItemByIndex or ListClipper_IncludeItemsByIndex before
 the first call to ListClipper_Step if you need a range of items to be displayed
 regardless of visibility.
@@ -167,7 +167,7 @@ may be included on either end of the display range).)")
 }
 
 API_FUNC(0_9, void, ListClipper_IncludeItemsByIndex,
-(ImGui_ListClipper*,clipper)(int,item_begin)(int,item_end),
+(ListClipper*,clipper) (int,item_begin) (int,item_end),
 R"(See ListClipper_IncludeItemByIndex.
 
 item_end is exclusive e.g. use (42, 42+1) to make item 42 never clipped.)")

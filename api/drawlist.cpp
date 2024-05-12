@@ -36,46 +36,46 @@ custom primitives.
 The Draw List API uses absolute coordinates (0,0 is the top-left corner of the
 primary monitor, not of your window!). See GetCursorScreenPos.)");
 
-API_FUNC(0_1, ImGui_DrawList*, GetWindowDrawList, (ImGui_Context*,ctx),
+API_FUNC(0_1, DrawListProxy*, GetWindowDrawList, (Context*,ctx),
 "The draw list associated to the current window, to append your own drawing primitives")
 {
   return DrawListProxy::encode<DrawListProxy::Window>(ctx);
 }
 
-API_FUNC(0_1, ImGui_DrawList*, GetBackgroundDrawList, (ImGui_Context*,ctx),
+API_FUNC(0_1, DrawListProxy*, GetBackgroundDrawList, (Context*,ctx),
 R"(This draw list will be the first rendering one. Useful to quickly draw
 shapes/text behind dear imgui contents.)")
 {
   return DrawListProxy::encode<DrawListProxy::Background>(ctx);
 }
 
-API_FUNC(0_1, ImGui_DrawList*, GetForegroundDrawList, (ImGui_Context*,ctx),
+API_FUNC(0_1, DrawListProxy*, GetForegroundDrawList, (Context*,ctx),
 R"(This draw list will be the last rendered one. Useful to quickly draw
 shapes/text over dear imgui contents.)")
 {
   return DrawListProxy::encode<DrawListProxy::Foreground>(ctx);
 }
 
-API_FUNC(0_1, void, DrawList_PushClipRect, (ImGui_DrawList*,draw_list)
-(double,clip_rect_min_x)(double,clip_rect_min_y)
-(double,clip_rect_max_x)(double,clip_rect_max_y)
-(bool*,API_RO(intersect_with_current_clip_rect),false),
+API_FUNC(0_1, void, DrawList_PushClipRect, (DrawListProxy*,draw_list)
+(double,clip_rect_min_x) (double,clip_rect_min_y)
+(double,clip_rect_max_x) (double,clip_rect_max_y)
+(RO<bool*>,intersect_with_current_clip_rect,false),
 R"(Render-level scissoring. Prefer using higher-level PushClipRect to affect
 logic (hit-testing and widget culling).)")
 {
   draw_list->get()->PushClipRect(
     ImVec2(clip_rect_min_x, clip_rect_min_y),
     ImVec2(clip_rect_max_x, clip_rect_max_y),
-    API_RO_GET(intersect_with_current_clip_rect));
+    API_GET(intersect_with_current_clip_rect));
 }
 
-API_FUNC(0_1, void, DrawList_PushClipRectFullScreen, (ImGui_DrawList*,draw_list),
+API_FUNC(0_1, void, DrawList_PushClipRectFullScreen, (DrawListProxy*,draw_list),
 "")
 {
   draw_list->get()->PushClipRectFullScreen();
 }
 
-API_FUNC(0_1, void, DrawList_PopClipRect, (ImGui_DrawList*,draw_list),
+API_FUNC(0_1, void, DrawList_PopClipRect, (DrawListProxy*,draw_list),
 "See DrawList_PushClipRect")
 {
   draw_list->get()->PopClipRect();
@@ -119,41 +119,41 @@ lower-right corners.
 For circle primitives, use "num_segments == 0" to automatically calculate
 tessellation (preferred).)");
 
-API_FUNC(0_1, void, DrawList_AddLine, (ImGui_DrawList*,draw_list)
-(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
-(int,col_rgba)(double*,API_RO(thickness),1.0),
+API_FUNC(0_1, void, DrawList_AddLine, (DrawListProxy*,draw_list)
+(double,p1_x) (double,p1_y) (double,p2_x) (double,p2_y)
+(int,col_rgba) (RO<double*>,thickness,1.0),
 "")
 {
   draw_list->get()->AddLine(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
-    Color::fromBigEndian(col_rgba), API_RO_GET(thickness));
+    Color::fromBigEndian(col_rgba), API_GET(thickness));
 }
 
-API_FUNC(0_1, void, DrawList_AddRect, (ImGui_DrawList*,draw_list)
-(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
-(double*,API_RO(rounding),0.0)(int*,API_RO(flags),ImDrawFlags_None)
-(double*,API_RO(thickness),1.0),
+API_FUNC(0_1, void, DrawList_AddRect, (DrawListProxy*,draw_list)
+(double,p_min_x) (double,p_min_y) (double,p_max_x) (double,p_max_y) (int,col_rgba)
+(RO<double*>,rounding,0.0) (RO<int*>,flags,ImDrawFlags_None)
+(RO<double*>,thickness,1.0),
 "")
 {
   draw_list->get()->AddRect(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     Color::fromBigEndian(col_rgba),
-    API_RO_GET(rounding), API_RO_GET(flags), API_RO_GET(thickness));
+    API_GET(rounding), API_GET(flags), API_GET(thickness));
 }
 
-API_FUNC(0_1, void, DrawList_AddRectFilled, (ImGui_DrawList*,draw_list)
-(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)(int,col_rgba)
-(double*,API_RO(rounding),0.0)(int*,API_RO(flags),ImDrawFlags_None),
+API_FUNC(0_1, void, DrawList_AddRectFilled, (DrawListProxy*,draw_list)
+(double,p_min_x) (double,p_min_y) (double,p_max_x) (double,p_max_y) (int,col_rgba)
+(RO<double*>,rounding,0.0) (RO<int*>,flags,ImDrawFlags_None),
 "")
 {
   draw_list->get()->AddRectFilled(
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
-    Color::fromBigEndian(col_rgba), API_RO_GET(rounding), API_RO_GET(flags));
+    Color::fromBigEndian(col_rgba), API_GET(rounding), API_GET(flags));
 }
 
-API_FUNC(0_1, void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,draw_list)
-(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
-(int,col_upr_left)(int,col_upr_right)(int,col_bot_right)(int,col_bot_left),
+API_FUNC(0_1, void, DrawList_AddRectFilledMultiColor, (DrawListProxy*,draw_list)
+(double,p_min_x) (double,p_min_y) (double,p_max_x) (double,p_max_y)
+(int,col_upr_left) (int,col_upr_right) (int,col_bot_right) (int,col_bot_left),
 "")
 {
   draw_list->get()->AddRectFilledMultiColor(
@@ -162,20 +162,20 @@ API_FUNC(0_1, void, DrawList_AddRectFilledMultiColor, (ImGui_DrawList*,draw_list
     Color::fromBigEndian(col_bot_right), Color::fromBigEndian(col_bot_left));
 }
 
-API_FUNC(0_1, void, DrawList_AddQuad, (ImGui_DrawList*,draw_list)
-(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
-(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
-(int,col_rgba)(double*,API_RO(thickness),1.0),
+API_FUNC(0_1, void, DrawList_AddQuad, (DrawListProxy*,draw_list)
+(double,p1_x) (double,p1_y) (double,p2_x) (double,p2_y)
+(double,p3_x) (double,p3_y) (double,p4_x) (double,p4_y)
+(int,col_rgba) (RO<double*>,thickness,1.0),
 "")
 {
   draw_list->get()->AddQuad(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
-    ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba), API_RO_GET(thickness));
+    ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba), API_GET(thickness));
 }
 
-API_FUNC(0_1, void, DrawList_AddQuadFilled, (ImGui_DrawList*,draw_list)
-(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
-(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
+API_FUNC(0_1, void, DrawList_AddQuadFilled, (DrawListProxy*,draw_list)
+(double,p1_x) (double,p1_y) (double,p2_x) (double,p2_y)
+(double,p3_x) (double,p3_y) (double,p4_x) (double,p4_y)
 (int,col_rgba),
 "")
 {
@@ -184,19 +184,19 @@ API_FUNC(0_1, void, DrawList_AddQuadFilled, (ImGui_DrawList*,draw_list)
     ImVec2(p4_x, p4_y), Color::fromBigEndian(col_rgba));
 }
 
-API_FUNC(0_1, void, DrawList_AddTriangle, (ImGui_DrawList*,draw_list)
-(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
-(double,p3_x)(double,p3_y)(int,col_rgba)(double*,API_RO(thickness),1.0),
+API_FUNC(0_1, void, DrawList_AddTriangle, (DrawListProxy*,draw_list)
+(double,p1_x) (double,p1_y) (double,p2_x) (double,p2_y)
+(double,p3_x) (double,p3_y) (int,col_rgba) (RO<double*>,thickness,1.0),
 "")
 {
   draw_list->get()->AddTriangle(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
-    Color::fromBigEndian(col_rgba), API_RO_GET(thickness));
+    Color::fromBigEndian(col_rgba), API_GET(thickness));
 }
 
-API_FUNC(0_1, void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_list)
-(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
-(double,p3_x)(double,p3_y)(int,col_rgba),
+API_FUNC(0_1, void, DrawList_AddTriangleFilled, (DrawListProxy*,draw_list)
+(double,p1_x) (double,p1_y) (double,p2_x) (double,p2_y)
+(double,p3_x) (double,p3_y) (int,col_rgba),
 "")
 {
   draw_list->get()->AddTriangleFilled(
@@ -204,36 +204,36 @@ API_FUNC(0_1, void, DrawList_AddTriangleFilled, (ImGui_DrawList*,draw_list)
     Color::fromBigEndian(col_rgba));
 }
 
-API_FUNC(0_1, void, DrawList_AddCircle, (ImGui_DrawList*,draw_list)
-(double,center_x)(double,center_y)(double,radius)(int,col_rgba)
-(int*,API_RO(num_segments),0)(double*,API_RO(thickness),1.0),
+API_FUNC(0_1, void, DrawList_AddCircle, (DrawListProxy*,draw_list)
+(double,center_x) (double,center_y) (double,radius) (int,col_rgba)
+(RO<int*>,num_segments,0) (RO<double*>,thickness,1.0),
 R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)")
 {
   draw_list->get()->AddCircle(ImVec2(center_x, center_y), radius,
     Color::fromBigEndian(col_rgba),
-    API_RO_GET(num_segments), API_RO_GET(thickness));
+    API_GET(num_segments), API_GET(thickness));
 }
 
-API_FUNC(0_1, void, DrawList_AddCircleFilled, (ImGui_DrawList*,draw_list)
-(double,center_x)(double,center_y)(double,radius)(int,col_rgba)
-(int*,API_RO(num_segments),0),
+API_FUNC(0_1, void, DrawList_AddCircleFilled, (DrawListProxy*,draw_list)
+(double,center_x) (double,center_y) (double,radius) (int,col_rgba)
+(RO<int*>,num_segments,0),
 R"(Use "num_segments == 0" to automatically calculate tessellation (preferred).)")
 {
   draw_list->get()->AddCircleFilled(ImVec2(center_x, center_y), radius,
-    Color::fromBigEndian(col_rgba), API_RO_GET(num_segments));
+    Color::fromBigEndian(col_rgba), API_GET(num_segments));
 }
 
-API_FUNC(0_1, void, DrawList_AddNgon, (ImGui_DrawList*,draw_list)
-(double,center_x)(double,center_y)(double,radius)(int,col_rgba)
-(int,num_segments)(double*,API_RO(thickness),1.0),
+API_FUNC(0_1, void, DrawList_AddNgon, (DrawListProxy*,draw_list)
+(double,center_x) (double,center_y) (double,radius) (int,col_rgba)
+(int,num_segments) (RO<double*>,thickness,1.0),
 "")
 {
   draw_list->get()->AddNgon(ImVec2(center_x, center_y), radius,
-    Color::fromBigEndian(col_rgba), num_segments, API_RO_GET(thickness));
+    Color::fromBigEndian(col_rgba), num_segments, API_GET(thickness));
 }
 
-API_FUNC(0_1, void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
-(double,center_x)(double,center_y)(double,radius)(int,col_rgba)
+API_FUNC(0_1, void, DrawList_AddNgonFilled, (DrawListProxy*,draw_list)
+(double,center_x) (double,center_y) (double,radius) (int,col_rgba)
 (int,num_segments),
 "")
 {
@@ -241,56 +241,52 @@ API_FUNC(0_1, void, DrawList_AddNgonFilled, (ImGui_DrawList*,draw_list)
     radius, Color::fromBigEndian(col_rgba), num_segments);
 }
 
-API_FUNC(0_9, void, DrawList_AddEllipse, (ImGui_DrawList*,draw_list)
-(double,center_x)(double,center_y)(double,radius_x)(double,radius_y)(int,col_rgba)
-(double*,API_RO(rot),0.0)(int*,API_RO(num_segments),0)(double*,API_RO(thickness),1.0),
+API_FUNC(0_9, void, DrawList_AddEllipse, (DrawListProxy*,draw_list)
+(double,center_x) (double,center_y) (double,radius_x) (double,radius_y) (int,col_rgba)
+(RO<double*>,rot,0.0) (RO<int*>,num_segments,0) (RO<double*>,thickness,1.0),
 "")
 {
   draw_list->get()->AddEllipse(
     ImVec2(center_x, center_y), ImVec2(radius_x, radius_y),
-    Color::fromBigEndian(col_rgba), API_RO_GET(rot), API_RO_GET(num_segments),
-    API_RO_GET(thickness));
+    Color::fromBigEndian(col_rgba), API_GET(rot), API_GET(num_segments),
+    API_GET(thickness));
 }
 
-API_FUNC(0_9, void, DrawList_AddEllipseFilled, (ImGui_DrawList*,draw_list)
-(double,center_x)(double,center_y)(double,radius_x)(double,radius_y)(int,col_rgba)
-(double*,API_RO(rot),0.0)(int*,API_RO(num_segments),0),
+API_FUNC(0_9, void, DrawList_AddEllipseFilled, (DrawListProxy*,draw_list)
+(double,center_x) (double,center_y) (double,radius_x) (double,radius_y) (int,col_rgba)
+(RO<double*>,rot,0.0) (RO<int*>,num_segments,0),
 "")
 {
   draw_list->get()->AddEllipseFilled(
     ImVec2(center_x, center_y), ImVec2(radius_x, radius_y),
-    Color::fromBigEndian(col_rgba), API_RO_GET(rot), API_RO_GET(num_segments));
+    Color::fromBigEndian(col_rgba), API_GET(rot), API_GET(num_segments));
 }
 
-API_FUNC(0_1, void, DrawList_AddText, (ImGui_DrawList*,draw_list)
-(double,x)(double,y)(int,col_rgba)(const char*,text),
+API_FUNC(0_1, void, DrawList_AddText, (DrawListProxy*,draw_list)
+(double,x) (double,y) (int,col_rgba) (const char*,text),
 "")
 {
   draw_list->get()->AddText(ImVec2(x, y), Color::fromBigEndian(col_rgba), text);
 }
 
-API_FUNC(0_4, void, DrawList_AddTextEx, (ImGui_DrawList*,draw_list)
-(ImGui_Font*,font)(double,font_size)(double,pos_x)(double,pos_y)
-(int,col_rgba)(const char*,text)(double*,API_RO(wrap_width),0.0)
-(double*,API_RO(cpu_fine_clip_rect_x))(double*,API_RO(cpu_fine_clip_rect_y))
-(double*,API_RO(cpu_fine_clip_rect_w))(double*,API_RO(cpu_fine_clip_rect_h)),
+API_FUNC(0_4, void, DrawList_AddTextEx, (DrawListProxy*,draw_list)
+(Font*,font) (double,font_size) (double,pos_x) (double,pos_y)
+(int,col_rgba) (const char*,text) (RO<double*>,wrap_width,0.0)
+(RO<double*>,cpu_fine_clip_rect_x) (RO<double*>,cpu_fine_clip_rect_y)
+(RO<double*>,cpu_fine_clip_rect_w) (RO<double*>,cpu_fine_clip_rect_h),
 R"(The last pushed font is used if font is nil.
 The size of the last pushed font is used if font_size is 0.
 cpu_fine_clip_rect_* only takes effect if all four are non-nil.)")
 {
   col_rgba = Color::fromBigEndian(col_rgba);
 
-  ImVec2 pos;
-  pos.x = pos_x;
-  pos.y = pos_y;
-
   ImVec4 cpu_fine_clip_rect, *cpu_fine_clip_rect_ptr;
-  if(API_RO(cpu_fine_clip_rect_x) && API_RO(cpu_fine_clip_rect_y) &&
-      API_RO(cpu_fine_clip_rect_w) && API_RO(cpu_fine_clip_rect_h)) {
-    cpu_fine_clip_rect.x = *API_RO(cpu_fine_clip_rect_x);
-    cpu_fine_clip_rect.y = *API_RO(cpu_fine_clip_rect_y);
-    cpu_fine_clip_rect.z = *API_RO(cpu_fine_clip_rect_w);
-    cpu_fine_clip_rect.w = *API_RO(cpu_fine_clip_rect_h);
+  if(cpu_fine_clip_rect_x && cpu_fine_clip_rect_y &&
+      cpu_fine_clip_rect_w && cpu_fine_clip_rect_h) {
+    cpu_fine_clip_rect.x = *cpu_fine_clip_rect_x;
+    cpu_fine_clip_rect.y = *cpu_fine_clip_rect_y;
+    cpu_fine_clip_rect.z = *cpu_fine_clip_rect_w;
+    cpu_fine_clip_rect.w = *cpu_fine_clip_rect_h;
     cpu_fine_clip_rect_ptr = &cpu_fine_clip_rect;
   }
   else
@@ -298,7 +294,7 @@ cpu_fine_clip_rect_* only takes effect if all four are non-nil.)")
 
   Context *ctx;
   draw_list->get(&ctx)->AddText(ctx->fonts().instanceOf(font), font_size,
-    pos, col_rgba, text, nullptr, API_RO_GET(wrap_width),
+    ImVec2(pos_x, pos_y), col_rgba, text, nullptr, API_GET(wrap_width),
     cpu_fine_clip_rect_ptr);
 }
 
@@ -318,30 +314,30 @@ static std::vector<ImVec2> makePointsArray(const reaper_array *points)
   return out;
 }
 
-API_FUNC(0_1, void, DrawList_AddBezierCubic, (ImGui_DrawList*,draw_list)
-(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
-(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
-(int,col_rgba)(double,thickness)(int*,API_RO(num_segments),0),
+API_FUNC(0_1, void, DrawList_AddBezierCubic, (DrawListProxy*,draw_list)
+(double,p1_x) (double,p1_y) (double,p2_x) (double,p2_y)
+(double,p3_x) (double,p3_y) (double,p4_x) (double,p4_y)
+(int,col_rgba) (double,thickness) (RO<int*>,num_segments,0),
 "Cubic Bezier (4 control points)")
 {
   draw_list->get()->AddBezierCubic(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
     ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
-    Color::fromBigEndian(col_rgba), thickness, API_RO_GET(num_segments));
+    Color::fromBigEndian(col_rgba), thickness, API_GET(num_segments));
 }
 
-API_FUNC(0_1, void, DrawList_AddBezierQuadratic, (ImGui_DrawList*,draw_list)
-(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)
-(int,col_rgba)(double,thickness)(int*,API_RO(num_segments),0),
+API_FUNC(0_1, void, DrawList_AddBezierQuadratic, (DrawListProxy*,draw_list)
+(double,p1_x) (double,p1_y) (double,p2_x) (double,p2_y) (double,p3_x) (double,p3_y)
+(int,col_rgba) (double,thickness) (RO<int*>,num_segments,0),
 "Quadratic Bezier (3 control points)")
 {
   draw_list->get()->AddBezierQuadratic(
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y),
-    Color::fromBigEndian(col_rgba), thickness, API_RO_GET(num_segments));
+    Color::fromBigEndian(col_rgba), thickness, API_GET(num_segments));
 }
 
-API_FUNC(0_2, void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
-(reaper_array*,points)(int,col_rgba)(int,flags)(double,thickness),
+API_FUNC(0_2, void, DrawList_AddPolyline, (DrawListProxy*,draw_list)
+(reaper_array*,points) (int,col_rgba) (int,flags) (double,thickness),
 "Points is a list of x,y coordinates.")
 {
   const std::vector<ImVec2> &vec2points { makePointsArray(points) };
@@ -350,8 +346,8 @@ API_FUNC(0_2, void, DrawList_AddPolyline, (ImGui_DrawList*,draw_list)
     flags, thickness);
 }
 
-API_FUNC(0_6, void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
-(reaper_array*,points)(int,col_rgba),
+API_FUNC(0_6, void, DrawList_AddConvexPolyFilled, (DrawListProxy*,draw_list)
+(reaper_array*,points) (int,col_rgba),
 "Note: Anti-aliased filling requires points to be in clockwise order.")
 {
   const std::vector<ImVec2> &vec2points { makePointsArray(points) };
@@ -359,8 +355,8 @@ API_FUNC(0_6, void, DrawList_AddConvexPolyFilled, (ImGui_DrawList*,draw_list)
     vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
 }
 
-API_FUNC(0_9, void, DrawList_AddConcavePolyFilled, (ImGui_DrawList*,draw_list)
-(reaper_array*,points)(int,col_rgba),
+API_FUNC(0_9, void, DrawList_AddConcavePolyFilled, (DrawListProxy*,draw_list)
+(reaper_array*,points) (int,col_rgba),
 "Concave polygon fill is more expensive than convex one: it has O(N^2) complexity.")
 {
   const std::vector<ImVec2> &vec2points { makePointsArray(points) };
@@ -368,12 +364,12 @@ API_FUNC(0_9, void, DrawList_AddConcavePolyFilled, (ImGui_DrawList*,draw_list)
     vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
 }
 
-API_FUNC(0_8, void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
-(ImGui_Image*,image)
-(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
-(double*,API_RO(uv_min_x),0.0)(double*,API_RO(uv_min_y),0.0)
-(double*,API_RO(uv_max_x),1.0)(double*,API_RO(uv_max_y),1.0)
-(int*,API_RO(col_rgba),0xFFFFFFFF),
+API_FUNC(0_8, void, DrawList_AddImage, (DrawListProxy*,draw_list)
+(Image*,image)
+(double,p_min_x) (double,p_min_y) (double,p_max_x) (double,p_max_y)
+(RO<double*>,uv_min_x,0.0) (RO<double*>,uv_min_y,0.0)
+(RO<double*>,uv_max_x,1.0) (RO<double*>,uv_max_y,1.0)
+(RO<int*>,col_rgba,0xFFFFFFFF),
 "")
 {
   Context *ctx;
@@ -381,19 +377,19 @@ API_FUNC(0_8, void, DrawList_AddImage, (ImGui_DrawList*,draw_list)
   assertValid(image);
   dl->AddImage(image->makeTexture(ctx->textureManager()),
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
-    ImVec2(API_RO_GET(uv_min_x), API_RO_GET(uv_min_y)),
-    ImVec2(API_RO_GET(uv_max_x), API_RO_GET(uv_max_y)),
-    Color::fromBigEndian(API_RO_GET(col_rgba)));
+    ImVec2(API_GET(uv_min_x), API_GET(uv_min_y)),
+    ImVec2(API_GET(uv_max_x), API_GET(uv_max_y)),
+    Color::fromBigEndian(API_GET(col_rgba)));
 }
 
-API_FUNC(0_8, void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
-(ImGui_Image*,image)(double,p1_x)(double,p1_y)(double,p2_x)(double,p2_y)
-(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
-(double*,API_RO(uv1_x),0.0)(double*,API_RO(uv1_y),0.0)
-(double*,API_RO(uv2_x),1.0)(double*,API_RO(uv2_y),0.0)
-(double*,API_RO(uv3_x),1.0)(double*,API_RO(uv3_y),1.0)
-(double*,API_RO(uv4_x),0.0)(double*,API_RO(uv4_y),1.0)
-(int*,API_RO(col_rgba),0xFFFFFFFF),
+API_FUNC(0_8, void, DrawList_AddImageQuad, (DrawListProxy*,draw_list)
+(Image*,image) (double,p1_x) (double,p1_y) (double,p2_x) (double,p2_y)
+(double,p3_x) (double,p3_y) (double,p4_x) (double,p4_y)
+(RO<double*>,uv1_x,0.0) (RO<double*>,uv1_y,0.0)
+(RO<double*>,uv2_x,1.0) (RO<double*>,uv2_y,0.0)
+(RO<double*>,uv3_x,1.0) (RO<double*>,uv3_y,1.0)
+(RO<double*>,uv4_x,0.0) (RO<double*>,uv4_y,1.0)
+(RO<int*>,col_rgba,0xFFFFFFFF),
 "")
 {
   Context *ctx;
@@ -402,18 +398,18 @@ API_FUNC(0_8, void, DrawList_AddImageQuad, (ImGui_DrawList*,draw_list)
   dl->AddImageQuad(image->makeTexture(ctx->textureManager()),
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
     ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
-    ImVec2(API_RO_GET(uv1_x), API_RO_GET(uv1_y)),
-    ImVec2(API_RO_GET(uv2_x), API_RO_GET(uv2_y)),
-    ImVec2(API_RO_GET(uv3_x), API_RO_GET(uv3_y)),
-    ImVec2(API_RO_GET(uv4_x), API_RO_GET(uv4_y)),
-    Color::fromBigEndian(API_RO_GET(col_rgba)));
+    ImVec2(API_GET(uv1_x), API_GET(uv1_y)),
+    ImVec2(API_GET(uv2_x), API_GET(uv2_y)),
+    ImVec2(API_GET(uv3_x), API_GET(uv3_y)),
+    ImVec2(API_GET(uv4_x), API_GET(uv4_y)),
+    Color::fromBigEndian(API_GET(col_rgba)));
 }
 
-API_FUNC(0_8, void, DrawList_AddImageRounded, (ImGui_DrawList*,draw_list)
-(ImGui_Image*,image)
-(double,p_min_x)(double,p_min_y)(double,p_max_x)(double,p_max_y)
-(double,uv_min_x)(double,uv_min_y)(double,uv_max_x)(double,uv_max_y)
-(int,col_rgba)(double,rounding)(int*,API_RO(flags),ImDrawFlags_None),
+API_FUNC(0_8, void, DrawList_AddImageRounded, (DrawListProxy*,draw_list)
+(Image*,image)
+(double,p_min_x) (double,p_min_y) (double,p_max_x) (double,p_max_y)
+(double,uv_min_x) (double,uv_min_y) (double,uv_max_x) (double,uv_max_y)
+(int,col_rgba) (double,rounding) (RO<int*>,flags,ImDrawFlags_None),
 "")
 {
   Context *ctx;
@@ -422,103 +418,103 @@ API_FUNC(0_8, void, DrawList_AddImageRounded, (ImGui_DrawList*,draw_list)
   dl->AddImageRounded(image->makeTexture(ctx->textureManager()),
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     ImVec2(uv_min_x, uv_min_y), ImVec2(uv_max_x, uv_max_y),
-    Color::fromBigEndian(col_rgba), rounding, API_RO_GET(flags));
+    Color::fromBigEndian(col_rgba), rounding, API_GET(flags));
 }
 
 API_SUBSECTION("Stateful Path",
 "Stateful path API, add points then finish with PathFillConvex() or PathStroke().");
 
-API_FUNC(0_1, void, DrawList_PathClear, (ImGui_DrawList*,draw_list),
+API_FUNC(0_1, void, DrawList_PathClear, (DrawListProxy*,draw_list),
 "")
 {
   draw_list->get()->PathClear();
 }
 
-API_FUNC(0_1, void, DrawList_PathLineTo, (ImGui_DrawList*,draw_list)
-(double,pos_x)(double,pos_y),
+API_FUNC(0_1, void, DrawList_PathLineTo, (DrawListProxy*,draw_list)
+(double,pos_x) (double,pos_y),
 "")
 {
   draw_list->get()->PathLineToMergeDuplicate(ImVec2(pos_x, pos_y));
 }
 
-API_FUNC(0_5_1, void, DrawList_PathFillConvex, (ImGui_DrawList*,draw_list)
+API_FUNC(0_5_1, void, DrawList_PathFillConvex, (DrawListProxy*,draw_list)
 (int,col_rgba),
 "")
 {
   draw_list->get()->PathFillConvex(Color::fromBigEndian(col_rgba));
 }
 
-API_FUNC(0_9, void, DrawList_PathFillConcave, (ImGui_DrawList*,draw_list)
+API_FUNC(0_9, void, DrawList_PathFillConcave, (DrawListProxy*,draw_list)
 (int,col_rgba),
 "")
 {
   draw_list->get()->PathFillConcave(Color::fromBigEndian(col_rgba));
 }
 
-API_FUNC(0_2, void, DrawList_PathStroke, (ImGui_DrawList*,draw_list)
-(int,col_rgba)(int*,API_RO(flags),ImDrawFlags_None)(double*,API_RO(thickness),1.0),
+API_FUNC(0_2, void, DrawList_PathStroke, (DrawListProxy*,draw_list)
+(int,col_rgba) (RO<int*>,flags,ImDrawFlags_None) (RO<double*>,thickness,1.0),
 "")
 {
   draw_list->get()->PathStroke(
-    Color::fromBigEndian(col_rgba), API_RO_GET(flags), API_RO_GET(thickness));
+    Color::fromBigEndian(col_rgba), API_GET(flags), API_GET(thickness));
 }
 
-API_FUNC(0_1, void, DrawList_PathArcTo, (ImGui_DrawList*,draw_list)
-(double,center_x)(double,center_y)(double,radius)(double,a_min)(double,a_max)
-(int*,API_RO(num_segments),0),
+API_FUNC(0_1, void, DrawList_PathArcTo, (DrawListProxy*,draw_list)
+(double,center_x) (double,center_y) (double,radius) (double,a_min) (double,a_max)
+(RO<int*>,num_segments,0),
 "")
 {
   draw_list->get()->PathArcTo(ImVec2(center_x, center_y),
-    radius, a_min, a_max, API_RO_GET(num_segments));
+    radius, a_min, a_max, API_GET(num_segments));
 }
 
-API_FUNC(0_1, void, DrawList_PathArcToFast, (ImGui_DrawList*,draw_list)
-(double,center_x)(double,center_y)(double,radius)
-(int,a_min_of_12)(int,a_max_of_12),
+API_FUNC(0_1, void, DrawList_PathArcToFast, (DrawListProxy*,draw_list)
+(double,center_x) (double,center_y) (double,radius)
+(int,a_min_of_12) (int,a_max_of_12),
 "Use precomputed angles for a 12 steps circle.")
 {
   draw_list->get()->PathArcToFast(
     ImVec2(center_x, center_y), radius, a_min_of_12, a_max_of_12);
 }
 
-API_FUNC(0_9, void, DrawList_PathEllipticalArcTo, (ImGui_DrawList*,draw_list)
-(double,center_x)(double,center_y)(double,radius_x)(double,radius_y)
-(double,rot)(double,a_min)(double,a_max)(int*,API_RO(num_segments),0),
+API_FUNC(0_9, void, DrawList_PathEllipticalArcTo, (DrawListProxy*,draw_list)
+(double,center_x) (double,center_y) (double,radius_x) (double,radius_y)
+(double,rot) (double,a_min) (double,a_max) (RO<int*>,num_segments,0),
 "Ellipse")
 {
   draw_list->get()->PathEllipticalArcTo(
     ImVec2(center_x, center_y), ImVec2(radius_x, radius_y),
-    rot, a_min, a_max, API_RO_GET(num_segments));
+    rot, a_min, a_max, API_GET(num_segments));
 }
 
-API_FUNC(0_1, void, DrawList_PathBezierCubicCurveTo, (ImGui_DrawList*,draw_list)
-(double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(double,p4_x)(double,p4_y)
-(int*,API_RO(num_segments),0),
+API_FUNC(0_1, void, DrawList_PathBezierCubicCurveTo, (DrawListProxy*,draw_list)
+(double,p2_x) (double,p2_y) (double,p3_x) (double,p3_y) (double,p4_x) (double,p4_y)
+(RO<int*>,num_segments,0),
 "Cubic Bezier (4 control points)")
 {
   draw_list->get()->PathBezierCubicCurveTo(
     ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
-    API_RO_GET(num_segments));
+    API_GET(num_segments));
 }
 
-API_FUNC(0_1, void, DrawList_PathBezierQuadraticCurveTo, (ImGui_DrawList*,draw_list)
-(double,p2_x)(double,p2_y)(double,p3_x)(double,p3_y)(int*,API_RO(num_segments),0),
+API_FUNC(0_1, void, DrawList_PathBezierQuadraticCurveTo, (DrawListProxy*,draw_list)
+(double,p2_x) (double,p2_y) (double,p3_x) (double,p3_y) (RO<int*>,num_segments,0),
 "Quadratic Bezier (3 control points)")
 {
   draw_list->get()->PathBezierQuadraticCurveTo(
-    ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), API_RO_GET(num_segments));
+    ImVec2(p2_x, p2_y), ImVec2(p3_x, p3_y), API_GET(num_segments));
 }
 
-API_FUNC(0_1, void, DrawList_PathRect, (ImGui_DrawList*,draw_list)
-(double,rect_min_x)(double,rect_min_y)(double,rect_max_x)(double,rect_max_y)
-(double*,API_RO(rounding),0.0)(int*,API_RO(flags),ImDrawFlags_None),
+API_FUNC(0_1, void, DrawList_PathRect, (DrawListProxy*,draw_list)
+(double,rect_min_x) (double,rect_min_y) (double,rect_max_x) (double,rect_max_y)
+(RO<double*>,rounding,0.0) (RO<int*>,flags,ImDrawFlags_None),
 "")
 {
   draw_list->get()->PathRect(ImVec2(rect_min_x, rect_min_y),
-    ImVec2(rect_max_x, rect_max_y), API_RO_GET(rounding), API_RO_GET(flags));
+    ImVec2(rect_max_x, rect_max_y), API_GET(rounding), API_GET(flags));
 }
 
-DrawListSplitter::DrawListSplitter(ImGui_DrawList *draw_list)
+DrawListSplitter::DrawListSplitter(DrawListProxy *draw_list)
   : m_drawlist { draw_list }, m_lastList { draw_list->get() }
 {
 }
@@ -544,7 +540,7 @@ ImDrawList *DrawListSplitter::drawList() const
     return m_lastList;
   else
     throw reascript_error
-      { "cannot use ImGui_DrawListSplitter over multiple windows" };
+      { "cannot use DrawListSplitter over multiple windows" };
 }
 
 API_SUBSECTION("Splitter",
@@ -568,34 +564,34 @@ Usage:
     ImGui.DrawList_AddRectFilled(draw_list, ...) -- background
     ImGui.DrawListSplitter_Merge(splitter))");
 
-API_FUNC(0_9, ImGui_DrawListSplitter*, CreateDrawListSplitter,
-(ImGui_DrawList*,draw_list),
+API_FUNC(0_9, DrawListSplitter*, CreateDrawListSplitter,
+(DrawListProxy*,draw_list),
 "")
 {
   return new DrawListSplitter { draw_list };
 }
 
-API_FUNC(0_7_1, void, DrawListSplitter_Clear, (ImGui_DrawListSplitter*,splitter),
+API_FUNC(0_7_1, void, DrawListSplitter_Clear, (DrawListSplitter*,splitter),
 "")
 {
   (*splitter)->Clear();
 }
 
-API_FUNC(0_7_1, void, DrawListSplitter_Split, (ImGui_DrawListSplitter*,splitter)
+API_FUNC(0_7_1, void, DrawListSplitter_Split, (DrawListSplitter*,splitter)
 (int,count),
 "")
 {
   (*splitter)->Split(splitter->drawList(), count);
 }
 
-API_FUNC(0_7_1, void, DrawListSplitter_Merge, (ImGui_DrawListSplitter*,splitter),
+API_FUNC(0_7_1, void, DrawListSplitter_Merge, (DrawListSplitter*,splitter),
 "")
 {
   (*splitter)->Merge(splitter->drawList());
 }
 
 API_FUNC(0_7_1, void, DrawListSplitter_SetCurrentChannel,
-(ImGui_DrawListSplitter*,splitter)(int,channel_idx),
+(DrawListSplitter*,splitter) (int,channel_idx),
 "")
 {
   (*splitter)->SetCurrentChannel(splitter->drawList(), channel_idx);

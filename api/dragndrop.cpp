@@ -38,8 +38,8 @@ static bool isUserType(const char *type)
   return type && *type && type[0] != '_';
 }
 
-API_FUNC(0_1, bool, BeginDragDropSource, (ImGui_Context*,ctx)
-(int*,API_RO(flags),ImGuiDragDropFlags_None),
+API_FUNC(0_1, bool, BeginDragDropSource, (Context*,ctx)
+(RO<int*>,flags,ImGuiDragDropFlags_None),
 R"(Call after submitting an item which may be dragged. when this return true,
 you can call SetDragDropPayload() + EndDragDropSource()
 
@@ -48,11 +48,11 @@ it won't have a preview tooltip (we currently display a fallback "..." tooltip
 as replacement).)")
 {
   FRAME_GUARD;
-  return ImGui::BeginDragDropSource(API_RO_GET(flags));
+  return ImGui::BeginDragDropSource(API_GET(flags));
 }
 
-API_FUNC(0_1, bool, SetDragDropPayload, (ImGui_Context*,ctx)
-(const char*,type)(const char*,data)(int*,API_RO(cond),ImGuiCond_Always),
+API_FUNC(0_1, bool, SetDragDropPayload, (Context*,ctx)
+(const char*,type) (const char*,data) (RO<int*>,cond,ImGuiCond_Always),
 R"(The type is a user defined string of maximum 32 characters.
 Strings starting with '_' are reserved for dear imgui internal types.
 Data is copied and held by imgui.)")
@@ -70,17 +70,17 @@ Data is copied and held by imgui.)")
       data = nullptr; // imgui asserts if data != null && size == 0
   }
 
-  return ImGui::SetDragDropPayload(type, data, dataSize, API_RO_GET(cond));
+  return ImGui::SetDragDropPayload(type, data, dataSize, API_GET(cond));
 }
 
-API_FUNC(0_1, void, EndDragDropSource, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndDragDropSource, (Context*,ctx),
 "Only call EndDragDropSource() if BeginDragDropSource returns true!")
 {
   FRAME_GUARD;
   ImGui::EndDragDropSource();
 }
 
-API_FUNC(0_1, bool, BeginDragDropTarget, (ImGui_Context*,ctx),
+API_FUNC(0_1, bool, BeginDragDropTarget, (Context*,ctx),
 R"(Call after submitting an item that may receive a payload.
 If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.)")
 {
@@ -88,10 +88,10 @@ If this returns true, you can call AcceptDragDropPayload + EndDragDropTarget.)")
   return ImGui::BeginDragDropTarget();
 }
 
-API_FUNC(0_1, bool, AcceptDragDropPayload, (ImGui_Context*,ctx)
+API_FUNC(0_1, bool, AcceptDragDropPayload, (Context*,ctx)
 (const char*,type)
-(char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
-(int*,API_RO(flags),ImGuiDragDropFlags_None),
+(WB<char*>,payload) (WBS<int>,payload_sz)
+(RO<int*>,flags,ImGuiDragDropFlags_None),
 R"(Accept contents of a given type. If DragDropFlags_AcceptBeforeDelivery is set
 you can peek into the payload before the mouse button is released.)")
 {
@@ -100,15 +100,12 @@ you can peek into the payload before the mouse button is released.)")
   if(!isUserType(type))
     return false;
 
-  const ImGuiDragDropFlags flags { API_RO_GET(flags) };
-  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
-  if(!payload)
+  const ImGuiPayload *impayload { ImGui::AcceptDragDropPayload(type, API_GET(flags)) };
+  if(!impayload)
     return false;
 
-  if(API_WBIG(payload) && payload->Data) {
-    copyToBigBuf(API_WBIG(payload), API_WBIG_SZ(payload),
-      payload->Data, payload->DataSize);
-  }
+  if(payload && impayload->Data)
+    copyToBigBuf(payload, payload_sz, impayload->Data, impayload->DataSize);
 
   return true;
 }
@@ -134,73 +131,71 @@ static bool AcceptDragDropPayloadColor(int *color, bool alpha,
   return true;
 }
 
-API_FUNC(0_1, bool, AcceptDragDropPayloadRGB, (ImGui_Context*,ctx)
-(int*,API_W(rgb))(int*,API_RO(flags),ImGuiDragDropFlags_None),
+API_FUNC(0_1, bool, AcceptDragDropPayloadRGB, (Context*,ctx)
+(W<int*>,rgb) (RO<int*>,flags,ImGuiDragDropFlags_None),
 "Accept a RGB color. See AcceptDragDropPayload.")
 {
   FRAME_GUARD;
-  return AcceptDragDropPayloadColor(API_W(rgb), false, API_RO_GET(flags));
+  return AcceptDragDropPayloadColor(rgb, false, API_GET(flags));
 }
 
-API_FUNC(0_1, bool, AcceptDragDropPayloadRGBA, (ImGui_Context*,ctx)
-(int*,API_W(rgba))(int*,API_RO(flags),ImGuiDragDropFlags_None),
+API_FUNC(0_1, bool, AcceptDragDropPayloadRGBA, (Context*,ctx)
+(W<int*>,rgba) (RO<int*>,flags,ImGuiDragDropFlags_None),
 "Accept a RGBA color. See AcceptDragDropPayload.")
 {
   FRAME_GUARD;
-  return AcceptDragDropPayloadColor(API_W(rgba), true, API_RO_GET(flags));
+  return AcceptDragDropPayloadColor(rgba, true, API_GET(flags));
 }
 
-API_FUNC(0_1, bool, AcceptDragDropPayloadFiles, (ImGui_Context*,ctx)
-(int*,API_W(count))(int*,API_RO(flags),ImGuiDragDropFlags_None),
+API_FUNC(0_1, bool, AcceptDragDropPayloadFiles, (Context*,ctx)
+(W<int*>,count) (RO<int*>,flags,ImGuiDragDropFlags_None),
 R"(Accept a list of dropped files. See AcceptDragDropPayload and GetDragDropPayloadFile.)")
 {
   FRAME_GUARD;
-  assertValid(API_W(count));
+  assertValid(count);
 
   const ImGuiPayload *payload {
-    ImGui::AcceptDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, API_RO_GET(flags))
+    ImGui::AcceptDragDropPayload(REAIMGUI_PAYLOAD_TYPE_FILES, API_GET(flags))
   };
 
   if(payload)
-    *API_W(count) = ctx->draggedFiles().size();
+    *count = ctx->draggedFiles().size();
 
   return payload;
 }
 
-API_FUNC(0_1, void, EndDragDropTarget, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, EndDragDropTarget, (Context*,ctx),
 "Only call EndDragDropTarget() if BeginDragDropTarget returns true!")
 {
   FRAME_GUARD;
   ImGui::EndDragDropTarget();
 }
 
-API_FUNC(0_1, bool, GetDragDropPayload, (ImGui_Context*,ctx)
-(char*,API_W(type))(int,API_W_SZ(type))
-(char*,API_WBIG(payload))(int,API_WBIG_SZ(payload))
-(bool*,API_W(is_preview))(bool*,API_W(is_delivery)),
+API_FUNC(0_1, bool, GetDragDropPayload, (Context*,ctx)
+(W<char*>,type) (WS<int>,type_sz)
+(WB<char*>,payload) (WBS<int>,payload_sz)
+(W<bool*>,is_preview) (W<bool*>,is_delivery),
 R"(Peek directly into the current payload from anywhere.
 Returns false when drag and drop is finished or inactive.)")
 {
   FRAME_GUARD;
 
-  const ImGuiPayload *payload { ImGui::GetDragDropPayload() };
-  if(!payload || payload->DataFrameCount == -1 || !isUserType(payload->DataType))
+  const ImGuiPayload *impayload { ImGui::GetDragDropPayload() };
+  if(!impayload || impayload->DataFrameCount == -1 || !isUserType(impayload->DataType))
     return false;
 
-  if(API_W(type))
-    snprintf(API_W(type), API_W_SZ(type), "%s", payload->DataType);
-  if(API_WBIG(payload) && payload->Data) {
-    copyToBigBuf(API_WBIG(payload), API_WBIG_SZ(payload),
-      payload->Data, payload->DataSize);
-  }
-  if(API_W(is_preview))  *API_W(is_preview)  = payload->Preview;
-  if(API_W(is_delivery)) *API_W(is_delivery) = payload->Delivery;
+  if(type)
+    snprintf(type, type_sz, "%s", impayload->DataType);
+  if(payload && impayload->Data)
+    copyToBigBuf(payload, payload_sz, impayload->Data, impayload->DataSize);
+  if(is_preview)  *is_preview  = impayload->Preview;
+  if(is_delivery) *is_delivery = impayload->Delivery;
 
   return true;
 }
 
-API_FUNC(0_1, bool, GetDragDropPayloadFile, (ImGui_Context*,ctx)
-(int,index)(char*,API_W(filename))(int,API_W_SZ(filename)),
+API_FUNC(0_1, bool, GetDragDropPayloadFile, (Context*,ctx)
+(int,index) (W<char*>,filename) (WS<int>,filename_sz),
 R"(Get a filename from the list of dropped files.
 Returns false if index is out of bounds.)")
 {
@@ -214,7 +209,7 @@ Returns false if index is out of bounds.)")
   else if(static_cast<size_t>(index) >= files.size())
     return false;
 
-  snprintf(API_W(filename), API_W_SZ(filename), "%s", files[index].c_str());
+  snprintf(filename, filename_sz, "%s", files[index].c_str());
 
   return true;
 }

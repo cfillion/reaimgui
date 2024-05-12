@@ -251,7 +251,7 @@ OVERRIDES = {
   # no text_end argument
   'ImVec2 ImGui::CalcTextSize(const char*, const char*, bool, float)'        => 'void CalcTextSize(const char*, double*, double*, bool*, double*)',
   'void ImDrawList::AddText(const ImVec2&, ImU32, const char*, const char*)' => 'void DrawList_AddText(double, double, int, const char*)',
-  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'void DrawList_AddTextEx(ImGui_Font*, double, double, double, int, const char*, double*, double*, double*, double*, double*)',
+  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'void DrawList_AddTextEx(Font*, double, double, double, int, const char*, double*, double*, double*, double*, double*)',
 
   'bool ImGui::DragScalarN(const char*, ImGuiDataType, void*, int, float, const void*, const void*, const char*, ImGuiSliderFlags)' => 'bool DragDoubleN(const char*, reaper_array*, double*, double*, double*, const char*, int*)',
   'bool ImGui::SliderScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiSliderFlags)'      => 'bool SliderDoubleN(const char*, reaper_array*, double, double, const char*, int*)',
@@ -263,7 +263,7 @@ OVERRIDES = {
   # ImGuiID -> str_id
   'bool ImGui::BeginChildFrame(ImGuiID, const ImVec2&, ImGuiWindowFlags)' => 'bool BeginChildFrame(const char*, double, double, int*)',
 
-  'bool ImGuiTextFilter::Draw(const char*, float)' => 'bool TextFilter_Draw(ImGui_Context*, const char*, double*)',
+  'bool ImGuiTextFilter::Draw(const char*, float)' => 'bool TextFilter_Draw(Context*, const char*, double*)',
 
   # preventing crashes when calling ImDrawListSplitter::Merge on a blank,
   # unused DrawList different from the one given to Split/SetCurrentChannel
@@ -274,17 +274,17 @@ OVERRIDES = {
 
 # argument position & name are checked
 RESOURCES = {
-  'ImGui_Context*'          => 'ctx',
-  'ImGui_DrawList*'         => 'draw_list',
-  'ImGui_DrawListSplitter*' => 'splitter',
-  'ImGui_Font*'             => 'font',
-  'ImGui_Function*'         => 'func',
-  'ImGui_Image*'            => 'image',
-  'ImGui_ImageSet*'         => 'set',
-  'ImGui_ListClipper*'      => 'clipper',
-  'ImGui_Resource*'         => 'obj',
-  'ImGui_TextFilter*'       => 'filter',
-  'ImGui_Viewport*'         => 'viewport',
+  'Context*'          => 'ctx',
+  'DrawListProxy*'    => 'draw_list',
+  'DrawListSplitter*' => 'splitter',
+  'Font*'             => 'font',
+  'Function*'         => 'func',
+  'Image*'            => 'image',
+  'ImageSet*'         => 'set',
+  'ListClipper*'      => 'clipper',
+  'Resource*'         => 'obj',
+  'TextFilter*'       => 'filter',
+  'ViewportProxy*'    => 'viewport',
 }
 
 # types REAPER's parser knows about
@@ -364,15 +364,17 @@ private
     when /unsigned int(\*)?/, /size_t(\*)?/
       "int#{$~[1]}"
     when 'ImTextureID'
-      'ImGui_Image*'
+      'Image*'
     when /Callback\z/
-      "ImGui_Function*"
+      "Function*"
     when /\AIm(?:Gui|Draw)[^\*]+(?:Flags\*)?\z/, 'ImU32'
       'int'
     when 'const char* const'
       'const char*'
+    when /\AIm(?:Gui)?(DrawList|Viewport)\*\z/
+      "#{$1}Proxy*"
     when /\A(?:const )?Im(?:Gui)?(?!Vec)(\w+)\*\z/
-      "ImGui_#{$1}*"
+      "#{$1}*"
     else
       type
     end
@@ -404,7 +406,7 @@ private
     arg.name += '_rgba' if arg.type == 'ImU32' && %[col color].include?(arg.name)
     arg.type = cpp_type_to_reascript_type arg.type
     arg.name = arg.name[4..-1] if arg.name =~ /\Aout_.+/ && arg.type.end_with?('*')
-    arg.name = RESOURCES[arg.type] if arg.type == 'ImGui_Image*'
+    arg.name = RESOURCES[arg.type] if arg.type == 'Image*'
 
     if arg.type.include? 'ImVec2'
       null_optional = arg.type.end_with? '*'
@@ -441,7 +443,7 @@ private
     elsif arg.type == 'void*' && ['user_data', 'custom_callback_data'].include?(arg.name) # callbacks
       return []
     elsif arg.name == 'buf_size'
-      arg.name = 'buf' # API_RWBIG_SZ?
+      arg.name = 'buf_sz'
     end
 
     if (matches = arg.default.to_s.scan(/(?:ImVec2\(|\G(?!\A))\s*([^f,\)]+)f?\s*,?/)) && !matches.empty?
@@ -487,7 +489,7 @@ private
   end
 end
 
-Argument = Struct.new :type, :name, :default, :size
+Argument = Struct.new :type, :name, :default, :size, :decoration
 
 # load ImGui definitions
 IMGUI_FUNC_R  = /IMGUI_API \s+ (?:(?<type>[\w\*\&\s]+?) \s*)? (?<=\b) (?<name>[\w]+) \( (?<args>.*?) \) (?:\s*IM_[A-Z]+\(.+\))?; /x
@@ -538,11 +540,11 @@ puts "imgui:    found %d functions, %d enums (total: %d symbols)" %
 REAIMGUI_FUNC_R = /\AAPI_FUNC \s*\(\s* (?<version>[0-9_]+) \s*,\s* (?<type>[\w\s\*]+) \s*,\s* (?<name>[\w]+) \s*,\s* (?<args>.*?) \s*(?<arg_end>,)?\s*(\/|\Z)/x
 REAIMGUI_ENUM_R = /\AAPI_ENUM \s*\(\s* (?<version>[0-9_]+) \s*,\s* (?<prefix>\w+) \s*,\s* (?<name>\w+) \s*,\s*/x
 REAIMGUI_ARGS_R = /\A\s* (?<args>\(.+?\)) \s*(?<arg_end>,)?\s*(\/|\Z)/x
-REAIMGUI_ARGN_R = /\A(?:(?<raw_name>[^\(\)]+)|(?<decoration>[^\(]+)\((?<raw_name>[^\)]+)\))\z/
+REAIMGUI_ARGT_R = /\A(?<decoration>[A-Z]+)\s*<\s*(?<type>.+)\s*>\z/
 
 def split_reaimgui_args(args)
-  return [] if args == 'NO_ARGS'
-  args = args.split ')('
+  return [] if args == 'API_NO_ARGS'
+  args = args.split /\)\s*\(/
   return args if args.size < 1
 
   args.first[0] = '' # remove leading (
@@ -550,8 +552,12 @@ def split_reaimgui_args(args)
 
   args.map do |arg|
     type, name, default = arg.split /\s*,\s*/
+    if type =~ REAIMGUI_ARGT_R
+      type, decoration = $~[:type], $~[:decoration]
+    end
+    type.delete_prefix! 'class '
     default.gsub! /\AIm(Gui)?/, '' if default
-    Argument.new type, name, default, 0
+    Argument.new type, name, default, 0, decoration
   end
 end
 
@@ -685,28 +691,25 @@ end
 reaimgui_funcs.each do |func|
   found_optional = false
   func.args.each_with_index do |rea_arg, i|
-    unless rea_arg.name =~ REAIMGUI_ARGN_R
-      warn "#{func.name}: invalid argument ##{i+1} '#{rea_arg.name}'"
+    unless rea_arg.name =~ /\A[a-z0-9_]+\z/
+      warn "#{func.name}: invalid argument ##{i+1} name '#{rea_arg.name}' (not snake case?)"
       next
     end
 
-    raw_name, decoration = $~[:raw_name], $~[:decoration]
-
-    unless raw_name =~ /\A[a-z0-9_]+\z/
-      warn "#{func.name}: invalid argument ##{i+1} name '#{raw_name}' (not snake case?)"
-      next
-    end
-
-    if decoration == 'API_RO'
+    if rea_arg.decoration == 'RO'
       found_optional = true
-    elsif found_optional && decoration.start_with?('API_W')
-      warn "#{func.name}: output argument '#{raw_name}' after input values"
+    elsif found_optional && rea_arg.decoration.start_with?('W')
+      warn "#{func.name}: output argument '#{rea_arg.name}' is after input values"
+    end
+
+    if rea_arg.decoration&.include?('S') && !rea_arg.name.end_with?('_sz')
+      warn "#{func.name}: argument ##{i+1} of type '*S<#{rea_arg.type}>' is named '#{rea_arg.name}', expected to end with '_sz'"
     end
 
     unless func.match
       # no default value = nil
       # if decoration && decoration[-1] == 'O' && rea_arg.default.nil?
-      #   warn "#{func.name}: argument ##{i+1} '#{raw_name}' has no documented default value"
+      #   warn "#{func.name}: argument ##{i+1} '#{rea_arg.name}' has no documented default value"
       # end
       next
     end
@@ -714,16 +717,12 @@ reaimgui_funcs.each do |func|
     imgui_arg = func.match.normalized.args[i]
 
     rename = ARG_RENAMES[func.name]&.[](imgui_arg.name)
-    unless raw_name == imgui_arg.name || raw_name == rename
-      warn "#{func.name}: argument ##{i+1} of type '#{rea_arg.type}' (#{decoration}) is named '#{raw_name}', expected '#{rename || imgui_arg.name}'"
+    unless rea_arg.name == imgui_arg.name || rea_arg.name == rename
+      warn "#{func.name}: argument ##{i+1} of type '#{rea_arg.type}' is named '#{rea_arg.name}', expected '#{rename || imgui_arg.name}'"
     end
 
     unless rea_arg.default == imgui_arg.default
-      if rea_arg.default.nil?
-        warn "#{func.name}: argument ##{i+1} '#{raw_name}' has no documented default value, expected #{imgui_arg.default}"
-      else
-        warn "#{func.name}: argument ##{i+1} '#{raw_name}' has documented default value #{rea_arg.default}, expected #{imgui_arg.default}"
-      end
+      warn "#{func.name}: argument ##{i+1} '#{rea_arg.name}' has documented default value '#{rea_arg.default}', expected '#{imgui_arg.default}'"
     end
   end
 end

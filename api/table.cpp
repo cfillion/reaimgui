@@ -49,33 +49,32 @@ The typical call flow is:
 5. Call EndTable.
 )");
 
-API_FUNC(0_9, bool, BeginTable, (ImGui_Context*,ctx)
-(const char*,str_id)(int,column)(int*,API_RO(flags),ImGuiTableFlags_None)
-(double*,API_RO(outer_size_w),0.0)(double*,API_RO(outer_size_h),0.0)
-(double*,API_RO(inner_width),0.0),
+API_FUNC(0_9, bool, BeginTable, (Context*,ctx)
+(const char*,str_id) (int,column) (RO<int*>,flags,ImGuiTableFlags_None)
+(RO<double*>,outer_size_w,0.0) (RO<double*>,outer_size_h,0.0)
+(RO<double*>,inner_width,0.0),
 "")
 {
   FRAME_GUARD;
 
-  return ImGui::BeginTable(str_id, column, API_RO_GET(flags),
-    ImVec2(API_RO_GET(outer_size_w), API_RO_GET(outer_size_h)),
-    API_RO_GET(inner_width));
+  return ImGui::BeginTable(str_id, column, API_GET(flags),
+    ImVec2(API_GET(outer_size_w), API_GET(outer_size_h)),
+    API_GET(inner_width));
 }
 
-API_FUNC(0_8, void, EndTable, (ImGui_Context*,ctx),
+API_FUNC(0_8, void, EndTable, (Context*,ctx),
 "Only call EndTable() if BeginTable() returns true!")
 {
   FRAME_GUARD;
   ImGui::EndTable();
 }
 
-API_FUNC(0_9, void, TableNextRow, (ImGui_Context*,ctx)
-(int*,API_RO(row_flags),ImGuiTableRowFlags_None)
-(double*,API_RO(min_row_height),0.0),
+API_FUNC(0_9, void, TableNextRow, (Context*,ctx)
+(RO<int*>,row_flags,ImGuiTableRowFlags_None) (RO<double*>,min_row_height,0.0),
 "Append into the first cell of a new row.")
 {
   FRAME_GUARD;
-  ImGui::TableNextRow(API_RO_GET(row_flags), API_RO_GET(min_row_height));
+  ImGui::TableNextRow(API_GET(row_flags), API_GET(min_row_height));
 }
 
 API_ENUM(0_1, ImGui, TableRowFlags_None, "For TableNextRow.");
@@ -83,7 +82,7 @@ API_ENUM(0_1, ImGui, TableRowFlags_Headers,
 R"(Identify header row (set default background color + width of its contents
    accounted different for auto column width).)");
 
-API_FUNC(0_8, bool, TableNextColumn, (ImGui_Context*,ctx),
+API_FUNC(0_8, bool, TableNextColumn, (Context*,ctx),
 R"(Append into the next column (or first column of next row if currently in
 last column). Return true when column is visible.)")
 {
@@ -91,7 +90,7 @@ last column). Return true when column is visible.)")
   return ImGui::TableNextColumn();
 }
 
-API_FUNC(0_8, bool, TableSetColumnIndex, (ImGui_Context*,ctx)
+API_FUNC(0_8, bool, TableSetColumnIndex, (Context*,ctx)
 (int,column_n),
 "Append into the specified column. Return true when column is visible.")
 {
@@ -99,21 +98,21 @@ API_FUNC(0_8, bool, TableSetColumnIndex, (ImGui_Context*,ctx)
   return ImGui::TableSetColumnIndex(column_n);
 }
 
-API_FUNC(0_1, int, TableGetColumnCount, (ImGui_Context*,ctx),
+API_FUNC(0_1, int, TableGetColumnCount, (Context*,ctx),
 "Return number of columns (value passed to BeginTable).")
 {
   FRAME_GUARD;
   return ImGui::TableGetColumnCount();
 }
 
-API_FUNC(0_1, int, TableGetColumnIndex, (ImGui_Context*,ctx),
+API_FUNC(0_1, int, TableGetColumnIndex, (Context*,ctx),
 "Return current column index.")
 {
   FRAME_GUARD;
   return ImGui::TableGetColumnIndex();
 }
 
-API_FUNC(0_1, int, TableGetRowIndex, (ImGui_Context*,ctx),
+API_FUNC(0_1, int, TableGetRowIndex, (Context*,ctx),
 "Return current row index.")
 {
   FRAME_GUARD;
@@ -136,27 +135,26 @@ header row).
 Use TableSetupScrollFreeze() to lock columns/rows so they stay visible when
 scrolled.)");
 
-API_FUNC(0_1, void, TableSetupColumn, (ImGui_Context*,ctx)
-(const char*,label)(int*,API_RO(flags),ImGuiTableColumnFlags_None)
-(double*,API_RO(init_width_or_weight),0.0)
-(int*,API_RO(user_id),0),
+API_FUNC(0_1, void, TableSetupColumn, (Context*,ctx)
+(const char*,label) (RO<int*>,flags,ImGuiTableColumnFlags_None)
+(RO<double*>,init_width_or_weight,0.0) (RO<int*>,user_id,0),
 R"(Use to specify label, resizing policy, default width/weight, id,
 various other flags etc.)")
 {
   FRAME_GUARD;
-  ImGui::TableSetupColumn(label, API_RO_GET(flags),
-    API_RO_GET(init_width_or_weight), API_RO_GET(user_id));
+  ImGui::TableSetupColumn(label, API_GET(flags),
+    API_GET(init_width_or_weight), API_GET(user_id));
 }
 
-API_FUNC(0_1, void, TableSetupScrollFreeze, (ImGui_Context*,ctx)
-(int,cols)(int,rows),
+API_FUNC(0_1, void, TableSetupScrollFreeze, (Context*,ctx)
+(int,cols) (int,rows),
 "Lock columns/rows so they stay visible when scrolled.")
 {
   FRAME_GUARD;
   ImGui::TableSetupScrollFreeze(cols, rows);
 }
 
-API_FUNC(0_1, void, TableHeader, (ImGui_Context*,ctx)
+API_FUNC(0_1, void, TableHeader, (Context*,ctx)
 (const char*,label),
 "Submit one header cell manually (rarely used). See TableSetupColumn.")
 {
@@ -164,7 +162,7 @@ API_FUNC(0_1, void, TableHeader, (ImGui_Context*,ctx)
   ImGui::TableHeader(label);
 }
 
-API_FUNC(0_1, void, TableHeadersRow, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, TableHeadersRow, (Context*,ctx),
 R"(Submit a row with headers cells based on data provided to TableSetupColumn
 + submit context menu.)")
 {
@@ -172,7 +170,7 @@ R"(Submit a row with headers cells based on data provided to TableSetupColumn
   ImGui::TableHeadersRow();
 }
 
-API_FUNC(0_1, void, TableAngledHeadersRow, (ImGui_Context*,ctx),
+API_FUNC(0_1, void, TableAngledHeadersRow, (Context*,ctx),
 R"(Submit a row with angled headers for every column with the
 TableColumnFlags_AngledHeader flag. Must be the first row.)")
 {
@@ -180,26 +178,26 @@ TableColumnFlags_AngledHeader flag. Must be the first row.)")
   ImGui::TableAngledHeadersRow();
 }
 
-API_FUNC(0_1, const char*, TableGetColumnName, (ImGui_Context*,ctx)
-(int*,API_RO(column_n),-1),
+API_FUNC(0_1, const char*, TableGetColumnName, (Context*,ctx)
+(RO<int*>,column_n,-1),
 R"(Return "" if column didn't have a name declared by TableSetupColumn.
 Pass -1 to use current column.)")
 {
   FRAME_GUARD;
-  return ImGui::TableGetColumnName(API_RO_GET(column_n));
+  return ImGui::TableGetColumnName(API_GET(column_n));
 }
 
-API_FUNC(0_1, int, TableGetColumnFlags, (ImGui_Context*,ctx)
-(int*,API_RO(column_n),-1),
+API_FUNC(0_1, int, TableGetColumnFlags, (Context*,ctx)
+(RO<int*>,column_n,-1),
 R"(Return column flags so you can query their Enabled/Visible/Sorted/Hovered
 status flags. Pass -1 to use current column.)")
 {
   FRAME_GUARD;
-  return ImGui::TableGetColumnFlags(API_RO_GET(column_n));
+  return ImGui::TableGetColumnFlags(API_GET(column_n));
 }
 
-API_FUNC(0_4_1, void, TableSetColumnEnabled, (ImGui_Context*,ctx)
-(int,column_n)(bool,v),
+API_FUNC(0_4_1, void, TableSetColumnEnabled, (Context*,ctx)
+(int,column_n) (bool,v),
 R"(Change user-accessible enabled/disabled state of a column, set to false to
 hide the column. Note that end-user can use the context menu to change this
 themselves (right-click in headers, or right-click in columns body with
@@ -277,8 +275,8 @@ API_ENUM(0_1, ImGui, TableColumnFlags_IsHovered, "Status: is hovered by mouse.")
 
 API_SUBSECTION("Sorting");
 
-API_FUNC(0_1, bool, TableNeedSort, (ImGui_Context*,ctx)
-(bool*,API_W(has_specs)),
+API_FUNC(0_1, bool, TableNeedSort, (Context*,ctx)
+(W<bool*>,has_specs),
 R"(Return true once when sorting specs have changed since last call,
 or the first time. 'has_specs' is false when not sorting.
 
@@ -286,19 +284,19 @@ See TableGetColumnSortSpecs.)")
 {
   FRAME_GUARD;
   if(ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() }) {
-    if(API_W(has_specs)) *API_W(has_specs) = specs->SpecsCount > 0;
+    if(has_specs) *has_specs = specs->SpecsCount > 0;
 
     const bool needSort { specs->SpecsDirty };
     specs->SpecsDirty = false;
     return needSort;
   }
 
-  if(API_W(has_specs)) *API_W(has_specs) = false;
+  if(has_specs) *has_specs = false;
   return false;
 }
 
-API_FUNC(0_9, bool, TableGetColumnSortSpecs, (ImGui_Context*,ctx)(int,id)
-(int*,API_W(column_index))(int*,API_W(column_user_id))(int*,API_W(sort_direction)),
+API_FUNC(0_9, bool, TableGetColumnSortSpecs, (Context*,ctx) (int,id)
+(W<int*>,column_index) (W<int*>,column_user_id) (W<int*>,sort_direction),
 R"(Sorting specification for one column of a table.
 Call while incrementing 'id' from 0 until false is returned.
 
@@ -317,9 +315,9 @@ See TableNeedSort.)")
     return false; // don't assert: user cannot know how many specs there are
 
   const ImGuiTableColumnSortSpecs &spec { specs->Specs[id] };
-  if(API_W(column_index))   *API_W(column_index)   = spec.ColumnIndex;
-  if(API_W(column_user_id)) *API_W(column_user_id) = spec.ColumnUserID;
-  if(API_W(sort_direction)) *API_W(sort_direction) = spec.SortDirection;
+  if(column_index)   *column_index   = spec.ColumnIndex;
+  if(column_user_id) *column_user_id = spec.ColumnUserID;
+  if(sort_direction) *sort_direction = spec.SortDirection;
 
   return true;
 }
@@ -344,14 +342,14 @@ RowBg0 color.
 If you set the color of RowBg1 or ColumnBg1 target, your color will blend over
 the RowBg0 color.)");
 
-API_FUNC(0_1, void, TableSetBgColor, (ImGui_Context*,ctx)
-(int,target)(int,color_rgba)(int*,API_RO(column_n),-1),
+API_FUNC(0_1, void, TableSetBgColor, (Context*,ctx)
+(int,target) (int,color_rgba) (RO<int*>,column_n,-1),
 R"(Change the color of a cell, row, or column.
 See TableBgTarget_* flags for details.)")
 {
   FRAME_GUARD;
   ImGui::TableSetBgColor(target,
-    Color::fromBigEndian(color_rgba), API_RO_GET(column_n));
+    Color::fromBigEndian(color_rgba), API_GET(column_n));
 }
 
 API_ENUM(0_1, ImGui, TableBgTarget_None, "");

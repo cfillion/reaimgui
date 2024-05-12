@@ -63,7 +63,6 @@ private:
   std::unique_ptr<NSEEL_CODEHANDLE_REF, ProgramDeleter> m_program;
 };
 
-using ImGui_Function = Function; // user-facing type
 API_REGISTER_OBJECT_TYPE(Function);
 
 #endif

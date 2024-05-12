@@ -149,14 +149,6 @@ static const char *nextString(const char *&str)
   return str += strlen(str) + 1;
 }
 
-static std::string_view typeName(const std::string_view type)
-{
-  // special case for EEL strings
-  if(type == "std::string_view")
-    return "const char*";
-  return type;
-}
-
 static std::string_view defaultValue(const std::string_view value)
 {
   if(value.empty())
@@ -213,7 +205,7 @@ Function::Function(const API::Symbol *api)
     }
 
     args.emplace_back(Argument {
-      typeName(argTypes.substr(0, typeLen)),
+      argTypes.substr(0, typeLen),
       argNames.substr(0, nameLen),
       defaultValue(argDefvs.substr(0, defvLen)),
     });

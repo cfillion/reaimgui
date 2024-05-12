@@ -51,7 +51,6 @@ namespace Tags {
 template<typename T, unsigned char TagV>
 class Tag {
 public:
-  static constexpr auto tags { TagV };
   Tag(T v) : m_val { v } {}
   operator T &() { return m_val; }
   operator const T &() const { return m_val; }
@@ -77,7 +76,7 @@ template<typename T, typename = void>
 struct TypeInfo;
 
 template<typename T>
-struct TypeInfo<T, typename std::enable_if_t<std::is_pointer_v<T>> >
+struct TypeInfo<T, typename std::enable_if_t<std::is_pointer_v<T>>>
 {
   using underlying = std::remove_pointer_t<T>;
   static constexpr auto type()
@@ -88,19 +87,42 @@ struct TypeInfo<T, typename std::enable_if_t<std::is_pointer_v<T>> >
     CompStr::append(p, name, '*');
     return out;
   }
-  static constexpr std::string_view name() { return TypeInfo<underlying>::name(); }
+
+  template<const auto &Names, size_t I>
+  static constexpr auto name()
+  {
+    return TypeInfo<underlying>::template name<Names, I>();
+  }
 };
 
 template<typename T, auto tags>
 struct TypeInfo<Tag<T, tags>>
 {
   static constexpr auto type() { return TypeInfo<T>::type(); }
+
+  template<const auto &Names, size_t I>
   static constexpr auto name()
   {
-    constexpr size_t length { TypeInfo<T>::name().size() + suffixesLength() };
+    constexpr auto resolvedName { [] {
+      constexpr auto name { TypeInfo<T>::template name<Names, I>() };
+
+      // do not append _sz again when Names[I] already ends with it
+      if constexpr(!!(tags & Tags::S)) {
+        constexpr auto sz { suffixFor(Tags::S) };
+        if constexpr(name.size() > sz.size() &&
+            name.substr(name.size() - sz.size()) == sz)
+          return name.substr(0, name.size() - sz.size());
+        else
+          return name;
+      }
+      else
+        return name;
+    }() };
+
+    constexpr size_t length { resolvedName.size() + suffixesLength() };
     std::array<char, length> decorated {};
     char *p { decorated.data() };
-    CompStr::append(p, TypeInfo<T>::name());
+    CompStr::append(p, resolvedName);
     for(size_t bit {}; bit < sizeof(tags) * CHAR_BIT; ++bit)
       CompStr::append(p, suffixFor(tags & (1 << bit)));
     return decorated;
@@ -130,8 +152,10 @@ private:
 
 #define API_REGISTER_TYPE(T, N)   \
   template<> struct TypeInfo<T> { \
-    static constexpr std::string_view type() { return N;   } \
-    static constexpr std::string_view name() { return "_"; } \
+    static constexpr std::string_view type() { return N; } \
+                                                           \
+    template<const auto &Names, size_t I>                  \
+    static constexpr auto name() { return Names[I]; }      \
   }
 
 #define API_REGISTER_BASIC_TYPE(T)  API_REGISTER_TYPE(T, #T)
@@ -143,6 +167,7 @@ API_REGISTER_BASIC_TYPE(const char*);
 API_REGISTER_BASIC_TYPE(double);
 API_REGISTER_BASIC_TYPE(int);
 API_REGISTER_BASIC_TYPE(void);
+API_REGISTER_TYPE(std::string_view, "const char*"); // EEL strings
 
 // https://forum.cockos.com/showthread.php?t=211620
 struct reaper_array {

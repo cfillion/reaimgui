@@ -48,50 +48,57 @@ DECLARE_HANDLE(HDROP);
 #define _API_ARG_TYPE(arg) BOOST_PP_TUPLE_ELEM(0, arg)
 #define _API_ARG_NAME(arg) BOOST_PP_TUPLE_ELEM(1, arg)
 #define _API_ARG_DEFV(arg) BOOST_PP_TUPLE_ELEM(2, arg)
-#define _API_ARG_DEFV_T(arg) decltype(_API_ARG_DEFV(arg))
 
 #define _API_FOREACH_ARG(macro, data, args) \
   BOOST_PP_SEQ_FOR_EACH_I(macro, data, BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))
 #define _API_SIGARG(r, data, i, arg) \
   BOOST_PP_COMMA_IF(i) _API_ARG_TYPE(arg) _API_ARG_NAME(arg)
-#define _API_STRARG(r, macro, i, arg) \
-  BOOST_PP_EXPR_IF(i, ",") BOOST_PP_STRINGIZE(macro(arg))
-#define _API_STRARGUS(r, macro, i, arg) \
+#define _API_STRARR(r, macro, i, arg) \
+  BOOST_PP_COMMA_IF(i) BOOST_PP_STRINGIZE(macro(arg))
+#define _API_STRARR_US(r, macro, i, arg) \
   BOOST_PP_EXPR_IF(i, "\31") BOOST_PP_STRINGIZE(macro(arg))
 
-template<typename T>
-using DefArgVal = std::conditional_t<
-  std::is_same_v<const char *, T>, T, std::remove_pointer_t<T>
->;
+template<typename T, typename = void>
+struct DefVal { using type = std::remove_pointer_t<T>; };
+
+template<>
+struct DefVal<const char *> { using type = const char *; };
+
+template<typename T, auto tags>
+struct DefVal<Tag<T, tags>> { using type = typename DefVal<T>::type; };
 
 #define _API_DEFARG_ID(argName) BOOST_PP_CAT(argName, Default)
 #define _API_DEFARG(r, name, i, arg)                          \
   BOOST_PP_EXPR_IF(                                           \
     BOOST_PP_GREATER_EQUAL(BOOST_PP_TUPLE_SIZE(arg), 3),      \
-    constexpr DefArgVal<_API_ARG_TYPE(arg)>                   \
-      _API_DEFARG_ID(_API_ARG_NAME(arg))(_API_ARG_DEFV(arg)); \
+    constexpr DefVal<_API_ARG_TYPE(arg)>::type                \
+      _API_ARG_NAME(arg)(_API_ARG_DEFV(arg)); \
   )
 
 // error out if API_SECTION() was not used in the file
 #define _API_CHECKROOTSECTION static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);
 
-#define _API_DEF(type, args, help)            \
-  #type                                  "\0" \
-  _API_FOREACH_ARG(_API_STRARG, _API_ARG_TYPE, args) "\0" \
-  _API_FOREACH_ARG(_API_STRARG, _API_ARG_NAME, args) "\0" \
-  help                                   "\0" \
-  _API_FOREACH_ARG(_API_STRARGUS, _API_ARG_DEFV, args)
-
 #define _API_STORE_LINE \
   static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) { __LINE__ };
 
-#define _API_FUNC_DECL(vernum, type, name, args)                       \
+#define _API_FUNC_DECL(vernum, type, name, args, help)                 \
   namespace API::v##vernum::name {                                     \
-    _API_FOREACH_ARG(_API_DEFARG, name, args) /* default arg values */ \
-    constexpr const char id[] { #name   };                             \
-    constexpr const char vn[] { #vernum };                             \
-    constexpr VerNum version  { CompStr::version<&vn> };               \
+    namespace defaults {                                               \
+      _API_FOREACH_ARG(_API_DEFARG, name, args)                        \
+    }                                                                  \
     static type impl(_API_FOREACH_ARG(_API_SIGARG, _, args));          \
+    struct meta {                                                      \
+      static constexpr char na##me[] = #name, vn[] = #vernum;          \
+      static constexpr std::string_view he##lp { [] {                  \
+        using namespace std::string_view_literals;                     \
+        return help "\0"                                               \
+          _API_FOREACH_ARG(_API_STRARR_US, _API_ARG_DEFV, args) ""sv;  \
+      }() };                                                           \
+      static constexpr VerNum version { CompStr::version<&vn> };       \
+      static constexpr std::array<std::string_view,                    \
+        BOOST_PP_SEQ_SIZE(BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))> argn    \
+        { _API_FOREACH_ARG(_API_STRARR, _API_ARG_NAME, args) };        \
+    };                                                                 \
   }
 
 #define _API_FUNC_DEF(vernum, type, name, args) \
@@ -103,34 +110,37 @@ using DefArgVal = std::conditional_t<
   namespace API::v##vernum::name { extern API::type symbol; } \
   API::type API::v##vernum::name::symbol
 
-#define _API_SAFECALL(vernum, apiName) &CallConv::Safe< \
-  &API::v##vernum::apiName::impl, &API::v##vernum::apiName::id>::invoke
+#define _API_SAFECALL(vernum, name) &CallConv::Safe< \
+  &API::v##vernum::name::impl, API::v##vernum::name::meta>::invoke
+
+#define _API_DEF(vernum, name, named) \
+  CompStr::apidef<&API::v##vernum::name::impl, API::v##vernum::name::meta, named>
 
 #define API_FUNC _API_STORE_LINE _API_FUNC
-#define _API_FUNC(vernum, type, name, args, help)                 \
-  _API_CHECKROOTSECTION                                           \
-  _API_FUNC_DECL(vernum, type, name, args)                        \
-  _API_EXPORT(ReaScriptFunc, vernum, name) {                      \
-    API::v##vernum::name::version,                                \
-    reinterpret_cast<void *>(&API::v##vernum::name::impl),        \
-    { "-API_" API_PREFIX #name, _API_SAFECALL(vernum, name) },    \
-    { "-APIvararg_" API_PREFIX #name,                             \
-      CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply },  \
-    { "-APIdef_" API_PREFIX #name, _API_DEF(type, args, help) },  \
-  };                                                              \
+#define _API_FUNC(vernum, type, name, args, help)                   \
+  _API_CHECKROOTSECTION                                             \
+  _API_FUNC_DECL(vernum, type, name, args, help)                    \
+  _API_EXPORT(ReaScriptFunc, vernum, name) {                        \
+    API::v##vernum::name::meta::version,                            \
+    reinterpret_cast<void *>(&API::v##vernum::name::impl),          \
+    { "-API_" API_PREFIX #name, _API_SAFECALL(vernum, name) },      \
+    { "-APIvararg_" API_PREFIX #name,                               \
+      CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply },    \
+    { "-APIdef_" API_PREFIX #name, _API_DEF(vernum, name, true) },  \
+  };                                                                \
   _API_FUNC_DEF(vernum, type, name, args)
 
 #define API_ENUM _API_STORE_LINE _API_ENUM
 #define _API_ENUM(vernum, prefix, name, doc) \
-  _API_FUNC(vernum, int, name, NO_ARGS, doc) { return prefix##name; }
+  _API_FUNC(vernum, int, name, API_NO_ARGS, doc) { return prefix##name; }
 
 #define API_EELFUNC _API_STORE_LINE _API_EELFUNC
 #define _API_EELFUNC(vernum, type, name, args, help)    \
   _API_CHECKROOTSECTION                                 \
-  _API_FUNC_DECL(vernum, type, name, args)              \
+  _API_FUNC_DECL(vernum, type, name, args, help)        \
   _API_EXPORT(EELFunc, vernum, name) {                  \
-    API::v##vernum::name::version,                      \
-    #name, _API_DEF(type, args, help),                  \
+    API::v##vernum::name::meta::version,                \
+    #name, _API_DEF(vernum, name, true),                \
     &CallConv::EEL<_API_SAFECALL(vernum, name)>::apply, \
      CallConv::EEL<_API_SAFECALL(vernum, name)>::ARGC,  \
   };                                                    \
@@ -140,7 +150,7 @@ using DefArgVal = std::conditional_t<
 #define _API_EELVAR(vernum, type, name, help)            \
   _API_CHECKROOTSECTION                                  \
   namespace API::v##vernum::EELVar_##name {              \
-    constexpr const char vn[] { #vernum };               \
+    constexpr char vn[] { #vernum };                     \
     constexpr VerNum version  { CompStr::version<&vn> }; \
   }                                                      \
   const API::EELVar EELVar_##name {                      \
@@ -152,7 +162,7 @@ using DefArgVal = std::conditional_t<
 // shortcuts with auto-generated identifier name for the section object
 #define _API_UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
 #define API_SECTION(...)                                      \
-  constexpr const char FILE_PATH[] { __FILE__ };              \
+  constexpr char FILE_PATH[] { __FILE__ };                    \
   constexpr auto ROOT_FILE { CompStr::basename<&FILE_PATH> }; \
   static const API::Section ROOT_SECTION                      \
     { nullptr, ROOT_FILE, __VA_ARGS__ }
@@ -161,29 +171,15 @@ using DefArgVal = std::conditional_t<
 #define API_SECTION_P(parent, ...) \
   API_SECTION_DEF(_API_UNIQ_SEC_ID, parent,       __VA_ARGS__)
 
-// TODO: replace these in favor of the new type tags from types.hpp
-#define NO_ARGS (,)
-#define API_RO(var)       var##InOptional // read, optional/nullable (except string, use nullIfEmpty)
-#define API_RW(var)       var##InOut      // read/write
-#define API_RWO(var)      var##InOutOptional // documentation/python only
-#define API_W(var)        var##Out        // write
-#define API_W_SZ(var)     var##Out_sz     // write
-// Not using varInOutOptional because REAPER refuses to pass NULL to them
-#define API_RWBIG(var)    var##InOutNeedBig    // read/write, resizable (realloc_cmd_ptr)
-#define API_RWBIG_SZ(var) var##InOutNeedBig_sz // size of previous API_RWBIG buffer
-#define API_WBIG(var)     var##OutNeedBig
-#define API_WBIG_SZ(var)  var##OutNeedBig_sz
+#define API_DO_NOT_USE "Internal use only."
+#define API_NO_ARGS (,)
 
-#define _API_GET(var) [](const auto v, const auto d) { \
-  if constexpr(std::is_pointer_v<decltype(d)>)         \
-    return v ?  v : d;                                 \
-  else                                                 \
-    return v ? *v : d;                                 \
-}(var, _API_DEFARG_ID(var))
-#define API_RO_GET(var)  _API_GET(API_RO(var))
-#define API_RWO_GET(var) _API_GET(API_RWO(var))
-
-#define FRAME_GUARD assertValid(ctx); assertFrame(ctx)
+#define API_GET(var) [](const auto &v, const auto &d) -> const auto & { \
+  if constexpr(std::is_pointer_v<std::remove_reference_t<decltype(d)>>) \
+    return v ? static_cast<decltype(d)>(v) : d; \
+  else                                          \
+    return v ? *v : d;                          \
+}(var, defaults::var)
 
 // const char *foobarInOptional from REAPER are never null before 6.58
 inline void nullIfEmpty(const char *&string)
@@ -209,6 +205,12 @@ void assertValid(T *ptr)
   Error::invalidObject(ptr);
 }
 
+template<typename T, auto tags>
+void assertValid(Tag<T, tags> ptr)
+{
+  return assertValid(static_cast<T>(ptr));
+}
+
 inline void assertFrame(Context *ctx)
 {
   if(!ctx->enterFrame()) {
@@ -216,6 +218,8 @@ inline void assertFrame(Context *ctx)
     throw reascript_error { "frame initialization failed" };
   }
 }
+
+#define FRAME_GUARD assertValid(ctx); assertFrame(ctx)
 
 template <typename PtrType, typename ValType, size_t N>
 class ReadWriteArray {
