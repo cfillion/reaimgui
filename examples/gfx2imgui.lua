@@ -1681,7 +1681,7 @@ function gfx.setfont(idx, fontface, sz, flags)
     if not fontface or fontface:len() == 0 then
       fontface = 'Arial'
     end
-    sz = $toint(sz)
+    sz = math.min($toint(sz), 96) -- sane limit to prevent errors (p=2781729)
     if sz < 2 then
       sz = 10
     end
