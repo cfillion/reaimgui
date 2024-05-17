@@ -23,8 +23,7 @@
 #include "../src/resource_proxy.hpp"
 #include "../src/context.hpp"
 
-struct DrawListProxy
-    : public ResourceProxy<DrawListProxy, Context, ImDrawList> {
+struct DrawListProxy : ResourceProxy<DrawListProxy, Context, ImDrawList> {
   using GetterFuncType = ImDrawList*(*)();
   template<Key KeyValue, GetterFuncType GetterFunc>
   struct Getter {

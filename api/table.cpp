@@ -126,7 +126,7 @@ width/weight, id, various other flags etc.
 Use TableHeadersRow() to create a header row and automatically submit a
 TableHeader() for each column. Headers are required to perform: reordering,
 sorting, and opening the context menu. The context menu can also be made
-available in columns body using ImGuiTableFlags_ContextMenuInBody.
+available in columns body using TableFlags_ContextMenuInBody.
 
 You may manually submit headers using TableNextRow() + TableHeader() calls, but
 this is only useful in some advanced use cases (e.g. adding custom widgets in

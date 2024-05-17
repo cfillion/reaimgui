@@ -22,14 +22,13 @@
 
 #include "../src/context.hpp"
 
-struct ViewportProxy
-    : public ResourceProxy<ViewportProxy, Context, ImGuiViewport> {
+struct ViewportProxy : ResourceProxy<ViewportProxy, Context, ImGuiViewport> {
   template<Key KeyValue, auto GetterFunc>
   struct Getter {
     static constexpr Key key { KeyValue };
-    static auto get(Context *ctx)
+    static ImGuiViewport *get(Context *ctx)
     {
-      ctx->setCurrent();
+      assertFrame(ctx);
       return GetterFunc();
     }
   };
