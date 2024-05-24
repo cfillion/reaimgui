@@ -54,6 +54,8 @@ project_cpp_args = {
     '/DNOMINMAX',
     '/DUNICODE',
 
+    '/Zc:preprocessor',
+
     '/wd4244', # conversion from T1 to T2, possible loss of data
     '/wd4267', # conversion from size_t to T, possible loss of data
     '/wd4624', # destructor was implicitly defined as deleted

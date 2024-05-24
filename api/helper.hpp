@@ -172,7 +172,7 @@ struct DefVal<Tag<T, tags>> { using type = typename DefVal<T>::type; };
   API_SECTION_DEF(_API_UNIQ_SEC_ID, parent,       __VA_ARGS__)
 
 #define API_DO_NOT_USE "Internal use only."
-#define API_NO_ARGS (,)
+#define API_NO_ARGS
 
 #define API_GET(var) [](const auto &v, const auto &d) -> const auto & { \
   if constexpr(std::is_pointer_v<std::remove_reference_t<decltype(d)>>) \
