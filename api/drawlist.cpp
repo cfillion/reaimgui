@@ -272,8 +272,8 @@ API_FUNC(0_1, void, DrawList_AddText, (DrawListProxy*,draw_list)
 API_FUNC(0_4, void, DrawList_AddTextEx, (DrawListProxy*,draw_list)
 (Font*,font) (double,font_size) (double,pos_x) (double,pos_y)
 (int,col_rgba) (const char*,text) (RO<double*>,wrap_width,0.0)
-(RO<double*>,cpu_fine_clip_rect_x) (RO<double*>,cpu_fine_clip_rect_y)
-(RO<double*>,cpu_fine_clip_rect_w) (RO<double*>,cpu_fine_clip_rect_h),
+(RO<double*>,cpu_fine_clip_rect_min_x) (RO<double*>,cpu_fine_clip_rect_min_y)
+(RO<double*>,cpu_fine_clip_rect_max_x) (RO<double*>,cpu_fine_clip_rect_max_y),
 R"(The last pushed font is used if font is nil.
 The size of the last pushed font is used if font_size is 0.
 cpu_fine_clip_rect_* only takes effect if all four are non-nil.)")
@@ -281,12 +281,12 @@ cpu_fine_clip_rect_* only takes effect if all four are non-nil.)")
   col_rgba = Color::fromBigEndian(col_rgba);
 
   ImVec4 cpu_fine_clip_rect, *cpu_fine_clip_rect_ptr;
-  if(cpu_fine_clip_rect_x && cpu_fine_clip_rect_y &&
-      cpu_fine_clip_rect_w && cpu_fine_clip_rect_h) {
-    cpu_fine_clip_rect.x = *cpu_fine_clip_rect_x;
-    cpu_fine_clip_rect.y = *cpu_fine_clip_rect_y;
-    cpu_fine_clip_rect.z = *cpu_fine_clip_rect_w;
-    cpu_fine_clip_rect.w = *cpu_fine_clip_rect_h;
+  if(cpu_fine_clip_rect_min_x && cpu_fine_clip_rect_min_y &&
+      cpu_fine_clip_rect_max_x && cpu_fine_clip_rect_max_y) {
+    cpu_fine_clip_rect.x = *cpu_fine_clip_rect_min_x;
+    cpu_fine_clip_rect.y = *cpu_fine_clip_rect_min_y;
+    cpu_fine_clip_rect.z = *cpu_fine_clip_rect_max_x;
+    cpu_fine_clip_rect.w = *cpu_fine_clip_rect_max_y;
     cpu_fine_clip_rect_ptr = &cpu_fine_clip_rect;
   }
   else
