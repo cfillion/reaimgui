@@ -1097,7 +1097,7 @@ function gfx.blit(source, ...)
     { srcx, srcy, srcw, srch, destx, desty, destw, desth,
       rotation, rotation_sin, rotation_cos, rotxoffs, rotyoffs }
   $drawCall(drawBlit, commands, sourceCommands,
-    gfx_vars.a, gfx_vars.mode, scale_x, scale_y, payload)
+    gfx_vars.a or 1, gfx_vars.mode, scale_x, scale_y, payload)
 
   return source
 end
