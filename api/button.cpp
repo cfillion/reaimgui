@@ -54,7 +54,8 @@ API_FUNC(0_1, bool, ArrowButton, (Context*,ctx)
 "Square button with an arrow shape. 'dir' is one of the Dir_* values")
 {
   FRAME_GUARD;
-  return ImGui::ArrowButton(str_id, dir);
+  IM_ASSERT(dir >= ImGuiDir_None && dir < ImGuiDir_COUNT);
+  return ImGui::ArrowButton(str_id, static_cast<ImGuiDir>(dir));
 }
 
 API_FUNC(0_1, bool, Checkbox, (Context*,ctx)

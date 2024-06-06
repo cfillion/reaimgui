@@ -168,10 +168,11 @@ R"(Disable default OS window decoration. Enabling decoration can create
    subsequent issues at OS levels (e.g. minimum window size).)");
 
 API_CONFIGVAR(0_7, MacOSXBehaviors,
-R"(OS X style: Text editing cursor movement using Alt instead of Ctrl, Shortcuts
-   using Cmd/Super instead of Ctrl, Line/Text Start and End using Cmd+Arrows
-   instead of Home/End, Double click selects by word instead of selecting whole
-   text, Multi-selection in lists uses Cmd/Super instead of Ctrl.)");
+R"(Enabled by default on macOS. Swap Cmd<>Ctrl keys, OS X style text editing
+   cursor movement using Alt instead of Ctrl, Shortcuts using Cmd/Super instead
+   of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End,
+   Double click selects by word instead of selecting whole text, Multi-selection
+   in lists uses Cmd/Super instead of Ctrl.)");
 API_CONFIGVAR(0_7, InputTrickleEventQueue,
 R"(Enable input queue trickling: some types of events submitted during the same
    frame (e.g. button down + up) will be spread over multiple frames, improving

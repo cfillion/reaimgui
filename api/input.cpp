@@ -253,7 +253,7 @@ API_FUNC(0_1, bool, InputDoubleN, (Context*,ctx) (const char*,label)
     values->data, values->size, step, step_fast, API_GET(format), clean_flags);
 }
 
-API_SUBSECTION("Flags",
+API_SECTION_DEF(flags, ROOT_SECTION, "Flags",
 R"(Most of these are only useful for InputText*() and not for InputDoubleX,
 InputIntX etc.
 
@@ -261,15 +261,46 @@ InputIntX etc.
 ConfigVar_InputTextCursorBlink and ConfigVar_InputTextEnterKeepActive.))");
 
 API_ENUM(0_1, ImGui, InputTextFlags_None,             "");
+
+API_SECTION_P(flags, "Basic filters", "See also InputTextFlags_CallbackCharFilter.");
 API_ENUM(0_1, ImGui, InputTextFlags_CharsDecimal,     "Allow 0123456789.+-*/.");
 API_ENUM(0_1, ImGui, InputTextFlags_CharsHexadecimal, "Allow 0123456789ABCDEFabcdef.");
+API_ENUM(0_1, ImGui, InputTextFlags_CharsScientific,
+    "Allow 0123456789.+-*/eE (Scientific notation input).");
 API_ENUM(0_1, ImGui, InputTextFlags_CharsUppercase,   "Turn a..z into A..Z.");
 API_ENUM(0_1, ImGui, InputTextFlags_CharsNoBlank,     "Filter out spaces, tabs.");
-API_ENUM(0_1, ImGui, InputTextFlags_AutoSelectAll,
-  "Select entire text when first taking mouse focus.");
+
+API_SECTION_P(flags, "Inputs", "");
+API_ENUM(0_1, ImGui, InputTextFlags_AllowTabInput,
+  "Pressing TAB input a '\\t' character into the text field.");
 API_ENUM(0_1, ImGui, InputTextFlags_EnterReturnsTrue,
 R"(Return 'true' when Enter is pressed (as opposed to every time the value was
    modified). Consider looking at the IsItemDeactivatedAfterEdit function.)");
+API_ENUM(0_8, ImGui, InputTextFlags_EscapeClearsAll,
+R"(Escape key clears content if not empty, and deactivate otherwise
+   (constrast to default behavior of Escape to revert).)");
+API_ENUM(0_1, ImGui, InputTextFlags_CtrlEnterForNewLine,
+R"(In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter
+   (default is opposite: unfocus with Ctrl+Enter, add line with Enter).)");
+
+API_SECTION_P(flags, "Other options", "");
+API_ENUM(0_1, ImGui, InputTextFlags_ReadOnly,        "Read-only mode.");
+API_ENUM(0_1, ImGui, InputTextFlags_Password,
+    "Password mode, display all characters as '*'.");
+API_ENUM(0_2, ImGui, InputTextFlags_AlwaysOverwrite, "Overwrite mode.");
+API_ENUM(0_1, ImGui, InputTextFlags_AutoSelectAll,
+  "Select entire text when first taking mouse focus.");
+API_ENUM(0_9_2, ImGui, InputTextFlags_ParseEmptyRefVal,
+  "InputDouble(), InputInt() etc. only: parse empty string as zero value.");
+API_ENUM(0_9_2, ImGui, InputTextFlags_DisplayEmptyRefVal,
+R"(InputDouble(), InputInt() etc. only: when value is zero, do not display it.
+   Generally used with InputTextFlags_ParseEmptyRefVal.)");
+API_ENUM(0_1, ImGui, InputTextFlags_NoHorizontalScroll,
+  "Disable following the cursor horizontally.");
+API_ENUM(0_1, ImGui, InputTextFlags_NoUndoRedo,
+    "Disable undo/redo. Note that input text owns the text data while active.");
+
+API_SECTION_P(flags, "Callback features", "");
 API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackCompletion,
   "Callback on pressing TAB (for completion handling).");
 API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackHistory,
@@ -283,24 +314,6 @@ API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackEdit,
 R"(Callback on any edit (note that InputText() already returns true on edit,
    the callback is useful mainly to manipulate the underlying buffer while
    focus is active).)");
-API_ENUM(0_1, ImGui, InputTextFlags_AllowTabInput,
-  "Pressing TAB input a '\\t' character into the text field.");
-API_ENUM(0_1, ImGui, InputTextFlags_CtrlEnterForNewLine,
-R"(In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter
-   (default is opposite: unfocus with Ctrl+Enter, add line with Enter).)");
-API_ENUM(0_1, ImGui, InputTextFlags_NoHorizontalScroll,
-  "Disable following the cursor horizontally.");
-API_ENUM(0_2, ImGui, InputTextFlags_AlwaysOverwrite, "Overwrite mode.");
-API_ENUM(0_1, ImGui, InputTextFlags_ReadOnly,        "Read-only mode.");
-API_ENUM(0_1, ImGui, InputTextFlags_Password,
-    "Password mode, display all characters as '*'.");
-API_ENUM(0_1, ImGui, InputTextFlags_NoUndoRedo,
-    "Disable undo/redo. Note that input text owns the text data while active.");
-API_ENUM(0_1, ImGui, InputTextFlags_CharsScientific,
-    "Allow 0123456789.+-*/eE (Scientific notation input).");
-API_ENUM(0_8, ImGui, InputTextFlags_EscapeClearsAll,
-R"(Escape key clears content if not empty, and deactivate otherwise
-   (constrast to default behavior of Escape to revert).)");
 
 API_SUBSECTION("InputText Callback",
 R"(The functions and variables documented in this section are only available

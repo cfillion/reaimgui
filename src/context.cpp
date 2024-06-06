@@ -404,7 +404,12 @@ void Context::mouseInput(int button, const bool down)
   }
 #endif
 
+  // always disable imgui's right click emulation which forwards Ctrl unlike REAPER's
+  // https://github.com/ocornut/imgui/pull/2343#issuecomment-2118602304
+  const bool oldMacOSBehaviors { m_imgui->IO.ConfigMacOSXBehaviors };
+  m_imgui->IO.ConfigMacOSXBehaviors = false;
   m_imgui->IO.AddMouseButtonEvent(button, down);
+  m_imgui->IO.ConfigMacOSXBehaviors = oldMacOSBehaviors;
 }
 
 void Context::mouseWheel(const bool horizontal, float delta)

@@ -126,7 +126,7 @@ R"(Display a bullet instead of arrow. IMPORTANT: node can still be marked
 API_ENUM(0_1, ImGui, TreeNodeFlags_FramePadding,
 R"(Use FramePadding (even for an unframed text node) to vertically align text
    baseline to regular widget height.
-   Equivalent to calling AlignTextToFramePadding.)");
+   Equivalent to calling AlignTextToFramePadding before the node.)");
 API_ENUM(0_1, ImGui, TreeNodeFlags_SpanAvailWidth,
 R"(Extend hit box to the right-most edge, even if not framed.
    This is not the default in order to allow adding other items on the same line.

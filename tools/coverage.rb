@@ -159,7 +159,7 @@ NATIVE_ONLY = [
 
   # experimental docking API
   'ImGuiID ImGui::DockSpace(ImGuiID, const ImVec2&, ImGuiDockNodeFlags, const ImGuiWindowClass*)',
-  'ImGuiID ImGui::DockSpaceOverViewport(const ImGuiViewport*, ImGuiDockNodeFlags, const ImGuiWindowClass*)',
+  'ImGuiID ImGui::DockSpaceOverViewport(ImGuiID, const ImGuiViewport*, ImGuiDockNodeFlags, const ImGuiWindowClass*)',
   'void ImGui::SetNextWindowClass(const ImGuiWindowClass*)',
 
   # broken since v0.5 migrated to new-style Begin/End before dear imgui did
@@ -191,7 +191,7 @@ NATIVE_ONLY_ENUMS = [
   'StyleVar_DockingSeparatorSize', # only applicable mid-frame to DockSpace
 
   # only for dear imgui's internal use
-  /\AWindowFlags_(NavFlattened|ChildWindow|Tooltip|Popup|Modal|ChildMenu|DockNodeHost)\z/,
+  /\AWindowFlags_(ChildWindow|Tooltip|Popup|Modal|ChildMenu|DockNodeHost)\z/,
   /\ADrawListFlags_/,
   /\ADockNodeFlags_/,
 ]

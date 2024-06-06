@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.6)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.8)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -52,7 +52,7 @@ Index of this file:
 --]]
 
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-local ImGui = require 'imgui' '0.9.1'
+local ImGui = require 'imgui' '0.9.2'
 
 local ctx, clipper
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
@@ -490,6 +490,7 @@ function demo.ShowDemoWindow(open)
       configVarCheckbox('ConfigVar_WindowsMoveFromTitleBarOnly')
       ImGui.SameLine(ctx); demo.HelpMarker('Does not apply to windows without a title bar.')
       configVarCheckbox('ConfigVar_MacOSXBehaviors')
+      ImGui.SameLine(ctx); demo.HelpMarker('Swap Cmd<>Ctrl keys, enable various MacOS style behaviors.')
       ImGui.Text(ctx, "Also see Style->Rendering for rendering options.")
 
       ImGui.SeparatorText(ctx, 'Debug')
@@ -2469,20 +2470,24 @@ label:
 --         ImGui.SliderScalar("slider u64 reverse",   ImGuiDataType_U64,  &u64_v, &u64_fifty, &u64_zero, "%I64u ms");
 --
 --         static bool inputs_step = true;
+--         static ImGuiInputTextFlags flags = ImGuiInputTextFlags_None;
 --         ImGui.SeparatorText("Inputs");
 --         ImGui.Checkbox("Show step buttons", &inputs_step);
---         ImGui.InputScalar("input s8",      ImGuiDataType_S8,     &s8_v,  inputs_step ? &s8_one  : NULL, NULL, "%d");
---         ImGui.InputScalar("input u8",      ImGuiDataType_U8,     &u8_v,  inputs_step ? &u8_one  : NULL, NULL, "%u");
---         ImGui.InputScalar("input s16",     ImGuiDataType_S16,    &s16_v, inputs_step ? &s16_one : NULL, NULL, "%d");
---         ImGui.InputScalar("input u16",     ImGuiDataType_U16,    &u16_v, inputs_step ? &u16_one : NULL, NULL, "%u");
---         ImGui.InputScalar("input s32",     ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%d");
---         ImGui.InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%04X");
---         ImGui.InputScalar("input u32",     ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%u");
---         ImGui.InputScalar("input u32 hex", ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%08X");
---         ImGui.InputScalar("input s64",     ImGuiDataType_S64,    &s64_v, inputs_step ? &s64_one : NULL);
---         ImGui.InputScalar("input u64",     ImGuiDataType_U64,    &u64_v, inputs_step ? &u64_one : NULL);
---         ImGui.InputScalar("input float",   ImGuiDataType_Float,  &f32_v, inputs_step ? &f32_one : NULL);
---         ImGui.InputScalar("input double",  ImGuiDataType_Double, &f64_v, inputs_step ? &f64_one : NULL);
+--         ImGui.CheckboxFlags("ImGuiInputTextFlags_ReadOnly", &flags, ImGuiInputTextFlags_ReadOnly);
+--         ImGui.CheckboxFlags("ImGuiInputTextFlags_ParseEmptyRefVal", &flags, ImGuiInputTextFlags_ParseEmptyRefVal);
+--         ImGui.CheckboxFlags("ImGuiInputTextFlags_DisplayEmptyRefVal", &flags, ImGuiInputTextFlags_DisplayEmptyRefVal);
+--         ImGui.InputScalar("input s8",      ImGuiDataType_S8,     &s8_v,  inputs_step ? &s8_one  : NULL, NULL, "%d", flags);
+--         ImGui.InputScalar("input u8",      ImGuiDataType_U8,     &u8_v,  inputs_step ? &u8_one  : NULL, NULL, "%u", flags);
+--         ImGui.InputScalar("input s16",     ImGuiDataType_S16,    &s16_v, inputs_step ? &s16_one : NULL, NULL, "%d", flags);
+--         ImGui.InputScalar("input u16",     ImGuiDataType_U16,    &u16_v, inputs_step ? &u16_one : NULL, NULL, "%u", flags);
+--         ImGui.InputScalar("input s32",     ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%d", flags);
+--         ImGui.InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : NULL, NULL, "%04X", flags);
+--         ImGui.InputScalar("input u32",     ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%u", flags);
+--         ImGui.InputScalar("input u32 hex", ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : NULL, NULL, "%08X", flags);
+--         ImGui.InputScalar("input s64",     ImGuiDataType_S64,    &s64_v, inputs_step ? &s64_one : NULL, NULL, NULL, flags);
+--         ImGui.InputScalar("input u64",     ImGuiDataType_U64,    &u64_v, inputs_step ? &u64_one : NULL, NULL, NULL, flags);
+--         ImGui.InputScalar("input float",   ImGuiDataType_Float,  &f32_v, inputs_step ? &f32_one : NULL, NULL, NULL, flags);
+--         ImGui.InputScalar("input double",  ImGuiDataType_Double, &f64_v, inputs_step ? &f64_one : NULL, NULL, NULL, flags);
 --
 --         ImGui.TreePop();
 --     }
@@ -4217,7 +4222,7 @@ function demo.ShowDemoWindowPopups()
 
       -- Testing behavior of widgets stacking their own regular popups over the modal.
       rv,popups.modal.item  = ImGui.Combo(ctx, 'Combo', popups.modal.item, 'aaaa\0bbbb\0cccc\0dddd\0eeee\0')
-      rv,popups.modal.color = ImGui.ColorEdit4(ctx, 'color', popups.modal.color)
+      rv,popups.modal.color = ImGui.ColorEdit4(ctx, 'Color', popups.modal.color)
 
       if ImGui.Button(ctx, 'Add another modal..') then
         ImGui.OpenPopup(ctx, 'Stacked 2')
@@ -4228,6 +4233,7 @@ function demo.ShowDemoWindowPopups()
       local unused_open = true
       if ImGui.BeginPopupModal(ctx, 'Stacked 2', unused_open) then
         ImGui.Text(ctx, 'Hello from Stacked The Second!')
+        rv,popups.modal.color = ImGui.ColorEdit4(ctx, 'Color', popups.modal.color) -- Allow opening another nested popup
         if ImGui.Button(ctx, 'Close') then
           ImGui.CloseCurrentPopup(ctx)
         end
@@ -6530,11 +6536,13 @@ function demo.ShowDemoWindowInputs()
   if ImGui.CollapsingHeader(ctx, 'Inputs & Focus') then
     -- Display inputs
     ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
-    if ImGui.TreeNode(ctx, 'Inputs') then
-      demo.HelpMarker(
-        "This is a simplified view. See more detailed input state:\n\z
-          - in 'Tools->Metrics/Debugger->Inputs'.\n\z
-          - in 'Tools->Debug Log->IO'.")
+    local inputs_opened = ImGui.TreeNode(ctx, 'Inputs')
+    ImGui.SameLine(ctx)
+    demo.HelpMarker(
+      "This is a simplified view. See more detailed input state:\n\z
+        - in 'Tools->Metrics/Debugger->Inputs'.\n\z
+        - in 'Tools->Debug Log->IO'.")
+    if inputs_opened then
       if ImGui.IsMousePosValid(ctx) then
         ImGui.Text(ctx, ('Mouse pos: (%g, %g)'):format(ImGui.GetMousePos(ctx)))
       else
@@ -6581,14 +6589,15 @@ function demo.ShowDemoWindowInputs()
 
     -- Display ImGuiIO output flags
     -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
-    -- if ImGui.TreeNode(ctx, 'Outputs') then
-    --   demo.HelpMarker(
-    --    'The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui \z
-    --     to instruct your application of how to route inputs. Typically, when a value is true, it means \z
-    --     Dear ImGui wants the corresponding inputs and we expect the underlying application to ignore them.\n\n\z
-    --     The most typical case is: when hovering a window, Dear ImGui set io.WantCaptureMouse to true, \z
-    --     and underlying application should ignore mouse inputs (in practice there are many and more subtle \z
-    --     rules leading to how those flags are set).');
+    -- local outputs_opened = ImGui.TreeNode(ctx, 'Outputs')
+    -- demo.HelpMarker(
+    --  'The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui \z
+    --   to instruct your application of how to route inputs. Typically, when a value is true, it means \z
+    --   Dear ImGui wants the corresponding inputs and we expect the underlying application to ignore them.\n\n\z
+    --   The most typical case is: when hovering a window, Dear ImGui set io.WantCaptureMouse to true, \z
+    --   and underlying application should ignore mouse inputs (in practice there are many and more subtle \z
+    --   rules leading to how those flags are set).');
+    -- if outputs_opened then
     --   ImGui.Text('io.WantCaptureMouse: %d', io.WantCaptureMouse);
     --   ImGui.Text('io.WantCaptureMouseUnlessPopupClose: %d', io.WantCaptureMouseUnlessPopupClose);
     --   ImGui.Text('io.WantCaptureKeyboard: %d', io.WantCaptureKeyboard);
@@ -6628,6 +6637,110 @@ function demo.ShowDemoWindowInputs()
 
     --   ImGui.TreePop(ctx)
     -- end
+
+    -- Demonstrate using Shortcut() and Routing Policies.
+    -- The general flow is:
+    -- - Code interested in a chord (e.g. "Ctrl+A") declares their intent.
+    -- - Multiple locations may be interested in same chord! Routing helps find a winner.
+    -- - Every frame, we resolve all claims and assign one owner if the modifiers are matching.
+    -- - The lower-level function is 'bool SetShortcutRouting()', returns true when caller got the route.
+    -- - Most of the times, SetShortcutRouting() is not called directly. User mostly calls Shortcut() with routing flags.
+    -- - If you call Shortcut() WITHOUT any routing option, it uses InputFlags_RouteFocused.
+    -- TL;DR: Most uses will simply be:
+    -- - Shortcut(Mod_Ctrl | Key_A); // Use InputFlags_RouteFocused policy.
+    if ImGui.TreeNode(ctx, 'Shortcuts') then
+      if not misc.shortcuts then
+        misc.shortcuts = {
+          route_options = ImGui.InputFlags_Repeat,
+          route_type    = ImGui.InputFlags_RouteFocused,
+          factor = 0.5,
+        }
+      end
+
+      rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_Repeat', misc.shortcuts.route_options, ImGui.InputFlags_Repeat)
+      rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteActive', misc.shortcuts.route_type, ImGui.InputFlags_RouteActive)
+      rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteFocused (default)', misc.shortcuts.route_type, ImGui.InputFlags_RouteFocused)
+      rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteGlobal', misc.shortcuts.route_type, ImGui.InputFlags_RouteGlobal)
+      ImGui.Indent(ctx)
+      ImGui.BeginDisabled(ctx, misc.shortcuts.route_type ~= ImGui.InputFlags_RouteGlobal)
+      rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_RouteOverFocused',     misc.shortcuts.route_options, ImGui.InputFlags_RouteOverFocused)
+      rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_RouteOverActive',      misc.shortcuts.route_options, ImGui.InputFlags_RouteOverActive)
+      rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_RouteUnlessBgFocused', misc.shortcuts.route_options, ImGui.InputFlags_RouteUnlessBgFocused)
+      ImGui.EndDisabled(ctx)
+      ImGui.Unindent(ctx)
+      rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteAlways', misc.shortcuts.route_type, ImGui.InputFlags_RouteAlways)
+      local flags = misc.shortcuts.route_type | misc.shortcuts.route_options -- Merged flags
+      if misc.shortcuts.route_type ~= ImGui.InputFlags_RouteGlobal then
+        flags = flags & ~(ImGui.InputFlags_RouteOverFocused | ImGui.InputFlags_RouteOverActive | ImGui.InputFlags_RouteUnlessBgFocused)
+      end
+
+      ImGui.SeparatorText(ctx, 'Using SetNextItemShortcut()')
+      ImGui.Text(ctx, 'Ctrl+S')
+      ImGui.SetNextItemShortcut(ctx, ImGui.Mod_Ctrl | ImGui.Key_S, flags | ImGui.InputFlags_Tooltip)
+      ImGui.Button(ctx, 'Save')
+      ImGui.Text(ctx, 'Alt+F')
+      ImGui.SetNextItemShortcut(ctx, ImGui.Mod_Alt | ImGui.Key_F, flags | ImGui.InputFlags_Tooltip)
+      rv, misc.shortcuts.factor = ImGui.SliderDouble(ctx, 'Factor', misc.shortcuts.factor, 0.0, 1.0)
+
+      ImGui.SeparatorText(ctx, 'Using Shortcut()')
+      local line_height = ImGui.GetTextLineHeightWithSpacing(ctx)
+      local key_chord = ImGui.Mod_Ctrl | ImGui.Key_A
+
+      ImGui.Text(ctx, 'Ctrl+A')
+      ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
+
+      ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg, 0xff00ff20)
+
+      if ImGui.BeginChild(ctx, 'WindowA', -FLT_MIN, line_height * 14, ImGui.ChildFlags_Border) then
+        ImGui.Text(ctx, 'Press Ctrl+A and see who receives it!')
+        ImGui.Separator(ctx)
+
+        -- 1: Window polling for Ctrl+A
+        ImGui.Text(ctx, '(in WindowA)')
+        ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
+
+        -- 2: InputText also polling for CTRL+A: it always uses _RouteFocused internally (gets priority when active)
+        -- (Commmented because the owner-aware version of Shortcut() is still in imgui_internal.h)
+        --local str = 'Press Ctrl+A'
+        --ImGui.Spacing(ctx)
+        --ImGui.InputText(ctx, 'InputTextB', str, ImGui.InputTextFlags_ReadOnly)
+        --local item_id = ImGui.GetItemID(ctx)
+        --ImGui.SameLine(ctx); demo.HelpMarker('Internal widgets always use _RouteFocused')
+        --ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags, item_id) and 'PRESSED' or '...'))
+
+        -- 3: Dummy child is not claiming the route: focusing them shouldn't steal route away from WindowA
+        if ImGui.BeginChild(ctx, 'ChildD', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Border) then
+          ImGui.Text(ctx, '(in ChildD: not using same Shortcut)')
+          ImGui.Text(ctx, ('IsWindowFocused: %s'):format(ImGui.IsWindowFocused(ctx)))
+          ImGui.EndChild(ctx)
+        end
+
+        -- 4: Child window polling for CTRL+A. It is deeper than WindowA and gets priority when focused.
+        if ImGui.BeginChild(ctx, 'ChildE', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Border) then
+          ImGui.Text(ctx, '(in ChildE: using same Shortcut)')
+          ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
+          ImGui.EndChild(ctx)
+        end
+
+        -- 5: In a popup
+        if ImGui.Button(ctx, 'Open Popup') then
+          ImGui.OpenPopup(ctx, 'PopupF')
+        end
+        if ImGui.BeginPopup(ctx, 'PopupF') then
+          ImGui.Text(ctx, '(in PopupF)')
+          ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
+          -- (Commmented because the owner-aware version of Shortcut() is still in imgui_internal.h)
+          --ImGui.InputText(ctx, 'InputTextG', str, ImGui.InputTextFlags_ReadOnly)
+          --ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags, ImGui.GetItemID(ctx)) and 'PRESSED' or '...'))
+          ImGui.EndPopup(ctx)
+        end
+
+        ImGui.EndChild(ctx)
+      end
+
+      ImGui.PopStyleColor(ctx)
+      ImGui.TreePop(ctx)
+    end
 
     -- Display mouse cursors
     if ImGui.TreeNode(ctx, 'Mouse Cursors') then
@@ -7033,9 +7146,8 @@ function demo.ShowStyleEditor()
       -- slider('DockingSeparatorSize', 0.0, 12.0, '%.0f')
 
       -- ImGui.SeparatorText(ctx, 'Misc')
-      -- ImGui.Text(ctx, 'Safe Area Padding')
-      -- ImGui.SameLine(ctx); demo.HelpMarker('Adjust if you cannot see the edges of your screen (ctx, e.g. on a TV where scaling has not been configured).')
-      -- slider('DisplaySafeAreaPadding', 0.0, 30.0, '%.0f')
+      -- slider('DisplayWindowPadding', 0.0, 30.0, '%.0f'); ImGui::SameLine(ctx); demo.HelpMarker('Apply to regular windows: amount which we enforce to keep visible when moving near edges of your screen.')
+      -- slider('DisplaySafeAreaPadding', 0.0, 30.0, '%.0f'); ImGui::SameLine(ctx); demo.HelpMarker('Apply to every windows, menus, popups, tooltips: amount where we avoid displaying contents. Adjust if you cannot see the edges of your screen (e.g. on a TV where scaling has not been configured).')
 
       ImGui.EndTabItem(ctx)
     end
@@ -7072,8 +7184,7 @@ function demo.ShowStyleEditor()
       if ImGui.BeginChild(ctx, '##colors', 0, 0, ImGui.ChildFlags_Border,
                             ImGui.WindowFlags_AlwaysVerticalScrollbar   |
                             ImGui.WindowFlags_AlwaysHorizontalScrollbar |
-                         -- ImGui.WindowFlags_NavFlattened()) TODO: BETA/INTERNAL, not exposed yet
-                            0) then
+                            ImGui.WindowFlags_NavFlattened) then
         ImGui.PushItemWidth(ctx, ImGui.GetFontSize(ctx) * -12)
         local inner_spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
         for i, name in demo.EachEnum('Col') do
@@ -7533,6 +7644,7 @@ function ExampleAppConsole:Draw(title)
   end
 
   -- Options, Filter
+  ImGui.SetNextItemShortcut(ctx, ImGui.Mod_Ctrl | ImGui.Key_O, ImGui.InputFlags_Tooltip)
   if ImGui.Button(self.ctx, 'Options') then
     ImGui.OpenPopup(self.ctx, 'Options')
   end
@@ -7542,7 +7654,7 @@ function ExampleAppConsole:Draw(title)
 
   -- Reserve enough left-over height for 1 separator + 1 input text
   local footer_height_to_reserve = select(2, ImGui.GetStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing)) + ImGui.GetFrameHeightWithSpacing(self.ctx)
-  if ImGui.BeginChild(self.ctx, 'ScrollingRegion', 0, -footer_height_to_reserve, ImGui.ChildFlags_None, ImGui.WindowFlags_HorizontalScrollbar) then
+  if ImGui.BeginChild(self.ctx, 'ScrollingRegion', 0, -footer_height_to_reserve, ImGui.ChildFlags_None, ImGui.WindowFlags_HorizontalScrollbar | ImGui.WindowFlags_NavFlattened) then
     if ImGui.BeginPopupContextWindow(self.ctx) then
       if ImGui.Selectable(self.ctx, 'Clear') then self:ClearLog() end
       ImGui.EndPopup(self.ctx)
@@ -8721,7 +8833,7 @@ end
 --     // If we remove all options we are showcasing, this demo would become:
 --     //     void ShowExampleAppDockSpace()
 --     //     {
---     //         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+--     //         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
 --     //     }
 --     // In most cases you should be able to just call DockSpaceOverViewport() and ignore all the code below!
 --     // In this specific demo, we are not using DockSpaceOverViewport() because:
@@ -8823,353 +8935,405 @@ end
 --     ImGui::End();
 -- }
 
--- //-----------------------------------------------------------------------------
--- // [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
--- //-----------------------------------------------------------------------------
---
--- // Simplified structure to mimic a Document model
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
+-------------------------------------------------------------------------------
+
+-- -- Simplified structure to mimic a Document model
 -- struct MyDocument
 -- {
---     const char* Name;       // Document title
---     bool        Open;       // Set when open (we keep an array of all available documents to simplify demo code!)
---     bool        OpenPrev;   // Copy of Open from last update.
---     bool        Dirty;      // Set when the document has been modified
---     bool        WantClose;  // Set when the document
---     ImVec4      Color;      // An arbitrary variable associated to the document
+--   char   Name[32];   -- Document title
+--   int    UID;        -- Unique ID (necessary as we can change title)
+--   bool   Open;       -- Set when open (we keep an array of all available documents to simplify demo code!)
+--   bool   OpenPrev;   -- Copy of Open from last update.
+--   bool   Dirty;      -- Set when the document has been modified
+--   ImVec4 Color;      -- An arbitrary variable associated to the document
 --
---     MyDocument(const char* name, bool open = true, const ImVec4& color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f))
---     {
---         Name = name;
---         Open = OpenPrev = open;
---         Dirty = false;
---         WantClose = false;
---         Color = color;
---     }
---     void DoOpen()       { Open = true; }
---     void DoQueueClose() { WantClose = true; }
---     void DoForceClose() { Open = false; Dirty = false; }
---     void DoSave()       { Dirty = false; }
---
---     // Display placeholder contents for the Document
---     static void DisplayContents(MyDocument* doc)
---     {
---         ImGui.PushID(doc);
---         ImGui.Text("Document \"%s\"", doc->Name);
---         ImGui.PushStyleColor(ImGuiCol_Text, doc->Color);
---         ImGui.TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
---         ImGui.PopStyleColor();
---         if (ImGui.Button("Modify", ImVec2(100, 0)))
---             doc->Dirty = true;
---         ImGui.SameLine();
---         if (ImGui.Button("Save", ImVec2(100, 0)))
---             doc->DoSave();
---         ImGui.ColorEdit3("color", &doc->Color.x);  // Useful to test drag and drop and hold-dragged-to-open-tab behavior.
---         ImGui.PopID();
---     }
---
---     // Display context menu for the Document
---     static void DisplayContextMenu(MyDocument* doc)
---     {
---         if (!ImGui.BeginPopupContextItem())
---             return;
---
---         char buf[256];
---         sprintf(buf, "Save %s", doc->Name);
---         if (ImGui.MenuItem(buf, "CTRL+S", false, doc->Open))
---             doc->DoSave();
---         if (ImGui.MenuItem("Close", "CTRL+W", false, doc->Open))
---             doc->DoQueueClose();
---         ImGui.EndPopup();
---     }
+--   MyDocument(int uid, const char* name, bool open = true, const ImVec4& color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f))
+--   {
+--     UID = uid;
+--     snprintf(Name, sizeof(Name), "%s", name);
+--     Open = OpenPrev = open;
+--     Dirty = false;
+--     Color = color;
+--   }
+--   void DoOpen()       { Open = true; }
+--   void DoForceClose() { Open = false; Dirty = false; }
+--   void DoSave()       { Dirty = false; }
 -- };
 --
 -- struct ExampleAppDocuments
 -- {
---     ImVector<MyDocument> Documents;
+--   ImVector<MyDocument>  Documents;
+--   ImVector<MyDocument*> CloseQueue;
+--   MyDocument*           RenamingDoc = NULL;
+--   bool                  RenamingStarted = false;
 --
---     ExampleAppDocuments()
+--   ExampleAppDocuments()
+--   {
+--     Documents.push_back(MyDocument(0, "Lettuce",             true,  ImVec4(0.4f, 0.8f, 0.4f, 1.0f)));
+--     Documents.push_back(MyDocument(1, "Eggplant",            true,  ImVec4(0.8f, 0.5f, 1.0f, 1.0f)));
+--     Documents.push_back(MyDocument(2, "Carrot",              true,  ImVec4(1.0f, 0.8f, 0.5f, 1.0f)));
+--     Documents.push_back(MyDocument(3, "Tomato",              false, ImVec4(1.0f, 0.3f, 0.4f, 1.0f)));
+--     Documents.push_back(MyDocument(4, "A Rather Long Title", false, ImVec4(0.4f, 0.8f, 0.8f, 1.0f)));
+--     Documents.push_back(MyDocument(5, "Some Document",       false, ImVec4(0.8f, 0.8f, 1.0f, 1.0f)));
+--   }
+--
+--   // As we allow to change document name, we append a never-changing document ID so tabs are stable
+--   void GetTabName(MyDocument* doc, char* out_buf, size_t out_buf_size)
+--   {
+--     snprintf(out_buf, out_buf_size, "%s###doc%d", doc->Name, doc->UID);
+--   }
+--
+--   // Display placeholder contents for the Document
+--   void DisplayDocContents(MyDocument* doc)
+--   {
+--     ImGui::PushID(doc);
+--     ImGui::Text("Document \"%s\"", doc->Name);
+--     ImGui::PushStyleColor(ImGuiCol_Text, doc->Color);
+--     ImGui::TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+--     ImGui::PopStyleColor();
+--
+--     ImGui::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_R, ImGuiInputFlags_Tooltip);
+--     if (ImGui::Button("Rename.."))
 --     {
---         Documents.push_back(MyDocument("Lettuce",             true,  ImVec4(0.4f, 0.8f, 0.4f, 1.0f)));
---         Documents.push_back(MyDocument("Eggplant",            true,  ImVec4(0.8f, 0.5f, 1.0f, 1.0f)));
---         Documents.push_back(MyDocument("Carrot",              true,  ImVec4(1.0f, 0.8f, 0.5f, 1.0f)));
---         Documents.push_back(MyDocument("Tomato",              false, ImVec4(1.0f, 0.3f, 0.4f, 1.0f)));
---         Documents.push_back(MyDocument("A Rather Long Title", false));
---         Documents.push_back(MyDocument("Some Document",       false));
+--       RenamingDoc = doc;
+--       RenamingStarted = true;
 --     }
+--     ImGui::SameLine();
+--
+--     ImGui::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_M, ImGuiInputFlags_Tooltip);
+--     if (ImGui::Button("Modify"))
+--       doc->Dirty = true;
+--
+--     ImGui::SameLine();
+--     ImGui::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_Tooltip);
+--     if (ImGui::Button("Save"))
+--       doc->DoSave();
+--
+--     ImGui::SameLine();
+--     ImGui::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_W, ImGuiInputFlags_Tooltip);
+--     if (ImGui::Button("Close"))
+--       CloseQueue.push_back(doc);
+--     ImGui::ColorEdit3("color", &doc->Color.x);  -- Useful to test drag and drop and hold-dragged-to-open-tab behavior.
+--     ImGui::PopID();
+--   }
+--
+--   -- Display context menu for the Document
+--   void DisplayDocContextMenu(MyDocument* doc)
+--   {
+--     if (!ImGui::BeginPopupContextItem())
+--       return;
+--
+--     char buf[256];
+--     sprintf(buf, "Save %s", doc->Name);
+--     if (ImGui::MenuItem(buf, "Ctrl+S", false, doc->Open))
+--       doc->DoSave();
+--     if (ImGui::MenuItem("Rename...", "Ctrl+R", false, doc->Open))
+--       RenamingDoc = doc;
+--     if (ImGui::MenuItem("Close", "Ctrl+W", false, doc->Open))
+--       CloseQueue.push_back(doc);
+--     ImGui::EndPopup();
+--   }
+--
+--   -- Display context menu for the Document
+--   void DisplayDocContextMenu(MyDocument* doc)
+--   {
+--     if (!ImGui::BeginPopupContextItem())
+--       return;
+--
+--     char buf[256];
+--     sprintf(buf, "Save %s", doc->Name);
+--     if (ImGui::MenuItem(buf, "Ctrl+S", false, doc->Open))
+--       doc->DoSave();
+--     if (ImGui::MenuItem("Rename...", "Ctrl+R", false, doc->Open))
+--       RenamingDoc = doc;
+--     if (ImGui::MenuItem("Close", "Ctrl+W", false, doc->Open))
+--       CloseQueue.push_back(doc);
+--     ImGui::EndPopup();
+--   }
+--
+--   -- [Optional] Notify the system of Tabs/Windows closure that happened outside the regular tab interface.
+--   -- If a tab has been closed programmatically (aka closed from another source such as the Checkbox() in the demo,
+--   -- as opposed to clicking on the regular tab closing button) and stops being submitted, it will take a frame for
+--   -- the tab bar to notice its absence. During this frame there will be a gap in the tab bar, and if the tab that has
+--   -- disappeared was the selected one, the tab bar will report no selected tab during the frame. This will effectively
+--   -- give the impression of a flicker for one frame.
+--   -- We call SetTabItemClosed() to manually notify the Tab Bar or Docking system of removed tabs to avoid this glitch.
+--   -- Note that this completely optional, and only affect tab bars with the ImGuiTabBarFlags_Reorderable flag.
+--   void NotifyOfDocumentsClosedElsewhere()
+--   {
+--     for (MyDocument& doc : Documents)
+--     {
+--       if (!doc.Open && doc.OpenPrev)
+--         ImGui::SetTabItemClosed(doc.Name);
+--       doc.OpenPrev = doc.Open;
+--     }
+--   }
 -- };
---
--- // [Optional] Notify the system of Tabs/Windows closure that happened outside the regular tab interface.
--- // If a tab has been closed programmatically (aka closed from another source such as the Checkbox() in the demo,
--- // as opposed to clicking on the regular tab closing button) and stops being submitted, it will take a frame for
--- // the tab bar to notice its absence. During this frame there will be a gap in the tab bar, and if the tab that has
--- // disappeared was the selected one, the tab bar will report no selected tab during the frame. This will effectively
--- // give the impression of a flicker for one frame.
--- // We call SetTabItemClosed() to manually notify the Tab Bar or Docking system of removed tabs to avoid this glitch.
--- // Note that this completely optional, and only affect tab bars with the ImGuiTabBarFlags_Reorderable flag.
--- static void NotifyOfDocumentsClosedElsewhere(ExampleAppDocuments& app)
--- {
---     for (MyDocument& doc : app.Documents)
---     {
---         if (!doc.Open && doc.OpenPrev)
---             ImGui.SetTabItemClosed(doc.Name);
---         doc.OpenPrev = doc.Open;
---     }
--- }
 --
 -- void ShowExampleAppDocuments(bool* p_open)
 -- {
---     static ExampleAppDocuments app;
+--   static ExampleAppDocuments app;
 --
---     // Options
---     enum Target
+--   -- Options
+--   enum Target
+--   {
+--     Target_None,
+--     Target_Tab,                 -- Create documents as local tab into a local tab bar
+--     Target_DockSpaceAndWindow   -- Create documents as regular windows, and create an embedded dockspace
+--   };
+--   static Target opt_target = Target_Tab;
+--   static bool opt_reorderable = true;
+--   static ImGuiTabBarFlags opt_fitting_flags = ImGuiTabBarFlags_FittingPolicyDefault_;
+--
+--   -- When (opt_target == Target_DockSpaceAndWindow) there is the possibily that one of our child Document window (e.g. "Eggplant")
+--   -- that we emit gets docked into the same spot as the parent window ("Example: Documents").
+--   -- This would create a problematic feedback loop because selecting the "Eggplant" tab would make the "Example: Documents" tab
+--   -- not visible, which in turn would stop submitting the "Eggplant" window.
+--   -- We avoid this problem by submitting our documents window even if our parent window is not currently visible.
+--   -- Another solution may be to make the "Example: Documents" window use the ImGuiWindowFlags_NoDocking.
+--
+--   bool window_contents_visible = ImGui::Begin("Example: Documents", p_open, ImGuiWindowFlags_MenuBar);
+--   if (!window_contents_visible && opt_target != Target_DockSpaceAndWindow)
+--   {
+--     ImGui::End();
+--     return;
+--   }
+--
+--   -- Menu
+--   if (ImGui::BeginMenuBar())
+--   {
+--     if (ImGui::BeginMenu("File"))
 --     {
---         Target_None,
---         Target_Tab,                 // Create documents as local tab into a local tab bar
---         Target_DockSpaceAndWindow   // Create documents as regular windows, and create an embedded dockspace
---     };
---     static Target opt_target = Target_Tab;
---     static bool opt_reorderable = true;
---     static ImGuiTabBarFlags opt_fitting_flags = ImGuiTabBarFlags_FittingPolicyDefault_;
+--       int open_count = 0;
+--       for (MyDocument& doc : app.Documents)
+--         open_count += doc.Open ? 1 : 0;
 --
---     // When (opt_target == Target_DockSpaceAndWindow) there is the possibily that one of our child Document window (e.g. "Eggplant")
---     // that we emit gets docked into the same spot as the parent window ("Example: Documents").
---     // This would create a problematic feedback loop because selecting the "Eggplant" tab would make the "Example: Documents" tab
---     // not visible, which in turn would stop submitting the "Eggplant" window.
---     // We avoid this problem by submitting our documents window even if our parent window is not currently visible.
---     // Another solution may be to make the "Example: Documents" window use the ImGuiWindowFlags_NoDocking.
---
---     bool window_contents_visible = ImGui.Begin("Example: Documents", p_open, ImGuiWindowFlags_MenuBar);
---     if (!window_contents_visible && opt_target != Target_DockSpaceAndWindow)
---     {
---         ImGui.End();
---         return;
---     }
---
---     // Menu
---     if (ImGui.BeginMenuBar())
---     {
---         if (ImGui.BeginMenu("File"))
---         {
---             int open_count = 0;
---             for (MyDocument& doc : app.Documents)
---                 open_count += doc.Open ? 1 : 0;
---
---             if (ImGui.BeginMenu("Open", open_count < app.Documents.Size))
---             {
---                 for (MyDocument& doc : app.Documents)
---                 {
---                     if (!doc.Open)
---                         if (ImGui.MenuItem(doc.Name))
---                             doc.DoOpen();
---                 }
---                 ImGui.EndMenu();
---             }
---             if (ImGui.MenuItem("Close All Documents", NULL, false, open_count > 0))
---                 for (MyDocument& doc : app.Documents)
---                     doc.DoQueueClose();
---             if (ImGui.MenuItem("Exit", "Ctrl+F4") && p_open)
---                 *p_open = false;
---             ImGui.EndMenu();
---         }
---         ImGui.EndMenuBar();
---     }
---
---     // [Debug] List documents with one checkbox for each
---     for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
---     {
---         MyDocument& doc = app.Documents[doc_n];
---         if (doc_n > 0)
---             ImGui.SameLine();
---         ImGui.PushID(&doc);
---         if (ImGui.Checkbox(doc.Name, &doc.Open))
---             if (!doc.Open)
---                 doc.DoForceClose();
---         ImGui.PopID();
---     }
---     ImGui.PushItemWidth(ImGui.GetFontSize() * 12);
---     ImGui.Combo("Output", (int*)&opt_target, "None\0TabBar+Tabs\0DockSpace+Window\0");
---     ImGui.PopItemWidth();
---     bool redock_all = false;
---     if (opt_target == Target_Tab)                { ImGui.SameLine(); ImGui.Checkbox("Reorderable Tabs", &opt_reorderable); }
---     if (opt_target == Target_DockSpaceAndWindow) { ImGui.SameLine(); redock_all = ImGui.Button("Redock all"); }
---
---     ImGui.Separator();
---
---     // About the ImGuiWindowFlags_UnsavedDocument / ImGuiTabItemFlags_UnsavedDocument flags.
---     // They have multiple effects:
---     // - Display a dot next to the title.
---     // - Tab is selected when clicking the X close button.
---     // - Closure is not assumed (will wait for user to stop submitting the tab).
---     //   Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
---     //   We need to assume closure by default otherwise waiting for "lack of submission" on the next frame would leave an empty
---     //   hole for one-frame, both in the tab-bar and in tab-contents when closing a tab/window.
---     //   The rarely used SetTabItemClosed() function is a way to notify of programmatic closure to avoid the one-frame hole.
---
---     // Tabs
---     if (opt_target == Target_Tab)
---     {
---         ImGuiTabBarFlags tab_bar_flags = (opt_fitting_flags) | (opt_reorderable ? ImGuiTabBarFlags_Reorderable : 0);
---         if (ImGui.BeginTabBar("##tabs", tab_bar_flags))
---         {
---             if (opt_reorderable)
---                 NotifyOfDocumentsClosedElsewhere(app);
---
---             // [DEBUG] Stress tests
---             //if ((ImGui.GetFrameCount() % 30) == 0) docs[1].Open ^= 1;            // [DEBUG] Automatically show/hide a tab. Test various interactions e.g. dragging with this on.
---             //if (ImGui.GetIO().KeyCtrl) ImGui.SetTabItemSelected(docs[1].Name);  // [DEBUG] Test SetTabItemSelected(), probably not very useful as-is anyway..
---
---             // Submit Tabs
---             for (MyDocument& doc : app.Documents)
---             {
---                 if (!doc.Open)
---                     continue;
---
---                 ImGuiTabItemFlags tab_flags = (doc.Dirty ? ImGuiTabItemFlags_UnsavedDocument : 0);
---                 bool visible = ImGui.BeginTabItem(doc.Name, &doc.Open, tab_flags);
---
---                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
---                 if (!doc.Open && doc.Dirty)
---                 {
---                     doc.Open = true;
---                     doc.DoQueueClose();
---                 }
---
---                 MyDocument::DisplayContextMenu(&doc);
---                 if (visible)
---                 {
---                     MyDocument::DisplayContents(&doc);
---                     ImGui.EndTabItem();
---                 }
---             }
---
---             ImGui.EndTabBar();
---         }
---     }
---     else if (opt_target == Target_DockSpaceAndWindow)
---     {
---         if (ImGui.GetIO().ConfigFlags & ImGuiConfigFlags_DockingEnable)
---         {
---             NotifyOfDocumentsClosedElsewhere(app);
---
---             // Create a DockSpace node where any window can be docked
---             ImGuiID dockspace_id = ImGui.GetID("MyDockSpace");
---             ImGui.DockSpace(dockspace_id);
---
---             // Create Windows
---             for (MyDocument& doc : app.Documents)
---             {
---                 if (!doc.Open)
---                     continue;
---
---                 ImGui.SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
---                 ImGuiWindowFlags window_flags = (doc.Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
---                 bool visible = ImGui.Begin(doc.Name, &doc.Open, window_flags);
---
---                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
---                 if (!doc.Open && doc.Dirty)
---                 {
---                     doc.Open = true;
---                     doc.DoQueueClose();
---                 }
---
---                 MyDocument::DisplayContextMenu(&doc);
---                 if (visible)
---                     MyDocument::DisplayContents(&doc);
---
---                 ImGui.End();
---             }
---         }
---         else
---         {
---             ShowDockingDisabledMessage();
---         }
---     }
---
---     // Early out other contents
---     if (!window_contents_visible)
---     {
---         ImGui.End();
---         return;
---     }
---
---     // Update closing queue
---     static ImVector<MyDocument*> close_queue;
---     if (close_queue.empty())
---     {
---         // Close queue is locked once we started a popup
+--       if (ImGui::BeginMenu("Open", open_count < app.Documents.Size))
+--       {
 --         for (MyDocument& doc : app.Documents)
---         {
---             if (doc.WantClose)
---             {
---                 doc.WantClose = false;
---                 close_queue.push_back(&doc);
---             }
---         }
+--           if (!doc.Open && ImGui::MenuItem(doc.Name))
+--             doc.DoOpen();
+--           ImGui::EndMenu();
+--       }
+--       if (ImGui::MenuItem("Close All Documents", NULL, false, open_count > 0))
+--         for (MyDocument& doc : app.Documents)
+--           app.CloseQueue.push_back(&doc);
+--       if (ImGui::MenuItem("Exit") && p_open)
+--         *p_open = false;
+--       ImGui::EndMenu();
 --     }
+--     ImGui::EndMenuBar();
+--   }
 --
---     // Display closing confirmation UI
---     if (!close_queue.empty())
+--   -- [Debug] List documents with one checkbox for each
+--   for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+--   {
+--     MyDocument& doc = app.Documents[doc_n];
+--     if (doc_n > 0)
+--       ImGui::SameLine();
+--     ImGui::PushID(&doc);
+--     if (ImGui::Checkbox(doc.Name, &doc.Open))
+--       if (!doc.Open)
+--         doc.DoForceClose();
+--     ImGui::PopID();
+--   }
+--   ImGui::PushItemWidth(ImGui::GetFontSize() * 12);
+--   ImGui::Combo("Output", (int*)&opt_target, "None\0TabBar+Tabs\0DockSpace+Window\0");
+--   ImGui::PopItemWidth();
+--   bool redock_all = false;
+--   if (opt_target == Target_Tab)                { ImGui::SameLine(); ImGui::Checkbox("Reorderable Tabs", &opt_reorderable); }
+--   if (opt_target == Target_DockSpaceAndWindow) { ImGui::SameLine(); redock_all = ImGui::Button("Redock all"); }
+--
+--   ImGui::Separator();
+--
+--   -- About the ImGuiWindowFlags_UnsavedDocument / ImGuiTabItemFlags_UnsavedDocument flags.
+--   -- They have multiple effects:
+--   -- - Display a dot next to the title.
+--   -- - Tab is selected when clicking the X close button.
+--   -- - Closure is not assumed (will wait for user to stop submitting the tab).
+--   --   Otherwise closure is assumed when pressing the X, so if you keep submitting the tab may reappear at end of tab bar.
+--   --   We need to assume closure by default otherwise waiting for "lack of submission" on the next frame would leave an empty
+--   --   hole for one-frame, both in the tab-bar and in tab-contents when closing a tab/window.
+--   --   The rarely used SetTabItemClosed() function is a way to notify of programmatic closure to avoid the one-frame hole.
+--
+--   -- Tabs
+--   if (opt_target == Target_Tab)
+--   {
+--     ImGuiTabBarFlags tab_bar_flags = (opt_fitting_flags) | (opt_reorderable ? ImGuiTabBarFlags_Reorderable : 0);
+--     if (ImGui::BeginTabBar("##tabs", tab_bar_flags))
 --     {
---         int close_queue_unsaved_documents = 0;
---         for (int n = 0; n < close_queue.Size; n++)
---             if (close_queue[n]->Dirty)
---                 close_queue_unsaved_documents++;
+--       if (opt_reorderable)
+--         app.NotifyOfDocumentsClosedElsewhere();
 --
---         if (close_queue_unsaved_documents == 0)
---         {
---             // Close documents when all are unsaved
---             for (int n = 0; n < close_queue.Size; n++)
---                 close_queue[n]->DoForceClose();
---             close_queue.clear();
---         }
---         else
---         {
---             if (!ImGui.IsPopupOpen("Save?"))
---                 ImGui.OpenPopup("Save?");
---             if (ImGui.BeginPopupModal("Save?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
---             {
---                 ImGui.Text("Save change to the following items?");
---                 float item_height = ImGui.GetTextLineHeightWithSpacing();
---                 if (ImGui::BeginChild(ImGui::GetID("frame"), ImVec2(-FLT_MIN, 6.25f * item_height), ImGuiChildFlags_FrameStyle))
---                 {
---                     for (int n = 0; n < close_queue.Size; n++)
---                         if (close_queue[n]->Dirty)
---                             ImGui.Text("%s", close_queue[n]->Name);
---                     ImGui.EndChild();
---                 }
+--       -- [DEBUG] Stress tests
+--       --if ((ImGui::GetFrameCount() % 30) == 0) docs[1].Open ^= 1;            -- [DEBUG] Automatically show/hide a tab. Test various interactions e.g. dragging with this on.
+--       --if (ImGui::GetIO().KeyCtrl) ImGui::SetTabItemSelected(docs[1].Name);  -- [DEBUG] Test SetTabItemSelected(), probably not very useful as-is anyway..
 --
---                 ImVec2 button_size(ImGui.GetFontSize() * 7.0f, 0.0f);
---                 if (ImGui.Button("Yes", button_size))
---                 {
---                     for (int n = 0; n < close_queue.Size; n++)
---                     {
---                         if (close_queue[n]->Dirty)
---                             close_queue[n]->DoSave();
---                         close_queue[n]->DoForceClose();
---                     }
---                     close_queue.clear();
---                     ImGui.CloseCurrentPopup();
---                 }
---                 ImGui.SameLine();
---                 if (ImGui.Button("No", button_size))
---                 {
---                     for (int n = 0; n < close_queue.Size; n++)
---                         close_queue[n]->DoForceClose();
---                     close_queue.clear();
---                     ImGui.CloseCurrentPopup();
---                 }
---                 ImGui.SameLine();
---                 if (ImGui.Button("Cancel", button_size))
---                 {
---                     close_queue.clear();
---                     ImGui.CloseCurrentPopup();
---                 }
---                 ImGui.EndPopup();
---             }
+--       -- Submit Tabs
+--       for (MyDocument& doc : app.Documents)
+--       {
+--         if (!doc.Open)
+--           continue;
+--
+--         -- As we allow to change document name, we append a never-changing document id so tabs are stable
+--         char doc_name_buf[64];
+--         app.GetTabName(&doc, doc_name_buf, sizeof(doc_name_buf));
+--         ImGuiTabItemFlags tab_flags = (doc.Dirty ? ImGuiTabItemFlags_UnsavedDocument : 0);
+--         bool visible = ImGui::BeginTabItem(doc_name_buf, &doc.Open, tab_flags);
+--
+--         -- Cancel attempt to close when unsaved add to save queue so we can display a popup.
+--         if (!doc.Open && doc.Dirty)
+--         {
+--           doc.Open = true;
+--           app.CloseQueue.push_back(&doc);
 --         }
+--
+--         app.DisplayDocContextMenu(&doc);
+--         if (visible)
+--         {
+--           app.DisplayDocContents(&doc);
+--           ImGui::EndTabItem();
+--         }
+--       }
+--
+--       ImGui::EndTabBar();
 --     }
+--   }
+--   else if (opt_target == Target_DockSpaceAndWindow)
+--   {
+--     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DockingEnable)
+--     {
+--       app.NotifyOfDocumentsClosedElsewhere();
 --
---     ImGui.End();
+--       -- Create a DockSpace node where any window can be docked
+--       ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+--       ImGui::DockSpace(dockspace_id);
+--
+--       -- Create Windows
+--       for (int doc_n = 0; doc_n < app.Documents.Size; doc_n++)
+--       {
+--         MyDocument* doc = &app.Documents[doc_n];
+--         if (!doc->Open)
+--           continue;
+--
+--         ImGui::SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
+--         ImGuiWindowFlags window_flags = (doc->Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
+--         bool visible = ImGui::Begin(doc->Name, &doc->Open, window_flags);
+--
+--         // Cancel attempt to close when unsaved add to save queue so we can display a popup.
+--         if (!doc->Open && doc->Dirty)
+--         {
+--           doc->Open = true;
+--           app.CloseQueue.push_back(doc);
+--         }
+--
+--         app.DisplayDocContextMenu(doc);
+--         if (visible)
+--           app.DisplayDocContents(doc);
+--
+--         ImGui::End();
+--       }
+--     }
+--     else
+--     {
+--       ShowDockingDisabledMessage();
+--     }
+--   }
+--
+--   -- Early out other contents
+--   if (!window_contents_visible)
+--   {
+--     ImGui::End();
+--     return;
+--   }
+--
+--   -- Display renaming UI
+--   if (app.RenamingDoc != NULL)
+--   {
+--     if (app.RenamingStarted)
+--       ImGui::OpenPopup("Rename");
+--     if (ImGui::BeginPopup("Rename"))
+--     {
+--       ImGui::SetNextItemWidth(ImGui::GetFontSize() * 30);
+--       if (ImGui::InputText("###Name", app.RenamingDoc->Name, IM_ARRAYSIZE(app.RenamingDoc->Name), ImGuiInputTextFlags_EnterReturnsTrue))
+--       {
+--         ImGui::CloseCurrentPopup();
+--         app.RenamingDoc = NULL;
+--       }
+--       if (app.RenamingStarted)
+--         ImGui::SetKeyboardFocusHere(-1);
+--       ImGui::EndPopup();
+--     }
+--     else
+--     {
+--       app.RenamingDoc = NULL;
+--     }
+--     app.RenamingStarted = false;
+--   }
+--
+--   -- Display closing confirmation UI
+--   if (!app.CloseQueue.empty())
+--   {
+--     int close_queue_unsaved_documents = 0;
+--     for (int n = 0; n < app.CloseQueue.Size; n++)
+--       if (app.CloseQueue[n]->Dirty)
+--         close_queue_unsaved_documents++;
+--
+--     if (close_queue_unsaved_documents == 0)
+--     {
+--       -- Close documents when all are unsaved
+--       for (int n = 0; n < app.CloseQueue.Size; n++)
+--         app.CloseQueue[n]->DoForceClose();
+--       app.CloseQueue.clear();
+--     }
+--     else
+--     {
+--       if (!ImGui::IsPopupOpen("Save?"))
+--         ImGui::OpenPopup("Save?");
+--       if (ImGui::BeginPopupModal("Save?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+--       {
+--         ImGui::Text("Save change to the following items?");
+--         float item_height = ImGui::GetTextLineHeightWithSpacing();
+--         if (ImGui::BeginChild(ImGui::GetID("frame"), ImVec2(-FLT_MIN, 6.25f * item_height), ImGuiChildFlags_FrameStyle))
+--           for (MyDocument* doc : app.CloseQueue)
+--             if (doc->Dirty)
+--               ImGui::Text("%s", doc->Name);
+--         ImGui::EndChild();
+--
+--         ImVec2 button_size(ImGui::GetFontSize() * 7.0f, 0.0f);
+--         if (ImGui::Button("Yes", button_size))
+--         {
+--           for (MyDocument* doc : app.CloseQueue)
+--           {
+--             if (doc->Dirty)
+--               doc->DoSave();
+--             doc->DoForceClose();
+--           }
+--           app.CloseQueue.clear();
+--           ImGui::CloseCurrentPopup();
+--         }
+--         ImGui::SameLine();
+--         if (ImGui::Button("No", button_size))
+--         {
+--           for (MyDocument* doc : app.CloseQueue)
+--             doc->DoForceClose();
+--           app.CloseQueue.clear();
+--           ImGui::CloseCurrentPopup();
+--         }
+--         ImGui::SameLine();
+--         if (ImGui::Button("Cancel", button_size))
+--         {
+--           app.CloseQueue.clear();
+--           ImGui::CloseCurrentPopup();
+--         }
+--         ImGui::EndPopup();
+--       }
+--     }
+--   }
+--
+--   ImGui::End();
 -- }
 
 local public, public_functions = {}, {

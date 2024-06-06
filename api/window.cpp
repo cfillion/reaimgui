@@ -732,6 +732,9 @@ R"(WindowFlags_NoTitleBar | WindowFlags_NoResize | WindowFlags_NoScrollbar |
    WindowFlags_NoCollapse)");
 API_ENUM(0_1, ImGui, WindowFlags_NoInputs,
   "WindowFlags_NoMouseInputs | WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
+API_ENUM(0_9_2, ImGui, WindowFlags_NavFlattened,
+R"(On child window: share focus scope, allow gamepad/keyboard navigation to
+   cross over parent border to this child or between sibling child windows.)");
 
 API_ENUM(0_5_5, ReaImGui, WindowFlags_TopMost,
   "Show the window above all non-topmost windows.");

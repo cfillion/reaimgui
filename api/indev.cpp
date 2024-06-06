@@ -167,7 +167,7 @@ Most users don't have a mouse with a horizontal wheel.)")
 
 API_FUNC(0_1, bool, IsMouseDragging, (Context*,ctx)
 (int,button) (RO<double*>,lock_threshold,-1.0),
-"Is mouse dragging? (if lock_threshold < -1.0, uses ConfigVar_MouseDragThreshold)")
+"Is mouse dragging? (uses ConfigVar_MouseDragThreshold if lock_threshold < 0.0)")
 {
   FRAME_GUARD;
   return ImGui::IsMouseDragging(button, API_GET(lock_threshold));
@@ -190,8 +190,8 @@ API_FUNC(0_1, void, GetMouseDragDelta, (Context*,ctx)
 (RO<int*>,button,ImGuiMouseButton_Left) (RO<double*>,lock_threshold,-1.0),
 R"(Return the delta from the initial clicking position while the mouse button is
 pressed or was just released. This is locked and return 0.0 until the mouse
-moves past a distance threshold at least once (if lock_threshold < -1.0, uses
-ConfigVar_MouseDragThreshold).)")
+moves past a distance threshold at least once (uses ConfigVar_MouseDragThreshold
+if lock_threshold < 0.0).)")
 {
   FRAME_GUARD;
   const ImVec2 &delta {
@@ -281,16 +281,6 @@ API_FUNC(0_9, bool, IsKeyReleased, (Context*,ctx)
 {
   FRAME_GUARD;
   return ImGui::IsKeyReleased(static_cast<ImGuiKey>(key));
-}
-
-API_FUNC(0_9, bool, IsKeyChordPressed, (Context*,ctx)
-(int,key_chord),
-R"(Was key chord (mods + key) pressed? You can pass e.g. `Mod_Shortcut | Key_S`
-as a key chord.)") // This doesn't do any routing or focus check,
-// please consider using the Shortcut() function instead.)")
-{
-  FRAME_GUARD;
-  return ImGui::IsKeyChordPressed(key_chord);
 }
 
 API_FUNC(0_9, int, GetKeyPressedAmount, (Context*,ctx)
@@ -468,17 +458,88 @@ API_ENUM(0_8, ImGui, Key_MouseX2,     "");
 API_ENUM(0_8, ImGui, Key_MouseWheelX, "");
 API_ENUM(0_8, ImGui, Key_MouseWheelY, "");
 API_SECTION_P(namedKeys, "Modifiers");
-API_ENUM(0_8, ImGui, Mod_None,  "");
-API_ENUM(0_8, ImGui, Mod_Ctrl,  "");
-API_ENUM(0_8, ImGui, Mod_Shift, "");
-API_ENUM(0_8, ImGui, Mod_Alt,   "");
-API_ENUM(0_8, ImGui, Mod_Super, "");
-// cannot use dear imgui's runtime redirection of Mod_Shortcut because of
-// user code relying on exact matches via GetKeyMods() == Mod_*
-#ifdef __APPLE__
-constexpr int ReaImGuiMod_Shortcut { ImGuiMod_Super };
-#else
-constexpr int ReaImGuiMod_Shortcut { ImGuiMod_Ctrl };
-#endif
-API_ENUM(0_8, ReaImGui, Mod_Shortcut,
-  "Alias for Mod_Ctrl on Linux and Windows and Mod_Super on macOS (Cmd key).");
+API_ENUM(0_8,   ImGui, Mod_None,  "");
+API_ENUM(0_9_2, ImGui, Mod_Ctrl,  "Cmd when ConfigVar_MacOSXBehaviors is enabled.");
+API_ENUM(0_8,   ImGui, Mod_Shift, "");
+API_ENUM(0_8,   ImGui, Mod_Alt,   "");
+API_ENUM(0_9_2, ImGui, Mod_Super, "Ctrl when ConfigVar_MacOSXBehaviors is enabled.");
+
+API_SECTION_DEF(shortcuts, ROOT_SECTION, "Shortcuts", R"(
+Key chords can combine a Key_* and a Mod_* value. For example: `Mod_Ctrl | Key_C`.
+Only Mod_* values can be combined a Key_* value. Another Key_* value cannot be combined.
+
+Several callers may register interest in a shortcut, and only one owner gets it.
+
+    Parent -> call Shortcut(Ctrl+S) // When Parent is focused, Parent gets the shortcut.
+    Child1 -> call Shortcut(Ctrl+S) // When Child1 is focused, Child1 gets the shortcut (Child1 overrides Parent shortcuts)
+    Child2 -> no call               // When Child2 is focused, Parent gets the shortcut.
+
+The whole system is order independent, so if Child1 makes its calls before Parent, results will be identical.
+This is an important property as it facilitate working with foreign code or larger codebase.
+
+To understand the difference:
+- IsKeyChordPressed compares modifiers and calls IsKeyPressed -> function has no side-effect.
+- Shortcut submits a route, routes are resolved, if it currently can be routed it
+  calls IsKeyChordPressed -> function has (desirable) side-effects as it can
+  prevents another call from getting the route.
+
+Registered routes may be visualized via Metrics/Debugger > Inputs (ShowMetricsWindow).)");
+
+API_FUNC(0_9, bool, IsKeyChordPressed, (Context*,ctx)
+(int,key_chord),
+R"(Was key chord (mods + key) pressed? You can pass e.g. `Mod_Shortcut | Key_S`
+as a key chord. // This doesn't do any routing or focus check,
+please consider using the Shortcut() function instead.)")
+{
+  FRAME_GUARD;
+  return ImGui::IsKeyChordPressed(key_chord);
+}
+
+API_FUNC(0_9_2, bool, Shortcut, (Context*,ctx)
+(int,key_chord) (RO<int*>,flags,ImGuiInputFlags_None),
+"")
+{
+  FRAME_GUARD;
+  return ImGui::Shortcut(key_chord, API_GET(flags));
+}
+
+API_FUNC(0_9_2, void, SetNextItemShortcut, (Context*,ctx)
+(int,key_chord) (RO<int*>,flags,ImGuiInputFlags_None),
+"")
+{
+  FRAME_GUARD;
+  ImGui::SetNextItemShortcut(key_chord, API_GET(flags));
+}
+
+API_SECTION_DEF(shortcutFlags, shortcuts, "Flags", "");
+API_ENUM(0_9_2, ImGui, InputFlags_None, "");
+API_ENUM(0_9_2, ImGui, InputFlags_Repeat,
+  "Enable repeat. Return true on successive repeats.");
+API_ENUM(0_9_2, ImGui, InputFlags_Tooltip,
+  "Automatically display a tooltip when hovering item");
+API_ENUM(0_9_2, ImGui, InputFlags_RouteOverFocused,
+R"(Global route: higher priority than focused route
+   (unless active item in focused route).)");
+API_ENUM(0_9_2, ImGui, InputFlags_RouteOverActive,
+R"(Global route: higher priority than active item. Unlikely you need to
+   use that: will interfere with every active items, e.g. Ctrl+A registered by
+   InputText will be overridden by this. May not be fully honored as user/internal
+   code is likely to always assume they can access keys when active.)");
+API_ENUM(0_9_2, ImGui, InputFlags_RouteUnlessBgFocused,
+R"(Option: global route: will not be applied if underlying background/void is
+   focused (== no Dear ImGui windows are focused). Useful for overlay applications.)");
+API_ENUM(0_9_2, ImGui, InputFlags_RouteFromRootWindow,
+R"(Option: route evaluated from the point of view of root window rather than current window.)");
+API_SECTION_P(shortcutFlags, "Routing policies",
+R"(RouteGlobal+OverActive >> RouteActive or RouteFocused (if owner is active item)
+   \>> RouteGlobal+OverFocused >> RouteFocused (if in focused window stack) >> RouteGlobal.
+
+   Default policy is RouteFocused. Can select only one policy among all available.)");
+API_ENUM(0_9_2, ImGui, InputFlags_RouteActive, "Route to active item only.");
+API_ENUM(0_9_2, ImGui, InputFlags_RouteFocused,
+R"(Route to windows in the focus stack. Deep-most focused window takes inputs.
+   Active item takes inputs over deep-most focused window.)");
+API_ENUM(0_9_2, ImGui, InputFlags_RouteGlobal,
+  "Global route (unless a focused window or active item registered the route).");
+API_ENUM(0_9_2, ImGui, InputFlags_RouteAlways,
+  "Do not register route, poll keys directly.");

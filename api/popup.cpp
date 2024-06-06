@@ -218,7 +218,7 @@ R"(Begin/append a tooltip window if preceding item was hovered. Shortcut for
 }
 
 API_FUNC(0_9, void, SetItemTooltip, (Context*,ctx) (const char*,text),
-R"(Set a text-only tooltip if preceeding item was hovered.
+R"(Set a text-only tooltip if preceding item was hovered.
 Override any previous call to SetTooltip(). Shortcut for
 `if (IsItemHovered(HoveredFlags_ForTooltip)) { SetTooltip(...); }`.)")
 {
