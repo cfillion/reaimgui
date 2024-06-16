@@ -1687,6 +1687,7 @@ function gfx.setfont(idx, fontface, sz, flags)
     end
 
     local imflags = 0
+    flags = $toint(tonumber(flags))
     while flags and flags ~= 0 do
       local imflag = FONT_FLAGS[flags & 0xFF]
       if imflag then
