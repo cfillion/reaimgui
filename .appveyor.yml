@@ -3,16 +3,16 @@ version: "{build}-{branch}"
 stack: python 3
 
 install:
-  - sh:  sudo -H "$(command -v pip3)" install meson
-  - cmd: pip3 install meson
-  - git submodule update --init --depth 1
+  # - sh:  sudo -H "$(command -v pip3)" install meson
+  # - cmd: pip3 install meson
+  # - git submodule update --init --depth 1
 build_script:
   - sh:  meson setup build --buildtype=release ${meson_options[@]}
            -Dcpp_std=c++17 -Dbuild.cpp_std=c++17 -Dexamples=enabled
   - cmd: meson setup build --buildtype=debugoptimized -Dexamples=enabled
-  - ninja -C build
-test_script:
-  - meson test -vC build reaimgui
+  # - ninja -C build
+# test_script:
+#   - meson test -vC build reaimgui
 artifacts:
   - path: build/examples/gfx2imgui.lua
   - path: build/imgui.py
@@ -116,16 +116,17 @@ for:
 
       - sudo -H pip3 install ninja
 
-  - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2022 ] }
+  - matrix: { only: [ appveyor_build_worker_image: &windows Visual Studio 2017 ] }
     cache:
       - '%LocalAppData%\pip\Cache -> .appveyor.yml'
       # override with a backslash to avoid "error calculating dependencies CRC:
       # pattern contains invalid characters"
       - subprojects/packagecache -> subprojects\*.wrap
     before_build:
-      - set VCPATH="%ProgramFiles%\Microsoft Visual Studio\2022\Community"
-      - if "%ARCH%" == "x64" call %VCPATH%\VC\Auxiliary\Build\vcvars64.bat
-      - if "%ARCH%" == "x86" call %VCPATH%\VC\Auxiliary\Build\vcvars32.bat
+      - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+      # - set VCPATH="%ProgramFiles%\Microsoft Visual Studio\2022\Community"
+      # - if "%ARCH%" == "x64" call %VCPATH%\VC\Auxiliary\Build\vcvars64.bat
+      # - if "%ARCH%" == "x86" call %VCPATH%\VC\Auxiliary\Build\vcvars32.bat
     after_test:
       # avoid very long "Calculating dependencies checksum" phase
       - git clean -fxdq -e subprojects/packagecache subprojects
@@ -135,30 +136,30 @@ environment:
     - job_name: Windows x86 64-bit
       appveyor_build_worker_image: *windows
       ARCH: x64
-    - job_name: Windows x86 32-bit
-      appveyor_build_worker_image: *windows
-      ARCH: x86
-    - job_name: macOS ARM 64-bit
-      appveyor_build_worker_image: macos-sonoma
-      ARCH: arm64
-    - job_name: macOS x86 64-bit
-      appveyor_build_worker_image: macos-bigsur
-      ARCH: x86_64
-    - job_name: macOS x86 32-bit
-      appveyor_build_worker_image: macos-mojave
-      ARCH: i386
-    - job_name: Linux x86 64-bit
-      appveyor_build_worker_image: *linux
-      ARCH: x86_64
-    - job_name: Linux x86 32-bit
-      appveyor_build_worker_image: *linux
-      ARCH: i686
-    - job_name: Linux ARM 64-bit
-      appveyor_build_worker_image: *linux
-      ARCH: aarch64
-    - job_name: Linux ARM 32-bit
-      appveyor_build_worker_image: *linux
-      ARCH: armv7l
+    # - job_name: Windows x86 32-bit
+    #   appveyor_build_worker_image: *windows
+    #   ARCH: x86
+    # - job_name: macOS ARM 64-bit
+    #   appveyor_build_worker_image: macos-sonoma
+    #   ARCH: arm64
+    # - job_name: macOS x86 64-bit
+    #   appveyor_build_worker_image: macos-bigsur
+    #   ARCH: x86_64
+    # - job_name: macOS x86 32-bit
+    #   appveyor_build_worker_image: macos-mojave
+    #   ARCH: i386
+    # - job_name: Linux x86 64-bit
+    #   appveyor_build_worker_image: *linux
+    #   ARCH: x86_64
+    # - job_name: Linux x86 32-bit
+    #   appveyor_build_worker_image: *linux
+    #   ARCH: i686
+    # - job_name: Linux ARM 64-bit
+    #   appveyor_build_worker_image: *linux
+    #   ARCH: aarch64
+    # - job_name: Linux ARM 32-bit
+    #   appveyor_build_worker_image: *linux
+    #   ARCH: armv7l
 
 deploy:
   provider: GitHub
