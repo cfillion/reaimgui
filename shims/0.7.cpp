@@ -24,7 +24,7 @@ SHIM("0.7",
   (int, ModFlags_Alt)
   (int, ModFlags_Super)
 
-  (void, SetNextFrameWantCaptureKeyboard, Context*)
+  (void, SetNextFrameWantCaptureKeyboard, Context*, bool)
 
   (void, ColorConvertHSVtoRGB, double, double, double, W<double*>, W<double*>, W<double*>)
   (void, ColorConvertRGBtoHSV, double, double, double, W<double*>, W<double*>, W<double*>)
@@ -48,7 +48,11 @@ SHIM_ALIAS(0_1, KeyModFlags_Alt,   ModFlags_Alt)
 SHIM_ALIAS(0_1, KeyModFlags_Super, ModFlags_Super)
 
 // Capture*FromApp to SetNextFrameWantCapture* rename
-SHIM_ALIAS(0_1, CaptureKeyboardFromApp, SetNextFrameWantCaptureKeyboard)
+SHIM_FUNC(0_1, void, CaptureKeyboardFromApp,
+  (Context*,ctx) (RO<bool*>,want_capture_keyboard,true))
+{
+  api.SetNextFrameWantCaptureKeyboard(ctx, API_GET(want_capture_keyboard));
+}
 
 // non-vanilla HSVtoRGB/RGBtoHSV packing and optional alpha parameter
 static int shimColorConv(decltype(api.ColorConvertHSVtoRGB) convFunc,
