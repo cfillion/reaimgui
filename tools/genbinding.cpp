@@ -270,6 +270,7 @@ struct ImGui_Error : std::runtime_error {
   using runtime_error::runtime_error;
 };
 
+class LICE_IBitmap;
 struct reaper_array;
 
 #ifdef REAIMGUIAPI_IMPLEMENT
@@ -1282,6 +1283,7 @@ static void luaLSBinding(std::ostream &stream)
 --- @class (exact) ImGui_ImageSet         : ImGui_Image
 --- @class (exact) ImGui_ListClipper      : ImGui_Resource
 --- @class (exact) ImGui_TextFilter       : ImGui_Resource
+--- @class (exact) LICE_IBitmap           : userdata
 --- @diagnostic disable: keyword
 )";
 

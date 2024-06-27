@@ -20,6 +20,8 @@
 #include "../src/color.hpp"
 #include "../src/image.hpp"
 
+#include <reaper_plugin_functions.h>
+
 API_SECTION("Image",
 R"(ReaImGui currently supports loading PNG and JPEG bitmap images.
 Flat vector images may be loaded as fonts, see CreateFont.
@@ -50,6 +52,29 @@ CreateImage or explicitely specify data_sz if supporting older versions.)")
 {
   // data_sz is inaccurate before REAPER 6.44
   return Image::fromMemory(data, data_sz);
+}
+
+API_REGISTER_BASIC_TYPE(LICE_IBitmap*);
+
+template<>
+void assertValid(LICE_IBitmap *ptr)
+{
+  static int (*JS_LICE_GetWidth)(LICE_IBitmap *);
+  if(!JS_LICE_GetWidth)
+    JS_LICE_GetWidth = reinterpret_cast<decltype(JS_LICE_GetWidth)>
+      (plugin_getapi("JS_LICE_GetWidth"));
+  if(!JS_LICE_GetWidth)
+    throw reascript_error { "cannot load JS_LICE_GetWidth" };
+  if(!JS_LICE_GetWidth(ptr))
+    Error::invalidObject(ptr);
+}
+
+API_FUNC(0_9_2, Image*, CreateImageFromLICE,
+(LICE_IBitmap*,bitmap) (RO<int*>,flags),
+"Copies pixel data from a LICE bitmap created using JS_LICE_CreateBitmap.")
+{
+  assertValid(bitmap);
+  return new LICEBitmap(bitmap);
 }
 
 API_FUNC(0_8, void, Image_GetSize, (class Image*,image)

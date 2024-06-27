@@ -23,6 +23,7 @@
 #include <vector>
 #include <istream>
 
+class LICE_IBitmap;
 class Texture;
 class TextureManager;
 
@@ -68,6 +69,11 @@ private:
 
   std::vector<unsigned char> m_pixels;
   size_t m_width, m_height;
+};
+
+class LICEBitmap : public Bitmap {
+public:
+  LICEBitmap(LICE_IBitmap *bitmap);
 };
 
 class ImageSet final : public Image {

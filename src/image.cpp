@@ -17,6 +17,7 @@
 
 #include "image.hpp"
 
+#include "color.hpp"
 #include "error.hpp"
 #include "texture.hpp"
 #include "win32_unicode.hpp"
@@ -25,6 +26,7 @@
 #include <cmath> // abs
 #include <fstream>
 #include <imgui/imgui.h>
+#include <reaper_plugin_functions.h>
 
 static const Image::RegisterType *&typeHead()
 {
@@ -64,6 +66,22 @@ Image *Image::fromMemory(const char *data, const int size)
   using boost::iostreams::array_source;
   boost::iostreams::stream<array_source> stream { data, size };
   return create(stream);
+}
+
+LICEBitmap::LICEBitmap(LICE_IBitmap *bitmap)
+{
+  resize(LICE__GetWidth(bitmap), LICE__GetHeight(bitmap), 4);
+
+  const auto stride { LICE__GetRowSpan(bitmap) };
+  auto pixels { static_cast<const LICE_pixel *>(LICE__GetBits(bitmap)) };
+
+  for(unsigned char *row : makeScanlines()) {
+    for(size_t i {}; i < width(); ++i) {
+      reinterpret_cast<uint32_t *>(row)[i] = (pixels[i] & 0xFF00FF00) |
+        (pixels[i] >> 16 & 0x0000FF) | (pixels[i] << 16 & 0xFF0000);
+    }
+    pixels += stride;
+  }
 }
 
 const unsigned char *Bitmap::getPixels(
