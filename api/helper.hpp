@@ -208,7 +208,7 @@ void assertValid(T *ptr)
 template<typename T, auto tags>
 void assertValid(Tag<T, tags> ptr)
 {
-  return assertValid(static_cast<T>(ptr));
+  assertValid(static_cast<T>(ptr));
 }
 
 inline void assertFrame(Context *ctx)

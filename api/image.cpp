@@ -44,7 +44,7 @@ unless attached to a context (see Attach).
 }
 
 API_FUNC(0_9, Image*, CreateImageFromMem,
-(const char*,data) (int,data_sz),
+(const char*,data) (int,data_sz) (RO<int*>,flags),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Load from a file using
 CreateImage or explicitely specify data_sz if supporting older versions.)")
 {
