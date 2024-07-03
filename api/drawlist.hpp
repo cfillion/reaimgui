@@ -24,14 +24,16 @@
 #include "../src/context.hpp"
 
 struct DrawListProxy : ResourceProxy<DrawListProxy, Context, ImDrawList> {
-  using GetterFuncType = ImDrawList*(*)();
-  template<Key KeyValue, GetterFuncType GetterFunc>
+  template<Key KeyValue, auto GetterFunc>
   struct Getter {
     static constexpr Key key { KeyValue };
     static auto get(Context *ctx)
     {
       assertFrame(ctx);
-      return GetterFunc();
+      if constexpr(std::is_same_v<decltype(GetterFunc), ImDrawList*(*)(ImGuiViewport *)>)
+        return GetterFunc(nullptr);
+      else
+        return GetterFunc();
     }
   };
 

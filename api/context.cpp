@@ -289,10 +289,13 @@ API_ENUM(0_8, ImGui, ConfigFlags_NavNoCaptureKeyboard,
 R"(Instruct navigation to not capture global keyboard input when
    ConfigFlags_NavEnableKeyboard is set (see SetNextFrameWantCaptureKeyboard).)");
 API_ENUM(0_1, ImGui, ConfigFlags_NoMouse,
-  "Instruct imgui to ignore mouse position/buttons.");
+  "Instruct dear imgui to disable mouse inputs and interactions");
 API_ENUM(0_1, ImGui, ConfigFlags_NoMouseCursorChange,
   "Instruct backend to not alter mouse cursor shape and visibility.");
 API_ENUM(0_5, ImGui, ConfigFlags_DockingEnable, "Enable docking functionality.");
+API_ENUM(0_9_2, ImGui, ConfigFlags_NoKeyboard,
+R"(Instruct dear imgui to disable keyboard inputs and interactions.
+This is done by ignoring keyboard events and clearing existing states.)");
 
 API_ENUM(0_4, ReaImGui, ConfigFlags_NoSavedSettings,
   "Disable state restoration and persistence for the whole context.");

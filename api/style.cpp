@@ -314,12 +314,19 @@ API_ENUM(0_1, ImGui, Col_ResizeGrip,
   "Resize grip in lower-right and lower-left corners of windows.");
 API_ENUM(0_1, ImGui, Col_ResizeGripHovered,     "");
 API_ENUM(0_1, ImGui, Col_ResizeGripActive,      "");
+API_ENUM(0_1, ImGui, Col_TabHovered,            "Tab background, when hovered");
 API_ENUM(0_1, ImGui, Col_Tab,
-  "TabItem in a TabBar");
-API_ENUM(0_1, ImGui, Col_TabHovered,            "");
-API_ENUM(0_1, ImGui, Col_TabActive,             "");
-API_ENUM(0_1, ImGui, Col_TabUnfocused,          "");
-API_ENUM(0_1, ImGui, Col_TabUnfocusedActive,    "");
+  "Tab background, when tab-bar is focused & tab is unselected");
+API_ENUM(0_9_2, ImGui, Col_TabSelected,
+  "Tab background, when tab-bar is focused & tab is selected");
+API_ENUM(0_9_2, ImGui, Col_TabSelectedOverline,
+  "Tab horizontal overline, when tab-bar is focused & tab is selected");
+API_ENUM(0_9_2, ImGui, Col_TabDimmed,
+  "Tab background, when tab-bar is unfocused & tab is unselected");
+API_ENUM(0_9_2, ImGui, Col_TabDimmedSelected,
+  "Tab background, when tab-bar is unfocused & tab is selected");
+API_ENUM(0_9_2, ImGui, Col_TabDimmedSelectedOverline,
+  "Horizontal overline, when tab-bar is unfocused & tab is selected");
 API_ENUM(0_5, ImGui, Col_DockingPreview,
   "Preview overlay color when about to docking something.");
 API_ENUM(0_5, ImGui, Col_DockingEmptyBg,

@@ -51,6 +51,8 @@ R"(Disable scrolling buttons (apply when fitting policy is
    TabBarFlags_FittingPolicyScroll).)");
 API_ENUM(0_1, ImGui, TabBarFlags_NoTooltip,
   "Disable tooltips when hovering a tab.");
+API_ENUM(0_9_2, ImGui, TabBarFlags_DrawSelectedOverline,
+  "Draw selected overline markers over selected tab");
 API_ENUM(0_1, ImGui, TabBarFlags_FittingPolicyResizeDown,
   "Resize tabs when they don't fit.");
 API_ENUM(0_1, ImGui, TabBarFlags_FittingPolicyScroll,

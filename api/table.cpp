@@ -50,14 +50,14 @@ The typical call flow is:
 )");
 
 API_FUNC(0_9, bool, BeginTable, (Context*,ctx)
-(const char*,str_id) (int,column) (RO<int*>,flags,ImGuiTableFlags_None)
+(const char*,str_id) (int,columns) (RO<int*>,flags,ImGuiTableFlags_None)
 (RO<double*>,outer_size_w,0.0) (RO<double*>,outer_size_h,0.0)
 (RO<double*>,inner_width,0.0),
 "")
 {
   FRAME_GUARD;
 
-  return ImGui::BeginTable(str_id, column, API_GET(flags),
+  return ImGui::BeginTable(str_id, columns, API_GET(flags),
     ImVec2(API_GET(outer_size_w), API_GET(outer_size_h)),
     API_GET(inner_width));
 }
@@ -212,6 +212,16 @@ TableFlags_ContextMenuInBody).
 {
   FRAME_GUARD;
   ImGui::TableSetColumnEnabled(column_n, v);
+}
+
+API_FUNC(0_9_2, int, TableGetHoveredColumn, (Context*,ctx),
+R"(Returns hovered column or -1 when table is not hovered. Returns columns_count
+if the unused space at the right of visible columns is hovered.
+
+Can also use (TableGetColumnFlags() & TableColumnFlags_IsHovered) instead.)")
+{
+  FRAME_GUARD;
+  return ImGui::TableGetHoveredColumn();
 }
 
 API_SECTION_DEF(columnFlags, columns, "Column Flags", "For TableSetupColumn.");

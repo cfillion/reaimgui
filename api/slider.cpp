@@ -485,3 +485,6 @@ R"(Disable rounding underlying value to match precision of the display format
    string (e.g. %.3f values are rounded to those 3 digits).)");
 API_ENUM(0_1, ImGui, SliderFlags_NoInput,
   "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
+API_ENUM(0_9_2, ImGui, SliderFlags_WrapAround,
+R"(Enable wrapping around from max to min and from min to max
+   (only supported by DragXXX() functions for now).)");

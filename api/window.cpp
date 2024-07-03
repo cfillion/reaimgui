@@ -166,9 +166,12 @@ R"(Combined with AutoResizeX/AutoResizeY. Always measure size even when child
 is hidden, always return true, always disable clipping optimization! NOT RECOMMENDED.)");
 API_ENUM(0_9, ImGui, ChildFlags_FrameStyle,
 R"(Style the child window like a framed item: use Col_FrameBg,
-StyleVar_FrameRounding, StyleVar_FrameBorderSize, StyleVar_FramePadding instead
-of Col_ChildBg, StyleVar_ChildRounding, StyleVar_ChildBorderSize,
-StyleVar_WindowPadding.)");
+   StyleVar_FrameRounding, StyleVar_FrameBorderSize, StyleVar_FramePadding
+   instead of Col_ChildBg, StyleVar_ChildRounding, StyleVar_ChildBorderSize,
+   StyleVar_WindowPadding.)");
+API_ENUM(0_9_2, ImGui, ChildFlags_NavFlattened,
+R"(Share focus scope, allow gamepad/keyboard navigation to cross over parent
+   border to this child or between sibling child windows.)");
 
 API_SECTION_DEF(properties, ROOT_SECTION, "Properties",
 R"(Prefer using SetNextWindow* functions (before Begin) rather that SetWindow* functions
@@ -732,9 +735,6 @@ R"(WindowFlags_NoTitleBar | WindowFlags_NoResize | WindowFlags_NoScrollbar |
    WindowFlags_NoCollapse)");
 API_ENUM(0_1, ImGui, WindowFlags_NoInputs,
   "WindowFlags_NoMouseInputs | WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
-API_ENUM(0_9_2, ImGui, WindowFlags_NavFlattened,
-R"(On child window: share focus scope, allow gamepad/keyboard navigation to
-   cross over parent border to this child or between sibling child windows.)");
 
 API_ENUM(0_5_5, ReaImGui, WindowFlags_TopMost,
   "Show the window above all non-topmost windows.");

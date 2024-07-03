@@ -167,7 +167,7 @@ NATIVE_ONLY = [
 ]
 
 NATIVE_ONLY_CLASSES = %w[
-  ImGuiIO ImFontAtlas ImFont ImDrawData ImGuiStoragePair
+  ImGuiIO ImFontAtlas ImFont ImDrawData ImGuiStorage
   ImGuiStyle ImGuiInputTextCallbackData ImFontGlyphRangesBuilder
   ImGuiTextBuffer ImFontConfig
 ]
@@ -189,6 +189,7 @@ NATIVE_ONLY_ENUMS = [
   'WindowFlags_NoBringToFrontOnFocus', # not supported with per-window viewports
   /\AMouseSource_/, # for backends (io.AddMouseSoruceEvent)
   'StyleVar_DockingSeparatorSize', # only applicable mid-frame to DockSpace
+  /\ADragDropFlags_PayloadNoCross/,
 
   # only for dear imgui's internal use
   /\AWindowFlags_(ChildWindow|Tooltip|Popup|Modal|ChildMenu|DockNodeHost)\z/,
@@ -295,6 +296,7 @@ TYPES = [
   'char*',
   'const char*',
   'reaper_array*',
+  'LICE_IBitmap*',
   'void*',
 ] + RESOURCES.keys
 

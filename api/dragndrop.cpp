@@ -237,7 +237,7 @@ API_ENUM(0_1, ImGui, DragDropFlags_SourceExtern,
 R"(External source (from outside of dear imgui), won't attempt to read current
    item/window info. Will always return true.
    Only one Extern source can be active simultaneously.)");
-API_ENUM(0_1, ImGui, DragDropFlags_SourceAutoExpirePayload,
+API_ENUM(0_9_2, ImGui, DragDropFlags_PayloadAutoExpire,
 R"(Automatically expire the payload if the source cease to be submitted
    (otherwise payloads are persisting while being dragged).)");
 API_SECTION_P(flags, "Payload", "For AcceptDragDropPayload");

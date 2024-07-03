@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.8)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.9)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -56,6 +56,7 @@ local ImGui = require 'imgui' '0.9.2'
 
 local ctx, clipper
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
+local DBL_MIN, DBL_MAX = ImGui.NumericLimits_Double()
 local IMGUI_VERSION, IMGUI_VERSION_NUM, REAIMGUI_VERSION = ImGui.GetVersion()
 
 local demo = {
@@ -419,18 +420,23 @@ function demo.ShowDemoWindow(open)
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NavEnableSetMousePos', config.flags, ImGui.ConfigFlags_NavEnableSetMousePos)
       ImGui.SameLine(ctx); demo.HelpMarker('Instruct navigation to move the mouse cursor.')
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoMouse', config.flags, ImGui.ConfigFlags_NoMouse)
+      ImGui.SameLine(ctx); demo.HelpMarker('Instruct dear imgui to disable mouse inputs and interactions.')
+
+      -- The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
       if (config.flags & ImGui.ConfigFlags_NoMouse) ~= 0 then
-        -- The "NoMouse" option can get us stuck with a disabled mouse! Let's provide an alternative way to fix it:
         if ImGui.GetTime(ctx) % 0.40 < 0.20 then
           ImGui.SameLine(ctx)
           ImGui.Text(ctx, '<<PRESS SPACE TO DISABLE>>')
         end
-        if ImGui.IsKeyPressed(ctx, ImGui.Key_Space) then
+        -- Prevent both being checked
+        if ImGui.IsKeyPressed(ctx, ImGui.Key_Space) or (config.flags & ImGui.ConfigFlags_NoKeyboard) ~= 0 then
           config.flags = config.flags & ~ImGui.ConfigFlags_NoMouse
         end
       end
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoMouseCursorChange', config.flags, ImGui.ConfigFlags_NoMouseCursorChange)
       ImGui.SameLine(ctx); demo.HelpMarker('Instruct backend to not alter mouse cursor shape and visibility.')
+      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoKeyboard', config.flags, ImGui.ConfigFlags_NoKeyboard)
+      ImGui.SameLine(ctx); demo.HelpMarker('Instruct dear imgui to disable keyboard inputs and interactions.')
 
       configVarCheckbox('ConfigVar_InputTrickleEventQueue')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
@@ -682,7 +688,8 @@ function demo.ShowDemoWindowWidgets()
         i0      = 123,
         i1      = 50,
         i2      = 42,
-        i3      = 0,
+        i3      = 128,
+        i4      = 0,
         d0      = 999999.00000001,
         d1      = 1e10,
         d2      = 1.00,
@@ -788,15 +795,17 @@ function demo.ShowDemoWindowWidgets()
         Double-click or CTRL+click to input value.')
 
       rv,widgets.basic.i2 = ImGui.DragInt(ctx, 'drag int 0..100', widgets.basic.i2, 1, 0, 100, '%d%%', ImGui.SliderFlags_AlwaysClamp)
+      rv,widgets.basic.i3 = ImGui.DragInt(ctx, 'drag int wrap 100..200', widgets.basic.i3, 1, 100, 200, '%d', ImGui.SliderFlags_WrapAround)
 
       rv,widgets.basic.d2 = ImGui.DragDouble(ctx, 'drag double', widgets.basic.d2, 0.005)
       rv,widgets.basic.d3 = ImGui.DragDouble(ctx, 'drag small double', widgets.basic.d3, 0.0001, 0.0, 0.0, '%.06f ns')
+      -- rv,widgets.basic.d4 = ImGui.DragDouble(ctx, 'drag wrap -1..1', widgets.basic.d4, 0.005, -1.0, 1.0, nil, ImGui.SliderFlags_WrapAround)
     end
 
     ImGui.SeparatorText(ctx, 'Sliders')
 
     do
-      rv,widgets.basic.i3 = ImGui.SliderInt(ctx, 'slider int', widgets.basic.i3, -1, 3)
+      rv,widgets.basic.i4 = ImGui.SliderInt(ctx, 'slider int', widgets.basic.i4, -1, 3)
       ImGui.SameLine(ctx); demo.HelpMarker('CTRL+click to input value.')
 
       rv,widgets.basic.d4 = ImGui.SliderDouble(ctx, 'slider double', widgets.basic.d4, 0.0, 1.0, 'ratio = %.3f')
@@ -944,10 +953,10 @@ function demo.ShowDemoWindowWidgets()
     -- which default value include the HoveredFlags_AllowWhenDisabled flag.
     ImGui.BeginDisabled(ctx)
     ImGui.Button(ctx, 'Disabled item', sz_w, sz_h)
-    ImGui.EndDisabled(ctx)
     if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_ForTooltip) then
       ImGui.SetTooltip(ctx, 'I am a a tooltip for a disabled item.')
     end
+    ImGui.EndDisabled(ctx)
 
     ImGui.TreePop(ctx)
   end
@@ -1858,6 +1867,7 @@ label:
       rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'TabBarFlags_AutoSelectNewTabs', widgets.tabs.flags1, ImGui.TabBarFlags_AutoSelectNewTabs)
       rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'TabBarFlags_TabListPopupButton', widgets.tabs.flags1, ImGui.TabBarFlags_TabListPopupButton)
       rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'TabBarFlags_NoCloseWithMiddleMouseButton', widgets.tabs.flags1, ImGui.TabBarFlags_NoCloseWithMiddleMouseButton)
+      rv,widgets.tabs.flags1 = ImGui.CheckboxFlags(ctx, 'TabBarFlags_DrawSelectedOverline', widgets.tabs.flags1, ImGui.TabBarFlags_DrawSelectedOverline)
 
       if widgets.tabs.flags1 & fitting_policy_mask == 0 then
         widgets.tabs.flags1 = widgets.tabs.flags1 | ImGui.TabBarFlags_FittingPolicyResizeDown -- was FittingPolicyDefault_
@@ -1870,9 +1880,11 @@ label:
       end
 
       -- Tab Bar
+      ImGui.AlignTextToFramePadding(ctx)
+      ImGui.Text(ctx, 'Opened:')
       local names = { 'Artichoke', 'Beetroot', 'Celery', 'Daikon' }
-      for n,opened in ipairs(widgets.tabs.opened) do
-        if n > 1 then ImGui.SameLine(ctx); end
+      for n, opened in ipairs(widgets.tabs.opened) do
+        ImGui.SameLine(ctx)
         rv,widgets.tabs.opened[n] = ImGui.Checkbox(ctx, names[n], opened)
       end
 
@@ -2333,8 +2345,8 @@ label:
     ImGui.SameLine(ctx); demo.HelpMarker('Disable rounding underlying value to match precision of the format string (e.g. %.3f values are rounded to those 3 digits).')
     rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_NoInput', widgets.sliders.flags, ImGui.SliderFlags_NoInput)
     ImGui.SameLine(ctx); demo.HelpMarker('Disable CTRL+Click or Enter key allowing to input text directly into the widget.')
-
-    local DBL_MIN, DBL_MAX = 2.22507e-308, 1.79769e+308
+    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_WrapAround', widgets.sliders.flags, ImGui.SliderFlags_WrapAround)
+    ImGui.SameLine(ctx); demo.HelpMarker('Enable wrapping around from max to min and from min to max (only supported by DragXXX() functions)')
 
     -- Drags
     ImGui.Text(ctx, ('Underlying double value: %f'):format(widgets.sliders.drag_d))
@@ -2345,9 +2357,10 @@ label:
     rv,widgets.sliders.drag_i = ImGui.DragInt(ctx, 'DragInt (0 -> 100)', widgets.sliders.drag_i, 0.5, 0, 100, '%d', widgets.sliders.flags)
 
     -- Sliders
+    local flags_for_sliders = widgets.sliders.flags & ~ImGui.SliderFlags_WrapAround
     ImGui.Text(ctx, ('Underlying float value: %f'):format(widgets.sliders.slider_d))
-    rv,widgets.sliders.slider_d = ImGui.SliderDouble(ctx, 'SliderDouble (0 -> 1)', widgets.sliders.slider_d, 0.0, 1.0, '%.3f', widgets.sliders.flags)
-    rv,widgets.sliders.slider_i = ImGui.SliderInt(ctx, 'SliderInt (0 -> 100)', widgets.sliders.slider_i, 0, 100, '%d', widgets.sliders.flags)
+    rv,widgets.sliders.slider_d = ImGui.SliderDouble(ctx, 'SliderDouble (0 -> 1)', widgets.sliders.slider_d, 0.0, 1.0, '%.3f', flags_for_sliders)
+    rv,widgets.sliders.slider_i = ImGui.SliderInt(ctx, 'SliderInt (0 -> 100)', widgets.sliders.slider_i, 0, 100, '%d', flags_for_sliders)
 
     ImGui.TreePop(ctx)
   end
@@ -7181,10 +7194,8 @@ function demo.ShowStyleEditor()
          Right-click to open edit options menu.')
 
       ImGui.SetNextWindowSizeConstraints(ctx, 0.0, ImGui.GetTextLineHeightWithSpacing(ctx) * 10, FLT_MAX, FLT_MAX)
-      if ImGui.BeginChild(ctx, '##colors', 0, 0, ImGui.ChildFlags_Border,
-                            ImGui.WindowFlags_AlwaysVerticalScrollbar   |
-                            ImGui.WindowFlags_AlwaysHorizontalScrollbar |
-                            ImGui.WindowFlags_NavFlattened) then
+      if ImGui.BeginChild(ctx, '##colors', 0, 0, ImGui.ChildFlags_Border | ImGui.ChildFlags_NavFlattened,
+          ImGui.WindowFlags_AlwaysVerticalScrollbar | ImGui.WindowFlags_AlwaysHorizontalScrollbar) then
         ImGui.PushItemWidth(ctx, ImGui.GetFontSize(ctx) * -12)
         local inner_spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
         for i, name in demo.EachEnum('Col') do
@@ -7268,10 +7279,10 @@ function demo.ShowStyleEditor()
 --                 ImGui.SetNextWindowPos(ImGui.GetCursorScreenPos());
 --             if (show_samples && ImGui::BeginTooltip())
 --             {
---                 ImGui.TextUnformatted("(R = radius, N = number of segments)");
+--                 ImGui.TextUnformatted("(R = radius, N = approx number of segments)");
 --                 ImGui.Spacing();
 --                 ImDrawList* draw_list = ImGui.GetWindowDrawList();
---                 const float min_widget_width = ImGui.CalcTextSize("N: MMM\nR: MMM").x;
+--                 const float min_widget_width = ImGui.CalcTextSize("R: MMM\nN: MMM").x;
 --                 for (int n = 0; n < 8; n++)
 --                 {
 --                     const float RAD_MIN = 5.0f;
@@ -7280,6 +7291,7 @@ function demo.ShowStyleEditor()
 --
 --                     ImGui.BeginGroup();
 --
+--                     // N is not always exact here due to how PathArcTo() function work internally
 --                     ImGui.Text("R: %.f\nN: %d", rad, draw_list->_CalcCircleAutoSegmentCount(rad));
 --
 --                     const float canvas_width = IM_MAX(min_widget_width, rad * 2.0f);
@@ -7654,7 +7666,7 @@ function ExampleAppConsole:Draw(title)
 
   -- Reserve enough left-over height for 1 separator + 1 input text
   local footer_height_to_reserve = select(2, ImGui.GetStyleVar(self.ctx, ImGui.StyleVar_ItemSpacing)) + ImGui.GetFrameHeightWithSpacing(self.ctx)
-  if ImGui.BeginChild(self.ctx, 'ScrollingRegion', 0, -footer_height_to_reserve, ImGui.ChildFlags_None, ImGui.WindowFlags_HorizontalScrollbar | ImGui.WindowFlags_NavFlattened) then
+  if ImGui.BeginChild(self.ctx, 'ScrollingRegion', 0, -footer_height_to_reserve, ImGui.ChildFlags_NavFlattened, ImGui.WindowFlags_HorizontalScrollbar) then
     if ImGui.BeginPopupContextWindow(self.ctx) then
       if ImGui.Selectable(self.ctx, 'Clear') then self:ClearLog() end
       ImGui.EndPopup(self.ctx)
@@ -9162,6 +9174,7 @@ end
 --   if (opt_target == Target_Tab)
 --   {
 --     ImGuiTabBarFlags tab_bar_flags = (opt_fitting_flags) | (opt_reorderable ? ImGuiTabBarFlags_Reorderable : 0);
+--     tab_bar_flags |= ImGuiTabBarFlags_DrawSelectedOverline;
 --     if (ImGui::BeginTabBar("##tabs", tab_bar_flags))
 --     {
 --       if (opt_reorderable)

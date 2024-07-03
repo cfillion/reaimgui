@@ -499,10 +499,8 @@ void Context::updateDragDrop()
 
 void Context::dragSources()
 {
-  constexpr ImGuiDragDropFlags flags {
-    ImGuiDragDropFlags_SourceExtern |
-    ImGuiDragDropFlags_SourceAutoExpirePayload
-  };
+  constexpr ImGuiDragDropFlags flags
+    { ImGuiDragDropFlags_SourceExtern | ImGuiDragDropFlags_PayloadAutoExpire };
 
   if(m_draggedFiles.empty())
     return;
@@ -632,10 +630,11 @@ void Context::clearFocus()
   else
     ImGui::FocusWindow(nullptr); // also calls ClearActiveID
 
-  // ClearInputKeys resets MousePos to -FLT_MAX
+  // ClearInputMouse resets MousePos to -FLT_MAX
   // Restoring it to gain focus on first click on Linux
   const ImVec2 mousePos { m_imgui->IO.MousePos };
-  m_imgui->IO.ClearInputKeys(); // clears keyboard and mouse
+  m_imgui->IO.ClearInputKeys();
+  m_imgui->IO.ClearInputMouse();
   m_imgui->IO.MousePos = mousePos;
 
   HWND capture { Platform::getCapture() };

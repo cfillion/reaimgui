@@ -20,6 +20,10 @@
 SHIM("0.9.2",
   (int, Mod_Ctrl)
   (int, Mod_Super)
+  (int, DragDropFlags_PayloadAutoExpire)
+  (int, Col_TabSelected)
+  (int, Col_TabDimmed)
+  (int, Col_TabDimmedSelected)
 );
 
 // dear imgui v1.90.7 swaps Ctrl<>Super on macOS
@@ -29,5 +33,12 @@ SHIM_ALIAS(0_8, Mod_Ctrl,  Mod_Super)
 SHIM_ALIAS(0_8, Mod_Super, Mod_Ctrl)
 #else
 SHIM_ALIAS(0_8, Mod_Ctrl,  Mod_Ctrl)
-SHIM_ALIAS(0_8, Mod_Super, Mod_Ctrl)
+SHIM_ALIAS(0_8, Mod_Super, Mod_Super)
 #endif
+
+// dear imgui v1.90.9
+SHIM_ALIAS(0_1, DragDropFlags_SourceAutoExpirePayload,
+  DragDropFlags_PayloadAutoExpire)
+SHIM_ALIAS(0_1, Col_TabActive, Col_TabSelected)
+SHIM_ALIAS(0_1, Col_TabUnfocused, Col_TabDimmed)
+SHIM_ALIAS(0_1, Col_TabUnfocusedActive, Col_TabDimmedSelected)
