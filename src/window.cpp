@@ -259,6 +259,9 @@ void Window::mouseUp(const ImGuiMouseButton btn)
 
   if(Platform::getCapture() == m_hwnd && m_mouseDown == 0)
     Platform::releaseCapture();
+  if(btn == ImGuiMouseButton_Left && m_ctx->imgui()->MovingWindow &&
+      m_ctx->imgui()->MovingWindow->Viewport == m_viewport)
+    m_viewport->Flags &= ~ImGuiViewportFlags_NoInputs;
 }
 
 void Window::releaseMouse()
