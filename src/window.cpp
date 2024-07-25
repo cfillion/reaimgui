@@ -303,17 +303,13 @@ void Window::transferCapture()
   }
 }
 
+#ifndef __APPLE__
 void Window::updateModifiers()
 {
   struct Modifiers { int vkey; ImGuiKey key; };
   constexpr Modifiers modifiers[] {
-#ifdef __APPLE__ // SWELL swaps those two
-    { VK_CONTROL, ImGuiMod_Super },
-    { VK_LWIN,    ImGuiMod_Ctrl  },
-#else
     { VK_CONTROL, ImGuiMod_Ctrl  },
     { VK_LWIN,    ImGuiMod_Super },
-#endif
     { VK_SHIFT,   ImGuiMod_Shift },
     { VK_MENU,    ImGuiMod_Alt   },
   };
@@ -323,6 +319,7 @@ void Window::updateModifiers()
       m_ctx->keyInput(modifier.key, true);
   }
 }
+#endif
 
 #ifndef _WIN32
 void Window::createSwellDialog()

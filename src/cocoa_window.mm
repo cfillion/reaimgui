@@ -260,3 +260,24 @@ int CocoaWindow::handleAccelerator(MSG *msg)
   [[m_view window] sendEvent:[NSApp currentEvent]];
   return Accel::EatKeystroke;
 }
+
+void Window::updateModifiers()
+{
+  // SWELL's GetAsyncKeyState omits Ctrl when right-click emulation is enabled
+
+  struct Modifiers { int vkey; ImGuiKey key; };
+  constexpr Modifiers modifiers[] {
+    { kCGEventFlagMaskControl,   ImGuiMod_Ctrl  },
+    { kCGEventFlagMaskCommand,   ImGuiMod_Super },
+    { kCGEventFlagMaskShift,     ImGuiMod_Shift },
+    { kCGEventFlagMaskAlternate, ImGuiMod_Alt   },
+  };
+
+  const CGEventFlags state
+    { CGEventSourceFlagsState(kCGEventSourceStateCombinedSessionState) };
+
+  for(const auto &modifier : modifiers) {
+    if(state & modifier.vkey)
+      m_ctx->keyInput(modifier.key, true);
+  }
+}
