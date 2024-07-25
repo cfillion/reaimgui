@@ -636,6 +636,9 @@ void Context::clearFocus()
   m_imgui->IO.ClearInputKeys();
   m_imgui->IO.ClearInputMouse();
   m_imgui->IO.MousePos = mousePos;
+#ifdef __APPLE__
+  m_stateFlags &= ~(RCE_Armed | RCE_Active);
+#endif
 
   HWND capture { Platform::getCapture() };
   if(capture && Window::contextFromHwnd(capture) == this) {
