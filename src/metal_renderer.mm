@@ -205,6 +205,11 @@ void MetalRenderer::Shared::textureCommand(const TextureCmd &cmd)
     int width, height;
     const unsigned char *pixels { cmd[i].getPixels(&width, &height) };
 
+    // [m_device maxTexture{Width,Height}2D] is private undocumented API
+    constexpr int metalMaxSize { 16384 };
+    if(width > metalMaxSize || height > metalMaxSize)
+      throw backend_error("texture size is greater than Metal limits");
+
     MTLTextureDescriptor *texDesc =
       [_MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
                                                           width:width
