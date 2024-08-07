@@ -53,6 +53,12 @@ Font::Font(const char *family, const int size, const int flags)
   }
 }
 
+Font::Font(std::vector<unsigned char> &&data, const int size, const int flags)
+  : m_data { std::move(data) }, m_index { flags & ReaImGuiFontFlags_IndexMask },
+    m_size { size }, m_missingStyles { flags & ReaImGuiFontFlags_StyleMask }
+{
+}
+
 ImFont *Font::load(ImFontAtlas *atlas, const float scale)
 {
   ImFontConfig cfg;

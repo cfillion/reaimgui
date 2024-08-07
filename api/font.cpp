@@ -49,6 +49,20 @@ If 'family_or_file' specifies a path to a font file (contains a / or \\):
   return new Font { family_or_file, size, API_GET(flags) };
 }
 
+API_FUNC(0_9_3, Font*, CreateFontFromMem,
+(const char*,data) (int,data_sz) (int,size) (RO<int*>,flags,ReaImGuiFontFlags_None),
+R"(Requires REAPER v6.44 or newer for EEL and Lua. Use CreateFont or
+explicitely specify data_sz to support older versions.
+
+- The first byte of 'flags' is used as the font index within the file
+- The font styles in 'flags' are simulated by the font renderer)")
+{
+  std::vector<unsigned char> buffer;
+  buffer.reserve(data_sz);
+  std::copy(data, data + data_sz, std::back_inserter(buffer));
+  return new Font { std::move(buffer), size, API_GET(flags) };
+}
+
 API_FUNC(0_4, Font*, GetFont, (Context*,ctx),
 "Get the current font")
 {

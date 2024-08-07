@@ -50,6 +50,7 @@ public:
     *SERIF      { "serif" };
 
   Font(const char *family, int size, int style);
+  Font(std::vector<unsigned char> &&, int size, int style);
   ImFont *load(ImFontAtlas *, float scale);
 
   bool attachable(const Context *) const override { return true; }
