@@ -3,6 +3,7 @@ version: "{build}-{branch}"
 stack: python 3
 
 install:
+  - sh:  sudo -H "$(command -v python3)" -m ensurepip --upgrade
   - sh:  sudo -H "$(command -v pip3)" install meson
   - cmd: pip3 install meson
   - git submodule update --init --depth 1
