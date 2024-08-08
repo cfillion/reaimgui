@@ -511,7 +511,7 @@ API_FUNC(0_9_2, void, SetNextItemShortcut, (Context*,ctx)
   ImGui::SetNextItemShortcut(key_chord, API_GET(flags));
 }
 
-API_SECTION_DEF(shortcutFlags, shortcuts, "Flags", "");
+API_SECTION_DEF(shortcutFlags, shortcuts, "Flags");
 API_ENUM(0_9_2, ImGui, InputFlags_None, "");
 API_ENUM(0_9_2, ImGui, InputFlags_Repeat,
   "Enable repeat. Return true on successive repeats.");
