@@ -64,7 +64,7 @@
 #define _SHIM_EXPORT(vernum, name, func)                          \
   namespace API::v##vernum::name {                                \
     struct meta {                                                 \
-      static constexpr char na##me[] = #name, vn[] = #vernum;     \
+      static constexpr char na##me[] { #name }, vn[] { #vernum }; \
       static constexpr std::string_view help { API_DO_NOT_USE };  \
       static constexpr VerNum version { CompStr::version<&vn> };  \
     };                                                            \

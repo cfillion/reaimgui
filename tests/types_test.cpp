@@ -10,7 +10,7 @@ namespace std {
   }
 }
 
-constexpr std::array<std::string_view, 12> names // global for GCC 7
+constexpr std::string_view names[] // global for GCC 7
   { "foo", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "norepeat_sz" };
 
 TEST(TypesTest, Builtins) {

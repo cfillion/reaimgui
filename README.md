@@ -18,7 +18,8 @@ Software requirements:
 - C++20 compiler* (C++17 is supported for Linux and macOS builds)
 - PHP (optional, for preprocessing of gfx2imgui.lua)
 
-(* The C++ compiler must be ABI-compatible with MSVC on Windows)
+(* The C++ compiler must be ABI-compatible with MSVC on Windows.
+Visual Studio 2022 17.11 or newer.)
 
 Library requirements:
 
