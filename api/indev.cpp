@@ -487,9 +487,9 @@ Registered routes may be visualized via Metrics/Debugger > Inputs (ShowMetricsWi
 
 API_FUNC(0_9, bool, IsKeyChordPressed, (Context*,ctx)
 (int,key_chord),
-R"(Was key chord (mods + key) pressed? You can pass e.g. `Mod_Shortcut | Key_S`
-as a key chord. // This doesn't do any routing or focus check,
-please consider using the Shortcut() function instead.)")
+R"(Was key chord (mods + key) pressed? You can pass e.g. `Mod_Ctrl | Key_S`
+as a key chord. This doesn't do any routing or focus check, consider using the
+Shortcut function instead.)")
 {
   FRAME_GUARD;
   return ImGui::IsKeyChordPressed(key_chord);
