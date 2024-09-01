@@ -250,6 +250,17 @@ std::optional<LRESULT> CocoaWindow::handleMessage
     // SWELL does not send WM_MOVE when resizing moves the window origin
     m_viewport->PlatformRequestMove = true;
     break;
+  case WM_MOUSEWHEEL:
+  case WM_MOUSEHWHEEL:
+    // [NSWindow setIgnoresMouseEvents] does not include mouse wheel events
+    if(m_viewport->Flags & ImGuiViewportFlags_NoInputs) {
+      HWND target { Platform::windowFromPoint(Platform::getCursorPos()) };
+      if(target && target != m_hwnd) {
+        [(__bridge NSView *)target scrollWheel:[NSApp currentEvent]];
+        return 0;
+      }
+    }
+    break;
   }
 
   return std::nullopt;
