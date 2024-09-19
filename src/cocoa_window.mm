@@ -169,7 +169,7 @@ void CocoaWindow::update()
       DetachWindowTopmostButton(m_hwnd, false);
       NSString *title { [window title] };
       [window setStyleMask:NSWindowStyleMaskBorderless]; // also clears the title
-      [window setTitle: title];
+      [window setTitle:title];
     }
     else {
       [window setStyleMask:m_defaultStyleMask];
