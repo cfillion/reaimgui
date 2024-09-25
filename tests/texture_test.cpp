@@ -317,6 +317,34 @@ TEST(TextureTest, InsertRemoveInsert) {
   }));
 }
 
+TEST(TextureTest, UpdateRemoveUpdate) {
+  std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
+    { ImGui::CreateContext(), &ImGui::DestroyContext };
+
+  CmdVector      cmds;
+  TextureManager manager;
+  TextureCookie  cookie;
+
+  manager.touch((void *)0x10, 1.f, nullptr);
+  manager.touch((void *)0x20, 1.f, nullptr);
+  manager.touch((void *)0x30, 1.f, nullptr);
+  manager.touch((void *)0x40, 1.f, nullptr);
+  manager.touch((void *)0x50, 1.f, nullptr);
+  manager.update(&cookie, LogCmds { cmds });
+  cmds.clear();
+
+  manager.invalidate((void *)0x10);
+  manager.remove((void *)0x20);
+  manager.remove((void *)0x30);
+  manager.invalidate((void *)0x50);
+  manager.update(&cookie, LogCmds { cmds });
+  EXPECT_THAT(cmds, testing::ElementsAreArray(CmdVector {
+    { &manager, TextureCmd::Update, 0, 1 },
+    { &manager, TextureCmd::Remove, 1, 2 },
+    { &manager, TextureCmd::Update, 2, 1 },
+  }));
+}
+
 TEST(TextureTest, UpdateOnReinsertion) {
   std::unique_ptr<ImGuiContext, decltype(&ImGui::DestroyContext)> ctx
     { ImGui::CreateContext(), &ImGui::DestroyContext };

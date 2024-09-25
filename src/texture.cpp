@@ -190,7 +190,7 @@ void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) 
       // execute the previous completed command
       runner(cmd);
       cookie->doCommand(cmd);
-      j = i;
+      j = i + (wantCmd == TextureCmd::Remove);
     }
 
     // prepare the next command
