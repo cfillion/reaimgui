@@ -259,9 +259,16 @@ void Window::mouseUp(const ImGuiMouseButton btn)
 
   if(Platform::getCapture() == m_hwnd && m_mouseDown == 0)
     Platform::releaseCapture();
+
+  // Clear NoInputs early to avoid sub-frame double-clicks reaching the window
+  // under only if that window is not one of ours (MouseHoveredViewport) to
+  // still allow for drag-docking.
   if(btn == ImGuiMouseButton_Left && m_ctx->imgui()->MovingWindow &&
-      m_ctx->imgui()->MovingWindow->Viewport == m_viewport)
+      m_ctx->imgui()->MovingWindow->Viewport == m_viewport &&
+      !m_ctx->IO().MouseHoveredViewport) {
     m_viewport->Flags &= ~ImGuiViewportFlags_NoInputs;
+    update(); // for the macOS backend to clear NSWindow's ignoresMouseEvents
+  }
 }
 
 void Window::releaseMouse()
