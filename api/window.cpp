@@ -102,7 +102,7 @@ API_FUNC(0_9, bool, BeginChild, (Context*,ctx)
 (const char*,str_id) (RO<double*>,size_w,0.0) (RO<double*>,size_h,0.0)
 (RO<int*>,child_flags,ImGuiChildFlags_None)
 (RO<int*>,window_flags,ImGuiWindowFlags_None),
-R"(Manual sizing (each axis can use a different setting e.g. ImVec2(0.0f, 400.0f)):
+R"(Manual sizing (each axis can use a different setting e.g. size_w=0 and size_h=400):
 - = 0.0: use remaining parent window size for this axis
 - \> 0.0: use specified size for this axis
 - < 0.0: right/bottom-align to specified distance from available content boundaries
