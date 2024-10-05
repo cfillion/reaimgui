@@ -29,8 +29,8 @@
 // Splash_GetWnd may be NULL for a brief moment after _s_splash_thread_running
 // is set internally. The misc timer may fire during this time, skipping
 // deferred scripts while still running extension callbacks (seen on Windows).
-// To workaround this, wait an extra frame before collecting unused objects.
-// [p=2450259]
+// This value must not be under 2 for working around that by waiting an extra
+// frame before collecting unused objects [p=2450259].
 constexpr unsigned char KEEP_ALIVE_FRAMES { 2 };
 
 // How many back-to-back GC frames to tolerate before complaining
@@ -59,12 +59,10 @@ static bool isDeferLoopBlocked()
   return (pauseDuringLoad && Splash_GetWnd()) || g_reentrant > 1;
 }
 
-class Resource::Timer {
-public:
+struct Resource::Timer {
   Timer();
   ~Timer();
 
-private:
   static void tick();
   static LRESULT CALLBACK mainProcOverride(HWND, unsigned int, WPARAM, LPARAM);
 };
@@ -191,7 +189,10 @@ bool Resource::heartbeat()
 
 bool Resource::isValid() const
 {
-  return true;
+  // Prevent usage of resources within their last frame of existence
+  // so that the texture manager doesn't refer to resources deleted at the
+  // frame end's heartbeat that were previously valid when the frame started.
+  return m_keepAlive;
 }
 
 void Resource::destroyAll()
@@ -203,4 +204,9 @@ void Resource::destroyAll()
 void Resource::bypassGCCheckOnce()
 {
   g_bypassGCCheckOnce = true;
+}
+
+void Resource::testHeartbeat()
+{
+  g_timer->tick();
 }

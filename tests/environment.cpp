@@ -15,8 +15,10 @@ static const auto g_setup
 
 void Environment::SetUp()
 {
+  GetAppVersion   = []() { return "5.99"; };
   GetMainHwnd     = []() -> HWND { return nullptr; };
   plugin_register = [](const char *, void *) { return 0; };
+  Splash_GetWnd   = []() -> HWND { return nullptr; };
 
 #ifndef _WIN32
   GetWindowLong = [](HWND, int)           -> LONG_PTR { return 0; };

@@ -54,6 +54,7 @@ public:
 
   static void destroyAll();
   static void bypassGCCheckOnce();
+  static void testHeartbeat();
 
   template<typename T>
   bool isInstanceOf() const
@@ -67,7 +68,7 @@ protected:
   virtual bool isValid() const;
 
 private:
-  class Timer;
+  struct Timer;
 
   static FlatSet<Resource *> g_rsx;
   static Timer *g_timer;
