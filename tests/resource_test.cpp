@@ -1,5 +1,7 @@
 #include "../src/resource.hpp"
 
+#include "../src/error.hpp"
+
 #include <gtest/gtest.h>
 
 struct Foo : Resource {
@@ -16,11 +18,11 @@ struct Baz : Resource {
 };
 
 struct Lifetime : Resource {
-  Lifetime(bool *alive) : m_alive { alive } { *m_alive = true; }
-  virtual ~Lifetime() { *m_alive = false; }
+  Lifetime(int *alive) : m_alive { alive } { ++*m_alive; }
+  virtual ~Lifetime() { --*m_alive; }
   bool attachable(const Context *) const override { return false; }
 
-  bool *m_alive;
+  int *m_alive;
 };
 
 TEST(ResourceTest, ValidateNull) {
@@ -84,26 +86,48 @@ TEST(ResourceTest, ForeachDerived) {
 }
 
 TEST(ResourceTest, KeepAlive) {
-  bool alive { false };
+  int alive {};
   Lifetime res { &alive };
-  EXPECT_TRUE(alive);
+  EXPECT_EQ(alive, 1);
   for(int i {}; i < 1024; ++i) {
     res.keepAlive();
     Resource::testHeartbeat();
-    ASSERT_TRUE(alive);
+    ASSERT_EQ(alive, 1);
   }
 }
 
 TEST(ResourceTest, GarbageCollection) {
-  bool alive { false };
+  int alive {};
   auto res = new Lifetime { &alive };
-  EXPECT_TRUE(alive);
+  EXPECT_EQ(alive, 1);
   for(int i {}; i < 2; ++i) {
     EXPECT_TRUE(Resource::isValid(res));
     Resource::testHeartbeat();
-    ASSERT_TRUE(alive);
+    ASSERT_EQ(alive, 1);
   }
   EXPECT_FALSE(Resource::isValid(res));
   Resource::testHeartbeat();
-  EXPECT_FALSE(alive);
+  EXPECT_EQ(alive, 0);
+}
+
+TEST(ResourceTest, MaxGCFrames) {
+  Foo timer;
+
+  int alive {};
+  for(int i {}; i < 120; ++i) {
+    new Lifetime { &alive };
+    timer.keepAlive();
+    Resource::testHeartbeat();
+  }
+  while(alive > 0) {
+    timer.keepAlive();
+    Resource::testHeartbeat();
+  }
+
+  EXPECT_THROW({ Foo foo; }, reascript_error);
+
+  Resource::bypassGCCheckOnce();
+  Foo allowed;
+
+  EXPECT_THROW({ Foo foo; }, reascript_error);
 }
