@@ -1087,6 +1087,7 @@ static void humanBinding(std::ostream &stream)
 <head>
   <meta charset="utf-8"/>
   <title>ReaImGui Documentation</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hack-font@3.3.0/build/web/hack-subset.css"/>
   <style>
   body {
     background-color: #0D0D0D;
@@ -1097,8 +1098,7 @@ static void humanBinding(std::ostream &stream)
     overflow-anchor: none;
   }
   body, pre, code {
-    font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
-                 Liberation Mono, monospace;
+    font-family: Menlo, "DejaVu Sans Mono", Hack, Consolas, monospace;
   }
   aside {
     background-color: #262626; /* Grey15 */
