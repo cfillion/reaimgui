@@ -160,7 +160,7 @@ Context::Context(const ImGuiID id, const char *label, const int userConfigFlags)
 Context::~Context()
 {
   setCurrent();
-  screenset_unregister(m_screensetID.data());
+  screenset_unregisterByParam(this);
 
   if(m_imgui->WithinFrameScope)
     endFrame(false);

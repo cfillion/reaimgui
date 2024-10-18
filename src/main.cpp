@@ -73,12 +73,12 @@ static bool loadAPI(void *(*getFunc)(const char *))
     IMPORT(GetToggleCommandState),
     IMPORT(plugin_getapi),
     IMPORT(plugin_register),
-    IMPORT(realloc_cmd_ptr), // v5.26
+    IMPORT(realloc_cmd_ptr), // v5.95
     IMPORT(ReaScriptError),
     IMPORT(RecursiveCreateDirectory),
     IMPORT(RefreshToolbar),
     IMPORT(screenset_registerNew), // v4
-    IMPORT(screenset_unregister),
+    IMPORT(screenset_unregisterByParam),
     IMPORT(ViewPrefs),
 
     IMPORT(LICE_CreateBitmap),

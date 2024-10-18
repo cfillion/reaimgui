@@ -105,7 +105,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     break;
   case WM_DESTROY:
     RemoveProp(handle, CLASS_NAME);
-    screenset_unregister(self->m_screensetKey.data());
+    screenset_unregisterByParam(handle);
     // Disable message passing to the derived class (not available at this point)
     SetWindowLongPtr(handle, GWLP_USERDATA, 0);
     // Announce to REAPER the window is no longer going to be valid
