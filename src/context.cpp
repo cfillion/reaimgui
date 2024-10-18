@@ -83,11 +83,6 @@ static std::string generateIniFilename(const ImGuiID id)
   return filename;
 }
 
-static std::string generateScreensetID(const ImGuiID id)
-{
-  return std::format("reaimgui:{:0{}X}", id, sizeof(id) * 2);
-}
-
 Context *Context::current()
 {
   if(ImGuiContext *imgui { ImGui::GetCurrentContext() })
@@ -102,16 +97,10 @@ void Context::clearCurrent()
 }
 
 Context::Context(const char *label, const int userConfigFlags)
-  : Context { ImHashStr(label), label, userConfigFlags }
-{
-}
-
-Context::Context(const ImGuiID id, const char *label, const int userConfigFlags)
-  : m_stateFlags {}, m_cursor {},
+  : m_id { ImHashStr(label) }, m_stateFlags {}, m_cursor {},
     m_lastFrame       { decltype(m_lastFrame)::clock::now()                },
     m_name            { label, ImGui::FindRenderedTextEnd(label)           },
-    m_iniFilename     { generateIniFilename(id)                            },
-    m_screensetID     { generateScreensetID(id)                            },
+    m_iniFilename     { generateIniFilename(m_id)                          },
     m_imgui           { ImGui::CreateContext(NO_DEFAULT_ATLAS)             },
     m_dockers         { std::make_unique<DockerList>()                     },
     m_textureManager  { std::make_unique<TextureManager>()                 },
@@ -154,7 +143,7 @@ Context::Context(const ImGuiID id, const char *label, const int userConfigFlags)
   if(Settings::NoSavedSettings)
     m_imgui->SettingsLoaded = true;
 
-  screenset_registerNew(m_screensetID.data(), &screensetProc, this);
+  screenset_registerNew(screensetKey().data(), &screensetProc, this);
 }
 
 Context::~Context()
@@ -672,6 +661,11 @@ bool Context::isAnyKeyDown() const
       return true;
   }
   return false;
+}
+
+std::string Context::screensetKey() const
+{
+  return std::format("reaimgui:{:0{}X}", m_id, sizeof(m_id) * 2);
 }
 
 LRESULT Context::screensetProc(const int action, const char *id,

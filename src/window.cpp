@@ -67,7 +67,10 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self->m_hwnd = handle;
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
     SetProp(handle, CLASS_NAME, self->m_ctx);
-    screenset_registerNew(self->m_screensetKey.data(), screensetProc, handle);
+
+    auto screensetKey { std::format("{}:{:0{}X}", self->m_ctx->screensetKey(),
+      self->m_viewport->ID, sizeof(self->m_viewport->ID) * 2) };
+    screenset_registerNew(screensetKey.data(), screensetProc, handle);
   }
   else {
     self = reinterpret_cast<Window *>(GetWindowLongPtr(handle, GWLP_USERDATA));
@@ -175,9 +178,6 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
       ("-hwnd_info", &Window::hwndInfo);
   else
     m_hwndInfo = g_hwndInfo.lock();
-
-  m_screensetKey = std::format("{}:{:0{}X}",
-    m_ctx->screensetKey(), m_viewport->ID, sizeof(m_viewport->ID) * 2);
 
   // HACK: See Window::show. Not using ViewportFlags because it would always be
   // set when using BeginPopup.

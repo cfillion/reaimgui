@@ -409,9 +409,9 @@ void DockerHost::create()
   HWND hwnd { m_window->nativeHandle() };
   m_viewport->PlatformHandle = hwnd;
 
-  const char *key { m_ctx->screensetKey() };
-  Dock_UpdateDockID(key, m_docker->id());
-  DockWindowAddEx(hwnd, m_ctx->name(), key, true);
+  const auto &key { m_ctx->screensetKey() };
+  Dock_UpdateDockID(key.c_str(), m_docker->id());
+  DockWindowAddEx(hwnd, m_ctx->name(), key.c_str(), true);
 
   // ImGuiViewportFlags_NoFocusOnAppearing is not inherited from the
   // docked windows, but would from the Begin in Docker::draw

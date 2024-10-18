@@ -85,8 +85,8 @@ public:
   ImGuiContext *imgui() const { return m_imgui.get(); }
   TextureManager *textureManager() const { return m_textureManager.get(); }
   RendererFactory *rendererFactory() const { return m_rendererFactory.get(); }
+  std::string screensetKey() const;
   const char *name() const { return m_name.c_str(); }
-  const char *screensetKey() const { return m_screensetID.c_str(); }
   const auto &draggedFiles() const { return m_draggedFiles; }
 
   bool attachable(const Context *) const override { return false; }
@@ -97,8 +97,6 @@ protected:
 private:
   static LRESULT screensetProc(const int action, const char *id,
     void *user, void *param, int paramSize);
-
-  Context(ImGuiID id, const char *label, int userConfigFlags);
 
   bool beginFrame();
   bool endFrame(bool render);
@@ -119,12 +117,13 @@ private:
   void loadScreenset(const char *data, unsigned long);
   long saveScreenset(char *data, unsigned long);
 
+  ImGuiID m_id;
   char m_stateFlags;
   HCURSOR m_cursor;
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
   std::vector<std::string> m_draggedFiles;
   std::vector<Resource *> m_attachments;
-  std::string m_name, m_iniFilename, m_screensetID;
+  std::string m_name, m_iniFilename;
 
   struct ContextDeleter { void operator()(ImGuiContext *); };
   std::unique_ptr<ImGuiContext, ContextDeleter> m_imgui;
