@@ -155,11 +155,14 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   case WM_RBUTTONUP:
     self->mouseUp(ImGuiMouseButton_Right);
     return 0;
-  case WM_NCHITTEST: // using [NSWindow ignoresMouseEvents] for this on macOS
+#endif // __APPLE__
+  case WM_NCHITTEST:
+    // Using [NSWindow ignoresMouseEvents] for this on macOS,
+    // however some scripts require SWELL's WindowFromPoint to return the
+    // correct underlying window anyway.
     if(self->m_viewport->Flags & ImGuiViewportFlags_NoInputs)
       return HTTRANSPARENT;
     break;
-#endif // __APPLE__
   }
 
   return DefWindowProc(handle, msg, wParam, lParam);
