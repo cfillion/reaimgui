@@ -32,7 +32,28 @@ UV parameters are texture coordinates in a scale of 0.0 (top/left) to 1.0
 Width/height are limited to 8192 pixels.
 
 There are also image functions in the DrawList API such as
-DrawList_AddImageQuad and DrawList_AddImageRounded.)");
+DrawList_AddImageQuad and DrawList_AddImageRounded.
+
+Caching of image objects may be implemented like this:
+
+    local images = {}
+    local function imageFromCache(fn)
+      local img = images[fn]
+      if not img then
+        img = {}
+        images[fn] = img
+      end
+
+      if not ImGui.ValidatePtr(img.inst, 'ImGui_Image*') then
+        if img.inst then images[img.inst] = nil end
+        img.inst = ImGui.CreateImage(fn)
+        local prev = images[img.inst]
+        if prev and prev ~= img then prev.inst = nil end
+        images[img.inst] = img
+      end
+
+      return img.inst
+    end)");
 
 API_FUNC(0_9, Image*, CreateImage,
 (const char*,file) (RO<int*>,flags),
