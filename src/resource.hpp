@@ -73,7 +73,8 @@ private:
   static FlatSet<Resource *> g_rsx;
   static Timer *g_timer;
 
-  unsigned char m_keepAlive, m_flags;
+  signed char m_keepAlive;
+  unsigned char m_flags;
 };
 
 API_REGISTER_OBJECT_TYPE(Resource);

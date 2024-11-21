@@ -180,7 +180,7 @@ void Resource::keepAlive()
 
 bool Resource::heartbeat()
 {
-  if(!m_keepAlive)
+  if(m_keepAlive < 0)
     return false;
 
   --m_keepAlive;
@@ -192,7 +192,7 @@ bool Resource::isValid() const
   // Prevent usage of resources within their last frame of existence
   // so that the texture manager doesn't refer to resources deleted at the
   // frame end's heartbeat that were previously valid when the frame started.
-  return m_keepAlive;
+  return m_keepAlive >= 0;
 }
 
 void Resource::destroyAll()

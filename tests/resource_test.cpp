@@ -100,7 +100,7 @@ TEST(ResourceTest, GarbageCollection) {
   int alive {};
   auto res = new Lifetime { &alive };
   EXPECT_EQ(alive, 1);
-  for(int i {}; i < 2; ++i) {
+  for(int i {}; i <= 2; ++i) {
     EXPECT_TRUE(Resource::isValid(res));
     Resource::testHeartbeat();
     ASSERT_EQ(alive, 1);
