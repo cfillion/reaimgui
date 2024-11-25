@@ -17,6 +17,7 @@
 
 #include "resource.hpp"
 
+#include "configvar.hpp"
 #include "context.hpp"
 #include "error.hpp"
 
@@ -31,6 +32,7 @@
 // deferred scripts while still running extension callbacks (seen on Windows).
 // This value must not be under 2 for working around that by waiting an extra
 // frame before collecting unused objects [p=2450259].
+// Only required in REAPER versions without __reascript_runcnt.
 constexpr unsigned char KEEP_ALIVE_FRAMES { 2 };
 
 // How many back-to-back GC frames to tolerate before complaining
@@ -43,7 +45,7 @@ enum Flags {
 FlatSet<Resource *> Resource::g_rsx;
 Resource::Timer *Resource::g_timer;
 
-static unsigned int  g_reentrant;
+static unsigned int  g_reentrant, g_scriptRunCount;
 static unsigned char g_consecutiveGcFrames;
 static WNDPROC g_mainProc;
 static bool g_disableProcOverride, g_bypassGCCheckOnce;
@@ -53,6 +55,13 @@ static bool g_disabledViewports;
 
 static bool isDeferLoopBlocked()
 {
+  static ConfigVar<unsigned int> runcnt { "__reascript_runcnt" };
+  if(runcnt) {
+    const bool blocked { *runcnt == g_scriptRunCount };
+    g_scriptRunCount = *runcnt;
+    return blocked;
+  }
+
   // REAPER v6.19+ does not execute deferred script callbacks
   // when the splash screen is open.
   static bool pauseDuringLoad { atof(GetAppVersion()) >= 6.19 };
@@ -69,7 +78,9 @@ struct Resource::Timer {
 
 Resource::Timer::Timer()
 {
-  if(!g_disableProcOverride) {
+  if(ConfigVar<unsigned int> runcnt { "__reascript_runcnt" })
+    g_scriptRunCount = *runcnt;
+  else if(!g_disableProcOverride) {
     LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
              oldProc { SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc) };
     g_mainProc = reinterpret_cast<WNDPROC>(oldProc);

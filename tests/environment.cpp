@@ -15,6 +15,7 @@ static const auto g_setup
 
 void Environment::SetUp()
 {
+  get_config_var  = [](const char *, int *) -> void * { return nullptr; };
   GetAppVersion   = []() { return "5.99"; };
   GetMainHwnd     = []() -> HWND { return nullptr; };
   plugin_register = [](const char *, void *) { return 0; };
