@@ -38,7 +38,16 @@ constexpr unsigned char KEEP_ALIVE_FRAMES { 2 };
 // How many back-to-back GC frames to tolerate before complaining
 constexpr unsigned char MAX_GC_FRAMES { 120 };
 
-enum Flags {
+enum GlobalFlags {
+  EnableTimer = 1<<0,
+  DisableProcOverride = 1<<1,
+  BypassGCCheckOnce = 1<<2,
+#ifndef __APPLE__
+  DisabledViewports = 1<<3,
+#endif
+};
+
+enum ResourceFlags {
   BypassGCCheck = 1<<0,
 };
 
@@ -46,17 +55,13 @@ FlatSet<Resource *> Resource::g_rsx;
 Resource::Timer *Resource::g_timer;
 
 static unsigned int  g_reentrant, g_scriptRunCount;
-static unsigned char g_consecutiveGcFrames;
+static unsigned char g_consecutiveGcFrames, g_flags;
 static WNDPROC g_mainProc;
-static bool g_disableProcOverride, g_bypassGCCheckOnce;
-#ifndef __APPLE__
-static bool g_disabledViewports;
-#endif
 
 static bool isDeferLoopBlocked()
 {
   static ConfigVar<unsigned int> runcnt { "__reascript_runcnt" };
-  if(runcnt) {
+  if(runcnt) { // v7.XX+
     const bool blocked { *runcnt == g_scriptRunCount };
     g_scriptRunCount = *runcnt;
     return blocked;
@@ -80,18 +85,19 @@ Resource::Timer::Timer()
 {
   if(ConfigVar<unsigned int> runcnt { "__reascript_runcnt" })
     g_scriptRunCount = *runcnt;
-  else if(!g_disableProcOverride) {
+
+  if(!(g_flags & DisableProcOverride)) {
     LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
              oldProc { SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc) };
     g_mainProc = reinterpret_cast<WNDPROC>(oldProc);
   }
 
-  plugin_register("timer", reinterpret_cast<void *>(&Timer::tick));
+  g_flags |= EnableTimer;
 }
 
 Resource::Timer::~Timer()
 {
-  plugin_register("-timer", reinterpret_cast<void *>(&Timer::tick));
+  g_flags &= EnableTimer;
   g_consecutiveGcFrames = 0;
 
   HWND mainWnd { GetMainHwnd() };
@@ -100,7 +106,7 @@ Resource::Timer::~Timer()
   if(GetWindowLongPtr(mainWnd, GWLP_WNDPROC) == expectedProc)
     SetWindowLongPtr(mainWnd, GWLP_WNDPROC, previousProc);
   else // prevent mainProcOverride from calling itself next time
-    g_disableProcOverride = true;
+    g_flags |= DisableProcOverride;
 }
 
 void Resource::Timer::tick()
@@ -108,10 +114,13 @@ void Resource::Timer::tick()
   const bool blocked { isDeferLoopBlocked() };
 
 #ifndef __APPLE__
-  if(blocked != g_disabledViewports) {
+  if(blocked != !!(g_flags & DisabledViewports)) {
     using namespace std::placeholders;
     Resource::foreach<Context>(std::bind(&Context::enableViewports, _1, !blocked));
-    g_disabledViewports = blocked;
+    if(blocked)
+      g_flags |= DisabledViewports;
+    else
+      g_flags &= ~DisabledViewports;
   }
 #endif
 
@@ -141,9 +150,13 @@ void Resource::Timer::tick()
 LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
   unsigned int msg, WPARAM wParam, LPARAM lParam)
 {
-  // Timers are reentrant on Windows and Linux, but deferred ReaScripts aren't.
-  // The workaround below suspends ReaImGui when a script opens a modal dialog,
-  // in order to not flag active contexts as being unused and destroying them.
+  // Timers are reentrant on Windows and Linux.
+  // Deferred ReaScripts and extension timers have separate reentrancy checks.
+  // The g_reentrant workaround below cannot distinguish between them.
+  // It's only used in REAPER versions without __reascript_runcnt (until v7.XX).
+  //
+  // Calling `tick` directly instead of registering an extension timer to bypass
+  // their reentrancy check which may be out of sync with deferred ReaScript's.
   //
   // 0x29a is REAPER's "misc timer". It's responsible for triggering both
   // deferred ReaScripts and extension timer callbacks (among other things).
@@ -151,6 +164,10 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
     g_reentrant += 1;
     const LRESULT ret { CallWindowProc(g_mainProc, hwnd, msg, wParam, lParam) };
     g_reentrant -= 1;
+
+    if(g_flags & EnableTimer)
+      tick();
+
     return ret;
   }
 
@@ -160,9 +177,9 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
 Resource::Resource()
   : m_keepAlive { KEEP_ALIVE_FRAMES }, m_flags {}
 {
-  if(g_bypassGCCheckOnce) {
+  if(g_flags & BypassGCCheckOnce) {
     // < 0.9 backward compatibility
-    g_bypassGCCheckOnce = false;
+    g_flags &= ~BypassGCCheckOnce;
     m_flags |= BypassGCCheck;
   }
   else if(g_consecutiveGcFrames >= MAX_GC_FRAMES)
@@ -214,7 +231,7 @@ void Resource::destroyAll()
 
 void Resource::bypassGCCheckOnce()
 {
-  g_bypassGCCheckOnce = true;
+  g_flags |= BypassGCCheckOnce;
 }
 
 void Resource::testHeartbeat()
