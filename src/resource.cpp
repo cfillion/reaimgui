@@ -61,7 +61,7 @@ static WNDPROC g_mainProc;
 static bool isDeferLoopBlocked()
 {
   static ConfigVar<unsigned int> runcnt { "__reascript_runcnt" };
-  if(runcnt) { // v7.XX+
+  if(runcnt) { // v7.28+
     const bool blocked { *runcnt == g_scriptRunCount };
     g_scriptRunCount = *runcnt;
     return blocked;
@@ -153,7 +153,7 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
   // Timers are reentrant on Windows and Linux.
   // Deferred ReaScripts and extension timers have separate reentrancy checks.
   // The g_reentrant workaround below cannot distinguish between them.
-  // It's only used in REAPER versions without __reascript_runcnt (until v7.XX).
+  // It's only used in REAPER versions without __reascript_runcnt (until v7.28).
   //
   // Calling `tick` directly instead of registering an extension timer to bypass
   // their reentrancy check which may be out of sync with deferred ReaScript's.
