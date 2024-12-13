@@ -80,7 +80,7 @@ API_FUNC(0_1, bool, ColorPicker4, (Context*,ctx)
   if(ref_col)
     Color(*ref_col, alpha).unpack(refCol);
 
-  if(ImGui::ColorPicker4(label, col, clean_flags, refCol)) {
+  if(ImGui::ColorPicker4(label, col, clean_flags, ref_col ? refCol : nullptr)) {
     // preserves unused bits from the input integer as-is (eg. REAPER's enable flag)
     *col_rgba = Color{col}.pack(alpha, *col_rgba);
     return true;
