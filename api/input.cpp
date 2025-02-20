@@ -270,7 +270,7 @@ API_ENUM(0_1, ImGui, InputTextFlags_CharsScientific,
 API_ENUM(0_1, ImGui, InputTextFlags_CharsUppercase,   "Turn a..z into A..Z.");
 API_ENUM(0_1, ImGui, InputTextFlags_CharsNoBlank,     "Filter out spaces, tabs.");
 
-API_SECTION_P(flags, "Inputs", "");
+API_SECTION_P(flags, "Inputs");
 API_ENUM(0_1, ImGui, InputTextFlags_AllowTabInput,
   "Pressing TAB input a '\\t' character into the text field.");
 API_ENUM(0_1, ImGui, InputTextFlags_EnterReturnsTrue,
@@ -283,7 +283,7 @@ API_ENUM(0_1, ImGui, InputTextFlags_CtrlEnterForNewLine,
 R"(In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter
    (default is opposite: unfocus with Ctrl+Enter, add line with Enter).)");
 
-API_SECTION_P(flags, "Other options", "");
+API_SECTION_P(flags, "Other options");
 API_ENUM(0_1, ImGui, InputTextFlags_ReadOnly,        "Read-only mode.");
 API_ENUM(0_1, ImGui, InputTextFlags_Password,
     "Password mode, display all characters as '*'.");
@@ -300,7 +300,7 @@ API_ENUM(0_1, ImGui, InputTextFlags_NoHorizontalScroll,
 API_ENUM(0_1, ImGui, InputTextFlags_NoUndoRedo,
     "Disable undo/redo. Note that input text owns the text data while active.");
 
-API_SECTION_P(flags, "Callback features", "");
+API_SECTION_P(flags, "Callback features");
 API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackCompletion,
   "Callback on pressing TAB (for completion handling).");
 API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackHistory,

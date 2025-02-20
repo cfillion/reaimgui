@@ -44,7 +44,7 @@ namespace API {
 
   struct Section {
     Section(const Section *parent, const char *file,
-      const char *title, const char *help = nullptr);
+      const char *title, const char *help = "");
     const Section *parent;
     const char *file, *title, *help;
   };

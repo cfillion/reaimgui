@@ -1271,7 +1271,7 @@ static void humanBinding(std::ostream &stream)
       outputHtmlText(stream, section->title);
       stream << "</h" << level << '>';
 
-      if(section->help)
+      if(strlen(section->help))
         outputMarkdown(stream, section->help);
     }
 
@@ -1404,7 +1404,7 @@ static void luaLSAnnotate(std::ostream &stream, const Function &func)
 
   for(auto it = func.sections.rbegin(); it < func.sections.rend(); ++it) {
     const API::Section *section { *it };
-    if(!section->help)
+    if(!strlen(section->help))
       continue;
     stream << "--- **";
     CommaSep heading { stream, " > " };
