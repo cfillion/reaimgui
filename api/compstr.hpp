@@ -28,6 +28,7 @@
 
 namespace CompStr {
 
+namespace {
 template<auto fn>
 class Basename {
   static constexpr auto compute()
@@ -43,10 +44,12 @@ class Basename {
 public:
   static constexpr auto value { compute() };
 };
+}
 
 template<auto input>
 static constexpr const char *basename { Basename<input>::value.data() };
 
+namespace {
 template<auto ver>
 class Version {
   static constexpr auto compute()
@@ -65,10 +68,12 @@ class Version {
 public:
   static constexpr auto value { compute() };
 };
+}
 
 template<auto input>
 static constexpr const char *version { Version<input>::value.data() };
 
+namespace {
 template<typename fn, typename Meta, bool UseArgNames = true>
 class APIDef;
 
@@ -128,6 +133,7 @@ class APIDef<R(*)(Args...), Meta, UseArgNames>
 public:
   static constexpr auto value { compute() };
 };
+}
 
 template<typename R, typename... Args, typename Meta, bool UseArgNames>
 class APIDef<R(*)(Args...) noexcept, Meta, UseArgNames>
