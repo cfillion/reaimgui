@@ -17,6 +17,7 @@
 
 #include "platform.hpp"
 
+#include "configvar.hpp"
 #include "context.hpp"
 #include "error.hpp"
 #include "import.hpp"
@@ -29,6 +30,8 @@
 static FuncImport<decltype(SetThreadDpiAwarenessContext)>
   _SetThreadDpiAwarenessContext
   { L"User32.dll", "SetThreadDpiAwarenessContext" };
+
+static int alwaysallowkb_val;
 
 class SetDpiAwareness {
 public:
@@ -286,10 +289,16 @@ HWND Platform::getCapture()
 
 void Platform::setCapture(HWND hwnd)
 {
+  // temporarily overriding "Allow keyboard commands when mouse-editing"
+  // to receive VK_MENU key events while the mouse is captured
+  ConfigVar<int> alwaysallowkb {"alwaysallowkb"};
+  alwaysallowkb_val = *alwaysallowkb;
+  *alwaysallowkb = 1;
   SetCapture(hwnd);
 }
 
 void Platform::releaseCapture()
 {
+  *ConfigVar<int> {"alwaysallowkb"} = alwaysallowkb_val;
   ReleaseCapture();
 }

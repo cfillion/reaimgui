@@ -32,7 +32,8 @@ public:
   }
 
   operator bool() const { return m_value != nullptr; }
-  T operator*() const { return *m_value; }
+  T &operator*() { return *m_value; }
+  const T &operator*() const { return *m_value; }
   T value_or(T fallback) const { return m_value ? *m_value : fallback; }
 
 private:
