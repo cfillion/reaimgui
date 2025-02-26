@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -29,8 +29,8 @@
 static const unsigned char *getPixels(
   const Texture &texture, int *width, int *height)
 {
-  FontList *list { static_cast<FontList *>(texture.object()) };
-  ImFontAtlas *atlas { list->getAtlas(texture.scale()) };
+  FontList *list {static_cast<FontList *>(texture.object())};
+  ImFontAtlas *atlas {list->getAtlas(texture.scale())};
   unsigned char *pixels {};
   atlas->GetTexDataAsRGBA32(&pixels, width, height);
   return pixels;
@@ -38,14 +38,14 @@ static const unsigned char *getPixels(
 
 static bool removeScale(const Texture &texture)
 {
-  FontList *list { static_cast<FontList *>(texture.object()) };
+  FontList *list {static_cast<FontList *>(texture.object())};
   return list->removeAtlas(texture.scale());
 }
 
 Font::Font(const char *family, const int size, const int flags)
-  : m_size { size }
+  : m_size {size}
 {
-  const int style { flags & ReaImGuiFontFlags_StyleMask };
+  const int style {flags & ReaImGuiFontFlags_StyleMask};
   if(strpbrk(family, "/\\") || !resolve(family, style)) {
     m_data = family;
     m_index = flags & ReaImGuiFontFlags_IndexMask;
@@ -54,8 +54,8 @@ Font::Font(const char *family, const int size, const int flags)
 }
 
 Font::Font(std::vector<unsigned char> &&data, const int size, const int flags)
-  : m_data { std::move(data) }, m_index { flags & ReaImGuiFontFlags_IndexMask },
-    m_size { size }, m_missingStyles { flags & ReaImGuiFontFlags_StyleMask }
+  : m_data {std::move(data)}, m_index {flags & ReaImGuiFontFlags_IndexMask},
+    m_size {size}, m_missingStyles {flags & ReaImGuiFontFlags_StyleMask}
 {
 }
 
@@ -71,15 +71,15 @@ ImFont *Font::load(ImFontAtlas *atlas, const float scale)
     cfg.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags_Oblique;
   cfg.FontNo = m_index;
 
-  const int scaledSize { static_cast<int>(m_size * scale) };
+  const int scaledSize {static_cast<int>(m_size * scale)};
   cfg.RasterizerDensity = static_cast<float>(scaledSize) / m_size;
 
   ImFont *font;
-  if(const std::string *path { std::get_if<std::string>(&m_data) })
+  if(const std::string *path {std::get_if<std::string>(&m_data)})
     font = atlas->AddFontFromFileTTF(path->c_str(), scaledSize, &cfg);
   else {
     cfg.FontDataOwnedByAtlas = false;
-    auto &data { std::get<std::vector<unsigned char>>(m_data) };
+    auto &data {std::get<std::vector<unsigned char>>(m_data)};
     font = atlas->AddFontFromMemoryTTF(data.data(), data.size(), scaledSize, &cfg);
   }
   font->Scale = static_cast<float>(m_size) / scaledSize;
@@ -88,7 +88,7 @@ ImFont *Font::load(ImFontAtlas *atlas, const float scale)
 }
 
 FontList::FontList(TextureManager *manager)
-  : m_textureManager { manager }, m_rebuild { false }
+  : m_textureManager {manager}, m_rebuild {false}
 {
 }
 
@@ -114,7 +114,7 @@ void FontList::add(Font *font)
 
 void FontList::remove(Font *font)
 {
-  const auto it { std::find(m_fonts.begin(), m_fonts.end(), font) };
+  const auto it {std::find(m_fonts.begin(), m_fonts.end(), font)};
   if(it == m_fonts.end())
     return;
 
@@ -140,13 +140,13 @@ void FontList::update()
 
 void FontList::setScale(const float scale)
 {
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io {ImGui::GetIO()};
 
-  std::unique_ptr<ImFontAtlas> &atlas { m_atlases[scale] };
+  std::unique_ptr<ImFontAtlas> &atlas {m_atlases[scale]};
   if(!atlas)
     atlas.reset(new ImFontAtlas);
 
-  const bool atlasChanged { atlas.get() != io.Fonts };
+  const bool atlasChanged {atlas.get() != io.Fonts};
   io.Fonts = atlas.get();
 
   if(!atlas->IsBuilt())
@@ -162,21 +162,21 @@ void FontList::setScale(const float scale)
 
 ImFontAtlas *FontList::getAtlas(const float scale)
 {
-  const auto it { m_atlases.find(scale) };
+  const auto it {m_atlases.find(scale)};
   return it != m_atlases.end() ? it->second.get() : nullptr;
 }
 
 bool FontList::removeAtlas(const float scale)
 {
-  const float primaryScale { ImGui::GetPlatformIO().Monitors[0].DpiScale };
+  const float primaryScale {ImGui::GetPlatformIO().Monitors[0].DpiScale};
   if(scale == primaryScale)
     return false;
 
-  const auto it { m_atlases.find(scale) };
+  const auto it {m_atlases.find(scale)};
   if(it == m_atlases.end())
     return true; // let the texture manager free it
 
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io {ImGui::GetIO()};
   if(io.Fonts == it->second.get())
     io.Fonts = m_atlases[primaryScale].get();
 
@@ -187,12 +187,12 @@ bool FontList::removeAtlas(const float scale)
 
 void FontList::build(const float scale)
 try {
-  auto &atlas { m_atlases.at(scale) }; // don't insert
+  auto &atlas {m_atlases.at(scale)}; // don't insert
   atlas->ClearFonts();
 
   ImFontConfig cfg;
   cfg.SizePixels = 13.f * scale;
-  ImFont *defFont { atlas->AddFontDefault(&cfg) };
+  ImFont *defFont {atlas->AddFontDefault(&cfg)};
   defFont->Scale = 1.f / scale;
 
   for(Font *font : m_fonts)
@@ -203,23 +203,23 @@ try {
   atlas->ClearInputData();
 }
 catch(const imgui_error &e) {
-  throw imgui_error { "cannot build the font atlas: {}", e.what() };
+  throw imgui_error {"cannot build the font atlas: {}", e.what()};
 }
 
 void FontList::migrateActiveFonts()
 {
-  if(ImFont *currentFont { ImGui::GetFont() })
+  if(ImFont *currentFont {ImGui::GetFont()})
     ImGui::SetCurrentFont(toCurrentAtlas(currentFont));
 
-  auto &fontStack { ImGui::GetCurrentContext()->FontStack };
+  auto &fontStack {ImGui::GetCurrentContext()->FontStack};
   for(int i {}; i < fontStack.Size; ++i)
     fontStack[i] = toCurrentAtlas(fontStack[i]);
 }
 
 Font *FontList::get(ImFont *instance) const
 {
-  const ImFontAtlas *atlas { ImGui::GetIO().Fonts };
-  for(int i { 1 }; i < atlas->Fonts.Size; ++i) {
+  const ImFontAtlas *atlas {ImGui::GetIO().Fonts};
+  for(int i {1}; i < atlas->Fonts.Size; ++i) {
     assert(static_cast<size_t>(i) <= m_fonts.size());
 
     if(atlas->Fonts[i] == instance)
@@ -233,26 +233,26 @@ ImFont *FontList::instanceOf(Font *font) const
   if(!font)
     return nullptr; // default font
 
-  const auto it { std::find(m_fonts.begin(), m_fonts.end(), font) };
+  const auto it {std::find(m_fonts.begin(), m_fonts.end(), font)};
   if(it == m_fonts.end())
-    throw reascript_error { "font is not attached to the context" };
+    throw reascript_error {"font is not attached to the context"};
 
-  const auto index { std::distance(m_fonts.begin(), it) + 1 };
-  const ImFontAtlas *atlas { ImGui::GetIO().Fonts };
+  const auto index {std::distance(m_fonts.begin(), it) + 1};
+  const ImFontAtlas *atlas {ImGui::GetIO().Fonts};
   assert(index < atlas->Fonts.Size);
   return atlas->Fonts[index];
 }
 
 ImFont *FontList::toCurrentAtlas(ImFont *oldInstance) const
 {
-  const ImFontAtlas *newAtlas { ImGui::GetIO().Fonts },
-                    *oldAtlas { oldInstance->ContainerAtlas };
+  const ImFontAtlas *newAtlas {ImGui::GetIO().Fonts},
+                    *oldAtlas {oldInstance->ContainerAtlas};
 
   if(newAtlas == oldAtlas)
     return oldInstance;
 
-  const int size { std::min(oldAtlas->Fonts.Size, newAtlas->Fonts.Size) };
-  for(int i { 0 }; i < size; ++i) {
+  const int size {std::min(oldAtlas->Fonts.Size, newAtlas->Fonts.Size)};
+  for(int i {0}; i < size; ++i) {
     if(oldAtlas->Fonts[i] == oldInstance)
       return newAtlas->Fonts[i];
   }

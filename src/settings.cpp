@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -77,7 +77,7 @@ template<typename... Ts>
 struct SettingVariant : std::variant<Setting<Ts>...> {
   template<typename T, typename... Args>
   constexpr SettingVariant(T *value, Args&&... args)
-    : std::variant<Setting<Ts>...> { Setting<T> { value, args... } } {}
+    : std::variant<Setting<Ts>...> {Setting<T> {value, args...}} {}
 };
 
 #if defined(_WIN32)
@@ -89,50 +89,50 @@ struct SettingVariant : std::variant<Setting<Ts>...> {
 #endif
 
 constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
-  { &Settings::NoSavedSettings, false, TEXT("nosavedsettings"),
-    TEXT("Restore window position, size, dock state and table settings"),
-    TEXT("Disable to force ReaImGui scripts to start with "
-         "their default first-use state (safe mode)."),
-    Checkbox { IDC_SAVEDSETTINGS, Checkbox::Invert },
+  {&Settings::NoSavedSettings, false, TEXT("nosavedsettings"),
+   TEXT("Restore window position, size, dock state and table settings"),
+   TEXT("Disable to force ReaImGui scripts to start with "
+        "their default first-use state (safe mode)."),
+   Checkbox {IDC_SAVEDSETTINGS, Checkbox::Invert},
   },
-  { &Settings::DockingEnable, true, TEXT("dockingenable"),
-    TEXT("Enable docking by default"),
-    TEXT("Drag the titlebar to dock windows into REAPER dockers or into other "
-         "windows of the same script instance."),
-    Checkbox { IDC_DOCKINGENABLE },
+  {&Settings::DockingEnable, true, TEXT("dockingenable"),
+   TEXT("Enable docking by default"),
+   TEXT("Drag the titlebar to dock windows into REAPER dockers or into other "
+        "windows of the same script instance."),
+   Checkbox {IDC_DOCKINGENABLE},
   },
-  { &Settings::DockingNoSplit, false, TEXT("dockingnosplit"),
-    TEXT("Enable window splitting when docking"),
-    TEXT("Disable to limit docking to merging multiple windows together into "
-         "tab bars (simplified docking mode)."),
-    Checkbox { IDC_DOCKSPLIT, Checkbox::Invert },
+  {&Settings::DockingNoSplit, false, TEXT("dockingnosplit"),
+   TEXT("Enable window splitting when docking"),
+   TEXT("Disable to limit docking to merging multiple windows together into "
+        "tab bars (simplified docking mode)."),
+   Checkbox {IDC_DOCKSPLIT, Checkbox::Invert},
   },
-  { &Settings::DockingWithShift, false, TEXT("dockingwithshift"),
-    TEXT("Dock only when holding Shift"),
-    TEXT("Press the Shift key to disable or enable docking when dragging "
-         "windows using the title bar. This option inverts the behavior."),
-    Checkbox { IDC_DOCKWITHSHIFT },
+  {&Settings::DockingWithShift, false, TEXT("dockingwithshift"),
+   TEXT("Dock only when holding Shift"),
+   TEXT("Press the Shift key to disable or enable docking when dragging "
+        "windows using the title bar. This option inverts the behavior."),
+   Checkbox {IDC_DOCKWITHSHIFT},
   },
-  { &Settings::DockingTransparentPayload, false, TEXT("dockingtransparentpayload"),
-    TEXT("Make windows transparent when docking"),
-    TEXT("Windows become semi-transparent when docking into another window. "
-         "Docking boxes are shown only in the target window."),
-    Checkbox { IDC_DOCKTRANSPARENT },
+  {&Settings::DockingTransparentPayload, false, TEXT("dockingtransparentpayload"),
+   TEXT("Make windows transparent when docking"),
+   TEXT("Windows become semi-transparent when docking into another window. "
+        "Docking boxes are shown only in the target window."),
+   Checkbox {IDC_DOCKTRANSPARENT},
   },
-  { &Settings::Renderer, nullptr, TEXT("renderer") PLATFORM_SUFFIX,
-    TEXT("Graphics renderer (advanced):"),
-    TEXT("Select a different renderer if you encounter compatibility problems."),
-    Combobox { IDC_RENDERER, IDC_RENDERERTXT },
+  {&Settings::Renderer, nullptr, TEXT("renderer") PLATFORM_SUFFIX,
+   TEXT("Graphics renderer (advanced):"),
+   TEXT("Select a different renderer if you encounter compatibility problems."),
+   Combobox {IDC_RENDERER, IDC_RENDERERTXT},
   },
-  { &Settings::ForceSoftware, false, TEXT("forcecpu") PLATFORM_SUFFIX,
-    TEXT("Disable hardware acceleration"),
-    TEXT("Enable this option force the use of software rendering. May improve "
-         "compatibility at the cost of potentially higher CPU usage."),
-    Checkbox { IDC_FORCESOFTWARE, Checkbox::NoAction }
+  {&Settings::ForceSoftware, false, TEXT("forcecpu") PLATFORM_SUFFIX,
+   TEXT("Disable hardware acceleration"),
+   TEXT("Enable this option force the use of software rendering. May improve "
+        "compatibility at the cost of potentially higher CPU usage."),
+   Checkbox {IDC_FORCESOFTWARE, Checkbox::NoAction}
   },
 };
 
-constexpr const TCHAR *SECTION { TEXT("reaimgui") };
+constexpr const TCHAR *SECTION {TEXT("reaimgui")};
 
 template<>
 void Setting<bool>::read(const TCHAR *file) const
@@ -151,7 +151,7 @@ void Setting<const RendererType *>::read(const TCHAR *file) const
 template<>
 void Setting<bool>::write(const TCHAR *file) const
 {
-  constexpr const TCHAR *bools[] { TEXT("0"), TEXT("1") };
+  constexpr const TCHAR *bools[] {TEXT("0"), TEXT("1")};
   WritePrivateProfileString(SECTION, key, bools[*value], file);
 }
 
@@ -179,15 +179,15 @@ void Combobox::setLabel(HWND window, const TCHAR *text) const
 
 void Checkbox::setValue(HWND window, const bool value) const
 {
-  const bool invert { (flags & Invert) != 0 };
+  const bool invert {(flags & Invert) != 0};
   CheckDlgButton(window, box, value ^ invert);
 }
 
 void Combobox::setValue(HWND window, const RendererType *value) const
 {
-  HWND combo { GetDlgItem(window, box) };
+  HWND combo {GetDlgItem(window, box)};
   SendMessage(combo, CB_RESETCONTENT, 0, 0);
-  for(const RendererType *type { RendererType::head() }; type; type = type->next) {
+  for(const RendererType *type {RendererType::head()}; type; type = type->next) {
     const auto index {
       SendMessage(combo, CB_ADDSTRING, 0,
                   reinterpret_cast<LPARAM>(WIDEN(type->displayName)))
@@ -200,14 +200,14 @@ void Combobox::setValue(HWND window, const RendererType *value) const
 
 void Checkbox::apply(HWND window, bool *value) const
 {
-  const bool invert { (flags & Invert) != 0 };
+  const bool invert {(flags & Invert) != 0};
   *value = !!IsDlgButtonChecked(window, box) ^ invert;
 }
 
 void Combobox::apply(HWND window, const RendererType **value) const
 {
-  HWND combo { GetDlgItem(window, box) };
-  const auto index { SendMessage(combo, CB_GETCURSEL, 0, 0) };
+  HWND combo {GetDlgItem(window, box)};
+  const auto index {SendMessage(combo, CB_GETCURSEL, 0, 0)};
   *value = reinterpret_cast<const RendererType *>
     (SendMessage(combo, CB_GETITEMDATA, index, 0));
 }
@@ -247,7 +247,7 @@ std::optional<bool> Combobox::isChangeEvent
 
 static std::string makeActionName(const TCHAR *key)
 {
-  std::string name { narrow(key) };
+  std::string name {narrow(key)};
   std::transform(name.begin(), name.end(), name.begin(), toupper);
   return name;
 }
@@ -257,7 +257,7 @@ void Checkbox::setup(const Setting<bool> &setting) const
   if(flags & NoAction)
     return;
 
-  const bool invert { (flags & Invert) != 0 };
+  const bool invert {(flags & Invert) != 0};
   new Action {
     makeActionName(setting.key), narrow(setting.label),
     [value = setting.value        ] { *value = !*value;       },
@@ -267,7 +267,7 @@ void Checkbox::setup(const Setting<bool> &setting) const
 
 static void updateHelp(HWND hwnd)
 {
-  constexpr int IDC_PREFS_HELP { 0x4eb }, IDT_PREFS_HELP_CLEAR { 0x654 };
+  constexpr int IDC_PREFS_HELP {0x4eb}, IDT_PREFS_HELP_CLEAR {0x654};
 
   static const TCHAR *shownText;
 
@@ -276,7 +276,7 @@ static void updateHelp(HWND hwnd)
     return; // another preference page is active
   }
 
-  HWND prefs { GetParent(hwnd) };
+  HWND prefs {GetParent(hwnd)};
   KillTimer(prefs, IDT_PREFS_HELP_CLEAR);
 
   POINT point;
@@ -302,9 +302,9 @@ static void updateHelp(HWND hwnd)
 static bool isChangeEvent(const short control, const short notification)
 {
   for(const auto &setting : SETTINGS) {
-    if(auto rv { std::visit([control, notification] (const auto &setting) {
+    if(auto rv {std::visit([control, notification] (const auto &setting) {
       return setting.control.isChangeEvent(control, notification);
-    }, setting) })
+    }, setting)})
       return *rv;
   }
 
@@ -315,7 +315,7 @@ template<typename T>
 static const Setting<T> *findSetting(T *value)
 {
   for(const auto &variant : SETTINGS) {
-    const auto setting { std::get_if<Setting<T>>(&variant) };
+    const auto setting {std::get_if<Setting<T>>(&variant)};
     if(setting && setting->value == value)
       return setting;
   }
@@ -325,8 +325,8 @@ static const Setting<T> *findSetting(T *value)
 
 static void updateRendererOptions(HWND hwnd)
 {
-  static auto renderer      { findSetting(&Settings::Renderer) };
-  static auto forceSoftware { findSetting(&Settings::ForceSoftware) };
+  static auto renderer      {findSetting(&Settings::Renderer)};
+  static auto forceSoftware {findSetting(&Settings::ForceSoftware)};
 
   const RendererType *type;
   renderer->control.apply(hwnd, &type);
@@ -359,7 +359,7 @@ static void processCommand(HWND hwnd,
   const short control, const short notification)
 {
   if(isChangeEvent(control, notification)) {
-    constexpr int IDC_PREFS_APPLY { 0x478 };
+    constexpr int IDC_PREFS_APPLY {0x478};
     EnableWindow(GetDlgItem(GetParent(hwnd), IDC_PREFS_APPLY), true);
     if(control == IDC_RENDERER)
       updateRendererOptions(hwnd);
@@ -376,7 +376,7 @@ static void processCommand(HWND hwnd,
 static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
   const WPARAM wParam, const LPARAM)
 {
-  constexpr int WM_PREFS_APPLY { WM_USER * 2 };
+  constexpr int WM_PREFS_APPLY {WM_USER * 2};
 
   switch(message) {
   case WM_INITDIALOG: {
@@ -393,8 +393,8 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
   case WM_SIZE: {
     RECT pageRect;
     GetClientRect(hwnd, &pageRect);
-    const auto pageWidth  { pageRect.right - pageRect.left },
-               pageHeight { pageRect.bottom - pageRect.top };
+    const auto pageWidth  {pageRect.right - pageRect.left},
+               pageHeight {pageRect.bottom - pageRect.top};
     SetWindowPos(GetDlgItem(hwnd, IDC_GROUPBOX), nullptr,
       0, 0, pageWidth, pageHeight,
       SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
@@ -443,10 +443,10 @@ void Settings::setup()
   plugin_register("prefpage", reinterpret_cast<void *>(&g_page));
 
 #ifdef _WIN32
-  const std::wstring &fn { widen(get_ini_file()) };
-  const wchar_t *file { fn.c_str() };
+  const std::wstring &fn {widen(get_ini_file())};
+  const wchar_t *file {fn.c_str()};
 #else
-  const char *file { get_ini_file() };
+  const char *file {get_ini_file()};
 #endif
 
   for(const auto &setting : SETTINGS) {
@@ -463,10 +463,10 @@ void Settings::setup()
 void Settings::save()
 {
 #ifdef _WIN32
-  const std::wstring &fn { widen(get_ini_file()) };
-  const wchar_t *file { fn.c_str() };
+  const std::wstring &fn {widen(get_ini_file())};
+  const wchar_t *file {fn.c_str()};
 #else
-  const char *file { get_ini_file() };
+  const char *file {get_ini_file()};
 #endif
 
   for(const auto &setting : SETTINGS)

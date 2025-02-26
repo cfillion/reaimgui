@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -38,7 +38,7 @@ public:
   {
     static_assert(sizeof(Type::key) <= sizeof(Key));
     static_assert(Type::key <= 1ull<<53, "out of double range (EEL incompatible)");
-    uintptr_t out { reinterpret_cast<uintptr_t>(in) };
+    uintptr_t out {reinterpret_cast<uintptr_t>(in)};
     out ^= static_cast<uintptr_t>(Type::key);
     return reinterpret_cast<ProxyT *>(out);
   }

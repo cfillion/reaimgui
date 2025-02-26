@@ -34,7 +34,7 @@ fragment half4 fragment_main(VertexOut in [[stage_in]],
   // sampler parameters are documented at page 39
   // "Table 2.7. Sampler state enumeration values"
   // https://developer.apple.com/metal/Metal-Shading-Language-Specification.pdf
-  constexpr sampler linearSampler { address::repeat, filter::linear };
+  constexpr sampler linearSampler {address::repeat, filter::linear};
   const half4 texColor = texture.sample(linearSampler, in.texCoords);
   return half4(in.color) * texColor;
 }

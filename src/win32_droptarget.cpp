@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,7 +20,7 @@
 #include "context.hpp"
 
 DropTarget::DropTarget(Context *ctx)
-  : m_ctx { ctx }, m_refCount { 0 }
+  : m_ctx {ctx}, m_refCount {0}
 {
 }
 
@@ -43,7 +43,7 @@ ULONG DropTarget::AddRef()
 
 ULONG DropTarget::Release()
 {
-  const LONG refCount { InterlockedDecrement(&m_refCount) };
+  const LONG refCount {InterlockedDecrement(&m_refCount)};
   if(refCount == 0)
     delete this;
   return refCount;
@@ -51,7 +51,7 @@ ULONG DropTarget::Release()
 
 HRESULT DropTarget::DragEnter(IDataObject *dataObj, DWORD, POINTL, DWORD *effect)
 {
-  FORMATETC format { CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+  FORMATETC format {CF_HDROP, nullptr, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
   STGMEDIUM medium;
 
   if(SUCCEEDED(dataObj->GetData(&format, &medium))) {

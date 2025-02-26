@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -39,7 +39,7 @@
     const_cast<char *>(BOOST_PP_STRINGIZE(name)));
 
 #define SHIM(vernum, imports) namespace {           \
-  constexpr VerNum api_version { vernum };          \
+  constexpr VerNum api_version {vernum};            \
   struct ImportTable : API::ImportTable {           \
     ImportTable() : API::ImportTable {              \
       api_version, sizeof(*this) } {}               \
@@ -61,23 +61,23 @@
 #define SHIM_CONST(version, name, value) \
   SHIM_FUNC(version, int, name, API_NO_ARGS) { return value; }
 
-#define _SHIM_EXPORT(vernum, name, func)                          \
-  namespace API::v##vernum::name {                                \
-    struct meta {                                                 \
-      static constexpr char na##me[] = #name, vn[] = #vernum;     \
-      static constexpr std::string_view help { API_DO_NOT_USE };  \
-      static constexpr VerNum version { CompStr::version<&vn> };  \
-    };                                                            \
-  }                                                               \
-  _API_EXPORT(ShimFunc, vernum, name) {                           \
-    API::v##vernum::name::meta::version, api_version, #name,      \
-    CompStr::apidef<func, API::v##vernum::name::meta, false>,     \
-    reinterpret_cast<void *>(CallConv::Safe<                      \
-      func, API::v##vernum::name::meta>::invoke),                 \
-    reinterpret_cast<void *>(                                     \
-      CallConv::ReaScript<CallConv::Safe<                         \
-        func, API::v##vernum::name::meta>::invoke>::apply),       \
-    reinterpret_cast<void *>(func),                               \
+#define _SHIM_EXPORT(vernum, name, func)                       \
+  namespace API::v##vernum::name {                             \
+    struct meta {                                              \
+      static constexpr char na##me[] = #name, vn[] = #vernum;  \
+      static constexpr std::string_view help {API_DO_NOT_USE}; \
+      static constexpr VerNum version {CompStr::version<&vn>}; \
+    };                                                         \
+  }                                                            \
+  _API_EXPORT(ShimFunc, vernum, name) {                        \
+    API::v##vernum::name::meta::version, api_version, #name,   \
+    CompStr::apidef<func, API::v##vernum::name::meta, false>,  \
+    reinterpret_cast<void *>(CallConv::Safe<                   \
+      func, API::v##vernum::name::meta>::invoke),              \
+    reinterpret_cast<void *>(                                  \
+      CallConv::ReaScript<CallConv::Safe<                      \
+        func, API::v##vernum::name::meta>::invoke>::apply),    \
+    reinterpret_cast<void *>(func),                            \
   };
 
 #define _SHIM_WRAP(func) ShimWrap<&api, &decltype(api)::func>

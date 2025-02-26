@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -33,8 +33,8 @@ constexpr char GET_WND_CTX {};
 
 static Context *getWindowContext(NSWindow *window)
 {
-  if(Context *(^getContext)() { objc_getAssociatedObject(window, &GET_WND_CTX) }) {
-    Context *ctx { getContext() };
+  if(Context *(^getContext)() {objc_getAssociatedObject(window, &GET_WND_CTX)}) {
+    Context *ctx {getContext()};
     if(Resource::isValid(ctx))
       return ctx;
     else
@@ -47,7 +47,7 @@ static Context *getWindowContext(NSWindow *window)
 @implementation EventHandler
 - (EventHandler *)init
 {
-  NSNotificationCenter *nc { [NSNotificationCenter defaultCenter] };
+  NSNotificationCenter *nc {[NSNotificationCenter defaultCenter]};
   [nc addObserver:self
          selector:@selector(screenChanged:)
              name:NSApplicationDidChangeScreenParametersNotification
@@ -66,9 +66,9 @@ static Context *getWindowContext(NSWindow *window)
     NSEventMaskRightMouseDown | NSEventMaskRightMouseUp |
     NSEventMaskOtherMouseDown | NSEventMaskOtherMouseUp
   };
-  __weak EventHandler *weakSelf { self }; // don't prevent dealloc
+  __weak EventHandler *weakSelf {self}; // don't prevent dealloc
   auto onMouseEvent
-    { ^NSEvent *(NSEvent *event) { return [weakSelf appMouseEvent:event]; } };
+    {^NSEvent *(NSEvent *event) { return [weakSelf appMouseEvent:event]; }};
   m_mouseMonitor = [NSEvent addLocalMonitorForEventsMatchingMask:mouseEventMask
                                                          handler:onMouseEvent];
 
@@ -83,7 +83,7 @@ static Context *getWindowContext(NSWindow *window)
 
 - (void)watchView:(NSView *)view context:(Context *)ctx
 {
-  Context *(^getContext)() { ^{ return ctx; } };
+  Context *(^getContext)() {^{ return ctx; }};
   objc_setAssociatedObject([view window], &GET_WND_CTX,
                            getContext, OBJC_ASSOCIATION_COPY);
 }
@@ -99,12 +99,12 @@ static Context *getWindowContext(NSWindow *window)
 - (void)menuDidBeginTracking:(NSNotification *)notification
 {
   // Not using Context::updateFocus: the window under the menu still has focus
-  if(Context *ctx { Window::contextFromHwnd(GetForegroundWindow()) })
+  if(Context *ctx {Window::contextFromHwnd(GetForegroundWindow())})
     ctx->IO().ClearInputKeys();
 
-  if(HWND capture { Platform::getCapture() }) {
+  if(HWND capture {Platform::getCapture()}) {
     Window *window
-      { reinterpret_cast<Window *>(GetWindowLongPtr(capture, GWLP_USERDATA)) };
+      {reinterpret_cast<Window *>(GetWindowLongPtr(capture, GWLP_USERDATA))};
     window->releaseMouse();
   }
 }
@@ -113,9 +113,9 @@ static Context *getWindowContext(NSWindow *window)
 {
   // The next window has not yet been promoted to key window yet at this time.
   // It may or may not belong to the same context, so updateFocus() must wait.
-  NSWindow *window { [notification object] };
+  NSWindow *window {[notification object]};
   dispatch_async(dispatch_get_main_queue(), ^{
-    if(Context *context { getWindowContext(window) })
+    if(Context *context {getWindowContext(window)})
       context->updateFocus();
   });
 }
@@ -131,16 +131,16 @@ static Context *getWindowContext(NSWindow *window)
   // NSEvent buttonNumber. CGEventCreateMouseEvent can set the buttonNumber
   // but not the target window.
 
-  HWND capture { Platform::getCapture() }; // only returns our windows
+  HWND capture {Platform::getCapture()}; // only returns our windows
   if(!capture)
     return event;
 
-  const auto button { [event buttonNumber] }; // 0-32
+  const auto button {[event buttonNumber]}; // 0-32
   if(button >= ImGuiMouseButton_COUNT)
     return nil;
 
   Window *window
-    { reinterpret_cast<Window *>(GetWindowLongPtr(capture, GWLP_USERDATA)) };
+    {reinterpret_cast<Window *>(GetWindowLongPtr(capture, GWLP_USERDATA))};
 
   switch(event.type) {
   case NSEventTypeLeftMouseDown:

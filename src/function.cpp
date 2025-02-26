@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -59,8 +59,8 @@ void Function::setup()
 }
 
 Function::Function(const char *eel2Code)
-  : m_strings { std::make_unique<eel_string_context_state>() },
-    m_vm { NSEEL_VM_alloc() }
+  : m_strings {std::make_unique<eel_string_context_state>()},
+    m_vm {NSEEL_VM_alloc()}
 {
   NSEEL_VM_SetCustomFuncThis(m_vm.get(), this);
   NSEEL_VM_SetFunctionTable(m_vm.get(), NSEEL_ADDFUNC_DESTINATION);
@@ -72,10 +72,10 @@ Function::Function(const char *eel2Code)
   if(m_program)
     m_strings->update_named_vars(m_vm.get());
   else {
-    if(const char *err { NSEEL_code_getcodeerror(m_vm.get()) })
-      throw reascript_error { "failed to compile EEL code: {}", err };
+    if(const char *err {NSEEL_code_getcodeerror(m_vm.get())})
+      throw reascript_error {"failed to compile EEL code: {}", err};
     else
-      throw reascript_error { "failed to compile EEL code" };
+      throw reascript_error {"failed to compile EEL code"};
   }
 }
 
@@ -105,7 +105,7 @@ std::optional<double> Function::getDouble(const char *name) const
   // GetNamedVar lookups from a cache of all registered variables
   // (built using NSEEL_VM_enumallvars)
   EEL_F allowNamedString;
-  if(EEL_F *variable { m_strings->GetNamedVar(name, false, &allowNamedString) })
+  if(EEL_F *variable {m_strings->GetNamedVar(name, false, &allowNamedString)})
     return *variable;
 
   return std::nullopt;
@@ -113,7 +113,7 @@ std::optional<double> Function::getDouble(const char *name) const
 
 bool Function::setDouble(const char *name, const double value)
 {
-  if(EEL_F *variable { m_strings->GetNamedVar(name, true, nullptr) }) {
+  if(EEL_F *variable {m_strings->GetNamedVar(name, true, nullptr)}) {
     *variable = value;
     return true;
   }
@@ -123,7 +123,7 @@ bool Function::setDouble(const char *name, const double value)
 
 std::optional<std::string_view> Function::getString(const char *name) const
 {
-  if(const auto &index { getDouble(name) })
+  if(const auto &index {getDouble(name)})
     return getString(*index);
 
   return std::nullopt;
@@ -135,13 +135,13 @@ std::optional<std::string_view> Function::getString(const double index) const
   if(!m_strings->GetStringForIndex(index, &storage, false) || !storage)
     return std::nullopt;
   return std::string_view
-    { storage->Get(), static_cast<size_t>(storage->GetLength()) };
+    {storage->Get(), static_cast<size_t>(storage->GetLength())};
 }
 
 bool Function::setString(const char *name, const std::string_view &value)
 {
   EEL_F allowNamedString;
-  const EEL_F *index { m_strings->GetNamedVar(name, true, &allowNamedString) };
+  const EEL_F *index {m_strings->GetNamedVar(name, true, &allowNamedString)};
   if(!index)
     return false;
   WDL_FastString *storage {};
@@ -158,8 +158,8 @@ static bool copyArray(NSEEL_VMCTX vm, std::optional<double> slot,
   if(!slot)
     return false;
 
-  auto *data { values->data },
-       *end  { values->data + values->size };
+  auto *data {values->data},
+       *end  {values->data + values->size};
 
   while(data < end) {
     EEL_F *ram;
@@ -167,7 +167,7 @@ static bool copyArray(NSEEL_VMCTX vm, std::optional<double> slot,
     if(!(ram = NSEEL_VM_getramptr(vm, *slot, &validCount)))
       return false;
 
-    const int blockSize { std::min(static_cast<int>(end - data), validCount) };
+    const int blockSize {std::min(static_cast<int>(end - data), validCount)};
     static_assert(sizeof(EEL_F[0xFF]) == sizeof(double[0xFF]));
     if constexpr(WriteToEEL)
       std::memcpy(ram, data, blockSize * sizeof(double));

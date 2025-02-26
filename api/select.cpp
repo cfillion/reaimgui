@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -26,11 +26,11 @@ static std::vector<const char *> splitList(const char *buf, const int size)
   // REAPER's buf, buf_sz mechanism did not handle strings containing null
   // bytes (and len was inaccurate) prior to v6.44.
   if(size < 1 || buf[size - 1] != '\0') {
-    throw reascript_error { "requires REAPER v6.44 or newer"
-      " (use BeginCombo or BeginListBox for wider compatibility)" };
+    throw reascript_error {"requires REAPER v6.44 or newer"
+      " (use BeginCombo or BeginListBox for wider compatibility)"};
   }
   else if(size < 2 || buf[size - 2] != '\0')
-    throw reascript_error { "items must be null-terminated" };
+    throw reascript_error {"items must be null-terminated"};
 
   std::vector<const char *> items;
 
@@ -70,7 +70,7 @@ null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)")
   FRAME_GUARD;
   assertValid(current_item);
 
-  const auto &strings { splitList(items, items_sz) };
+  const auto &strings {splitList(items, items_sz)};
   return ImGui::Combo(label, current_item,
     strings.data(), strings.size(), API_GET(popup_max_height_in_items));
 }
@@ -104,7 +104,7 @@ Each item must be null-terminated (requires REAPER v6.44 or newer for EEL and Lu
   FRAME_GUARD;
   assertValid(current_item);
 
-  const auto &strings { splitList(items, items_sz) };
+  const auto &strings {splitList(items, items_sz)};
   return ImGui::ListBox(label, current_item,
     strings.data(), strings.size(), API_GET(height_in_items));
 }

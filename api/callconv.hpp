@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -38,22 +38,22 @@ struct ReaScript<fn>
     if(static_cast<size_t>(argc) < sizeof...(Args))
       return nullptr;
 
-    const auto &args { makeTuple(argv, std::index_sequence_for<Args...>{}) };
+    const auto &args {makeTuple(argv, std::index_sequence_for<Args...>{})};
 
     if constexpr(std::is_void_v<R>) {
       std::apply(fn, args);
       return nullptr;
     }
     else if constexpr(std::is_floating_point_v<R>) {
-      const auto value { std::apply(fn, args) };
-      void *storage { argv[argc - 1] };
+      const auto value {std::apply(fn, args)};
+      void *storage {argv[argc - 1]};
       *static_cast<double *>(storage) = value;
       return storage;
     }
     else {
       // cast numbers to have the same size as a pointer to avoid warnings
       using IntPtrR = std::conditional_t<std::is_pointer_v<R>, R, uintptr_t>;
-      const auto value { static_cast<IntPtrR>(std::apply(fn, args)) };
+      const auto value {static_cast<IntPtrR>(std::apply(fn, args))};
       return reinterpret_cast<const void *>(value);
     }
   }

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +28,7 @@
 
 static GdkWindow *getOSWindow(HWND hwnd)
 {
-  static bool hasOSWindow { atof(GetAppVersion()) >= 6.57 };
+  static bool hasOSWindow {atof(GetAppVersion()) >= 6.57};
 
   return static_cast<GdkWindow *>(
     hasOSWindow ? SWELL_GetOSWindow(hwnd, "GdkWindow")
@@ -39,7 +39,7 @@ static GdkWindow *getOSWindow(HWND hwnd)
 template<typename T>
 static T *currentEvent(const int expectedType)
 {
-  void *event { SWELL_GetOSEvent("GdkEvent") };
+  void *event {SWELL_GetOSEvent("GdkEvent")};
   if(event && static_cast<GdkEvent *>(event)->type == expectedType)
     return static_cast<T *>(event);
   else
@@ -47,7 +47,7 @@ static T *currentEvent(const int expectedType)
 }
 
 GDKWindow::GDKWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }, m_ime { nullptr }, m_imeOpen { false }
+  : Window {viewport, dockerHost}, m_ime {nullptr}, m_imeOpen {false}
 {
 }
 
@@ -78,7 +78,7 @@ GdkWindow *GDKWindow::getOSWindow() const
 
 static void imeCommit(GtkIMContext *, gchar *input, gpointer data)
 {
-  Context *ctx { reinterpret_cast<Context *>(data) };
+  Context *ctx {reinterpret_cast<Context *>(data)};
   while(*input) {
     ctx->charInput(g_utf8_get_char(input));
     input = g_utf8_next_char(input);
@@ -141,16 +141,16 @@ void GDKWindow::update()
   if(GetFocus() == m_hwnd)
     SWELL_SetClassName(m_hwnd, getSwellClass());
 
-  const ImGuiViewportFlags diff { m_previousFlags ^ m_viewport->Flags };
+  const ImGuiViewportFlags diff {m_previousFlags ^ m_viewport->Flags};
   m_previousFlags = m_viewport->Flags;
 
   if(!diff || isDocked())
     return;
 
-  GdkWindow *native { getOSWindow() };
+  GdkWindow *native {getOSWindow()};
 
   if(diff & ImGuiViewportFlags_NoDecoration) {
-    auto style { GetWindowLongPtr(m_hwnd, GWL_STYLE) };
+    auto style {GetWindowLongPtr(m_hwnd, GWL_STYLE)};
 
     if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration)
       style &= ~WS_CAPTION;
@@ -185,7 +185,7 @@ void GDKWindow::update()
 
   if(diff & ImGuiViewportFlags_NoFocusOnClick) {
     const bool focusOnClick
-      { !(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnClick) };
+      {!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnClick)};
     gdk_window_set_accept_focus(native, focusOnClick);
   }
 
@@ -203,7 +203,7 @@ void GDKWindow::update()
 
 float GDKWindow::globalScaleFactor()
 {
-  static float scale { SWELL_GetScaling256() / 256.f };
+  static float scale {SWELL_GetScaling256() / 256.f};
   return scale;
 }
 
@@ -214,7 +214,7 @@ void GDKWindow::setIME(ImGuiPlatformImeData *data)
 
   // cannot use m_viewport->Pos when docked
   // (IME cursor location must be relative to the dock host window)
-  HWND container { m_hwnd };
+  HWND container {m_hwnd};
   while(!::getOSWindow(container))
     container = GetParent(container);
   RECT containerPos;
@@ -273,7 +273,7 @@ std::optional<LRESULT> GDKWindow::handleMessage
 {
   switch(msg) {
   case WM_DROPFILES: {
-    HDROP drop { reinterpret_cast<HDROP>(wParam) };
+    HDROP drop {reinterpret_cast<HDROP>(wParam)};
     m_ctx->beginDrag(drop);
     DragFinish(drop);
     m_ctx->endDrag(true);
@@ -281,9 +281,9 @@ std::optional<LRESULT> GDKWindow::handleMessage
   }
   case WM_LBUTTONDOWN: // for supporting thumb buttons
   case WM_LBUTTONUP: //   SWELL treats thumb buttons as Left
-    if(auto *event { currentEvent<GdkEventButton>(GDK_BUTTON_PRESS) })
+    if(auto *event {currentEvent<GdkEventButton>(GDK_BUTTON_PRESS)})
       mouseDown(translateButton(event));
-    else if(auto *event { currentEvent<GdkEventButton>(GDK_BUTTON_RELEASE) })
+    else if(auto *event {currentEvent<GdkEventButton>(GDK_BUTTON_RELEASE)})
       mouseUp(translateButton(event));
     else if(!currentEvent<GdkEventButton>(GDK_2BUTTON_PRESS))
       break;  // do default SWELL message handling in Window
@@ -343,15 +343,15 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
 
 void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
 {
-  const GdkEventType expectedType { down ? GDK_KEY_PRESS : GDK_KEY_RELEASE };
-  auto *gdkEvent { currentEvent<GdkEventKey>(expectedType) };
+  const GdkEventType expectedType {down ? GDK_KEY_PRESS : GDK_KEY_RELEASE};
+  auto *gdkEvent {currentEvent<GdkEventKey>(expectedType)};
 
   struct Modifier { unsigned int vkey; ImGuiKey modkey, ikey; };
   constexpr Modifier modifiers[] {
-    { VK_CONTROL, ImGuiMod_Ctrl,  ImGuiKey_LeftCtrl  },
-    { VK_SHIFT,   ImGuiMod_Shift, ImGuiKey_LeftShift },
-    { VK_MENU,    ImGuiMod_Alt,   ImGuiKey_LeftAlt   },
-    { VK_LWIN,    ImGuiMod_Super, ImGuiKey_LeftSuper },
+    {VK_CONTROL, ImGuiMod_Ctrl,  ImGuiKey_LeftCtrl },
+    {VK_SHIFT,   ImGuiMod_Shift, ImGuiKey_LeftShift},
+    {VK_MENU,    ImGuiMod_Alt,   ImGuiKey_LeftAlt  },
+    {VK_LWIN,    ImGuiMod_Super, ImGuiKey_LeftSuper},
   };
 
   for(const auto &modifier : modifiers) {
@@ -376,7 +376,7 @@ void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
     if(m_imeOpen && down)
       return;
 
-    if(ImGuiKey namedKey { translateGdkKey(gdkEvent) }) {
+    if(ImGuiKey namedKey {translateGdkKey(gdkEvent)}) {
       m_ctx->keyInput(namedKey, down);
       return;
     }

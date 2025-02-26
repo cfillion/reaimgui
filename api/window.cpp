@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -34,7 +34,7 @@ using SizeCallback = Callback<ImGuiSizeCallbackData>;
 class DecorationBehavior {
 public:
   DecorationBehavior(Context *ctx, ImGuiWindowFlags *flags)
-    : m_enabled { !ctx->IO().ConfigViewportsNoDecoration }
+    : m_enabled {!ctx->IO().ConfigViewportsNoDecoration}
   {
     if(m_enabled) {
       ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
@@ -55,9 +55,9 @@ private:
 static bool nativeWindowBehavior(const char *name, bool *p_open)
 {
   ImGuiWindowFlags flags {};
-  DecorationBehavior dec { Context::current(), &flags };
+  DecorationBehavior dec {Context::current(), &flags};
   ImGui::Begin(name, openPtrBehavior(p_open), flags);
-  auto &beginCount { ImGui::GetCurrentWindow()->BeginCount };
+  auto &beginCount {ImGui::GetCurrentWindow()->BeginCount};
   ImGui::End();
 
   --beginCount;
@@ -78,9 +78,9 @@ R"(Push window to the stack and start appending to it.
 {
   FRAME_GUARD;
 
-  WindowFlags clean_flags { API_GET(flags) };
-  DecorationBehavior dec { ctx, *clean_flags };
-  const bool rv { ImGui::Begin(name, openPtrBehavior(p_open), clean_flags) };
+  WindowFlags clean_flags {API_GET(flags)};
+  DecorationBehavior dec {ctx, *clean_flags};
+  const bool rv {ImGui::Begin(name, openPtrBehavior(p_open), clean_flags)};
   if(!rv)
     ImGui::End();
   return rv;
@@ -211,7 +211,7 @@ R"(Get current window position in screen space (note: it is unlikely you need to
 use this. Consider using current layout pos instead, GetCursorScreenPos()).)")
 {
   FRAME_GUARD;
-  const ImVec2 &vec { ImGui::GetWindowPos() };
+  const ImVec2 &vec {ImGui::GetWindowPos()};
   if(x) *x = vec.x;
   if(y) *y = vec.y;
 }
@@ -222,7 +222,7 @@ R"(Get current window size (note: it is unlikely you need to use this.
 Consider using GetCursorScreenPos() and e.g. GetContentRegionAvail() instead))")
 {
   FRAME_GUARD;
-  const ImVec2 &vec { ImGui::GetWindowSize() };
+  const ImVec2 &vec {ImGui::GetWindowSize()};
   if(w) *w = vec.x;
   if(h) *h = vec.y;
 }
@@ -485,7 +485,7 @@ API_FUNC(0_1, void, GetContentRegionAvail, (Context*,ctx)
 {
   FRAME_GUARD;
 
-  const ImVec2 &vec { ImGui::GetContentRegionAvail() };
+  const ImVec2 &vec {ImGui::GetContentRegionAvail()};
   if(x) *x = vec.x;
   if(y) *y = vec.y;
 }
@@ -497,7 +497,7 @@ or current column boundaries), in windows coordinates.)")
 {
   FRAME_GUARD;
 
-  const ImVec2 &vec { ImGui::GetContentRegionMax() };
+  const ImVec2 &vec {ImGui::GetContentRegionMax()};
   if(x) *x = vec.x;
   if(y) *y = vec.y;
 }
@@ -508,7 +508,7 @@ API_FUNC(0_1, void, GetWindowContentRegionMin, (Context*,ctx)
 {
   FRAME_GUARD;
 
-  const ImVec2 &vec { ImGui::GetWindowContentRegionMin() };
+  const ImVec2 &vec {ImGui::GetWindowContentRegionMin()};
   if(x) *x = vec.x;
   if(y) *y = vec.y;
 }
@@ -520,7 +520,7 @@ overridden with SetNextWindowContentSize, in window coordinates.)")
 {
   FRAME_GUARD;
 
-  const ImVec2 &vec { ImGui::GetWindowContentRegionMax() };
+  const ImVec2 &vec {ImGui::GetWindowContentRegionMax()};
   if(x) *x = vec.x;
   if(y) *y = vec.y;
 }
@@ -625,8 +625,8 @@ Display ReaImGui version, Dear ImGui version, credits and build/system informati
 {
   FRAME_GUARD;
 
-  ImGuiWindowFlags flags { ImGuiWindowFlags_AlwaysAutoResize };
-  DecorationBehavior dec { ctx, &flags };
+  ImGuiWindowFlags flags {ImGuiWindowFlags_AlwaysAutoResize};
+  DecorationBehavior dec {ctx, &flags};
   if(ImGui::Begin("About Dear ImGui", openPtrBehavior(p_open), flags)) {
     ImGui::Separator();
     ImGui::Text("reaper_imgui %s (API %s)",

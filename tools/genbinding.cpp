@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -38,11 +38,11 @@
 
 static char API_VERSION[255];
 constexpr const char *GENERATED_FOR
-  { "Generated for ReaImGui v" REAIMGUI_VERSION };
+  {"Generated for ReaImGui v" REAIMGUI_VERSION};
 
 struct Type {
-  Type(const char *val)             : m_value { val } {}
-  Type(const std::string_view &val) : m_value { val } {}
+  Type(const char *val)             : m_value {val} {}
+  Type(const std::string_view &val) : m_value {val} {}
 
   bool isVoid()      const { return m_value == "void"; }
   bool isInt()       const { return m_value == "int"; }
@@ -58,7 +58,7 @@ struct Type {
   Type removePtr() const
   {
     if(isPointer())
-      return { std::string_view { m_value.data(), m_value.size() - 1 } };
+      return {std::string_view {m_value.data(), m_value.size() - 1}};
     else
       return *this;
   }
@@ -130,7 +130,7 @@ struct Function {
 
 bool Function::operator<(const Function &o) const
 {
-  const size_t maxDepth { std::min(sections.size(), o.sections.size()) };
+  const size_t maxDepth {std::min(sections.size(), o.sections.size())};
   for(size_t i {}; i < maxDepth; ++i) {
     if(sections[i] != o.sections[i])
       return strcmp(sections[i]->title, o.sections[i]->title) < 0;
@@ -156,14 +156,14 @@ static std::string_view defaultValue(const std::string_view value)
 
   struct Macro { std::string_view name, value; };
   constexpr Macro macros[] {
-#define MACRO(m) { "-" #m, BOOST_PP_STRINGIZE(m) }
+#define MACRO(m) {"-" #m, BOOST_PP_STRINGIZE(m)}
     MACRO(FLT_MIN), MACRO(FLT_MAX)
 #undef MACRO
   };
 
   for(const Macro &macro : macros) {
     assert(macro.name != macro.value); // ensure the macro is defined
-    const bool isNeg { value[0] == '-' };
+    const bool isNeg {value[0] == '-'};
     if(value.substr(isNeg) == macro.value)
       return macro.name.substr(!isNeg);
   }
@@ -172,24 +172,24 @@ static std::string_view defaultValue(const std::string_view value)
 }
 
 Function::Function(const API::Symbol *api)
-  : section { api->m_section }, name { api->name() },
-    type { api->definition() }, line { api->m_line },
-    version { api->version() }, flags { api->m_flags }
+  : section {api->m_section}, name {api->name()},
+    type {api->definition()}, line {api->m_line},
+    version {api->version()}, flags {api->m_flags}
 {
-  const API::Section *curSection { section };
+  const API::Section *curSection {section};
   do { sections.push_front(curSection); }
   while((curSection = curSection->parent));
 
-  const char *def { api->definition() };
-  std::string_view argTypes { nextString(def) };
-  std::string_view argNames { nextString(def) };
+  const char *def {api->definition()};
+  std::string_view argTypes {nextString(def)};
+  std::string_view argNames {nextString(def)};
   doc = nextString(def);
-  std::string_view argDefvs { nextString(def) }; // non-standard field
+  std::string_view argDefvs {nextString(def)}; // non-standard field
 
   while(argTypes.size() > 0 && argNames.size() > 0) { // argDefvs may be empty
-    size_t typeLen { argTypes.find(',') },
-           nameLen { argNames.find(',') },
-           defvLen { argDefvs.find('\31') };
+    size_t typeLen {argTypes.find(',')},
+           nameLen {argNames.find(',')},
+           defvLen {argDefvs.find('\31')};
 
     if(argDefvs.substr(0, strlen("ImGui")) == "ImGui") {
       argDefvs.remove_prefix(strlen("ImGui"));
@@ -223,7 +223,7 @@ Function::Function(const API::Symbol *api)
 
 struct CommaSep {
   CommaSep(std::ostream &stream, const char *sep = ", ")
-    : m_stream { stream }, m_sep { sep }, m_printSep { false } {}
+    : m_stream {stream}, m_sep {sep}, m_printSep {false} {}
 
   template<typename T>
   std::ostream &operator<<(const T rhs)
@@ -288,21 +288,21 @@ namespace ImGui {
 
     inline void check_error()
     {
-      if(const char *err { last_error() })
-        throw ImGui_Error { err };
+      if(const char *err {last_error()})
+        throw ImGui_Error {err};
     }
 
     struct nullopt_t {
       constexpr explicit nullopt_t(int) {}
     };
-    constexpr nullopt_t nullopt { 0 };
+    constexpr nullopt_t nullopt {0};
 
     template<typename T, typename E = void>
     class optional {
     public:
       using value_type = T*;
-      optional(nullopt_t) : m_present { false } {}
-      optional(const T v) : m_value { v }, m_present { true } {}
+      optional(nullopt_t) : m_present {false} {}
+      optional(const T v) : m_value {v}, m_present {true} {}
       optional(value_type) = delete;
       operator value_type() { return m_present ? &m_value : nullptr; }
 
@@ -315,8 +315,8 @@ namespace ImGui {
     class optional<T, typename std::enable_if_t<std::is_pointer_v<T>>> {
     public:
       using value_type = T;
-      optional(nullopt_t) : optional { nullptr } {}
-      optional(T ptr) : m_value { ptr } {}
+      optional(nullopt_t) : optional {nullptr} {}
+      optional(T ptr) : m_value {ptr} {}
       operator value_type() { return m_value; }
 
     private:
@@ -335,8 +335,8 @@ namespace ImGui {
     class function<R(Args...), nodiscard> {
     public:
       using Proc = R(*)(typename param<Args>::value_type...) noexcept;
-      function() : m_proc { nullptr } {}
-      function(Proc proc) : m_proc { proc } {}
+      function() : m_proc {nullptr} {}
+      function(Proc proc) : m_proc {proc} {}
       operator bool() const { return m_proc != nullptr; }
 
       template<typename... CallArgs, bool ND = nodiscard>
@@ -359,7 +359,7 @@ namespace ImGui {
 
     protected:
       friend void ImGui::init(void *(*)(const char *));
-      function(void *proc) : m_proc { reinterpret_cast<Proc>(proc) } {}
+      function(void *proc) : m_proc {reinterpret_cast<Proc>(proc)} {}
 
     private:
       R invoke(Args... args) const
@@ -369,7 +369,7 @@ namespace ImGui {
           check_error();
         }
         else {
-          const R rv { m_proc(std::forward<Args>(args)...) };
+          const R rv {m_proc(std::forward<Args>(args)...)};
           check_error();
           return rv;
         }
@@ -395,7 +395,7 @@ namespace ImGui {
       stream << func.type << ' ';
     else {
       stream << "details::function<" << func.type << '(';
-      CommaSep cs { stream };
+      CommaSep cs {stream};
       for(const Argument &arg : func.args) {
         if(arg.isOptional()) {
           cs << "details::optional<";
@@ -429,7 +429,7 @@ void ImGui::init(void *(*plugin_getapi)(const char *))
   void *(*get_func)(const char *v, const char *n) noexcept = reinterpret_cast<decltype(get_func)>(plugin_getapi("ImGui__getapi"));
   details::last_error = reinterpret_cast<decltype(details::last_error)>(plugin_getapi("ImGui__geterr"));
   if(!get_func || !details::last_error)
-    throw ImGui_Error { "ReaImGui is not installed or too old" };
+    throw ImGui_Error {"ReaImGui is not installed or too old"};
 )";
 
   for(const Function &func : g_funcs) {
@@ -455,7 +455,7 @@ void ImGui::init(void *(*plugin_getapi)(const char *))
 
 static std::string zigType(const Type type, bool isOptional = false)
 {
-  const auto noptr { type.removePtr() };
+  const auto noptr {type.removePtr()};
 
   std::string base;
   if(type.isString())
@@ -472,7 +472,7 @@ static std::string zigType(const Type type, bool isOptional = false)
     base = noptr;
 
   if(type.isPointer() && !type.isString()) {
-    constexpr std::string_view prefix { "ImGui_" };
+    constexpr std::string_view prefix {"ImGui_"};
     if(base.substr(0, prefix.size()) == prefix) {
       base = base.substr(prefix.size()) + "Ptr";
       isOptional = false;
@@ -521,7 +521,7 @@ const API = struct {
 
     stream << "  " << func.name << ": ";
     stream << "*fn(";
-    CommaSep cs { stream };
+    CommaSep cs {stream};
     for(const Argument &arg : func.args)
       cs << zigType(arg.type, arg.isOptional());
     stream << ") callconv(.C) " << zigType(func.type) << ",\n";
@@ -551,7 +551,7 @@ const API = struct {
            << "&api." << func.name << ", " << minArgc << ", &.{";
     if(!func.args.empty())
       stream << ' ';
-    CommaSep cs { stream };
+    CommaSep cs {stream};
     for(const Argument &arg : func.args) {
       if(arg.isOptional()) {
         if(!arg.isOutput() && arg.type.isScalarPtr())
@@ -621,7 +621,7 @@ fn function(comptime func: anytype, min_argc: comptime_int,
       var cast_args: std.meta.Tuple(arg_types) = undefined;
       if(args.len < min_argc) {
         @compileError(std.fmt.comptimePrint("expected {}..{} arguments, got {}",
-          .{ min_argc, cast_args.len, args.len }));
+          .{min_argc, cast_args.len, args.len}));
       }
       inline for(0..cast_args.len) |i| {
         if(i >= args.len) {
@@ -747,7 +747,7 @@ void Function::cppSignature(std::ostream &stream) const
   if(isEnum())
     return;
   stream << '(';
-  CommaSep cs { stream };
+  CommaSep cs {stream};
   for(const Argument &arg : args) {
     cs << hl(Highlight::Type);
     if(arg.isOptional() && !arg.isOutput() && arg.type.isScalarPtr())
@@ -783,9 +783,9 @@ static std::string_view luaType(const Type type)
 
 void Function::luaSignature(std::ostream &stream) const
 {
-  bool hasReturns { false };
+  bool hasReturns {false};
   {
-    CommaSep cs { stream };
+    CommaSep cs {stream};
     if(!type.isVoid()) {
       cs << hl(Highlight::Type) << luaType(type) << hl() << ' ';
       if(!isEnum()) {
@@ -808,8 +808,8 @@ void Function::luaSignature(std::ostream &stream) const
     return;
   stream << '(';
   {
-    const bool listOutputs { hasOptionalArgs() };
-    CommaSep cs { stream };
+    const bool listOutputs {hasOptionalArgs()};
+    CommaSep cs {stream};
     for(const Argument &arg : args) {
       if(arg.isBufSize())
         continue;
@@ -844,7 +844,7 @@ void Function::eelSignature(std::ostream &stream, const bool legacySyntax) const
     return;
   }
 
-  CommaSep cs { stream };
+  CommaSep cs {stream};
   if(!type.isVoid())
     stream << hl(Highlight::Type) << type << hl() << ' ';
 
@@ -895,7 +895,7 @@ static std::string_view pythonType(const Type type)
 void Function::pythonSignature(std::ostream &stream) const
 {
   if(hasOutputArgs()) {
-    CommaSep cs { stream };
+    CommaSep cs {stream};
     stream << '(';
     if(!type.isVoid())
       cs << hl(Highlight::Type) << pythonType(type) << hl() << " retval";
@@ -912,7 +912,7 @@ void Function::pythonSignature(std::ostream &stream) const
 
   stream << "ImGui." << name << '(';
   {
-    CommaSep cs { stream };
+    CommaSep cs {stream};
     for(const Argument &arg : args) {
       if(arg.isBufSize() || !arg.isInput())
         continue;
@@ -930,8 +930,8 @@ void Function::pythonSignature(std::ostream &stream) const
 static auto findNewSection
   (const Function &func, std::vector<const API::Section *> &oldSections)
 {
-  auto oldSection { oldSections.begin() };
-  auto newSection { func.sections.begin() };
+  auto oldSection {oldSections.begin()};
+  auto newSection {func.sections.begin()};
   while(oldSection != oldSections.end() && newSection != func.sections.end() &&
         *oldSection == *newSection)
     ++oldSection, ++newSection;
@@ -944,7 +944,7 @@ static void outputHtmlText(std::ostream &stream, std::string_view text)
 {
   // outputting char by char is slower than as many as possible at once
   while(!text.empty()) {
-    const size_t nextEntity { text.find_first_of("<>&") };
+    const size_t nextEntity {text.find_first_of("<>&")};
     stream << text.substr(0, nextEntity);
     if(nextEntity == std::string_view::npos)
       return;
@@ -989,19 +989,19 @@ static std::vector<Reference> parseReferences(const std::string_view &input)
 
   std::vector<Reference> links;
 
-  auto start { input.begin() };
+  auto start {input.begin()};
   while(start != input.end()) {
     start = std::find_if(start, input.end(),
       [&](const unsigned char c) { return charmap[c] & InitialChar; });
     if(start == input.end())
       break;
-    const auto end { std::find_if_not(start, input.end(),
-      [&](const unsigned char c) { return charmap[c] & ValidChar; }) };
+    const auto end {std::find_if_not(start, input.end(),
+      [&](const unsigned char c) { return charmap[c] & ValidChar; })};
     // constructor taking (first, last) iterators is C++20
-    const std::string_view word { &*start, static_cast<size_t>(end - start) };
+    const std::string_view word {&*start, static_cast<size_t>(end - start)};
     decltype(funcs)::const_iterator it;
     if(*word.rbegin() == '*') {
-      const std::string_view prefix { word.substr(0, word.size() - 1) };
+      const std::string_view prefix {word.substr(0, word.size() - 1)};
       it = funcs.lower_bound(prefix);
       // starts_with is C++20
       if(it->first.substr(0, prefix.size()) != prefix)
@@ -1010,7 +1010,7 @@ static std::vector<Reference> parseReferences(const std::string_view &input)
     else
       it = funcs.find(word);
     if(it != funcs.end())
-      links.push_back({ it->second, word });
+      links.push_back({it->second, word});
     start += word.size();
   }
 
@@ -1020,10 +1020,10 @@ static std::vector<Reference> parseReferences(const std::string_view &input)
 static void outputHtmlBlock(std::ostream &stream, std::string_view html,
   const bool escape = true)
 {
-  const auto &links { parseReferences(html) };
-  for(auto link { links.begin() }; link != links.end(); ++link) {
-    const auto prefixSize { link->range.data() - html.data() };
-    const std::string_view prefix { html.substr(0, prefixSize) };
+  const auto &links {parseReferences(html)};
+  for(auto link {links.begin()}; link != links.end(); ++link) {
+    const auto prefixSize {link->range.data() - html.data()};
+    const std::string_view prefix {html.substr(0, prefixSize)};
     if(escape)
       outputHtmlText(stream, prefix);
     else
@@ -1040,14 +1040,14 @@ static void outputHtmlBlock(std::ostream &stream, std::string_view html,
 
 static void outputMarkdown(const char *data, MD_SIZE size, void *userData)
 {
-  std::ostream &stream { *static_cast<std::ostream *>(userData) };
-  outputHtmlBlock(stream, { data, size }, false);
+  std::ostream &stream {*static_cast<std::ostream *>(userData)};
+  outputHtmlBlock(stream, {data, size}, false);
 }
 
 static void outputMarkdown(std::ostream &stream, const std::string_view &text)
 {
   constexpr auto parserFlags
-    { MD_FLAG_NOHTML | MD_FLAG_PERMISSIVEURLAUTOLINKS | MD_FLAG_TABLES };
+    {MD_FLAG_NOHTML | MD_FLAG_PERMISSIVEURLAUTOLINKS | MD_FLAG_TABLES};
   if(md_html(text.data(), text.size(), &outputMarkdown, &stream, parserFlags, 0)) {
     stream << "<pre>";
     outputHtmlBlock(stream, text);
@@ -1057,7 +1057,7 @@ static void outputMarkdown(std::ostream &stream, const std::string_view &text)
 
 static void outputHtmlSlug(std::ostream &stream, const std::string_view &text)
 {
-  bool prevWasPrintable { false };
+  bool prevWasPrintable {false};
   for(const char c : text) {
     if(isalnum(c)) {
       stream << static_cast<char>(tolower(c));
@@ -1073,7 +1073,7 @@ static void outputHtmlSlug(std::ostream &stream, const std::string_view &text)
 static void outputSectionSlug(std::ostream &stream,
   const Function &func, std::deque<const API::Section *>::const_iterator section)
 {
-  for(auto it { func.sections.begin() }; it <= section; ++it) {
+  for(auto it {func.sections.begin()}; it <= section; ++it) {
     if(it != func.sections.begin())
       stream << '-';
     outputHtmlSlug(stream, (*it)->title);
@@ -1228,12 +1228,12 @@ static void humanBinding(std::ostream &stream)
   std::vector<const API::Section *> sections;
   stream << "<h2 id=\"toc\">Table of Contents</h2>";
   stream << "<div class=\"toc\">";
-  long long level { -1 };
+  long long level {-1};
   for(const Function &func : g_funcs) {
-    for(auto it { findNewSection(func, sections) };
+    for(auto it {findNewSection(func, sections)};
         it != func.sections.end(); ++it) {
-      const API::Section *section { *it };
-      const auto thisLevel { std::distance(func.sections.begin(), it) + 1 };
+      const API::Section *section {*it};
+      const auto thisLevel {std::distance(func.sections.begin(), it) + 1};
 
       if(thisLevel == level)
         stream << "</li>";
@@ -1258,10 +1258,10 @@ static void humanBinding(std::ostream &stream)
   stream << "</div>\n\n";
 
   for(const Function &func : g_funcs) {
-    for(auto it { findNewSection(func, sections) };
+    for(auto it {findNewSection(func, sections)};
         it != func.sections.end(); ++it) {
-      const API::Section *section { *it };
-      const auto level { std::distance(func.sections.begin(), it) + 2 };
+      const API::Section *section {*it};
+      const auto level {std::distance(func.sections.begin(), it) + 2};
 
       if(level == 2)
         stream << "<hr/>";
@@ -1291,12 +1291,12 @@ static void humanBinding(std::ostream &stream)
     };
     using namespace std::placeholders;
     static const Target targets[] {
-      { "C++",        API::Symbol::TargetNative, std::mem_fn(&Function::cppSignature)              },
-      { "EEL",        API::Symbol::TargetScript | API::Symbol::TargetEELFunc,
-        std::bind(&Function::eelSignature, _1, _2, false) },
-      { "Legacy EEL", API::Symbol::TargetScript, std::bind(&Function::eelSignature, _1, _2, true)  },
-      { "Lua",        API::Symbol::TargetScript, std::mem_fn(&Function::luaSignature)              },
-      { "Python",     API::Symbol::TargetScript, std::mem_fn(&Function::pythonSignature)           },
+      {"C++",        API::Symbol::TargetNative, std::mem_fn(&Function::cppSignature)            },
+      {"EEL",        API::Symbol::TargetScript | API::Symbol::TargetEELFunc,
+       std::bind(&Function::eelSignature, _1, _2, false)},
+      {"Legacy EEL", API::Symbol::TargetScript, std::bind(&Function::eelSignature, _1, _2, true)},
+      {"Lua",        API::Symbol::TargetScript, std::mem_fn(&Function::luaSignature)            },
+      {"Python",     API::Symbol::TargetScript, std::mem_fn(&Function::pythonSignature)         },
     };
     stream << "<table>";
     for(const Target &target : targets) {
@@ -1369,8 +1369,8 @@ static void outputEscapedMarkdown(std::ostream &stream, const std::string_view &
 static void luaLSBlock(std::ostream &stream, std::string_view markdown)
 {
   while(!markdown.empty()) {
-    size_t endl { markdown.find('\n') };
-    const std::string_view line { markdown.substr(0, endl) };
+    size_t endl {markdown.find('\n')};
+    const std::string_view line {markdown.substr(0, endl)};
     if(line.empty())
       stream << "---";
     else
@@ -1384,10 +1384,10 @@ static void luaLSBlock(std::ostream &stream, std::string_view markdown)
 
 static void luaLSAnnotate(std::ostream &stream, const Function &func)
 {
-  constexpr const char *separator { "\n---\n--- ---\n---\n" };
+  constexpr const char *separator {"\n---\n--- ---\n---\n"};
 
   stream << "--- **";
-  CommaSep heading { stream, " > " };
+  CommaSep heading {stream, " > "};
   for(const API::Section *section : func.sections) {
     heading << "";
     outputEscapedMarkdown(stream, section->title);
@@ -1403,11 +1403,11 @@ static void luaLSAnnotate(std::ostream &stream, const Function &func)
   stream << separator;
 
   for(auto it = func.sections.rbegin(); it < func.sections.rend(); ++it) {
-    const API::Section *section { *it };
+    const API::Section *section {*it};
     if(!strlen(section->help))
       continue;
     stream << "--- **";
-    CommaSep heading { stream, " > " };
+    CommaSep heading {stream, " > "};
     for(const API::Section *parent : func.sections) {
       heading << "";
       outputEscapedMarkdown(stream, parent->title);
@@ -1425,7 +1425,7 @@ static void luaLSAnnotate(std::ostream &stream, const Function &func)
   if(func.isEnum())
     return;
 
-  const bool listOutputs { func.hasOptionalArgs() };
+  const bool listOutputs {func.hasOptionalArgs()};
   size_t skipCount {};
   for(const Argument &arg : func.args) {
     if(arg.isBufSize())
@@ -1443,7 +1443,7 @@ static void luaLSAnnotate(std::ostream &stream, const Function &func)
       stream << '?';
     stream << ' ' << luaType(arg.type);
     if(arg.isOptional()) {
-      const std::string_view defv { arg.defv.empty() ? "nil" : arg.defv };
+      const std::string_view defv {arg.defv.empty() ? "nil" : arg.defv};
       stream << " default value = `" << defv << '`';
     }
     else if(arg.type == "ImGui_Font*")
@@ -1506,9 +1506,9 @@ static void luaLSBinding(std::ostream &stream)
     stream << '\n';
     luaLSAnnotate(stream, func);
     stream << "function ImGui." << func.name << '(';
-    const bool listOutputs { func.hasOptionalArgs() };
+    const bool listOutputs {func.hasOptionalArgs()};
     size_t skipCount {};
-    CommaSep cs { stream };
+    CommaSep cs {stream};
     for(const Argument &arg : func.args) {
       if(arg.isBufSize())
         continue;
@@ -1532,10 +1532,10 @@ return function(api_version) end
 static const char *pythonCType(const Type &type)
 {
   static const std::unordered_map<std::string_view, const char *> ctypes {
-    { "void",   "None"     },
-    { "bool",   "c_bool"   },
-    { "int",    "c_int"    },
-    { "double", "c_double" },
+    {"void",   "None"    },
+    {"bool",   "c_bool"  },
+    {"int",    "c_int"   },
+    {"double", "c_double"},
   };
 
   if(type.isString())
@@ -1549,9 +1549,9 @@ static const char *pythonCType(const Type &type)
 static const char *pythonScalarType(const Type &type) // non-pointers scalars only
 {
   static const std::unordered_map<std::string_view, const char *> pytypes {
-    { "bool",   "int"   },
-    { "int",    "int"   },
-    { "double", "float" },
+    {"bool",   "int"  },
+    {"int",    "int"  },
+    {"double", "float"},
   };
 
   return pytypes.at(type);
@@ -1568,7 +1568,7 @@ static void pythonBinding(std::ostream &stream)
 
     stream << "\ndef " << func.name << '(';
     {
-      CommaSep cs { stream };
+      CommaSep cs {stream};
       for(const Argument &arg : func.args) {
         if(arg.isBufSize() || !arg.isInput())
           continue;
@@ -1582,7 +1582,7 @@ static void pythonBinding(std::ostream &stream)
               "    proc = rpr_getfp('" API_PREFIX << func.name << "')\n"
               "    " << func.name << ".func = CFUNCTYPE(";
     {
-      CommaSep cs { stream };
+      CommaSep cs {stream};
       cs << pythonCType(func.type);
       for(const Argument &arg : func.args)
         cs << pythonCType(arg.type);
@@ -1591,7 +1591,7 @@ static void pythonBinding(std::ostream &stream)
 
     if(!func.args.empty()) {
       stream << "  args = (";
-      CommaSep cs { stream };
+      CommaSep cs {stream};
       for(const Argument &arg : func.args) {
         if(arg.type.isScalarPtr())
           cs << pythonCType(arg.type.removePtr());
@@ -1632,9 +1632,9 @@ static void pythonBinding(std::ostream &stream)
       if(!func.type.isVoid())
         stream << "rval = ";
       stream << func.name << ".func(";
-      CommaSep cs { stream };
-      for(size_t i { 0 }; i < func.args.size(); ++i) {
-        const Argument &arg { func.args[i] };
+      CommaSep cs {stream};
+      for(size_t i {0}; i < func.args.size(); ++i) {
+        const Argument &arg {func.args[i]};
         if(arg.type.isScalarPtr()) {
           cs << "byref(args[" << i << "])";
           if(arg.isOptional())
@@ -1648,15 +1648,15 @@ static void pythonBinding(std::ostream &stream)
 
     if(!func.type.isVoid() || func.hasOutputArgs()) {
       stream << "  return ";
-      CommaSep cs { stream };
+      CommaSep cs {stream};
       if(!func.type.isVoid()) {
         if(func.type.isString())
           cs << "str(rval.decode())";
         else
           cs << "rval";
       }
-      for(size_t i { 0 }; i < func.args.size(); ++i) {
-        const Argument &arg { func.args[i] };
+      for(size_t i {0}; i < func.args.size(); ++i) {
+        const Argument &arg {func.args[i]};
         if(!arg.isOutput() || arg.isBufSize())
           continue;
         else if(arg.type.isScalarPtr())
@@ -1681,8 +1681,8 @@ int main(int argc, const char *argv[])
     return 1;
   }
 
-  FuncImport<decltype(API_head)> _API_head { WIDEN(argv[1]), "API_head" };
-  FuncImport<decltype(API_version)> _API_version { WIDEN(argv[1]), "API_version" };
+  FuncImport<decltype(API_head)> _API_head {WIDEN(argv[1]), "API_head"};
+  FuncImport<decltype(API_version)> _API_version {WIDEN(argv[1]), "API_version"};
   if(!_API_head || !_API_version) {
     std::cerr << "failed to find API head of '" << argv[1] << "'\n";
     return 2;
@@ -1690,13 +1690,13 @@ int main(int argc, const char *argv[])
 
   _API_version(API_VERSION, sizeof(API_VERSION));
 
-  for(const API::Symbol *func { _API_head() }; func; func = func->m_next) {
+  for(const API::Symbol *func {_API_head()}; func; func = func->m_next) {
     if(func->name()[0] != '_')
       g_funcs.push_back(func);
   }
   std::sort(g_funcs.begin(), g_funcs.end());
 
-  const std::string_view lang { argc >= 3 ? argv[2] : "cpp" };
+  const std::string_view lang {argc >= 3 ? argv[2] : "cpp"};
 
   if(lang == "cpp")
     cppBinding(std::cout);

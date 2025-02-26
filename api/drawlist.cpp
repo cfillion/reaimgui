@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -304,7 +304,7 @@ static std::vector<ImVec2> makePointsArray(const reaper_array *points)
 
   if(points->size % 2) {
     throw reascript_error
-      { "an odd amount of points was provided (expected x,y pairs)" };
+      {"an odd amount of points was provided (expected x,y pairs)"};
   }
 
   std::vector<ImVec2> out;
@@ -340,7 +340,7 @@ API_FUNC(0_2, void, DrawList_AddPolyline, (DrawListProxy*,draw_list)
 (reaper_array*,points) (int,col_rgba) (int,flags) (double,thickness),
 "Points is a list of x,y coordinates.")
 {
-  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
+  const std::vector<ImVec2> &vec2points {makePointsArray(points)};
   draw_list->get()->AddPolyline(
     vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba),
     flags, thickness);
@@ -350,7 +350,7 @@ API_FUNC(0_6, void, DrawList_AddConvexPolyFilled, (DrawListProxy*,draw_list)
 (reaper_array*,points) (int,col_rgba),
 "Note: Anti-aliased filling requires points to be in clockwise order.")
 {
-  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
+  const std::vector<ImVec2> &vec2points {makePointsArray(points)};
   draw_list->get()->AddConvexPolyFilled(
     vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
 }
@@ -359,7 +359,7 @@ API_FUNC(0_9, void, DrawList_AddConcavePolyFilled, (DrawListProxy*,draw_list)
 (reaper_array*,points) (int,col_rgba),
 "Concave polygon fill is more expensive than convex one: it has O(N^2) complexity.")
 {
-  const std::vector<ImVec2> &vec2points { makePointsArray(points) };
+  const std::vector<ImVec2> &vec2points {makePointsArray(points)};
   draw_list->get()->AddConcavePolyFilled(
     vec2points.data(), vec2points.size(), Color::fromBigEndian(col_rgba));
 }
@@ -373,7 +373,7 @@ API_FUNC(0_8, void, DrawList_AddImage, (DrawListProxy*,draw_list)
 "")
 {
   Context *ctx;
-  ImDrawList *dl { draw_list->get(&ctx) };
+  ImDrawList *dl {draw_list->get(&ctx)};
   assertValid(image);
   dl->AddImage(image->makeTexture(ctx->textureManager()),
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
@@ -393,7 +393,7 @@ API_FUNC(0_8, void, DrawList_AddImageQuad, (DrawListProxy*,draw_list)
 "")
 {
   Context *ctx;
-  ImDrawList *dl { draw_list->get(&ctx) };
+  ImDrawList *dl {draw_list->get(&ctx)};
   assertValid(image);
   dl->AddImageQuad(image->makeTexture(ctx->textureManager()),
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
@@ -413,7 +413,7 @@ API_FUNC(0_8, void, DrawList_AddImageRounded, (DrawListProxy*,draw_list)
 "")
 {
   Context *ctx;
-  ImDrawList *dl { draw_list->get(&ctx) };
+  ImDrawList *dl {draw_list->get(&ctx)};
   assertValid(image);
   dl->AddImageRounded(image->makeTexture(ctx->textureManager()),
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
@@ -515,7 +515,7 @@ API_FUNC(0_1, void, DrawList_PathRect, (DrawListProxy*,draw_list)
 }
 
 DrawListSplitter::DrawListSplitter(DrawListProxy *draw_list)
-  : m_drawlist { draw_list }, m_lastList { draw_list->get() }
+  : m_drawlist {draw_list}, m_lastList {draw_list->get()}
 {
 }
 
@@ -540,7 +540,7 @@ ImDrawList *DrawListSplitter::drawList() const
     return m_lastList;
   else
     throw reascript_error
-      { "cannot use DrawListSplitter over multiple windows" };
+      {"cannot use DrawListSplitter over multiple windows"};
 }
 
 API_SUBSECTION("Splitter",
@@ -568,7 +568,7 @@ API_FUNC(0_9, DrawListSplitter*, CreateDrawListSplitter,
 (DrawListProxy*,draw_list),
 "")
 {
-  return new DrawListSplitter { draw_list };
+  return new DrawListSplitter {draw_list};
 }
 
 API_FUNC(0_7_1, void, DrawListSplitter_Clear, (DrawListSplitter*,splitter),

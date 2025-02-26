@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -58,18 +58,18 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 
 #ifdef _WIN32
   if(msg == WM_NCCREATE) {
-    void *ptr { reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams };
+    void *ptr {reinterpret_cast<CREATESTRUCT*>(lParam)->lpCreateParams};
 #else
   if(msg == WM_CREATE) {
-    auto &ptr { lParam };
+    auto &ptr {lParam};
 #endif
     self = reinterpret_cast<Window *>(ptr);
     self->m_hwnd = handle;
     SetWindowLongPtr(handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(self));
     SetProp(handle, CLASS_NAME, self->m_ctx);
 
-    auto screensetKey { std::format("{}:{:0{}X}", self->m_ctx->screensetKey(),
-      self->m_viewport->ID, sizeof(self->m_viewport->ID) * 2) };
+    auto screensetKey {std::format("{}:{:0{}X}", self->m_ctx->screensetKey(),
+      self->m_viewport->ID, sizeof(self->m_viewport->ID) * 2)};
     screenset_registerNew(screensetKey.data(), screensetProc, handle);
   }
   else {
@@ -79,7 +79,7 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
       return DefWindowProc(handle, msg, wParam, lParam);
   }
 
-  if(const std::optional<LRESULT> &rv { self->handleMessage(msg, wParam, lParam) })
+  if(const std::optional<LRESULT> &rv {self->handleMessage(msg, wParam, lParam)})
     return *rv;
 
   switch(msg) {
@@ -97,8 +97,8 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
     self->m_viewport->PlatformRequestResize = true;
     return 0;
   case WM_GETMINMAXINFO: {
-    const ImVec2 minSize { self->m_ctx->style().WindowMinSize };
-    MINMAXINFO *mmi { reinterpret_cast<MINMAXINFO *>(lParam) };
+    const ImVec2 minSize {self->m_ctx->style().WindowMinSize};
+    MINMAXINFO *mmi {reinterpret_cast<MINMAXINFO *>(lParam)};
     mmi->ptMinTrackSize.x = minSize.x;
     mmi->ptMinTrackSize.y = minSize.y;
     break;
@@ -169,10 +169,10 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
 }
 
 Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Viewport { viewport }, m_dockerHost { dockerHost },
-    m_accel { &translateAccel, true, this },
-    m_accelReg { "-accelerator", &m_accel },
-    m_mouseDown { 0 }, m_noFocus { false }
+  : Viewport {viewport}, m_dockerHost {dockerHost},
+    m_accel {&translateAccel, true, this},
+    m_accelReg {"-accelerator", &m_accel},
+    m_mouseDown {0}, m_noFocus {false}
 {
   static std::weak_ptr<PluginRegister> g_hwndInfo; // v6.29+
 
@@ -184,8 +184,8 @@ Window::Window(ImGuiViewport *viewport, DockerHost *dockerHost)
 
   // HACK: See Window::show. Not using ViewportFlags because it would always be
   // set when using BeginPopup.
-  ImGuiViewportP *viewportPrivate { static_cast<ImGuiViewportP *>(viewport) };
-  if(ImGuiWindow *userWindow { viewportPrivate->Window })
+  ImGuiViewportP *viewportPrivate {static_cast<ImGuiViewportP *>(viewport)};
+  if(ImGuiWindow *userWindow {viewportPrivate->Window})
     m_noFocus = userWindow->Flags & ImGuiWindowFlags_NoFocusOnAppearing;
 
   // Cannot initialize m_hwnd during construction due to handleMessage being
@@ -286,16 +286,16 @@ void Window::transferCapture()
 {
   Platform::releaseCapture();
 
-  const ImGuiPlatformIO &pio { m_ctx->imgui()->PlatformIO };
-  for(int i { 1 }; i < pio.Viewports.Size; ++i) { // skip the main viewport
-    ImGuiViewport *viewport { pio.Viewports[i] };
+  const ImGuiPlatformIO &pio {m_ctx->imgui()->PlatformIO};
+  for(int i {1}; i < pio.Viewports.Size; ++i) { // skip the main viewport
+    ImGuiViewport *viewport {pio.Viewports[i]};
     if(viewport == m_viewport || !viewport->PlatformHandle)
       continue;
 
     // Don't transfer capture to a parent window that is being destroyed.
     // This can happen when DestroyWindow is called on one of the captured
     // window's parents (user data is cleared via our WM_DESTROY handler)
-    HWND handle { static_cast<HWND>(viewport->PlatformHandle) };
+    HWND handle {static_cast<HWND>(viewport->PlatformHandle)};
     if(!GetWindowLongPtr(handle, GWLP_USERDATA))
       continue;
 
@@ -304,8 +304,8 @@ void Window::transferCapture()
     // Transfer knowledge of all down buttons to not release capture
     // before all buttons are released
     Window *window;
-    Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) };
-    if(DockerHost *host { dynamic_cast<DockerHost *>(instance) })
+    Viewport *instance {static_cast<Viewport *>(viewport->PlatformUserData)};
+    if(DockerHost *host {dynamic_cast<DockerHost *>(instance)})
       window = host->window();
     else
       window = dynamic_cast<Window *>(instance);
@@ -321,10 +321,10 @@ void Window::updateModifiers()
 {
   struct Modifiers { int vkey; ImGuiKey key; };
   constexpr Modifiers modifiers[] {
-    { VK_CONTROL, ImGuiMod_Ctrl  },
-    { VK_LWIN,    ImGuiMod_Super },
-    { VK_SHIFT,   ImGuiMod_Shift },
-    { VK_MENU,    ImGuiMod_Alt   },
+    {VK_CONTROL, ImGuiMod_Ctrl },
+    {VK_LWIN,    ImGuiMod_Super},
+    {VK_SHIFT,   ImGuiMod_Shift},
+    {VK_MENU,    ImGuiMod_Alt  },
   };
 
   for(const auto &modifier : modifiers) {
@@ -342,8 +342,8 @@ void Window::createSwellDialog()
     Resizable = 1,
   };
 
-  const char *res { MAKEINTRESOURCE(ForceNonChild | Resizable) };
-  LPARAM param { reinterpret_cast<LPARAM>(this) };
+  const char *res {MAKEINTRESOURCE(ForceNonChild | Resizable)};
+  LPARAM param {reinterpret_cast<LPARAM>(this)};
   CreateDialogParam(s_instance, res, parentHandle(), proc, param);
 }
 
@@ -356,7 +356,7 @@ const char *Window::getSwellClass() const
 
 HWND Window::parentHandle()
 {
-  ImGuiViewport *parent { ImGui::FindViewportByID(m_viewport->ParentViewportId) };
+  ImGuiViewport *parent {ImGui::FindViewportByID(m_viewport->ParentViewportId)};
 
   if(!parent)
     parent = ImGui::GetMainViewport();
@@ -366,8 +366,8 @@ HWND Window::parentHandle()
 
 int Window::translateAccel(MSG *msg, accelerator_register_t *accel)
 {
-  auto *self { static_cast<Window *>(accel->user) };
-  HWND hwnd { self->m_hwnd };
+  auto *self {static_cast<Window *>(accel->user)};
+  HWND hwnd {self->m_hwnd};
   if(hwnd == msg->hwnd || IsChild(hwnd, msg->hwnd))
     return self->handleAccelerator(msg);
   else
@@ -382,7 +382,7 @@ int Window::handleAccelerator(MSG *)
 Context *Window::contextFromHwnd(HWND hwnd)
 {
   do {
-    if(Context *ctx { static_cast<Context *>(GetProp(hwnd, CLASS_NAME)) })
+    if(Context *ctx {static_cast<Context *>(GetProp(hwnd, CLASS_NAME))})
       return ctx;
 #ifdef __APPLE__
   // hwnd is the InputView when it has focus
@@ -399,7 +399,7 @@ int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
   enum InfoType { IsInTextField };
   enum RetVal { Unknown = 0, InTextField = 1, NotInTextField = -1 };
 
-  Context *ctx { contextFromHwnd(hwnd) };
+  Context *ctx {contextFromHwnd(hwnd)};
 
   if(infoType == IsInTextField && Resource::isValid(ctx)) {
     // Called for handling global shortcuts (v6.29+)
@@ -417,15 +417,15 @@ void Window::contextMenu(const short x, const short y)
 
   if(m_ctx->IO().ConfigFlags & ImGuiConfigFlags_DockingEnable) {
     const ReaDockID currentDockId
-      { m_dockerHost ? m_dockerHost->docker()->id() : -1 };
+      {m_dockerHost ? m_dockerHost->docker()->id() : -1};
 
-    Menu setDockMenu { menu.addMenu("Move to docker") };
+    Menu setDockMenu {menu.addMenu("Move to docker")};
     for(size_t id {}; id < DockerList::DOCKER_COUNT; ++id) {
       char label[64];
-      const char *pos { DockGetPositionName(DockGetPosition(id)) };
+      const char *pos {DockGetPositionName(DockGetPosition(id))};
       snprintf(label, sizeof(label), "Docker %zu (%s)", id + 1, pos);
 
-      int cmd { NoOp }, flags {};
+      int cmd {NoOp}, flags {};
       if(currentDockId == id)
         flags |= Menu::Checked | Menu::Radio;
       else if(m_ctx->dockers().findById(id)->isActive())
@@ -442,7 +442,7 @@ void Window::contextMenu(const short x, const short y)
 
   menu.addItem("Close", Close);
 
-  const Action cmd { static_cast<Action>(menu.show(nativeHandle(), x, y)) };
+  const Action cmd {static_cast<Action>(menu.show(nativeHandle(), x, y))};
   switch(cmd) {
   case NoOp:
     break;
@@ -455,7 +455,7 @@ void Window::contextMenu(const short x, const short y)
     break;
   default:
     m_ctx->setCurrent();
-    Docker *target { m_ctx->dockers().findById(cmd - SetDock) };
+    Docker *target {m_ctx->dockers().findById(cmd - SetDock)};
     if(m_dockerHost)
       m_dockerHost->docker()->moveTo(target);
     else

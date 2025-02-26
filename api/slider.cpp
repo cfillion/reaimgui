@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -37,7 +37,7 @@ Format string may also be set to nil or use the default format ("%f" or "%d").)"
 
 class SliderFlags : public Flags<ImGuiSliderFlags> {
 public:
-  SliderFlags(int flags) : Flags { flags }
+  SliderFlags(int flags) : Flags {flags}
   {
     // dear imgui will assert if these bits are set
     *this &= ~ImGuiSliderFlags_InvalidMask_;
@@ -65,7 +65,7 @@ API_FUNC(0_1, bool, DragInt, (Context*,ctx)
 
   return ImGui::DragInt(label, v, API_GET(v_speed),
     API_GET(v_min), API_GET(v_max), API_GET(format),
-    SliderFlags { API_GET(flags) });
+    SliderFlags {API_GET(flags)});
 }
 
 API_FUNC(0_1, bool, DragInt2, (Context*,ctx)
@@ -78,11 +78,11 @@ API_FUNC(0_1, bool, DragInt2, (Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<int, int, 2> values { v1, v2 };
+  ReadWriteArray<int, int, 2> values {v1, v2};
 
   if(ImGui::DragInt2(label, values.data(), API_GET(v_speed),
       API_GET(v_min), API_GET(v_max), API_GET(format),
-      SliderFlags { API_GET(flags) }))
+      SliderFlags {API_GET(flags)}))
     return values.commit();
   else
     return false;
@@ -98,11 +98,11 @@ API_FUNC(0_1, bool, DragInt3, (Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<int, int, 3> values { v1, v2, v3 };
+  ReadWriteArray<int, int, 3> values {v1, v2, v3};
 
   if(ImGui::DragInt3(label, values.data(), API_GET(v_speed),
       API_GET(v_min), API_GET(v_max), API_GET(format),
-      SliderFlags { API_GET(flags) }))
+      SliderFlags {API_GET(flags)}))
     return values.commit();
   else
     return false;
@@ -118,11 +118,11 @@ API_FUNC(0_1, bool, DragInt4, (Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<int, int, 4> values { v1, v2, v3, v4 };
+  ReadWriteArray<int, int, 4> values {v1, v2, v3, v4};
 
   if(ImGui::DragInt4(label, values.data(), API_GET(v_speed),
       API_GET(v_min), API_GET(v_max), API_GET(format),
-      SliderFlags { API_GET(flags) }))
+      SliderFlags {API_GET(flags)}))
     return values.commit();
   else
     return false;
@@ -139,11 +139,11 @@ API_FUNC(0_1, bool, DragIntRange2, (Context*,ctx)
   nullIfEmpty(format);
   nullIfEmpty(format_max);
 
-  ReadWriteArray<int, int, 2> values { v_current_min, v_current_max };
+  ReadWriteArray<int, int, 2> values {v_current_min, v_current_max};
 
   if(ImGui::DragIntRange2(label, &values[0], &values[1],
       API_GET(v_speed), API_GET(v_min), API_GET(v_max),
-      API_GET(format), format_max, SliderFlags { API_GET(flags) }))
+      API_GET(format), format_max, SliderFlags {API_GET(flags)}))
     return values.commit();
   else
     return false;
@@ -160,11 +160,11 @@ API_FUNC(0_1, bool, DragFloatRange2, (Context*,ctx)
   nullIfEmpty(format);
   nullIfEmpty(format_max);
 
-  ReadWriteArray<double, float, 2> values { v_current_min, v_current_max };
+  ReadWriteArray<double, float, 2> values {v_current_min, v_current_max};
 
   if(ImGui::DragFloatRange2(label, &values[0], &values[1],
       API_GET(v_speed), API_GET(v_min), API_GET(v_max),
-      API_GET(format), format_max, SliderFlags { API_GET(flags) }))
+      API_GET(format), format_max, SliderFlags {API_GET(flags)}))
     return values.commit();
   else
     return false;
@@ -181,7 +181,7 @@ API_FUNC(0_1, bool, DragDouble, (Context*,ctx)
 
   return ImGui::DragScalar(label, ImGuiDataType_Double,
     v, API_GET(v_speed), &API_GET(v_min), &API_GET(v_max),
-    API_GET(format), SliderFlags { API_GET(flags) });
+    API_GET(format), SliderFlags {API_GET(flags)});
 }
 
 static bool dragDoubleN(const char *label, double *data, const size_t size,
@@ -201,7 +201,7 @@ API_FUNC(0_1, bool, DragDouble2, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 2> values { v1, v2 };
+  ReadWriteArray<double, double, 2> values {v1, v2};
 
   if(dragDoubleN(label, values.data(), values.size(),
       API_GET(v_speed), API_GET(v_min), API_GET(v_max),
@@ -220,7 +220,7 @@ API_FUNC(0_1, bool, DragDouble3, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 3> values { v1, v2, v3 };
+  ReadWriteArray<double, double, 3> values {v1, v2, v3};
 
   if(dragDoubleN(label, values.data(), values.size(),
       API_GET(v_speed), API_GET(v_min), API_GET(v_max),
@@ -240,7 +240,7 @@ API_FUNC(0_1, bool, DragDouble4, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 4> values { v1, v2, v3, v4 };
+  ReadWriteArray<double, double, 4> values {v1, v2, v3, v4};
 
   if(dragDoubleN(label, values.data(), values.size(),
       API_GET(v_speed), API_GET(v_min), API_GET(v_max),
@@ -276,7 +276,7 @@ API_FUNC(0_1, bool, SliderInt, (Context*,ctx)
   nullIfEmpty(format);
 
   return ImGui::SliderInt(label, v, v_min, v_max,
-    API_GET(format), SliderFlags { API_GET(flags) });
+    API_GET(format), SliderFlags {API_GET(flags)});
 }
 
 API_FUNC(0_1, bool, SliderInt2, (Context*,ctx)
@@ -287,10 +287,10 @@ API_FUNC(0_1, bool, SliderInt2, (Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<int, int, 2> values { v1, v2 };
+  ReadWriteArray<int, int, 2> values {v1, v2};
 
   if(ImGui::SliderInt2(label, values.data(), v_min, v_max,
-      API_GET(format), SliderFlags { API_GET(flags) }))
+      API_GET(format), SliderFlags {API_GET(flags)}))
     return values.commit();
   else
     return false;
@@ -305,10 +305,10 @@ API_FUNC(0_1, bool, SliderInt3, (Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<int, int, 3> values { v1, v2, v3 };
+  ReadWriteArray<int, int, 3> values {v1, v2, v3};
 
   if(ImGui::SliderInt3(label, values.data(), v_min, v_max,
-      API_GET(format), SliderFlags { API_GET(flags) }))
+      API_GET(format), SliderFlags {API_GET(flags)}))
     return values.commit();
   else
     return false;
@@ -323,10 +323,10 @@ API_FUNC(0_1, bool, SliderInt4, (Context*,ctx)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<int, int, 4> values { v1, v2, v3, v4 };
+  ReadWriteArray<int, int, 4> values {v1, v2, v3, v4};
 
   if(ImGui::SliderInt4(label, values.data(), v_min, v_max,
-      API_GET(format), SliderFlags { API_GET(flags) }))
+      API_GET(format), SliderFlags {API_GET(flags)}))
     return values.commit();
   else
     return false;
@@ -341,7 +341,7 @@ API_FUNC(0_1, bool, SliderDouble, (Context*,ctx)
   nullIfEmpty(format);
 
   return ImGui::SliderScalar(label, ImGuiDataType_Double, v,
-    &v_min, &v_max, API_GET(format), SliderFlags { API_GET(flags) });
+    &v_min, &v_max, API_GET(format), SliderFlags {API_GET(flags)});
 }
 
 static bool sliderDoubleN(const char *label, double *data, const size_t size,
@@ -361,7 +361,7 @@ API_FUNC(0_1, bool, SliderDouble2, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 2> values { v1, v2 };
+  ReadWriteArray<double, double, 2> values {v1, v2};
 
   if(sliderDoubleN(label, values.data(), values.size(),
       v_min, v_max, API_GET(format), API_GET(flags)))
@@ -379,7 +379,7 @@ API_FUNC(0_1, bool, SliderDouble3, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 3> values { v1, v2, v3 };
+  ReadWriteArray<double, double, 3> values {v1, v2, v3};
 
   if(sliderDoubleN(label, values.data(), values.size(),
       v_min, v_max, API_GET(format), API_GET(flags)))
@@ -397,7 +397,7 @@ API_FUNC(0_1, bool, SliderDouble4, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 4> values { v1, v2, v3, v4 };
+  ReadWriteArray<double, double, 4> values {v1, v2, v3, v4};
 
   if(sliderDoubleN(label, values.data(), values.size(),
       v_min, v_max, API_GET(format), API_GET(flags)))
@@ -435,7 +435,7 @@ API_FUNC(0_1, bool, SliderAngle, (Context*,ctx)
 
   if(ImGui::SliderAngle(label, &rad,
       API_GET(v_degrees_min), API_GET(v_degrees_max),
-      API_GET(format), SliderFlags { API_GET(flags) })) {
+      API_GET(format), SliderFlags {API_GET(flags)})) {
     *v_rad = rad;
     return true;
   }
@@ -452,7 +452,7 @@ API_FUNC(0_1, bool, VSliderInt, (Context*,ctx)
   nullIfEmpty(format);
 
   return ImGui::VSliderInt(label, ImVec2(size_w, size_h), v,
-    v_min, v_max, API_GET(format), SliderFlags { API_GET(flags) });
+    v_min, v_max, API_GET(format), SliderFlags {API_GET(flags)});
 }
 
 API_FUNC(0_1, bool, VSliderDouble, (Context*,ctx)
@@ -466,7 +466,7 @@ API_FUNC(0_1, bool, VSliderDouble, (Context*,ctx)
 
   return ImGui::VSliderScalar(label, ImVec2(size_w, size_h),
     ImGuiDataType_Double, v, &v_min, &v_max,
-    API_GET(format), SliderFlags { API_GET(flags) });
+    API_GET(format), SliderFlags {API_GET(flags)});
 }
 
 API_SUBSECTION("Flags",

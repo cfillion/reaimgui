@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -28,35 +28,35 @@
 class VerNum {
   using ValT = uint32_t;
 
-  static constexpr auto MAX_SEGS { 4 };
-  static constexpr auto SEG_BITS { sizeof(ValT) * CHAR_BIT / MAX_SEGS };
-  static constexpr auto SEG_MASK { (1<<SEG_BITS) - 1 };
+  static constexpr auto MAX_SEGS {4};
+  static constexpr auto SEG_BITS {sizeof(ValT) * CHAR_BIT / MAX_SEGS};
+  static constexpr auto SEG_MASK {(1<<SEG_BITS) - 1};
 
 public:
-  static constexpr auto MAX { std::numeric_limits<ValT>::max() };
+  static constexpr auto MAX {std::numeric_limits<ValT>::max()};
 
-  constexpr VerNum(ValT v = 0) : m_value { v } {}
+  constexpr VerNum(ValT v = 0) : m_value {v} {}
   constexpr VerNum(const char *input)
     : m_value {}
   {
     if(!*input)
-      throw reascript_error { "version number is empty" };
+      throw reascript_error {"version number is empty"};
 
-    ValT accumulator {}, seg { MAX_SEGS };
+    ValT accumulator {}, seg {MAX_SEGS};
     while(true) {
-      const char c { *input++ };
+      const char c {*input++};
       if(c < '0' || c > '9')
-        throw reascript_error { "version contains non-numeric segments" };
+        throw reascript_error {"version contains non-numeric segments"};
 
       accumulator *= 10;
       accumulator += (c - '0');
 
-      const char n { *input };
+      const char n {*input};
       if(n && n != '.')
         continue;
 
       if(accumulator & ~SEG_MASK)
-        throw reascript_error { "version contains out of range segments" };
+        throw reascript_error {"version contains out of range segments"};
 
       m_value |= accumulator << (SEG_BITS * --seg);
 
@@ -66,7 +66,7 @@ public:
       accumulator = 0;
       ++input;
       if(!seg)
-        throw reascript_error { "version contains too many segments" };
+        throw reascript_error {"version contains too many segments"};
     }
   }
 
@@ -75,7 +75,7 @@ public:
   std::string toString() const
   {
     std::string vernum;
-    ValT accumulator { m_value }, seg { MAX_SEGS };
+    ValT accumulator {m_value}, seg {MAX_SEGS};
     while(accumulator || seg > MAX_SEGS - 2) {
       if(!vernum.empty())
         vernum += '.';
@@ -88,7 +88,7 @@ public:
   constexpr ValT operator[](const unsigned char seg) const
   {
     if(seg >= MAX_SEGS)
-      throw reascript_error { "out of range segment" };
+      throw reascript_error {"out of range segment"};
     return (m_value >> ((MAX_SEGS - seg - 1) * SEG_BITS)) & SEG_MASK;
   }
 

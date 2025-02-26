@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -40,7 +40,7 @@ public:
   auto lowerBound(T v) const { return std::lower_bound(begin(), end(), v); }
   bool contains(T v) const
   {
-    const auto it { lowerBound(v) };
+    const auto it {lowerBound(v)};
     return it != m_data.end() && *it == v;
   }
 

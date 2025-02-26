@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -63,12 +63,12 @@ SHIM_ALIAS(0_6, Key_ModSuper, Mod_Super)
 SHIM_FUNC(0_1, int, GetKeyMods, (Context*,ctx))
 {
   int oldmods {};
-  const int newmods { api.GetKeyMods(ctx) };
+  const int newmods {api.GetKeyMods(ctx)};
   const struct { int newval, oldval; } mods[] {
-    { api.Mod_Ctrl(),  ModFlags_Ctrl  },
-    { api.Mod_Shift(), ModFlags_Shift },
-    { api.Mod_Alt(),   ModFlags_Alt   },
-    { api.Mod_Super(), ModFlags_Super },
+    {api.Mod_Ctrl(),  ModFlags_Ctrl },
+    {api.Mod_Shift(), ModFlags_Shift},
+    {api.Mod_Alt(),   ModFlags_Alt  },
+    {api.Mod_Super(), ModFlags_Super},
   };
   for(const auto &mod : mods) {
     if(newmods & mod.newval)
@@ -90,8 +90,8 @@ SHIM_FUNC(0_1, bool, IsWindowCollapsed, (Context*,ctx))
 // obsoleted window boundary extension via SetCursorPos (ocornut/imgui#5548)
 SHIM_PROXY_BEGIN(ShimWindowEnd, func, args)
 {
-  Context *ctx { std::get<0>(args) };
-  double spacing { 0.0 };
+  Context *ctx {std::get<0>(args)};
+  double spacing {0.0};
   api.SameLine(ctx, nullptr, &spacing);
   api.Spacing(ctx);
   return std::apply(api.*func, args);

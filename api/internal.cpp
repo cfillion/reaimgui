@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,8 +23,8 @@ API_SECTION("Internal");
 
 static void assertVersion(const VerNum requested)
 {
-  static constexpr char gitVersion[] { REAIMGUI_VERSION };
-  constexpr VerNum current { CompStr::version<&gitVersion> };
+  static constexpr char gitVersion[] {REAIMGUI_VERSION};
+  constexpr VerNum current {CompStr::version<&gitVersion>};
   if(std::max(current, API::version()) >= requested)
     return;
 
@@ -37,33 +37,33 @@ static void assertVersion(const VerNum requested)
 API_FUNC(0_9, void*, _getapi, (const char*,version) (const char*,symbol_name),
 API_DO_NOT_USE)
 {
-  const VerNum vernum { version };
+  const VerNum vernum {version};
   assertVersion(vernum);
-  if(auto callable { API::Callable::lookup(vernum, symbol_name) })
+  if(auto callable {API::Callable::lookup(vernum, symbol_name)})
     return callable->safeImpl();
-  throw reascript_error { "function '{}' not found or missing shim for v{}",
-    symbol_name, vernum.toString() };
+  throw reascript_error {"function '{}' not found or missing shim for v{}",
+    symbol_name, vernum.toString()};
 }
 
 // special definition to not have CallConv::Safe clear the last error
 struct GetErrMeta {
-  static constexpr std::string_view help { API_DO_NOT_USE };
+  static constexpr std::string_view help {API_DO_NOT_USE};
   static constexpr std::array<std::string_view, 0> argn {};
 };
 _API_EXPORT(ReaScriptFunc, 0_9, _geterr) {
   {}, reinterpret_cast<void *>(&API::lastError),
-  { "-API_"       API_PREFIX "_geterr", &API::lastError },
-  { "-APIvararg_" API_PREFIX "_geterr",
-    CallConv::ReaScript<&API::lastError>::apply },
-  { "-APIdef_"    API_PREFIX "_geterr",
-    CompStr::apidef<&API::lastError, GetErrMeta> },
+  {"-API_"       API_PREFIX "_geterr", &API::lastError},
+  {"-APIvararg_" API_PREFIX "_geterr",
+   CallConv::ReaScript<&API::lastError>::apply},
+  {"-APIdef_"    API_PREFIX "_geterr",
+   CompStr::apidef<&API::lastError, GetErrMeta>},
 };
 
 API_FUNC(0_9, void, _init, (RWB<char*>,buf) (RWBS<int>,buf_sz),
 API_DO_NOT_USE)
 {
   assertValid(buf);
-  const VerNum version { buf };
+  const VerNum version {buf};
   assertVersion(version);
   copyToBigBuf(buf, buf_sz, API::Callable::serializeAll(version));
 }
@@ -71,11 +71,11 @@ API_DO_NOT_USE)
 API_FUNC(0_9, void, _setshim, (const char*,version) (const char*,symbol_name),
 API_DO_NOT_USE)
 {
-  auto shim { API::Callable::lookup(version, symbol_name) };
+  auto shim {API::Callable::lookup(version, symbol_name)};
   if(shim && typeid(*shim) == typeid(ShimFunc))
     return static_cast<const ShimFunc *>(shim)->activate();
 
-  throw reascript_error { "no suitable implementation available" };
+  throw reascript_error {"no suitable implementation available"};
 }
 
 API_FUNC(0_9, void, _shim, API_NO_ARGS, API_DO_NOT_USE) {}

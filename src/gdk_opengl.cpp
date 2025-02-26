@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -56,7 +56,7 @@ private:
 class MakeCurrent {
 public:
   MakeCurrent(GdkGLContext *gl)
-    : m_gl { gl }
+    : m_gl {gl}
   {
     gdk_gl_context_make_current(m_gl);
   }
@@ -71,13 +71,13 @@ private:
 };
 
 decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
-  { &Renderer::create<GDKOpenGL> };
-decltype(RendererType::flags) OpenGLRenderer::flags { RendererType::Available };
+  {&Renderer::create<GDKOpenGL>};
+decltype(RendererType::flags) OpenGLRenderer::flags {RendererType::Available};
 
 // GdkGLContext cannot share ressources: they're already shared with the
 // window's paint context (which itself isn't shared with anything).
 GDKOpenGL::GDKOpenGL(RendererFactory *factory, Window *window)
-  : OpenGLRenderer(factory, window, false), m_skipFrame { false }
+  : OpenGLRenderer {factory, window, false}, m_skipFrame {false}
 {
   GdkWindow *osWindow;
 
@@ -89,12 +89,12 @@ GDKOpenGL::GDKOpenGL(RendererFactory *factory, Window *window)
     osWindow = static_cast<GDKWindow *>(m_window)->getOSWindow();
 
   if(!osWindow || static_cast<void *>(osWindow) == m_window->nativeHandle())
-    throw backend_error { "headless SWELL is not supported" };
+    throw backend_error {"headless SWELL is not supported"};
 
   GError *error {};
   m_gl = gdk_window_create_gl_context(osWindow, &error);
   if(error) {
-    const backend_error ex { error->message };
+    const backend_error ex {error->message};
     g_clear_error(&error);
     assert(!m_gl);
     throw ex;
@@ -103,13 +103,13 @@ GDKOpenGL::GDKOpenGL(RendererFactory *factory, Window *window)
   gdk_gl_context_set_required_version(m_gl, 3, 2);
   gdk_gl_context_realize(m_gl, &error);
   if(error) {
-    const backend_error ex { error->message };
+    const backend_error ex {error->message};
     g_clear_error(&error);
     g_clear_object(&m_gl);
     throw ex;
   }
 
-  MakeCurrent cur { m_gl };
+  MakeCurrent cur {m_gl};
 
   glGenTextures(1, &m_tex);
   resizeTextures(m_window->viewport()->Size); // binds to the texture and sets its size
@@ -133,7 +133,7 @@ GDKOpenGL::GDKOpenGL(RendererFactory *factory, Window *window)
   // Mesa waits for swap buffers to complete in loader_dri3_wait_for_sbc
   // called from st_glFinish.
   if(!(m_window->viewport()->Flags & ImGuiViewportFlags_NoTaskBarIcon)) {
-    const char *gpuVendor { reinterpret_cast<const char *>(glGetString(GL_VENDOR)) };
+    const char *gpuVendor {reinterpret_cast<const char *>(glGetString(GL_VENDOR))};
     m_skipFrame = !strcmp(gpuVendor, "Intel");
   }
 }
@@ -141,7 +141,7 @@ GDKOpenGL::GDKOpenGL(RendererFactory *factory, Window *window)
 GDKOpenGL::~GDKOpenGL()
 {
   {
-    MakeCurrent cur { m_gl };
+    MakeCurrent cur {m_gl};
 
     glDeleteFramebuffers(1, &m_fbo);
     glDeleteTextures(1, &m_tex);
@@ -163,8 +163,8 @@ void GDKOpenGL::initSoftwareBlit()
   if(g_offscreen.expired()) {
     GdkWindowAttr attr {};
     attr.window_type = GDK_WINDOW_TOPLEVEL;
-    GdkWindow *window { gdk_window_new(nullptr, &attr, 0) };
-    std::shared_ptr<GdkWindow> offscreen { window, g_object_unref };
+    GdkWindow *window {gdk_window_new(nullptr, &attr, 0)};
+    std::shared_ptr<GdkWindow> offscreen {window, g_object_unref};
     g_offscreen = m_offscreen = offscreen;
   }
   else
@@ -173,13 +173,13 @@ void GDKOpenGL::initSoftwareBlit()
 
 void GDKOpenGL::setSize(const ImVec2 size)
 {
-  MakeCurrent cur { m_gl };
+  MakeCurrent cur {m_gl};
   resizeTextures(size);
 }
 
 void GDKOpenGL::resizeTextures(ImVec2 size)
 {
-  const float scale { m_window->scaleFactor() };
+  const float scale {m_window->scaleFactor()};
   size.x *= scale, size.y *= scale;
 
   glBindTexture(GL_TEXTURE_2D, m_tex);
@@ -203,12 +203,12 @@ void GDKOpenGL::render(void *userData)
     return;
   }
 
-  MakeCurrent cur { m_gl };
+  MakeCurrent cur {m_gl};
 
   // FIXME: Currently we use SWELL's DPI scale which is fixed & app-wide.
   // If this changes, we'll want to only upload textures for our own DPI
   // since we're not sharing them with other windows.
-  const bool useSoftwareBlit { m_window->isDocked() };
+  const bool useSoftwareBlit {m_window->isDocked()};
   OpenGLRenderer::render(useSoftwareBlit);
 
   if(useSoftwareBlit) {
@@ -221,11 +221,11 @@ void GDKOpenGL::render(void *userData)
     return;
   }
 
-  GdkWindow *window { static_cast<GDKWindow *>(m_window)->getOSWindow() };
-  const ImGuiViewport *viewport { m_window->viewport() };
-  const cairo_region_t *region { gdk_window_get_clip_region(window) };
-  GdkDrawingContext *drawContext { gdk_window_begin_draw_frame(window, region) };
-  cairo_t *cairoContext { gdk_drawing_context_get_cairo_context(drawContext) };
+  GdkWindow *window {static_cast<GDKWindow *>(m_window)->getOSWindow()};
+  const ImGuiViewport *viewport {m_window->viewport()};
+  const cairo_region_t *region {gdk_window_get_clip_region(window)};
+  GdkDrawingContext *drawContext {gdk_window_begin_draw_frame(window, region)};
+  cairo_t *cairoContext {gdk_drawing_context_get_cairo_context(drawContext)};
   gdk_cairo_draw_from_gl(cairoContext, window,
     m_tex, GL_TEXTURE, 1, 0, 0,
     viewport->DrawData->DisplaySize.x * viewport->DpiScale,
@@ -247,8 +247,8 @@ void GDKOpenGL::softwareBlit()
   if(!BeginPaint(m_window->nativeHandle(), &ps))
     return;
 
-  const int width  { LICE__GetWidth(m_pixels.get())  },
-            height { LICE__GetHeight(m_pixels.get()) };
+  const int width  {LICE__GetWidth(m_pixels.get()) },
+            height {LICE__GetHeight(m_pixels.get())};
 
   StretchBltFromMem(ps.hdc, 0, 0, width, height, LICE__GetBits(m_pixels.get()),
     width, height, LICE__GetRowSpan(m_pixels.get()));

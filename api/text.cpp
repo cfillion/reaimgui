@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -35,7 +35,7 @@ API_FUNC(0_1, void, TextColored, (Context*,ctx)
 {
   FRAME_GUARD;
 
-  ImVec4 color { Color(col_rgba) };
+  ImVec4 color {Color(col_rgba)};
   ImGui::PushStyleColor(ImGuiCol_Text, color);
   ImGui::TextUnformatted(text);
   ImGui::PopStyleColor();
@@ -46,7 +46,7 @@ API_FUNC(0_1, void, TextDisabled, (Context*,ctx)
 "")
 {
   FRAME_GUARD;
-  const ImGuiStyle &style { ImGui::GetStyle() };
+  const ImGuiStyle &style {ImGui::GetStyle()};
   ImGui::PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
   ImGui::TextUnformatted(text);
   ImGui::PopStyleColor();

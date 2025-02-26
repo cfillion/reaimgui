@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -65,7 +65,7 @@ public:
   const char *getSwellClass() const;
 
 protected:
-  static constexpr const auto *CLASS_NAME { TEXT("reaper_imgui_context") };
+  static constexpr const auto *CLASS_NAME {TEXT("reaper_imgui_context")};
   static LRESULT CALLBACK proc(HWND, unsigned int, WPARAM, LPARAM);
 
   void createSwellDialog();

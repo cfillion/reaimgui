@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@ int main(int argc, const char *argv[])
     return 1;
   }
 
-  const char *target { argv[1] }, *filename { argv[2] };
+  const char *target {argv[1]}, *filename {argv[2]};
 
   CComPtr<ID3DBlob> blob, errors;
   constexpr unsigned int flags {
@@ -48,10 +48,10 @@ int main(int argc, const char *argv[])
     return 1;
   }
 
-  const uint8_t *data { static_cast<uint8_t *>(blob->GetBufferPointer()) };
-  const size_t size { blob->GetBufferSize() };
+  const uint8_t *data {static_cast<uint8_t *>(blob->GetBufferPointer())};
+  const size_t size {blob->GetBufferSize()};
 
-  for(size_t i { 0 }; i < size; ++i) {
+  for(size_t i {0}; i < size; ++i) {
     if(i > 0) {
       if(!(i % 8))
         std::cout << std::endl;

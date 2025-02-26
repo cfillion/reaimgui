@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -113,7 +113,7 @@ API_FUNC(0_1, void, GetCursorPos, (Context*,ctx)
 "Cursor position in window")
 {
   FRAME_GUARD;
-  const ImVec2 &pos { ImGui::GetCursorPos() };
+  const ImVec2 &pos {ImGui::GetCursorPos()};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }
@@ -161,7 +161,7 @@ API_FUNC(0_1, void, GetCursorStartPos, (Context*,ctx)
 "Initial cursor position in window coordinates.")
 {
   FRAME_GUARD;
-  const ImVec2 &pos { ImGui::GetCursorStartPos() };
+  const ImVec2 &pos {ImGui::GetCursorStartPos()};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }
@@ -171,7 +171,7 @@ API_FUNC(0_1, void, GetCursorScreenPos, (Context*,ctx)
 "Cursor position in absolute screen coordinates (useful to work with the DrawList API).")
 {
   FRAME_GUARD;
-  const ImVec2 &pos { ImGui::GetCursorScreenPos() };
+  const ImVec2 &pos {ImGui::GetCursorScreenPos()};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -89,7 +89,7 @@ protected:
 
 private:
   struct Item {
-    Item(float scale, Image *image) : scale { scale }, image { image } {}
+    Item(float scale, Image *image) : scale {scale}, image {image} {}
     float scale;
     Image *image;
     bool operator<(float targetScale) const { return scale < targetScale; }

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -44,7 +44,7 @@ afterwards if returned true. WindowFlags* are forwarded to the window.
 Return true if the popup is open, and you can start outputting to it.)")
 {
   FRAME_GUARD;
-  return ImGui::BeginPopup(str_id, WindowFlags { API_GET(flags) });
+  return ImGui::BeginPopup(str_id, WindowFlags {API_GET(flags)});
 }
 
 API_FUNC(0_1, bool, BeginPopupModal, (Context*,ctx)
@@ -54,7 +54,7 @@ dimming background, has a title bar. Return true if the modal is open, and you
 can start outputting to it. See BeginPopup.)")
 {
   FRAME_GUARD;
-  WindowFlags clean_flags { API_GET(flags) };
+  WindowFlags clean_flags {API_GET(flags)};
   return ImGui::BeginPopupModal(name, openPtrBehavior(p_open), clean_flags);
 }
 

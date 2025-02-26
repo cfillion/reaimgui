@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -25,10 +25,10 @@
 #include <imgui/backends/imgui_impl_opengl3_loader.h>
 
 // https://registry.khronos.org/OpenGL/api/GL/wglext.h
-constexpr int WGL_CONTEXT_MAJOR_VERSION_ARB    { 0x2091 },
-              WGL_CONTEXT_MINOR_VERSION_ARB    { 0x2092 },
-              WGL_CONTEXT_PROFILE_MASK_ARB     { 0x9126 },
-              WGL_CONTEXT_CORE_PROFILE_BIT_ARB { 0x0001 };
+constexpr int WGL_CONTEXT_MAJOR_VERSION_ARB    {0x2091},
+              WGL_CONTEXT_MINOR_VERSION_ARB    {0x2092},
+              WGL_CONTEXT_PROFILE_MASK_ARB     {0x9126},
+              WGL_CONTEXT_CORE_PROFILE_BIT_ARB {0x0001};
 typedef HGLRC (WINAPI *PFNWGLCREATECONTEXTATTRIBSARBPROC)
   (HDC hDC, HGLRC hShareContext, const int *attribList);
 
@@ -52,7 +52,7 @@ private:
 class MakeCurrent {
 public:
   MakeCurrent(HDC dc, HGLRC gl)
-    : m_gl { gl }
+    : m_gl {gl}
   {
     wglMakeCurrent(dc, m_gl);
   }
@@ -74,11 +74,11 @@ struct GLDeleter {
 };
 
 decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
-  { &Renderer::create<Win32OpenGL> };
-decltype(RendererType::flags) OpenGLRenderer::flags { RendererType::Available };
+  {&Renderer::create<Win32OpenGL>};
+decltype(RendererType::flags) OpenGLRenderer::flags {RendererType::Available};
 
 Win32OpenGL::Win32OpenGL(RendererFactory *factory, Window *window)
-  : OpenGLRenderer(factory, window), m_dc { GetDC(window->nativeHandle()) }
+  : OpenGLRenderer(factory, window), m_dc {GetDC(window->nativeHandle())}
 {
   setPixelFormat();
 
@@ -88,16 +88,16 @@ Win32OpenGL::Win32OpenGL(RendererFactory *factory, Window *window)
   }
   else {
     createContext();
-    m_shared->m_platform = { m_gl, GLDeleter{} };
+    m_shared->m_platform = {m_gl, GLDeleter {}};
   }
 
-  MakeCurrent cur { m_dc, m_gl };
+  MakeCurrent cur {m_dc, m_gl};
   setup();
 }
 
 Win32OpenGL::~Win32OpenGL()
 {
-  MakeCurrent cur { m_dc, m_gl };
+  MakeCurrent cur {m_dc, m_gl};
   teardown();
 }
 
@@ -113,17 +113,17 @@ void Win32OpenGL::setPixelFormat()
   };
 
   if(!SetPixelFormat(m_dc, ChoosePixelFormat(m_dc, &pfd), &pfd))
-    throw backend_error { "failed to set a suitable pixel format" };
+    throw backend_error {"failed to set a suitable pixel format"};
 }
 
 void Win32OpenGL::createContext()
 {
-  HGLRC dummyGl { wglCreateContext(m_dc) }; // creates a legacy (< 2.1) context
+  HGLRC dummyGl {wglCreateContext(m_dc)}; // creates a legacy (< 2.1) context
   wglMakeCurrent(m_dc, m_gl = dummyGl);
 
   PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB
-    { reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>
-      (wglGetProcAddress("wglCreateContextAttribsARB")) };
+    {reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>
+     (wglGetProcAddress("wglCreateContextAttribsARB"))};
 
   if(wglCreateContextAttribsARB) {
     // https://www.khronos.org/registry/OpenGL/extensions/ARB/WGL_ARB_create_context.txt
@@ -133,7 +133,7 @@ void Win32OpenGL::createContext()
       0
     };
 
-    if(HGLRC coreGl { wglCreateContextAttribsARB(m_dc, nullptr, attrs) }) {
+    if(HGLRC coreGl {wglCreateContextAttribsARB(m_dc, nullptr, attrs)}) {
       wglMakeCurrent(m_dc, m_gl = coreGl);
       wglDeleteContext(dummyGl);
     }
@@ -141,13 +141,13 @@ void Win32OpenGL::createContext()
 
   if(imgl3wInit()) {
     wglDeleteContext(m_gl);
-    throw backend_error { "OpenGL 3.2 is not available on this system" };
+    throw backend_error {"OpenGL 3.2 is not available on this system"};
   }
 }
 
 void Win32OpenGL::render(void *)
 {
-  MakeCurrent cur { m_dc, m_gl };
+  MakeCurrent cur {m_dc, m_gl};
   OpenGLRenderer::render(false);
 }
 

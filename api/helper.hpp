@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -79,7 +79,7 @@ struct DefVal<Tag<T, tags>> { using type = typename DefVal<T>::type; };
 #define _API_CHECKROOTSECTION static_assert(&ROOT_SECTION + 1 > &ROOT_SECTION);
 
 #define _API_STORE_LINE \
-  static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) { __LINE__ };
+  static const API::StoreLineNumber BOOST_PP_CAT(line, __LINE__) {__LINE__};
 
 #define _API_FUNC_DECL(vernum, type, name, args, help)                 \
   namespace API::v##vernum::name {                                     \
@@ -89,15 +89,15 @@ struct DefVal<Tag<T, tags>> { using type = typename DefVal<T>::type; };
     static type impl(_API_FOREACH_ARG(_API_SIGARG, _, args));          \
     struct meta {                                                      \
       static constexpr char na##me[] = #name, vn[] = #vernum;          \
-      static constexpr std::string_view he##lp { [] {                  \
+      static constexpr std::string_view he##lp {[] {                   \
         using namespace std::string_view_literals;                     \
         return help "\0"                                               \
           _API_FOREACH_ARG(_API_STRARR_US, _API_ARG_DEFV, args) ""sv;  \
-      }() };                                                           \
-      static constexpr VerNum version { CompStr::version<&vn> };       \
+      }()};                                                            \
+      static constexpr VerNum version {CompStr::version<&vn>};         \
       static constexpr std::array<std::string_view,                    \
         BOOST_PP_SEQ_SIZE(BOOST_PP_VARIADIC_SEQ_TO_SEQ(args))> argn    \
-        { _API_FOREACH_ARG(_API_STRARR, _API_ARG_NAME, args) };        \
+        {_API_FOREACH_ARG(_API_STRARR, _API_ARG_NAME, args)};          \
     };                                                                 \
   }
 
@@ -117,17 +117,17 @@ struct DefVal<Tag<T, tags>> { using type = typename DefVal<T>::type; };
   CompStr::apidef<&API::v##vernum::name::impl, API::v##vernum::name::meta, named>
 
 #define API_FUNC _API_STORE_LINE _API_FUNC
-#define _API_FUNC(vernum, type, name, args, help)                   \
-  _API_CHECKROOTSECTION                                             \
-  _API_FUNC_DECL(vernum, type, name, args, help)                    \
-  _API_EXPORT(ReaScriptFunc, vernum, name) {                        \
-    API::v##vernum::name::meta::version,                            \
-    reinterpret_cast<void *>(&API::v##vernum::name::impl),          \
-    { "-API_" API_PREFIX #name, _API_SAFECALL(vernum, name) },      \
-    { "-APIvararg_" API_PREFIX #name,                               \
-      CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply },    \
-    { "-APIdef_" API_PREFIX #name, _API_DEF(vernum, name, true) },  \
-  };                                                                \
+#define _API_FUNC(vernum, type, name, args, help)                \
+  _API_CHECKROOTSECTION                                          \
+  _API_FUNC_DECL(vernum, type, name, args, help)                 \
+  _API_EXPORT(ReaScriptFunc, vernum, name) {                     \
+    API::v##vernum::name::meta::version,                         \
+    reinterpret_cast<void *>(&API::v##vernum::name::impl),       \
+    {"-API_" API_PREFIX #name, _API_SAFECALL(vernum, name)},     \
+    {"-APIvararg_" API_PREFIX #name,                             \
+      CallConv::ReaScript<_API_SAFECALL(vernum, name)>::apply},  \
+    {"-APIdef_" API_PREFIX #name, _API_DEF(vernum, name, true)}, \
+  };                                                             \
   _API_FUNC_DEF(vernum, type, name, args)
 
 #define API_ENUM _API_STORE_LINE _API_ENUM
@@ -147,25 +147,25 @@ struct DefVal<Tag<T, tags>> { using type = typename DefVal<T>::type; };
   _API_FUNC_DEF(vernum, type, name, args)
 
 #define API_EELVAR _API_STORE_LINE _API_EELVAR
-#define _API_EELVAR(vernum, type, name, help)            \
-  _API_CHECKROOTSECTION                                  \
-  namespace API::v##vernum::EELVar_##name {              \
-    constexpr char vn[] { #vernum };                     \
-    constexpr VerNum version  { CompStr::version<&vn> }; \
-  }                                                      \
-  const API::EELVar EELVar_##name {                      \
+#define _API_EELVAR(vernum, type, name, help)           \
+  _API_CHECKROOTSECTION                                 \
+  namespace API::v##vernum::EELVar_##name {             \
+    constexpr char vn[] {#vernum};                      \
+    constexpr VerNum version {CompStr::version<&vn>};   \
+  }                                                     \
+  const API::EELVar EELVar_##name {                     \
     API::v##vernum::EELVar_##name::version, #name, #type "\0\0\0" help "\0" }
 
 #define API_SECTION_DEF(id, parent, ...) static const API::Section id \
-  { &parent, ROOT_FILE, __VA_ARGS__ };
+  {&parent, ROOT_FILE, __VA_ARGS__};
 
 // shortcuts with auto-generated identifier name for the section object
 #define _API_UNIQ_SEC_ID BOOST_PP_CAT(section, __LINE__)
-#define API_SECTION(...)                                      \
-  constexpr char FILE_PATH[] { __FILE__ };                    \
-  constexpr auto ROOT_FILE { CompStr::basename<&FILE_PATH> }; \
-  static const API::Section ROOT_SECTION                      \
-    { nullptr, ROOT_FILE, __VA_ARGS__ }
+#define API_SECTION(...)                                    \
+  constexpr char FILE_PATH[] {__FILE__};                    \
+  constexpr auto ROOT_FILE {CompStr::basename<&FILE_PATH>}; \
+  static const API::Section ROOT_SECTION                    \
+    {nullptr, ROOT_FILE, __VA_ARGS__}
 #define API_SUBSECTION(...) \
   API_SECTION_DEF(_API_UNIQ_SEC_ID, ROOT_SECTION, __VA_ARGS__)
 #define API_SECTION_P(parent, ...) \
@@ -185,7 +185,7 @@ struct DefVal<Tag<T, tags>> { using type = typename DefVal<T>::type; };
 inline void nullIfEmpty(const char *&string)
 {
   extern const char *(*GetAppVersion)();
-  static bool hasNullableStrings { atof(GetAppVersion()) >= 6.58 };
+  static bool hasNullableStrings {atof(GetAppVersion()) >= 6.58};
   if(!hasNullableStrings && string && !string[0] /* empty */)
     string = nullptr;
 }
@@ -215,7 +215,7 @@ inline void assertFrame(Context *ctx)
 {
   if(!ctx->enterFrame()) {
     delete ctx;
-    throw reascript_error { "frame initialization failed" };
+    throw reascript_error {"frame initialization failed"};
   }
 }
 
@@ -227,9 +227,9 @@ public:
   template<typename... Args,
     typename = typename std::enable_if_t<sizeof...(Args) == N>>
   ReadWriteArray(Args&&... args)
-    : m_inputs { std::forward<Args>(args)... }
+    : m_inputs {std::forward<Args>(args)...}
   {
-    size_t i { 0 };
+    size_t i {0};
     for(const PtrType *ptr : m_inputs) {
       assertValid(ptr);
       m_values[i++] = *ptr;
@@ -242,7 +242,7 @@ public:
 
   bool commit()
   {
-    size_t i { 0 };
+    size_t i {0};
     for(const ValType value : m_values)
       *m_inputs[i++] = value;
     return true;
@@ -258,14 +258,14 @@ inline void copyToBigBuf(char *&buf, int &bufSize,
   const void *data, size_t dataSize, const bool mayHaveNulls = true)
 {
   extern bool (*realloc_cmd_ptr)(char **ptr, int *ptr_size, int new_size);
-  const bool wantRealloc { mayHaveNulls || dataSize >= static_cast<size_t>(bufSize) };
+  const bool wantRealloc {mayHaveNulls || dataSize >= static_cast<size_t>(bufSize)};
   if(wantRealloc && dataSize > 0 && dataSize < INT_MAX &&
       realloc_cmd_ptr(&buf, &bufSize, dataSize)) {
     // the buffer is no longer null-terminated after using realloc_cmd_ptr!
     std::memcpy(buf, data, bufSize);
   }
   else if(bufSize > 1) {
-    const size_t limit { std::min<size_t>(bufSize - 1, dataSize) };
+    const size_t limit {std::min<size_t>(bufSize - 1, dataSize)};
     std::memcpy(buf, data, limit);
     buf[limit] = '\0';
   }
@@ -274,7 +274,7 @@ inline void copyToBigBuf(char *&buf, int &bufSize,
 template<typename T, typename = std::enable_if_t<std::is_class_v<T>>>
 auto copyToBigBuf(char *&buf, int &bufSize, const T &value, const bool mayHaveNulls = true)
 {
-  const size_t byteSize { value.size() * sizeof(typename T::value_type) };
+  const size_t byteSize {value.size() * sizeof(typename T::value_type)};
   return copyToBigBuf(buf, bufSize, value.data(), byteSize, mayHaveNulls);
 }
 

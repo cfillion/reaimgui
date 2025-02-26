@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -43,11 +43,11 @@ class Font final : public Resource {
 public:
   // generic fonts
   static constexpr const char
-    *CURSIVE    { "cursive" },
-    *FANTASY    { "fantasy" },
-    *MONOSPACE  { "monospace" },
-    *SANS_SERIF { "sans-serif" },
-    *SERIF      { "serif" };
+    *CURSIVE    {"cursive"},
+    *FANTASY    {"fantasy"},
+    *MONOSPACE  {"monospace"},
+    *SANS_SERIF {"sans-serif"},
+    *SERIF      {"serif"};
 
   Font(const char *family, int size, int style);
   Font(std::vector<unsigned char> &&, int size, int style);

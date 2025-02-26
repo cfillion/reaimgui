@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -41,7 +41,7 @@
 static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
-constexpr NSRange kEmptyRange { NSNotFound, 0 };
+constexpr NSRange kEmptyRange {NSNotFound, 0};
 
 static NSString *eventCharsIgnoringMods(NSEvent *event)
 {
@@ -50,11 +50,11 @@ static NSString *eventCharsIgnoringMods(NSEvent *event)
   // This is undesirable because it would lead to stuck keys:
   // Shift down, 4 down (value for '$'), Shift up, 4 up (oops, value for '4'!).
 
-  const auto inputSource { TISCopyCurrentKeyboardLayoutInputSource() };
-  const auto layoutData { static_cast<CFDataRef>(
-    TISGetInputSourceProperty(inputSource, kTISPropertyUnicodeKeyLayoutData)) };
+  const auto inputSource {TISCopyCurrentKeyboardLayoutInputSource()};
+  const auto layoutData {static_cast<CFDataRef>(
+    TISGetInputSourceProperty(inputSource, kTISPropertyUnicodeKeyLayoutData))};
   const auto layout
-    { reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(layoutData)) };
+    {reinterpret_cast<const UCKeyboardLayout*>(CFDataGetBytePtr(layoutData))};
 
   UInt32 deadKeyState {};
   UniChar str[4];
@@ -70,7 +70,7 @@ static NSString *eventCharsIgnoringMods(NSEvent *event)
 
 static int translateKeyCode(NSEvent *event)
 {
-  const uint16_t keyCode { [event keyCode] };
+  const uint16_t keyCode {[event keyCode]};
 
   // hard-code these keys based on their physical location on the keyboard
   // https://developer.apple.com/library/archive/documentation/mac/pdf/MacintoshToolboxEssentials.pdf
@@ -138,7 +138,7 @@ static int translateKeyCode(NSEvent *event)
   if(![chars length])
     return keyCode & 0xFF;
 
-  uint16_t charValue { [chars characterAtIndex:0] };
+  uint16_t charValue {[chars characterAtIndex:0]};
 
   // attempt to be compatible with QWERTY/AZERTY, may be inaccurate
   switch(charValue) {
@@ -168,7 +168,7 @@ static int translateKeyCode(NSEvent *event)
 @implementation InputView
 - (instancetype)initWithWindow:(Window *)window
 {
-  NSView *parent { (__bridge NSView *)window->nativeHandle() };
+  NSView *parent {(__bridge NSView *)window->nativeHandle()};
   self = [super initWithFrame:[parent frame]];
   m_window = window;
 
@@ -200,7 +200,7 @@ static int translateKeyCode(NSEvent *event)
   // Calling updateFocus later because at this time focus has yet to be transferred
   // Cannot use m_window in the callback because we might get destroyed before
   // it is executed.
-  Context *ctx { m_window->context() };
+  Context *ctx {m_window->context()};
   dispatch_async(dispatch_get_main_queue(), ^{
     if(Resource::isValid(ctx))
       ctx->updateFocus();
@@ -237,7 +237,7 @@ static int translateKeyCode(NSEvent *event)
 
 - (void)otherMouseDown:(NSEvent *)event
 {
-  const auto button { [event buttonNumber] }; // 0-32
+  const auto button {[event buttonNumber]}; // 0-32
   if(button < ImGuiMouseButton_COUNT)
     m_window->mouseDown(button);
 }
@@ -252,13 +252,13 @@ static int translateKeyCode(NSEvent *event)
   // Send key to the system input manager. It will reply by sending insertText.
   [self interpretKeyEvents:@[event]];
 
-  const ImGuiKey key { static_cast<ImGuiKey>(translateKeyCode(event)) };
+  const ImGuiKey key {static_cast<ImGuiKey>(translateKeyCode(event))};
   m_window->context()->keyInput(key, true);
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-  const ImGuiKey key { static_cast<ImGuiKey>(translateKeyCode(event)) };
+  const ImGuiKey key {static_cast<ImGuiKey>(translateKeyCode(event))};
   m_window->context()->keyInput(key, false);
 }
 
@@ -276,26 +276,26 @@ static int translateKeyCode(NSEvent *event)
   };
 
   constexpr Modifier modifiers[] {
-    { ImGuiMod_Ctrl,  NSEventModifierFlagControl, {
-      { kVK_Control,      ImGuiKey_LeftCtrl,  0x0001 },
-      { kVK_RightControl, ImGuiKey_RightCtrl, 0x2000 }
+    {ImGuiMod_Ctrl,  NSEventModifierFlagControl, {
+      {kVK_Control,      ImGuiKey_LeftCtrl,  0x0001},
+      {kVK_RightControl, ImGuiKey_RightCtrl, 0x2000}
     }},
-    { ImGuiMod_Shift, NSEventModifierFlagShift, {
-      { kVK_Shift,      ImGuiKey_LeftShift,  0x0002 },
-      { kVK_RightShift, ImGuiKey_RightShift, 0x0004 }
+    {ImGuiMod_Shift, NSEventModifierFlagShift, {
+      {kVK_Shift,      ImGuiKey_LeftShift,  0x0002},
+      {kVK_RightShift, ImGuiKey_RightShift, 0x0004}
     }},
-    { ImGuiMod_Super, NSEventModifierFlagCommand, {
-      { kVK_Command,      ImGuiKey_LeftSuper,  0x0008 },
-      { kVK_RightCommand, ImGuiKey_RightSuper, 0x0010 },
+    {ImGuiMod_Super, NSEventModifierFlagCommand, {
+      {kVK_Command,      ImGuiKey_LeftSuper,  0x0008},
+      {kVK_RightCommand, ImGuiKey_RightSuper, 0x0010},
     }},
-    { ImGuiMod_Alt,   NSEventModifierFlagOption, {
-      { kVK_Option,      ImGuiKey_LeftAlt,  0x0020 },
-      { kVK_RightOption, ImGuiKey_RightAlt, 0x0040 },
+    {ImGuiMod_Alt,   NSEventModifierFlagOption, {
+      {kVK_Option,      ImGuiKey_LeftAlt,  0x0020},
+      {kVK_RightOption, ImGuiKey_RightAlt, 0x0040},
     }},
   };
 
-  const unsigned short keyCode { [event keyCode] };
-  const unsigned long modFlags { [event modifierFlags] };
+  const unsigned short keyCode {[event keyCode]};
+  const unsigned long modFlags {[event modifierFlags]};
 
   for(const auto &modifier : modifiers) {
     m_window->context()->keyInput(modifier.modkey, modFlags & modifier.flag);
@@ -309,18 +309,18 @@ static int translateKeyCode(NSEvent *event)
 
 - (NSDragOperation)draggingEntered:(id<NSDraggingInfo>)sender
 {
-  NSPasteboard *pboard { [sender draggingPasteboard] };
+  NSPasteboard *pboard {[sender draggingPasteboard]};
   if(![[pboard types] containsObject:NSFilenamesPboardType])
     return NSDragOperationNone;
 
-  NSArray *nsfiles { [pboard propertyListForType:NSFilenamesPboardType] };
-  const NSUInteger count { [nsfiles count] };
+  NSArray *nsfiles {[pboard propertyListForType:NSFilenamesPboardType]};
+  const NSUInteger count {[nsfiles count]};
 
   std::vector<std::string> files;
   files.reserve(count);
 
-  for(size_t i { 0 }; i < count; ++i) {
-    NSString *file { [nsfiles objectAtIndex:i] };
+  for(size_t i {}; i < count; ++i) {
+    NSString *file {[nsfiles objectAtIndex:i]};
     files.emplace_back([file UTF8String]);
   }
 
@@ -336,7 +336,7 @@ static int translateKeyCode(NSEvent *event)
 
 - (BOOL)performDragOperation:(id<NSDraggingInfo>)sender
 {
-  NSPasteboard *pboard { [sender draggingPasteboard] };
+  NSPasteboard *pboard {[sender draggingPasteboard]};
   if([[pboard types] containsObject:NSFilenamesPboardType]) {
     m_window->context()->endDrag(true);
     return YES;
@@ -349,7 +349,7 @@ static int translateKeyCode(NSEvent *event)
 // Extracted from GLFW (zlib license) with minimal changes
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange
 {
-  const NSEvent *event { [NSApp currentEvent] };
+  const NSEvent *event {[NSApp currentEvent]};
 
   if([event modifierFlags] & NSEventModifierFlagCommand)
     return;
@@ -360,7 +360,7 @@ static int translateKeyCode(NSEvent *event)
   else
     characters = string;
 
-  NSRange range { NSMakeRange(0, [characters length]) };
+  NSRange range {NSMakeRange(0, [characters length])};
 
   while(range.length) {
     ImWchar codepoint {};

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -38,7 +38,7 @@ constexpr auto assertStyleVar(T ImGuiStyle::*var)
 template<typename... T>
 using StyleFields = std::variant<T ImGuiStyle::*...>;
 
-constexpr int baseStyleVar { __COUNTER__ };
+constexpr int baseStyleVar {__COUNTER__};
 static constexpr StyleFields<float, ImVec2> g_styleVars[] {
   STYLEVAR(Alpha),
   STYLEVAR(DisabledAlpha),
@@ -87,18 +87,18 @@ See StyleVar_* for possible values of 'var_idx'.)")
 {
   FRAME_GUARD;
   if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
-    throw reascript_error { "unknown style variable" };
+    throw reascript_error {"unknown style variable"};
 
   std::visit([var_idx, val1, val2](auto ImGuiStyle::*field) {
     if constexpr(std::is_same_v<ImVec2,
                             std::decay_t<decltype(ImGui::GetStyle().*field)>>) {
       if(!val2)
-        throw reascript_error { "this variable requires two values (x, y)" };
+        throw reascript_error {"this variable requires two values (x, y)"};
       ImGui::PushStyleVar(var_idx, ImVec2(val1, *val2));
     }
     else {
       if(val2)
-        throw reascript_error { "second value ignored for this variable" };
+        throw reascript_error {"second value ignored for this variable"};
       ImGui::PushStyleVar(var_idx, val1);
     }
   }, g_styleVars[var_idx]);
@@ -118,10 +118,10 @@ API_FUNC(0_1, void, GetStyleVar, (Context*,ctx)
 {
   FRAME_GUARD;
   if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
-    throw reascript_error { "unknown style variable" };
+    throw reascript_error {"unknown style variable"};
 
   std::visit([val1, val2](auto ImGuiStyle::*field) {
-    const ImGuiStyle &style { ImGui::GetStyle() };
+    const ImGuiStyle &style {ImGui::GetStyle()};
     if constexpr(std::is_same_v<ImVec2, std::decay_t<decltype(style.*field)>>) {
       if(val1) *val1 = (style.*field).x;
       if(val2) *val2 = (style.*field).y;
@@ -222,7 +222,7 @@ multiplier, packed as a 32-bit value (RGBA). See Col_* for available style color
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
-  const ImGuiCol col { idx };
+  const ImGuiCol col {idx};
   return Color::toBigEndian(ImGui::GetColorU32(col, API_GET(alpha_mul)));
 }
 
@@ -245,7 +245,7 @@ with style alpha baked in. See Col_* for available style colors.)")
 {
   FRAME_GUARD;
   IM_ASSERT(idx >= 0 && idx < ImGuiCol_COUNT);
-  return Color { ImGui::GetStyleColorVec4(idx) }.pack(true);
+  return Color {ImGui::GetStyleColorVec4(idx)}.pack(true);
 }
 
 API_FUNC(0_1, void, PushStyleColor, (Context*,ctx)

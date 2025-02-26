@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -51,7 +51,7 @@ namespace Tags {
 template<typename T, unsigned char TagV>
 class Tag {
 public:
-  Tag(T v) : m_val { v } {}
+  Tag(T v) : m_val {v} {}
   operator T &() { return m_val; }
   operator const T &() const { return m_val; }
 
@@ -81,9 +81,9 @@ struct TypeInfo<T, typename std::enable_if_t<std::is_pointer_v<T>>>
   using underlying = std::remove_pointer_t<T>;
   static constexpr auto type()
   {
-    constexpr auto name { TypeInfo<underlying>::type() };
+    constexpr auto name {TypeInfo<underlying>::type()};
     std::array<char, name.size() + 1> out {};
-    char *p { out.data() };
+    char *p {out.data()};
     CompStr::append(p, name, '*');
     return out;
   }
@@ -103,12 +103,12 @@ struct TypeInfo<Tag<T, tags>>
   template<const auto &Names, size_t I>
   static constexpr auto name()
   {
-    constexpr auto resolvedName { [] {
-      constexpr auto name { TypeInfo<T>::template name<Names, I>() };
+    constexpr auto resolvedName {[] {
+      constexpr auto name {TypeInfo<T>::template name<Names, I>()};
 
       // do not append _sz again when Names[I] already ends with it
       if constexpr(!!(tags & Tags::S)) {
-        constexpr auto sz { suffixFor(Tags::S) };
+        constexpr auto sz {suffixFor(Tags::S)};
         if constexpr(name.size() > sz.size() &&
             name.substr(name.size() - sz.size()) == sz)
           return name.substr(0, name.size() - sz.size());
@@ -117,11 +117,11 @@ struct TypeInfo<Tag<T, tags>>
       }
       else
         return name;
-    }() };
+    }()};
 
-    constexpr size_t length { resolvedName.size() + suffixesLength() };
+    constexpr size_t length {resolvedName.size() + suffixesLength()};
     std::array<char, length> decorated {};
-    char *p { decorated.data() };
+    char *p {decorated.data()};
     CompStr::append(p, resolvedName);
     for(size_t bit {}; bit < sizeof(tags) * CHAR_BIT; ++bit)
       CompStr::append(p, suffixFor(tags & (1 << bit)));

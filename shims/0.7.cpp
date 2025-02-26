@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -94,8 +94,8 @@ SHIM_FUNC(0_1, void, SetConfigFlags, (Context*,ctx) (int,flags))
 // null-terminated combo and list box items
 static int convertItemSeparator(char *items)
 {
-  const size_t size { strlen(items) };
-  for(char *c { items + size - 1 }; c >= items; --c) {
+  const size_t size {strlen(items)};
+  for(char *c {items + size - 1}; c >= items; --c) {
     if(*c == '\x1f') // ASCII Unit Separator
       *c = '\0';
   }
@@ -106,14 +106,14 @@ SHIM_FUNC(0_1, bool, Combo, (Context*,ctx)
   (const char*,label) (RW<int*>,current_item) (char*,items)
   (RO<int*>,popup_max_height_in_items))
 {
-  const int size { convertItemSeparator(items) };
+  const int size {convertItemSeparator(items)};
   return api.Combo(ctx, label, current_item, items, size, popup_max_height_in_items);
 }
 
 SHIM_FUNC(0_1, bool, ListBox, (Context*,ctx) (const char*,label)
   (RW<int*>,current_item) (char*,items) (RO<int*>,height_in_items))
 {
-  const int size { convertItemSeparator(items) };
+  const int size {convertItemSeparator(items)};
   return api.ListBox(ctx, label, current_item, items, size, height_in_items);
 }
 

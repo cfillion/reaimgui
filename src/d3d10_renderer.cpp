@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -95,9 +95,9 @@ private:
 D3D10Renderer::Shared::Shared(const bool forceSoftware)
 {
   static FuncImport<decltype(D3D10CreateDevice)>
-    _D3D10CreateDevice { L"D3D10", "D3D10CreateDevice" };
+    _D3D10CreateDevice {L"D3D10", "D3D10CreateDevice"};
   if(!_D3D10CreateDevice)
-    throw backend_error { "Direct3D 10 is not installed on this system" };
+    throw backend_error {"Direct3D 10 is not installed on this system"};
   const auto createDevice = [&](const D3D10_DRIVER_TYPE driver) {
     return SUCCEEDED(_D3D10CreateDevice(
       nullptr, driver, nullptr, 0, D3D10_SDK_VERSION, &m_device));
@@ -105,58 +105,58 @@ D3D10Renderer::Shared::Shared(const bool forceSoftware)
   if(forceSoftware || !createDevice(D3D10_DRIVER_TYPE_HARDWARE))
     createDevice(D3D10_DRIVER_TYPE_WARP); // software rasterizer
   if(!m_device)
-    throw backend_error { "failed to create Direct3D 10 device" };
+    throw backend_error {"failed to create Direct3D 10 device"};
 
   {
     CComPtr<IDXGIDevice> dxgiDevice;
     CComPtr<IDXGIAdapter> dxgiAdapter;
     if(FAILED(m_device->QueryInterface(IID_PPV_ARGS(&dxgiDevice))))
-      throw backend_error { "failed to get DXGI device" };
+      throw backend_error {"failed to get DXGI device"};
     if(FAILED(dxgiDevice->GetParent(IID_PPV_ARGS(&dxgiAdapter))))
-      throw backend_error { "failed to get DXGI adapter" };
+      throw backend_error {"failed to get DXGI adapter"};
     if(FAILED(dxgiAdapter->GetParent(IID_PPV_ARGS(&m_factory))))
-      throw backend_error { "failed to get DXGI factory" };
+      throw backend_error {"failed to get DXGI factory"};
   }
 
   if(FAILED(m_device->CreateVertexShader(VERTEX_SHADER, sizeof(VERTEX_SHADER),
                                          &m_vertexShader)))
-    throw backend_error { "failed to create vertex shader" };
+    throw backend_error {"failed to create vertex shader"};
   m_device->VSSetShader(m_vertexShader);
 
   if(FAILED(m_device->CreatePixelShader(PIXEL_SHADER, sizeof(PIXEL_SHADER),
                                         &m_pixelShader)))
-    throw backend_error { "failed to create pixel shader" };
+    throw backend_error {"failed to create pixel shader"};
   m_device->PSSetShader(m_pixelShader);
 
   constexpr D3D10_INPUT_ELEMENT_DESC vertexInputs[] {
-    { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0,
-      offsetof(ImDrawVert, pos), D3D10_INPUT_PER_VERTEX_DATA, 0 },
-    { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0,
-      offsetof(ImDrawVert, uv),  D3D10_INPUT_PER_VERTEX_DATA, 0 },
-    { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0,
-      offsetof(ImDrawVert, col), D3D10_INPUT_PER_VERTEX_DATA, 0 },
+    {"POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0,
+      offsetof(ImDrawVert, pos), D3D10_INPUT_PER_VERTEX_DATA, 0},
+    {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0,
+      offsetof(ImDrawVert, uv),  D3D10_INPUT_PER_VERTEX_DATA, 0},
+    {"COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0,
+      offsetof(ImDrawVert, col), D3D10_INPUT_PER_VERTEX_DATA, 0},
   };
   if(FAILED(m_device->CreateInputLayout(vertexInputs, std::size(vertexInputs),
                                         VERTEX_SHADER, sizeof(VERTEX_SHADER),
                                         &m_inputLayout)))
-    throw backend_error { "failed to create layout of vertex shader inputs" };
+    throw backend_error {"failed to create layout of vertex shader inputs"};
   m_device->IASetInputLayout(m_inputLayout);
   m_device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
   constexpr D3D10_BLEND_DESC blendDesc {
     .AlphaToCoverageEnable = false,
-    .BlendEnable           = { true },
+    .BlendEnable           = {true},
     .SrcBlend              = D3D10_BLEND_SRC_ALPHA,
     .DestBlend             = D3D10_BLEND_INV_SRC_ALPHA,
     .BlendOp               = D3D10_BLEND_OP_ADD,
     .SrcBlendAlpha         = D3D10_BLEND_ONE,
     .DestBlendAlpha        = D3D10_BLEND_INV_SRC_ALPHA,
     .BlendOpAlpha          = D3D10_BLEND_OP_ADD,
-    .RenderTargetWriteMask = { D3D10_COLOR_WRITE_ENABLE_ALL },
+    .RenderTargetWriteMask = {D3D10_COLOR_WRITE_ENABLE_ALL},
   };
   if(FAILED(m_device->CreateBlendState(&blendDesc, &m_blendState)))
-    throw backend_error { "failed to create blend state" };
-  constexpr float blendFactor[] { 0.f, 0.f, 0.f, 0.f };
+    throw backend_error {"failed to create blend state"};
+  constexpr float blendFactor[] {0.f, 0.f, 0.f, 0.f};
   m_device->OMSetBlendState(m_blendState, blendFactor, 0xffffffff);
 
   constexpr D3D10_RASTERIZER_DESC rasterizerDesc {
@@ -166,7 +166,7 @@ D3D10Renderer::Shared::Shared(const bool forceSoftware)
     .ScissorEnable   = true,
   };
   if(FAILED(m_device->CreateRasterizerState(&rasterizerDesc, &m_rasterizerState)))
-    throw backend_error { "failed to create rasterizer state" };
+    throw backend_error {"failed to create rasterizer state"};
   m_device->RSSetState(m_rasterizerState);
 
   constexpr D3D10_DEPTH_STENCILOP_DESC faceDesc {
@@ -184,7 +184,7 @@ D3D10Renderer::Shared::Shared(const bool forceSoftware)
     .BackFace       = faceDesc,
   };
   if(FAILED(m_device->CreateDepthStencilState(&depthStencilDesc, &m_depthStencilState)))
-    throw backend_error { "failed to create depth stencil state" };
+    throw backend_error {"failed to create depth stencil state"};
   m_device->OMSetDepthStencilState(m_depthStencilState, 0);
 
   constexpr D3D10_SAMPLER_DESC samplerDesc {
@@ -195,7 +195,7 @@ D3D10Renderer::Shared::Shared(const bool forceSoftware)
     .ComparisonFunc = D3D10_COMPARISON_ALWAYS,
   };
   if(FAILED(m_device->CreateSamplerState(&samplerDesc, &m_samplerState)))
-    throw backend_error { "failed to create sampler state" };
+    throw backend_error {"failed to create sampler state"};
   m_device->PSSetSamplers(0, 1, &m_samplerState.p);
 }
 
@@ -221,7 +221,7 @@ void D3D10Renderer::Shared::textureCommand(const TextureCmd &cmd)
 
   for(size_t i {}; i < cmd.size; ++i) {
     int width, height;
-    const unsigned char *pixels { cmd[i].getPixels(&width, &height) };
+    const unsigned char *pixels {cmd[i].getPixels(&width, &height)};
 
     CComPtr<ID3D10Texture2D> texture;
     const D3D10_TEXTURE2D_DESC textureDesc {
@@ -230,7 +230,7 @@ void D3D10Renderer::Shared::textureCommand(const TextureCmd &cmd)
       .MipLevels = 1,
       .ArraySize = 1,
       .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-      .SampleDesc = { .Count = 1 },
+      .SampleDesc = {.Count = 1},
       .Usage = D3D10_USAGE_DEFAULT,
       .BindFlags = D3D10_BIND_SHADER_RESOURCE,
     };
@@ -239,12 +239,12 @@ void D3D10Renderer::Shared::textureCommand(const TextureCmd &cmd)
       .SysMemPitch = textureDesc.Width * 4,
     };
     if(FAILED(m_device->CreateTexture2D(&textureDesc, &subResourceDesc, &texture)))
-      throw backend_error { "failed to create texture" };
+      throw backend_error {"failed to create texture"};
 
     const D3D10_SHADER_RESOURCE_VIEW_DESC resourceViewDesc {
       .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
       .ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D,
-      .Texture2D = { .MipLevels = textureDesc.MipLevels },
+      .Texture2D = {.MipLevels = textureDesc.MipLevels},
     };
     m_device->CreateShaderResourceView(texture,
       &resourceViewDesc, &m_textures[cmd.offset + i]);
@@ -252,7 +252,7 @@ void D3D10Renderer::Shared::textureCommand(const TextureCmd &cmd)
 }
 
 D3D10Renderer::D3D10Renderer(RendererFactory *factory, Window *window)
-  : Renderer { window }
+  : Renderer {window}
 {
   m_shared = factory->getSharedData<Shared>();
   if(!m_shared) {
@@ -262,10 +262,10 @@ D3D10Renderer::D3D10Renderer(RendererFactory *factory, Window *window)
 
   DXGI_SWAP_CHAIN_DESC swapChainDesc {
     .BufferDesc = {
-      .RefreshRate = { .Numerator = 60, .Denominator = 1 },
+      .RefreshRate = {.Numerator = 60, .Denominator = 1},
       .Format      = DXGI_FORMAT_R8G8B8A8_UNORM,
     },
-    .SampleDesc   = { .Count = 1, .Quality = 0 },
+    .SampleDesc   = {.Count = 1, .Quality = 0},
     .BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT,
     .BufferCount  = 1,
     .OutputWindow = window->nativeHandle(),
@@ -274,7 +274,7 @@ D3D10Renderer::D3D10Renderer(RendererFactory *factory, Window *window)
     .Flags        = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH,
   };
   if(FAILED(m_shared->m_factory->CreateSwapChain(m_shared->m_device, &swapChainDesc, &m_swapChain)))
-    throw backend_error { "failed to create DXGI swap chain" };
+    throw backend_error {"failed to create DXGI swap chain"};
 
   // disable Alt+Enter enabling fullscreen mode
   m_shared->m_factory->MakeWindowAssociation(window->nativeHandle(),
@@ -284,7 +284,7 @@ D3D10Renderer::D3D10Renderer(RendererFactory *factory, Window *window)
 
   if(!setupBuffer(m_buffers[ConstantBuf], 1, 0, sizeof(ProjMtx),
                   D3D10_BIND_CONSTANT_BUFFER))
-    throw backend_error { "failed to create vertex constant buffer" };
+    throw backend_error {"failed to create vertex constant buffer"};
 }
 
 D3D10Renderer::~D3D10Renderer()
@@ -295,9 +295,9 @@ void D3D10Renderer::createRenderTarget()
 {
   CComPtr<ID3D10Texture2D> buffer;
   if(FAILED(m_swapChain->GetBuffer(0, IID_PPV_ARGS(&buffer))))
-    throw backend_error { "failed to get swap chain buffer" };
+    throw backend_error {"failed to get swap chain buffer"};
   if(FAILED(m_shared->m_device->CreateRenderTargetView(buffer, nullptr, &m_renderTarget)))
-    throw backend_error { "failed to create render target view" };
+    throw backend_error {"failed to create render target view"};
 }
 
 bool D3D10Renderer::setupBuffer(Buffer &buffer, const unsigned int wantSize,
@@ -309,7 +309,7 @@ bool D3D10Renderer::setupBuffer(Buffer &buffer, const unsigned int wantSize,
 
   buffer.ptr = nullptr; // calls Release()
 
-  const unsigned int newSize { wantSize + reserveExtra };
+  const unsigned int newSize {wantSize + reserveExtra};
   const D3D10_BUFFER_DESC bufferDesc {
     .ByteWidth      = newSize * stride,
     .Usage          = D3D10_USAGE_DYNAMIC,
@@ -328,10 +328,10 @@ void D3D10Renderer::setSize(const ImVec2 size)
   m_shared->m_device->OMSetRenderTargets(0, nullptr, nullptr);
   m_renderTarget = nullptr; // before resizing the swap chain buffer
 
-  const float scale { m_window->viewport()->DpiScale };
+  const float scale {m_window->viewport()->DpiScale};
   if(FAILED(m_swapChain->ResizeBuffers(0,
             size.x * scale, size.y * scale, DXGI_FORMAT_UNKNOWN, 0)))
-    throw backend_error { "failed to resize swap chain buffer" };
+    throw backend_error {"failed to resize swap chain buffer"};
 
   createRenderTarget();
 }
@@ -342,14 +342,14 @@ void D3D10Renderer::render(void *)
   m_window->context()->textureManager()->update(&m_shared->m_cookie,
     std::bind(&Shared::textureCommand, m_shared.get(), _1));
 
-  const ImGuiViewport *viewport { m_window->viewport() };
-  const ImDrawData *drawData { viewport->DrawData };
+  const ImGuiViewport *viewport {m_window->viewport()};
+  const ImDrawData *drawData {viewport->DrawData};
 
-  ID3D10Device *device { m_shared->m_device };
+  ID3D10Device *device {m_shared->m_device};
   device->OMSetRenderTargets(1, &m_renderTarget.p, nullptr);
 
   if(!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) {
-    constexpr float clearColor[] { 0.f, 0.f, 0.f, 0.f };
+    constexpr float clearColor[] {0.f, 0.f, 0.f, 0.f};
     device->ClearRenderTargetView(m_renderTarget, clearColor);
   }
 
@@ -381,7 +381,7 @@ void D3D10Renderer::render(void *)
       D3D10_MAP_WRITE_DISCARD, 0, reinterpret_cast<void **>(&indexData))))
     return;
   for(int i {}; i < drawData->CmdListsCount; ++i) {
-    const ImDrawList *cmdList { drawData->CmdLists[i] };
+    const ImDrawList *cmdList {drawData->CmdLists[i]};
     memcpy(vertexData, cmdList->VtxBuffer.Data,
            cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
     memcpy(indexData, cmdList->IdxBuffer.Data,
@@ -392,36 +392,36 @@ void D3D10Renderer::render(void *)
   m_buffers[VertexBuf]->Unmap();
   m_buffers[IndexBuf]->Unmap();
 
-  const ProjMtx projMatrix { drawData->DisplayPos, drawData->DisplaySize };
+  const ProjMtx projMatrix {drawData->DisplayPos, drawData->DisplaySize};
   void *constData;
   if(FAILED(m_buffers[ConstantBuf]->Map(D3D10_MAP_WRITE_DISCARD, 0, &constData)))
     return;
   memcpy(constData, &projMatrix, sizeof(ProjMtx));
   m_buffers[ConstantBuf]->Unmap();
 
-  const unsigned int stride { sizeof(ImDrawVert) }, offset {};
+  const unsigned int stride {sizeof(ImDrawVert)}, offset {};
   device->VSSetConstantBuffers(0, 1, &m_buffers[ConstantBuf].ptr.p);
   device->IASetVertexBuffers(0, 1, &m_buffers[VertexBuf].ptr.p, &stride, &offset);
   device->IASetIndexBuffer(m_buffers[IndexBuf],
     sizeof(ImDrawIdx) == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT, 0);
 
-  const ImVec2 &clipOffset { drawData->DisplayPos },
-               &clipScale  { viewport->DpiScale, viewport->DpiScale };
+  const ImVec2 &clipOffset {drawData->DisplayPos},
+               &clipScale  {viewport->DpiScale, viewport->DpiScale};
   int globalVtxOffset {}, globalIdxOffset {};
   for(int i {}; i < drawData->CmdListsCount; ++i) {
-    const ImDrawList *cmdList { drawData->CmdLists[i] };
+    const ImDrawList *cmdList {drawData->CmdLists[i]};
     for(int j {}; j < cmdList->CmdBuffer.Size; ++j) {
-      const ImDrawCmd *cmd { &cmdList->CmdBuffer[j] };
+      const ImDrawCmd *cmd {&cmdList->CmdBuffer[j]};
       if(cmd->UserCallback)
         continue; // no need to call the callback, not using them
 
-      const ClipRect clipRect { cmd->ClipRect, clipOffset, clipScale };
+      const ClipRect clipRect {cmd->ClipRect, clipOffset, clipScale};
       static_assert(sizeof(ClipRect) == sizeof(D3D10_RECT));
       if(!clipRect)
         continue;
       device->RSSetScissorRects(1, reinterpret_cast<const D3D10_RECT *>(&clipRect));
 
-      ID3D10ShaderResourceView *texture { m_shared->m_textures[cmd->GetTexID()] };
+      ID3D10ShaderResourceView *texture {m_shared->m_textures[cmd->GetTexID()]};
       device->PSSetShaderResources(0, 1, &texture);
       device->DrawIndexed(cmd->ElemCount, cmd->IdxOffset + globalIdxOffset,
                                           cmd->VtxOffset + globalVtxOffset);

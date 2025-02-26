@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -34,8 +34,8 @@
 
 static unsigned int xpScreenDpi()
 {
-  const HDC dc { GetDC(nullptr) };
-  const int dpi { GetDeviceCaps(dc, LOGPIXELSX) };
+  const HDC dc {GetDC(nullptr)};
+  const int dpi {GetDeviceCaps(dc, LOGPIXELSX)};
   ReleaseDC(nullptr, dc);
   return dpi;
 }
@@ -44,7 +44,7 @@ unsigned int Win32Window::dpiForMonitor(HMONITOR monitor)
 {
   // Windows 8.1+
   static FuncImport<decltype(GetDpiForMonitor)>
-    _GetDpiForMonitor { L"SHCore.dll", "GetDpiForMonitor" };
+    _GetDpiForMonitor {L"SHCore.dll", "GetDpiForMonitor"};
 
   if(_GetDpiForMonitor && monitor) {
     unsigned int dpiX, dpiY;
@@ -59,12 +59,12 @@ unsigned int Win32Window::dpiForWindow(HWND window)
 {
   // Windows 10 Anniversary Update (1607) and newer
   static FuncImport<decltype(GetDpiForWindow)>
-    _GetDpiForWindow { L"User32.dll", "GetDpiForWindow" };
+    _GetDpiForWindow {L"User32.dll", "GetDpiForWindow"};
 
   if(_GetDpiForWindow)
     return _GetDpiForWindow(window);
   else {
-    HMONITOR monitor { MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST) };
+    HMONITOR monitor {MonitorFromWindow(window, MONITOR_DEFAULTTONEAREST)};
     return dpiForMonitor(monitor);
   }
 }
@@ -78,7 +78,7 @@ float Win32Window::scaleForDpi(const unsigned int dpi)
 // Use large (non-tool) window frames for windows
 static bool useBigFrame()
 {
-  static const ConfigVar<int> bigwndframes { "bigwndframes" };
+  static const ConfigVar<int> bigwndframes {"bigwndframes"};
   return bigwndframes.value_or(false);
 }
 
@@ -103,7 +103,7 @@ void Win32Window::updateStyles()
 
 static BOOL CALLBACK reparentChildren(HWND hwnd, LPARAM data)
 {
-  HWND owner { reinterpret_cast<HWND>(data) };
+  HWND owner {reinterpret_cast<HWND>(data)};
   if(GetWindow(hwnd, GW_OWNER) == owner) {
     SetWindowLongPtr(hwnd, GWLP_HWNDPARENT,
       reinterpret_cast<LONG_PTR>(GetWindow(owner, GW_OWNER)));
@@ -128,7 +128,7 @@ Win32Window::Class::~Class()
 }
 
 Win32Window::Win32Window(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }
+  : Window {viewport, dockerHost}
 {
 }
 
@@ -143,7 +143,7 @@ void Win32Window::create()
   updateStyles();
 
   // Trick remove the default icon during construction, unset in show()
-  DWORD exStyle { m_exStyle };
+  DWORD exStyle {m_exStyle};
   if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration))
     exStyle |= WS_EX_DLGMODALFRAME;
 
@@ -151,17 +151,17 @@ void Win32Window::create()
   // so that m_dpi gets initialized to the correct value
   // (would be the primary monitor's DPI otherwise, causing scalePosition to be
   // given an incorrect scale and possibly moving the window out of view)
-  ImVec2 initialPos { m_viewport->Pos };
+  ImVec2 initialPos {m_viewport->Pos};
   Platform::scalePosition(&initialPos, true);
   CreateWindowEx(exStyle, CLASS_NAME, L"", m_style,
     initialPos.x, initialPos.y, 0, 0,
     parentHandle(), nullptr, s_instance, this);
   if(!m_hwnd)
-    throw backend_error { "failed to create native window" };
+    throw backend_error {"failed to create native window"};
 
   m_dpi = dpiForWindow(m_hwnd);
   m_viewport->DpiScale = scaleForDpi(m_dpi);
-  const RECT &rect { scaledWindowRect(m_viewport->Pos, m_viewport->Size) };
+  const RECT &rect {scaledWindowRect(m_viewport->Pos, m_viewport->Size)};
   SetWindowPos(m_hwnd, nullptr,  rect.left, rect.top,
     rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER);
 
@@ -174,14 +174,14 @@ void Win32Window::create()
   }
 
   // will be freed upon RevokeDragDrop during destruction
-  DropTarget *dropTarget = new DropTarget { m_ctx };
+  DropTarget *dropTarget = new DropTarget {m_ctx};
   RegisterDragDrop(m_hwnd, dropTarget);
 
   // disable IME by default
   ImmAssociateContextEx(m_hwnd, nullptr, 0);
 
   // enable compositing for transparency
-  HRGN region { CreateRectRgn(0, 0, -1, -1) };
+  HRGN region {CreateRectRgn(0, 0, -1, -1)};
   const DWM_BLURBEHIND bb {
     .dwFlags  = DWM_BB_ENABLE | DWM_BB_BLURREGION,
     .fEnable  = true,
@@ -204,7 +204,7 @@ void Win32Window::destroy()
 
 RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
 {
-  const float scale { m_viewport->DpiScale };
+  const float scale {m_viewport->DpiScale};
   Platform::scalePosition(&pos, true, m_viewport);
 
   RECT rect;
@@ -216,7 +216,7 @@ RECT Win32Window::scaledWindowRect(ImVec2 pos, ImVec2 size) const
   // Windows 10 Anniversary Update (1607) and newer
   static FuncImport<decltype(AdjustWindowRectExForDpi)>
     _AdjustWindowRectExForDpi
-    { L"User32.dll", "AdjustWindowRectExForDpi" };
+    {L"User32.dll", "AdjustWindowRectExForDpi"};
 
   if(_AdjustWindowRectExForDpi)
     _AdjustWindowRectExForDpi(&rect, m_style, false, m_exStyle, m_dpi);
@@ -235,21 +235,21 @@ void Win32Window::show()
     Window::show();
   else {
     // prevent ShowWindow from bringing the parent window to the front
-    const LONG_PTR parent { SetWindowLongPtr(m_hwnd, GWLP_HWNDPARENT, 0) };
+    const LONG_PTR parent {SetWindowLongPtr(m_hwnd, GWLP_HWNDPARENT, 0)};
     Window::show();
     SetWindowLongPtr(m_hwnd, GWLP_HWNDPARENT, parent);
   }
 
   // WS_EX_DLGMODALFRAME removes the default icon but adds a border when docked
   // Unsetting it after the window is visible disables the border (+ no icon)
-  const auto exStyle { GetWindowLong(m_hwnd, GWL_EXSTYLE) };
+  const auto exStyle {GetWindowLong(m_hwnd, GWL_EXSTYLE)};
   if(exStyle & WS_EX_DLGMODALFRAME)
     SetWindowLongPtr(m_hwnd, GWL_EXSTYLE, m_exStyle);
 }
 
 void Win32Window::setPosition(const ImVec2 pos)
 {
-  const RECT &rect { scaledWindowRect(pos, m_viewport->Size) };
+  const RECT &rect {scaledWindowRect(pos, m_viewport->Size)};
   SetWindowPos(m_hwnd, nullptr,
     rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
     SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOSIZE);
@@ -257,7 +257,7 @@ void Win32Window::setPosition(const ImVec2 pos)
 
 void Win32Window::setSize(const ImVec2 size)
 {
-  const RECT &rect { scaledWindowRect(m_viewport->Pos, size) };
+  const RECT &rect {scaledWindowRect(m_viewport->Pos, size)};
   SetWindowPos(m_hwnd, nullptr,
     0, 0, rect.right - rect.left, rect.bottom - rect.top,
     SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
@@ -289,7 +289,7 @@ void Win32Window::update()
   if(isDocked())
     return;
 
-  const DWORD prevStyle { m_style }, prevExStyle { m_exStyle };
+  const DWORD prevStyle {m_style}, prevExStyle {m_exStyle};
   updateStyles();
 
   if(prevStyle != m_style || prevExStyle != m_exStyle) {
@@ -302,7 +302,7 @@ void Win32Window::update()
       AttachWindowTopmostButton(m_hwnd);
 
     HWND insertAfter;
-    unsigned int flags { SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW };
+    unsigned int flags {SWP_NOACTIVATE | SWP_FRAMECHANGED | SWP_SHOWWINDOW};
     if((prevExStyle & m_exStyle) ^ WS_EX_TOPMOST) {
       if(m_exStyle & WS_EX_TOPMOST)
         insertAfter = HWND_TOPMOST;
@@ -314,7 +314,7 @@ void Win32Window::update()
       flags |= SWP_NOZORDER;
     }
 
-    const RECT rect { scaledWindowRect(m_viewport->Pos, m_viewport->Size) };
+    const RECT rect {scaledWindowRect(m_viewport->Pos, m_viewport->Size)};
     SetWindowPos(m_hwnd, insertAfter, rect.left, rect.top,
       rect.right - rect.left, rect.bottom - rect.top, flags);
     m_viewport->PlatformRequestMove = m_viewport->PlatformRequestResize = true;
@@ -330,8 +330,8 @@ void Win32Window::setIME(ImGuiPlatformImeData *data)
 {
   ImmAssociateContextEx(m_hwnd, nullptr, data->WantVisible ? IACE_DEFAULT : 0);
 
-  if(HIMC ime { ImmGetContext(m_hwnd) }) {
-    ImVec2 pos { data->InputPos };
+  if(HIMC ime {ImmGetContext(m_hwnd)}) {
+    ImVec2 pos {data->InputPos};
     Platform::scalePosition(&pos, true);
 
     COMPOSITIONFORM composition;
@@ -357,7 +357,7 @@ std::optional<LRESULT> Win32Window::handleMessage
   case WM_NCCREATE: {
     // Windows 10 Anniversary Update (1607) and newer
     static FuncImport<decltype(EnableNonClientDpiScaling)>
-      _EnableNonClientDpiScaling { L"User32.dll", "EnableNonClientDpiScaling" };
+      _EnableNonClientDpiScaling {L"User32.dll", "EnableNonClientDpiScaling"};
     if(_EnableNonClientDpiScaling)
       _EnableNonClientDpiScaling(m_hwnd);
     break;
@@ -376,7 +376,7 @@ std::optional<LRESULT> Win32Window::handleMessage
     m_dpi = LOWORD(wParam);
     m_viewport->DpiScale = scaleForDpi(m_dpi);
 
-    const RECT *sugg { reinterpret_cast<RECT *>(lParam) };
+    const RECT *sugg {reinterpret_cast<RECT *>(lParam)};
     SetWindowPos(m_hwnd, nullptr,
       sugg->left, sugg->top, sugg->right - sugg->left, sugg->bottom - sugg->top,
       SWP_NOACTIVATE | SWP_NOZORDER);
@@ -450,7 +450,7 @@ void Win32Window::keyEvent(unsigned int msg,
   if(vk > 255)
     return;
 
-  const bool down { msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN };
+  const bool down {msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN};
 
   // Windows doesn't send a WM_KEYDOWN for Print Screen
   if(vk == VK_SNAPSHOT && !down)
@@ -465,17 +465,17 @@ void Win32Window::keyEvent(unsigned int msg,
 struct ModKey { uint8_t vk; ImGuiKey ik; };
 struct Modifier { uint8_t modVK; ImGuiKey modKey; ModKey keys[2]; };
 constexpr Modifier modifiers[] {
-  { VK_CONTROL, ImGuiMod_Ctrl, {
-    { VK_LCONTROL, ImGuiKey_LeftCtrl }, { VK_RCONTROL, ImGuiKey_RightCtrl },
+  {VK_CONTROL, ImGuiMod_Ctrl, {
+    {VK_LCONTROL, ImGuiKey_LeftCtrl }, {VK_RCONTROL, ImGuiKey_RightCtrl},
   }},
-  { VK_SHIFT, ImGuiMod_Shift, {
-    { VK_LSHIFT, ImGuiKey_LeftShift }, { VK_RSHIFT, ImGuiKey_RightShift },
+  {VK_SHIFT, ImGuiMod_Shift, {
+    {VK_LSHIFT, ImGuiKey_LeftShift }, {VK_RSHIFT, ImGuiKey_RightShift},
   }},
-  { VK_MENU, ImGuiMod_Alt, {
-    { VK_LMENU, ImGuiKey_LeftAlt }, { VK_RMENU, ImGuiKey_RightAlt },
+  {VK_MENU, ImGuiMod_Alt, {
+    {VK_LMENU, ImGuiKey_LeftAlt }, {VK_RMENU, ImGuiKey_RightAlt},
   }},
-  { VK_LWIN, ImGuiMod_Super, {
-    { VK_LWIN, ImGuiKey_LeftSuper }, { VK_RWIN, ImGuiKey_RightSuper },
+  {VK_LWIN, ImGuiMod_Super, {
+    {VK_LWIN, ImGuiKey_LeftSuper }, {VK_RWIN, ImGuiKey_RightSuper},
   }},
 };
 

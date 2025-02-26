@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -84,16 +84,16 @@ struct EEL;
 
 template<typename R, typename... Args, R (*fn)(Args...) noexcept>
 struct EEL<fn> {
-  static constexpr size_t ARGC { sizeof...(Args) };
+  static constexpr size_t ARGC {sizeof...(Args)};
 
   static EEL_F NSEEL_CGEN_CALL apply(void *self, INT_PTR argc, EEL_F **argv)
   {
     if(static_cast<size_t>(argc) < sizeof...(Args))
       return 0;
 
-    Function *func { static_cast<Function *>(self) };
+    Function *func {static_cast<Function *>(self)};
     const auto &args
-      { makeTuple(func, argv, std::index_sequence_for<Args...>{}) };
+      {makeTuple(func, argv, std::index_sequence_for<Args...>{})};
     if constexpr(std::is_void_v<R>) {
       std::apply(fn, args);
       return 0;

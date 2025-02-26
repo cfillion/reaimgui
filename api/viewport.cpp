@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -38,7 +38,7 @@ API_FUNC(0_1, void, Viewport_GetPos, (ViewportProxy*,viewport)
 (W<double*>,x) (W<double*>,y),
 "Main Area: Position of the viewport")
 {
-  const ImVec2 &pos { viewport->get()->Pos };
+  const ImVec2 &pos {viewport->get()->Pos};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }
@@ -47,7 +47,7 @@ API_FUNC(0_1, void, Viewport_GetSize, (ViewportProxy*,viewport)
 (W<double*>,w) (W<double*>,h),
 "Main Area: Size of the viewport.")
 {
-  const ImVec2 &size { viewport->get()->Size };
+  const ImVec2 &size {viewport->get()->Size};
   if(w) *w = size.x;
   if(h) *h = size.y;
 }
@@ -56,7 +56,7 @@ API_FUNC(0_1, void, Viewport_GetCenter, (ViewportProxy*,viewport)
 (W<double*>,x) (W<double*>,y),
 "Center of the viewport.")
 {
-  const ImVec2 &pos { viewport->get()->GetCenter() };
+  const ImVec2 &pos {viewport->get()->GetCenter()};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }
@@ -67,7 +67,7 @@ API_FUNC(0_1, void, Viewport_GetWorkPos, (ViewportProxy*,viewport)
 (W<double*>,x) (W<double*>,y),
 ">= Viewport_GetPos")
 {
-  const ImVec2 &pos { viewport->get()->WorkPos };
+  const ImVec2 &pos {viewport->get()->WorkPos};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }
@@ -76,7 +76,7 @@ API_FUNC(0_1, void, Viewport_GetWorkSize, (ViewportProxy*,viewport)
 (W<double*>,w) (W<double*>,h),
 "<= Viewport_GetSize")
 {
-  const ImVec2 &size { viewport->get()->WorkSize };
+  const ImVec2 &size {viewport->get()->WorkSize};
   if(w) *w = size.x;
   if(h) *h = size.y;
 }
@@ -85,7 +85,7 @@ API_FUNC(0_1, void, Viewport_GetWorkCenter, (ViewportProxy*,viewport)
 (W<double*>,x) (W<double*>,y),
 "Center of the viewport's work area.")
 {
-  const ImVec2 &pos { viewport->get()->GetWorkCenter() };
+  const ImVec2 &pos {viewport->get()->GetWorkCenter()};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }

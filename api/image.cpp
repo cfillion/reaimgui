@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -85,7 +85,7 @@ void assertValid(LICE_IBitmap *ptr)
     JS_LICE_GetWidth = reinterpret_cast<decltype(JS_LICE_GetWidth)>
       (plugin_getapi("JS_LICE_GetWidth"));
   if(!JS_LICE_GetWidth)
-    throw reascript_error { "cannot load JS_LICE_GetWidth" };
+    throw reascript_error {"cannot load JS_LICE_GetWidth"};
   if(!JS_LICE_GetWidth(ptr))
     Error::invalidObject(ptr);
 }
@@ -117,7 +117,7 @@ API_FUNC(0_8, void, Image, (Context*,ctx)
   FRAME_GUARD;
   assertValid(image);
 
-  const ImTextureID tex { image->makeTexture(ctx->textureManager()) };
+  const ImTextureID tex {image->makeTexture(ctx->textureManager())};
   ImGui::Image(tex, ImVec2(image_size_w, image_size_h),
     ImVec2(API_GET(uv0_x), API_GET(uv0_y)),
     ImVec2(API_GET(uv1_x), API_GET(uv1_y)),
@@ -134,7 +134,7 @@ API_FUNC(0_8, bool, ImageButton, (Context*,ctx)
   FRAME_GUARD;
   assertValid(image);
 
-  const ImTextureID tex { image->makeTexture(ctx->textureManager()) };
+  const ImTextureID tex {image->makeTexture(ctx->textureManager())};
   return ImGui::ImageButton(str_id, tex, ImVec2(image_size_w, image_size_h),
     ImVec2(API_GET(uv0_x), API_GET(uv0_y)),
     ImVec2(API_GET(uv1_x), API_GET(uv1_y)),

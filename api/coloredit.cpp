@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -37,10 +37,10 @@ R"(Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xXXRRGGBB
   FRAME_GUARD;
   assertValid(col_rgba);
 
-  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  ImGuiColorEditFlags clean_flags {API_GET(flags)};
   sanitizeColorEditFlags(clean_flags);
 
-  const bool alpha { (clean_flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+  const bool alpha {(clean_flags & ImGuiColorEditFlags_NoAlpha) == 0};
   float col[4];
   Color(*col_rgba, alpha).unpack(col);
   if(ImGui::ColorEdit4(label, col, clean_flags)) {
@@ -57,7 +57,7 @@ API_FUNC(0_1, bool, ColorEdit3, (Context*,ctx)
 "Color is in 0xXXRRGGBB. XX is ignored and will not be modified.")
 {
   // Edit4 will take care of starting the frame and validating col_rgb
-  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  ImGuiColorEditFlags clean_flags {API_GET(flags)};
   clean_flags |= ImGuiColorEditFlags_NoAlpha;
   return ColorEdit4::impl(ctx, label, col_rgb, &clean_flags);
 }
@@ -70,10 +70,10 @@ API_FUNC(0_1, bool, ColorPicker4, (Context*,ctx)
   FRAME_GUARD;
   assertValid(col_rgba);
 
-  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  ImGuiColorEditFlags clean_flags {API_GET(flags)};
   sanitizeColorEditFlags(clean_flags);
 
-  const bool alpha { (clean_flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+  const bool alpha {(clean_flags & ImGuiColorEditFlags_NoAlpha) == 0};
 
   float col[4], refCol[4];
   Color(*col_rgba, alpha).unpack(col);
@@ -94,7 +94,7 @@ API_FUNC(0_1, bool, ColorPicker3, (Context*,ctx)
 R"(Color is in 0xXXRRGGBB. XX is ignored and will not be modified.)")
 {
   // Picker4 will take care of starting the frame and validating col_rgb
-  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  ImGuiColorEditFlags clean_flags {API_GET(flags)};
   clean_flags |= ImGuiColorEditFlags_NoAlpha;
   return ColorPicker4::impl(ctx, label, col_rgb, &clean_flags, nullptr);
 }
@@ -107,10 +107,10 @@ Color is in 0xRRGGBBAA or, if ColorEditFlags_NoAlpha is set, 0xRRGGBB.)")
 {
   FRAME_GUARD;
 
-  ImGuiColorEditFlags clean_flags { API_GET(flags) };
+  ImGuiColorEditFlags clean_flags {API_GET(flags)};
   sanitizeColorEditFlags(clean_flags);
 
-  const bool alpha { (clean_flags & ImGuiColorEditFlags_NoAlpha) == 0 };
+  const bool alpha {(clean_flags & ImGuiColorEditFlags_NoAlpha) == 0};
   const Color col(col_rgba, alpha);
   const ImVec2 size(API_GET(size_w), API_GET(size_h));
 

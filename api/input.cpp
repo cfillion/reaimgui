@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -33,7 +33,7 @@ using InputTextCallback = Callback<ImGuiInputTextCallbackData>;
 
 class InputTextFlags : public Flags<ImGuiInputTextFlags> {
 public:
-  InputTextFlags(int flags) : Flags { flags }
+  InputTextFlags(int flags) : Flags {flags}
   {
     *this &= ~(
       // don't expose these to users
@@ -57,8 +57,8 @@ API_FUNC(0_8_5, bool, InputText, (Context*,ctx)
   FRAME_GUARD;
   assertValid(buf);
 
-  std::string value { buf };
-  const InputTextFlags clean_flags { API_GET(flags) };
+  std::string value {buf};
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   // The output buffer is updated only when true is returned.
   // This differs from upstream Dear ImGui when InputTextFlags_EnterReturnsTrue
@@ -80,9 +80,9 @@ API_FUNC(0_8_5, bool, InputTextMultiline, (Context*,ctx)
   FRAME_GUARD;
   assertValid(buf);
 
-  std::string value { buf };
+  std::string value {buf};
   const ImVec2 size(API_GET(size_w), API_GET(size_h));
-  const InputTextFlags clean_flags { API_GET(flags) };
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   if(ImGui::InputTextMultiline(label, &value, size, clean_flags, CALLBACK_ARGS)) {
     copyToBigBuf(buf, buf_sz, value, false);
@@ -99,8 +99,8 @@ API_FUNC(0_8_5, bool, InputTextWithHint, (Context*,ctx)
   FRAME_GUARD;
   assertValid(buf);
 
-  std::string value { buf };
-  const InputTextFlags clean_flags { API_GET(flags) };
+  std::string value {buf};
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   if(ImGui::InputTextWithHint(label, hint, &value, clean_flags, CALLBACK_ARGS)) {
     copyToBigBuf(buf, buf_sz, value, false);
@@ -116,7 +116,7 @@ API_FUNC(0_1, bool, InputInt, (Context*,ctx) (const char*,label)
 {
   FRAME_GUARD;
 
-  const InputTextFlags clean_flags { API_GET(flags) };
+  const InputTextFlags clean_flags {API_GET(flags)};
   return ImGui::InputInt(label, v, API_GET(step), API_GET(step_fast), clean_flags);
 }
 
@@ -126,8 +126,8 @@ API_FUNC(0_1, bool, InputInt2, (Context*,ctx) (const char*,label)
 {
   FRAME_GUARD;
 
-  ReadWriteArray<int, int, 2> values { v1, v2 };
-  const InputTextFlags clean_flags { API_GET(flags) };
+  ReadWriteArray<int, int, 2> values {v1, v2};
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   if(ImGui::InputInt2(label, values.data(), clean_flags))
     return values.commit();
@@ -142,8 +142,8 @@ API_FUNC(0_1, bool, InputInt3, (Context*,ctx) (const char*,label)
 {
   FRAME_GUARD;
 
-  ReadWriteArray<int, int, 3> values { v1, v2, v3 };
-  const InputTextFlags clean_flags { API_GET(flags) };
+  ReadWriteArray<int, int, 3> values {v1, v2, v3};
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   if(ImGui::InputInt3(label, values.data(), clean_flags))
     return values.commit();
@@ -158,8 +158,8 @@ API_FUNC(0_1, bool, InputInt4, (Context*,ctx) (const char*,label)
 {
   FRAME_GUARD;
 
-  ReadWriteArray<int, int, 4> values { v1, v2, v3, v4 };
-  const InputTextFlags clean_flags { API_GET(flags) };
+  ReadWriteArray<int, int, 4> values {v1, v2, v3, v4};
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   if(ImGui::InputInt4(label, values.data(), clean_flags))
     return values.commit();
@@ -175,7 +175,7 @@ API_FUNC(0_1, bool, InputDouble, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  const InputTextFlags clean_flags { API_GET(flags) };
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   return ImGui::InputDouble(label, v,
     API_GET(step), API_GET(step_fast), API_GET(format), clean_flags);
@@ -196,8 +196,8 @@ API_FUNC(0_1, bool, InputDouble2, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 2> values { v1, v2 };
-  const InputTextFlags clean_flags { API_GET(flags) };
+  ReadWriteArray<double, double, 2> values {v1, v2};
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   if(inputDoubleN(label, values.data(), values.size(), API_GET(format), clean_flags))
     return values.commit();
@@ -213,8 +213,8 @@ API_FUNC(0_1, bool, InputDouble3, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 3> values { v1, v2, v3 };
-  const InputTextFlags clean_flags { API_GET(flags) };
+  ReadWriteArray<double, double, 3> values {v1, v2, v3};
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   if(inputDoubleN(label, values.data(), values.size(), API_GET(format), clean_flags))
     return values.commit();
@@ -230,8 +230,8 @@ API_FUNC(0_1, bool, InputDouble4, (Context*,ctx) (const char*,label)
   FRAME_GUARD;
   nullIfEmpty(format);
 
-  ReadWriteArray<double, double, 4> values { v1, v2, v3, v4 };
-  const InputTextFlags clean_flags { API_GET(flags) };
+  ReadWriteArray<double, double, 4> values {v1, v2, v3, v4};
+  const InputTextFlags clean_flags {API_GET(flags)};
 
   if(inputDoubleN(label, values.data(), values.size(), API_GET(format), clean_flags))
     return values.commit();
@@ -248,7 +248,7 @@ API_FUNC(0_1, bool, InputDoubleN, (Context*,ctx) (const char*,label)
   assertValid(values);
   nullIfEmpty(format);
 
-  const InputTextFlags clean_flags { API_GET(flags) };
+  const InputTextFlags clean_flags {API_GET(flags)};
   return ImGui::InputScalarN(label, ImGuiDataType_Double,
     values->data, values->size, step, step_fast, API_GET(format), clean_flags);
 }
@@ -379,7 +379,7 @@ void InputTextCallback::storeVars(Function *func)
                           ImGuiInputTextFlags_CallbackCompletion |
                           ImGuiInputTextFlags_CallbackHistory)) {
     func->setString("#Buf",
-      { s_data->Buf, static_cast<size_t>(s_data->BufTextLen) });
+      {s_data->Buf, static_cast<size_t>(s_data->BufTextLen)});
 
     func->setDouble(EELVar_CursorPos,      s_data->CursorPos);
     func->setDouble(EELVar_SelectionStart, s_data->SelectionStart);

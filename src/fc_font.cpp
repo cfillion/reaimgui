@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -21,7 +21,7 @@
 
 class FontConfig {
 public:
-  FontConfig() : m_fc { FcInitLoadConfigAndFonts() } {}
+  FontConfig() : m_fc {FcInitLoadConfigAndFonts()} {}
   FontConfig(const FontConfig &) = delete;
   ~FontConfig() { FcConfigDestroy(m_fc); }
 
@@ -33,7 +33,7 @@ private:
 
 class FontPattern {
 public:
-  FontPattern(FcPattern *p = FcPatternCreate()) : m_pattern { p } {}
+  FontPattern(FcPattern *p = FcPatternCreate()) : m_pattern {p} {}
   FontPattern(const FontPattern &) = delete;
   ~FontPattern() { FcPatternDestroy(m_pattern); }
 
@@ -97,7 +97,7 @@ FontPattern FontPattern::bestMatch(FcConfig *fc)
   FcDefaultSubstitute(m_pattern);
 
   FcResult result;
-  return { FcFontMatch(fc, m_pattern, &result) };
+  return {FcFontMatch(fc, m_pattern, &result)};
 }
 
 bool Font::resolve(const char *family, const int style)
@@ -111,7 +111,7 @@ bool Font::resolve(const char *family, const int style)
   query.add(FC_SLANT,
     style & ReaImGuiFontFlags_Italic ? FC_SLANT_ITALIC : FC_SLANT_ROMAN);
 
-  const FontPattern &font { query.bestMatch(fc) };
+  const FontPattern &font {query.bestMatch(fc)};
   if(!font)
     return false;
 

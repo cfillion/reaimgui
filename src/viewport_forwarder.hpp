@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -49,7 +49,7 @@ public:
     using T = typename FuncInfo<decltype(fn)>::InstanceType;
     using R = typename FuncInfo<decltype(fn)>::ReturnType;
 
-    if(T *instance { static_cast<T *>(viewport->*instancePtr) })
+    if(T *instance {static_cast<T *>(viewport->*instancePtr)})
       return (instance->*fn)(args...);
 
     if constexpr(!std::is_void_v<R>)

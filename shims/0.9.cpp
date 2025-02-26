@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -123,7 +123,7 @@ SHIM_FUNC(0_1, bool, BeginTable, (Context*,ctx) (const char*,str_id)
   if(!api.BeginTable(ctx, str_id, column, flags,
       outer_size_w, outer_size_h, inner_width))
     return false;
-  if(ImGuiTable *table { ctx->imgui()->CurrentTable })
+  if(ImGuiTable *table {ctx->imgui()->CurrentTable})
     table->RowCellPaddingY = ctx->style().CellPadding.y;
   return true;
 }
@@ -131,9 +131,9 @@ SHIM_FUNC(0_8, void, TableNextRow, (Context*,ctx) (RO<int*>,row_flags)
   (RO<double*>,min_row_height))
 {
   FRAME_GUARD;
-  ImGuiStyle &style { ctx->style() };
-  const float backup_y { style.CellPadding.y };
-  if(ImGuiTable *table { ctx->imgui()->CurrentTable })
+  ImGuiStyle &style {ctx->style()};
+  const float backup_y {style.CellPadding.y};
+  if(const ImGuiTable *table {ctx->imgui()->CurrentTable})
     style.CellPadding.y = table->RowCellPaddingY;
   api.TableNextRow(ctx, row_flags, min_row_height);
   style.CellPadding.y = backup_y;
@@ -152,7 +152,7 @@ SHIM_FUNC(0_1, bool, BeginChild, (Context*,ctx) (const char*,str_id)
 SHIM_FUNC(0_3, bool, BeginChildFrame, (Context*,ctx) (const char*,str_id)
   (double,size_w) (double,size_h) (RO<int*>,window_flags))
 {
-  int child_flags { api.ChildFlags_FrameStyle() };
+  int child_flags {api.ChildFlags_FrameStyle()};
   return api.BeginChild(ctx, str_id, &size_w, &size_h, &child_flags, window_flags);
 }
 SHIM_FUNC(0_8, void, EndChildFrame, (Context*,ctx))
@@ -162,7 +162,7 @@ SHIM_FUNC(0_8, void, EndChildFrame, (Context*,ctx))
 SHIM_CONST(0_1, WindowFlags_AlwaysUseWindowPadding, 0)
 SHIM_PROXY_BEGIN(ShimVirtualKeys, func, args)
 {
-  int &key { std::get<1>(args) };
+  int &key {std::get<1>(args)};
   if(ImGui::IsLegacyKey(static_cast<ImGuiKey>(key))) {
     if(!(key = KeyMap::translateVirtualKey(key)))
       return decltype(std::apply(api.*func, args)) {};

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -35,7 +35,7 @@
 
 static void fatalError(const char *message)
 {
-  HWND parent { Splash_GetWnd ? Splash_GetWnd() : nullptr };
+  HWND parent {Splash_GetWnd ? Splash_GetWnd() : nullptr};
   MessageBox(parent, WIDEN(message), TEXT("ReaImGui (reaper_imgui)"),
     MB_OK | MB_ICONERROR);
 }
@@ -43,19 +43,19 @@ static void fatalError(const char *message)
 struct ApiImport {
   template<typename T>
   ApiImport(const char *name, T *ptr, T fallback = nullptr)
-    : name { name }, ptr { reinterpret_cast<void **>(ptr) },
-      fallback { reinterpret_cast<void *>(fallback) }
+    : name {name}, ptr {reinterpret_cast<void **>(ptr)},
+      fallback {reinterpret_cast<void *>(fallback)}
   {}
   const char *name; void **ptr; void *fallback;
 };
 
-#define IMPORT(name, ...) { #name, &name, __VA_ARGS__ }
+#define IMPORT(name, ...) {#name, &name, __VA_ARGS__}
 
 static bool loadAPI(void *(*getFunc)(const char *))
 {
   const ApiImport funcs[] {
     IMPORT(Splash_GetWnd), // v4.7, import first (used by fatalError)
-    { "__localizeFunc", &LocalizeString, }, // LocalizeString added in v6.11
+    {"__localizeFunc", &LocalizeString}, // LocalizeString added in v6.11
 
     IMPORT(AttachWindowTopmostButton),
     IMPORT(DetachWindowTopmostButton),
@@ -157,9 +157,9 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
   Settings::setup();
   Function::setup();
 
-  new Action { "DOCUMENTATION", "Open ReaScript documentation (HTML)...", [] {
-    const auto path { widen(GetResourcePath()) + TEXT(WDL_DIRCHAR_STR)
-      TEXT("Data") TEXT(WDL_DIRCHAR_STR) TEXT("reaper_imgui_doc.html") };
+  new Action {"DOCUMENTATION", "Open ReaScript documentation (HTML)...", [] {
+    const auto path {widen(GetResourcePath()) + TEXT(WDL_DIRCHAR_STR)
+      TEXT("Data") TEXT(WDL_DIRCHAR_STR) TEXT("reaper_imgui_doc.html")};
     ShellExecute(nullptr, TEXT("open"), path.c_str(), nullptr, nullptr, SW_SHOW);
   }};
 

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -32,11 +32,11 @@ static_assert(__has_feature(objc_arc),
 static const char *translateGenericFont(const char *family)
 {
   constexpr std::pair<const char *, const char *> genericMap[] {
-    { Font::CURSIVE,    "Apple Chancery" },
-    { Font::FANTASY,    "Papyrus"        },
-    { Font::MONOSPACE,  "Courier"        },
-    { Font::SANS_SERIF, "Helvetica"      },
-    { Font::SERIF,      "Times"          },
+    {Font::CURSIVE,    "Apple Chancery"},
+    {Font::FANTASY,    "Papyrus"       },
+    {Font::MONOSPACE,  "Courier"       },
+    {Font::SANS_SERIF, "Helvetica"     },
+    {Font::SERIF,      "Times"         },
   };
 
   for(const auto &generic : genericMap) {
@@ -57,7 +57,7 @@ static int styleToTraits(const int style)
 
 static bool findExactMatch(NSArray *collection, const int style, int *index)
 {
-  const int traits { styleToTraits(style) };
+  const int traits {styleToTraits(style)};
   NSDictionary<NSFontDescriptorAttributeName, id> *attrs {@{
     NSFontTraitsAttribute: @{
       NSFontSymbolicTrait: [NSNumber numberWithInteger:traits]
@@ -65,7 +65,7 @@ static bool findExactMatch(NSArray *collection, const int style, int *index)
   }};
 
   NSSet *keys
-    { [NSSet setWithArray:@[NSFontNameAttribute, NSFontTraitsAttribute]] };
+    {[NSSet setWithArray:@[NSFontNameAttribute, NSFontTraitsAttribute]]};
 
   *index = 0;
 
@@ -84,43 +84,43 @@ static bool findExactMatch(NSArray *collection, const int style, int *index)
 
 static std::pair<int, int> findClosestMatch(NSURL *url, const int style)
 {
-  NSArray *collection { (__bridge_transfer NSArray *)
-    CTFontManagerCreateFontDescriptorsFromURL((__bridge CFURLRef)url) };
+  NSArray *collection {(__bridge_transfer NSArray *)
+    CTFontManagerCreateFontDescriptorsFromURL((__bridge CFURLRef)url)};
 
   int index;
   if(findExactMatch(collection, style, &index))
-    return { index, ReaImGuiFontFlags_None };
+    return {index, ReaImGuiFontFlags_None};
 
-  static int fallbacks[] { ReaImGuiFontFlags_Bold, ReaImGuiFontFlags_Italic };
+  static int fallbacks[] {ReaImGuiFontFlags_Bold, ReaImGuiFontFlags_Italic};
 
   for(const int fallback : fallbacks) {
     if(findExactMatch(collection, fallback, &index))
-      return { index, style & ~fallback };
+      return {index, style & ~fallback};
   }
 
-  return { 0, style };
+  return {0, style};
 }
 
 static NSURL *findMatchingFile(NSDictionary *attrs)
 {
   NSFontDescriptor *match
-    { [NSFontDescriptor fontDescriptorWithFontAttributes:attrs] };
+    {[NSFontDescriptor fontDescriptorWithFontAttributes:attrs]};
   return (__bridge_transfer NSURL *)CTFontDescriptorCopyAttribute
     ((__bridge CTFontDescriptorRef)match, kCTFontURLAttribute);
 }
 
 bool Font::resolve(const char *family, const int style)
 {
-  const int traits { styleToTraits(style) };
+  const int traits {styleToTraits(style)};
   family = translateGenericFont(family);
 
-  NSMutableDictionary *attrs { [NSMutableDictionary dictionaryWithCapacity:2] };
+  NSMutableDictionary *attrs {[NSMutableDictionary dictionaryWithCapacity:2]};
   attrs[NSFontFamilyAttribute] = [NSString stringWithUTF8String:family];
   attrs[NSFontTraitsAttribute] = @{
     NSFontSymbolicTrait: [NSNumber numberWithInteger:traits]
   };
 
-  NSURL *url { findMatchingFile(attrs) };
+  NSURL *url {findMatchingFile(attrs)};
 
   if(!url) {
     family = translateGenericFont("sans-serif");

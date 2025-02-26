@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -93,9 +93,11 @@ types (indentation represents inheritance):
 API_FUNC(0_9, const char*, GetBuiltinPath, API_NO_ARGS,
 "Returns the path to the directory containing imgui.lua, imgui.py and gfx2imgui.lua.")
 {
-  static const std::string output { std::string { GetResourcePath() } +
+  static const std::string output {
+    std::string {GetResourcePath()} +
     WDL_DIRCHAR_STR "Scripts" WDL_DIRCHAR_STR "ReaTeam Extensions"
-    WDL_DIRCHAR_STR "API" };
+    WDL_DIRCHAR_STR "API"
+  };
 
   return output.c_str();
 }
@@ -185,7 +187,7 @@ API_FUNC(0_7, void, ColorConvertU32ToDouble4,
 (W<double*>,r) (W<double*>,g) (W<double*>,b) (W<double*>,a),
 "Unpack a 32-bit integer (0xRRGGBBAA) into separate RGBA values (0..1).")
 {
-  ImVec4 color { Color { static_cast<uint32_t>(rgba) } };
+  ImVec4 color {Color {static_cast<uint32_t>(rgba)}};
   if(r) *r = color.x;
   if(g) *g = color.y;
   if(b) *b = color.z;
@@ -196,7 +198,7 @@ API_FUNC(0_7, int, ColorConvertDouble4ToU32,
 (double,r) (double,g) (double,b) (double,a),
 "Pack 0..1 RGBA values into a 32-bit integer (0xRRGGBBAA).")
 {
-  return Color { ImVec4(r, g, b, a) }.pack(true);
+  return Color {ImVec4(r, g, b, a)}.pack(true);
 }
 
 API_FUNC(0_7, void, ColorConvertHSVtoRGB,

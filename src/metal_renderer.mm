@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -43,8 +43,8 @@ REGISTER_RENDERER(10, metal, "Metal", &Renderer::create<MetalRenderer>, []() -> 
 #define FPATH(name) \
   "/System/Library/Frameworks/" name ".framework/Versions/Current/" name
 
-constexpr const char *METAL       { FPATH("Metal") },
-                     *QUARTZ_CORE { FPATH("QuartzCore") };
+constexpr const char *METAL       {FPATH("Metal")},
+                     *QUARTZ_CORE {FPATH("QuartzCore")};
 
 constexpr uint8_t SHADER_LIBRARY[] {
 #  include "metal_shader.metal.ipp"
@@ -95,13 +95,13 @@ static id<MTLFunction> getShaderFunc(id<MTLLibrary> library, NSString *name)
     MTLFunctionConstantValues *cv {};
     func = [library newFunctionWithName:name constantValues:cv error:&error];
     if(error)
-      throw backend_error { [[error localizedDescription] UTF8String] };
+      throw backend_error {[[error localizedDescription] UTF8String]};
   }
   else
     func = [library newFunctionWithName:name];
 
   if(!func)
-    throw backend_error { "failed to load shader library functions" };
+    throw backend_error {"failed to load shader library functions"};
 
   return func;
 }
@@ -109,34 +109,34 @@ static id<MTLFunction> getShaderFunc(id<MTLLibrary> library, NSString *name)
 MetalRenderer::Shared::Shared()
 {
   static FuncImport<decltype(MTLCreateSystemDefaultDevice)>
-    _MTLCreateSystemDefaultDevice { METAL, "MTLCreateSystemDefaultDevice" };
+    _MTLCreateSystemDefaultDevice {METAL, "MTLCreateSystemDefaultDevice"};
   if(!_MTLCreateSystemDefaultDevice)
-    throw backend_error { "Metal is not available on this device" };
+    throw backend_error {"Metal is not available on this device"};
   m_device = _MTLCreateSystemDefaultDevice();
 
   m_commandQueue = [m_device newCommandQueue];
 
   static ClassImport _MTLDepthStencilDescriptor
-    { METAL, "MTLDepthStencilDescriptor" };
+    {METAL, "MTLDepthStencilDescriptor"};
   if(!_MTLDepthStencilDescriptor)
-    throw backend_error { "could not import MTLDepthStencilDescriptor" };
-  MTLDepthStencilDescriptor *depthDesc = [_MTLDepthStencilDescriptor new];
+    throw backend_error {"could not import MTLDepthStencilDescriptor"};
+  MTLDepthStencilDescriptor *depthDesc {[_MTLDepthStencilDescriptor new]};
   depthDesc.depthWriteEnabled = NO;
   depthDesc.depthCompareFunction = MTLCompareFunctionAlways;
   m_depthStencilState = [m_device newDepthStencilStateWithDescriptor:depthDesc];
 
   NSError *error {};
   dispatch_data_t shaderData
-    { dispatch_data_create(SHADER_LIBRARY, sizeof(SHADER_LIBRARY), nil, nil) };
-  id<MTLLibrary> library { [m_device newLibraryWithData:shaderData error:&error] };
+    {dispatch_data_create(SHADER_LIBRARY, sizeof(SHADER_LIBRARY), nil, nil)};
+  id<MTLLibrary> library {[m_device newLibraryWithData:shaderData error:&error]};
   if(error)
-    throw backend_error { [[error localizedDescription] UTF8String] };
-  id<MTLFunction> vertexFunc   { getShaderFunc(library, @"vertex_main") },
-                  fragmentFunc { getShaderFunc(library, @"fragment_main") };
+    throw backend_error {[[error localizedDescription] UTF8String]};
+  id<MTLFunction> vertexFunc   {getShaderFunc(library, @"vertex_main")},
+                  fragmentFunc {getShaderFunc(library, @"fragment_main")};
 
-  static ClassImport _MTLVertexDescriptor { METAL, "MTLVertexDescriptor" };
+  static ClassImport _MTLVertexDescriptor {METAL, "MTLVertexDescriptor"};
   if(!_MTLVertexDescriptor)
-    throw backend_error { "failed to import MTLVertexDescriptor" };
+    throw backend_error {"failed to import MTLVertexDescriptor"};
   MTLVertexDescriptor *vertexDesc = [_MTLVertexDescriptor vertexDescriptor];
   vertexDesc.attributes[0].offset = offsetof(ImDrawVert, pos);
   vertexDesc.attributes[0].format = MTLVertexFormatFloat2;
@@ -152,16 +152,16 @@ MetalRenderer::Shared::Shared()
   vertexDesc.layouts[0].stride = sizeof(ImDrawVert);
 
   static ClassImport _MTLRenderPipelineDescriptor
-    { METAL, "MTLRenderPipelineDescriptor" };
+    {METAL, "MTLRenderPipelineDescriptor"};
   if(!_MTLRenderPipelineDescriptor)
-    throw backend_error { "failed to import MTLRenderPipelineDescriptor" };
-  MTLRenderPipelineDescriptor *pipelineDesc { [_MTLRenderPipelineDescriptor new] };
+    throw backend_error {"failed to import MTLRenderPipelineDescriptor"};
+  MTLRenderPipelineDescriptor *pipelineDesc {[_MTLRenderPipelineDescriptor new]};
   pipelineDesc.vertexFunction   = vertexFunc;
   pipelineDesc.fragmentFunction = fragmentFunc;
   pipelineDesc.vertexDescriptor = vertexDesc;
   // pipelineDesc.sampleCount = drawable.texture.sampleCount;
   MTLRenderPipelineColorAttachmentDescriptor *colorDesc
-    { pipelineDesc.colorAttachments[0] };
+    {pipelineDesc.colorAttachments[0]};
   // colorDesc.pixelFormat = drawable.texture.colorPixelFormat;
   colorDesc.pixelFormat                 = MTLPixelFormatBGRA8Unorm;
   colorDesc.blendingEnabled             = YES;
@@ -175,7 +175,7 @@ MetalRenderer::Shared::Shared()
   m_renderPipelineState =
     [m_device newRenderPipelineStateWithDescriptor:pipelineDesc error:&error];
   if(error)
-    throw backend_error { [[error localizedDescription] UTF8String] };
+    throw backend_error {[[error localizedDescription] UTF8String]};
 }
 
 MetalRenderer::Shared::~Shared()
@@ -197,16 +197,16 @@ void MetalRenderer::Shared::textureCommand(const TextureCmd &cmd)
   }
 
   static ClassImport _MTLTextureDescriptor
-    { METAL, "MTLTextureDescriptor" };
+    {METAL, "MTLTextureDescriptor"};
   if(!_MTLTextureDescriptor)
-    throw backend_error { "failed to import MTLTextureDescriptor" };
+    throw backend_error {"failed to import MTLTextureDescriptor"};
 
   for(size_t i {}; i < cmd.size; ++i) {
     int width, height;
-    const unsigned char *pixels { cmd[i].getPixels(&width, &height) };
+    const unsigned char *pixels {cmd[i].getPixels(&width, &height)};
 
     // [m_device maxTexture{Width,Height}2D] is private undocumented API
-    constexpr int metalMaxSize { 16384 };
+    constexpr int metalMaxSize {16384};
     if(width > metalMaxSize || height > metalMaxSize)
       throw backend_error("texture size is greater than Metal limits");
 
@@ -218,9 +218,9 @@ void MetalRenderer::Shared::textureCommand(const TextureCmd &cmd)
     texDesc.storageMode = MTLStorageModeManaged;
     texDesc.usage = MTLTextureUsageShaderRead;
 
-    id<MTLTexture> texture { [m_device newTextureWithDescriptor:texDesc] };
+    id<MTLTexture> texture {[m_device newTextureWithDescriptor:texDesc]};
     if(!texture)
-      throw backend_error { "failed to create texture" };
+      throw backend_error {"failed to create texture"};
     [texture replaceRegion:MTLRegionMake2D(0, 0, width, height)
                mipmapLevel:0
                  withBytes:pixels
@@ -230,7 +230,7 @@ void MetalRenderer::Shared::textureCommand(const TextureCmd &cmd)
 }
 
 MetalRenderer::MetalRenderer(RendererFactory *factory, Window *window)
-  : Renderer { window }, m_firstFrame { true }
+  : Renderer {window}, m_firstFrame {true}
 {
   m_shared = factory->getSharedData<Shared>();
   if(!m_shared) {
@@ -238,21 +238,21 @@ MetalRenderer::MetalRenderer(RendererFactory *factory, Window *window)
     factory->setSharedData(m_shared);
   }
 
-  static ClassImport _MTLRenderPassDescriptor { METAL, "MTLRenderPassDescriptor" };
+  static ClassImport _MTLRenderPassDescriptor {METAL, "MTLRenderPassDescriptor"};
   if(!_MTLRenderPassDescriptor)
-    throw backend_error { "could not import MTLRenderPassDescriptor" };
+    throw backend_error {"could not import MTLRenderPassDescriptor"};
   m_renderPass = [_MTLRenderPassDescriptor new];
 
-  static ClassImport _CAMetalLayer { QUARTZ_CORE, "CAMetalLayer" };
+  static ClassImport _CAMetalLayer {QUARTZ_CORE, "CAMetalLayer"};
   if(!_CAMetalLayer)
-    throw backend_error { "could not import CAMetalLayer" };
+    throw backend_error {"could not import CAMetalLayer"};
   m_layer = static_cast<CAMetalLayer *>([_CAMetalLayer layer]);
   // don't stretch on resize before the next redraw (bottom = top)
   m_layer.contentsGravity = kCAGravityBottomLeft;
   m_layer.device = m_shared->m_device;
   m_layer.opaque = NO;
   m_layer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-  NSView *view { (__bridge NSView *)window->nativeHandle() };
+  NSView *view {(__bridge NSView *)window->nativeHandle()};
   view.layer = m_layer;
   view.wantsLayer = YES;
 }
@@ -267,15 +267,15 @@ void MetalRenderer::resizeBuffer(const size_t buf, const unsigned int wantSize,
   if(m_buffers[buf] && [m_buffers[buf] length] >= wantSize * stride)
     return;
 
-  const unsigned int size { (wantSize + reserveExtra) * stride };
+  const unsigned int size {(wantSize + reserveExtra) * stride};
   constexpr auto options
-    { MTLResourceStorageModeShared | MTLResourceCPUCacheModeWriteCombined };
+    {MTLResourceStorageModeShared | MTLResourceCPUCacheModeWriteCombined};
   m_buffers[buf] = [m_shared->m_device newBufferWithLength:size options:options];
 }
 
 void MetalRenderer::setSize(const ImVec2 size)
 {
-  const float scale { m_window->viewport()->DpiScale };
+  const float scale {m_window->viewport()->DpiScale};
 
   [CATransaction begin];
   [CATransaction setDisableActions:YES]; // disable animation when scale changes
@@ -290,10 +290,10 @@ void MetalRenderer::render(void *)
   m_window->context()->textureManager()->update(&m_shared->m_cookie,
     std::bind(&Shared::textureCommand, m_shared.get(), _1));
 
-  const ImGuiViewport *viewport { m_window->viewport() };
-  const ImDrawData *drawData { viewport->DrawData };
-  const ImVec2 position { drawData->DisplayPos },
-               scale    { viewport->DpiScale, viewport->DpiScale };
+  const ImGuiViewport *viewport {m_window->viewport()};
+  const ImDrawData *drawData {viewport->DrawData};
+  const ImVec2 position {drawData->DisplayPos},
+               scale    {viewport->DpiScale, viewport->DpiScale};
 
   id<CAMetalDrawable> drawable {};
   if(m_firstFrame) {
@@ -306,7 +306,7 @@ void MetalRenderer::render(void *)
     // [CAMetalLayer nextDrawable] waits up 1 second when a window becomes
     // completely hidden. NSWindowOcclusionStateVisible is always unset for the
     // first frame.
-    NSWindow *window { [(__bridge NSView *)m_window->nativeHandle() window] };
+    NSWindow *window {[(__bridge NSView *)m_window->nativeHandle() window]};
     if(window.occlusionState & NSWindowOcclusionStateVisible)
       drawable = [m_layer nextDrawable];
   }
@@ -327,9 +327,9 @@ void MetalRenderer::render(void *)
   else
     m_renderPass.colorAttachments[0].loadAction = MTLLoadActionClear;
 
-  id<MTLCommandBuffer> commandBuffer { [m_shared->m_commandQueue commandBuffer] };
+  id<MTLCommandBuffer> commandBuffer {[m_shared->m_commandQueue commandBuffer]};
   id<MTLRenderCommandEncoder> commandEncoder
-    { [commandBuffer renderCommandEncoderWithDescriptor:m_renderPass] };
+    {[commandBuffer renderCommandEncoderWithDescriptor:m_renderPass]};
   [commandEncoder setCullMode:MTLCullModeNone];
   [commandEncoder setDepthStencilState:m_shared->m_depthStencilState];
   [commandEncoder setRenderPipelineState:m_shared->m_renderPipelineState];
@@ -342,13 +342,13 @@ void MetalRenderer::render(void *)
     .zfar    = 1.0,
   }];
 
-  const ProjMtx projMatrix { drawData->DisplayPos, drawData->DisplaySize };
+  const ProjMtx projMatrix {drawData->DisplayPos, drawData->DisplaySize};
   [commandEncoder setVertexBuffer:m_buffers[VertexBuf] offset:0 atIndex:0];
   [commandEncoder setVertexBytes:&projMatrix length:sizeof(ProjMtx) atIndex:1];
 
   size_t vtxOffset {}, idxOffset {};
   for(int i {}; i < drawData->CmdListsCount; ++i) {
-    const ImDrawList *cmdList { drawData->CmdLists[i] };
+    const ImDrawList *cmdList {drawData->CmdLists[i]};
 
     memcpy(static_cast<char *>(m_buffers[VertexBuf].contents) + vtxOffset,
       cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
@@ -356,11 +356,11 @@ void MetalRenderer::render(void *)
       cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
 
     for(int j {}; j < cmdList->CmdBuffer.Size; ++j) {
-      const ImDrawCmd *cmd { &cmdList->CmdBuffer[j] };
+      const ImDrawCmd *cmd {&cmdList->CmdBuffer[j]};
       if(cmd->UserCallback)
         continue; // no need to call the callback, not using them
 
-      const ClipRect clipRect { cmd->ClipRect, position, scale };
+      const ClipRect clipRect {cmd->ClipRect, position, scale};
       if(!clipRect)
         continue;
       [commandEncoder setScissorRect:MTLScissorRect {

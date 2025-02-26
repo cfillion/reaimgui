@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -20,7 +20,7 @@
 #include "textfilter.hpp"
 
 TextFilter::TextFilter(const char *filter)
-  : m_filter { filter }
+  : m_filter {filter}
 {
 }
 
@@ -50,7 +50,7 @@ API_FUNC(0_9, TextFilter*, CreateTextFilter,
 (RO<const char*>,default_filter,""),
 "Valid while used every frame unless attached to a context (see Attach).")
 {
-  return new TextFilter { API_GET(default_filter) };
+  return new TextFilter {API_GET(default_filter)};
 }
 
 API_FUNC(0_5_6, void, TextFilter_Set, (TextFilter*,filter)

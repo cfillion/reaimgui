@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -26,10 +26,10 @@
 #  include <OpenGL/gl3.h>
 #elif _WIN32
 #  include <imgui/backends/imgui_impl_opengl3_loader.h>
-constexpr int GL_TEXTURE_WRAP_S { 0x2802 },
-              GL_TEXTURE_WRAP_T { 0x2803 },
-              GL_REPEAT         { 0x2901 },
-              GL_NO_ERROR       { 0x0000 };
+constexpr int GL_TEXTURE_WRAP_S {0x2802},
+              GL_TEXTURE_WRAP_T {0x2803},
+              GL_REPEAT         {0x2901},
+              GL_NO_ERROR       {0x0000};
 #else
 #  include <epoxy/gl.h>
 #endif
@@ -39,7 +39,7 @@ constexpr int GL_TEXTURE_WRAP_S { 0x2802 },
 REGISTER_RENDERER(90, opengl3, "OpenGL 3.2",
   OpenGLRenderer::creator, OpenGLRenderer::flags);
 
-constexpr const char *VERTEX_SHADER { R"(
+constexpr const char *VERTEX_SHADER {R"(
 #version 150
 
 uniform mat4 ProjMtx;
@@ -57,9 +57,9 @@ void main()
   Frag_Color = Color;
   gl_Position = ProjMtx * vec4(Position.xy,0,1);
 }
-)" };
+)"};
 
-constexpr const char *FRAGMENT_SHADER { R"(
+constexpr const char *FRAGMENT_SHADER {R"(
 #version 150
 
 uniform sampler2D Texture;
@@ -73,13 +73,13 @@ void main()
 {
   Out_Color = Frag_Color * texture(Texture, Frag_UV.st);
 }
-)" };
+)"};
 
 // these must match with the sizes of the corresponding member arrays
-enum Buffers   { VertexBuf, IndexBuf };
-enum Textures  { FontTex };
-enum Locations { ProjMtxUniLoc, TexUniLoc,
-                 VtxColorAttrLoc, VtxPosAttrLoc, VtxUVAttrLoc };
+enum Buffers   {VertexBuf, IndexBuf};
+enum Textures  {FontTex};
+enum Locations {ProjMtxUniLoc, TexUniLoc,
+                VtxColorAttrLoc, VtxPosAttrLoc, VtxUVAttrLoc};
 
 OpenGLRenderer::Shared::Shared()
   : m_setupCount {}
@@ -88,11 +88,11 @@ OpenGLRenderer::Shared::Shared()
 
 void OpenGLRenderer::Shared::setup()
 {
-  unsigned int vertShader { glCreateShader(GL_VERTEX_SHADER) };
+  const unsigned int vertShader {glCreateShader(GL_VERTEX_SHADER)};
   glShaderSource(vertShader, 1, &VERTEX_SHADER, nullptr);
   glCompileShader(vertShader);
 
-  unsigned int fragShader { glCreateShader(GL_FRAGMENT_SHADER) };
+  const unsigned int fragShader {glCreateShader(GL_FRAGMENT_SHADER)};
   glShaderSource(fragShader, 1, &FRAGMENT_SHADER, nullptr);
   glCompileShader(fragShader);
 
@@ -109,13 +109,13 @@ void OpenGLRenderer::Shared::setup()
   int shadersStatus;
   glGetProgramiv(m_program, GL_LINK_STATUS, &shadersStatus);
   if(!shadersStatus)
-    throw backend_error { "failed to compile or link OpenGL shaders" };
+    throw backend_error {"failed to compile or link OpenGL shaders"};
 
   m_locations[ProjMtxUniLoc]   = glGetUniformLocation(m_program, "ProjMtx");
   m_locations[TexUniLoc]       = glGetUniformLocation(m_program, "Texture");
-  m_locations[VtxColorAttrLoc] = glGetAttribLocation(m_program,  "Color");
-  m_locations[VtxPosAttrLoc]   = glGetAttribLocation(m_program,  "Position");
-  m_locations[VtxUVAttrLoc]    = glGetAttribLocation(m_program,  "UV");
+  m_locations[VtxColorAttrLoc] = glGetAttribLocation (m_program, "Color");
+  m_locations[VtxPosAttrLoc]   = glGetAttribLocation (m_program, "Position");
+  m_locations[VtxUVAttrLoc]    = glGetAttribLocation (m_program, "UV");
 
   glActiveTexture(GL_TEXTURE0);
 }
@@ -136,7 +136,7 @@ void OpenGLRenderer::Shared::textureCommand(const TextureCmd &cmd)
   case TextureCmd::Update:
     for(size_t i {}; i < cmd.size; ++i) {
       int width, height;
-      const unsigned char *pixels { cmd[i].getPixels(&width, &height) };
+      const unsigned char *pixels {cmd[i].getPixels(&width, &height)};
       glBindTexture(GL_TEXTURE_2D, m_textures[cmd.offset + i]);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -155,7 +155,7 @@ void OpenGLRenderer::Shared::textureCommand(const TextureCmd &cmd)
 
 OpenGLRenderer::OpenGLRenderer
   (RendererFactory *factory, Window *window, const bool share)
-  : Renderer { window }
+  : Renderer {window}
 {
   m_shared = factory->getSharedData<Shared>();
   if(!m_shared || !share) {
@@ -211,8 +211,8 @@ void OpenGLRenderer::render(const bool flip)
   m_window->context()->textureManager()->update(&m_shared->m_cookie,
     std::bind(&Shared::textureCommand, m_shared.get(), _1));
 
-  const ImGuiViewport *viewport { m_window->viewport() };
-  const ImDrawData *drawData { viewport->DrawData };
+  const ImGuiViewport *viewport {m_window->viewport()};
+  const ImDrawData *drawData {viewport->DrawData};
 
   if(!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) {
     glClearColor(0.f, 0.f, 0.f, 0.f); // premultiplied alpha
@@ -221,7 +221,7 @@ void OpenGLRenderer::render(const bool flip)
 
   glEnable(GL_SCISSOR_TEST);
 
-  const float height { drawData->DisplaySize.y * viewport->DpiScale };
+  const float height {drawData->DisplaySize.y * viewport->DpiScale};
   glViewport(0, 0, drawData->DisplaySize.x * viewport->DpiScale, height);
 
   // re-bind non-shared objets (we're reusing the same GL context on Windows)
@@ -230,13 +230,13 @@ void OpenGLRenderer::render(const bool flip)
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_buffers[IndexBuf]);
 
   // update shader variables
-  const ProjMtx projMtx { drawData->DisplayPos, drawData->DisplaySize, flip };
+  const ProjMtx projMtx {drawData->DisplayPos, drawData->DisplaySize, flip};
   glUniformMatrix4fv(m_shared->m_locations[ProjMtxUniLoc], 1, GL_FALSE, &projMtx);
 
-  const ImVec2 &clipOffset { drawData->DisplayPos },
-               &clipScale  { viewport->DpiScale, viewport->DpiScale };
-  for(int i { 0 }; i < drawData->CmdListsCount; ++i) {
-    const ImDrawList *cmdList { drawData->CmdLists[i] };
+  const ImVec2 &clipOffset {drawData->DisplayPos},
+               &clipScale  {viewport->DpiScale, viewport->DpiScale};
+  for(int i {0}; i < drawData->CmdListsCount; ++i) {
+    const ImDrawList *cmdList {drawData->CmdLists[i]};
 
     glBufferData(GL_ARRAY_BUFFER,
       static_cast<GLsizeiptr>(cmdList->VtxBuffer.Size * sizeof(ImDrawVert)),
@@ -245,12 +245,12 @@ void OpenGLRenderer::render(const bool flip)
       static_cast<GLsizeiptr>(cmdList->IdxBuffer.Size * sizeof(ImDrawIdx)),
       static_cast<const void *>(cmdList->IdxBuffer.Data), GL_STREAM_DRAW);
 
-    for(int j { 0 }; j < cmdList->CmdBuffer.Size; ++j) {
-      const ImDrawCmd *cmd { &cmdList->CmdBuffer[j] };
+    for(int j {0}; j < cmdList->CmdBuffer.Size; ++j) {
+      const ImDrawCmd *cmd {&cmdList->CmdBuffer[j]};
       if(cmd->UserCallback)
         continue; // no need to call the callback, not using them
 
-      const ClipRect clipRect { cmd->ClipRect, clipOffset, clipScale };
+      const ClipRect clipRect {cmd->ClipRect, clipOffset, clipScale};
       if(!clipRect)
         continue;
       glScissor(clipRect.left, flip ? clipRect.top : height - clipRect.bottom,
@@ -268,7 +268,7 @@ void OpenGLRenderer::render(const bool flip)
   // allow glClear to modify the whole framebuffer
   glDisable(GL_SCISSOR_TEST);
 
-  const GLenum err { glGetError() };
+  const GLenum err {glGetError()};
   if(err != GL_NO_ERROR)
-    throw backend_error { "rendering failed with OpenGL error {:#x}", err };
+    throw backend_error {"rendering failed with OpenGL error {:#x}", err};
 }

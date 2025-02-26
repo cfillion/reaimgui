@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -33,17 +33,17 @@ ListClipper::~ListClipper()
   // do ~ImGuiListClipper's work to allow out-of-order destruction
 
   if(m_imlc.TempData && isValid()) {
-    ImGuiContext *ctx { m_imlc.Ctx };
+    ImGuiContext *ctx {m_imlc.Ctx};
     --ctx->ClipperTempDataStacked;
 
-    bool shift { false };
-    for(int i { 0 }; i < ctx->ClipperTempDataStacked; ++i) {
-      ImGuiListClipperData &data { ctx->ClipperTempData[i] };
+    bool shift {false};
+    for(int i {0}; i < ctx->ClipperTempDataStacked; ++i) {
+      ImGuiListClipperData &data {ctx->ClipperTempData[i]};
       if(data.ListClipper == &m_imlc)
         shift = true;
       else if(shift) {
         // i > 0 because shift can only be true from the second iteration
-        ImGuiListClipperData &prevData { ctx->ClipperTempData[i - 1] };
+        ImGuiListClipperData &prevData {ctx->ClipperTempData[i - 1]};
         prevData.ListClipper->TempData = &data;
         prevData = data;
       }
@@ -118,7 +118,7 @@ R"(The returned clipper object is only valid for the given context and is valid
 as long as it is used in each defer cycle unless attached (see Attach).)")
 {
   assertValid(ctx);
-  return new ListClipper { ctx };
+  return new ListClipper {ctx};
 }
 
 API_FUNC(0_1, void, ListClipper_Begin, (ListClipper*,clipper)
@@ -149,7 +149,7 @@ API_FUNC(0_3, void, ListClipper_GetDisplayRange, (ListClipper*,clipper)
 (W<int*>,display_start) (W<int*>,display_end),
 "")
 {
-  ImGuiListClipper *imclipper { (*clipper).operator->() };
+  ImGuiListClipper *imclipper {(*clipper).operator->()};
   if(display_start) *display_start = imclipper->DisplayStart;
   if(display_end)   *display_end   = imclipper->DisplayEnd;
 }

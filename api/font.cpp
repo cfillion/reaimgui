@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -46,7 +46,7 @@ If 'family_or_file' specifies a path to a font file (contains a / or \\):
 - The first byte of 'flags' is used as the font index within the file
 - The font styles in 'flags' are simulated by the font renderer)")
 {
-  return new Font { family_or_file, size, API_GET(flags) };
+  return new Font {family_or_file, size, API_GET(flags)};
 }
 
 API_FUNC(0_9_3, Font*, CreateFontFromMem,
@@ -60,7 +60,7 @@ explicitely specify data_sz to support older versions.
   std::vector<unsigned char> buffer;
   buffer.reserve(data_sz);
   std::copy(data, data + data_sz, std::back_inserter(buffer));
-  return new Font { std::move(buffer), size, API_GET(flags) };
+  return new Font {std::move(buffer), size, API_GET(flags)};
 }
 
 API_FUNC(0_4, Font*, GetFont, (Context*,ctx),

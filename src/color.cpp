@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -44,7 +44,7 @@ uint32_t Color::convertNative(uint32_t rgb)
 
 Color Color::fromNative(const uint32_t rgb)
 {
-  Color color { rgb, false };
+  Color color {rgb, false};
 #ifdef _WIN32
   // swap red/blue channels
   std::swap(std::get<0>(color.m_store), std::get<2>(color.m_store));
@@ -53,14 +53,14 @@ Color Color::fromNative(const uint32_t rgb)
 }
 
 Color::Color()
-  : m_store { 0.0f, 0.0f, 0.0f, 1.0f }
+  : m_store {0.0f, 0.0f, 0.0f, 1.0f}
 {
 }
 
 Color::Color(const uint32_t rgba, const bool alpha)
 {
   uint32_t i {};
-  auto &[r, g, b, a] { m_store };
+  auto &[r, g, b, a] {m_store};
 
   if(alpha)
     a = (rgba >> (8 * i++) & 0xFF) / 255.f;
@@ -72,25 +72,25 @@ Color::Color(const uint32_t rgba, const bool alpha)
 }
 
 Color::Color(const ImVec4 &vec, const bool alpha)
-  : m_store { vec.x, vec.y, vec.z, alpha ? vec.w : 1.0f }
+  : m_store {vec.x, vec.y, vec.z, alpha ? vec.w : 1.0f}
 {
 }
 
 Color::Color(const float rgba[4], const bool alpha)
-  : m_store { rgba[0], rgba[1], rgba[2], alpha ? rgba[3] : 1.0f }
+  : m_store {rgba[0], rgba[1], rgba[2], alpha ? rgba[3] : 1.0f}
 {
 }
 
 Color::operator ImVec4() const
 {
-  const auto [r, g, b, a] { m_store };
-  return { r, g, b, a };
+  const auto [r, g, b, a] {m_store};
+  return {r, g, b, a};
 }
 
 uint32_t Color::pack(const bool alpha, const uint32_t extra) const
 {
   uint32_t rgba {}, i {};
-  const auto [r, g, b, a] { m_store };
+  const auto [r, g, b, a] {m_store};
 
   if(alpha)
     rgba |= static_cast<uint32_t>(std::round(a * 0xFF)) << (8 * i++);

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -44,7 +44,7 @@ const RendererType *RendererType::head()
 
 const RendererType *RendererType::bestMatch(const char *id)
 {
-  for(const RendererType *type { head() }; type; type = type->next) {
+  for(const RendererType *type {head()}; type; type = type->next) {
     if(!strcmp(id, type->id))
       return type;
   }
@@ -55,7 +55,7 @@ RendererType::Register::Register(RendererType *type)
 {
   if(!(type->flags & RendererType::Available))
     return;
-  RendererType **insertionPoint { &typeHead() };
+  RendererType **insertionPoint {&typeHead()};
   while(*insertionPoint && **insertionPoint < *type)
     insertionPoint = &(*insertionPoint)->next;
   type->next = *insertionPoint;
@@ -64,7 +64,7 @@ RendererType::Register::Register(RendererType *type)
 
 // Caches the renderer settings for the entire lifetime of the Context
 RendererFactory::RendererFactory()
-  : m_type { Settings::Renderer }, m_forceSoftware { Settings::ForceSoftware }
+  : m_type {Settings::Renderer}, m_forceSoftware {Settings::ForceSoftware}
 {
   assert(m_type);
 }
@@ -80,7 +80,7 @@ void Renderer::install()
 
   // cannot use Renderer_{Create,Destroy}Window because it would
   // create renderers for inactive dockers
-  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  ImGuiPlatformIO &pio {ImGui::GetPlatformIO()};
   // pio.Renderer_CreateWindow  = &createViewport;
   // pio.Renderer_DestroyWindow = &destroyViewport;
   pio.Renderer_SetWindowSize = &Forwarder::wrap<&Renderer::setSize>;
@@ -89,7 +89,7 @@ void Renderer::install()
 }
 
 Renderer::Renderer(Window *window)
-  : m_window { window }
+  : m_window {window}
 {
   m_window->viewport()->RendererUserData = this;
 }
@@ -101,19 +101,19 @@ Renderer::~Renderer()
 
 Renderer::ProjMtx::ProjMtx(const ImVec2 &pos, const ImVec2 &size, const bool flip)
 {
-  float L { pos.x },
-        R { pos.x + size.x },
-        T { pos.y },
-        B { pos.y + size.y };
+  float L {pos.x},
+        R {pos.x + size.x},
+        T {pos.y},
+        B {pos.y + size.y};
 
   if(flip)
     std::swap(T, B);
 
   m_data = {{
-    { 2.f/(R-L),   0.f,         0.f, 0.f },
-    { 0.f,         2.f/(T-B),   0.f, 0.f },
-    { 0.f,         0.f,         1.f, 0.f },
-    { (R+L)/(L-R), (T+B)/(B-T), 0.f, 1.f },
+    {2.f/(R-L),   0.f,         0.f, 0.f},
+    {0.f,         2.f/(T-B),   0.f, 0.f},
+    {0.f,         0.f,         1.f, 0.f},
+    {(R+L)/(L-R), (T+B)/(B-T), 0.f, 1.f},
   }};
 }
 
@@ -122,10 +122,10 @@ Renderer::ProjMtx::ProjMtx(const ImVec2 &pos, const ImVec2 &size, const bool fli
 // clipping area does not cover the entire window anymore.
 Renderer::ClipRect::ClipRect
     (const ImVec4 &rect, const ImVec2 &offset, const ImVec2 &scale)
-  : left   { std::max(0l, static_cast<long>((rect.x - offset.x) * scale.x)) },
-    top    { std::max(0l, static_cast<long>((rect.y - offset.y) * scale.y)) },
-    right  { static_cast<long>((rect.z - offset.x) * scale.x) },
-    bottom { static_cast<long>((rect.w - offset.y) * scale.y) }
+  : left   {std::max(0l, static_cast<long>((rect.x - offset.x) * scale.x))},
+    top    {std::max(0l, static_cast<long>((rect.y - offset.y) * scale.y))},
+    right  {static_cast<long>((rect.z - offset.x) * scale.x)},
+    bottom {static_cast<long>((rect.w - offset.y) * scale.y)}
 {
 }
 

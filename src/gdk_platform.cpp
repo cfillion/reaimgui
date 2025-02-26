@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -32,7 +32,7 @@ static const char *getClipboardText(void *)
   static std::string text;
 
   OpenClipboard(nullptr);
-  if(HANDLE mem { GetClipboardData(CF_TEXT) }) {
+  if(HANDLE mem {GetClipboardData(CF_TEXT)}) {
     text = static_cast<const char *>(GlobalLock(mem));
     GlobalUnlock(mem);
   }
@@ -45,8 +45,8 @@ static const char *getClipboardText(void *)
 
 static void setClipboardText(void *, const char *text)
 {
-  const size_t size { strlen(text) + 1 };
-  HANDLE mem { GlobalAlloc(GMEM_MOVEABLE, size) };
+  const size_t size {strlen(text) + 1};
+  HANDLE mem {GlobalAlloc(GMEM_MOVEABLE, size)};
   memcpy(GlobalLock(mem), text, size);
   GlobalUnlock(mem);
 
@@ -58,7 +58,7 @@ static void setClipboardText(void *, const char *text)
 
 void Platform::install()
 {
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io {ImGui::GetIO()};
   io.BackendPlatformName = "reaper_imgui_gdk";
   io.GetClipboardTextFn = &getClipboardText;
   io.SetClipboardTextFn = &setClipboardText;
@@ -66,19 +66,19 @@ void Platform::install()
 
 Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
 {
-  return new GDKWindow { viewport, dockerHost };
+  return new GDKWindow {viewport, dockerHost};
 }
 
 void Platform::updateMonitors()
 {
-  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  ImGuiPlatformIO &pio {ImGui::GetPlatformIO()};
   pio.Monitors.resize(0); // recycle allocated memory (don't use clear here!)
 
-  GdkDisplay *display { gdk_display_get_default() };
+  GdkDisplay *display {gdk_display_get_default()};
 
-  const int count { gdk_display_get_n_monitors(display) };
+  const int count {gdk_display_get_n_monitors(display)};
   for(int i {}; i < count; ++i) {
-    GdkMonitor *monitor { gdk_display_get_monitor(display, i) };
+    GdkMonitor *monitor {gdk_display_get_monitor(display, i)};
 
     GdkRectangle geometry, workArea;
     gdk_monitor_get_geometry(monitor, &geometry);
@@ -113,7 +113,7 @@ HWND Platform::windowFromPoint(const ImVec2 nativePoint)
   point.x = nativePoint.x;
   point.y = nativePoint.y;
 
-  HWND window { WindowFromPoint(point) };
+  HWND window {WindowFromPoint(point)};
 
   if(window && HTTRANSPARENT ==
       SendMessage(window, WM_NCHITTEST, 0, MAKELPARAM(point.x, point.y))) {
@@ -122,8 +122,8 @@ HWND Platform::windowFromPoint(const ImVec2 nativePoint)
     // Trick WindowFromPoint into skipping this window by overwriting
     // HWND::m_visible. Storing the original value as a sanity-check
     // in case the offset isn't always valid in odd configurations.
-    char *visible { reinterpret_cast<char *>(window) + 0x2b0 };
-    const char originalValue { *visible };
+    char *visible {reinterpret_cast<char *>(window) + 0x2b0};
+    const char originalValue {*visible};
     *visible = 0;
     window = WindowFromPoint(point);
     *visible = originalValue;
@@ -141,7 +141,7 @@ ImVec2 Platform::getCursorPos()
 
 void Platform::scalePosition(ImVec2 *pos, const bool toHiDpi, const ImGuiViewport *)
 {
-  float scale { GDKWindow::globalScaleFactor() };
+  float scale {GDKWindow::globalScaleFactor()};
   if(!toHiDpi)
     scale = 1.f / scale;
 
@@ -160,7 +160,7 @@ HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
 {
   struct Cursor {
     Cursor(const GdkCursorType type)
-      : m_cur { gdk_cursor_new_for_display(gdk_display_get_default(), type) } {}
+      : m_cur {gdk_cursor_new_for_display(gdk_display_get_default(), type)} {}
     operator HCURSOR() const { return reinterpret_cast<HCURSOR>(m_cur); }
     GdkCursor *m_cur;
   };

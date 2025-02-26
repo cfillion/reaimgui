@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -29,7 +29,7 @@ The context will remain valid as long as it is used in each defer cycle.
 The label is used for the tab text when windows are docked in REAPER
 and also as a unique identifier for storing settings.)")
 {
-  return new Context { label, API_GET(config_flags) };
+  return new Context {label, API_GET(config_flags)};
 }
 
 API_FUNC(0_1, double, GetTime, (Context*,ctx),
@@ -139,7 +139,7 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   API_FUNC(vernum, int, ConfigVar##_##name, API_NO_ARGS, doc) \
     { return __COUNTER__ - baseConfigVar - 1; }
 
-constexpr int baseConfigVar { __COUNTER__ };
+constexpr int baseConfigVar {__COUNTER__};
 API_CONFIGVAR(0_7, Flags, "ConfigFlags_*");
 
 API_CONFIGVAR(0_7, MouseDoubleClickTime, "Time for a double-click, in seconds.");
@@ -232,11 +232,11 @@ API_FUNC(0_7, double, GetConfigVar, (Context*,ctx)
 {
   assertValid(ctx);
   if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
-    throw reascript_error { "unknown config variable" };
+    throw reascript_error {"unknown config variable"};
 
   return std::visit(overloaded {
     [ctx](auto ImGuiIO::*field) -> double {
-      const ImGuiIO &io { ctx->IO() };
+      const ImGuiIO &io {ctx->IO()};
 
       if constexpr(std::is_same_v<decltype(ImGuiIO::ConfigFlags),
                    std::decay_t<decltype(io.*field)>>) {
@@ -256,11 +256,11 @@ API_FUNC(0_7, void, SetConfigVar, (Context*,ctx)
 {
   assertValid(ctx);
   if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
-    throw reascript_error { "unknown config variable" };
+    throw reascript_error {"unknown config variable"};
 
   std::visit(overloaded {
     [ctx, value](auto ImGuiIO::*field) {
-      ImGuiIO &io { ctx->IO() };
+      ImGuiIO &io {ctx->IO()};
 
       if constexpr(std::is_same_v<decltype(ImGuiIO::ConfigFlags),
                    std::decay_t<decltype(io.*field)>>) {

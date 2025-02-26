@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -30,7 +30,7 @@ public:
   T operator &(T op) const { return m_flags & op; }
 
 protected:
-  Flags(T flags) : m_flags { flags } {}
+  Flags(T flags) : m_flags {flags} {}
 
 private:
   T m_flags;
@@ -43,7 +43,7 @@ enum {
 
 class WindowFlags : public Flags<ImGuiWindowFlags> {
 public:
-  WindowFlags(int flags) : Flags { flags }
+  WindowFlags(int flags) : Flags {flags}
   {
     if(*this & ReaImGuiWindowFlags_TopMost) {
       ImGuiWindowClass topmost;

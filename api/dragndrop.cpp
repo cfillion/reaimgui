@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -100,7 +100,7 @@ you can peek into the payload before the mouse button is released.)")
   if(!isUserType(type))
     return false;
 
-  const ImGuiPayload *impayload { ImGui::AcceptDragDropPayload(type, API_GET(flags)) };
+  const ImGuiPayload *impayload {ImGui::AcceptDragDropPayload(type, API_GET(flags))};
   if(!impayload)
     return false;
 
@@ -115,13 +115,13 @@ static bool AcceptDragDropPayloadColor(int *color, bool alpha,
 {
   assertValid(color);
 
-  const char *type { alpha ? IMGUI_PAYLOAD_TYPE_COLOR_4F : IMGUI_PAYLOAD_TYPE_COLOR_3F };
-  const ImGuiPayload *payload { ImGui::AcceptDragDropPayload(type, flags) };
+  const char *type {alpha ? IMGUI_PAYLOAD_TYPE_COLOR_4F : IMGUI_PAYLOAD_TYPE_COLOR_3F};
+  const ImGuiPayload *payload {ImGui::AcceptDragDropPayload(type, flags)};
 
   if(!payload)
     return false;
 
-  const size_t size { sizeof(float) * (alpha ? 4 : 3) };
+  const size_t size {sizeof(float) * (alpha ? 4 : 3)};
   assert(static_cast<size_t>(payload->DataSize) == size);
 
   float buf[4];
@@ -180,7 +180,7 @@ Returns false when drag and drop is finished or inactive.)")
 {
   FRAME_GUARD;
 
-  const ImGuiPayload *impayload { ImGui::GetDragDropPayload() };
+  const ImGuiPayload *impayload {ImGui::GetDragDropPayload()};
   if(!impayload || impayload->DataFrameCount == -1 || !isUserType(impayload->DataType))
     return false;
 
@@ -201,9 +201,9 @@ Returns false if index is out of bounds.)")
 {
   FRAME_GUARD;
 
-  const auto &files { ctx->draggedFiles() };
+  const auto &files {ctx->draggedFiles()};
 
-  const ImGuiPayload *payload { ImGui::GetDragDropPayload() };
+  const ImGuiPayload *payload {ImGui::GetDragDropPayload()};
   if(!payload || !payload->IsDataType(REAIMGUI_PAYLOAD_TYPE_FILES))
     return false;
   else if(static_cast<size_t>(index) >= files.size())

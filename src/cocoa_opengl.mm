@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -77,14 +77,14 @@ private:
 };
 
 struct CocoaOpenGLShared {
-  CocoaOpenGLShared() : ctx { nil } {}
+  CocoaOpenGLShared() : ctx {nil} {}
   NSOpenGLContext *ctx;
 };
 
 class MakeCurrent {
 public:
   MakeCurrent(NSOpenGLContext *gl)
-    : m_gl { gl }
+    : m_gl {gl}
   {
     [m_gl makeCurrentContext];
   }
@@ -99,12 +99,12 @@ private:
 };
 
 decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
-  { &Renderer::create<CocoaOpenGL> };
+  {&Renderer::create<CocoaOpenGL>};
 decltype(OpenGLRenderer::flags) OpenGLRenderer::flags
-  { RendererType::Available | RendererType::CanForceSoftware };
+  {RendererType::Available | RendererType::CanForceSoftware};
 
 CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
-  : OpenGLRenderer { factory, window }
+  : OpenGLRenderer {factory, window}
 {
   if(!m_shared->m_platform)
     m_shared->m_platform = std::make_shared<CocoaOpenGLShared>();
@@ -112,9 +112,9 @@ CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
   m_layer = [[OpenGLLayer alloc] initWithRenderer:this
                                     forceSoftware:factory->wantSoftware()];
 
-  HWND hwnd { m_window->nativeHandle() };
+  HWND hwnd {m_window->nativeHandle()};
   SetOpaque(hwnd, false);
-  NSView *view { (__bridge NSView *)hwnd };
+  NSView *view {(__bridge NSView *)hwnd};
   [view setWantsBestResolutionOpenGLSurface:YES]; // enable HiDPI support
   [view setLayer:m_layer];
   [view setWantsLayer:YES];
@@ -124,8 +124,8 @@ CocoaOpenGL::CocoaOpenGL(RendererFactory *factory, Window *window)
 
 CocoaOpenGL::~CocoaOpenGL()
 {
-  if(NSOpenGLContext *gl { [m_layer openGLContext] }) {
-    MakeCurrent cur { gl };
+  if(NSOpenGLContext *gl {[m_layer openGLContext]}) {
+    MakeCurrent cur {gl};
     teardown();
   }
 
@@ -179,7 +179,7 @@ void CocoaOpenGL::swapBuffers(void *)
   m_inRender = false;
 
   if(m_didInit && ![self openGLContext])
-    throw backend_error { "failed to initialize a OpenGL 3.2 context" };
+    throw backend_error {"failed to initialize a OpenGL 3.2 context"};
 }
 
 - (NSOpenGLPixelFormat *)openGLPixelFormatForDisplayMask:(uint32_t)mask
@@ -214,15 +214,15 @@ void CocoaOpenGL::swapBuffers(void *)
 
 - (NSOpenGLContext *)openGLContextForPixelFormat:(NSOpenGLPixelFormat *)fmt
 {
-  auto globalShared { m_renderer->m_shared };
+  auto globalShared {m_renderer->m_shared};
 
   CocoaOpenGLShared *shared
-    { std::static_pointer_cast<CocoaOpenGLShared>(globalShared->m_platform).get() };
+    {std::static_pointer_cast<CocoaOpenGLShared>(globalShared->m_platform).get()};
   NSOpenGLContext *gl
-    { [[NSOpenGLContext alloc] initWithFormat:fmt shareContext:shared->ctx] };
+    {[[NSOpenGLContext alloc] initWithFormat:fmt shareContext:shared->ctx]};
 
   if(m_oldGlCtx) {
-    MakeCurrent cur { m_oldGlCtx };
+    MakeCurrent cur {m_oldGlCtx};
 
     // increases the reference count so that teardown() below doesn't incorrectly
     // frees shared OpenGL resources and setup() doesn't re-initializes it
@@ -239,7 +239,7 @@ void CocoaOpenGL::swapBuffers(void *)
   if(!shared->ctx)
     shared->ctx = gl;
 
-  MakeCurrent cur { gl };
+  MakeCurrent cur {gl};
   m_renderer->setup();
 
   if(m_oldGlCtx) {
@@ -273,7 +273,7 @@ void CocoaOpenGL::swapBuffers(void *)
                forLayerTime:(CFTimeInterval)t
                 displayTime:(const CVTimeStamp *)ts
 {
-  MakeCurrent cur { gl };
+  MakeCurrent cur {gl};
   m_renderer->render(false);
 }
 @end

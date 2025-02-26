@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -37,7 +37,7 @@ and [string](https://www.reaper.fm/sdk/js/strings.php#js_string_funcs)
 functions are available in addition to callback-specific functions
 (see InputTextCallback_*).)")
 {
-  return new Function { code };
+  return new Function {code};
 }
 
 API_FUNC(0_8_5, void, Function_Execute, (Function*,func),
@@ -52,9 +52,9 @@ API_FUNC(0_8_5, double, Function_GetValue, (Function*,func)
 "")
 {
   assertValid(func);
-  if(const auto &value { func->getDouble(name) })
+  if(const auto &value {func->getDouble(name)})
     return *value;
-  throw reascript_error { "could not read number value" };
+  throw reascript_error {"could not read number value"};
 }
 
 API_FUNC(0_8_5, void, Function_SetValue, (Function*,func)
@@ -63,7 +63,7 @@ API_FUNC(0_8_5, void, Function_SetValue, (Function*,func)
 {
   assertValid(func);
   if(!func->setDouble(name, value))
-    throw reascript_error { "could not write number value" };
+    throw reascript_error {"could not write number value"};
 }
 
 API_FUNC(0_8_5, void, Function_GetValue_Array, (Function*,func)
@@ -74,7 +74,7 @@ in the given variable into the array.)")
   assertValid(func);
   assertValid(values);
   if(!func->getArray(name, values))
-    throw reascript_error { "could not read array values" };
+    throw reascript_error {"could not read array values"};
 }
 
 API_FUNC(0_8_5, void, Function_SetValue_Array, (Function*,func)
@@ -85,7 +85,7 @@ in the given variable.)")
   assertValid(func);
   assertValid(values);
   if(!func->setArray(name, values))
-    throw reascript_error { "could not write array values" };
+    throw reascript_error {"could not write array values"};
 }
 
 API_FUNC(0_8_5, void, Function_GetValue_String, (Function*,func)
@@ -95,9 +95,9 @@ API_FUNC(0_8_5, void, Function_GetValue_String, (Function*,func)
   assertValid(func);
   assertValid(value);
 
-  const auto &string { func->getString(name) };
+  const auto &string {func->getString(name)};
   if(!string)
-    throw reascript_error { "could not read string value" };
+    throw reascript_error {"could not read string value"};
   copyToBigBuf(value, value_sz, *string);
 }
 
@@ -107,12 +107,12 @@ API_FUNC(0_8_5, void, Function_SetValue_String, (Function*,func)
 {
   assertValid(func);
 
-  static bool hasAccurateSize { atof(GetAppVersion()) >= 6.44 };
+  static bool hasAccurateSize {atof(GetAppVersion()) >= 6.44};
   if(!hasAccurateSize)
     value_sz = strlen(value);
   else if(value_sz > 0)
     --value_sz; // don't include the null terminator
 
-  if(!func->setString(name, { value, static_cast<size_t>(value_sz) }))
-    throw reascript_error { "could not write string value" };
+  if(!func->setString(name, {value, static_cast<size_t>(value_sz)}))
+    throw reascript_error {"could not write string value"};
 }

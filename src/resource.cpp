@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -33,10 +33,10 @@
 // This value must not be under 2 for working around that by waiting an extra
 // frame before collecting unused objects [p=2450259].
 // Only required in REAPER versions without __reascript_runcnt.
-constexpr unsigned char KEEP_ALIVE_FRAMES { 2 };
+constexpr unsigned char KEEP_ALIVE_FRAMES {2};
 
 // How many back-to-back GC frames to tolerate before complaining
-constexpr unsigned char MAX_GC_FRAMES { 120 };
+constexpr unsigned char MAX_GC_FRAMES {120};
 
 enum GlobalFlags {
   EnableTimer = 1<<0,
@@ -60,16 +60,16 @@ static WNDPROC g_mainProc;
 
 static bool isDeferLoopBlocked()
 {
-  static ConfigVar<unsigned int> runcnt { "__reascript_runcnt" };
+  static ConfigVar<unsigned int> runcnt {"__reascript_runcnt"};
   if(runcnt) { // v7.28+
-    const bool blocked { *runcnt == g_scriptRunCount };
+    const bool blocked {*runcnt == g_scriptRunCount};
     g_scriptRunCount = *runcnt;
     return blocked;
   }
 
   // REAPER v6.19+ does not execute deferred script callbacks
   // when the splash screen is open.
-  static bool pauseDuringLoad { atof(GetAppVersion()) >= 6.19 };
+  static bool pauseDuringLoad {atof(GetAppVersion()) >= 6.19};
   return (pauseDuringLoad && Splash_GetWnd()) || g_reentrant > 1;
 }
 
@@ -83,12 +83,12 @@ struct Resource::Timer {
 
 Resource::Timer::Timer()
 {
-  if(ConfigVar<unsigned int> runcnt { "__reascript_runcnt" })
+  if(ConfigVar<unsigned int> runcnt {"__reascript_runcnt"})
     g_scriptRunCount = *runcnt;
 
   if(!(g_flags & DisableProcOverride)) {
-    LONG_PTR newProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
-             oldProc { SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc) };
+    LONG_PTR newProc {reinterpret_cast<LONG_PTR>(&mainProcOverride)},
+             oldProc {SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc)};
     g_mainProc = reinterpret_cast<WNDPROC>(oldProc);
   }
 
@@ -100,9 +100,9 @@ Resource::Timer::~Timer()
   g_flags &= EnableTimer;
   g_consecutiveGcFrames = 0;
 
-  HWND mainWnd { GetMainHwnd() };
-  LONG_PTR expectedProc { reinterpret_cast<LONG_PTR>(&mainProcOverride) },
-           previousProc { reinterpret_cast<LONG_PTR>(g_mainProc) };
+  HWND mainWnd {GetMainHwnd()};
+  LONG_PTR expectedProc {reinterpret_cast<LONG_PTR>(&mainProcOverride)},
+           previousProc {reinterpret_cast<LONG_PTR>(g_mainProc)};
   if(GetWindowLongPtr(mainWnd, GWLP_WNDPROC) == expectedProc)
     SetWindowLongPtr(mainWnd, GWLP_WNDPROC, previousProc);
   else // prevent mainProcOverride from calling itself next time
@@ -111,7 +111,7 @@ Resource::Timer::~Timer()
 
 void Resource::Timer::tick()
 {
-  const bool blocked { isDeferLoopBlocked() };
+  const bool blocked {isDeferLoopBlocked()};
 
 #ifndef __APPLE__
   if(blocked != !!(g_flags & DisabledViewports)) {
@@ -127,11 +127,11 @@ void Resource::Timer::tick()
   if(blocked)
     return;
 
-  auto it { g_rsx.begin() };
-  bool didGc { false };
+  auto it {g_rsx.begin()};
+  bool didGc {false};
 
   while(it != g_rsx.end()) {
-    Resource *rs { *it };
+    Resource *rs {*it};
     if(rs->heartbeat())
       ++it;
     else {
@@ -162,7 +162,7 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
   // deferred ReaScripts and extension timer callbacks (among other things).
   if(msg == WM_TIMER && wParam == 0x29a) {
     g_reentrant += 1;
-    const LRESULT ret { CallWindowProc(g_mainProc, hwnd, msg, wParam, lParam) };
+    const LRESULT ret {CallWindowProc(g_mainProc, hwnd, msg, wParam, lParam)};
     g_reentrant -= 1;
 
     if(g_flags & EnableTimer)
@@ -175,7 +175,7 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
 }
 
 Resource::Resource()
-  : m_keepAlive { KEEP_ALIVE_FRAMES }, m_flags {}
+  : m_keepAlive {KEEP_ALIVE_FRAMES}, m_flags {}
 {
   if(g_flags & BypassGCCheckOnce) {
     // < 0.9 backward compatibility
@@ -183,7 +183,7 @@ Resource::Resource()
     m_flags |= BypassGCCheck;
   }
   else if(g_consecutiveGcFrames >= MAX_GC_FRAMES)
-    throw reascript_error { "excessive creation of short-lived resources" };
+    throw reascript_error {"excessive creation of short-lived resources"};
 
   if(!g_timer)
     g_timer = new Timer;

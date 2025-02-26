@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -33,7 +33,7 @@ private:
 };
 
 SelectFont::SelectFont(LOGFONT *desc)
-  : m_dc { CreateCompatibleDC(nullptr) }, m_font { CreateFontIndirect(desc) }
+  : m_dc {CreateCompatibleDC(nullptr)}, m_font {CreateFontIndirect(desc)}
 {
   SelectObject(m_dc, m_font);
 }
@@ -47,11 +47,11 @@ SelectFont::~SelectFont()
 static bool addGenericAttrs(const char *family, LOGFONT *desc)
 {
   constexpr std::pair<const char *, unsigned char> genericMap[] {
-    { Font::CURSIVE,    FF_SCRIPT     },
-    { Font::FANTASY,    FF_DECORATIVE },
-    { Font::MONOSPACE,  FF_MODERN     },
-    { Font::SANS_SERIF, FF_SWISS      },
-    { Font::SERIF,      FF_ROMAN      },
+    {Font::CURSIVE,    FF_SCRIPT    },
+    {Font::FANTASY,    FF_DECORATIVE},
+    {Font::MONOSPACE,  FF_MODERN    },
+    {Font::SANS_SERIF, FF_SWISS     },
+    {Font::SERIF,      FF_ROMAN     },
   };
 
   for(const auto &generic : genericMap) {
@@ -67,7 +67,7 @@ static bool addGenericAttrs(const char *family, LOGFONT *desc)
 static int CALLBACK enumStyles(const LOGFONT *desc,
   const TEXTMETRIC *, DWORD, LPARAM lParam)
 {
-  int *missingStyles { reinterpret_cast<int *>(lParam) };
+  int *missingStyles {reinterpret_cast<int *>(lParam)};
   if(desc->lfWeight > FW_NORMAL) *missingStyles &= ~ReaImGuiFontFlags_Bold;
   if(desc->lfItalic) *missingStyles &= ~ReaImGuiFontFlags_Italic;
   return 1;
@@ -83,11 +83,11 @@ bool Font::resolve(const char *family, const int style)
   if(!addGenericAttrs(family, &desc))
     MultiByteToWideChar(CP_UTF8, 0, family, -1, desc.lfFaceName, LF_FACESIZE - 1);
 
-  SelectFont sel { &desc };
+  SelectFont sel {&desc};
   if(!sel)
     return false;
 
-  const DWORD dataSize { GetFontData(sel.dc(), 0, 0, nullptr, 0) };
+  const DWORD dataSize {GetFontData(sel.dc(), 0, 0, nullptr, 0)};
   if(dataSize == GDI_ERROR)
     return false;
   std::vector<unsigned char> fontData(dataSize);

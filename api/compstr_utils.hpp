@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -26,7 +26,7 @@ template<auto str>
 constexpr const char *lfind(const char match,
   const char *start, const char *fallback)
 {
-  const char *end { *str + sizeof(*str) - 1 };
+  const char *end {*str + sizeof(*str) - 1};
   do { if (*start == match) return start + 1; } while(++start < end);
   return fallback;
 }
@@ -35,7 +35,7 @@ template<auto str>
 constexpr const char *rfind(const char match,
   const char *start, const char *fallback)
 {
-  const char *p { *str + sizeof(*str) - 1 };
+  const char *p {*str + sizeof(*str) - 1};
   do { if(*p == match) return p + 1; } while(--p > start);
   return fallback;
 }

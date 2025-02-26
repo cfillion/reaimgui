@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -24,7 +24,7 @@
 #endif
 
 Menu::Menu(HMENU menu)
-  : m_menu { menu }, m_owned { !menu }
+  : m_menu {menu}, m_owned {!menu}
 {
   if(m_owned)
     m_menu = CreatePopupMenu();
@@ -55,12 +55,12 @@ static MENUITEMINFO makeItem(const TCHAR *label, const int flags)
 }
 
 #ifdef _WIN32
-#  define MAKE_ITEM(label, flags)                 \
-     const std::wstring &wlabel { widen(label) }; \
-     MENUITEMINFO item { makeItem(wlabel.c_str(), flags) }
+#  define MAKE_ITEM(label, flags)               \
+     const std::wstring &wlabel {widen(label)}; \
+     MENUITEMINFO item {makeItem(wlabel.c_str(), flags)}
 #else
 #  define MAKE_ITEM(label, flags) \
-     MENUITEMINFO item { makeItem(label, flags) }
+     MENUITEMINFO item {makeItem(label, flags)}
 #endif
 
 void Menu::addItem(const char *label, const int command, const int flags)
@@ -78,7 +78,7 @@ Menu Menu::addMenu(const char *label, const int flags)
   item.hSubMenu = CreatePopupMenu();
   append(item);
 
-  return { item.hSubMenu };
+  return {item.hSubMenu};
 }
 
 void Menu::append(MENUITEMINFO &item)

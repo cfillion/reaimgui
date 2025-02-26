@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -105,7 +105,7 @@ API_FUNC(0_1, void, GetItemRectMin, (Context*,ctx)
 "Get upper-left bounding rectangle of the last item (screen space)")
 {
   FRAME_GUARD;
-  const ImVec2 &rect { ImGui::GetItemRectMin() };
+  const ImVec2 &rect {ImGui::GetItemRectMin()};
   if(x) *x = rect.x;
   if(y) *y = rect.y;
 }
@@ -115,7 +115,7 @@ API_FUNC(0_1, void, GetItemRectMax, (Context*,ctx)
 "Get lower-right bounding rectangle of the last item (screen space)")
 {
   FRAME_GUARD;
-  const ImVec2 &rect { ImGui::GetItemRectMax() };
+  const ImVec2 &rect {ImGui::GetItemRectMax()};
   if(x) *x = rect.x;
   if(y) *y = rect.y;
 }
@@ -125,7 +125,7 @@ API_FUNC(0_1, void, GetItemRectSize, (Context*,ctx)
 "Get size of last item")
 {
   FRAME_GUARD;
-  const ImVec2 &rect { ImGui::GetItemRectSize() };
+  const ImVec2 &rect {ImGui::GetItemRectSize()};
   if(w) *w = rect.x;
   if(h) *h = rect.y;
 }

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -293,10 +293,10 @@ or the first time. 'has_specs' is false when not sorting.
 See TableGetColumnSortSpecs.)")
 {
   FRAME_GUARD;
-  if(ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() }) {
+  if(ImGuiTableSortSpecs *specs {ImGui::TableGetSortSpecs()}) {
     if(has_specs) *has_specs = specs->SpecsCount > 0;
 
-    const bool needSort { specs->SpecsDirty };
+    const bool needSort {specs->SpecsDirty};
     specs->SpecsDirty = false;
     return needSort;
   }
@@ -320,11 +320,11 @@ See TableNeedSort.)")
 {
   FRAME_GUARD;
 
-  const ImGuiTableSortSpecs *specs { ImGui::TableGetSortSpecs() };
+  const ImGuiTableSortSpecs *specs {ImGui::TableGetSortSpecs()};
   if(!specs || id < 0 || id >= specs->SpecsCount)
     return false; // don't assert: user cannot know how many specs there are
 
-  const ImGuiTableColumnSortSpecs &spec { specs->Specs[id] };
+  const ImGuiTableColumnSortSpecs &spec {specs->Specs[id]};
   if(column_index)   *column_index   = spec.ColumnIndex;
   if(column_user_id) *column_user_id = spec.ColumnUserID;
   if(sort_direction) *sort_direction = spec.SortDirection;

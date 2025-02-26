@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -36,9 +36,9 @@ public:
 
   Texture(void *user, float scale, GetPixelsFunc getPixels,
     IsValidFunc isValid = nullptr, CompactFunc compact = nullptr)
-    : m_user { user }, m_scale { scale }, m_getPixels { getPixels },
-      m_compact { compact }, m_isValid { isValid },
-      m_version { 0u }, m_lastTimeActive { 0.f }
+    : m_user {user}, m_scale {scale}, m_getPixels {getPixels},
+      m_compact {compact}, m_isValid {isValid},
+      m_version {0u}, m_lastTimeActive {0.f}
   {}
 
   void *object() const { return m_user; }
@@ -85,7 +85,7 @@ public:
 
   size_t touch(Texture &&);
   template<typename... Args>
-  size_t touch(Args &&...args) { return touch(Texture { args... }); }
+  size_t touch(Args &&...args) { return touch(Texture {args...}); }
   const Texture &get(size_t i) const { return m_textures[i]; }
   void invalidate(void *object);
 

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -64,7 +64,7 @@ API_FUNC(0_1, void, GetMouseClickedPos, (Context*,ctx)
 {
   FRAME_GUARD;
   IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(ImGuiIO::MouseDownDuration));
-  const ImVec2 &pos { ctx->IO().MouseClickedPos[button] };
+  const ImVec2 &pos {ctx->IO().MouseClickedPos[button]};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }
@@ -135,7 +135,7 @@ API_FUNC(0_1, void, GetMousePos, (Context*,ctx)
 "")
 {
   FRAME_GUARD;
-  const ImVec2 &pos { ctx->IO().MousePos };
+  const ImVec2 &pos {ctx->IO().MousePos};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }
@@ -146,7 +146,7 @@ R"(Retrieve mouse position at the time of opening popup we have BeginPopup()
 into (helper to avoid user backing that value themselves).)")
 {
   FRAME_GUARD;
-  const ImVec2 &pos { ImGui::GetMousePosOnOpeningCurrentPopup() };
+  const ImVec2 &pos {ImGui::GetMousePosOnOpeningCurrentPopup()};
   if(x) *x = pos.x;
   if(y) *y = pos.y;
 }
@@ -160,7 +160,7 @@ Horizontal: >0 scrolls Left, <0 scrolls Right.
 Most users don't have a mouse with a horizontal wheel.)")
 {
   FRAME_GUARD;
-  const ImGuiIO &io { ctx->IO() };
+  const ImGuiIO &io {ctx->IO()};
   if(vertical)   *vertical   = io.MouseWheel;
   if(horizontal) *horizontal = io.MouseWheelH;
 }
@@ -180,7 +180,7 @@ are invalid (-FLT_MAX,-FLT_MAX), so a disappearing/reappearing mouse won't have
 a huge delta.)")
 {
   FRAME_GUARD;
-  const ImVec2 &delta { ctx->IO().MouseDelta };
+  const ImVec2 &delta {ctx->IO().MouseDelta};
   if(x) *x = delta.x;
   if(y) *y = delta.y;
 }
@@ -305,7 +305,7 @@ R"(Read from ImGui's character input queue.
 Call with increasing idx until false is returned.)")
 {
   FRAME_GUARD;
-  const ImGuiIO &io { ctx->IO() };
+  const ImGuiIO &io {ctx->IO()};
   if(idx >= 0 && idx < io.InputQueueCharacters.Size) {
     if(unicode_char)
       *unicode_char = io.InputQueueCharacters[idx];

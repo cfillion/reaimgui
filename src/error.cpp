@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -58,16 +58,16 @@ static std::unique_ptr<ErrorReporter> g_reporter;
 
 constexpr const TCHAR *HEADER_FONT_FAMILY
 #ifdef _WIN32
-  { L"MS Shell Dlg 2" };
+  {L"MS Shell Dlg 2"};
 #else
-  { "Arial" };
+  {"Arial"};
 #endif
 
 constexpr int HEADER_FONT_SIZE
 #ifdef __APPLE__
-  { 13 };
+  {13};
 #else
-  { 15 };
+  {15};
 #endif
 
 static RECT calcHeaderRect(HWND hwnd)
@@ -88,7 +88,7 @@ static WDL_DLGRET errorProc(HWND hwnd, const unsigned int msg,
     SetFocus(GetDlgItem(hwnd, IDOK));
     return 0;
   case WM_USER: {
-    const ErrorReport *err { g_reporter->current() };
+    const ErrorReport *err {g_reporter->current()};
 
     char title[128];
     snprintf(title, sizeof(title), "%s [%zu/%zu]",
@@ -99,7 +99,7 @@ static WDL_DLGRET errorProc(HWND hwnd, const unsigned int msg,
     SetDlgItemText(hwnd, IDC_REPORT, WIDEN(err->ex.what()));
 
     // update the bold header text
-    RECT headerRect { calcHeaderRect(hwnd) };
+    RECT headerRect {calcHeaderRect(hwnd)};
     InvalidateRect(hwnd, &headerRect, true);
 
     EnableWindow(GetDlgItem(hwnd, IDC_PREV), g_reporter->index() > 0);
@@ -110,20 +110,20 @@ static WDL_DLGRET errorProc(HWND hwnd, const unsigned int msg,
     return 0;
   }
   case WM_PAINT: {
-    const ErrorReport *err { g_reporter->current() };
+    const ErrorReport *err {g_reporter->current()};
 #ifdef __APPLE__
-    constexpr float scale { 1.f };
+    constexpr float scale {1.f};
 #else
-    const float scale { Platform::scaleForWindow(hwnd) };
+    const float scale {Platform::scaleForWindow(hwnd)};
 #endif
     PAINTSTRUCT ps;
-    HDC dc { BeginPaint(hwnd, &ps) };
+    HDC dc {BeginPaint(hwnd, &ps)};
 
-    HFONT headerFont { CreateFont(HEADER_FONT_SIZE * scale, 0, 0, 0, FW_BOLD,
+    HFONT headerFont {CreateFont(HEADER_FONT_SIZE * scale, 0, 0, 0, FW_BOLD,
       false, false, false, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-      CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, HEADER_FONT_FAMILY) };
-    RECT headerRect { calcHeaderRect(hwnd) };
-    HGDIOBJ defaultFont { SelectObject(dc, headerFont) };
+      CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, HEADER_FONT_FAMILY)};
+    RECT headerRect {calcHeaderRect(hwnd)};
+    HGDIOBJ defaultFont {SelectObject(dc, headerFont)};
     SetBkMode(dc, TRANSPARENT);
     SetTextColor(dc, GetSysColor(COLOR_BTNTEXT));
     DrawText(dc, err->header, -1, &headerRect, DT_LEFT);
@@ -178,7 +178,7 @@ void ErrorReporter::report(const ErrorReport &&e)
 }
 
 ErrorReporter::ErrorReporter()
-  : m_current { static_cast<size_t>(-1) }
+  : m_current {static_cast<size_t>(-1)}
 {
   m_window = CreateDialog(Window::s_instance,
     MAKEINTRESOURCE(IDD_ERROR), GetMainHwnd(), errorProc);
@@ -220,10 +220,10 @@ void Error::report(Context *ctx, const backend_error &ex)
 
 void Error::imguiAssertionFailure(const char *message)
 {
-  throw imgui_error { message };
+  throw imgui_error {message};
 }
 
 void Error::imguiDebugBreak()
 {
-  throw reascript_error { "debug break" };
+  throw reascript_error {"debug break"};
 }

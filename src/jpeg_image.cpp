@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -34,7 +34,7 @@ public:
 
 static bool isJPEG(std::istream &stream)
 {
-  constexpr const unsigned char jpeg[] { 0xFF, 0xD8, 0xFF };
+  constexpr const unsigned char jpeg[] {0xFF, 0xD8, 0xFF};
   char magic[sizeof(jpeg)];
   stream.read(magic, sizeof(jpeg));
   return memcmp(jpeg, magic, sizeof(jpeg)) == 0;
@@ -42,23 +42,23 @@ static bool isJPEG(std::istream &stream)
 
 static Image *create(std::istream &stream)
 {
-  return new JPEGImage(stream);
+  return new JPEGImage {stream};
 }
 
-static const Image::RegisterType JPEG { &isJPEG, &create };
+static const Image::RegisterType JPEG {&isJPEG, &create};
 
 static void error(j_common_ptr jpeg)
 {
   char message[JMSG_LENGTH_MAX];
   jpeg->err->format_message(jpeg, message);
-  throw reascript_error { message };
+  throw reascript_error {message};
 }
 
 struct StreamSource : public jpeg_source_mgr {
   StreamSource(std::istream &stream)
     : jpeg_source_mgr {
         nullptr, 0, init, fill, skip, jpeg_resync_to_restart, term,
-      }, stream { stream }
+      }, stream {stream}
   {
   }
 
@@ -73,13 +73,13 @@ struct StreamSource : public jpeg_source_mgr {
 
 void StreamSource::init(j_decompress_ptr jpeg)
 {
-  StreamSource *src { static_cast<StreamSource *>(jpeg->src) };
+  StreamSource *src {static_cast<StreamSource *>(jpeg->src)};
   src->stream.seekg(0); // un-read the magic number bytes
 }
 
 boolean StreamSource::fill(j_decompress_ptr jpeg)
 {
-  StreamSource *src { static_cast<StreamSource *>(jpeg->src) };
+  StreamSource *src {static_cast<StreamSource *>(jpeg->src)};
   if(!src->stream)
     ERREXIT(jpeg, JERR_INPUT_EOF);
   src->stream.read(src->buffer.data(), src->buffer.size());
@@ -94,7 +94,7 @@ void StreamSource::skip(j_decompress_ptr jpeg, long bytes)
     return; // no-op as per libjpeg's recommendation
 
   unsigned int skips {};
-  StreamSource *src { static_cast<StreamSource *>(jpeg->src) };
+  StreamSource *src {static_cast<StreamSource *>(jpeg->src)};
   while(bytes > static_cast<long>(src->bytes_in_buffer)) {
     bytes -= src->bytes_in_buffer;
     src->bytes_in_buffer = src->buffer.size();
@@ -123,14 +123,14 @@ JPEGImage::JPEGImage(std::istream &stream)
   err.output_message = error; // warnings as errors
 
   jpeg_create_decompress(jpeg);
-  StreamSource src { stream };
+  StreamSource src {stream};
   jpeg->src = &src;
   jpeg_read_header(jpeg, TRUE);
   jpeg->out_color_space = JCS_EXT_RGBA; // TODO: save memory with RGB textures
   jpeg_start_decompress(jpeg);
 
   resize(jpeg->output_width, jpeg->output_height, jpeg->output_components);
-  std::vector<unsigned char *> scanlines { makeScanlines() };
+  std::vector<unsigned char *> scanlines {makeScanlines()};
 
   // jpeg_read_scanlines does not decompress the entire image at once
   while(jpeg->output_scanline < jpeg->output_height) {

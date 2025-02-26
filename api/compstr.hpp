@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -33,8 +33,8 @@ template<auto fn>
 class Basename {
   static constexpr auto compute()
   {
-    constexpr const char *start { rfind<fn>('/', *fn, *fn) },
-                         *end   { rfind<fn>('.', start, *fn + sizeof(*fn)) };
+    constexpr const char *start {rfind<fn>('/', *fn, *fn)},
+                         *end   {rfind<fn>('.', start, *fn + sizeof(*fn))};
     std::array<char, end - start> name {};
     for(size_t i {}; i < name.size() - 1; ++i)
       name[i] = start[i];
@@ -42,36 +42,36 @@ class Basename {
   }
 
 public:
-  static constexpr auto value { compute() };
+  static constexpr auto value {compute()};
 };
 }
 
 template<auto input>
-static constexpr const char *basename { Basename<input>::value.data() };
+static constexpr const char *basename {Basename<input>::value.data()};
 
 namespace {
 template<auto ver>
 class Version {
   static constexpr auto compute()
   {
-    constexpr const char *start { **ver == 'v' ? *ver + 1 : *ver },
-                         *dirty { lfind<ver>('+', start, *ver + sizeof(*ver)) },
-                         *end   { lfind<ver>('-', start, dirty) };
+    constexpr const char *start {**ver == 'v' ? *ver + 1 : *ver},
+                         *dirty {lfind<ver>('+', start, *ver + sizeof(*ver))},
+                         *end   {lfind<ver>('-', start, dirty)};
     std::array<char, end - start> version {};
     for(size_t i {}; i < version.size() - 1; ++i) {
-      const char c { start[i] };
+      const char c {start[i]};
       version[i] = c == '_' ? '.' : c;
     }
     return version;
   }
 
 public:
-  static constexpr auto value { compute() };
+  static constexpr auto value {compute()};
 };
 }
 
 template<auto input>
-static constexpr const char *version { Version<input>::value.data() };
+static constexpr const char *version {Version<input>::value.data()};
 
 namespace {
 template<typename fn, typename Meta, bool UseArgNames = true>
@@ -96,7 +96,7 @@ class APIDef<R(*)(Args...), Meta, UseArgNames>
       Meta::help.size() + 1
     };
     std::array<char, length> def {};
-    char *p { def.data() };
+    char *p {def.data()};
     append(p, TypeInfo<R>::type(), '\0');
     std::apply([&p](auto... arg) {
       if constexpr(sizeof...(arg) == 0)
@@ -111,18 +111,18 @@ class APIDef<R(*)(Args...), Meta, UseArgNames>
     return def;
   }
 
-  static constexpr std::array<std::string_view, 1> noArgNames { "_" };
+  static constexpr std::array<std::string_view, 1> noArgNames {"_"};
 
   template<typename... ArgsPart, std::size_t... Is>
   static constexpr auto args(std::index_sequence<Is...>)
   {
     [[maybe_unused]] // for GCC 7
-    constexpr const auto &argn { []() -> const auto & {
+    constexpr const auto &argn {[]() -> const auto & {
       if constexpr(UseArgNames)
         return Meta::argn;
       else
         return noArgNames;
-    }() };
+    }()};
 
     return std::make_tuple(std::make_tuple(
       TypeInfo<ArgsPart>::type(),
@@ -131,7 +131,7 @@ class APIDef<R(*)(Args...), Meta, UseArgNames>
   }
 
 public:
-  static constexpr auto value { compute() };
+  static constexpr auto value {compute()};
 };
 }
 
@@ -141,8 +141,8 @@ class APIDef<R(*)(Args...) noexcept, Meta, UseArgNames>
 
 template<auto func, typename Meta, bool UseArgNames = true>
 static constexpr const char *apidef
-  { APIDef<decltype(func), Meta, UseArgNames>::value.data() };
+  {APIDef<decltype(func), Meta, UseArgNames>::value.data()};
 
-}
+} // namespace CompStr
 
 #endif

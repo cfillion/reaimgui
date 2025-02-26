@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -68,20 +68,20 @@ static ImportTable *&lastImportTable()
 }
 
 Callable::Callable(const VerNum since, const VerNum until, const char *name)
-  : m_since { since }, m_until { until }
+  : m_since {since}, m_until {until}
 {
   if(since > latestVersion())
     latestVersion() = since;
   if(until != VerNum::MAX && until > latestVersion())
     latestVersion() = until;
 
-  auto [it, isNew] { callables().try_emplace(name, this) };
+  auto [it, isNew] {callables().try_emplace(name, this)};
   if(isNew)
     m_precursor = nullptr;
   else if(since >= it->second->m_since) {
     m_precursor = it->second;
     if(since < m_precursor->m_until)
-      throw reascript_error { "overlapping callable version range" };
+      throw reascript_error {"overlapping callable version range"};
     it->second = this;
   }
   else {
@@ -90,21 +90,21 @@ Callable::Callable(const VerNum since, const VerNum until, const char *name)
       precursor = precursor->m_precursor;
     m_precursor = precursor->m_precursor;
     if(until > precursor->m_since)
-      throw reascript_error { "overlapping callable version range" };
+      throw reascript_error {"overlapping callable version range"};
     precursor->m_precursor = this;
   }
 }
 
 const Callable *Callable::lookup(const VerNum version, const char *name)
 {
-  const auto &map { callables() };
-  const auto it { map.find(name) };
+  const auto &map {callables()};
+  const auto it {map.find(name)};
   return it == map.end() ? nullptr : it->second->rollback(version);
 }
 
 const Callable *Callable::rollback(const VerNum version) const
 {
-  const Callable *match { this };
+  const Callable *match {this};
   while(match && match->m_since > version)
     match = match->m_precursor;
   if(match && match->m_until <= version)
@@ -119,7 +119,7 @@ std::string Callable::serializeAll(const VerNum version)
   for(const auto &pair : callables()) {
     if(pair.first[0] == '_')
       continue;
-    const Callable *match { pair.second->rollback(version) };
+    const Callable *match {pair.second->rollback(version)};
     if(!match)
       continue;
     char flags {};
@@ -141,14 +141,14 @@ StoreLineNumber::StoreLineNumber(LineNumber line)
 
 Section::Section(const Section *parent, const char *file,
     const char *title, const char *help)
-  : parent { parent }, file { file }, title { title }, help { help }
+  : parent {parent}, file {file}, title {title}, help {help}
 {
   lastSection() = this;
 }
 
 Symbol::Symbol(const int flags)
-  : m_section { lastSection() }, m_next { lastSymbol() }, m_line { lastLine() },
-    m_flags { flags }
+  : m_section {lastSection()}, m_next {lastSymbol()}, m_line {lastLine()},
+    m_flags {flags}
 {
   lastSymbol() = this;
 }
@@ -167,18 +167,18 @@ static const char *extractRegName(const PluginRegisterBase &reg)
 constexpr bool isDefConstant(const char *definition)
 {
   using namespace std::literals;
-  constexpr std::string_view signature { "int\0\0"sv };
-  return std::string_view { definition, signature.size() } == signature;
+  constexpr std::string_view signature {"int\0\0"sv};
+  return std::string_view {definition, signature.size()} == signature;
 }
 
 ReaScriptFunc::ReaScriptFunc(const VerNum version, void *impl,
                              const PluginRegisterBase &native,
                              const PluginRegisterBase &reascript,
                              const PluginRegisterBase &desc)
-  : Callable { version, VerNum::MAX, extractRegName(native) },
-    Symbol { TargetNative | TargetScript |
-      (isDefConstant(desc.value<const char *>()) ? Constant : 0) },
-    m_impl { impl }, m_regs { native, reascript, desc }
+  : Callable {version, VerNum::MAX, extractRegName(native)},
+    Symbol {TargetNative | TargetScript |
+      (isDefConstant(desc.value<const char *>()) ? Constant : 0)},
+    m_impl {impl}, m_regs {native, reascript, desc}
 {
 }
 
@@ -195,8 +195,8 @@ const char *ReaScriptFunc::name() const
 
 EELFunc::EELFunc(const VerNum version, const char *name, const char *definition,
                  VarArgFunc impl, const int argc)
-  : Symbol { TargetEELFunc }, m_name { name }, m_definition { definition },
-    m_impl { impl }, m_version { version }, m_argc { std::max(1, argc) }
+  : Symbol {TargetEELFunc}, m_name {name}, m_definition {definition},
+    m_impl {impl}, m_version {version}, m_argc {std::max(1, argc)}
 {
   // std::max as workaround for EEL needing argc >= 1 because it does
   // nseel_resolve_named_symbol(..., np<1 ? 1 : np, ...)
@@ -213,23 +213,23 @@ void EELFunc::announce(const bool init) const
   if(!init)
     return;
 
-  constexpr int ExactArgCount { 1 };
+  constexpr int ExactArgCount {1};
   NSEEL_addfunc_varparm_ex(m_name, m_argc, ExactArgCount,
                          NSEEL_PProc_THIS, m_impl, &g_eelFuncs);
 }
 
 EELVar::EELVar(const VerNum version, const char *name, const char *definition)
-  : Symbol { TargetEELFunc | Variable },
-    m_name { name }, m_definition { definition }, m_version { version }
+  : Symbol {TargetEELFunc | Variable},
+    m_name {name}, m_definition {definition}, m_version {version}
 {
 }
 
 ShimFunc::ShimFunc(const VerNum since, const VerNum until,
                    const char *name, const char *definition,
                    void *safeImpl, void *varargImpl, void *unsafeImpl)
-  : Callable { since, until, name }, m_definition { definition },
-    m_safeImpl { safeImpl }, m_varargImpl { varargImpl },
-    m_unsafeImpl { unsafeImpl }, m_isConstant { isDefConstant(definition) }
+  : Callable {since, until, name}, m_definition {definition},
+    m_safeImpl {safeImpl}, m_varargImpl {varargImpl},
+    m_unsafeImpl {unsafeImpl}, m_isConstant {isDefConstant(definition)}
 {
 }
 
@@ -243,7 +243,7 @@ void ShimFunc::activate() const
 }
 
 ImportTable::ImportTable(const VerNum version, const size_t size)
-  : m_next { lastImportTable() }, m_ftable { offset(size) }, m_version { version }
+  : m_next {lastImportTable()}, m_ftable {offset(size)}, m_version {version}
 {
   lastImportTable() = this;
 }
@@ -255,8 +255,8 @@ void **ImportTable::offset(const size_t bytes)
 
 void ImportTable::resolve()
 {
-  for(void **func { offset(sizeof(*this)) }; func < m_ftable; ++func) {
-    const char *name { static_cast<const char *>(*func) };
+  for(void **func {offset(sizeof(*this))}; func < m_ftable; ++func) {
+    const char *name {static_cast<const char *>(*func)};
     *func = Callable::lookup(m_version, name)->unsafeImpl();
   }
 }
@@ -278,7 +278,7 @@ eel_function_table *API::eelFunctionTable()
 
 static void announceAll(const bool add)
 {
-  for(const Symbol *sym { lastSymbol() }; sym; sym = sym->m_next)
+  for(const Symbol *sym {lastSymbol()}; sym; sym = sym->m_next)
     sym->announce(add);
 }
 
@@ -286,7 +286,7 @@ void API::setup()
 {
   announceAll(true);
 
-  for(ImportTable *tbl { lastImportTable() }; tbl; tbl = tbl->m_next)
+  for(ImportTable *tbl {lastImportTable()}; tbl; tbl = tbl->m_next)
     tbl->resolve();
 }
 

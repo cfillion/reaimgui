@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -35,7 +35,7 @@
 // avoid bogus "not all control paths return a value" warning with enum class
 #  define UNREACHABLE __assume(false)
 constexpr DWORD DIALOG_STYLE
-  { DS_MODALFRAME | WS_POPUP | WS_SYSMENU | WS_CAPTION };
+  {DS_MODALFRAME | WS_POPUP | WS_SYSMENU | WS_CAPTION};
 #else
 #  include <swell/swell.h>
 #  include <swell/swell-dlggen.h>
@@ -93,14 +93,14 @@ std::ostream &operator<<(std::ostream &stream, const Box &b)
 }
 
 struct Dimension {
-  static constexpr int DEF_MARGIN { 4 };
+  static constexpr int DEF_MARGIN {4};
 
-  Dimension() : base {}, margin { DEF_MARGIN }, canStretch {} {}
-  Dimension(int base) : Dimension { base, DEF_MARGIN } {}
+  Dimension() : base {}, margin {DEF_MARGIN}, canStretch {} {}
+  Dimension(int base) : Dimension {base, DEF_MARGIN} {}
   Dimension(int base, int margin)
-    : base { base }, margin { margin }, canStretch { base < 1 } {};
+    : base {base }, margin {margin}, canStretch {base < 1} {};
   Dimension(int base, int margin, bool canStretch)
-    : base { base }, margin { margin }, canStretch { canStretch } {}
+    : base {base }, margin {margin}, canStretch {canStretch} {}
 
   int base, margin;
   bool canStretch;
@@ -108,8 +108,8 @@ struct Dimension {
 
 struct Size {
   Size() : width {}, height {} {}
-  Size(int w, int h) : width { w }, height { h } {}
-  Size(Dimension w, Dimension h) : width { w }, height { h } {}
+  Size(int w, int h) : width {w}, height {h} {}
+  Size(Dimension w, Dimension h) : width {w}, height {h} {}
 
   void merge(const Size &, Axis, bool includeMargin);
   Dimension &operator[](Axis);
@@ -122,7 +122,7 @@ struct Size {
 
 class StringLiteral {
 public:
-  StringLiteral(const char *str) : m_str { str } {}
+  StringLiteral(const char *str) : m_str {str} {}
   std::ostream &operator()(std::ostream &) const;
 
 private:
@@ -137,7 +137,7 @@ std::ostream &operator<<(std::ostream &stream, const StringLiteral &lit)
 std::ostream &StringLiteral::operator()(std::ostream &stream) const
 {
   stream << '"';
-  for(const char *p { m_str }; *p; ++p) {
+  for(const char *p {m_str}; *p; ++p) {
     switch(*p) {
     case '\\':
       stream << "\\\\";
@@ -233,7 +233,7 @@ using WidgetList = std::initializer_list<Widget>;
 
 class WidgetVisitor {
 public:
-  WidgetVisitor(const Widget &widget) : m_widget { widget } {}
+  WidgetVisitor(const Widget &widget) : m_widget {widget} {}
 
   Size size() const;
   void output(const Box &box) const;
@@ -245,7 +245,7 @@ private:
 class NamedWidget {
 public:
   NamedWidget(int id, const char *label, Size size)
-    : m_id { id }, m_label { label }, m_size { size } {}
+    : m_id {id}, m_label {label}, m_size {size} {}
   Size size() const { return m_size; }
 
 protected:
@@ -282,7 +282,7 @@ private:
 
 class Dummy {
 public:
-  Dummy(int w, int h) : m_size { { w, 0 }, { h, 0 } } {} // no margin
+  Dummy(int w, int h) : m_size {{w, 0}, {h, 0}} {} // no margin
   Size size() const { return m_size; }
   void output(const Box &) const {}
 
@@ -343,8 +343,8 @@ private:
 
 template<Axis axis>
 struct MakeLayout : Layout {
-  MakeLayout(WidgetList w) : Layout { axis, Align::Start, w } {}
-  MakeLayout(Align align, WidgetList w) : Layout { axis, align, w } {}
+  MakeLayout(WidgetList w) : Layout {axis, Align::Start, w} {}
+  MakeLayout(Align align, WidgetList w) : Layout {axis, align, w} {}
 };
 
 using HLayout = MakeLayout<Axis::Horizontal>;
@@ -373,7 +373,7 @@ void WidgetVisitor::output(const Box &box) const
 }
 
 Button::Button(const int id, const char *label, const int w, const bool isDefault)
-  : NamedWidget { id, label, { w, 14 }}, m_default { isDefault }
+  : NamedWidget {id, label, {w, 14}}, m_default {isDefault}
 {
 }
 
@@ -384,12 +384,12 @@ void Button::output(const Box &box) const
 }
 
 #ifdef _WIN32
-constexpr int comboBoxHeight { 14 };
+constexpr int comboBoxHeight {14};
 #else
-constexpr int comboBoxHeight { 12 }; // special case for SWELL
+constexpr int comboBoxHeight {12}; // special case for SWELL
 #endif
 ComboBox::ComboBox(const int id, const int w)
-  : m_id { id }, m_size { w, comboBoxHeight }
+  : m_id {id}, m_size {w, comboBoxHeight}
 {
 }
 
@@ -400,7 +400,7 @@ void ComboBox::output(const Box &box) const
 }
 
 CheckBox::CheckBox(const int id, const char *label)
-  : NamedWidget { id, label, { { 0, 2 }, { 10, 2 } } }
+  : NamedWidget {id, label, {{0, 2}, {10, 2}}}
 {
 }
 
@@ -411,7 +411,7 @@ void CheckBox::output(const Box &box) const
 }
 
 EditText::EditText(const int id, const int w, const int h, const DWORD style)
-  : m_id { id }, m_style { style }, m_size { w, h }
+  : m_id {id}, m_style {style}, m_size {w, h}
 {
 }
 
@@ -421,7 +421,7 @@ void EditText::output(const Box &box) const
 }
 
 GroupBox::GroupBox(const int id, const char *label, const Widget &widget)
-  : NamedWidget { id, label, {} }, m_widget { widget }
+  : NamedWidget {id, label, {}}, m_widget {widget}
 {
 }
 
@@ -430,34 +430,34 @@ void GroupBox::output(const Box &box) const
   g_rc->out << "  GROUPBOX " << StringLiteral(m_label) << ", " << m_id << ", "
             << box << '\n';
 
-  constexpr int PAD { 7 }, FROM_TOP { 11 - PAD };
-  Box contentBox { box };
+  constexpr int PAD {7}, FROM_TOP {11 - PAD};
+  Box contentBox {box};
   contentBox.addPadding(7);
   contentBox.y += FROM_TOP, contentBox.h -= FROM_TOP;
-  WidgetVisitor { m_widget }.output(contentBox);
+  WidgetVisitor {m_widget}.output(contentBox);
 }
 
 Indent::Indent(const Widget &widget)
-  : m_size { WidgetVisitor { widget }.size() }, m_widget { widget }
+  : m_size {WidgetVisitor {widget}.size()}, m_widget {widget}
 {
 }
 
 void Indent::output(const Box &box) const
 {
-  Box contentBox { box };
+  Box contentBox {box};
   contentBox.x += 12;
   contentBox.w -= 12;
 
   g_rc->out << "  // -->\n";
-  WidgetVisitor { m_widget }.output(contentBox);
+  WidgetVisitor {m_widget}.output(contentBox);
   g_rc->out << "  // <--\n";
 }
 
 Layout::Layout(const Axis axis, const Align align, WidgetList widgets)
-  : m_axis { axis }, m_align { align }, m_size {}, m_widgets(widgets)
+  : m_axis {axis}, m_align {align}, m_size {}, m_widgets(widgets)
 {
   for(const Widget &widget : widgets) {
-    const Size size { WidgetVisitor { widget }.size() };
+    const Size size {WidgetVisitor {widget}.size() };
     m_size.merge(size, m_axis, &widget != &*std::rbegin(widgets));
   }
 
@@ -467,7 +467,7 @@ Layout::Layout(const Axis axis, const Align align, WidgetList widgets)
 
 std::vector<Box> Layout::layout(const Box &parentBox) const
 {
-  int x { parentBox.x }, y { parentBox.y };
+  int x {parentBox.x}, y {parentBox.y};
   std::vector<Box> boxes;
   boxes.reserve(m_widgets.size());
 
@@ -484,8 +484,8 @@ std::vector<Box> Layout::layout(const Box &parentBox) const
   // populate boxes with base positions and count stretchable widgets
   int canStretchCount {};
   for(const Widget &widget : m_widgets) {
-    Size size { WidgetVisitor { widget }.size() };
-    int offAxisRemaining { parentBox.size(!m_axis) - size[!m_axis].base };
+    Size size {WidgetVisitor {widget}.size() };
+    int offAxisRemaining {parentBox.size(!m_axis) - size[!m_axis].base};
     if(offAxisRemaining > 0) {
       if(size[!m_axis].canStretch) {
         size[!m_axis].base = parentBox.size(!m_axis);
@@ -496,7 +496,7 @@ std::vector<Box> Layout::layout(const Box &parentBox) const
       else if(m_align == Align::Middle)
         offAxisRemaining /= 2;
     }
-    boxes.push_back({ x, y, size.width.base, size.height.base });
+    boxes.push_back({x, y, size.width.base, size.height.base});
     if(offAxisRemaining > 0)
       boxes.back().pos(!m_axis) += offAxisRemaining;
 
@@ -508,15 +508,15 @@ std::vector<Box> Layout::layout(const Box &parentBox) const
   }
 
   // adjust positions for alignment and stretching
-  const int used { *pos - parentBox.pos(m_axis) };
-  int remaining { parentBox.size(m_axis) - used };
+  const int used {*pos - parentBox.pos(m_axis)};
+  int remaining {parentBox.size(m_axis) - used};
   if(remaining > 0) {
     if(canStretchCount > 0) {
-      const int stretchSize { remaining / canStretchCount };
+      const int stretchSize {remaining / canStretchCount};
       int stretchedCount {};
-      auto widgetBox { boxes.begin() };
+      auto widgetBox {boxes.begin()};
       for(const Widget &widget : m_widgets) {
-        const Size size { WidgetVisitor { widget }.size() };
+        const Size size {WidgetVisitor {widget}.size()};
         widgetBox->pos(m_axis) += stretchSize * stretchedCount;
         if(size[m_axis].canStretch) {
           widgetBox->size(m_axis) += stretchSize;
@@ -538,10 +538,10 @@ std::vector<Box> Layout::layout(const Box &parentBox) const
 
 void Layout::output(const Box &box) const
 {
-  const std::vector<Box> &boxes { layout(box) };
-  auto widgetBox { boxes.begin() };
+  const std::vector<Box> &boxes {layout(box)};
+  auto widgetBox {boxes.begin()};
   for(const Widget &widget : m_widgets)
-    WidgetVisitor { widget }.output(*widgetBox++);
+    WidgetVisitor {widget}.output(*widgetBox++);
 }
 
 void Spacing::output(const Box &) const
@@ -551,7 +551,7 @@ void Spacing::output(const Box &) const
 
 static int countLines(const char *label)
 {
-  int count { 1 };
+  int count {1};
   while(*label) {
     if(*label++ == '\n')
       ++count;
@@ -561,7 +561,7 @@ static int countLines(const char *label)
 
 // recommended spacing between paragraphs is 8 but that's a bit too much
 Text::Text(const int id, const char *label, int width)
-  : NamedWidget { id, label, { width, 8 * countLines(label) } }
+  : NamedWidget {id, label, {width, 8 * countLines(label)}}
 {
 }
 
@@ -582,7 +582,7 @@ private:
 
 Dialog::Dialog(int id, const char *title, int x, int y, int w, int h,
     DWORD style, DWORD exstyle, Widget widget)
-  : m_box { 0, 0, w, h }
+  : m_box {0, 0, w, h}
 {
   g_rc->out << '\n';
 
@@ -593,14 +593,14 @@ Dialog::Dialog(int id, const char *title, int x, int y, int w, int h,
             << "EXSTYLE " << exstyle << '\n'
             << "FONT    8, " << StringLiteral("MS Shell Dlg") << '\n';
 #else
-  int flags { SWELL_DLG_WS_FLIPPED | SWELL_DLG_WS_NOAUTOSIZE };
+  int flags {SWELL_DLG_WS_FLIPPED | SWELL_DLG_WS_NOAUTOSIZE};
   if(style & WS_CHILD)
     flags |= SWELL_DLG_WS_CHILD;
 
 #  ifdef __APPLE__
-  constexpr double dluScale { 1.7 };
+  constexpr double dluScale {1.7};
 #  else
-  constexpr double dluScale { 1.9 };
+  constexpr double dluScale {1.9};
 #  endif
 
   g_rc->out << "SWELL_DEFINE_DIALOG_RESOURCE_BEGIN("
@@ -612,7 +612,7 @@ Dialog::Dialog(int id, const char *title, int x, int y, int w, int h,
     m_box.addPadding(7);
 
   g_rc->out << "BEGIN\n";
-  WidgetVisitor { widget }.output(m_box);
+  WidgetVisitor {widget}.output(m_box);
   g_rc->out << "END\n";
 
 #ifndef _WIN32
@@ -621,7 +621,7 @@ Dialog::Dialog(int id, const char *title, int x, int y, int w, int h,
 }
 
 OutputRC::OutputRC(std::ostream &stream)
-  : out { stream }, m_prev { g_rc }
+  : out {stream}, m_prev {g_rc}
 {
   g_rc = this;
 #ifdef _WIN32
@@ -634,48 +634,48 @@ OutputRC::OutputRC(std::ostream &stream)
 
 int main()
 {
-  OutputRC rc { std::cout };
+  OutputRC rc {std::cout};
 
-  Dialog { IDD_SETTINGS, "", 0, 0, 319, 240,
-           DS_CONTROL | WS_CHILD, WS_EX_CONTROLPARENT,
-    GroupBox { IDC_GROUPBOX, "ReaImGui settings", VLayout {
-      CheckBox { IDC_SAVEDSETTINGS, "" },
+  Dialog {IDD_SETTINGS, "", 0, 0, 319, 240,
+          DS_CONTROL | WS_CHILD, WS_EX_CONTROLPARENT,
+    GroupBox {IDC_GROUPBOX, "ReaImGui settings", VLayout {
+      CheckBox {IDC_SAVEDSETTINGS, ""},
       Spacing {},
-      CheckBox { IDC_DOCKINGENABLE, "" },
-      Indent { VLayout {
-        CheckBox { IDC_DOCKWITHSHIFT,   "" },
-        CheckBox { IDC_DOCKSPLIT,       "" },
-        CheckBox { IDC_DOCKTRANSPARENT, "" },
+      CheckBox {IDC_DOCKINGENABLE, ""},
+      Indent {VLayout {
+        CheckBox {IDC_DOCKWITHSHIFT,   ""},
+        CheckBox {IDC_DOCKSPLIT,       ""},
+        CheckBox {IDC_DOCKTRANSPARENT, ""},
       }},
       Spacing {},
 
-      HLayout { Align::Middle, {
-        Text { IDC_RENDERERTXT, "", 98 },
-        ComboBox { IDC_RENDERER, 72 },
-        CheckBox { IDC_FORCESOFTWARE, "" },
+      HLayout {Align::Middle, {
+        Text {IDC_RENDERERTXT, "", 98},
+        ComboBox {IDC_RENDERER, 72},
+        CheckBox {IDC_FORCESOFTWARE, ""},
       }},
       Spacing {},
 
-      Dummy { 0, 0 },
+      Dummy {0, 0},
 
-      HLayout { Align::End, {
-        Text { IDC_VERSION, "v" REAIMGUI_VERSION }, // no WS_DISABLED for SWELL
-        Button { IDC_RESETDEFAULTS, "Restore defaults", 70 },
+      HLayout {Align::End, {
+        Text {IDC_VERSION, "v" REAIMGUI_VERSION}, // no WS_DISABLED for SWELL
+        Button {IDC_RESETDEFAULTS, "Restore defaults", 70},
       }},
     }},
   };
 
-  Dialog { IDD_ERROR, "", 50, 50, 320, 114, DIALOG_STYLE, 0, VLayout {
-    Dummy { 0, 12 },
-    Text  { IDC_MESSAGE, "\n\n" },
-    EditText { IDC_REPORT, 0, 0, WS_VSCROLL | ES_MULTILINE | ES_READONLY },
+  Dialog {IDD_ERROR, "", 50, 50, 320, 114, DIALOG_STYLE, 0, VLayout {
+    Dummy {0, 12},
+    Text  {IDC_MESSAGE, "\n\n"},
+    EditText {IDC_REPORT, 0, 0, WS_VSCROLL | ES_MULTILINE | ES_READONLY},
     HLayout {
-      Button { IDC_SETTINGS, "ReaImGui &settings...", 80 },
-      HLayout { Align::End, {
-        Button { IDC_PREV, "←" },
-        Button { IDC_NEXT, "→" },
+      Button {IDC_SETTINGS, "ReaImGui &settings...", 80},
+      HLayout {Align::End, {
+        Button {IDC_PREV, "←"},
+        Button {IDC_NEXT, "→"},
         Spacing {},
-        Button { IDOK, "&Close", 50, true },
+        Button {IDOK, "&Close", 50, true},
       }},
     },
   }};

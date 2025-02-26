@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -28,8 +28,8 @@
 inline std::string narrow(const std::wstring_view &input,
   const unsigned int codepage = CP_UTF8)
 {
-  const int size { WideCharToMultiByte(codepage, 0,
-    input.data(), input.size(), nullptr, 0, nullptr, nullptr) };
+  const int size {WideCharToMultiByte(codepage, 0,
+    input.data(), input.size(), nullptr, 0, nullptr, nullptr)};
 
   std::string output(size, L'\0');
   WideCharToMultiByte(codepage, 0, input.data(), input.size(),

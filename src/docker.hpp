@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -62,7 +62,7 @@ private:
 
 class DockerList {
 public:
-  static constexpr size_t DOCKER_COUNT { 16 };
+  static constexpr size_t DOCKER_COUNT {16};
 
   DockerList();
   void drawAll();

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -55,8 +55,8 @@ static void createViewport(ImGuiViewport *viewport)
 {
   Viewport *instance;
 
-  if(Docker *docker { Context::current()->dockers().findByViewport(viewport) })
-    instance = new DockerHost { docker, viewport };
+  if(Docker *docker {Context::current()->dockers().findByViewport(viewport)})
+    instance = new DockerHost {docker, viewport};
   else
     instance = Platform::createWindow(viewport);
 
@@ -76,7 +76,7 @@ static void createViewport(ImGuiViewport *viewport)
 
 static void destroyViewport(ImGuiViewport *viewport)
 {
-  if(Viewport *instance { static_cast<Viewport *>(viewport->PlatformUserData) }) {
+  if(Viewport *instance {static_cast<Viewport *>(viewport->PlatformUserData)}) {
     instance->destroy();
     delete instance;
   }
@@ -86,7 +86,7 @@ static void destroyViewport(ImGuiViewport *viewport)
 }
 
 Viewport::Viewport(ImGuiViewport *viewport)
-  : m_ctx { Context::current() }, m_viewport { viewport }
+  : m_ctx {Context::current()}, m_viewport {viewport}
 {
 }
 
@@ -98,7 +98,7 @@ void Viewport::install()
 {
   using Forwarder = ViewportForwarder<&ImGuiViewport::PlatformUserData>;
 
-  ImGuiPlatformIO &pio { ImGui::GetPlatformIO() };
+  ImGuiPlatformIO &pio {ImGui::GetPlatformIO()};
   pio.Platform_CreateWindow       = &createViewport;
   pio.Platform_DestroyWindow      = &destroyViewport;
   pio.Platform_ShowWindow         = &Forwarder::wrap<&Viewport::show>;
@@ -115,7 +115,7 @@ void Viewport::install()
   pio.Platform_GetWindowDpiScale  = &Forwarder::wrap<&Viewport::scaleFactor>;
   pio.Platform_OnChangedViewport  = &Forwarder::wrap<&Viewport::onChanged>;
 
-  ImGuiIO &io { ImGui::GetIO() };
+  ImGuiIO &io {ImGui::GetIO()};
   io.SetPlatformImeDataFn = &Forwarder::wrap<&Viewport::setIME>;
 
   new MainViewport; // lifetime managed by Dear ImGui
@@ -152,7 +152,7 @@ ImVec2 Viewport::getSize() const
 }
 
 MainViewport::MainViewport()
-  : Viewport { ImGui::GetMainViewport() }, m_hwnd { GetMainHwnd() }
+  : Viewport {ImGui::GetMainViewport()}, m_hwnd {GetMainHwnd()}
 {
   m_viewport->PlatformUserData = this;
   m_viewport->PlatformHandle = m_hwnd;

@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -24,11 +24,11 @@
 
 class Comparator {
 public:
-  Comparator(const TextureManager *manager) : m_manager { manager } {}
+  Comparator(const TextureManager *manager) : m_manager {manager} {}
 
   bool operator()(const size_t ida, const size_t idb) const
   {
-    const Texture &a { m_manager->get(ida) }, &b { m_manager->get(idb) };
+    const Texture &a {m_manager->get(ida)}, &b {m_manager->get(idb)};
     if(a.object() == b.object())
       return a.scale() < b.scale();
     return a.object() < b.object();
@@ -65,14 +65,14 @@ TextureManager::TextureManager()
 
 size_t TextureManager::touch(Texture &&tex)
 {
-  const Comparator comparator { this };
+  const Comparator comparator {this};
   const auto [begin, end]
-    { std::equal_range(m_sorted.begin(), m_sorted.end(), tex.m_user, comparator) };
-  auto it { std::lower_bound(begin, end, tex.m_scale, comparator) };
+    {std::equal_range(m_sorted.begin(), m_sorted.end(), tex.m_user, comparator)};
+  auto it {std::lower_bound(begin, end, tex.m_scale, comparator)};
 
   if(it == end || !m_textures[*it].isSame(tex.m_user, tex.m_scale)) {
     tex.m_version = m_version;
-    const Texture &inserted { m_textures.emplace_back(std::move(tex)) };
+    const Texture &inserted {m_textures.emplace_back(std::move(tex))};
     it = m_sorted.emplace(it, &inserted - &m_textures.front());
     ++m_version;
   }
@@ -84,11 +84,11 @@ size_t TextureManager::touch(Texture &&tex)
 
 void TextureManager::invalidate(void *object)
 {
-  const Comparator comparator { this };
+  const Comparator comparator {this};
   const auto [begin, end]
-    { equal_range(m_sorted.begin(), m_sorted.end(), object, comparator) };
+    {equal_range(m_sorted.begin(), m_sorted.end(), object, comparator)};
 
-  for(auto it { begin }; it < end; ++it)
+  for(auto it {begin}; it < end; ++it)
     ++(m_textures[*it].m_version);
 
   ++m_version;
@@ -96,25 +96,25 @@ void TextureManager::invalidate(void *object)
 
 void TextureManager::remove(void *object)
 {
-  const Comparator comparator { this };
+  const Comparator comparator {this};
   const auto [begin, end]
-    { std::equal_range(m_sorted.begin(), m_sorted.end(), object, comparator) };
+    {std::equal_range(m_sorted.begin(), m_sorted.end(), object, comparator)};
 
   if(begin == end)
     return;
 
   std::sort(begin, end);
-  const size_t first { *begin }, last { *std::prev(end) };
+  const size_t first {*begin}, last {*std::prev(end)};
 
   size_t i {};
   m_textures.erase(std::remove_if(m_textures.begin(), m_textures.end(),
   [&](const Texture &) {
-    const bool rm { i >= first && i <= last };
+    const bool rm {i >= first && i <= last};
     ++i;
     return rm;
   }), m_textures.end());
 
-  const auto rangeSize { end - begin };
+  const auto rangeSize {end - begin};
   for(size_t &i : m_sorted) {
     if(i >= *begin)
       i -= rangeSize;
@@ -126,13 +126,13 @@ void TextureManager::remove(void *object)
 
 void TextureManager::cleanup()
 {
-  const float ttl { ImGui::GetIO().ConfigMemoryCompactTimer };
-  const auto cutoff { static_cast<float>(ImGui::GetTime()) - ttl };
-  const auto isExpired { [cutoff](const Texture &tex) {
+  const float ttl {ImGui::GetIO().ConfigMemoryCompactTimer};
+  const auto cutoff {static_cast<float>(ImGui::GetTime()) - ttl};
+  const auto isExpired {[cutoff](const Texture &tex) {
     return !tex.isValid() || (tex.m_lastTimeActive <= cutoff && tex.compact());
   }};
   const auto newEnd
-    { std::remove_if(m_textures.begin(), m_textures.end(), isExpired) };
+    {std::remove_if(m_textures.begin(), m_textures.end(), isExpired)};
 
   if(newEnd == m_textures.end())
     return;
@@ -141,7 +141,7 @@ void TextureManager::cleanup()
   m_textures.erase(newEnd, m_textures.end());
   m_sorted.resize(m_textures.size());
   std::iota(m_sorted.begin(), m_sorted.end(), 0);
-  std::sort(m_sorted.begin(), m_sorted.end(), Comparator { this });
+  std::sort(m_sorted.begin(), m_sorted.end(), Comparator {this});
 }
 
 void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) const
@@ -155,7 +155,7 @@ void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) 
   // allow selecting only textures of a given scale (eg. if the GDK backend
   // ever gain multi-DPI capability.)
 
-  const auto NullCmd { static_cast<TextureCmd::Type>(-1) };
+  const auto NullCmd {static_cast<TextureCmd::Type>(-1)};
 
   if(m_version == cookie->m_version)
     return;
@@ -163,12 +163,12 @@ void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) 
   cookie->m_version = m_version;
   cookie->m_crumbs.reserve(m_textures.size());
 
-  TextureCmd cmd { this, NullCmd };
+  TextureCmd cmd {this, NullCmd};
 
   for(size_t i {}, j {}; i < m_textures.size() &&
                          j < cookie->m_crumbs.size(); ++i, ++j) {
-    const Texture &tex { m_textures[i] };
-    const auto &crumb { cookie->m_crumbs[j] };
+    const Texture &tex {m_textures[i]};
+    const auto &crumb {cookie->m_crumbs[j]};
 
     TextureCmd::Type wantCmd;
 
@@ -206,8 +206,8 @@ void TextureManager::update(TextureCookie *cookie, const CommandRunner &runner) 
     cookie->doCommand(cmd);
   }
 
-  if(const auto diff { static_cast<long long>(cookie->m_crumbs.size()) -
-                       static_cast<long long>(m_textures.size()) }) {
+  if(const auto diff {static_cast<long long>(cookie->m_crumbs.size()) -
+                      static_cast<long long>(m_textures.size())}) {
     if(diff < 0) {
       cmd.type = TextureCmd::Insert;
       cmd.offset = cookie->m_crumbs.size();
@@ -230,21 +230,21 @@ TextureCookie::TextureCookie()
 
 void TextureCookie::doCommand(const TextureCmd &cmd)
 {
-  auto crumb { m_crumbs.begin() + cmd.offset };
+  auto crumb {m_crumbs.begin() + cmd.offset};
 
   switch(cmd.type) {
   case TextureCmd::Insert: {
     // assumes the manager stores textures contiguously!
-    const Texture *tex { &cmd.manager->get(cmd.offset) };
+    const Texture *tex {&cmd.manager->get(cmd.offset)};
     std::transform(tex, tex + cmd.size, std::inserter(m_crumbs, crumb),
       [](const Texture &tex) {
-        return Crumb { tex.m_user, tex.m_scale, tex.m_version };
+        return Crumb {tex.m_user, tex.m_scale, tex.m_version};
       });
     break;
   }
   case TextureCmd::Update: {
-    auto texture { &cmd.manager->get(cmd.offset) };
-    const auto end { crumb + cmd.size };
+    auto texture {&cmd.manager->get(cmd.offset)};
+    const auto end {crumb + cmd.size};
     while(crumb < end)
       (crumb++)->version = (texture++)->m_version;
     break;

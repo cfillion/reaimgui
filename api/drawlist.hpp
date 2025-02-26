@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -26,7 +26,7 @@
 struct DrawListProxy : ResourceProxy<DrawListProxy, Context, ImDrawList> {
   template<Key KeyValue, auto GetterFunc>
   struct Getter {
-    static constexpr Key key { KeyValue };
+    static constexpr Key key {KeyValue};
     static auto get(Context *ctx)
     {
       assertFrame(ctx);

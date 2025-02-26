@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +47,7 @@ public:
   template<typename T = void>
   static T invoke(Data *data)
   {
-    SetData raii { data };
+    SetData raii {data};
     storeVars(function());
     function()->execute();
     loadVars(function());
@@ -77,9 +77,9 @@ private:
   static void assertValid()
   {
     if(!s_data)
-      throw reascript_error { "cannot be used outside of a callback" };
+      throw reascript_error {"cannot be used outside of a callback"};
     if(API::lastError())
-      throw reascript_error { "an error occurred during callback execution" };
+      throw reascript_error {"an error occurred during callback execution"};
   }
 };
 

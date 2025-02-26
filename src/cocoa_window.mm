@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -47,7 +47,7 @@ static_assert(__has_feature(objc_arc),
 @end
 
 CocoaWindow::CocoaWindow(ImGuiViewport *viewport, DockerHost *dockerHost)
-  : Window { viewport, dockerHost }
+  : Window {viewport, dockerHost}
 {
 }
 
@@ -61,7 +61,7 @@ void CocoaWindow::create()
   m_view = (__bridge NSView *)m_hwnd; // SWELL_hwndChild inherits from NSView
   m_inputView = [[InputView alloc] initWithWindow:this];
 
-  NSWindow *window { [m_view window] };
+  NSWindow *window {[m_view window]};
   m_defaultStyleMask = [window styleMask];
   m_previousScale = m_viewport->DpiScale;
   m_previousFlags = ~m_viewport->Flags; // mark all as modified
@@ -100,23 +100,23 @@ void CocoaWindow::setPosition(ImVec2 pos)
 {
   Platform::scalePosition(&pos, true);
 
-  NSWindow *window { [m_view window] };
-  const NSRect &content { [window contentRectForFrameRect:[window frame]] };
-  const CGFloat titleBarHeight { [window frame].size.height - content.size.height };
+  NSWindow *window {[m_view window]};
+  const NSRect &content {[window contentRectForFrameRect:[window frame]]};
+  const CGFloat titleBarHeight {[window frame].size.height - content.size.height};
   [window setFrameTopLeftPoint:NSMakePoint(pos.x, pos.y + titleBarHeight)];
 }
 
 void CocoaWindow::setSize(const ImVec2 size)
 {
   // most scripts expect y=0 to be the top of the window
-  NSWindow *window { [m_view window] };
+  NSWindow *window {[m_view window]};
   [window setContentSize:NSMakeSize(size.x, size.y)];
   setPosition(m_viewport->Pos); // preserve y position from the top
 }
 
 void CocoaWindow::setFocus()
 {
-  NSWindow *window { [m_view window] };
+  NSWindow *window {[m_view window]};
   [window makeKeyAndOrderFront:nil];
   [window makeFirstResponder:m_inputView];
 }
@@ -127,7 +127,7 @@ bool CocoaWindow::hasFocus() const
   // returning true here in this case is important, otherwise
   // Context::updateFocus would misdetect no active windows when it's called
   // from EventHandler::windowDidResignKey
-  HWND focus { GetFocus() };
+  const HWND focus {GetFocus()};
   return focus == (__bridge HWND)m_inputView || focus == m_hwnd;
 }
 
@@ -138,14 +138,14 @@ void CocoaWindow::setTitle(const char *title)
 
 void CocoaWindow::setAlpha(const float alpha)
 {
-  NSWindow *window { [m_view window] };
+  NSWindow *window {[m_view window]};
   [window setAlphaValue:alpha];
 }
 
 void CocoaWindow::update()
 {
   // restore keyboard focus to the input view when switching to our docker tab
-  static bool no_wm_setfocus { atof(GetAppVersion()) < 6.53 };
+  static bool no_wm_setfocus {atof(GetAppVersion()) < 6.53};
   if(no_wm_setfocus && GetFocus() == m_hwnd)
     setFocus();
 
@@ -159,15 +159,15 @@ void CocoaWindow::update()
   if(isDocked())
     return;
 
-  const ImGuiViewportFlags diff { m_previousFlags ^ m_viewport->Flags };
+  const ImGuiViewportFlags diff {m_previousFlags ^ m_viewport->Flags};
   m_previousFlags = m_viewport->Flags;
 
-  NSWindow *window { [m_view window] };
+  NSWindow *window {[m_view window]};
 
   if(diff & ImGuiViewportFlags_NoDecoration) {
     if(m_viewport->Flags & ImGuiViewportFlags_NoDecoration) {
       DetachWindowTopmostButton(m_hwnd, false);
-      NSString *title { [window title] };
+      NSString *title {[window title]};
       [window setStyleMask:NSWindowStyleMaskBorderless]; // also clears the title
       [window setTitle:title];
     }
@@ -185,7 +185,7 @@ void CocoaWindow::update()
     //
     // 0=normal/1=topmost as observed via a breakpoint when clicking on
     // AttachWindowTopmostButton's thumbstack button.
-    const bool topmost { (m_viewport->Flags & ImGuiViewportFlags_TopMost) != 0 };
+    const bool topmost {(m_viewport->Flags & ImGuiViewportFlags_TopMost) != 0};
     SWELL_SetWindowWantRaiseAmt(m_hwnd, topmost);
   }
 
@@ -193,13 +193,13 @@ void CocoaWindow::update()
   // (shadows wouldn't be updated along with the contents until next resize)
   if(diff & ImGuiViewportFlags_NoRendererClear) {
     const bool opaque
-      { (m_viewport->Flags & ImGuiViewportFlags_NoRendererClear) != 0 };
+      {(m_viewport->Flags & ImGuiViewportFlags_NoRendererClear) != 0};
     [window setHasShadow:opaque];
   }
 
   if(diff & ImGuiViewportFlags_NoInputs) {
     const bool hitTestTransparent
-      { (m_viewport->Flags & ImGuiViewportFlags_NoInputs) != 0 };
+      {(m_viewport->Flags & ImGuiViewportFlags_NoInputs) != 0};
     [window setIgnoresMouseEvents:hitTestTransparent];
   }
 }
@@ -212,12 +212,12 @@ float CocoaWindow::scaleFactor() const
 void CocoaWindow::setIME(ImGuiPlatformImeData *data)
 {
   if(!data->WantVisible) {
-    NSTextInputContext *inputContext { [m_inputView inputContext] };
+    NSTextInputContext *inputContext {[m_inputView inputContext]};
     [inputContext discardMarkedText];
     [inputContext invalidateCharacterCoordinates];
   }
 
-  ImVec2 pos { data->InputPos };
+  ImVec2 pos {data->InputPos};
   Platform::scalePosition(&pos, true);
   pos.y -= data->InputLineHeight;
 
@@ -236,9 +236,9 @@ std::optional<LRESULT> CocoaWindow::handleMessage
     // Both makeFirstResponder and making the window key are required
     // for receiving key events right away without a click
     const bool focusOnAppearing
-      { !(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing) };
+      {!(m_viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)};
     if(focusOnAppearing || IsWindowVisible(m_hwnd)) {
-      HWND hwndCache { m_hwnd };
+      const HWND hwndCache {m_hwnd};
       dispatch_async(dispatch_get_main_queue(), ^{
         if(IsWindow(hwndCache)) // if we didn't get destroyed in the meantime
           setFocus();
@@ -254,7 +254,7 @@ std::optional<LRESULT> CocoaWindow::handleMessage
   case WM_MOUSEHWHEEL:
     // [NSWindow setIgnoresMouseEvents] does not include mouse wheel events
     if(m_viewport->Flags & ImGuiViewportFlags_NoInputs) {
-      HWND target { Platform::windowFromPoint(Platform::getCursorPos()) };
+      HWND target {Platform::windowFromPoint(Platform::getCursorPos())};
       if(target && target != m_hwnd) {
         [(__bridge NSView *)target scrollWheel:[NSApp currentEvent]];
         return 0;
@@ -278,14 +278,14 @@ void Window::updateModifiers()
 
   struct Modifiers { int vkey; ImGuiKey key; };
   constexpr Modifiers modifiers[] {
-    { kCGEventFlagMaskControl,   ImGuiMod_Ctrl  },
-    { kCGEventFlagMaskCommand,   ImGuiMod_Super },
-    { kCGEventFlagMaskShift,     ImGuiMod_Shift },
-    { kCGEventFlagMaskAlternate, ImGuiMod_Alt   },
+    {kCGEventFlagMaskControl,   ImGuiMod_Ctrl },
+    {kCGEventFlagMaskCommand,   ImGuiMod_Super},
+    {kCGEventFlagMaskShift,     ImGuiMod_Shift},
+    {kCGEventFlagMaskAlternate, ImGuiMod_Alt  },
   };
 
   const CGEventFlags state
-    { CGEventSourceFlagsState(kCGEventSourceStateCombinedSessionState) };
+    {CGEventSourceFlagsState(kCGEventSourceStateCombinedSessionState)};
 
   for(const auto &modifier : modifiers) {
     if(state & modifier.vkey)

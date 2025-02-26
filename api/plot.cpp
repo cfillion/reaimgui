@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -23,7 +23,7 @@ API_SECTION("Plot", "Simple data plotting using reaper_array as data source.");
 
 static float getArrayValue(void *data, const int index)
 {
-  const double value { static_cast<double *>(data)[index] };
+  const double value {static_cast<double *>(data)[index]};
   return static_cast<float>(value);
 }
 

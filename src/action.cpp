@@ -1,5 +1,5 @@
 /* ReaImGui: ReaScript binding for Dear ImGui
- * Copyright (C) 2021-2024  Christian Fillion
+ * Copyright (C) 2021-2025  Christian Fillion
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
@@ -36,7 +36,7 @@ static Action *findAction(const int id)
   if(id < g_actions.front()->id() || id > g_actions.back()->id())
     return nullptr;
 
-  auto it { std::lower_bound(g_actions.begin(), g_actions.end(), id) };
+  const auto it {std::lower_bound(g_actions.begin(), g_actions.end(), id)};
   if(it == g_actions.end() || (*it)->id() != id)
     return nullptr;
 
@@ -47,7 +47,7 @@ static bool commandHook(const int id, const int flag)
 {
   (void)flag;
 
-  if(Action *action { findAction(id) }) {
+  if(Action *action {findAction(id)}) {
     action->run();
     return true;
   }
@@ -57,7 +57,7 @@ static bool commandHook(const int id, const int flag)
 
 static int toggleHook(const int id)
 {
-  if(Action *action { findAction(id) })
+  if(const Action *action {findAction(id)})
     return action->state();
 
   return -1;
@@ -86,15 +86,15 @@ void Action::refreshAll()
 
 Action::Action(const std::string &name, const std::string &desc,
                const RunFunc &run, const StateFunc &getState)
-  : m_name { "REAIMGUI_"s + name }, m_desc { "ReaImGui: "s + desc },
-    m_cmd {}, m_run { run }, m_getState { getState }
+  : m_name {"REAIMGUI_"s + name}, m_desc {"ReaImGui: "s + desc},
+    m_cmd {}, m_run {run}, m_getState {getState}
 {
   m_cmd.accel.cmd =
     plugin_register("command_id", const_cast<char *>(m_name.c_str()));
   m_cmd.desc = m_desc.c_str();
   plugin_register("gaccel", &m_cmd);
 
-  auto it { std::lower_bound(g_actions.begin(), g_actions.end(), m_cmd.accel.cmd) };
+  auto it {std::lower_bound(g_actions.begin(), g_actions.end(), m_cmd.accel.cmd)};
   g_actions.emplace(it, this);
 }
 
