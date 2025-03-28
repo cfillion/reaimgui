@@ -619,6 +619,9 @@ void Context::clearFocus()
   else
     ImGui::FocusWindow(nullptr); // also calls ClearActiveID
 
+  // let UpdateViewportsNewFrame detect when the same viewport regains focus
+  m_imgui->PlatformLastFocusedViewportId = ImGui::GetMainViewport()->ID;
+
   // ClearInputMouse resets MousePos to -FLT_MAX
   // Restoring it to gain focus on first click on Linux
   const ImVec2 mousePos {m_imgui->IO.MousePos};
