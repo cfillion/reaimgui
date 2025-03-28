@@ -1348,8 +1348,10 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
   local is_new = not state
 
   if is_new then
+    name = name and tostring(name) or ''
+
     local ctx_name = name
-    if ctx_name:len() < 1 then ctx_name = 'gfx2imgui' end
+    if #ctx_name < 1 then ctx_name = 'gfx2imgui' end
 
     local ctx_flags    = ImGui.ConfigFlags_NoSavedSettings
     local canary_flags = ImGui.ConfigFlags_NoSavedSettings
@@ -1389,7 +1391,7 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     setDock(dockstate)
 
     gfx_vars.ext_retina = 1 -- ReaImGui scales automatically
-  elseif name and name:len() > 0 then
+  elseif name and #name > 0 then
     state.name = name
     return 1
   end
@@ -1678,7 +1680,7 @@ function gfx.setfont(idx, fontface, sz, flags)
 
   if idx > 0 and (fontface or sz) then
     -- gfx does this
-    if not fontface or fontface:len() == 0 then
+    if not fontface or #fontface == 0 then
       fontface = 'Arial'
     end
     sz = math.min($toint(sz), 96) -- sane limit to prevent errors (p=2781729)
