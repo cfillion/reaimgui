@@ -378,10 +378,10 @@ end
 <? macro('transformRectToQuad', 'x1', 'y1', 'x2', 'y2', 'x3', 'y3', 'x4', 'y4') ?>
   $x4, $y4, $x3, $y3 = $x1, $y2, $x2, $y2
   $x2, $y2, $x1, $y1 = $x2, $y1, $x1, $y1
-  $transformPoint($x1, $y2, opts)
-  $transformPoint($x2, $y2, opts)
-  $transformPoint($x2, $y1, opts)
   $transformPoint($x1, $y1, opts)
+  $transformPoint($x2, $y2, opts)
+  $transformPoint($x3, $y3, opts)
+  $transformPoint($x4, $y4, opts)
 <? endmacro() ?>
 
 local function alignText(flags, pos, size, limit)
