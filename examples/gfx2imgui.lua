@@ -148,9 +148,9 @@ local KEYMAP = (function()
   return map
 end)()
 local FONT_FLAGS = {
-  [0]                = ImGui.FontFlags_None,
-  [string.byte('b')] = ImGui.FontFlags_Bold,
-  [string.byte('i')] = ImGui.FontFlags_Italic,
+  ['\0'] = ImGui.FontFlags_None,
+  [ 'b'] = ImGui.FontFlags_Bold,
+  [ 'i'] = ImGui.FontFlags_Italic,
 }
 local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
@@ -1691,7 +1691,8 @@ function gfx.setfont(idx, fontface, sz, flags)
     local imflags = 0
     flags = $toint(tonumber(flags))
     while flags and flags ~= 0 do
-      local imflag = FONT_FLAGS[flags & 0xFF]
+      local flag = string.char(flags & 0xFF):lower()
+      local imflag = FONT_FLAGS[flag]
       if imflag then
         imflags = imflags | imflag
       else
