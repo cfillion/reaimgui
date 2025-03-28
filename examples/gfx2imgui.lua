@@ -147,10 +147,14 @@ local KEYMAP = (function()
 
   return map
 end)()
+local FONT_FLAG_INVERT = 1<<32
 local FONT_FLAGS = {
+  -- bits 0-31 = reaimgui flags
   ['\0'] = ImGui.FontFlags_None,
   [ 'b'] = ImGui.FontFlags_Bold,
   [ 'i'] = ImGui.FontFlags_Italic,
+  -- bits 32-63 = gfx2imgui flags
+  [ 'v'] = FONT_FLAG_INVERT,
 }
 local FALLBACK_STRING = '<bad string>'
 local DEFAULT_FONT_SIZE = 13 -- gfx default texth is 8
@@ -689,7 +693,7 @@ local function loadRequestedFonts()
       end
 
       -- print(('Attach() %s@%d[%d]'):format(font.family, font.size, font.flags))
-      local instance = ImGui.CreateFont(font.family, font.size, font.flags)
+      local instance = ImGui.CreateFont(font.family, font.size, font.flags & 0xFFFFFFFF)
       local keep_alive = hasValue(global_state.fonts, font)
       ImGui.Attach(state.ctx, instance)
       put(state.fontmap, font.family, font.flags, font.size, {
@@ -1198,6 +1202,12 @@ local function drawString(draw_list, cmd, i, opts)
   if right and bottom then
     $transformPoint(right, bottom, opts)
   end
+  if font.invert then
+    local w, h = unpackSigned(font.invert)
+    $transformPoint(w, h, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
+    DL_AddRectFilled(draw_list, x, y, x + w, y + h, c)
+    c = (~c & 0xFFFFFF00) | (c & 0xFF) -- FIXME: transparent text
+  end
   DL_AddTextEx(
     draw_list, font.inst, size, x + x_off, y + y_off, c, str, 0, x, y, right, bottom)
 end
@@ -1229,6 +1239,9 @@ function gfx.drawstr(str, flags, right, bottom)
     packSigned(x, y), packSigned(x_off, y_off),
     packSigned(right or 0x7FFFFFFF, bottom or 0x7FFFFFFF)
   local payload = { cache = f_cache, inst = f_inst }
+  if (f.flags & FONT_FLAG_INVERT) ~= 0 then
+    payload.invert = packSigned(right and (right-x) or (w//1), bottom and (bottom-y) or (h//1))
+  end
   $drawCall(drawString, c, str, f_sz, xy, xy_off, rb, payload)
   return 0
 end
