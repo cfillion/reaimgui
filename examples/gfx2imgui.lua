@@ -268,7 +268,7 @@ local function ringEnum(buffer)
   end
 end
 
-<? macro('drawCall', 'a=0', 'b=0', 'c=0', 'd=0', 'e=0', 'f=0', 'g=0', 'h=0') ?>
+<? macro('drawCall', '...args') ?>
 do
   local list = global_state.commands[gfx_vars.dest]
   if not list then
@@ -279,14 +279,24 @@ do
   end
 
   local ptr; $ringReserve(ptr, list, $DRAW_CALL_SIZE)
-  list[ptr  ], list[ptr+1], list[ptr+2], list[ptr+3],
-  list[ptr+4], list[ptr+5], list[ptr+6], list[ptr+7] =
-    $a, $b, $c, $d, $e, $f, $g, $h
+  <%
+    echo 'list[ptr]';
+    for($i = 1; $i < $DRAW_CALL_SIZE; ++$i)
+      echo ", list[ptr+$i]";
+    echo ' = ';
+    $vararg = count($args) > $DRAW_CALL_SIZE;
+    for($i = 0; $i < $DRAW_CALL_SIZE - $vararg; ++$i) {
+      if($i > 0)
+        echo ', ';
+      echo $args[$i] ?? '0';
+    }
+    if($vararg)
+      echo ', {' . implode(', ', array_slice($args, $DRAW_CALL_SIZE - 1)) . '}';
+  %>
 
   <% ob_start() // comment out block %>
   if DEBUG then
-    assert(type((...)) == 'function', 'uncallable draw command')
-    assert(select('#', ...) == $DRAW_CALL_SIZE, 'incorrect argument count')
+    assert(type(list[ptr]) == 'function', 'uncallable draw command')
     for i = 0, $DRAW_CALL_SIZE - 1 do
       assert(list[ptr+i] ~= nil, 'nils holes degrade copy performance')
     end
@@ -296,9 +306,15 @@ end
 <? endmacro(); ?>
 
 <? macro('drawValues', 'n') ?> <%
-for($i = 0; $i < $n; ++$i) {
-  if($i > 0) echo ', ';
-  echo "cmd[i+$i]";
+$last = $DRAW_CALL_SIZE - 1; // the first arg (func) is skipped
+$vararg = $n > $last;
+$last -= $vararg;
+echo 'cmd[i]';
+for($i = 1; $i < min($n, $last); ++$i)
+  echo ", cmd[i+$i]";
+for($i = $last; $i < $n; ++$i) {
+  $rel = $i - $last + 1;
+  echo ", cmd[i+$last][$rel]";
 }
 %> <? endmacro() ?>
 
@@ -1175,7 +1191,7 @@ function gfx.drawnumber(n, ndigits)
 end
 
 local function drawString(draw_list, cmd, i, opts)
-  local c, str, size, xy, xy_off, rb, font = $drawValues(7)
+  local c, str, size, xy, xy_off, rb, f_cache, f_inst, invert = $drawValues(9)
   local x,     y      = unpackSigned(xy)
   local x_off, y_off  = unpackSigned(xy_off)
   local right, bottom = unpackSigned(rb)
@@ -1186,13 +1202,13 @@ local function drawString(draw_list, cmd, i, opts)
   -- search for a new font as the draw call may have been stored for a
   -- long time in an offscreen buffer while the font instance got detached
   -- or the script may have re-created the context with gfx.quit+gfx.init
-  if font.cache and not font.cache.attached then
-    font.cache, font.inst = getNearestCachedFont(f)
+  if f_cache and not f_cache.attached then
+    f_cache, f_inst = getNearestCachedFont(f)
   end
 
   -- keep the font alive while the draw call is still in use (eg. from a blit)
-  if font.cache then
-    font.cache.last_use = state.frame_count
+  if f_cache then
+    f_cache.last_use = state.frame_count
   end
 
   $transformColor(c, opts)
@@ -1202,14 +1218,14 @@ local function drawString(draw_list, cmd, i, opts)
   if right and bottom then
     $transformPoint(right, bottom, opts)
   end
-  if font.invert then
-    local w, h = unpackSigned(font.invert)
+  if invert then
+    local w, h = unpackSigned(invert)
     $transformPoint(w, h, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
     DL_AddRectFilled(draw_list, x, y, x + w, y + h, c)
     c = (~c & 0xFFFFFF00) | (c & 0xFF) -- FIXME: transparent text
   end
   DL_AddTextEx(
-    draw_list, font.inst, size, x + x_off, y + y_off, c, str, 0, x, y, right, bottom)
+    draw_list, f_inst, size, x + x_off, y + y_off, c, str, 0, x, y, right, bottom)
 end
 
 function gfx.drawstr(str, flags, right, bottom)
@@ -1238,11 +1254,9 @@ function gfx.drawstr(str, flags, right, bottom)
   local xy, xy_off, rb =
     packSigned(x, y), packSigned(x_off, y_off),
     packSigned(right or 0x7FFFFFFF, bottom or 0x7FFFFFFF)
-  local payload = { cache = f_cache, inst = f_inst }
-  if (f.flags & FONT_FLAG_INVERT) ~= 0 then
-    payload.invert = packSigned(right and (right-x) or (w//1), bottom and (bottom-y) or (h//1))
-  end
-  $drawCall(drawString, c, str, f_sz, xy, xy_off, rb, payload)
+  local invert = (f.flags & FONT_FLAG_INVERT) ~= 0 and
+    packSigned(right and (right-x) or (w//1), bottom and (bottom-y) or (h//1))
+  $drawCall(drawString, c, str, f_sz, xy, xy_off, rb, f_cache, f_inst, invert)
   return 0
 end
 

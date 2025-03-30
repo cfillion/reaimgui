@@ -17,7 +17,7 @@ function preprocess($output, $local_vars = []) {
   return preg_replace_callback($pattern, function($matches) use($local_vars) {
     $name = $matches['name'];
     $value = $local_vars[$name] ?? $GLOBALS[$name] ??
-      trigger_error("\$name is not defined", E_USER_ERROR);
+      trigger_error("\$$name is not defined", E_USER_ERROR);
     if(!isset($matches['is_call']))
       return $value;
     else if(!is_callable($value))
@@ -29,19 +29,31 @@ function preprocess($output, $local_vars = []) {
 }
 
 function macro($name, ...$_args_def) {
-  array_walk($_args_def, function(&$arg) {
-    preg_match('/^(\w+)(?:\s*=\s*(.+))?$/U', $arg, $matches);
-    $arg = ['name' => $matches[1], 'default' => $matches[2] ?? null];
+  $saw_vararg = false;
+  array_walk($_args_def, function(&$arg) use(&$saw_vararg) {
+    $input = $arg;
+    if(!preg_match('/^(?<vararg>\.{3})?(?<name>\w+)(?:\s*=\s*(?<default>.+))?$/U', $arg, $arg))
+      trigger_error("invalid macro parameter definition $input", E_USER_ERROR);
+    if($arg['vararg']) {
+      if($saw_vararg)
+        trigger_error("only the last macro parameter can be variadic", E_USER_ERROR);
+      else
+        $saw_vararg = true;
+    }
   });
   ob_start(function($_code) use($name, $_args_def) {
     $_code = preg_replace('/(?<=<)%|%(?=>)/', '?', $_code);
     $GLOBALS[$name] = function(...$_args) use($_args_def, $_code) {
-      if(count($_args) > count($_args_def)) {
+      if(!end($_args_def)['vararg'] && count($_args) > count($_args_def)) {
         trigger_error('macro called with '.count($_args).
           ' many arguments (expected up to '.count($_args_def).') got '.
           var_export($_args, true), E_USER_ERROR);
       }
       foreach($_args_def as $_i => $_arg) {
+        if($_arg['vararg']) {
+          ${$_arg['name']} = array_slice($_args, $_i);
+          break;
+        }
         ${$_arg['name']} = $_args[$_i] ?? $_arg['default']
           ?? trigger_error("macro called with missing required argument {$_arg['name']}", E_USER_ERROR);
       }
