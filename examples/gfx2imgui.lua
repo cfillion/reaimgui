@@ -1310,7 +1310,7 @@ local function drawGradRect(draw_list, cmd, i, opts)
   -- FIXME: no AddQuadFilledMultiColor for rotation (ocornut/imgui#4495)
   if opts.angle then
     local x3, y3, x4, y4
-    $transformRectToQuad(x1, y1, x2, y2, x3, y3, x4, y4, opts)
+    $transformRectToQuad(x1, y1, x2, y2, x3, y3, x4, y4)
     DL_AddQuadFilled(draw_list, x1, y1, x2, y2, x3, y3, x4, y4, ctl)
     return
   end
@@ -1597,7 +1597,7 @@ local function drawRect(draw_list, cmd, i, opts)
 
   if opts.angle then
     local x3, y3, x4, y4
-    $transformRectToQuad(x1, y1, x2, y2, x3, y3, x4, y4, opts)
+    $transformRectToQuad(x1, y1, x2, y2, x3, y3, x4, y4)
     quadFunc(draw_list, x1, y1, x2, y2, x3, y3, x4, y4, c)
   else
     $transformPoint(x1, y1, opts)
@@ -1631,7 +1631,7 @@ local function drawRoundRect(draw_list, cmd, i, opts)
   if a then
     local quarter, x3, y3, x4, y4 = math.pi * .5
     x1, y1, x2, y2 = x1 + radius, y1 + radius, x2 - radius, y2 - radius
-    $transformRectToQuad(x1, y1, x2, y2, x3, y3, x4, y4, opts)
+    $transformRectToQuad(x1, y1, x2, y2, x3, y3, x4, y4)
     radius = radius * opts.scale_y -- FIXME: scale_x
     DL_PathArcTo(draw_list, x1, y1, radius, a + math.pi, a + quarter*3)
     DL_PathArcTo(draw_list, x2, y2, radius, a - quarter, a          )

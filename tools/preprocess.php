@@ -36,6 +36,11 @@ function macro($name, ...$_args_def) {
   ob_start(function($_code) use($name, $_args_def) {
     $_code = preg_replace('/(?<=<)%|%(?=>)/', '?', $_code);
     $GLOBALS[$name] = function(...$_args) use($_args_def, $_code) {
+      if(count($_args) > count($_args_def)) {
+        trigger_error('macro called with '.count($_args).
+          ' many arguments (expected up to '.count($_args_def).') got '.
+          var_export($_args, true), E_USER_ERROR);
+      }
       foreach($_args_def as $_i => $_arg)
         ${$_arg['name']} = $_args[$_i] ?? $_arg['default'];
       foreach(array_diff_key($GLOBALS, get_defined_vars()) as $_name => $_value)
