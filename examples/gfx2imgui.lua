@@ -1191,7 +1191,7 @@ function gfx.drawnumber(n, ndigits)
 end
 
 local function drawString(draw_list, cmd, i, opts)
-  local c, str, size, xy, xy_off, rb, f_cache, f_inst, invert = $drawValues(9)
+  local c, str, size, xy, xy_off, rb, f, f_cache, f_inst, invert = $drawValues(10)
   local x,     y      = unpackSigned(xy)
   local x_off, y_off  = unpackSigned(xy_off)
   local right, bottom = unpackSigned(rb)
@@ -1256,7 +1256,7 @@ function gfx.drawstr(str, flags, right, bottom)
     packSigned(right or 0x7FFFFFFF, bottom or 0x7FFFFFFF)
   local invert = (f.flags & FONT_FLAG_INVERT) ~= 0 and
     packSigned(right and (right-x) or (w//1), bottom and (bottom-y) or (h//1))
-  $drawCall(drawString, c, str, f_sz, xy, xy_off, rb, f_cache, f_inst, invert)
+  $drawCall(drawString, c, str, f_sz, xy, xy_off, rb, f, f_cache, f_inst, invert)
   return 0
 end
 
