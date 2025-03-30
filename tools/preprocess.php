@@ -31,7 +31,7 @@ function preprocess($output, $local_vars = []) {
 function macro($name, ...$_args_def) {
   array_walk($_args_def, function(&$arg) {
     preg_match('/^(\w+)(?:\s*=\s*(.+))?$/U', $arg, $matches);
-    $arg = ['name' => $matches[1], 'default' => $matches[2] ?? ''];
+    $arg = ['name' => $matches[1], 'default' => $matches[2] ?? null];
   });
   ob_start(function($_code) use($name, $_args_def) {
     $_code = preg_replace('/(?<=<)%|%(?=>)/', '?', $_code);
@@ -41,12 +41,15 @@ function macro($name, ...$_args_def) {
           ' many arguments (expected up to '.count($_args_def).') got '.
           var_export($_args, true), E_USER_ERROR);
       }
-      foreach($_args_def as $_i => $_arg)
-        ${$_arg['name']} = $_args[$_i] ?? $_arg['default'];
+      foreach($_args_def as $_i => $_arg) {
+        ${$_arg['name']} = $_args[$_i] ?? $_arg['default']
+          ?? trigger_error("macro called with missing required argument {$_arg['name']}", E_USER_ERROR);
+      }
       foreach(array_diff_key($GLOBALS, get_defined_vars()) as $_name => $_value)
         global ${$_name};
       ob_start();
-      eval('?>' . $_code);
+      unset($_args, $_args_def, $_i, $_arg, $_name, $_value);
+      eval('unset($_code); ?>' . $_code);
       return preprocess(ltrim(ob_get_clean()), get_defined_vars());
     };
   });
