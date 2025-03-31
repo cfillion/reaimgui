@@ -92,22 +92,26 @@ void CocoaWindow::create()
 
 void CocoaWindow::show()
 {
+  printf("show()\n");
   Window::show();
   [m_eventHandler watchView:m_view context:m_ctx];
 }
 
 void CocoaWindow::setPosition(ImVec2 pos)
 {
+  printf("setPosition(%f, %f)\n", pos.x, pos.y);
   Platform::scalePosition(&pos, true);
 
   NSWindow *window {[m_view window]};
   const NSRect &content {[window contentRectForFrameRect:[window frame]]};
+  printf("  -> content.size = [%f, %f]\n", content.size.width, content.size.height);
   const CGFloat titleBarHeight {[window frame].size.height - content.size.height};
   [window setFrameTopLeftPoint:NSMakePoint(pos.x, pos.y + titleBarHeight)];
 }
 
 void CocoaWindow::setSize(const ImVec2 size)
 {
+  printf("setSize(%f, %f)\n", size.x, size.y);
   // most scripts expect y=0 to be the top of the window
   NSWindow *window {[m_view window]};
   [window setContentSize:NSMakeSize(size.x, size.y)];
@@ -116,6 +120,7 @@ void CocoaWindow::setSize(const ImVec2 size)
 
 void CocoaWindow::setFocus()
 {
+  printf("setFocus()\n");
   NSWindow *window {[m_view window]};
   [window makeKeyAndOrderFront:nil];
   [window makeFirstResponder:m_inputView];
@@ -144,6 +149,7 @@ void CocoaWindow::setAlpha(const float alpha)
 
 void CocoaWindow::update()
 {
+  printf("update()\n");
   // restore keyboard focus to the input view when switching to our docker tab
   static bool no_wm_setfocus {atof(GetAppVersion()) < 6.53};
   if(no_wm_setfocus && GetFocus() == m_hwnd)
@@ -247,6 +253,7 @@ std::optional<LRESULT> CocoaWindow::handleMessage
     break;
   }
   case WM_SIZE:
+    printf("WM_SIZE\n");
     // SWELL does not send WM_MOVE when resizing moves the window origin
     m_viewport->PlatformRequestMove = true;
     break;
