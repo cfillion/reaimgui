@@ -16,7 +16,7 @@ gmock_dep = dependency('gmock_main')
 
 tests = executable('tests', test_src,
   dependencies: [common_dep, eel_dep, gmock_dep],
-  link_with: [src])
+  link_with: [src], build_by_default: false)
 
 test(meson.project_name(), tests,
   args: ['--gtest_color=yes'], protocol: 'gtest')
