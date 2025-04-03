@@ -1688,8 +1688,8 @@ function demo.ShowDemoWindowWidgets()
 label:
 	lock cmpxchg8b eax
 ]],
+          flags = ImGui.InputTextFlags_AllowTabInput,
         },
-        flags = ImGui.InputTextFlags_AllowTabInput,
         buf = { '', '', '', '', '', '', '', '', '', '' },
         password = 'hunter2',
       }
