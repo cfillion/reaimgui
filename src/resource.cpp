@@ -39,11 +39,10 @@ constexpr unsigned char KEEP_ALIVE_FRAMES {2};
 constexpr unsigned char MAX_GC_FRAMES {120};
 
 enum GlobalFlags {
-  EnableTimer = 1<<0,
-  DisableProcOverride = 1<<1,
-  BypassGCCheckOnce = 1<<2,
+  MainProcOverriden = 1<<0,
+  BypassGCCheckOnce = 1<<1,
 #ifndef __APPLE__
-  DisabledViewports = 1<<3,
+  DisabledViewports = 1<<2,
 #endif
 };
 
@@ -86,18 +85,18 @@ Resource::Timer::Timer()
   if(ConfigVar<unsigned int> runcnt {"__reascript_runcnt"})
     g_scriptRunCount = *runcnt;
 
-  if(!(g_flags & DisableProcOverride)) {
+  if(!(g_flags & MainProcOverriden)) {
     LONG_PTR newProc {reinterpret_cast<LONG_PTR>(&mainProcOverride)},
              oldProc {SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc)};
     g_mainProc = reinterpret_cast<WNDPROC>(oldProc);
   }
 
-  g_flags |= EnableTimer;
+  plugin_register("timer", reinterpret_cast<void *>(&Timer::tick));
 }
 
 Resource::Timer::~Timer()
 {
-  g_flags &= EnableTimer;
+  plugin_register("-timer", reinterpret_cast<void *>(&Timer::tick));
   g_consecutiveGcFrames = 0;
 
   HWND mainWnd {GetMainHwnd()};
@@ -106,7 +105,7 @@ Resource::Timer::~Timer()
   if(GetWindowLongPtr(mainWnd, GWLP_WNDPROC) == expectedProc)
     SetWindowLongPtr(mainWnd, GWLP_WNDPROC, previousProc);
   else // prevent mainProcOverride from calling itself next time
-    g_flags |= DisableProcOverride;
+    g_flags |= MainProcOverriden;
 }
 
 void Resource::Timer::tick()
@@ -117,10 +116,7 @@ void Resource::Timer::tick()
   if(blocked != !!(g_flags & DisabledViewports)) {
     using namespace std::placeholders;
     Resource::foreach<Context>(std::bind(&Context::enableViewports, _1, !blocked));
-    if(blocked)
-      g_flags |= DisabledViewports;
-    else
-      g_flags &= ~DisabledViewports;
+    blocked ? g_flags |= DisabledViewports : g_flags &= ~DisabledViewports;
   }
 #endif
 
@@ -155,18 +151,12 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
   // The g_reentrant workaround below cannot distinguish between them.
   // It's only used in REAPER versions without __reascript_runcnt (until v7.28).
   //
-  // Calling `tick` directly instead of registering an extension timer to bypass
-  // their reentrancy check which may be out of sync with deferred ReaScript's.
-  //
   // 0x29a is REAPER's "misc timer". It's responsible for triggering both
   // deferred ReaScripts and extension timer callbacks (among other things).
   if(msg == WM_TIMER && wParam == 0x29a) {
     g_reentrant += 1;
     const LRESULT ret {CallWindowProc(g_mainProc, hwnd, msg, wParam, lParam)};
     g_reentrant -= 1;
-
-    if(g_flags & EnableTimer)
-      tick();
 
     return ret;
   }
