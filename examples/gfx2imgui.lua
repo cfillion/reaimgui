@@ -147,6 +147,7 @@ local KEYMAP = (function()
 
   return map
 end)()
+local FONT_FLAG_IMMASK = 0xFFFFFFFF
 local FONT_FLAG_INVERT = 1<<32
 local FONT_FLAGS = {
   -- bits 0-31 = reaimgui flags
@@ -634,19 +635,19 @@ local function nearest(array, target_key)
 end
 
 local function getCachedFont(font)
-  return dig(state.fontmap, font.family, font.flags, font.size)
+  return dig(state.fontmap, font.family, font.flags & FONT_FLAG_IMMASK, font.size)
 end
 
 local function warnUnavailableFont(font)
   warn("font '%s'@%d[%x] temporarily unavailable: \z
     frame already started (falling back to nearest match for up to %d frames)",
-    font.family, font.size, font.flags, THROTTLE_FONT_LOADING_FRAMES)
+    font.family, font.size, font.flags & FONT_FLAG_IMMASK, THROTTLE_FONT_LOADING_FRAMES)
 end
 
 local function getNearestCachedFont(font)
   if not font then return nil, nil, 0 end
 
-  local sizes = dig(state.fontmap, font.family, font.flags)
+  local sizes = dig(state.fontmap, font.family, font.flags & FONT_FLAG_IMMASK)
   if not sizes then
     warnUnavailableFont(font)
     return nil, nil, DEFAULT_FONT_SIZE - font.size
@@ -709,10 +710,10 @@ local function loadRequestedFonts()
       end
 
       -- print(('Attach() %s@%d[%d]'):format(font.family, font.size, font.flags))
-      local instance = ImGui.CreateFont(font.family, font.size, font.flags & 0xFFFFFFFF)
+      local instance = ImGui.CreateFont(font.family, font.size, font.flags & FONT_FLAG_IMMASK)
       local keep_alive = hasValue(global_state.fonts, font)
       ImGui.Attach(state.ctx, instance)
-      put(state.fontmap, font.family, font.flags, font.size, {
+      put(state.fontmap, font.family, font.flags & FONT_FLAG_IMMASK, font.size, {
         attached   = true,
         last_use   = state.frame_count,
         keep_alive = keep_alive,
@@ -1728,14 +1729,11 @@ function gfx.setfont(idx, fontface, sz, flags)
       flags = flags >> 8
     end
 
-    local is_new
+    local is_new, old_inst
 
     if font then
       is_new = font.family ~= fontface or font.size ~= sz or font.flags ~= imflags
-      if is_new and state then
-        local cache = getCachedFont(font)
-        if cache then cache.keep_alive = false end
-      end
+      old_inst = is_new and state and getCachedFont(font)
     else
       is_new = true
     end
@@ -1745,8 +1743,13 @@ function gfx.setfont(idx, fontface, sz, flags)
       global_state.fonts[idx] = font
     end
 
-    if state and not getCachedFont(font) then
-      state.fontqueue[#state.fontqueue + 1] = font
+    if state then
+      local new_inst = getCachedFont(font)
+      if not new_inst then
+        state.fontqueue[#state.fontqueue + 1] = font
+      elseif old_inst and new_inst ~= old_inst then
+        old_inst.keep_alive = false
+      end
     end
   end
 
