@@ -84,8 +84,7 @@ Resource::Timer::Timer()
 {
   if(ConfigVar<unsigned int> runcnt {"__reascript_runcnt"})
     g_scriptRunCount = *runcnt;
-
-  if(!(g_flags & MainProcOverriden)) {
+  else if(!(g_flags & MainProcOverriden)) {
     LONG_PTR newProc {reinterpret_cast<LONG_PTR>(&mainProcOverride)},
              oldProc {SetWindowLongPtr(GetMainHwnd(), GWLP_WNDPROC, newProc)};
     g_mainProc = reinterpret_cast<WNDPROC>(oldProc);
