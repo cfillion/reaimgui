@@ -261,6 +261,10 @@ std::optional<LRESULT> CocoaWindow::handleMessage
       }
     }
     break;
+  case WM_RBUTTONUP:
+    // Prevent DefWindowProc from emitting WM_CONTEXTMENU
+    // when focus is lost before the right mouse button was released
+    return 0;
   }
 
   return std::nullopt;
