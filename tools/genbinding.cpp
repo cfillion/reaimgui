@@ -585,7 +585,7 @@ pub fn init(plugin_getapi: *fn(name: [*:0]const u8) callconv(.C) ?*anyopaque) !v
   @setEvalBranchQuota(0x1000);
   @setRuntimeSafety(false);
 
-  const getFunc: ?*fn(v: [*:0]const u8, n: [*:0]const u8) *anyopaque =
+  const getFunc: ?*fn(v: [*:0]const u8, n: [*:0]const u8) callconv(.C) *anyopaque =
     @ptrCast(plugin_getapi("ImGui__getapi"));
   getError = @ptrCast(plugin_getapi("ImGui__geterr"));
 
