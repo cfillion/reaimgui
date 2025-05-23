@@ -223,7 +223,7 @@ void GDKOpenGL::render(void *userData)
 
   GdkWindow *window {static_cast<GDKWindow *>(m_window)->getOSWindow()};
   const ImGuiViewport *viewport {m_window->viewport()};
-  const cairo_region_t *region {gdk_window_get_clip_region(window)};
+  cairo_region_t *region {gdk_window_get_clip_region(window)};
   GdkDrawingContext *drawContext {gdk_window_begin_draw_frame(window, region)};
   cairo_t *cairoContext {gdk_drawing_context_get_cairo_context(drawContext)};
   gdk_cairo_draw_from_gl(cairoContext, window,
@@ -231,6 +231,7 @@ void GDKOpenGL::render(void *userData)
     viewport->DrawData->DisplaySize.x * viewport->DpiScale,
     viewport->DrawData->DisplaySize.y * viewport->DpiScale);
   gdk_window_end_draw_frame(window, drawContext);
+  cairo_region_destroy(region);
 
   // required for making the window visible on GNOME
   gdk_window_thaw_updates(window); // schedules an update
