@@ -594,23 +594,23 @@ pub fn init(plugin_getapi: *fn(name: [*:0]const u8) callconv(.C) ?*anyopaque) !v
     return error.ImGui;
   }
 
-  inline for(@typeInfo(API).Struct.fields) |field| {
+  inline for(@typeInfo(API).@"struct".fields) |field| {
     @field(api, field.name) = @ptrCast(getFunc.?(api_version, field.name));
     try checkError();
   }
 
-  inline for(@typeInfo(API).Struct.decls) |decl| {
+  inline for(@typeInfo(API).@"struct".decls) |decl| {
     @field(API, decl.name) = getEnum(@ptrCast(getFunc.?(api_version, decl.name)));
     try checkError();
   }
 }
 
 fn funcType(comptime func: anytype) type {
-  return @typeInfo(@TypeOf(func.*)).Pointer.child;
+  return @typeInfo(@TypeOf(func.*)).pointer.child;
 }
 
 fn returnType(comptime func: anytype) type {
-  return Error!@typeInfo(funcType(func)).Fn.return_type.?;
+  return Error!@typeInfo(funcType(func)).@"fn".return_type.?;
 }
 
 fn function(comptime func: anytype, min_argc: comptime_int,
@@ -630,11 +630,11 @@ fn function(comptime func: anytype, min_argc: comptime_int,
         }
         const arg_type = @typeInfo(@TypeOf(args[i]));
         comptime var cast_arg_type = @typeInfo(@TypeOf(cast_args[i]));
-        if(cast_arg_type == .Optional)
-          cast_arg_type = @typeInfo(cast_arg_type.Optional.child);
-        cast_args[i] = if(cast_arg_type == .Int and (
-            (arg_type == .ComptimeInt and args[i] > std.math.maxInt(c_int)) or
-            (arg_type == .Int and arg_type.Int.signedness == .unsigned)))
+        if(cast_arg_type == .optional)
+          cast_arg_type = @typeInfo(cast_arg_type.optional.child);
+        cast_args[i] = if(cast_arg_type == .int and (
+            (arg_type == .comptime_int and args[i] > std.math.maxInt(c_int)) or
+            (arg_type == .int and arg_type.int.signedness == .unsigned)))
           @bitCast(@as(c_uint, args[i]))
         else
           args[i];
@@ -644,9 +644,9 @@ fn function(comptime func: anytype, min_argc: comptime_int,
       inline for(0..call_args.len) |i| {
         const cast_arg_type = @typeInfo(@TypeOf(cast_args[i]));
         call_args[i] =
-          if(cast_arg_type == .Optional)
+          if(cast_arg_type == .optional)
             if(cast_args[i]) |*arg_val|
-              if(@typeInfo(cast_arg_type.Optional.child) == .Pointer)
+              if(@typeInfo(cast_arg_type.optional.child) == .pointer)
                 arg_val.*
               else
                 arg_val

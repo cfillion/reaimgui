@@ -31,12 +31,12 @@ const reaper = struct { // @import("reaper");
     }
 
     const getFunc = rec.getFunc.?;
-    inline for(@typeInfo(@This()).Struct.decls) |decl| {
+    inline for(@typeInfo(@This()).@"struct".decls) |decl| {
       comptime var decl_type = @typeInfo(@TypeOf(@field(@This(), decl.name)));
-      const is_optional = decl_type == .Optional;
+      const is_optional = decl_type == .optional;
       if(is_optional)
-        decl_type = @typeInfo(decl_type.Optional.child);
-      if(decl_type != .Pointer or @typeInfo(decl_type.Pointer.child) != .Fn)
+        decl_type = @typeInfo(decl_type.optional.child);
+      if(decl_type != .pointer or @typeInfo(decl_type.pointer.child) != .@"fn")
         continue;
       if(getFunc(decl.name)) |func|
         @field(@This(), decl.name) = @ptrCast(func)
