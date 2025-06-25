@@ -19,6 +19,7 @@
 
 #include "error.hpp"
 #include "gdk_window.hpp"
+#include "settings.hpp"
 
 #include <cassert>
 #include <epoxy/gl.h>
@@ -72,7 +73,8 @@ private:
 
 decltype(OpenGLRenderer::creator) OpenGLRenderer::creator
   {&Renderer::create<GDKOpenGL>};
-decltype(RendererType::flags) OpenGLRenderer::flags {RendererType::Available};
+decltype(RendererType::flags) OpenGLRenderer::flags
+  {RendererType::Available | RendererType::CanForceSoftware};
 
 // GdkGLContext cannot share ressources: they're already shared with the
 // window's paint context (which itself isn't shared with anything).
@@ -81,7 +83,7 @@ GDKOpenGL::GDKOpenGL(RendererFactory *factory, Window *window)
 {
   GdkWindow *osWindow;
 
-  if(m_window->isDocked()) {
+  if(m_window->isDocked() || Settings::ForceSoftware) {
     initSoftwareBlit();
     osWindow = m_offscreen.get();
   }
@@ -208,7 +210,7 @@ void GDKOpenGL::render(void *userData)
   // FIXME: Currently we use SWELL's DPI scale which is fixed & app-wide.
   // If this changes, we'll want to only upload textures for our own DPI
   // since we're not sharing them with other windows.
-  const bool useSoftwareBlit {m_window->isDocked()};
+  const bool useSoftwareBlit {m_pixels != nullptr};
   OpenGLRenderer::render(useSoftwareBlit);
 
   if(useSoftwareBlit) {

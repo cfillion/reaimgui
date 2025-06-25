@@ -86,6 +86,7 @@ struct SettingVariant : std::variant<Setting<Ts>...> {
 #  define PLATFORM_SUFFIX "_cocoa"
 #else
 #  define PLATFORM_SUFFIX "_gdk"
+#  define GDK_WORKAROUNDS
 #endif
 
 constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
@@ -125,9 +126,15 @@ constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
    Combobox {IDC_RENDERER, IDC_RENDERERTXT},
   },
   {&Settings::ForceSoftware, false, TEXT("forcecpu") PLATFORM_SUFFIX,
+#ifdef GDK_WORKAROUNDS
+   TEXT("Disable hardware blitting"),
+   TEXT("Enable this option force the use of software blitting. May improve "
+        "compatibility at the cost of potentially higher CPU usage."),
+#else
    TEXT("Disable hardware acceleration"),
    TEXT("Enable this option force the use of software rendering. May improve "
         "compatibility at the cost of potentially higher CPU usage."),
+#endif
    Checkbox {IDC_FORCESOFTWARE, Checkbox::NoAction}
   },
 };
