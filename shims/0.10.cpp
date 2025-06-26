@@ -31,6 +31,10 @@ SHIM("0.10",
 
   (int, SelectableFlags_NoAutoClosePopups)
   (int, ChildFlags_Borders)
+
+  (Context*, CreateContext, const char*, RO<int*>)
+  (void, SetConfigVar, Context*, int, double)
+  (int, ConfigVar_DebugHighlightIdConflicts)
 );
 
 // dear imgui v1.91
@@ -84,3 +88,12 @@ SHIM_ALIAS(0_1, SelectableFlags_DontClosePopups, SelectableFlags_NoAutoClosePopu
 
 // dear imgui v1.91.1
 SHIM_ALIAS(0_9, ChildFlags_Border, ChildFlags_Borders);
+
+// dear imgui v1.91.2
+SHIM_FUNC(0_5, Context*, CreateContext,
+(const char*,label) (RO<int*>,config_flags))
+{
+  Context *ctx {api.CreateContext(label, config_flags)};
+  api.SetConfigVar(ctx, api.ConfigVar_DebugHighlightIdConflicts(), false);
+  return ctx;
+}

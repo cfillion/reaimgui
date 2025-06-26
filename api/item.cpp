@@ -370,3 +370,7 @@ R"(Any button-like behavior will have repeat mode enabled (based on
 API_ENUM(0_10, ImGui, ItemFlags_AutoClosePopups,
 R"(MenuItem/Selectable automatically close their parent popup window.
    Default = true)");
+API_ENUM(0_10, ImGui, ItemFlags_AllowDuplicateId,
+R"(Allow submitting an item with the same identifier as an item already
+   submitted this frame without triggering a warning tooltip if
+   ConfigVar_ConfigDebugHighlightIdConflicts is set.)");

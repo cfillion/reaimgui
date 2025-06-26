@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.1)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.2)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -338,6 +338,7 @@ function demo.ShowDemoWindow(open)
   if ImGui.CollapsingHeader(ctx, 'Configuration') then
     if ImGui.TreeNode(ctx, 'Configuration##2') then
       local function configVarCheckbox(name)
+        name = 'ConfigVar_' .. name
         local var = assert(reaper[('ImGui_%s'):format(name)], 'unknown var')()
         local rv,val = ImGui.Checkbox(ctx, name, ImGui.GetConfigVar(ctx, var))
         if rv then ImGui.SetConfigVar(ctx, var, val and 1 or 0) end
@@ -370,7 +371,7 @@ function demo.ShowDemoWindow(open)
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoKeyboard', config.flags, ImGui.ConfigFlags_NoKeyboard)
       ImGui.SameLine(ctx); demo.HelpMarker('Instruct dear imgui to disable keyboard inputs and interactions.')
 
-      configVarCheckbox('ConfigVar_InputTrickleEventQueue')
+      configVarCheckbox('InputTrickleEventQueue')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
       -- ImGui.Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
       -- ImGui.SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
@@ -389,13 +390,13 @@ function demo.ShowDemoWindow(open)
       end
       if config.flags & ImGui.ConfigFlags_DockingEnable ~= 0 then
         ImGui.Indent(ctx)
-        configVarCheckbox('ConfigVar_DockingNoSplit')
+        configVarCheckbox('DockingNoSplit')
         ImGui.SameLine(ctx); demo.HelpMarker('Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.')
-        configVarCheckbox('ConfigVar_DockingWithShift')
+        configVarCheckbox('DockingWithShift')
         ImGui.SameLine(ctx); demo.HelpMarker('Enable docking when holding Shift only (allow to drop in wider space, reduce visual noise)')
         -- ImGui.Checkbox(ctx, 'io.ConfigDockingAlwaysTabBar', &io.ConfigDockingAlwaysTabBar)
         -- ImGui.SameLine(ctx); demo.HelpMarker('Create a docking node and tab-bar on single floating windows.')
-        configVarCheckbox('ConfigVar_DockingTransparentPayload')
+        configVarCheckbox('DockingTransparentPayload')
         ImGui.SameLine(ctx); demo.HelpMarker('Make window or viewport transparent when docking and only display docking boxes on the target viewport.')
         ImGui.Unindent(ctx)
       end
@@ -410,39 +411,41 @@ function demo.ShowDemoWindow(open)
       --     ImGui::SameLine(); HelpMarker("Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it.");
       --     ImGui::Checkbox("io.ConfigViewportsNoTaskBarIcon", &io.ConfigViewportsNoTaskBarIcon);
       --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the task bar icon state right away).");
-      configVarCheckbox('ConfigVar_ViewportsNoDecoration')
+      configVarCheckbox('ViewportsNoDecoration')
       --     ImGui::Checkbox("io.ConfigViewportsNoDefaultParent", &io.ConfigViewportsNoDefaultParent);
       --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the parenting right away).");
       --     ImGui::Unindent();
       -- }
 
       ImGui.SeparatorText(ctx, 'Widgets')
-      configVarCheckbox('ConfigVar_InputTextCursorBlink')
+      configVarCheckbox('InputTextCursorBlink')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable blinking cursor (optional as some users consider it to be distracting).')
-      configVarCheckbox('ConfigVar_InputTextEnterKeepActive')
+      configVarCheckbox('InputTextEnterKeepActive')
       ImGui.SameLine(ctx); demo.HelpMarker('Pressing Enter will keep item active and select contents (single-line only).')
-      configVarCheckbox('ConfigVar_DragClickToInputText')
+      configVarCheckbox('DragClickToInputText')
       ImGui.SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
-      configVarCheckbox('ConfigVar_WindowsResizeFromEdges')
+      configVarCheckbox('WindowsResizeFromEdges')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.')
-      configVarCheckbox('ConfigVar_WindowsMoveFromTitleBarOnly')
+      configVarCheckbox('WindowsMoveFromTitleBarOnly')
       ImGui.SameLine(ctx); demo.HelpMarker('Does not apply to windows without a title bar.')
-      configVarCheckbox('ConfigVar_MacOSXBehaviors')
+      configVarCheckbox('MacOSXBehaviors')
       ImGui.SameLine(ctx); demo.HelpMarker('Swap Cmd<>Ctrl keys, enable various MacOS style behaviors.')
       ImGui.Text(ctx, "Also see Style->Rendering for rendering options.")
 
       ImGui.SeparatorText(ctx, 'Debug')
-      -- configVarCheckbox('ConfigVar_DebugIsDebuggerPresent')
+      -- configVarCheckbox('DebugIsDebuggerPresent')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Enable various tools calling IM_DEBUG_BREAK().\n\nRequires a debugger being attached, otherwise IM_DEBUG_BREAK() options will appear to crash your application.')
+      configVarCheckbox('DebugHighlightIdConflicts')
+      ImGui.SameLine(ctx); demo.HelpMarker('Highlight and show an error message when multiple items have conflicting identifiers.')
       ImGui.BeginDisabled(ctx)
-      configVarCheckbox('ConfigVar_DebugBeginReturnValueOnce')
+      configVarCheckbox('DebugBeginReturnValueOnce')
       ImGui.EndDisabled(ctx)
       ImGui.SameLine(ctx); demo.HelpMarker('First calls to Begin()/BeginChild() will return false.\n\nTHIS OPTION IS DISABLED because it needs to be set at application boot-time to make sense. Showing the disabled option is a way to make this feature easier to discover')
-      configVarCheckbox('ConfigVar_DebugBeginReturnValueLoop')
+      configVarCheckbox('DebugBeginReturnValueLoop')
       ImGui.SameLine(ctx); demo.HelpMarker('Some calls to Begin()/BeginChild() will return false.\n\nWill cycle through window depths then repeat. Windows should be flickering while running.')
-      -- configVarCheckbox('ConfigVar_DebugIgnoreFocusLoss')
+      -- configVarCheckbox('DebugIgnoreFocusLoss')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Option to deactivate io.AddFocusEvent(false) handling. May facilitate interactions with a debugger when focus loss leads to clearing inputs data.')
-      -- configVarCheckbox('ConfigVar_DebugIniSettings')
+      -- configVarCheckbox('DebugIniSettings')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Option to save .ini data with extra comments (particularly helpful for Docking, but makes saving slower).')
 
       ImGui.SeparatorText(ctx, 'Tooltips')
@@ -645,16 +648,23 @@ function demo.ShowDemoWindowMenuBar()
     rv,show_app.metrics       = ImGui.MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
     rv,show_app.debug_log     = ImGui.MenuItem(ctx, 'Debug Log',        nil, show_app.debug_log)
     rv,show_app.id_stack_tool = ImGui.MenuItem(ctx, 'ID Stack Tool',    nil, show_app.id_stack_tool)
-    rv,show_app.style_editor  = ImGui.MenuItem(ctx, 'Style Editor',     nil, show_app.style_editor)
     local is_debugger_present = true -- ImGui::GetIO().ConfigDebugIsDebuggerPresent
     if ImGui.MenuItem(ctx, 'Item Picker', nil, false, is_debugger_present) then
       ImGui.DebugStartItemPicker(ctx)
     end
-    -- if !is_debugger_present then
-    --   ImGui.SetItemTooltip(ctx, 'Requires io.ConfigDebugIsDebuggerPresent=true to be set.\n\nWe otherwise disable the menu option to avoid casual users crashing the application.\n\nYou can however always access the Item Picker in Metrics->Tools.')
-    -- end
-    ImGui.Separator(ctx)
+    if not is_debugger_present then
+      ImGui.SetItemTooltip(ctx, 'Requires ConfigVar_ConfigDebugIsDebuggerPresent=true to be set.\n\nWe otherwise disable the menu option to avoid casual users crashing the application.\n\nYou can however always access the Item Picker in Metrics->Tools.')
+    end
+    rv,show_app.style_editor  = ImGui.MenuItem(ctx, 'Style Editor',     nil, show_app.style_editor)
     rv,show_app.about = ImGui.MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
+
+    ImGui.SeparatorText(ctx, 'Debug Options')
+    local highlight_id_conflicts = 0 ~= ImGui.GetConfigVar(ctx, ImGui.ConfigVar_DebugHighlightIdConflicts)
+    if ImGui.MenuItem(ctx, 'Highlight ID Conflicts', nil, highlight_id_conflicts) then
+      highlight_id_conflicts = not highlight_id_conflicts
+      ImGui.SetConfigVar(ctx, ImGui.ConfigVar_DebugHighlightIdConflicts, highlight_id_conflicts and 1 or 0)
+    end
+
     ImGui.EndMenu(ctx)
   end
   ImGui.EndMenuBar(ctx)
@@ -2063,8 +2073,8 @@ label:
       end
     end
 
-    ImGui.PlotLines(ctx, 'Lines', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
-    ImGui.PlotHistogram(ctx, 'Histogram', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
+    ImGui.PlotLines(ctx, 'Lines##2', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
+    ImGui.PlotHistogram(ctx, 'Histogram##2', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
 
     -- ImGui.Text(ctx, 'Need better plotting and graphing? Consider using ImPlot:')
     -- ImGui.TextLinkOpenURL(ctx, 'https://github.com/epezent/implot')
@@ -2715,6 +2725,11 @@ label:
     end
 
     if ImGui.TreeNode(ctx, 'Drag to reorder items (simple)') then
+      -- FIXME: there is temporary (usually single-frame) ID Conflict during reordering as a same item may be submitting twice.
+      -- This code was always slightly faulty but in a way which was not easily noticeable.
+      -- Until we fix this, enable ImGuiItemFlags_AllowDuplicateId to disable detecting the issue.
+      ImGui.PushItemFlag(ctx, ImGui.ItemFlags_AllowDuplicateId, true)
+
       -- Simple reordering
       demo.HelpMarker(
         "We don't use the drag and drop api at all here! \z
@@ -2732,6 +2747,8 @@ label:
           end
         end
       end
+
+      ImGui.PopItemFlag(ctx)
       ImGui.TreePop(ctx)
     end
 
@@ -3495,7 +3512,7 @@ function demo.ShowDemoWindowLayout()
       -- down by FramePadding.y ahead of time)
       ImGui.AlignTextToFramePadding(ctx)
       ImGui.Text(ctx, 'OK Blahblah'); ImGui.SameLine(ctx)
-      ImGui.Button(ctx, 'Some framed item'); ImGui.SameLine(ctx)
+      ImGui.Button(ctx, 'Some framed item##2'); ImGui.SameLine(ctx)
       demo.HelpMarker('We call AlignTextToFramePadding() to vertically align the text baseline by +FramePadding.y')
 
       -- SmallButton() uses the same vertical padding as Text
@@ -6457,12 +6474,14 @@ end
 --         {
 --             if (h_borders && ImGui.GetColumnIndex() == 0)
 --                 ImGui.Separator();
+--             ImGui::PushID(i);
 --             ImGui.Text("%c%c%c", 'a' + i, 'a' + i, 'a' + i);
 --             ImGui.Text("Width %.2f", ImGui.GetColumnWidth());
 --             ImGui.Text("Avail %.2f", ImGui.GetContentRegionAvail().x);
 --             ImGui.Text("Offset %.2f", ImGui.GetColumnOffset());
 --             ImGui.Text("Long text that is likely to clip");
 --             ImGui.Button("Button", ImVec2(-FLT_MIN, 0.0f));
+--             ImGui::PopID();
 --             ImGui.NextColumn();
 --         }
 --         ImGui.Columns(1);
@@ -6803,12 +6822,14 @@ function demo.ShowDemoWindowInputs()
   -- Display mouse cursors
   if ImGui.TreeNode(ctx, 'Mouse Cursors') then
     local current = ImGui.GetMouseCursor(ctx)
+    local current_name = 'N/A'
     for cursor, name in demo.EachEnum('MouseCursor') do
       if cursor == current then
-        ImGui.Text(ctx, ('Current mouse cursor = %d: %s'):format(current, name))
+        current_name = name
         break
       end
     end
+    ImGui.Text(ctx, ('Current mouse cursor = %d: %s'):format(current, current_name))
     ImGui.Text(ctx, 'Hover to see mouse cursors:')
     -- ImGui.SameLine(ctx); demo.HelpMarker(
     --   'Your application can render a different mouse cursor based on what ImGui.GetMouseCursor() returns. \z

@@ -21,7 +21,7 @@
 
 API_SECTION("Context");
 
-API_FUNC(0_5, Context*, CreateContext,
+API_FUNC(0_10, Context*, CreateContext,
 (const char*,label) (RO<int*>,config_flags,ImGuiConfigFlags_None),
 R"(Create a new ReaImGui context.
 The context will remain valid as long as it is used in each defer cycle.
@@ -88,7 +88,8 @@ ValidatePtr.)")
   ctx->detach(obj);
 }
 
-API_SUBSECTION("Options");
+API_SUBSECTION("Options",
+  "You can visualize and interact with all options in Demo > Configuration");
 
 template<typename... T>
 using IOFields = std::variant<T ImGuiIO::*..., T ImGuiStyle::*...>;
@@ -126,6 +127,7 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   &ImGuiIO::ConfigWindowsResizeFromEdges,
   &ImGuiIO::ConfigWindowsMoveFromTitleBarOnly,
 
+  &ImGuiIO::ConfigDebugHighlightIdConflicts,
   &ImGuiIO::ConfigDebugBeginReturnValueOnce,
   &ImGuiIO::ConfigDebugBeginReturnValueLoop,
 
@@ -198,6 +200,11 @@ API_CONFIGVAR(0_7, WindowsMoveFromTitleBarOnly,
 R"(Enable allowing to move windows only when clicking on their title bar.
    Does not apply to windows without a title bar.)");
 
+API_CONFIGVAR(0_10, DebugHighlightIdConflicts,
+R"(Highlight and show an error message when multiple items have conflicting
+   identifiers.
+   - Code should use PushID/PopID in loops, or append "##xx" to same-label identifiers.
+   - Empty label e.g. Button("") == same ID as parent widget/node. Use Button("##xx") instead!)");
 API_CONFIGVAR(0_8_5, DebugBeginReturnValueOnce,
 R"(First-time calls to Begin()/BeginChild() will return false.
 **Needs to be set at context startup time** if you don't want to miss windows.)");
@@ -230,13 +237,18 @@ static_assert(__COUNTER__ - baseConfigVar - 1 == std::size(g_configVars),
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
+static void assertConfigVar(const size_t var_idx)
+{
+  if(var_idx >= std::size(g_configVars))
+    throw reascript_error {"unknown config variable"};
+}
+
 API_FUNC(0_7, double, GetConfigVar, (Context*,ctx)
 (int,var_idx),
 "")
 {
   assertValid(ctx);
-  if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
-    throw reascript_error {"unknown config variable"};
+  assertConfigVar(var_idx);
 
   return std::visit(overloaded {
     [ctx](auto ImGuiIO::*field) -> double {
@@ -259,8 +271,7 @@ API_FUNC(0_7, void, SetConfigVar, (Context*,ctx)
 "")
 {
   assertValid(ctx);
-  if(static_cast<size_t>(var_idx) >= std::size(g_configVars))
-    throw reascript_error {"unknown config variable"};
+  assertConfigVar(var_idx);
 
   std::visit(overloaded {
     [ctx, value](auto ImGuiIO::*field) {
