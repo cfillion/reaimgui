@@ -154,15 +154,20 @@ API_ENUM(0_1, ImGui, ColorEditFlags_NoDragDrop,
   "ColorEdit: disable drag and drop target. ColorButton: disable drag and drop source.");
 API_ENUM(0_1, ImGui, ColorEditFlags_NoBorder,
   "ColorButton: disable border (which is enforced by default).");
+
+API_SECTION_P(colorFlags, "Alpha Preview", "For ColorEdit, ColorPicker, ColorButton");
+API_ENUM(0_10, ImGui, ColorEditFlags_AlphaOpaque,
+R"(Disable alpha in the preview.
+   Contrary to _NoAlpha it may still be edited when calling ColorEdit4/ColorPicker4.
+   For ColorButton this does the same as _NoAlpha.)");
+API_ENUM(0_10, ImGui, ColorEditFlags_AlphaNoBg,
+  "Disable rendering a checkerboard background behind transparent color.");
+API_ENUM(0_1, ImGui, ColorEditFlags_AlphaPreviewHalf,
+  "Display half opaque / half transparent preview.");
+
 API_SECTION_P(colorFlags, "User Options", "(right-click on widget to change some of them)");
 API_ENUM(0_1, ImGui, ColorEditFlags_AlphaBar,
   "ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.");
-API_ENUM(0_1, ImGui, ColorEditFlags_AlphaPreview,
-R"(ColorEdit, ColorPicker, ColorButton: display preview as a transparent color
-   over a checkerboard, instead of opaque.)");
-API_ENUM(0_1, ImGui, ColorEditFlags_AlphaPreviewHalf,
-R"(ColorEdit, ColorPicker, ColorButton: display half opaque / half checkerboard,
-   instead of opaque.)");
 // API_ENUM(ImGui, ColorEditFlags_HDR,
 // R"((WIP) ColorEdit: Currently only disable 0.0..1.0 limits in RGBA edition
 //    (note: you probably want to use ImGuiColorEditFlags_Float flag as well).)");

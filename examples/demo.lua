@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.7)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.8)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -2178,16 +2178,11 @@ label:
     if not widgets.colors then
       widgets.colors = {
         rgba               = 0x72909ac8,
-        alpha_preview      = true,
-        alpha_half_preview = false,
-        drag_and_drop      = true,
-        options_menu       = true,
+        base_flags         = ImGui.ColorEditFlags_None,
         saved_palette      = nil, -- filled later
         backup_color       = nil,
         no_border          = false,
-        alpha              = true,
-        alpha_bar          = true,
-        side_preview       = true,
+        color_picker_flags = ImGui.ColorEditFlags_AlphaBar,
         ref_color          = false,
         ref_color_rgba     = 0xff00ff80,
         display_mode       = 0,
@@ -2197,19 +2192,14 @@ label:
       }
     end
 
-    -- static bool hdr = false;
     ImGui.SeparatorText(ctx, 'Options')
-    rv,widgets.colors.alpha_preview      = ImGui.Checkbox(ctx, 'With Alpha Preview',      widgets.colors.alpha_preview)
-    rv,widgets.colors.alpha_half_preview = ImGui.Checkbox(ctx, 'With Half Alpha Preview', widgets.colors.alpha_half_preview)
-    rv,widgets.colors.drag_and_drop      = ImGui.Checkbox(ctx, 'With Drag and Drop',      widgets.colors.drag_and_drop)
-    rv,widgets.colors.options_menu       = ImGui.Checkbox(ctx, 'With Options Menu',       widgets.colors.options_menu)
-    ImGui.SameLine(ctx); demo.HelpMarker('Right-click on the individual color widget to show options.')
-    -- ImGui.Checkbox("With HDR", &hdr); ImGui.SameLine(); HelpMarker("Currently all this does is to lift the 0..1 limits on dragging widgets.")
-    local misc_flags = --(widgets.colors.hdr and ImGui.ColorEditFlags_HDR or 0) |
-      (widgets.colors.drag_and_drop and 0 or ImGui.ColorEditFlags_NoDragDrop) |
-      (widgets.colors.alpha_half_preview and ImGui.ColorEditFlags_AlphaPreviewHalf
-        or (widgets.colors.alpha_preview and ImGui.ColorEditFlags_AlphaPreview or 0)) |
-      (widgets.colors.options_menu  and 0 or ImGui.ColorEditFlags_NoOptions)
+    rv,widgets.colors.base_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_NoAlpha', widgets.colors.base_flags, ImGui.ColorEditFlags_NoAlpha)
+    rv,widgets.colors.base_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_AlphaOpaque', widgets.colors.base_flags, ImGui.ColorEditFlags_AlphaOpaque)
+    rv,widgets.colors.base_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_AlphaNoBg', widgets.colors.base_flags, ImGui.ColorEditFlags_AlphaNoBg)
+    rv,widgets.colors.base_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_AlphaPreviewHalf', widgets.colors.base_flags, ImGui.ColorEditFlags_AlphaPreviewHalf)
+    rv,widgets.colors.base_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_NoDragDrop', widgets.colors.base_flags, ImGui.ColorEditFlags_NoDragDrop)
+    rv,widgets.colors.base_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_NoOptions', widgets.colors.base_flags, ImGui.ColorEditFlags_NoOptions); ImGui.SameLine(ctx); demo.HelpMarker('Right-click on the individual color widget to show options.')
+    -- rv,widgets.colors.base_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_HDR', widgets.colors.base_flags, ImGui.ColorEditFlags_HDR); ImGui::SameLine(ctx); HelpMarker('Currently all this does is to lift the 0..1 limits on dragging widgets.')
 
     ImGui.SeparatorText(ctx, 'Inline color editor')
     ImGui.Text(ctx, 'Color widget:')
@@ -2217,23 +2207,23 @@ label:
       'Click on the color square to open a color picker.\n\z
        CTRL+click on individual component to input value.\n')
     local argb = demo.RgbaToArgb(widgets.colors.rgba)
-    rv,argb = ImGui.ColorEdit3(ctx, 'MyColor##1', argb, misc_flags)
+    rv,argb = ImGui.ColorEdit3(ctx, 'MyColor##1', argb, widgets.colors.base_flags)
     if rv then
       widgets.colors.rgba = demo.ArgbToRgba(argb)
     end
 
     ImGui.Text(ctx, 'Color widget HSV with Alpha:')
-    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##2', widgets.colors.rgba, ImGui.ColorEditFlags_DisplayHSV | misc_flags)
+    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##2', widgets.colors.rgba, ImGui.ColorEditFlags_DisplayHSV | widgets.colors.base_flags)
 
     ImGui.Text(ctx, 'Color widget with Float Display:')
-    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##2f', widgets.colors.rgba, ImGui.ColorEditFlags_Float | misc_flags)
+    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##2f', widgets.colors.rgba, ImGui.ColorEditFlags_Float | widgets.colors.base_flags)
 
     ImGui.Text(ctx, 'Color button with Picker:')
     ImGui.SameLine(ctx); demo.HelpMarker(
       'With the ColorEditFlags_NoInputs flag you can hide all the slider/text inputs.\n\z
        With the ColorEditFlags_NoLabel flag you can pass a non-empty label which will only \z
        be used for the tooltip and picker popup.')
-    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##3', widgets.colors.rgba, ImGui.ColorEditFlags_NoInputs | ImGui.ColorEditFlags_NoLabel | misc_flags)
+    rv,widgets.colors.rgba = ImGui.ColorEdit4(ctx, 'MyColor##3', widgets.colors.rgba, ImGui.ColorEditFlags_NoInputs | ImGui.ColorEditFlags_NoLabel | widgets.colors.base_flags)
 
     ImGui.Text(ctx, 'Color button with Custom Picker Popup:')
 
@@ -2245,7 +2235,7 @@ label:
       end
     end
 
-    local open_popup = ImGui.ColorButton(ctx, 'MyColor##3b', widgets.colors.rgba, misc_flags)
+    local open_popup = ImGui.ColorButton(ctx, 'MyColor##3b', widgets.colors.rgba, widgets.colors.base_flags)
     ImGui.SameLine(ctx, 0, (ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)))
     open_popup = ImGui.Button(ctx, 'Palette') or open_popup
     if open_popup then
@@ -2255,7 +2245,7 @@ label:
     if ImGui.BeginPopup(ctx, 'mypicker') then
       ImGui.Text(ctx, 'MY CUSTOM COLOR PICKER WITH AN AMAZING PALETTE!')
       ImGui.Separator(ctx)
-      rv,widgets.colors.rgba = ImGui.ColorPicker4(ctx, '##picker', widgets.colors.rgba, misc_flags | ImGui.ColorEditFlags_NoSidePreview | ImGui.ColorEditFlags_NoSmallPreview)
+      rv,widgets.colors.rgba = ImGui.ColorPicker4(ctx, '##picker', widgets.colors.rgba, widgets.colors.base_flags | ImGui.ColorEditFlags_NoSidePreview | ImGui.ColorEditFlags_NoSmallPreview)
       ImGui.SameLine(ctx)
 
       ImGui.BeginGroup(ctx) -- Lock X position
@@ -2308,35 +2298,34 @@ label:
     ImGui.Text(ctx, 'Color button only:')
     rv,widgets.colors.no_border = ImGui.Checkbox(ctx, 'ColorEditFlags_NoBorder', widgets.colors.no_border)
     ImGui.ColorButton(ctx, 'MyColor##3c', widgets.colors.rgba,
-      misc_flags | (widgets.colors.no_border and ImGui.ColorEditFlags_NoBorder or 0),
+      widgets.colors.base_flags | (widgets.colors.no_border and ImGui.ColorEditFlags_NoBorder or 0),
       80, 80)
 
     ImGui.SeparatorText(ctx, 'Color picker')
-    rv,widgets.colors.alpha = ImGui.Checkbox(ctx, 'With Alpha', widgets.colors.alpha)
-    rv,widgets.colors.alpha_bar = ImGui.Checkbox(ctx, 'With Alpha Bar', widgets.colors.alpha_bar)
-    rv,widgets.colors.side_preview = ImGui.Checkbox(ctx, 'With Side Preview', widgets.colors.side_preview)
-    if widgets.colors.side_preview then
+    ImGui.PushID(ctx, 'Color picker')
+    rv,widgets.colors.color_picker_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_NoAlpha', widgets.colors.color_picker_flags, ImGui.ColorEditFlags_NoAlpha)
+    rv,widgets.colors.color_picker_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_AlphaBar', widgets.colors.color_picker_flags, ImGui.ColorEditFlags_AlphaBar)
+    rv,widgets.colors.color_picker_flags = ImGui.CheckboxFlags(ctx, 'ColorEditFlags_NoSidePreview', widgets.colors.color_picker_flags, ImGui.ColorEditFlags_NoSidePreview)
+    if widgets.colors.color_picker_flags & ImGui.ColorEditFlags_NoSidePreview ~= 0 then
       ImGui.SameLine(ctx)
       rv,widgets.colors.ref_color = ImGui.Checkbox(ctx, 'With Ref Color', widgets.colors.ref_color)
       if widgets.colors.ref_color then
         ImGui.SameLine(ctx)
         rv,widgets.colors.ref_color_rgba = ImGui.ColorEdit4(ctx, '##RefColor',
-          widgets.colors.ref_color_rgba, ImGui.ColorEditFlags_NoInputs | misc_flags)
+          widgets.colors.ref_color_rgba, ImGui.ColorEditFlags_NoInputs | widgets.colors.base_flags)
       end
     end
-    rv,widgets.colors.display_mode = ImGui.Combo(ctx, 'Display Mode', widgets.colors.display_mode,
-      'Auto/Current\0None\0RGB Only\0HSV Only\0Hex Only\0')
+
+    rv,widgets.colors.picker_mode = ImGui.Combo(ctx, 'Picker Mode', widgets.colors.picker_mode, 'Auto/Current\0ColorEditFlags_PickerHueBar\0ColorEditFlags_PickerHueWheel\0')
+    ImGui.SameLine(ctx); demo.HelpMarker('When not specified explicitly, user can right-click the picker to change mode.')
+
+    rv,widgets.colors.display_mode = ImGui.Combo(ctx, 'Display Mode', widgets.colors.display_mode, 'Auto/Current\0ColorEditFlags_NoInputs\0ColorEditFlags_DisplayRGB\0ColorEditFlags_DisplayHSV\0ColorEditFlags_DisplayHex\0')
     ImGui.SameLine(ctx); demo.HelpMarker(
       "ColorEdit defaults to displaying RGB inputs if you don't specify a display mode, \z
        but the user can change it with a right-click on those inputs.\n\nColorPicker defaults to displaying RGB+HSV+Hex \z
        if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().")
-    rv,widgets.colors.picker_mode = ImGui.Combo(ctx, 'Picker Mode', widgets.colors.picker_mode,
-      'Auto/Current\0Hue bar + SV rect\0Hue wheel + SV triangle\0')
-    ImGui.SameLine(ctx); demo.HelpMarker('When not specified explicitly (Auto/Current mode), user can right-click the picker to change mode.')
-    local flags = misc_flags
-    if not widgets.colors.alpha         then flags = flags | ImGui.ColorEditFlags_NoAlpha        end
-    if widgets.colors.alpha_bar         then flags = flags | ImGui.ColorEditFlags_AlphaBar       end
-    if not widgets.colors.side_preview  then flags = flags | ImGui.ColorEditFlags_NoSidePreview  end
+
+    local flags = widgets.colors.base_flags | widgets.colors.color_picker_flags
     if widgets.colors.picker_mode  == 1 then flags = flags | ImGui.ColorEditFlags_PickerHueBar   end
     if widgets.colors.picker_mode  == 2 then flags = flags | ImGui.ColorEditFlags_PickerHueWheel end
     if widgets.colors.display_mode == 1 then flags = flags | ImGui.ColorEditFlags_NoInputs       end -- Disable all RGB/HSV/Hex displays
@@ -2344,12 +2333,13 @@ label:
     if widgets.colors.display_mode == 3 then flags = flags | ImGui.ColorEditFlags_DisplayHSV     end
     if widgets.colors.display_mode == 4 then flags = flags | ImGui.ColorEditFlags_DisplayHex     end
 
-    local color = widgets.colors.alpha and widgets.colors.rgba or demo.RgbaToArgb(widgets.colors.rgba)
-    local ref_color = widgets.colors.alpha and widgets.colors.ref_color_rgba or demo.RgbaToArgb(widgets.colors.ref_color_rgba)
+    local has_alpha = flags & ImGui.ColorEditFlags_NoAlpha == 0
+    local color = has_alpha and widgets.colors.rgba or demo.RgbaToArgb(widgets.colors.rgba)
+    local ref_color = has_alpha and widgets.colors.ref_color_rgba or demo.RgbaToArgb(widgets.colors.ref_color_rgba)
     rv,color = ImGui.ColorPicker4(ctx, 'MyColor##4', color, flags,
       widgets.colors.ref_color and ref_color or nil)
     if rv then
-      widgets.colors.rgba = widgets.colors.alpha and color or demo.ArgbToRgba(color)
+      widgets.colors.rgba = has_alpha and color or demo.ArgbToRgba(color)
     end
 
     ImGui.Text(ctx, 'Set defaults in code:')
@@ -2377,6 +2367,7 @@ label:
     ImGui.SetNextItemWidth(ctx, w)
     rv,color = ImGui.ColorPicker3(ctx, '##MyColor##6', color, ImGui.ColorEditFlags_PickerHueWheel | ImGui.ColorEditFlags_NoSidePreview | ImGui.ColorEditFlags_NoInputs | ImGui.ColorEditFlags_NoAlpha)
     if rv then widgets.colors.rgba = demo.ArgbToRgba(color) end
+    ImGui.PopID(ctx)
 
     -- HSV encoded support (to avoid RGB<>HSV round trips and singularities when S==0 or V==0)
     ImGui.Spacing(ctx)
@@ -6714,6 +6705,17 @@ function demo.ShowDemoWindowInputs()
 
     ImGui.Text(ctx, ('Mouse wheel: %.1f %.1f'):format(ImGui.GetMouseWheel(ctx)))
 
+    ImGui.Text(ctx, 'Mouse clicked count:')
+    for button = 0, buttons do
+      if ImGui.IsMouseDown(ctx, button) then
+        local count = ImGui.GetMouseClickedCount(ctx, button)
+        if count > 0 then
+          ImGui.SameLine(ctx)
+          ImGui.Text(ctx, ('b%d: %d'):format(button, count))
+        end
+      end
+    end
+
     ImGui.Text(ctx, 'Keys down:')
     for key, name in demo.EachEnum('Key') do
       if ImGui.IsKeyDown(ctx, key) then
@@ -7267,7 +7269,7 @@ function demo.ShowStyleEditor()
       slider('FrameBorderSize',    0.0, 1.0, '%.0f')
       slider('TabBorderSize',      0.0, 1.0, '%.0f')
       slider('TabBarBorderSize',   0.0, 2.0, '%.0f')
-      slider('TabBarOverlineSize', 0.0, 2.0, '%.0f'); ImGui.SameLine(ctx); demo.HelpMarker('Overline is only drawn over the selected tab when TabBarFlags_DrawSelectedOverline is set.')
+      slider('TabBarOverlineSize', 0.0, 3.0, '%.0f'); ImGui.SameLine(ctx); demo.HelpMarker('Overline is only drawn over the selected tab when TabBarFlags_DrawSelectedOverline is set.')
 
       ImGui.SeparatorText(ctx, 'Rounding')
       slider('WindowRounding',    0.0, 12.0, '%.0f')
@@ -7319,12 +7321,12 @@ function demo.ShowStyleEditor()
 
       ImGui.TextFilter_Draw(app.style_editor.colors.filter, ctx, 'Filter colors', ImGui.GetFontSize(ctx) * 16)
 
-      if ImGui.RadioButton(ctx, 'Opaque', app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_None) then
-        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_None
+      if ImGui.RadioButton(ctx, 'Opaque', app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_AlphaOpaque) then
+        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_AlphaOpaque
       end
       ImGui.SameLine(ctx)
-      if ImGui.RadioButton(ctx, 'Alpha',  app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_AlphaPreview) then
-        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_AlphaPreview
+      if ImGui.RadioButton(ctx, 'Alpha',  app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_None) then
+        app.style_editor.colors.alpha_flags = ImGui.ColorEditFlags_None
       end
       ImGui.SameLine(ctx)
       if ImGui.RadioButton(ctx, 'Both',   app.style_editor.colors.alpha_flags == ImGui.ColorEditFlags_AlphaPreviewHalf) then

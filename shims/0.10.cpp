@@ -113,3 +113,6 @@ SHIM_CONST(0_8, ConfigFlags_NavNoCaptureKeyboard, 0);
 
 // dear imgui v1.91.7
 SHIM_ALIAS(0_9_1, TreeNodeFlags_SpanTextWidth, TreeNodeFlags_SpanLabelWidth);
+
+// dear imgui v1.91.8
+SHIM_CONST(0_1, ColorEditFlags_AlphaPreview, 0); // no replacement

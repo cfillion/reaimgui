@@ -86,6 +86,17 @@ R"(Did mouse button double-clicked? Same as GetMouseClickedCount() == 2.
   return ImGui::IsMouseDoubleClicked(button);
 }
 
+API_FUNC(0_10, bool, IsMouseReleasedWithDelay, (Context*,ctx)
+(int,button) (double,delay),
+R"(Delayed mouse release (use sparingly!). Generally used with
+`delay >= ConfigVar_MouseDoubleClickTime` + combined with a
+`GetMouseClickedCount()==1` test. This is a very rarely used UI idiom,
+but some apps use this: e.g. MS Explorer single click on an icon to rename.)")
+{
+  FRAME_GUARD;
+  return ImGui::IsMouseReleasedWithDelay(button, delay);
+}
+
 API_FUNC(0_5_10, int, GetMouseClickedCount, (Context*,ctx)
 (int,button),
 "Return the number of successive mouse-clicks at the time where a click happen (otherwise 0).")
