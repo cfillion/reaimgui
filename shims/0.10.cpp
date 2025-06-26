@@ -37,6 +37,7 @@ SHIM("0.10",
   (int, ConfigVar_DebugHighlightIdConflicts)
 
   (int, SliderFlags_ClampOnInput)
+  (int, Col_NavCursor)
 );
 
 // dear imgui v1.91
@@ -102,3 +103,9 @@ SHIM_FUNC(0_5, Context*, CreateContext,
 
 // dear imgui v1.91.3
 SHIM_ALIAS(0_1, SliderFlags_AlwaysClamp, SliderFlags_ClampOnInput);
+
+// dear imgui v1.91.4
+SHIM_ALIAS(0_1, Col_NavHighlight, Col_NavCursor);
+// no known usage in public search results
+SHIM_CONST(0_1, ConfigFlags_NavEnableSetMousePos, 0);
+SHIM_CONST(0_8, ConfigFlags_NavNoCaptureKeyboard, 0);

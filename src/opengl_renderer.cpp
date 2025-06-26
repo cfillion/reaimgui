@@ -26,10 +26,6 @@
 #  include <OpenGL/gl3.h>
 #elif _WIN32
 #  include <imgui/backends/imgui_impl_opengl3_loader.h>
-constexpr int GL_TEXTURE_WRAP_S {0x2802},
-              GL_TEXTURE_WRAP_T {0x2803},
-              GL_REPEAT         {0x2901},
-              GL_NO_ERROR       {0x0000};
 #else
 #  include <epoxy/gl.h>
 #endif
@@ -268,7 +264,6 @@ void OpenGLRenderer::render(const bool flip)
   // allow glClear to modify the whole framebuffer
   glDisable(GL_SCISSOR_TEST);
 
-  const GLenum err {glGetError()};
-  if(err != GL_NO_ERROR)
+  if(const GLenum err {glGetError()})
     throw backend_error {"rendering failed with OpenGL error {:#x}", err};
 }

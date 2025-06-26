@@ -54,7 +54,7 @@ NATIVE_ONLY = [
 
   'ImDrawData* ImGui::GetDrawData()',
   'ImDrawListSharedData* ImGui::GetDrawListSharedData()',
-  'void ImDrawList::AddCallback(ImDrawCallback, void*)',
+  'void ImDrawList::AddCallback(ImDrawCallback, void*, size_t)',
   'void ImDrawList::AddDrawCmd()',
 
   'void ImDrawListSplitter::ClearFreeMemory()',

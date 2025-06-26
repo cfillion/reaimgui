@@ -108,6 +108,14 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   // &ImGuiIO::FontGlobalScale,
   // &ImGuiIO::FontAllowUserScaling,
 
+  // &ImGuiIO::ConfigNavSwapGamepadButtons,
+  &ImGuiIO::ConfigNavMoveSetMousePos,
+  &ImGuiIO::ConfigNavCaptureKeyboard,
+  &ImGuiIO::ConfigNavEscapeClearFocusItem,
+  &ImGuiIO::ConfigNavEscapeClearFocusWindow,
+  &ImGuiIO::ConfigNavCursorVisibleAuto,
+  &ImGuiIO::ConfigNavCursorVisibleAlways,
+
   &ImGuiIO::ConfigDockingNoSplit,
   &ImGuiIO::ConfigDockingWithShift,
   // &ImGuiIO::ConfigDockingAlwaysTabBar,
@@ -119,7 +127,6 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   // &ImGuiIO::ConfigViewportsNoDefaultParent,
 
   &ImGuiIO::ConfigMacOSXBehaviors,
-  // &ImGuiIO::ConfigNavSwapGamepadButtons,
   &ImGuiIO::ConfigInputTrickleEventQueue,
   &ImGuiIO::ConfigInputTextCursorBlink,
   &ImGuiIO::ConfigInputTextEnterKeepActive,
@@ -162,6 +169,27 @@ R"(When holding a key/button, time before it starts repeating, in seconds
 API_CONFIGVAR(0_7, KeyRepeatRate,
   "When holding a key/button, rate at which it repeats, in seconds.");
 
+// Keyboard/Gamepad Navigation options
+// API_CONFIGVAR(?, ConfigNavSwapGamepadButtons,
+// R"(Swap Activate<>Cancel (A<>B) buttons, matching typical
+//    "Nintendo/Japanese style" gamepad layout.)");
+API_CONFIGVAR(0_10, NavMoveSetMousePos,
+  "Directional/tabbing navigation teleports the mouse cursor.");
+API_CONFIGVAR(0_10, NavCaptureKeyboard,
+R"(Instruct navigation to not capture global keyboard input
+   (see SetNextFrameWantCaptureKeyboard).)");
+API_CONFIGVAR(0_10, NavEscapeClearFocusItem,
+R"(Pressing Escape can clear focused item + navigation id/highlight.
+   Set to false if you want to always keep highlight on.)");
+API_CONFIGVAR(0_10, NavEscapeClearFocusWindow,
+R"(Pressing Escape can clear focused window as well
+   (superset of ConfigVar_NavEscapeClearFocusItem).)");
+API_CONFIGVAR(0_10, NavCursorVisibleAuto,
+R"(Using directional navigation key makes the cursor visible.
+   Mouse click hides the cursor.)");
+API_CONFIGVAR(0_10, NavCursorVisibleAlways,
+  "Navigation cursor is always visible.");
+
 API_CONFIGVAR(0_7, DockingNoSplit,
 R"(Simplified docking mode: disable window splitting, so docking is limited to
    merging multiple windows together into tab-bars.)");
@@ -182,9 +210,6 @@ R"(Enabled by default on macOS. Swap Cmd<>Ctrl keys, OS X style text editing
    of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End,
    Double click selects by word instead of selecting whole text, Multi-selection
    in lists uses Cmd/Super instead of Ctrl.)");
-// API_CONFIGVAR(?, ConfigNavSwapGamepadButtons,
-// R"(Swap Activate<>Cancel (A<>B) buttons, matching typical
-//    "Nintendo/Japanese style" gamepad layout.)");
 API_CONFIGVAR(0_7, InputTrickleEventQueue,
 R"(Enable input queue trickling: some types of events submitted during the same
    frame (e.g. button down + up) will be spread over multiple frames, improving
@@ -308,11 +333,6 @@ R"(Master keyboard navigation enable flag.
    Enable full Tabbing + directional arrows + space/enter to activate.)");
 // API_ENUM(ImGui, ConfigFlags_NavEnableGamepad,
 //"Master gamepad navigation enable flag.");
-API_ENUM(0_1, ImGui, ConfigFlags_NavEnableSetMousePos,
-  "Instruct navigation to move the mouse cursor.");
-API_ENUM(0_8, ImGui, ConfigFlags_NavNoCaptureKeyboard,
-R"(Instruct navigation to not capture global keyboard input when
-   ConfigFlags_NavEnableKeyboard is set (see SetNextFrameWantCaptureKeyboard).)");
 API_ENUM(0_1, ImGui, ConfigFlags_NoMouse,
   "Instruct dear imgui to disable mouse inputs and interactions");
 API_ENUM(0_1, ImGui, ConfigFlags_NoMouseCursorChange,

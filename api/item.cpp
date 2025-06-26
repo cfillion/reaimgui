@@ -78,13 +78,10 @@ API_FUNC(0_9, void, DebugStartItemPicker, (Context*,ctx),
   ImGui::DebugStartItemPicker();
 }
 
-API_SUBSECTION("Focus & Activation",
-R"~(Prefer using "SetItemDefaultFocus()" over
-"if(IsWindowAppearing()) SetScrollHereY()" when applicable to signify
-"this is the default item".)~");
+API_SUBSECTION("Focus & Activation");
 
 API_FUNC(0_1, void, SetItemDefaultFocus, (Context*,ctx),
-"Make last item the default focused item of a window.")
+"Make last item the default focused item of a newly appearing window.")
 {
   FRAME_GUARD;
   ImGui::SetItemDefaultFocus();
@@ -288,7 +285,7 @@ API_ENUM(0_1, ImGui, HoveredFlags_AllowWhenBlockedByActiveItem,
 R"(Return true even if an active item is blocking access to this item/window.
    Useful for Drag and Drop patterns.)");
 API_ENUM(0_7, ImGui, HoveredFlags_NoNavOverride,
-  "Disable using gamepad/keyboard navigation state when active, always query mouse.");
+  "Disable using keyboard/gamepad navigation state when active, always query mouse.");
 API_ENUM(0_9, ImGui, HoveredFlags_ForTooltip,
 R"(Typically used with IsItemHovered() before SetTooltip().
    This is a shortcut to pull flags from ConfigVar_HoverFlagsForTooltip* where

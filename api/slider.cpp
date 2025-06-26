@@ -46,7 +46,7 @@ public:
 
 API_SUBSECTION("Drag Sliders",
 R"(Speed are per-pixel of mouse movement (v_speed=0.2: mouse needs to move by 5
-pixels to increase value by 1). For gamepad/keyboard navigation, minimum speed
+pixels to increase value by 1). For keyboard/gamepad navigation, minimum speed
 is Max(v_speed, minimum_step_at_given_precision).
 
 Use v_min < v_max to clamp edits to given limits. Note that CTRL+Click manual

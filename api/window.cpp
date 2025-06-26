@@ -170,7 +170,7 @@ R"(Style the child window like a framed item: use Col_FrameBg,
    instead of Col_ChildBg, StyleVar_ChildRounding, StyleVar_ChildBorderSize,
    StyleVar_WindowPadding.)");
 API_ENUM(0_9_2, ImGui, ChildFlags_NavFlattened,
-R"(Share focus scope, allow gamepad/keyboard navigation to cross over parent
+R"(Share focus scope, allow keyboard/gamepad navigation to cross over parent
    border to this child or between sibling child windows.)");
 
 API_SECTION_DEF(properties, ROOT_SECTION, "Properties",
@@ -680,9 +680,9 @@ API_ENUM(0_1, ImGui, WindowFlags_AlwaysVerticalScrollbar,
 API_ENUM(0_1, ImGui, WindowFlags_AlwaysHorizontalScrollbar,
   "Always show horizontal scrollbar (even if ContentSize.x < Size.x).");
 API_ENUM(0_1, ImGui, WindowFlags_NoNavInputs,
-  "No gamepad/keyboard navigation within the window.");
+  "No keyboard/gamepad navigation within the window.");
 API_ENUM(0_1, ImGui, WindowFlags_NoNavFocus,
-R"(No focusing toward this window with gamepad/keyboard navigation
+R"(No focusing toward this window with keyboard/gamepad navigation
    (e.g. skipped by CTRL+TAB).)");
 API_ENUM(0_1, ImGui, WindowFlags_UnsavedDocument,
 R"(Display a dot next to the title. When used in a tab/docking context,

@@ -41,7 +41,8 @@ public:
 
       // reserved for ImGui's internal use
       static_cast<ImGuiInputTextFlags>(
-        ImGuiInputTextFlags_Multiline | ImGuiInputTextFlags_NoMarkEdited
+        ImGuiInputTextFlags_Multiline | ImGuiInputTextFlags_MergedItem |
+        ImGuiInputTextFlags_LocalizeDecimalPoint
       )
     );
   }
@@ -274,8 +275,8 @@ API_SECTION_P(flags, "Inputs");
 API_ENUM(0_1, ImGui, InputTextFlags_AllowTabInput,
   "Pressing TAB input a '\\t' character into the text field.");
 API_ENUM(0_1, ImGui, InputTextFlags_EnterReturnsTrue,
-R"(Return 'true' when Enter is pressed (as opposed to every time the value was
-   modified). Consider looking at the IsItemDeactivatedAfterEdit function.)");
+R"(Return true when Enter is pressed (as opposed to every time the value was
+   modified). Consider using IsItemDeactivatedAfterEdit instead!)");
 API_ENUM(0_8, ImGui, InputTextFlags_EscapeClearsAll,
 R"(Escape key clears content if not empty, and deactivate otherwise
    (constrast to default behavior of Escape to revert).)");

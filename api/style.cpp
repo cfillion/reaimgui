@@ -360,8 +360,7 @@ API_ENUM(0_1, ImGui, Col_PlotLines,             "");
 API_ENUM(0_1, ImGui, Col_PlotLinesHovered,      "");
 API_ENUM(0_1, ImGui, Col_PlotHistogram,         "");
 API_ENUM(0_1, ImGui, Col_PlotHistogramHovered,  "");
-API_ENUM(0_1, ImGui, Col_TableHeaderBg,
-  "Table header background.");
+API_ENUM(0_1, ImGui, Col_TableHeaderBg, "Table header background.");
 API_ENUM(0_1, ImGui, Col_TableBorderStrong,
   "Table outer and header borders (prefer using Alpha=1.0 here).");
 API_ENUM(0_1, ImGui, Col_TableBorderLight,
@@ -371,7 +370,8 @@ API_ENUM(0_1, ImGui, Col_TableRowBgAlt, "Table row background (odd rows).");
 API_ENUM(0_10, ImGui, Col_TextLink, "Hyperlink color");
 API_ENUM(0_1, ImGui, Col_TextSelectedBg, "");
 API_ENUM(0_1, ImGui, Col_DragDropTarget, "Rectangle highlighting a drop target");
-API_ENUM(0_1, ImGui, Col_NavHighlight, "Gamepad/keyboard: current highlighted item.");
+API_ENUM(0_1, ImGui, Col_NavCursor,
+  "Color of keyboard/gamepad navigation cursor/rectangle, when visible");
 API_ENUM(0_1, ImGui, Col_NavWindowingHighlight, "Highlight window when using CTRL+TAB.");
 API_ENUM(0_1, ImGui, Col_NavWindowingDimBg,
   "Darken/colorize entire screen behind the CTRL+TAB window list, when active.");

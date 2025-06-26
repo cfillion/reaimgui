@@ -100,6 +100,8 @@ API_ENUM(0_1, ImGui, ButtonFlags_MouseButtonRight,
   "React on right mouse button.");
 API_ENUM(0_1, ImGui, ButtonFlags_MouseButtonMiddle,
   "React on center mouse button.");
+API_ENUM(0_10, ImGui, ButtonFlags_EnableNav,
+  "Do not disable navigation/tabbing. Otherwise disabled by default.");
 
 API_SUBSECTION("Cardinal Directions", "For ArrowButton.");
 API_ENUM(0_1, ImGui, Dir_None,  "");

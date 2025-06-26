@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.3)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.4)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -350,8 +350,6 @@ function demo.ShowDemoWindow(open)
       ImGui.SameLine(ctx); demo.HelpMarker('Enable keyboard controls.')
       -- ImGui.CheckboxFlags("io.ConfigFlags: NavEnableGamepad",     &io.ConfigFlags, ImGuiConfigFlags_NavEnableGamepad)
       -- ImGui.SameLine(ctx); demo.HelpMarker("Enable gamepad controls. Require backend to set io.BackendFlags |= ImGuiBackendFlags_HasGamepad.\n\nRead instructions in imgui.cpp for details.")
-      rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NavEnableSetMousePos', config.flags, ImGui.ConfigFlags_NavEnableSetMousePos)
-      ImGui.SameLine(ctx); demo.HelpMarker('Instruct navigation to move the mouse cursor.')
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoMouse', config.flags, ImGui.ConfigFlags_NoMouse)
       ImGui.SameLine(ctx); demo.HelpMarker('Instruct dear imgui to disable mouse inputs and interactions.')
 
@@ -379,6 +377,20 @@ function demo.ShowDemoWindow(open)
       -- ReaImGui
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoSavedSettings', config.flags, ImGui.ConfigFlags_NoSavedSettings)
       ImGui.SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
+
+      ImGui.SeparatorText(ctx, 'Keyboard/Gamepad Navigation')
+      -- configVarCheckbox('NavSwapGamepadButtons')
+      configVarCheckbox('NavMoveSetMousePos')
+      ImGui.SameLine(ctx); demo.HelpMarker('Directional/tabbing navigation teleports the mouse cursor.')
+      configVarCheckbox('NavCaptureKeyboard')
+      configVarCheckbox('NavEscapeClearFocusItem')
+      ImGui.SameLine(ctx); demo.HelpMarker('Pressing Escape clears focused item.')
+      configVarCheckbox('NavEscapeClearFocusWindow')
+      ImGui.SameLine(ctx); demo.HelpMarker('Pressing Escape clears focused window.')
+      configVarCheckbox('NavCursorVisibleAuto')
+      ImGui.SameLine(ctx); demo.HelpMarker("Using directional navigation key makes the cursor visible. Mouse click hides the cursor.");
+      configVarCheckbox('NavCursorVisibleAlways')
+      ImGui.SameLine(ctx); demo.HelpMarker("Navigation cursor is always visible.")
 
       ImGui.SeparatorText(ctx, 'Docking')
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_DockingEnable', config.flags, ImGui.ConfigFlags_DockingEnable)
@@ -956,7 +968,7 @@ function demo.ShowDemoWindowWidgets()
 
     -- The following examples are passed for documentation purpose but may not be useful to most users.
     -- Passing HoveredFlags_ForTooltip to IsItemHovered() will pull HoveredFlags flags values from
-    -- ConfigVar_HoverFlagsForTooltipMouse or ConfigVar_HoverFlagsForTooltipNav depending on whether mouse or gamepad/keyboard is being used.
+    -- ConfigVar_HoverFlagsForTooltipMouse or ConfigVar_HoverFlagsForTooltipNav depending on whether mouse or keyboard/gamepad is being used.
     -- With default settings, HoveredFlags_ForTooltip is equivalent to HoveredFlags_DelayShort + HoveredFlags_Stationary.
     ImGui.Button(ctx, 'Manual', sz_w, sz_h)
     if ImGui.IsItemHovered(ctx, ImGui.HoveredFlags_ForTooltip) then
