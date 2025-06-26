@@ -91,6 +91,22 @@ API_FUNC(0_1, void, BulletText, (Context*,ctx)
   ImGui::TextUnformatted(text);
 }
 
+API_FUNC(0_10, bool, TextLink, (Context*,ctx)
+(const char*,label),
+"Hyperlink text button, returns true when clicked.")
+{
+  FRAME_GUARD;
+  return ImGui::TextLink(label);
+}
+
+API_FUNC(0_10, void, TextLinkOpenURL, (Context*,ctx)
+(const char*,label) (RO<const char*>,url),
+"Hyperlink text button, automatically open file/url when clicked")
+{
+  FRAME_GUARD;
+  ImGui::TextLinkOpenURL(label, url);
+}
+
 API_FUNC(0_1, void, PushTextWrapPos, (Context*,ctx)
 (RO<double*>,wrap_local_pos_x,0.0),
 R"(Push word-wrapping position for Text*() commands.

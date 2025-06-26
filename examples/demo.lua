@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.90.9)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.0)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -20,39 +20,43 @@ reaper.defer(loop)
 
 --[[
 How to easily locate code?
-- Use the Item Picker to debug break in code by clicking any widgets: https://github.com/ocornut/imgui/wiki/Debug-Tools
+- Use Tools->Item Picker to debug break in code by clicking any widgets: https://github.com/ocornut/imgui/wiki/Debug-Tools
 - Find a visible string and search for it in the code!
+- You can search/grep for all sections listed in the index to find the section.
 
 Index of this file:
 
-// [SECTION] Helpers
-// [SECTION] Demo Window / ShowDemoWindow()
-// - ShowDemoWindow()
-// - sub section: ShowDemoWindowWidgets()
-// - sub section: ShowDemoWindowLayout()
-// - sub section: ShowDemoWindowPopups()
-// - sub section: ShowDemoWindowTables()
-// - sub section: ShowDemoWindowInputs()
--- [SECTION] Style Editor / ShowStyleEditor()
--- [SECTION] User Guide / ShowUserGuide()
-// [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
-// [SECTION] Example App: Debug Console / ShowExampleAppConsole()
-// [SECTION] Example App: Debug Log / ShowExampleAppLog()
-// [SECTION] Example App: Simple Layout / ShowExampleAppLayout()
-// [SECTION] Example App: Property Editor / ShowExampleAppPropertyEditor()
-// [SECTION] Example App: Long Text / ShowExampleAppLongText()
-// [SECTION] Example App: Auto Resize / ShowExampleAppAutoResize()
-// [SECTION] Example App: Constrained Resize / ShowExampleAppConstrainedResize()
-// [SECTION] Example App: Simple overlay / ShowExampleAppSimpleOverlay()
-// [SECTION] Example App: Fullscreen window / ShowExampleAppFullscreen()
-// [SECTION] Example App: Manipulating window titles / ShowExampleAppWindowTitles()
-// [SECTION] Example App: Custom Rendering using ImDrawList API / ShowExampleAppCustomRendering()
-// [SECTION] Example App: Docking, DockSpace / ShowExampleAppDockSpace()
-// [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
+- [SECTION] Helpers
+- [SECTION] Helpers: ExampleTreeNode, ExampleMemberInfo (for use by Property Editor & Multi-Select demos)
+- [SECTION] Demo Window / ShowDemoWindow()
+- [SECTION] ShowDemoWindowMenuBar()
+- [SECTION] ShowDemoWindowWidgets()
+- [SECTION] ShowDemoWindowMultiSelect()
+- [SECTION] ShowDemoWindowLayout()
+- [SECTION] ShowDemoWindowPopups()
+- [SECTION] ShowDemoWindowTables()
+- [SECTION] ShowDemoWindowInputs()
+- [SECTION] Style Editor / ShowStyleEditor()
+- [SECTION] User Guide / ShowUserGuide()
+- [SECTION] Example App: Main Menu Bar / ShowExampleAppMainMenuBar()
+- [SECTION] Example App: Debug Console / ShowExampleAppConsole()
+- [SECTION] Example App: Debug Log / ShowExampleAppLog()
+- [SECTION] Example App: Simple Layout / ShowExampleAppLayout()
+- [SECTION] Example App: Property Editor / ShowExampleAppPropertyEditor()
+- [SECTION] Example App: Long Text / ShowExampleAppLongText()
+- [SECTION] Example App: Auto Resize / ShowExampleAppAutoResize()
+- [SECTION] Example App: Constrained Resize / ShowExampleAppConstrainedResize()
+- [SECTION] Example App: Simple overlay / ShowExampleAppSimpleOverlay()
+- [SECTION] Example App: Fullscreen window / ShowExampleAppFullscreen()
+- [SECTION] Example App: Manipulating window titles / ShowExampleAppWindowTitles()
+- [SECTION] Example App: Custom Rendering using ImDrawList API / ShowExampleAppCustomRendering()
+- [SECTION] Example App: Docking, DockSpace / ShowExampleAppDockSpace()
+- [SECTION] Example App: Documents Handling / ShowExampleAppDocuments()
+- [SECTION] Example App: Assets Browser / ShowExampleAppAssetsBrowser()
 --]]
 
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-local ImGui = require 'imgui' '0.9.2'
+local ImGui = require 'imgui' '0.10'
 
 local ctx, clipper
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
@@ -86,6 +90,7 @@ local demo = {
 local show_app = {
   -- Examples Apps (accessible from the "Examples" menu)
   -- main_menu_bar      = false,
+  assets_browser     = false,
   console            = false,
   custom_rendering   = false,
   -- dockspace          = false,
@@ -137,7 +142,6 @@ if select(2, reaper.get_action_context()) == debug.getinfo(1, 'S').source:sub(2)
   _G.misc    = misc
   _G.app     = app
 
-  -- hajime!
   ctx = ImGui.CreateContext('ReaImGui Demo')
   clipper = ImGui.CreateListClipper(ctx)
   ImGui.Attach(ctx, clipper)
@@ -176,21 +180,6 @@ function demo.clamp(v, mn, mx)
   if v < mn then return mn end
   if v > mx then return mx end
   return v
-end
-
-function demo.Link(url)
-  if not reaper.CF_ShellExecute then
-    ImGui.Text(ctx, url)
-    return
-  end
-
-  local color = ImGui.GetStyleColor(ctx, ImGui.Col_CheckMark)
-  ImGui.TextColored(ctx, color, url)
-  if ImGui.IsItemClicked(ctx) then
-    reaper.CF_ShellExecute(url)
-  elseif ImGui.IsItemHovered(ctx) then
-    ImGui.SetMouseCursor(ctx, ImGui.MouseCursor_Hand)
-  end
 end
 
 function demo.HSV(h, s, v, a)
@@ -238,14 +227,11 @@ function demo.DockName(dock_id)
 end
 
 -------------------------------------------------------------------------------
--- [SECTION] Demo Window / ShowDemoWindow()
+-- [SECTION] Helpers: ExampleTreeNode, ExampleMemberInfo (for use by Property Editor etc.)
 -------------------------------------------------------------------------------
--- - ShowDemoWindowWidgets()
--- - ShowDemoWindowLayout()
--- - ShowDemoWindowPopups()
--- - ShowDemoWindowTables()
--- - ShowDemoWindowColumns()
--- - ShowDemoWindowInputs()
+
+-------------------------------------------------------------------------------
+-- [SECTION] Demo Window / ShowDemoWindow()
 -------------------------------------------------------------------------------
 
 -- Demonstrate most Dear ImGui features (this is big function!)
@@ -254,10 +240,12 @@ end
 function demo.ShowDemoWindow(open)
   local rv = nil
 
+  -- Examples Apps (accessible from the "Examples" menu)
   -- if show_app.main_menu_bar      then                               demo.ShowExampleAppMainMenuBar()       end
-  -- if show_app.dockspace          then show_app.dockspace          = demo.ShowExampleAppDockSpace()         end -- Process the Docking app first, as explicit DockSpace() nodes needs to be submitted early (read comments near the DockSpace function)
-  if show_app.documents          then show_app.documents          = demo.ShowExampleAppDocuments()         end -- Process the Document app next, as it may also use a DockSpace()
+  -- if show_app.dockspace          then show_app.dockspace          = demo.ShowExampleAppDockSpace()         end -- Important: Process the Docking app first, as explicit DockSpace() nodes needs to be submitted early (read comments near the DockSpace function)
+  if show_app.documents          then show_app.documents          = demo.ShowExampleAppDocuments()         end -- ...process the Document app next, as it may also use a DockSpace()
   if show_app.console            then show_app.console            = demo.ShowExampleAppConsole()           end
+  if show_app.assets_browser     then show_app.assets_browser     = demo.ShowExampleAppAssetsBrowser()     end
   if show_app.custom_rendering   then show_app.custom_rendering   = demo.ShowExampleAppCustomRendering()   end
   if show_app.log                then show_app.log                = demo.ShowExampleAppLog()               end
   if show_app.layout             then show_app.layout             = demo.ShowExampleAppLayout()            end
@@ -267,7 +255,7 @@ function demo.ShowDemoWindow(open)
   if show_app.constrained_resize then show_app.constrained_resize = demo.ShowExampleAppConstrainedResize() end
   if show_app.fullscreen         then show_app.fullscreen         = demo.ShowExampleAppFullscreen()        end
   if show_app.long_text          then show_app.long_text          = demo.ShowExampleAppLongText()          end
-  if show_app.window_titles      then                               demo.ShowExampleAppWindowTitles()      end
+  if show_app.window_titles      then show_app.window_titles      = demo.ShowExampleAppWindowTitles()      end
 
   if show_app.metrics       then show_app.metrics       = ImGui.ShowMetricsWindow(ctx,     show_app.metrics)       end
   if show_app.debug_log     then show_app.debug_log     = ImGui.ShowDebugLogWindow(ctx,    show_app.debug_log)     end
@@ -315,70 +303,11 @@ function demo.ShowDemoWindow(open)
   if not rv then return open end
 
   -- Most "big" widgets share a common width settings by default. See 'Demo->Layout->Widgets Width' for details.
-
-  -- e.g. Use 2/3 of the space for widgets and 1/3 for labels (right align)
-  --ImGui.PushItemWidth(ctx, -ImGui.GetWindowWidth(ctx) * 0.35)
-
-  -- e.g. Leave a fixed amount of width for labels (by passing a negative value), the rest goes to widgets.
-  ImGui.PushItemWidth(ctx, ImGui.GetFontSize(ctx) * -12)
+  ImGui.PushItemWidth(ctx, ImGui.GetFontSize(ctx) * -12)        -- e.g. Leave a fixed amount of width for labels (by passing a negative value), the rest goes to widgets.
+  --ImGui.PushItemWidth(ctx, -ImGui.GetWindowWidth(ctx) * 0.35) -- e.g. Use 2/3 of the space for widgets and 1/3 for labels (right align)
 
   -- Menu Bar
-  if ImGui.BeginMenuBar(ctx) then
-    if ImGui.BeginMenu(ctx, 'Menu') then
-      demo.ShowExampleMenuFile()
-      ImGui.EndMenu(ctx)
-    end
-    if ImGui.BeginMenu(ctx, 'ReaImGui') then
-      if ImGui.MenuItem(ctx, 'Documentation') then
-        reaper.Main_OnCommand(reaper.NamedCommandLookup('_REAIMGUI_DOCUMENTATION'), 0)
-      end
-      if ImGui.MenuItem(ctx, 'Preferences...') then
-        reaper.ViewPrefs(0, 'reaimgui')
-      end
-      ImGui.EndMenu(ctx)
-    end
-    if ImGui.BeginMenu(ctx, 'Examples') then
-      -- rv,show_app.main_menu_bar =
-      --   ImGui.MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
-
-      ImGui.SeparatorText(ctx, 'Mini apps')
-      rv,show_app.console          = ImGui.MenuItem(ctx, 'Console', nil, show_app.console)
-      rv,show_app.custom_rendering = ImGui.MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
-      -- rv,show_app.dockspace     = ImGui.MenuItem(ctx, 'Dockspace', nil, show_app.dockspace, false)
-      rv,show_app.documents        = ImGui.MenuItem(ctx, 'Documents', nil, show_app.documents, false)
-      rv,show_app.log              = ImGui.MenuItem(ctx, 'Log', nil, show_app.log)
-      rv,show_app.property_editor  = ImGui.MenuItem(ctx, 'Property editor', nil, show_app.property_editor)
-      rv,show_app.layout           = ImGui.MenuItem(ctx, 'Simple layout', nil, show_app.layout)
-      rv,show_app.simple_overlay   = ImGui.MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay)
-
-      ImGui.SeparatorText(ctx, 'Concepts')
-      rv,show_app.auto_resize        = ImGui.MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize)
-      rv,show_app.constrained_resize = ImGui.MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize)
-      rv,show_app.fullscreen         = ImGui.MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen)
-      rv,show_app.long_text          = ImGui.MenuItem(ctx, 'Long text display', nil, show_app.long_text)
-      rv,show_app.window_titles      = ImGui.MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
-
-      ImGui.EndMenu(ctx)
-    end
-    -- if ImGui.MenuItem(ctx, 'MenuItem') then end -- You can also use MenuItem() inside a menu bar!
-    if ImGui.BeginMenu(ctx, 'Tools') then
-      rv,show_app.metrics       = ImGui.MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
-      rv,show_app.debug_log     = ImGui.MenuItem(ctx, 'Debug Log',        nil, show_app.debug_log)
-      rv,show_app.id_stack_tool = ImGui.MenuItem(ctx, 'ID Stack Tool',    nil, show_app.id_stack_tool)
-      rv,show_app.style_editor  = ImGui.MenuItem(ctx, 'Style Editor',     nil, show_app.style_editor)
-      local is_debugger_present = true -- ImGui::GetIO().ConfigDebugIsDebuggerPresent
-      if ImGui.MenuItem(ctx, 'Item Picker', nil, false, is_debugger_present) then
-        ImGui.DebugStartItemPicker(ctx)
-      end
-      -- if !is_debugger_present then
-      --   ImGui.SetItemTooltip(ctx, 'Requires io.ConfigDebugIsDebuggerPresent=true to be set.\n\nWe otherwise disable the menu option to avoid casual users crashing the application.\n\nYou can however always access the Item Picker in Metrics->Tools.')
-      -- end
-      ImGui.Separator(ctx)
-      rv,show_app.about = ImGui.MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
-      ImGui.EndMenu(ctx)
-    end
-    ImGui.EndMenuBar(ctx)
-  end
+  demo.ShowDemoWindowMenuBar()
 
   ImGui.Text(ctx, ('dear imgui says hello. (%s) (%d) (ReaImGui %s)'):format(IMGUI_VERSION, IMGUI_VERSION_NUM, REAIMGUI_VERSION))
   ImGui.Spacing(ctx)
@@ -393,9 +322,12 @@ function demo.ShowDemoWindow(open)
     ImGui.SeparatorText(ctx, 'PROGRAMMER GUIDE:')
     ImGui.BulletText(ctx, 'See the ShowDemoWindow() code in ReaImGui_Demo.lua. <- you are here!')
     -- ImGui.BulletText(ctx, 'See comments in imgui.cpp.')
-    ImGui.BulletText(ctx, 'See example scripts in the examples/ folder.')
-    ImGui.Indent(ctx); demo.Link('https://github.com/cfillion/reaimgui/tree/master/examples'); ImGui.Unindent(ctx)
-    ImGui.BulletText(ctx, 'Read the FAQ at '); ImGui.SameLine(ctx, 0, 0); demo.Link('https://www.dearimgui.com/faq/')
+    ImGui.BulletText(ctx, 'See example scripts in the ')
+    ImGui.SameLine(ctx, 0, 0)
+    ImGui.TextLinkOpenURL(ctx, 'examples folder', 'https://github.com/cfillion/reaimgui/tree/master/examples')
+    ImGui.BulletText(ctx, 'Read the FAQ at ')
+    ImGui.SameLine(ctx, 0, 0)
+    ImGui.TextLinkOpenURL(ctx, 'https://www.dearimgui.com/faq/')
     ImGui.BulletText(ctx, "Set ConfigFlags_NavEnableKeyboard for keyboard controls.")
     -- ImGui.BulletText(ctx, "Set ConfigFlags_NavEnableGamepad for gamepad controls.")
 
@@ -555,8 +487,9 @@ function demo.ShowDemoWindow(open)
 --         }
 
     if ImGui.TreeNode(ctx, 'Style') then
+      rv, show_app.style_editor = ImGui.Checkbox(ctx, 'Style Editor', show_app.style_editor);
+      ImGui.SameLine(ctx)
       demo.HelpMarker("The same contents can be accessed in 'Tools->Style Editor'.")
-      demo.ShowStyleEditor()
       ImGui.TreePop(ctx)
       ImGui.Spacing(ctx)
     end
@@ -663,10 +596,77 @@ function demo.ShowDemoWindow(open)
   return open
 end
 
-function demo.ShowDemoWindowWidgets()
-  if not ImGui.CollapsingHeader(ctx, 'Widgets') then
-    return
+-------------------------------------------------------------------------------
+-- [SECTION] ShowDemoWindowMenuBar()
+-------------------------------------------------------------------------------
+
+function demo.ShowDemoWindowMenuBar()
+  if not ImGui.BeginMenuBar(ctx) then return end
+
+  if ImGui.BeginMenu(ctx, 'Menu') then
+    demo.ShowExampleMenuFile()
+    ImGui.EndMenu(ctx)
   end
+  if ImGui.BeginMenu(ctx, 'ReaImGui') then
+    if ImGui.MenuItem(ctx, 'Documentation') then
+      reaper.Main_OnCommand(reaper.NamedCommandLookup('_REAIMGUI_DOCUMENTATION'), 0)
+    end
+    if ImGui.MenuItem(ctx, 'Preferences...') then
+      reaper.ViewPrefs(0, 'reaimgui')
+    end
+    ImGui.EndMenu(ctx)
+  end
+  if ImGui.BeginMenu(ctx, 'Examples') then
+    -- rv,show_app.main_menu_bar =
+    --   ImGui.MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
+
+    ImGui.SeparatorText(ctx, 'Mini apps')
+    rv,show_app.assets_browser   = ImGui.MenuItem(ctx, 'Assets browser', nil, show_app.assets_browser)
+    rv,show_app.console          = ImGui.MenuItem(ctx, 'Console', nil, show_app.console)
+    rv,show_app.custom_rendering = ImGui.MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
+    -- rv,show_app.dockspace     = ImGui.MenuItem(ctx, 'Dockspace', nil, show_app.dockspace, false)
+    rv,show_app.documents        = ImGui.MenuItem(ctx, 'Documents', nil, show_app.documents, false)
+    rv,show_app.log              = ImGui.MenuItem(ctx, 'Log', nil, show_app.log)
+    rv,show_app.property_editor  = ImGui.MenuItem(ctx, 'Property editor', nil, show_app.property_editor)
+    rv,show_app.layout           = ImGui.MenuItem(ctx, 'Simple layout', nil, show_app.layout)
+    rv,show_app.simple_overlay   = ImGui.MenuItem(ctx, 'Simple overlay', nil, show_app.simple_overlay)
+
+    ImGui.SeparatorText(ctx, 'Concepts')
+    rv,show_app.auto_resize        = ImGui.MenuItem(ctx, 'Auto-resizing window', nil, show_app.auto_resize)
+    rv,show_app.constrained_resize = ImGui.MenuItem(ctx, 'Constrained-resizing window', nil, show_app.constrained_resize)
+    rv,show_app.fullscreen         = ImGui.MenuItem(ctx, 'Fullscreen window', nil, show_app.fullscreen)
+    rv,show_app.long_text          = ImGui.MenuItem(ctx, 'Long text display', nil, show_app.long_text)
+    rv,show_app.window_titles      = ImGui.MenuItem(ctx, 'Manipulating window titles', nil, show_app.window_titles)
+
+    ImGui.EndMenu(ctx)
+  end
+  -- if ImGui.MenuItem(ctx, 'MenuItem') then end -- You can also use MenuItem() inside a menu bar!
+  if ImGui.BeginMenu(ctx, 'Tools') then
+    rv,show_app.metrics       = ImGui.MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
+    rv,show_app.debug_log     = ImGui.MenuItem(ctx, 'Debug Log',        nil, show_app.debug_log)
+    rv,show_app.id_stack_tool = ImGui.MenuItem(ctx, 'ID Stack Tool',    nil, show_app.id_stack_tool)
+    rv,show_app.style_editor  = ImGui.MenuItem(ctx, 'Style Editor',     nil, show_app.style_editor)
+    local is_debugger_present = true -- ImGui::GetIO().ConfigDebugIsDebuggerPresent
+    if ImGui.MenuItem(ctx, 'Item Picker', nil, false, is_debugger_present) then
+      ImGui.DebugStartItemPicker(ctx)
+    end
+    -- if !is_debugger_present then
+    --   ImGui.SetItemTooltip(ctx, 'Requires io.ConfigDebugIsDebuggerPresent=true to be set.\n\nWe otherwise disable the menu option to avoid casual users crashing the application.\n\nYou can however always access the Item Picker in Metrics->Tools.')
+    -- end
+    ImGui.Separator(ctx)
+    rv,show_app.about = ImGui.MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
+    ImGui.EndMenu(ctx)
+  end
+  ImGui.EndMenuBar(ctx)
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] ShowDemoWindowWidgets()
+-------------------------------------------------------------------------------
+
+function demo.ShowDemoWindowWidgets()
+  --ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
+  if not ImGui.CollapsingHeader(ctx, 'Widgets') then return end
 
   if widgets.disable_all then
     ImGui.BeginDisabled(ctx)
@@ -742,7 +742,7 @@ function demo.ShowDemoWindowWidgets()
 
     -- Arrow buttons with Repeater
     local spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
-    ImGui.PushButtonRepeat(ctx, true)
+    ImGui.PushItemFlag(ctx, ImGui.ItemFlags_ButtonRepeat, true)
     if ImGui.ArrowButton(ctx, '##left', ImGui.Dir_Left) then
       widgets.basic.counter = widgets.basic.counter - 1
     end
@@ -750,7 +750,7 @@ function demo.ShowDemoWindowWidgets()
     if ImGui.ArrowButton(ctx, '##right', ImGui.Dir_Right) then
       widgets.basic.counter = widgets.basic.counter + 1
     end
-    ImGui.PopButtonRepeat(ctx)
+    ImGui.PopItemFlag(ctx)
     ImGui.SameLine(ctx)
     ImGui.Text(ctx, ('%d'):format(widgets.basic.counter))
 
@@ -1009,6 +1009,7 @@ function demo.ShowDemoWindowWidgets()
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAllColumns',    widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanAllColumns); ImGui.SameLine(ctx); demo.HelpMarker('For use in Tables only.')
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_AllowOverlap',     widgets.trees.base_flags, ImGui.TreeNodeFlags_AllowOverlap);
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_Framed',           widgets.trees.base_flags, ImGui.TreeNodeFlags_Framed); ImGui.SameLine(ctx); demo.HelpMarker('Draw frame with background (e.g. for CollapsingHeader)')
+      -- rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_NavLeftJumpsBackHere', widgets.trees.base_flags, ImGui.TreeNodeFlags_NavLeftJumpsBackHere)
       rv,widgets.trees.align_label_with_current_x_position = ImGui.Checkbox(ctx, 'Align label with current X position', widgets.trees.align_label_with_current_x_position)
       rv,widgets.trees.test_drag_and_drop = ImGui.Checkbox(ctx, 'Test tree node as drag source',      widgets.trees.test_drag_and_drop)
       ImGui.Text(ctx, 'Hello!')
@@ -1041,13 +1042,15 @@ function demo.ShowDemoWindowWidgets()
             ImGui.Text(ctx, 'This is a drag and drop source')
             ImGui.EndDragDropSource(ctx)
           end
-          if i == 2 then
+          if i == 2 and widgets.trees.base_flags & ImGui.TreeNodeFlags_SpanTextWidth ~= 0 then
              -- Item 2 has an additional inline button to help demonstrate SpanTextWidth.
              ImGui.SameLine(ctx)
              if ImGui.SmallButton(ctx, 'button') then end
           end
           if node_open then
             ImGui.BulletText(ctx, 'Blah blah\nBlah Blah')
+            ImGui.SameLine(ctx)
+            ImGui.SmallButton(ctx, 'Button')
             ImGui.TreePop(ctx)
           end
         else
@@ -1191,7 +1194,7 @@ function demo.ShowDemoWindowWidgets()
       ImGui.TextWrapped(ctx,
         'CJK text cannot be rendered due to current limitations regarding font rasterization. \z
         It is however safe to copy & paste from/into another application.')
-      demo.Link('https://github.com/cfillion/reaimgui/issues/5')
+      ImGui.TextLinkOpenURL(ctx, 'https://github.com/cfillion/reaimgui/issues/5')
       ImGui.Spacing(ctx)
       -- ImGui.TextWrapped(ctx,
       --   'CJK text will only appear if the font was loaded with the appropriate CJK character ranges. \z
@@ -1462,7 +1465,7 @@ function demo.ShowDemoWindowWidgets()
 
   if ImGui.TreeNode(ctx, 'List boxes') then
     if not widgets.lists then
-      widgets.lists = { current_idx = 1 }
+      widgets.lists = { selected_idx = 1, item_highlight = false }
     end
 
     -- BeginListBox() is essentially a thin wrapper to using BeginChild()/EndChild()
@@ -1472,11 +1475,19 @@ function demo.ShowDemoWindowWidgets()
     -- (your selection data could be an index, a pointer to the object, an id for the object, a flag intrusively
     -- stored in the object itself, etc.)
     local items = { 'AAAA', 'BBBB', 'CCCC', 'DDDD', 'EEEE', 'FFFF', 'GGGG', 'HHHH', 'IIII', 'JJJJ', 'KKKK', 'LLLLLLL', 'MMMM', 'OOOOOOO' }
+
+    local item_highlighted_idx = -1
+    rv, widgets.lists.item_highlight = ImGui.Checkbox(ctx, 'Highlight hovered item in second listbox', widgets.lists.item_highlight)
+
     if ImGui.BeginListBox(ctx, 'listbox 1') then
       for n,v in ipairs(items) do
-        local is_selected = widgets.lists.current_idx == n
+        local is_selected = widgets.lists.selected_idx == n
         if ImGui.Selectable(ctx, v, is_selected) then
-          widgets.lists.current_idx = n
+          widgets.lists.selected_idx = n
+        end
+
+        if widgets.lists.item_highlight and ImGui.IsItemHovered(ctx) then
+          widgets.lists.item_highlighted_idx = n
         end
 
         -- Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -1492,8 +1503,9 @@ function demo.ShowDemoWindowWidgets()
     ImGui.Text(ctx, 'Full-width:')
     if ImGui.BeginListBox(ctx, '##listbox 2', -FLT_MIN, 5 * ImGui.GetTextLineHeightWithSpacing(ctx)) then
       for n,v in ipairs(items) do
-        local is_selected = widgets.lists.current_idx == n
-        if ImGui.Selectable(ctx, v, is_selected) then
+        local is_selected = widgets.lists.selected_idx == n
+        local flags = widgets.lists.item_highlighted_idx == n and ImGui.SelectableFlags_Highlight or 0
+        if ImGui.Selectable(ctx, v, is_selected, flags) then
           widgets.lists.current_idx = n
         end
 
@@ -1508,6 +1520,7 @@ function demo.ShowDemoWindowWidgets()
     ImGui.TreePop(ctx)
   end
 
+  --ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
   if ImGui.TreeNode(ctx, 'Selectables') then
     if not widgets.selectables then
       widgets.selectables = {
@@ -1583,7 +1596,7 @@ function demo.ShowDemoWindowWidgets()
       ImGui.SameLine(ctx); ImGui.SmallButton(ctx, 'Link 3')
       ImGui.TreePop(ctx)
     end
-    if ImGui.TreeNode(ctx, 'In columns') then
+    if ImGui.TreeNode(ctx, 'In Tables') then
       if ImGui.BeginTable(ctx, 'split1', 3, ImGui.TableFlags_Resizable | ImGui.TableFlags_NoSavedSettings | ImGui.TableFlags_Borders) then
         for i,sel in ipairs(widgets.selectables.columns) do
           ImGui.TableNextColumn(ctx)
@@ -1671,6 +1684,8 @@ function demo.ShowDemoWindowWidgets()
 
     ImGui.TreePop(ctx)
   end
+
+  demo.ShowDemoWindowMultiSelect()
 
   if ImGui.TreeNode(ctx, 'Text Input') then
     if not widgets.input then
@@ -2812,9 +2827,9 @@ label:
       rv = ImGui.Button(ctx, 'ITEM: Button')
     end
     if item_type == 2  then -- Testing button (with repeater)
-      ImGui.PushButtonRepeat(ctx, true)
+      ImGui.PushItemFlag(ctx, ImGui.ItemFlags_ButtonRepeat, true)
       rv = ImGui.Button(ctx, 'ITEM: Button')
-      ImGui.PopButtonRepeat(ctx)
+      ImGui.PopItemFlag(ctx)
     end
     if item_type == 3  then -- Testing checkbox
       rv,widgets.query_item.b = ImGui.Checkbox(ctx, 'ITEM: Checkbox', widgets.query_item.b)
@@ -3076,10 +3091,25 @@ label:
   end
 end
 
+-------------------------------------------------------------------------------
+-- [SECTION] ShowDemoWindowMultiSelect()
+-------------------------------------------------------------------------------
+-- Multi-selection demos
+-- Also read: https://github.com/ocornut/imgui/wiki/Multi-Select
+-------------------------------------------------------------------------------
+
+function demo.ShowDemoWindowMultiSelect()
+  if not ImGui.TreeNode(ctx, 'Selection State & Multi-Select') then return end
+
+  ImGui.TreePop(ctx)
+end
+
+-------------------------------------------------------------------------------
+-- [SECTION] ShowDemoWindowLayout()
+-------------------------------------------------------------------------------
+
 function demo.ShowDemoWindowLayout()
-  if not ImGui.CollapsingHeader(ctx, 'Layout & Scrolling') then
-    return
-  end
+  if not ImGui.CollapsingHeader(ctx, 'Layout & Scrolling') then return end
 
   local rv
 
@@ -3379,7 +3409,7 @@ function demo.ShowDemoWindowLayout()
     ImGui.Text(ctx, 'Manual wrapping:')
     local item_spacing_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)
     local buttons_count = 20
-    local window_visible_x2 = ImGui.GetWindowPos(ctx) + ImGui.GetWindowContentRegionMax(ctx)
+    local window_visible_x2 = ImGui.GetCursorScreenPos(ctx) + ImGui.GetContentRegionAvail(ctx)
     for n = 0, buttons_count - 1 do
       ImGui.PushID(ctx, n)
       ImGui.Button(ctx, 'Box', button_sz_w, button_sz_h)
@@ -3873,7 +3903,7 @@ function demo.ShowDemoWindowLayout()
     ImGui.TreePop(ctx)
   end
 
-  if ImGui.TreeNode(ctx, 'Clipping') then
+  if ImGui.TreeNode(ctx, 'Text Clipping') then
     if not layout.clipping then
       layout.clipping = {
         size_w   = 100.0, size_h   = 100.0,
@@ -3974,10 +4004,12 @@ function demo.ShowDemoWindowLayout()
   end
 end
 
+-------------------------------------------------------------------------------
+-- [SECTION] ShowDemoWindowPopups()
+-------------------------------------------------------------------------------
+
 function demo.ShowDemoWindowPopups()
-  if not ImGui.CollapsingHeader(ctx, 'Popups & Modal windows') then
-    return
-  end
+  if not ImGui.CollapsingHeader(ctx, 'Popups & Modal windows') then return end
 
   local rv
 
@@ -4443,11 +4475,13 @@ function demo.ShowTableColumnsStatusFlags(flags)
   ImGui.CheckboxFlags(ctx, '_IsHovered', flags, ImGui.TableColumnFlags_IsHovered)
 end
 
+-------------------------------------------------------------------------------
+-- [SECTION] ShowDemoWindowTables()
+-------------------------------------------------------------------------------
+
 function demo.ShowDemoWindowTables()
   -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
-  if not ImGui.CollapsingHeader(ctx, 'Tables') then
-    return
-  end
+  if not ImGui.CollapsingHeader(ctx, 'Tables') then return end
 
   local rv
 
@@ -4564,7 +4598,7 @@ function demo.ShowDemoWindowTables()
     demo.PushStyleCompact()
     rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'TableFlags_RowBg', tables.borders_bg.flags, ImGui.TableFlags_RowBg)
     rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'TableFlags_Borders', tables.borders_bg.flags, ImGui.TableFlags_Borders)
-    ImGui.SameLine(ctx); demo.HelpMarker('TableFlags_Borders\n = TableFlags_BordersInnerV\n | TableFlags_BordersOuterV\n | TableFlags_BordersInnerV\n | TableFlags_BordersOuterH')
+    ImGui.SameLine(ctx); demo.HelpMarker('TableFlags_Borders\n = TableFlags_BordersInnerV\n | TableFlags_BordersOuterV\n | TableFlags_BordersInnerH\n | TableFlags_BordersOuterH')
     ImGui.Indent(ctx)
 
     rv,tables.borders_bg.flags = ImGui.CheckboxFlags(ctx, 'TableFlags_BordersH', tables.borders_bg.flags, ImGui.TableFlags_BordersH)
@@ -6236,8 +6270,6 @@ function demo.ShowDemoWindowTables()
       end
 
       -- Show data
-      ImGui.PushButtonRepeat(ctx, true)
-
       -- Demonstrate using clipper for large vertical lists
       ImGui.ListClipper_Begin(clipper, #tables.advanced.items)
       while ImGui.ListClipper_Step(clipper) do
@@ -6309,7 +6341,6 @@ function demo.ShowDemoWindowTables()
           ImGui.PopID(ctx)
         end
       end
-      ImGui.PopButtonRepeat(ctx)
 
       -- Store some info to display debug details below
       -- table_scroll_cur_x, table_scroll_cur_y = ImGui.GetScrollX(ctx), ImGui.GetScrollY(ctx)
@@ -6543,339 +6574,343 @@ end
 --     ImGui.TreePop();
 -- }
 
+-------------------------------------------------------------------------------
+-- [SECTION] ShowDemoWindowInputs()
+-------------------------------------------------------------------------------
+
 function demo.ShowDemoWindowInputs()
   local rv
 
-  if ImGui.CollapsingHeader(ctx, 'Inputs & Focus') then
-    -- Display inputs
-    ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
-    local inputs_opened = ImGui.TreeNode(ctx, 'Inputs')
-    ImGui.SameLine(ctx)
-    demo.HelpMarker(
-      "This is a simplified view. See more detailed input state:\n\z
-        - in 'Tools->Metrics/Debugger->Inputs'.\n\z
-        - in 'Tools->Debug Log->IO'.")
-    if inputs_opened then
-      if ImGui.IsMousePosValid(ctx) then
-        ImGui.Text(ctx, ('Mouse pos: (%g, %g)'):format(ImGui.GetMousePos(ctx)))
-      else
-        ImGui.Text(ctx, 'Mouse pos: <INVALID>')
-      end
-      ImGui.Text(ctx, ('Mouse delta: (%g, %g)'):format(ImGui.GetMouseDelta(ctx)))
+  if not ImGui.CollapsingHeader(ctx, 'Inputs & Focus') then return end
 
-      local buttons = 4
-      ImGui.Text(ctx, 'Mouse down:')
-      for button = 0, buttons do
-        if ImGui.IsMouseDown(ctx, button) then
-          local duration = ImGui.GetMouseDownDuration(ctx, button)
-          ImGui.SameLine(ctx)
-          ImGui.Text(ctx, ('b%d (%.02f secs)'):format(button, duration))
-        end
-      end
+  -- Display inputs
+  ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
+  local inputs_opened = ImGui.TreeNode(ctx, 'Inputs')
+  ImGui.SameLine(ctx)
+  demo.HelpMarker(
+    "This is a simplified view. See more detailed input state:\n\z
+      - in 'Tools->Metrics/Debugger->Inputs'.\n\z
+      - in 'Tools->Debug Log->IO'.")
+  if inputs_opened then
+    if ImGui.IsMousePosValid(ctx) then
+      ImGui.Text(ctx, ('Mouse pos: (%g, %g)'):format(ImGui.GetMousePos(ctx)))
+    else
+      ImGui.Text(ctx, 'Mouse pos: <INVALID>')
+    end
+    ImGui.Text(ctx, ('Mouse delta: (%g, %g)'):format(ImGui.GetMouseDelta(ctx)))
 
-      ImGui.Text(ctx, ('Mouse wheel: %.1f %.1f'):format(ImGui.GetMouseWheel(ctx)))
-
-      ImGui.Text(ctx, 'Keys down:')
-      for key, name in demo.EachEnum('Key') do
-        if ImGui.IsKeyDown(ctx, key) then
-          local duration = ImGui.GetKeyDownDuration(ctx, key)
-          ImGui.SameLine(ctx)
-          ImGui.Text(ctx, ('"%s" %d (%.02f secs)'):format(name, key, duration))
-        end
-      end
-      ImGui.Text(ctx, ('Keys mods: %s%s%s%s'):format(
-        ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl)  and 'CTRL '   or '',
-        ImGui.IsKeyDown(ctx, ImGui.Mod_Shift) and 'SHIFT '  or '',
-        ImGui.IsKeyDown(ctx, ImGui.Mod_Alt)   and 'ALT '    or '',
-        ImGui.IsKeyDown(ctx, ImGui.Mod_Super) and 'SUPER '  or ''))
-
-      ImGui.Text(ctx, 'Chars queue:')
-      for next_id = 0, math.huge do
-        local rv, c = ImGui.GetInputQueueCharacter(ctx, next_id)
-        if not rv then break end
+    local buttons = 4
+    ImGui.Text(ctx, 'Mouse down:')
+    for button = 0, buttons do
+      if ImGui.IsMouseDown(ctx, button) then
+        local duration = ImGui.GetMouseDownDuration(ctx, button)
         ImGui.SameLine(ctx)
-        ImGui.Text(ctx, ("'%s' (0x%04X)"):format(utf8.char(c), c))
+        ImGui.Text(ctx, ('b%d (%.02f secs)'):format(button, duration))
+      end
+    end
+
+    ImGui.Text(ctx, ('Mouse wheel: %.1f %.1f'):format(ImGui.GetMouseWheel(ctx)))
+
+    ImGui.Text(ctx, 'Keys down:')
+    for key, name in demo.EachEnum('Key') do
+      if ImGui.IsKeyDown(ctx, key) then
+        local duration = ImGui.GetKeyDownDuration(ctx, key)
+        ImGui.SameLine(ctx)
+        ImGui.Text(ctx, ('"%s" %d (%.02f secs)'):format(name, key, duration))
+      end
+    end
+    ImGui.Text(ctx, ('Keys mods: %s%s%s%s'):format(
+      ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl)  and 'CTRL '   or '',
+      ImGui.IsKeyDown(ctx, ImGui.Mod_Shift) and 'SHIFT '  or '',
+      ImGui.IsKeyDown(ctx, ImGui.Mod_Alt)   and 'ALT '    or '',
+      ImGui.IsKeyDown(ctx, ImGui.Mod_Super) and 'SUPER '  or ''))
+
+    ImGui.Text(ctx, 'Chars queue:')
+    for next_id = 0, math.huge do
+      local rv, c = ImGui.GetInputQueueCharacter(ctx, next_id)
+      if not rv then break end
+      ImGui.SameLine(ctx)
+      ImGui.Text(ctx, ("'%s' (0x%04X)"):format(utf8.char(c), c))
+    end
+
+    ImGui.TreePop(ctx)
+  end
+
+  -- Display ImGuiIO output flags
+  -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
+  -- local outputs_opened = ImGui.TreeNode(ctx, 'Outputs')
+  -- demo.HelpMarker(
+  --  'The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui \z
+  --   to instruct your application of how to route inputs. Typically, when a value is true, it means \z
+  --   Dear ImGui wants the corresponding inputs and we expect the underlying application to ignore them.\n\n\z
+  --   The most typical case is: when hovering a window, Dear ImGui set io.WantCaptureMouse to true, \z
+  --   and underlying application should ignore mouse inputs (in practice there are many and more subtle \z
+  --   rules leading to how those flags are set).');
+  -- if outputs_opened then
+  --   ImGui.Text('io.WantCaptureMouse: %d', io.WantCaptureMouse);
+  --   ImGui.Text('io.WantCaptureMouseUnlessPopupClose: %d', io.WantCaptureMouseUnlessPopupClose);
+  --   ImGui.Text('io.WantCaptureKeyboard: %d', io.WantCaptureKeyboard);
+  --   ImGui.Text('io.WantTextInput: %d', io.WantTextInput);
+  --   ImGui.Text('io.WantSetMousePos: %d', io.WantSetMousePos);
+  --   ImGui.Text('io.NavActive: %d, io.NavVisible: %d', io.NavActive, io.NavVisible);
+
+    if ImGui.TreeNode(ctx, 'WantCapture override') then
+      if not misc.capture_override then
+        misc.capture_override = { mouse = -1, keyboard = -1 }
+      end
+
+      demo.HelpMarker(
+        -- "Hovering the colored canvas will override io.WantCaptureXXX fields.\n\z
+        --  Notice how normally (when set to none), the value of io.WantCaptureKeyboard would be false when hovering \n
+        --  and true when clicking."
+        "SetNextFrameWantCaptureXXX instructs ReaImGui how to route inputs.\n\n\z
+        Capturing the keyboard allows receiving input from REAPER's global scope.\n\n\z
+        Hovering the colored canvas will call SetNextFrameWantCaptureXXX.")
+
+      local capture_override_desc = { 'None', 'Set to false', 'Set to true' }
+      -- ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 15)
+      -- rv,misc.capture_override.mouse = ImGui.SliderInt(ctx, 'SetNextFrameWantCaptureMouse() on hover', misc.capture_override.mouse, -1, 1, capture_override_desc[misc.capture_override.mouse + 2], ImGui.SliderFlags_AlwaysClamp)
+      ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 15)
+      rv,misc.capture_override.keyboard = ImGui.SliderInt(ctx, 'SetNextFrameWantCaptureKeyboard() on hover', misc.capture_override.keyboard, -1, 1, capture_override_desc[misc.capture_override.keyboard + 2], ImGui.SliderFlags_AlwaysClamp)
+
+      ImGui.ColorButton(ctx, '##panel', 0xb219b2ff, ImGui.ColorEditFlags_NoTooltip | ImGui.ColorEditFlags_NoDragDrop, 128, 96) -- Dummy item
+      -- if ImGui.IsItemHovered(ctx) and misc.capture_override.mouse ~= -1 then
+      --   ImGui.SetNextFrameWantCaptureMouse(ctx, misc.capture_override.mouse == 1)
+      -- end
+      if ImGui.IsItemHovered(ctx) and misc.capture_override.keyboard ~= -1 then
+        ImGui.SetNextFrameWantCaptureKeyboard(ctx, misc.capture_override.keyboard == 1)
       end
 
       ImGui.TreePop(ctx)
     end
 
-    -- Display ImGuiIO output flags
-    -- ImGui.SetNextItemOpen(ctx, true, ImGui.Cond_Once)
-    -- local outputs_opened = ImGui.TreeNode(ctx, 'Outputs')
-    -- demo.HelpMarker(
-    --  'The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui \z
-    --   to instruct your application of how to route inputs. Typically, when a value is true, it means \z
-    --   Dear ImGui wants the corresponding inputs and we expect the underlying application to ignore them.\n\n\z
-    --   The most typical case is: when hovering a window, Dear ImGui set io.WantCaptureMouse to true, \z
-    --   and underlying application should ignore mouse inputs (in practice there are many and more subtle \z
-    --   rules leading to how those flags are set).');
-    -- if outputs_opened then
-    --   ImGui.Text('io.WantCaptureMouse: %d', io.WantCaptureMouse);
-    --   ImGui.Text('io.WantCaptureMouseUnlessPopupClose: %d', io.WantCaptureMouseUnlessPopupClose);
-    --   ImGui.Text('io.WantCaptureKeyboard: %d', io.WantCaptureKeyboard);
-    --   ImGui.Text('io.WantTextInput: %d', io.WantTextInput);
-    --   ImGui.Text('io.WantSetMousePos: %d', io.WantSetMousePos);
-    --   ImGui.Text('io.NavActive: %d, io.NavVisible: %d', io.NavActive, io.NavVisible);
+  --   ImGui.TreePop(ctx)
+  -- end
 
-      if ImGui.TreeNode(ctx, 'WantCapture override') then
-        if not misc.capture_override then
-          misc.capture_override = { mouse = -1, keyboard = -1 }
-        end
+  -- Demonstrate using Shortcut() and Routing Policies.
+  -- The general flow is:
+  -- - Code interested in a chord (e.g. "Ctrl+A") declares their intent.
+  -- - Multiple locations may be interested in same chord! Routing helps find a winner.
+  -- - Every frame, we resolve all claims and assign one owner if the modifiers are matching.
+  -- - The lower-level function is 'bool SetShortcutRouting()', returns true when caller got the route.
+  -- - Most of the times, SetShortcutRouting() is not called directly. User mostly calls Shortcut() with routing flags.
+  -- - If you call Shortcut() WITHOUT any routing option, it uses InputFlags_RouteFocused.
+  -- TL;DR: Most uses will simply be:
+  -- - Shortcut(Mod_Ctrl | Key_A); // Use InputFlags_RouteFocused policy.
+  if ImGui.TreeNode(ctx, 'Shortcuts') then
+    if not misc.shortcuts then
+      misc.shortcuts = {
+        route_options = ImGui.InputFlags_Repeat,
+        route_type    = ImGui.InputFlags_RouteFocused,
+        factor = 0.5,
+      }
+    end
 
-        demo.HelpMarker(
-         -- "Hovering the colored canvas will override io.WantCaptureXXX fields.\n\z
-         --  Notice how normally (when set to none), the value of io.WantCaptureKeyboard would be false when hovering \n
-         --  and true when clicking."
-         "SetNextFrameWantCaptureXXX instructs ReaImGui how to route inputs.\n\n\z
-          Capturing the keyboard allows receiving input from REAPER's global scope.\n\n\z
-          Hovering the colored canvas will call SetNextFrameWantCaptureXXX.")
+    rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_Repeat', misc.shortcuts.route_options, ImGui.InputFlags_Repeat)
+    rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteActive', misc.shortcuts.route_type, ImGui.InputFlags_RouteActive)
+    rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteFocused (default)', misc.shortcuts.route_type, ImGui.InputFlags_RouteFocused)
+    rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteGlobal', misc.shortcuts.route_type, ImGui.InputFlags_RouteGlobal)
+    ImGui.Indent(ctx)
+    ImGui.BeginDisabled(ctx, misc.shortcuts.route_type ~= ImGui.InputFlags_RouteGlobal)
+    rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_RouteOverFocused',     misc.shortcuts.route_options, ImGui.InputFlags_RouteOverFocused)
+    rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_RouteOverActive',      misc.shortcuts.route_options, ImGui.InputFlags_RouteOverActive)
+    rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_RouteUnlessBgFocused', misc.shortcuts.route_options, ImGui.InputFlags_RouteUnlessBgFocused)
+    ImGui.EndDisabled(ctx)
+    ImGui.Unindent(ctx)
+    rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteAlways', misc.shortcuts.route_type, ImGui.InputFlags_RouteAlways)
+    local flags = misc.shortcuts.route_type | misc.shortcuts.route_options -- Merged flags
+    if misc.shortcuts.route_type ~= ImGui.InputFlags_RouteGlobal then
+      flags = flags & ~(ImGui.InputFlags_RouteOverFocused | ImGui.InputFlags_RouteOverActive | ImGui.InputFlags_RouteUnlessBgFocused)
+    end
 
-        local capture_override_desc = { 'None', 'Set to false', 'Set to true' }
-        -- ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 15)
-        -- rv,misc.capture_override.mouse = ImGui.SliderInt(ctx, 'SetNextFrameWantCaptureMouse() on hover', misc.capture_override.mouse, -1, 1, capture_override_desc[misc.capture_override.mouse + 2], ImGui.SliderFlags_AlwaysClamp)
-        ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 15)
-        rv,misc.capture_override.keyboard = ImGui.SliderInt(ctx, 'SetNextFrameWantCaptureKeyboard() on hover', misc.capture_override.keyboard, -1, 1, capture_override_desc[misc.capture_override.keyboard + 2], ImGui.SliderFlags_AlwaysClamp)
+    ImGui.SeparatorText(ctx, 'Using SetNextItemShortcut()')
+    ImGui.Text(ctx, 'Ctrl+S')
+    ImGui.SetNextItemShortcut(ctx, ImGui.Mod_Ctrl | ImGui.Key_S, flags | ImGui.InputFlags_Tooltip)
+    ImGui.Button(ctx, 'Save')
+    ImGui.Text(ctx, 'Alt+F')
+    ImGui.SetNextItemShortcut(ctx, ImGui.Mod_Alt | ImGui.Key_F, flags | ImGui.InputFlags_Tooltip)
+    rv, misc.shortcuts.factor = ImGui.SliderDouble(ctx, 'Factor', misc.shortcuts.factor, 0.0, 1.0)
 
-        ImGui.ColorButton(ctx, '##panel', 0xb219b2ff, ImGui.ColorEditFlags_NoTooltip | ImGui.ColorEditFlags_NoDragDrop, 128, 96) -- Dummy item
-        -- if ImGui.IsItemHovered(ctx) and misc.capture_override.mouse ~= -1 then
-        --   ImGui.SetNextFrameWantCaptureMouse(ctx, misc.capture_override.mouse == 1)
-        -- end
-        if ImGui.IsItemHovered(ctx) and misc.capture_override.keyboard ~= -1 then
-          ImGui.SetNextFrameWantCaptureKeyboard(ctx, misc.capture_override.keyboard == 1)
-        end
+    ImGui.SeparatorText(ctx, 'Using Shortcut()')
+    local line_height = ImGui.GetTextLineHeightWithSpacing(ctx)
+    local key_chord = ImGui.Mod_Ctrl | ImGui.Key_A
 
-        ImGui.TreePop(ctx)
-      end
+    ImGui.Text(ctx, 'Ctrl+A')
+    ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
 
-    --   ImGui.TreePop(ctx)
-    -- end
+    ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg, 0xff00ff20)
 
-    -- Demonstrate using Shortcut() and Routing Policies.
-    -- The general flow is:
-    -- - Code interested in a chord (e.g. "Ctrl+A") declares their intent.
-    -- - Multiple locations may be interested in same chord! Routing helps find a winner.
-    -- - Every frame, we resolve all claims and assign one owner if the modifiers are matching.
-    -- - The lower-level function is 'bool SetShortcutRouting()', returns true when caller got the route.
-    -- - Most of the times, SetShortcutRouting() is not called directly. User mostly calls Shortcut() with routing flags.
-    -- - If you call Shortcut() WITHOUT any routing option, it uses InputFlags_RouteFocused.
-    -- TL;DR: Most uses will simply be:
-    -- - Shortcut(Mod_Ctrl | Key_A); // Use InputFlags_RouteFocused policy.
-    if ImGui.TreeNode(ctx, 'Shortcuts') then
-      if not misc.shortcuts then
-        misc.shortcuts = {
-          route_options = ImGui.InputFlags_Repeat,
-          route_type    = ImGui.InputFlags_RouteFocused,
-          factor = 0.5,
-        }
-      end
+    if ImGui.BeginChild(ctx, 'WindowA', -FLT_MIN, line_height * 14, ImGui.ChildFlags_Border) then
+      ImGui.Text(ctx, 'Press Ctrl+A and see who receives it!')
+      ImGui.Separator(ctx)
 
-      rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_Repeat', misc.shortcuts.route_options, ImGui.InputFlags_Repeat)
-      rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteActive', misc.shortcuts.route_type, ImGui.InputFlags_RouteActive)
-      rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteFocused (default)', misc.shortcuts.route_type, ImGui.InputFlags_RouteFocused)
-      rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteGlobal', misc.shortcuts.route_type, ImGui.InputFlags_RouteGlobal)
-      ImGui.Indent(ctx)
-      ImGui.BeginDisabled(ctx, misc.shortcuts.route_type ~= ImGui.InputFlags_RouteGlobal)
-      rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_RouteOverFocused',     misc.shortcuts.route_options, ImGui.InputFlags_RouteOverFocused)
-      rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_RouteOverActive',      misc.shortcuts.route_options, ImGui.InputFlags_RouteOverActive)
-      rv, misc.shortcuts.route_options = ImGui.CheckboxFlags(ctx, 'InputFlags_RouteUnlessBgFocused', misc.shortcuts.route_options, ImGui.InputFlags_RouteUnlessBgFocused)
-      ImGui.EndDisabled(ctx)
-      ImGui.Unindent(ctx)
-      rv, misc.shortcuts.route_type = ImGui.RadioButtonEx(ctx, 'InputFlags_RouteAlways', misc.shortcuts.route_type, ImGui.InputFlags_RouteAlways)
-      local flags = misc.shortcuts.route_type | misc.shortcuts.route_options -- Merged flags
-      if misc.shortcuts.route_type ~= ImGui.InputFlags_RouteGlobal then
-        flags = flags & ~(ImGui.InputFlags_RouteOverFocused | ImGui.InputFlags_RouteOverActive | ImGui.InputFlags_RouteUnlessBgFocused)
-      end
-
-      ImGui.SeparatorText(ctx, 'Using SetNextItemShortcut()')
-      ImGui.Text(ctx, 'Ctrl+S')
-      ImGui.SetNextItemShortcut(ctx, ImGui.Mod_Ctrl | ImGui.Key_S, flags | ImGui.InputFlags_Tooltip)
-      ImGui.Button(ctx, 'Save')
-      ImGui.Text(ctx, 'Alt+F')
-      ImGui.SetNextItemShortcut(ctx, ImGui.Mod_Alt | ImGui.Key_F, flags | ImGui.InputFlags_Tooltip)
-      rv, misc.shortcuts.factor = ImGui.SliderDouble(ctx, 'Factor', misc.shortcuts.factor, 0.0, 1.0)
-
-      ImGui.SeparatorText(ctx, 'Using Shortcut()')
-      local line_height = ImGui.GetTextLineHeightWithSpacing(ctx)
-      local key_chord = ImGui.Mod_Ctrl | ImGui.Key_A
-
-      ImGui.Text(ctx, 'Ctrl+A')
+      -- 1: Window polling for Ctrl+A
+      ImGui.Text(ctx, '(in WindowA)')
       ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
 
-      ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg, 0xff00ff20)
+      -- 2: InputText also polling for CTRL+A: it always uses _RouteFocused internally (gets priority when active)
+      -- (Commmented because the owner-aware version of Shortcut() is still in imgui_internal.h)
+      --local str = 'Press Ctrl+A'
+      --ImGui.Spacing(ctx)
+      --ImGui.InputText(ctx, 'InputTextB', str, ImGui.InputTextFlags_ReadOnly)
+      --local item_id = ImGui.GetItemID(ctx)
+      --ImGui.SameLine(ctx); demo.HelpMarker('Internal widgets always use _RouteFocused')
+      --ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags, item_id) and 'PRESSED' or '...'))
 
-      if ImGui.BeginChild(ctx, 'WindowA', -FLT_MIN, line_height * 14, ImGui.ChildFlags_Border) then
-        ImGui.Text(ctx, 'Press Ctrl+A and see who receives it!')
-        ImGui.Separator(ctx)
-
-        -- 1: Window polling for Ctrl+A
-        ImGui.Text(ctx, '(in WindowA)')
-        ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
-
-        -- 2: InputText also polling for CTRL+A: it always uses _RouteFocused internally (gets priority when active)
-        -- (Commmented because the owner-aware version of Shortcut() is still in imgui_internal.h)
-        --local str = 'Press Ctrl+A'
-        --ImGui.Spacing(ctx)
-        --ImGui.InputText(ctx, 'InputTextB', str, ImGui.InputTextFlags_ReadOnly)
-        --local item_id = ImGui.GetItemID(ctx)
-        --ImGui.SameLine(ctx); demo.HelpMarker('Internal widgets always use _RouteFocused')
-        --ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags, item_id) and 'PRESSED' or '...'))
-
-        -- 3: Dummy child is not claiming the route: focusing them shouldn't steal route away from WindowA
-        if ImGui.BeginChild(ctx, 'ChildD', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Border) then
-          ImGui.Text(ctx, '(in ChildD: not using same Shortcut)')
-          ImGui.Text(ctx, ('IsWindowFocused: %s'):format(ImGui.IsWindowFocused(ctx)))
-          ImGui.EndChild(ctx)
-        end
-
-        -- 4: Child window polling for CTRL+A. It is deeper than WindowA and gets priority when focused.
-        if ImGui.BeginChild(ctx, 'ChildE', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Border) then
-          ImGui.Text(ctx, '(in ChildE: using same Shortcut)')
-          ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
-          ImGui.EndChild(ctx)
-        end
-
-        -- 5: In a popup
-        if ImGui.Button(ctx, 'Open Popup') then
-          ImGui.OpenPopup(ctx, 'PopupF')
-        end
-        if ImGui.BeginPopup(ctx, 'PopupF') then
-          ImGui.Text(ctx, '(in PopupF)')
-          ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
-          -- (Commmented because the owner-aware version of Shortcut() is still in imgui_internal.h)
-          --ImGui.InputText(ctx, 'InputTextG', str, ImGui.InputTextFlags_ReadOnly)
-          --ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags, ImGui.GetItemID(ctx)) and 'PRESSED' or '...'))
-          ImGui.EndPopup(ctx)
-        end
-
+      -- 3: Dummy child is not claiming the route: focusing them shouldn't steal route away from WindowA
+      if ImGui.BeginChild(ctx, 'ChildD', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Border) then
+        ImGui.Text(ctx, '(in ChildD: not using same Shortcut)')
+        ImGui.Text(ctx, ('IsWindowFocused: %s'):format(ImGui.IsWindowFocused(ctx)))
         ImGui.EndChild(ctx)
       end
 
-      ImGui.PopStyleColor(ctx)
-      ImGui.TreePop(ctx)
+      -- 4: Child window polling for CTRL+A. It is deeper than WindowA and gets priority when focused.
+      if ImGui.BeginChild(ctx, 'ChildE', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Border) then
+        ImGui.Text(ctx, '(in ChildE: using same Shortcut)')
+        ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
+        ImGui.EndChild(ctx)
+      end
+
+      -- 5: In a popup
+      if ImGui.Button(ctx, 'Open Popup') then
+        ImGui.OpenPopup(ctx, 'PopupF')
+      end
+      if ImGui.BeginPopup(ctx, 'PopupF') then
+        ImGui.Text(ctx, '(in PopupF)')
+        ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
+        -- (Commmented because the owner-aware version of Shortcut() is still in imgui_internal.h)
+        --ImGui.InputText(ctx, 'InputTextG', str, ImGui.InputTextFlags_ReadOnly)
+        --ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags, ImGui.GetItemID(ctx)) and 'PRESSED' or '...'))
+        ImGui.EndPopup(ctx)
+      end
+
+      ImGui.EndChild(ctx)
     end
 
-    -- Display mouse cursors
-    if ImGui.TreeNode(ctx, 'Mouse Cursors') then
-      local current = ImGui.GetMouseCursor(ctx)
-      for cursor, name in demo.EachEnum('MouseCursor') do
-        if cursor == current then
-          ImGui.Text(ctx, ('Current mouse cursor = %d: %s'):format(current, name))
-          break
-        end
+    ImGui.PopStyleColor(ctx)
+    ImGui.TreePop(ctx)
+  end
+
+  -- Display mouse cursors
+  if ImGui.TreeNode(ctx, 'Mouse Cursors') then
+    local current = ImGui.GetMouseCursor(ctx)
+    for cursor, name in demo.EachEnum('MouseCursor') do
+      if cursor == current then
+        ImGui.Text(ctx, ('Current mouse cursor = %d: %s'):format(current, name))
+        break
       end
-      ImGui.Text(ctx, 'Hover to see mouse cursors:')
-      -- ImGui.SameLine(ctx); demo.HelpMarker(
-      --   'Your application can render a different mouse cursor based on what ImGui.GetMouseCursor() returns. \z
-      --    If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, \z
-      --    otherwise your backend needs to handle it.')
-      for i, name in demo.EachEnum('MouseCursor') do
-        local label = ('Mouse cursor %d: %s'):format(i, name)
-        ImGui.Bullet(ctx); ImGui.Selectable(ctx, label, false)
-        if ImGui.IsItemHovered(ctx) then
-          ImGui.SetMouseCursor(ctx, i)
-        end
+    end
+    ImGui.Text(ctx, 'Hover to see mouse cursors:')
+    -- ImGui.SameLine(ctx); demo.HelpMarker(
+    --   'Your application can render a different mouse cursor based on what ImGui.GetMouseCursor() returns. \z
+    --    If software cursor rendering (io.MouseDrawCursor) is set ImGui will draw the right cursor for you, \z
+    --    otherwise your backend needs to handle it.')
+    for i, name in demo.EachEnum('MouseCursor') do
+      local label = ('Mouse cursor %d: %s'):format(i, name)
+      ImGui.Bullet(ctx); ImGui.Selectable(ctx, label, false)
+      if ImGui.IsItemHovered(ctx) then
+        ImGui.SetMouseCursor(ctx, i)
       end
-      ImGui.TreePop(ctx)
+    end
+    ImGui.TreePop(ctx)
+  end
+
+  if ImGui.TreeNode(ctx, 'Tabbing') then
+    if not misc.tabbing then
+      misc.tabbing = {
+        buf = 'hello',
+      }
     end
 
-    if ImGui.TreeNode(ctx, 'Tabbing') then
-      if not misc.tabbing then
-        misc.tabbing = {
-          buf = 'hello',
-        }
-      end
+    ImGui.Text(ctx, 'Use TAB/SHIFT+TAB to cycle through keyboard editable fields.')
+    rv,misc.tabbing.buf = ImGui.InputText(ctx, '1', misc.tabbing.buf)
+    rv,misc.tabbing.buf = ImGui.InputText(ctx, '2', misc.tabbing.buf)
+    rv,misc.tabbing.buf = ImGui.InputText(ctx, '3', misc.tabbing.buf)
+    ImGui.PushItemFlag(ctx, ImGui.ItemFlags_NoTabStop, true)
+    rv,misc.tabbing.buf = ImGui.InputText(ctx, '4 (tab skip)', misc.tabbing.buf)
+    ImGui.SameLine(ctx); demo.HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.")
+    ImGui.PopItemFlag(ctx)
+    rv,misc.tabbing.buf = ImGui.InputText(ctx, '5', misc.tabbing.buf)
+    ImGui.TreePop(ctx)
+  end
 
-      ImGui.Text(ctx, 'Use TAB/SHIFT+TAB to cycle through keyboard editable fields.')
-      rv,misc.tabbing.buf = ImGui.InputText(ctx, '1', misc.tabbing.buf)
-      rv,misc.tabbing.buf = ImGui.InputText(ctx, '2', misc.tabbing.buf)
-      rv,misc.tabbing.buf = ImGui.InputText(ctx, '3', misc.tabbing.buf)
-      ImGui.PushTabStop(ctx, false)
-      rv,misc.tabbing.buf = ImGui.InputText(ctx, '4 (tab skip)', misc.tabbing.buf)
-      ImGui.SameLine(ctx); demo.HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.")
-      ImGui.PopTabStop(ctx)
-      rv,misc.tabbing.buf = ImGui.InputText(ctx, '5', misc.tabbing.buf)
-      ImGui.TreePop(ctx)
+  if ImGui.TreeNode(ctx, 'Focus from code') then
+    if not misc.focus then
+      misc.focus = {
+        buf = 'click on a button to set focus',
+        d3  = { 0.0, 0.0, 0.0 }
+      }
     end
 
-    if ImGui.TreeNode(ctx, 'Focus from code') then
-      if not misc.focus then
-        misc.focus = {
-          buf = 'click on a button to set focus',
-          d3  = { 0.0, 0.0, 0.0 }
-        }
-      end
+    local focus_1 = ImGui.Button(ctx, 'Focus on 1'); ImGui.SameLine(ctx)
+    local focus_2 = ImGui.Button(ctx, 'Focus on 2'); ImGui.SameLine(ctx)
+    local focus_3 = ImGui.Button(ctx, 'Focus on 3')
+    local has_focus = 0
 
-      local focus_1 = ImGui.Button(ctx, 'Focus on 1'); ImGui.SameLine(ctx)
-      local focus_2 = ImGui.Button(ctx, 'Focus on 2'); ImGui.SameLine(ctx)
-      local focus_3 = ImGui.Button(ctx, 'Focus on 3')
-      local has_focus = 0
+    if focus_1 then ImGui.SetKeyboardFocusHere(ctx) end
+    rv,misc.focus.buf = ImGui.InputText(ctx, '1', misc.focus.buf)
+    if ImGui.IsItemActive(ctx) then has_focus = 1 end
 
-      if focus_1 then ImGui.SetKeyboardFocusHere(ctx) end
-      rv,misc.focus.buf = ImGui.InputText(ctx, '1', misc.focus.buf)
-      if ImGui.IsItemActive(ctx) then has_focus = 1 end
+    if focus_2 then ImGui.SetKeyboardFocusHere(ctx) end
+    rv,misc.focus.buf = ImGui.InputText(ctx, '2', misc.focus.buf)
+    if ImGui.IsItemActive(ctx) then has_focus = 2 end
 
-      if focus_2 then ImGui.SetKeyboardFocusHere(ctx) end
-      rv,misc.focus.buf = ImGui.InputText(ctx, '2', misc.focus.buf)
-      if ImGui.IsItemActive(ctx) then has_focus = 2 end
+    ImGui.PushItemFlag(ctx, ImGui.ItemFlags_NoTabStop, true)
+    if focus_3 then ImGui.SetKeyboardFocusHere(ctx) end
+    rv,misc.focus.buf = ImGui.InputText(ctx, '3 (tab skip)', misc.focus.buf)
+    if ImGui.IsItemActive(ctx) then has_focus = 3 end
+    ImGui.SameLine(ctx); demo.HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.")
+    ImGui.PopItemFlag(ctx)
 
-      ImGui.PushTabStop(ctx, false)
-      if focus_3 then ImGui.SetKeyboardFocusHere(ctx) end
-      rv,misc.focus.buf = ImGui.InputText(ctx, '3 (tab skip)', misc.focus.buf)
-      if ImGui.IsItemActive(ctx) then has_focus = 3 end
-      ImGui.SameLine(ctx); demo.HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.")
-      ImGui.PopTabStop(ctx)
-
-      if has_focus > 0 then
-        ImGui.Text(ctx, ('Item with focus: %d'):format(has_focus))
-      else
-        ImGui.Text(ctx, 'Item with focus: <none>')
-      end
-
-      -- Use >= 0 parameter to SetKeyboardFocusHere() to focus an upcoming item
-      local focus_ahead = -1
-      if ImGui.Button(ctx, 'Focus on X') then focus_ahead = 0 end ImGui.SameLine(ctx)
-      if ImGui.Button(ctx, 'Focus on Y') then focus_ahead = 1 end ImGui.SameLine(ctx)
-      if ImGui.Button(ctx, 'Focus on Z') then focus_ahead = 2 end
-      if focus_ahead ~= -1 then ImGui.SetKeyboardFocusHere(ctx, focus_ahead) end
-      rv,misc.focus.d3[1],misc.focus.d3[2],misc.focus.d3[3] =
-        ImGui.SliderDouble3(ctx, 'Float3', misc.focus.d3[1], misc.focus.d3[2], misc.focus.d3[3], 0.0, 1.0)
-
-      ImGui.TextWrapped(ctx, 'NB: Cursor & selection are preserved when refocusing last used item in code.')
-      ImGui.TreePop(ctx)
+    if has_focus > 0 then
+      ImGui.Text(ctx, ('Item with focus: %d'):format(has_focus))
+    else
+      ImGui.Text(ctx, 'Item with focus: <none>')
     end
 
-    if ImGui.TreeNode(ctx, 'Dragging') then
-      ImGui.TextWrapped(ctx, 'You can use GetMouseDragDelta(0) to query for the dragged amount on any widget.')
-      for button = 0, 2 do
-        ImGui.Text(ctx, ('IsMouseDragging(%d):'):format(button))
-        ImGui.Text(ctx, ('  w/ default threshold: %s,'):format(ImGui.IsMouseDragging(ctx, button)))
-        ImGui.Text(ctx, ('  w/ zero threshold: %s,'):format(ImGui.IsMouseDragging(ctx, button, 0.0)))
-        ImGui.Text(ctx, ('  w/ large threshold: %s,'):format(ImGui.IsMouseDragging(ctx, button, 20.0)))
-      end
+    -- Use >= 0 parameter to SetKeyboardFocusHere() to focus an upcoming item
+    local focus_ahead = -1
+    if ImGui.Button(ctx, 'Focus on X') then focus_ahead = 0 end ImGui.SameLine(ctx)
+    if ImGui.Button(ctx, 'Focus on Y') then focus_ahead = 1 end ImGui.SameLine(ctx)
+    if ImGui.Button(ctx, 'Focus on Z') then focus_ahead = 2 end
+    if focus_ahead ~= -1 then ImGui.SetKeyboardFocusHere(ctx, focus_ahead) end
+    rv,misc.focus.d3[1],misc.focus.d3[2],misc.focus.d3[3] =
+      ImGui.SliderDouble3(ctx, 'Float3', misc.focus.d3[1], misc.focus.d3[2], misc.focus.d3[3], 0.0, 1.0)
 
-      ImGui.Button(ctx, 'Drag Me')
-      if ImGui.IsItemActive(ctx) then
-        -- Draw a line between the button and the mouse cursor
-        local draw_list = ImGui.GetForegroundDrawList(ctx)
-        local mouse_pos_x, mouse_pos_y = ImGui.GetMousePos(ctx)
-        local click_pos_x, click_pos_y = ImGui.GetMouseClickedPos(ctx, 0)
-        local color = ImGui.GetColor(ctx, ImGui.Col_Button)
-        ImGui.DrawList_AddLine(draw_list, click_pos_x, click_pos_y, mouse_pos_x, mouse_pos_y, color, 4.0)
-      end
+    ImGui.TextWrapped(ctx, 'NB: Cursor & selection are preserved when refocusing last used item in code.')
+    ImGui.TreePop(ctx)
+  end
 
-      -- Drag operations gets "unlocked" when the mouse has moved past a certain threshold
-      -- (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
-      -- threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
-      local value_raw_x, value_raw_y = ImGui.GetMouseDragDelta(ctx, nil, nil, ImGui.MouseButton_Left, 0.0)
-      local value_with_lock_threshold_x, value_with_lock_threshold_y = ImGui.GetMouseDragDelta(ctx, nil, nil, ImGui.MouseButton_Left)
-      local mouse_delta_x, mouse_delta_y = ImGui.GetMouseDelta(ctx)
-      ImGui.Text(ctx, 'GetMouseDragDelta(0):')
-      ImGui.Text(ctx, ('  w/ default threshold: (%.1f, %.1f)'):format(value_with_lock_threshold_x, value_with_lock_threshold_y))
-      ImGui.Text(ctx, ('  w/ zero threshold: (%.1f, %.1f)'):format(value_raw_x, value_raw_y))
-      ImGui.Text(ctx, ('GetMouseDelta() (%.1f, %.1f)'):format(mouse_delta_x, mouse_delta_y))
-      ImGui.TreePop(ctx)
+  if ImGui.TreeNode(ctx, 'Dragging') then
+    ImGui.TextWrapped(ctx, 'You can use GetMouseDragDelta(0) to query for the dragged amount on any widget.')
+    for button = 0, 2 do
+      ImGui.Text(ctx, ('IsMouseDragging(%d):'):format(button))
+      ImGui.Text(ctx, ('  w/ default threshold: %s,'):format(ImGui.IsMouseDragging(ctx, button)))
+      ImGui.Text(ctx, ('  w/ zero threshold: %s,'):format(ImGui.IsMouseDragging(ctx, button, 0.0)))
+      ImGui.Text(ctx, ('  w/ large threshold: %s,'):format(ImGui.IsMouseDragging(ctx, button, 20.0)))
     end
+
+    ImGui.Button(ctx, 'Drag Me')
+    if ImGui.IsItemActive(ctx) then
+      -- Draw a line between the button and the mouse cursor
+      local draw_list = ImGui.GetForegroundDrawList(ctx)
+      local mouse_pos_x, mouse_pos_y = ImGui.GetMousePos(ctx)
+      local click_pos_x, click_pos_y = ImGui.GetMouseClickedPos(ctx, 0)
+      local color = ImGui.GetColor(ctx, ImGui.Col_Button)
+      ImGui.DrawList_AddLine(draw_list, click_pos_x, click_pos_y, mouse_pos_x, mouse_pos_y, color, 4.0)
+    end
+
+    -- Drag operations gets "unlocked" when the mouse has moved past a certain threshold
+    -- (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
+    -- threshold using the second parameter of IsMouseDragging() and GetMouseDragDelta().
+    local value_raw_x, value_raw_y = ImGui.GetMouseDragDelta(ctx, nil, nil, ImGui.MouseButton_Left, 0.0)
+    local value_with_lock_threshold_x, value_with_lock_threshold_y = ImGui.GetMouseDragDelta(ctx, nil, nil, ImGui.MouseButton_Left)
+    local mouse_delta_x, mouse_delta_y = ImGui.GetMouseDelta(ctx)
+    ImGui.Text(ctx, 'GetMouseDragDelta(0):')
+    ImGui.Text(ctx, ('  w/ default threshold: (%.1f, %.1f)'):format(value_with_lock_threshold_x, value_with_lock_threshold_y))
+    ImGui.Text(ctx, ('  w/ zero threshold: (%.1f, %.1f)'):format(value_raw_x, value_raw_y))
+    ImGui.Text(ctx, ('GetMouseDelta() (%.1f, %.1f)'):format(mouse_delta_x, mouse_delta_y))
+    ImGui.TreePop(ctx)
   end
 end
 
@@ -7119,12 +7154,13 @@ function demo.ShowStyleEditor()
       slider('GrabMinSize',       1.0, 20.0, '%.0f')
 
       ImGui.SeparatorText(ctx, 'Borders')
-      slider('WindowBorderSize', 0.0, 1.0, '%.0f')
-      slider('ChildBorderSize',  0.0, 1.0, '%.0f')
-      slider('PopupBorderSize',  0.0, 1.0, '%.0f')
-      slider('FrameBorderSize',  0.0, 1.0, '%.0f')
-      slider('TabBorderSize',    0.0, 1.0, '%.0f')
-      slider('TabBarBorderSize', 0.0, 2.0, '%.0f')
+      slider('WindowBorderSize',   0.0, 1.0, '%.0f')
+      slider('ChildBorderSize',    0.0, 1.0, '%.0f')
+      slider('PopupBorderSize',    0.0, 1.0, '%.0f')
+      slider('FrameBorderSize',    0.0, 1.0, '%.0f')
+      slider('TabBorderSize',      0.0, 1.0, '%.0f')
+      slider('TabBarBorderSize',   0.0, 2.0, '%.0f')
+      slider('TabBarOverlineSize', 0.0, 2.0, '%.0f'); ImGui.SameLine(ctx); demo.HelpMarker('Overline is only drawn over the selected tab when TabBarFlags_DrawSelectedOverline is set.')
 
       ImGui.SeparatorText(ctx, 'Rounding')
       slider('WindowRounding',    0.0, 12.0, '%.0f')
@@ -8064,6 +8100,11 @@ end
 -------------------------------------------------------------------------------
 -- [SECTION] Example App: Property Editor / ShowExampleAppPropertyEditor()
 -------------------------------------------------------------------------------
+-- Some of the interactions are a bit lack-luster:
+-- - We would want pressing validating or leaving the filter to somehow restore focus.
+-- - We may want more advanced filtering (child nodes) and clipper support: both will need extra work.
+-- - We would want to customize some keyboard interactions to easily keyboard navigate between the tree and the properties.
+-------------------------------------------------------------------------------
 
 function demo.ShowPlaceholderObject(prefix, uid)
   local rv
@@ -8483,6 +8524,8 @@ function demo.ShowExampleAppWindowTitles()
     ImGui.Text(ctx, 'This window has a changing title.')
     ImGui.End(ctx)
   end
+
+  return true
 end
 
 -------------------------------------------------------------------------------
@@ -9348,6 +9391,12 @@ end
 --
 --   ImGui::End();
 -- }
+
+-------------------------------------------------------------------------------
+-- [SECTION] Example App: Assets Browser / ShowExampleAppAssetsBrowser()
+-------------------------------------------------------------------------------
+
+-- End of Demo code
 
 local public, public_functions = {}, {
   'ShowDemoWindow', 'ShowStyleEditor', 'PushStyle', 'PopStyle',

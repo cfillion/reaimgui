@@ -65,6 +65,7 @@ static constexpr StyleFields<float, ImVec2> g_styleVars[] {
   STYLEVAR(TabRounding),
   STYLEVAR(TabBorderSize),
   STYLEVAR(TabBarBorderSize),
+  STYLEVAR(TabBarOverlineSize),
   STYLEVAR(TableAngledHeadersAngle),
   STYLEVAR(TableAngledHeadersTextAlign),
   STYLEVAR(ButtonTextAlign),
@@ -193,6 +194,8 @@ API_ENUM(0_1, ImGui, StyleVar_TabRounding,
 API_ENUM(0_9, ImGui, StyleVar_TabBorderSize, "Thickness of border around tabs.");
 API_ENUM(0_9, ImGui, StyleVar_TabBarBorderSize,
   "Thickness of tab-bar separator, which takes on the tab active color to denote focus.");
+API_ENUM(0_10, ImGui, StyleVar_TabBarOverlineSize,
+  "Thickness of tab-bar overline, which highlights the selected tab-bar.");
 API_ENUM(0_9, ImGui, StyleVar_TableAngledHeadersAngle,
   "Angle of angled headers (supported values range from -50.0 degrees to +50.0 degrees).");
 API_ENUM(0_9_1, ImGui, StyleVar_TableAngledHeadersTextAlign,
@@ -341,17 +344,13 @@ API_ENUM(0_1, ImGui, Col_TableBorderStrong,
   "Table outer and header borders (prefer using Alpha=1.0 here).");
 API_ENUM(0_1, ImGui, Col_TableBorderLight,
   "Table inner borders (prefer using Alpha=1.0 here).");
-API_ENUM(0_1, ImGui, Col_TableRowBg,
-  "Table row background (even rows).");
-API_ENUM(0_1, ImGui, Col_TableRowBgAlt,
-  "Table row background (odd rows).");
+API_ENUM(0_1, ImGui, Col_TableRowBg, "Table row background (even rows).");
+API_ENUM(0_1, ImGui, Col_TableRowBgAlt, "Table row background (odd rows).");
+API_ENUM(0_10, ImGui, Col_TextLink, "Hyperlink color");
 API_ENUM(0_1, ImGui, Col_TextSelectedBg, "");
-API_ENUM(0_1, ImGui, Col_DragDropTarget,
-  "Rectangle highlighting a drop target");
-API_ENUM(0_1, ImGui, Col_NavHighlight,
-  "Gamepad/keyboard: current highlighted item.");
-API_ENUM(0_1, ImGui, Col_NavWindowingHighlight,
-  "Highlight window when using CTRL+TAB.");
+API_ENUM(0_1, ImGui, Col_DragDropTarget, "Rectangle highlighting a drop target");
+API_ENUM(0_1, ImGui, Col_NavHighlight, "Gamepad/keyboard: current highlighted item.");
+API_ENUM(0_1, ImGui, Col_NavWindowingHighlight, "Highlight window when using CTRL+TAB.");
 API_ENUM(0_1, ImGui, Col_NavWindowingDimBg,
   "Darken/colorize entire screen behind the CTRL+TAB window list, when active.");
 API_ENUM(0_1, ImGui, Col_ModalWindowDimBg,

@@ -5,6 +5,7 @@ shim_sources = files([
   '0.8.7.cpp',
   '0.9.cpp',
   '0.9.2.cpp',
+  '0.10.cpp',
 ])
 
 shims = static_library('shims', shim_sources, dependencies: [common_dep])

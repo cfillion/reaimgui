@@ -110,7 +110,7 @@ output at the right of the preceding widget.)");
 
 API_FUNC(0_1, void, GetCursorPos, (Context*,ctx)
 (W<double*>,x) (W<double*>,y),
-"Cursor position in window")
+"Cursor position in window-local coordinates.")
 {
   FRAME_GUARD;
   const ImVec2 &pos {ImGui::GetCursorPos()};
@@ -119,14 +119,14 @@ API_FUNC(0_1, void, GetCursorPos, (Context*,ctx)
 }
 
 API_FUNC(0_1, double, GetCursorPosX, (Context*,ctx),
-"Cursor X position in window")
+"Cursor X position in window-local coordinates.")
 {
   FRAME_GUARD;
   return ImGui::GetCursorPosX();
 }
 
 API_FUNC(0_1, double, GetCursorPosY, (Context*,ctx),
-"Cursor Y position in window")
+"Cursor Y position in window-local coordinates.")
 {
   FRAME_GUARD;
   return ImGui::GetCursorPosY();
@@ -158,7 +158,8 @@ API_FUNC(0_1, void, SetCursorPosY, (Context*,ctx)
 
 API_FUNC(0_1, void, GetCursorStartPos, (Context*,ctx)
 (W<double*>,x) (W<double*>,y),
-"Initial cursor position in window coordinates.")
+R"(Initial cursor position in window coordinates.
+Call GetCursorScreenPos after Begin to get the absolute coordinates version.)")
 {
   FRAME_GUARD;
   const ImVec2 &pos {ImGui::GetCursorStartPos()};
@@ -168,7 +169,9 @@ API_FUNC(0_1, void, GetCursorStartPos, (Context*,ctx)
 
 API_FUNC(0_1, void, GetCursorScreenPos, (Context*,ctx)
 (W<double*>,x) (W<double*>,y),
-"Cursor position in absolute screen coordinates (useful to work with the DrawList API).")
+R"(Cursor position in absolute screen coordinates.
+Prefer using this rather than GetCursorPos (it's also more useful to work with
+the DrawList API).)")
 {
   FRAME_GUARD;
   const ImVec2 &pos {ImGui::GetCursorScreenPos()};
@@ -182,6 +185,17 @@ API_FUNC(0_1, void, SetCursorScreenPos, (Context*,ctx)
 {
   FRAME_GUARD;
   ImGui::SetCursorScreenPos(ImVec2(pos_x, pos_y));
+}
+
+API_FUNC(0_1, void, GetContentRegionAvail, (Context*,ctx)
+(W<double*>,x) (W<double*>,y),
+"Available space from current position. This is your best friend.")
+{
+  FRAME_GUARD;
+
+  const ImVec2 &vec {ImGui::GetContentRegionAvail()};
+  if(x) *x = vec.x;
+  if(y) *y = vec.y;
 }
 
 API_SUBSECTION("Clipping",

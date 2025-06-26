@@ -159,8 +159,8 @@ API_FUNC(0_1, bool, Selectable, (Context*,ctx)
 }
 
 API_ENUM(0_1, ImGui, SelectableFlags_None, "");
-API_ENUM(0_1, ImGui, SelectableFlags_DontClosePopups,
-  "Clicking this doesn't close parent popup window.");
+API_ENUM(0_10, ImGui, SelectableFlags_NoAutoClosePopups,
+  "Clicking this doesn't close parent popup window (overrides ItemFlags_AutoClosePopups)");
 API_ENUM(0_1, ImGui, SelectableFlags_SpanAllColumns,
   "Frame will span all columns of its container table (text will still fit in current column).");
 API_ENUM(0_1, ImGui, SelectableFlags_AllowDoubleClick,
@@ -169,3 +169,5 @@ API_ENUM(0_1, ImGui, SelectableFlags_Disabled,
   "Cannot be selected, display grayed out text.");
 API_ENUM(0_9, ImGui, SelectableFlags_AllowOverlap,
   "Hit testing to allow subsequent widgets to overlap this one.");
+API_ENUM(0_10, ImGui, SelectableFlags_Highlight,
+  "Make the item be displayed as if it is hovered.");

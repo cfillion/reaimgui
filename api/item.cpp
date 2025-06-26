@@ -54,6 +54,22 @@ API_FUNC(0_5_5, void, EndDisabled, (Context*,ctx),
   ImGui::EndDisabled();
 }
 
+API_FUNC(0_10, void, PushItemFlag, (Context*,ctx)
+(int,option)(bool,enabled),
+R"(Modify specified shared item flag for certain widgets.
+Example: `PushItemFlag(ItemFlags_NoTabStop, true)`.)")
+{
+  FRAME_GUARD;
+  ImGui::PushItemFlag(option, enabled);
+}
+
+API_FUNC(0_10, void, PopItemFlag, (Context*,ctx),
+"See PushItemFlag")
+{
+  FRAME_GUARD;
+  ImGui::PopItemFlag();
+}
+
 API_FUNC(0_9, void, DebugStartItemPicker, (Context*,ctx),
 "")
 {
@@ -80,22 +96,6 @@ components of a multiple component widget. Use -1 to access previous widget.)")
 {
   FRAME_GUARD;
   ImGui::SetKeyboardFocusHere(API_GET(offset));
-}
-
-API_FUNC(0_8_5, void, PushTabStop, (Context*,ctx)
-(bool,tab_stop),
-R"(Allow focusing using TAB/Shift-TAB, enabled by default but you can disable it
-for certain widgets)")
-{
-  FRAME_GUARD;
-  ImGui::PushTabStop(tab_stop);
-}
-
-API_FUNC(0_8_5, void, PopTabStop, (Context*,ctx),
-"See PushTabStop")
-{
-  FRAME_GUARD;
-  ImGui::PopTabStop();
 }
 
 API_SUBSECTION("Dimensions");
@@ -349,3 +349,24 @@ API_ENUM(0_5_10, ImGui, HoveredFlags_DockHierarchy,
   parent of docked window) (when used with _ChildWindows or _RootWindow).)");
 API_ENUM(0_1, ImGui, HoveredFlags_RootAndChildWindows,
   "HoveredFlags_RootWindow | HoveredFlags_ChildWindows");
+
+API_SECTION_DEF(itemFlags, ROOT_SECTION, "Item Flags",
+  "For PushItemFlag, shared by all items.");
+API_ENUM(0_10, ImGui, ItemFlags_None, "");
+API_ENUM(0_10, ImGui, ItemFlags_NoTabStop,
+R"(Disable keyboard tabbing. This is a "lighter" version of ItemFlags_NoNav.
+   Default = false.)");
+API_ENUM(0_10, ImGui, ItemFlags_NoNav,
+R"(Disable any form of focusing (keyboard/gamepad directional navigation and
+   SetKeyboardFocusHere calls). Default = false)");
+API_ENUM(0_10, ImGui, ItemFlags_NoNavDefaultFocus,
+R"(Disable item being a candidate for default focus (e.g. used by title bar
+   items). Default = false)");
+API_ENUM(0_10, ImGui, ItemFlags_ButtonRepeat,
+R"(Any button-like behavior will have repeat mode enabled (based on
+   ConfigVar_KeyRepeatDelay and ConfigVar_KeyRepeatRate values). Note that you
+   can also call IsItemActive after any button to tell if it is being held.
+   Default = false)");
+API_ENUM(0_10, ImGui, ItemFlags_AutoClosePopups,
+R"(MenuItem/Selectable automatically close their parent popup window.
+   Default = true)");

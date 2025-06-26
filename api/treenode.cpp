@@ -138,7 +138,7 @@ API_ENUM(0_9_1, ImGui, TreeNodeFlags_SpanTextWidth,
   "Narrow hit box + narrow hovering highlight, will only cover the label text.");
 API_ENUM(0_9, ImGui, TreeNodeFlags_SpanAllColumns,
   "Frame will span all columns of its container table (text will still fit in current column).");
-// API_ENUM(ImGui, TreeNodeFlags_NavLeftJumpsBackHere,
+// API_ENUM(?, ImGui, TreeNodeFlags_NavLeftJumpsBackHere,
 // R"((WIP) Nav: left direction may move to this TreeNode() from any of its child
 //    (items submitted between TreeNode and TreePop).)");
 API_ENUM(0_1, ImGui, TreeNodeFlags_CollapsingHeader,

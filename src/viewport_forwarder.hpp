@@ -55,6 +55,12 @@ public:
     if constexpr(!std::is_void_v<R>)
       return R{};
   }
+
+  template<auto fn, typename... Args>
+  static auto wrapWithCtx(ImGuiContext*, ImGuiViewport *viewport, Args... args)
+  {
+    return wrap<fn>(viewport, args...);
+  }
 };
 
 #endif

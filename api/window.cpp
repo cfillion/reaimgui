@@ -207,8 +207,9 @@ See HoveredFlags_* for options.)")
 
 API_FUNC(0_1, void, GetWindowPos, (Context*,ctx)
 (W<double*>,x) (W<double*>,y),
-R"(Get current window position in screen space (note: it is unlikely you need to
-use this. Consider using current layout pos instead, GetCursorScreenPos()).)")
+R"(Get current window position in screen space.
+It is unlikely you ever need to use this!
+Consider always using GetCursorScreenPos and GetContentRegionAvail instead.)")
 {
   FRAME_GUARD;
   const ImVec2 &vec {ImGui::GetWindowPos()};
@@ -218,8 +219,9 @@ use this. Consider using current layout pos instead, GetCursorScreenPos()).)")
 
 API_FUNC(0_1, void, GetWindowSize, (Context*,ctx)
 (W<double*>,w) (W<double*>,h),
-R"(Get current window size (note: it is unlikely you need to use this.
-Consider using GetCursorScreenPos() and e.g. GetContentRegionAvail() instead))")
+R"(Get current window size.
+It is unlikely you ever need to use this!
+Consider always using GetCursorScreenPos and GetContentRegionAvail instead.)")
 {
   FRAME_GUARD;
   const ImVec2 &vec {ImGui::GetWindowSize()};
@@ -228,14 +230,16 @@ Consider using GetCursorScreenPos() and e.g. GetContentRegionAvail() instead))")
 }
 
 API_FUNC(0_1, double, GetWindowWidth, (Context*,ctx),
-"Get current window width (shortcut for (GetWindowSize().w).")
+R"(Get current window width (shortcut for (GetWindowSize().w).
+It is unlikely you ever need to use this!)")
 {
   FRAME_GUARD;
   return ImGui::GetWindowWidth();
 }
 
 API_FUNC(0_1, double, GetWindowHeight, (Context*,ctx),
-"Get current window height (shortcut for (GetWindowSize().h).")
+R"(Get current window height (shortcut for (GetWindowSize().h).
+It is unlikely you ever need to use this!)")
 {
   FRAME_GUARD;
   return ImGui::GetWindowHeight();
@@ -475,56 +479,6 @@ API_FUNC(0_5, void, SetNextWindowDockID, (Context*,ctx)
   ImGui::SetNextWindowDockID(dock_id, API_GET(cond));
 }
 
-API_SUBSECTION("Content Region",
-R"(Retrieve available space from a given point.
-GetContentRegionAvail() is frequently useful.)");
-
-API_FUNC(0_1, void, GetContentRegionAvail, (Context*,ctx)
-(W<double*>,x) (W<double*>,y),
-"== GetContentRegionMax() - GetCursorPos()")
-{
-  FRAME_GUARD;
-
-  const ImVec2 &vec {ImGui::GetContentRegionAvail()};
-  if(x) *x = vec.x;
-  if(y) *y = vec.y;
-}
-
-API_FUNC(0_1, void, GetContentRegionMax, (Context*,ctx)
-(W<double*>,x) (W<double*>,y),
-R"(Current content boundaries (typically window boundaries including scrolling,
-or current column boundaries), in windows coordinates.)")
-{
-  FRAME_GUARD;
-
-  const ImVec2 &vec {ImGui::GetContentRegionMax()};
-  if(x) *x = vec.x;
-  if(y) *y = vec.y;
-}
-
-API_FUNC(0_1, void, GetWindowContentRegionMin, (Context*,ctx)
-(W<double*>,x) (W<double*>,y),
-"Content boundaries min (roughly (0,0)-Scroll), in window coordinates.")
-{
-  FRAME_GUARD;
-
-  const ImVec2 &vec {ImGui::GetWindowContentRegionMin()};
-  if(x) *x = vec.x;
-  if(y) *y = vec.y;
-}
-
-API_FUNC(0_1, void, GetWindowContentRegionMax, (Context*,ctx)
-(W<double*>,x) (W<double*>,y),
-R"(Content boundaries max (roughly (0,0)+Size-Scroll) where Size can be
-overridden with SetNextWindowContentSize, in window coordinates.)")
-{
-  FRAME_GUARD;
-
-  const ImVec2 &vec {ImGui::GetWindowContentRegionMax()};
-  if(x) *x = vec.x;
-  if(y) *y = vec.y;
-}
-
 API_SUBSECTION("Scrolling",
 R"(Any change of Scroll will be applied at the beginning of next frame in the
 first call to Begin().
@@ -618,6 +572,7 @@ Generally GetCursorStartPos() + offset to compute a valid position.)")
 
 API_SUBSECTION("Debug Windows");
 
+void openDocumentation();
 API_FUNC(0_5_4, void, ShowAboutWindow, (Context*,ctx)
 (RWO<bool*>,p_open),
 R"(Create About window.
@@ -631,9 +586,17 @@ Display ReaImGui version, Dear ImGui version, credits and build/system informati
     ImGui::Separator();
     ImGui::Text("reaper_imgui %s (API %s)",
       REAIMGUI_VERSION, API::version().toString().c_str());
+    ImGui::TextLinkOpenURL("Forum thread", "https://forum.cockos.com/showthread.php?t=250419");
+    ImGui::SameLine();
+    if(ImGui::TextLink("Documentation"))
+      openDocumentation();
+    ImGui::SameLine();
+    ImGui::TextLinkOpenURL("Bug tracker", "https://github.com/cfillion/reaimgui/issues");
+    ImGui::SameLine();
+    ImGui::TextLinkOpenURL("Donate", "https://reapack.com/donate");
     ImGui::Separator();
     ImGui::TextUnformatted("By Christian Fillion and contributors.");
-    ImGui::TextUnformatted("ReaImGui is licensed under the LGPL.");
+    ImGui::TextUnformatted("ReaImGui is licensed under the LGPL v3 or later.");
     ImGui::Spacing();
     ImGui::Separator();
   }

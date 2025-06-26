@@ -116,7 +116,7 @@ void Viewport::install()
   pio.Platform_OnChangedViewport  = &Forwarder::wrap<&Viewport::onChanged>;
 
   ImGuiIO &io {ImGui::GetIO()};
-  io.SetPlatformImeDataFn = &Forwarder::wrap<&Viewport::setIME>;
+  io.PlatformSetImeDataFn = &Forwarder::wrapWithCtx<&Viewport::setIME>;
 
   new MainViewport; // lifetime managed by Dear ImGui
 }

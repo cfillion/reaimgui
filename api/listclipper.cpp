@@ -123,8 +123,9 @@ as long as it is used in each defer cycle unless attached (see Attach).)")
 
 API_FUNC(0_1, void, ListClipper_Begin, (ListClipper*,clipper)
 (int,items_count) (RO<double*>,items_height,-1.0),
-R"(- items_count: Use INT_MAX if you don't know how many items you have
-(in which case the cursor won't be advanced in the final step)
+R"(- items_count: Use INT_MAX from NumericLimits_Int if you don't know how many
+items you have (in which case the cursor won't be advanced in the final step,
+and you can call SeekCursorForItem manually if you need)
 - items_height: Use -1.0 to be calculated automatically on first step.
   Otherwise pass in the distance between your items, typically
   GetTextLineHeightWithSpacing or GetFrameHeightWithSpacing.)")
@@ -173,4 +174,14 @@ R"(See ListClipper_IncludeItemByIndex.
 item_end is exclusive e.g. use (42, 42+1) to make item 42 never clipped.)")
 {
   (*clipper)->IncludeItemsByIndex(item_begin, item_end);
+}
+
+API_FUNC(0_10, void, ListClipper_SeekCursorForItem,
+(ListClipper*,clipper) (int,items_count),
+R"(Seek cursor toward given item. This is automatically called while stepping.
+The only reason to call this is: you can use ListClipper_Begin(INT_MAX) if you
+don't know item count ahead of time. In this case, after all steps are done,
+you'll want to call SeekCursorForItem(items_count).)")
+{
+  (*clipper)->SeekCursorForItem(items_count);
 }

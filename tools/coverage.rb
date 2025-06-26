@@ -223,6 +223,7 @@ RENAMES = {
 ARG_RENAMES = {
   'ListBox' => { 'items_count' => 'items_sz' },
   'ColorConvertDouble4ToU32' => { 'in_x' => 'r', 'in_y' => 'g', 'in_w' => 'b', 'in_h' => 'a' },
+  'ListClipper_SeekCursorForItem' => { 'item_index' => 'items_count' }
 }
 
 # these functions were not ported 1:1 (same name, otherwise add to RENAMES above too!)

@@ -135,6 +135,13 @@ static bool isAlreadyLoaded()
   return false;
 }
 
+void openDocumentation()
+{
+  const auto path {widen(GetResourcePath()) + TEXT(WDL_DIRCHAR_STR)
+    TEXT("Data") TEXT(WDL_DIRCHAR_STR) TEXT("reaper_imgui_doc.html")};
+  ShellExecute(nullptr, TEXT("open"), path.c_str(), nullptr, nullptr, SW_SHOW);
+}
+
 extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
   REAPER_PLUGIN_HINSTANCE instance, reaper_plugin_info_t *rec)
 {
@@ -157,11 +164,7 @@ extern "C" REAPER_PLUGIN_DLL_EXPORT int REAPER_PLUGIN_ENTRYPOINT(
   Settings::setup();
   Function::setup();
 
-  new Action {"DOCUMENTATION", "Open ReaScript documentation (HTML)...", [] {
-    const auto path {widen(GetResourcePath()) + TEXT(WDL_DIRCHAR_STR)
-      TEXT("Data") TEXT(WDL_DIRCHAR_STR) TEXT("reaper_imgui_doc.html")};
-    ShellExecute(nullptr, TEXT("open"), path.c_str(), nullptr, nullptr, SW_SHOW);
-  }};
+  new Action {"DOCUMENTATION", "Open ReaScript documentation (HTML)...", &openDocumentation};
 
   return 1;
 }

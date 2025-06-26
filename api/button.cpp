@@ -92,25 +92,6 @@ API_FUNC(0_1, bool, RadioButtonEx, (Context*,ctx)
   return ImGui::RadioButton(label, v, v_button);
 }
 
-API_FUNC(0_1, void, PushButtonRepeat, (Context*,ctx)
-(bool,repeat),
-R"(In 'repeat' mode, Button*() functions return repeated true in a typematic
-manner (using ConfigVar_KeyRepeatDelay/ConfigVar_KeyRepeatRate settings).
-
-Note that you can call IsItemActive after any Button to tell if the button is
-held in the current frame.)")
-{
-  FRAME_GUARD;
-  ImGui::PushButtonRepeat(repeat);
-}
-
-API_FUNC(0_1, void, PopButtonRepeat, (Context*,ctx),
-"See PushButtonRepeat")
-{
-  FRAME_GUARD;
-  ImGui::PopButtonRepeat();
-}
-
 API_SUBSECTION("Flags", "For InvisibleButton.");
 API_ENUM(0_1, ImGui, ButtonFlags_None, "");
 API_ENUM(0_1, ImGui, ButtonFlags_MouseButtonLeft,

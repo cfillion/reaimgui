@@ -260,7 +260,7 @@ InputIntX etc.
 (Those are per-item flags. There are shared flags in SetConfigVar:
 ConfigVar_InputTextCursorBlink and ConfigVar_InputTextEnterKeepActive.))");
 
-API_ENUM(0_1, ImGui, InputTextFlags_None,             "");
+API_ENUM(0_1, ImGui, InputTextFlags_None, "");
 
 API_SECTION_P(flags, "Basic filters", "See also InputTextFlags_CallbackCharFilter.");
 API_ENUM(0_1, ImGui, InputTextFlags_CharsDecimal,     "Allow 0123456789.+-*/.");

@@ -118,6 +118,7 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   // &ImGuiIO::ConfigViewportsNoDefaultParent,
 
   &ImGuiIO::ConfigMacOSXBehaviors,
+  // &ImGuiIO::ConfigNavSwapGamepadButtons,
   &ImGuiIO::ConfigInputTrickleEventQueue,
   &ImGuiIO::ConfigInputTextCursorBlink,
   &ImGuiIO::ConfigInputTextEnterKeepActive,
@@ -173,6 +174,9 @@ R"(Enabled by default on macOS. Swap Cmd<>Ctrl keys, OS X style text editing
    of Ctrl, Line/Text Start and End using Cmd+Arrows instead of Home/End,
    Double click selects by word instead of selecting whole text, Multi-selection
    in lists uses Cmd/Super instead of Ctrl.)");
+// API_CONFIGVAR(?, ConfigNavSwapGamepadButtons,
+// R"(Swap Activate<>Cancel (A<>B) buttons, matching typical
+//    "Nintendo/Japanese style" gamepad layout.)");
 API_CONFIGVAR(0_7, InputTrickleEventQueue,
 R"(Enable input queue trickling: some types of events submitted during the same
    frame (e.g. button down + up) will be spread over multiple frames, improving
