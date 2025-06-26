@@ -595,9 +595,10 @@ Display ReaImGui version, Dear ImGui version, credits and build/system informati
     ImGui::SameLine();
     ImGui::TextLinkOpenURL("Donate", "https://reapack.com/donate");
     ImGui::Separator();
-    ImGui::TextUnformatted("By Christian Fillion and contributors.");
+    ImGui::TextUnformatted("(c) 2021-2025 Christian Fillion");
+    ImGui::TextUnformatted("Developed by Christian Fillion and contributors.");
     ImGui::TextUnformatted("ReaImGui is licensed under the LGPL v3 or later.");
-    ImGui::Spacing();
+    ImGui::NewLine();
     ImGui::Separator();
   }
   ImGui::End();

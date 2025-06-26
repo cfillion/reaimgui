@@ -317,9 +317,9 @@ API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackCharFilter,
 R"(Callback on character inputs to replace or discard them.
    Modify 'EventChar' to replace or 'EventChar = 0' to discard.)");
 API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackEdit,
-R"(Callback on any edit (note that InputText() already returns true on edit,
-   the callback is useful mainly to manipulate the underlying buffer while
-   focus is active).)");
+R"(Callback on any edit. Note that InputText already returns true on edit +
+   you can always use IsItemEdited. The callback is useful to manipulate the
+   underlying buffer while focus is active.)");
 
 API_SUBSECTION("InputText Callback",
 R"(The functions and variables documented in this section are only available

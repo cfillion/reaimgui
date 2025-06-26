@@ -38,6 +38,7 @@ SHIM("0.10",
 
   (int, SliderFlags_ClampOnInput)
   (int, Col_NavCursor)
+  (int, TreeNodeFlags_SpanLabelWidth)
 );
 
 // dear imgui v1.91
@@ -109,3 +110,6 @@ SHIM_ALIAS(0_1, Col_NavHighlight, Col_NavCursor);
 // no known usage in public search results
 SHIM_CONST(0_1, ConfigFlags_NavEnableSetMousePos, 0);
 SHIM_CONST(0_8, ConfigFlags_NavNoCaptureKeyboard, 0);
+
+// dear imgui v1.91.7
+SHIM_ALIAS(0_9_1, TreeNodeFlags_SpanTextWidth, TreeNodeFlags_SpanLabelWidth);

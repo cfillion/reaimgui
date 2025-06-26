@@ -483,6 +483,9 @@ R"(Clamp even if min==max==0. Otherwise due to legacy reason DragXXX functions
    almost always want to use it.)");
 API_ENUM(0_10, ImGui, SliderFlags_AlwaysClamp,
   "SliderFlags_ClampOnInput | SliderFlags_ClampZeroRange");
+API_ENUM(0_10, ImGui, SliderFlags_NoSpeedTweaks,
+R"(Disable keyboard modifiers altering tweak speed.
+   Useful if you want to alter tweak speed yourself based on your own logic.)");
 API_ENUM(0_1, ImGui, SliderFlags_Logarithmic,
 R"(Make the widget logarithmic (linear otherwise).
    Consider using SliderFlags_NoRoundToFormat with this if using a format-string

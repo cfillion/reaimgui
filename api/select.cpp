@@ -92,7 +92,9 @@ API_ENUM(0_9, ImGui, ComboFlags_WidthFitPreview,
 
 API_SUBSECTION("List Boxes",
 R"(This is essentially a thin wrapper to using BeginChild/EndChild with the
-ChildFlags_FrameStyle flag for stylistic changes + displaying a label.)");
+ChildFlags_FrameStyle flag for stylistic changes + displaying a label.
+If you don't need a label you can probably simply use BeginChild with the
+ChildFlags_FrameStyle flag for the same result.)");
 
 API_FUNC(0_7, bool, ListBox, (Context*,ctx) (const char*,label)
 (RW<int*>,current_item) (const char*,items) (int,items_sz)

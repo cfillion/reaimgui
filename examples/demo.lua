@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.6)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.7)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -226,6 +226,13 @@ function demo.DockName(dock_id)
   return ('REAPER docker %d (%s)'):format(-dock_id, position)
 end
 
+function demo.ConfigVarCheckbox(name, label)
+  name = 'ConfigVar_' .. name
+  local var = assert(reaper[('ImGui_%s'):format(name)], 'unknown var')()
+  local rv,val = ImGui.Checkbox(ctx, label or name, ImGui.GetConfigVar(ctx, var))
+  if rv then ImGui.SetConfigVar(ctx, var, val and 1 or 0) end
+end
+
 -------------------------------------------------------------------------------
 -- [SECTION] Helpers: ExampleTreeNode, ExampleMemberInfo (for use by Property Editor etc.)
 -------------------------------------------------------------------------------
@@ -337,12 +344,6 @@ function demo.ShowDemoWindow(open)
 
   if ImGui.CollapsingHeader(ctx, 'Configuration') then
     if ImGui.TreeNode(ctx, 'Configuration##2') then
-      local function configVarCheckbox(name)
-        name = 'ConfigVar_' .. name
-        local var = assert(reaper[('ImGui_%s'):format(name)], 'unknown var')()
-        local rv,val = ImGui.Checkbox(ctx, name, ImGui.GetConfigVar(ctx, var))
-        if rv then ImGui.SetConfigVar(ctx, var, val and 1 or 0) end
-      end
       config.flags = ImGui.GetConfigVar(ctx, ImGui.ConfigVar_Flags)
 
       ImGui.SeparatorText(ctx, 'General')
@@ -369,7 +370,7 @@ function demo.ShowDemoWindow(open)
       rv,config.flags = ImGui.CheckboxFlags(ctx, 'ConfigFlags_NoKeyboard', config.flags, ImGui.ConfigFlags_NoKeyboard)
       ImGui.SameLine(ctx); demo.HelpMarker('Instruct dear imgui to disable keyboard inputs and interactions.')
 
-      configVarCheckbox('InputTrickleEventQueue')
+      demo.ConfigVarCheckbox('InputTrickleEventQueue')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable input queue trickling: some types of events submitted during the same frame (e.g. button down + up) will be spread over multiple frames, improving interactions with low framerates.')
       -- ImGui.Checkbox(ctx, 'io.MouseDrawCursor', &io.MouseDrawCursor)
       -- ImGui.SameLine(ctx); HelpMarker('Instruct Dear ImGui to render a mouse cursor itself. Note that a mouse cursor rendered via your application GPU rendering path will feel more laggy than hardware cursor, but will be more in sync with your other visuals.\n\nSome desktop applications may use both kinds of cursors (e.g. enable software cursor only when resizing/dragging something).')
@@ -379,17 +380,17 @@ function demo.ShowDemoWindow(open)
       ImGui.SameLine(ctx); demo.HelpMarker('Globally disable loading and saving state to an .ini file')
 
       ImGui.SeparatorText(ctx, 'Keyboard/Gamepad Navigation')
-      -- configVarCheckbox('NavSwapGamepadButtons')
-      configVarCheckbox('NavMoveSetMousePos')
+      -- demo.ConfigVarCheckbox('NavSwapGamepadButtons')
+      demo.ConfigVarCheckbox('NavMoveSetMousePos')
       ImGui.SameLine(ctx); demo.HelpMarker('Directional/tabbing navigation teleports the mouse cursor.')
-      configVarCheckbox('NavCaptureKeyboard')
-      configVarCheckbox('NavEscapeClearFocusItem')
+      demo.ConfigVarCheckbox('NavCaptureKeyboard')
+      demo.ConfigVarCheckbox('NavEscapeClearFocusItem')
       ImGui.SameLine(ctx); demo.HelpMarker('Pressing Escape clears focused item.')
-      configVarCheckbox('NavEscapeClearFocusWindow')
+      demo.ConfigVarCheckbox('NavEscapeClearFocusWindow')
       ImGui.SameLine(ctx); demo.HelpMarker('Pressing Escape clears focused window.')
-      configVarCheckbox('NavCursorVisibleAuto')
+      demo.ConfigVarCheckbox('NavCursorVisibleAuto')
       ImGui.SameLine(ctx); demo.HelpMarker("Using directional navigation key makes the cursor visible. Mouse click hides the cursor.");
-      configVarCheckbox('NavCursorVisibleAlways')
+      demo.ConfigVarCheckbox('NavCursorVisibleAlways')
       ImGui.SameLine(ctx); demo.HelpMarker("Navigation cursor is always visible.")
 
       ImGui.SeparatorText(ctx, 'Docking')
@@ -402,13 +403,13 @@ function demo.ShowDemoWindow(open)
       end
       if config.flags & ImGui.ConfigFlags_DockingEnable ~= 0 then
         ImGui.Indent(ctx)
-        configVarCheckbox('DockingNoSplit')
+        demo.ConfigVarCheckbox('DockingNoSplit')
         ImGui.SameLine(ctx); demo.HelpMarker('Simplified docking mode: disable window splitting, so docking is limited to merging multiple windows together into tab-bars.')
-        configVarCheckbox('DockingWithShift')
+        demo.ConfigVarCheckbox('DockingWithShift')
         ImGui.SameLine(ctx); demo.HelpMarker('Enable docking when holding Shift only (allow to drop in wider space, reduce visual noise)')
         -- ImGui.Checkbox(ctx, 'io.ConfigDockingAlwaysTabBar', &io.ConfigDockingAlwaysTabBar)
         -- ImGui.SameLine(ctx); demo.HelpMarker('Create a docking node and tab-bar on single floating windows.')
-        configVarCheckbox('DockingTransparentPayload')
+        demo.ConfigVarCheckbox('DockingTransparentPayload')
         ImGui.SameLine(ctx); demo.HelpMarker('Make window or viewport transparent when docking and only display docking boxes on the target viewport.')
         ImGui.Unindent(ctx)
       end
@@ -423,36 +424,36 @@ function demo.ShowDemoWindow(open)
       --     ImGui::SameLine(); HelpMarker("Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it.");
       --     ImGui::Checkbox("io.ConfigViewportsNoTaskBarIcon", &io.ConfigViewportsNoTaskBarIcon);
       --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the task bar icon state right away).");
-      configVarCheckbox('ViewportsNoDecoration')
+      demo.ConfigVarCheckbox('ViewportsNoDecoration')
       --     ImGui::Checkbox("io.ConfigViewportsNoDefaultParent", &io.ConfigViewportsNoDefaultParent);
       --     ImGui::SameLine(); HelpMarker("Toggling this at runtime is normally unsupported (most platform backends won't refresh the parenting right away).");
       --     ImGui::Unindent();
       -- }
 
       ImGui.SeparatorText(ctx, 'Windows')
-      configVarCheckbox('WindowsResizeFromEdges')
+      demo.ConfigVarCheckbox('WindowsResizeFromEdges')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.')
-      configVarCheckbox('WindowsMoveFromTitleBarOnly')
+      demo.ConfigVarCheckbox('WindowsMoveFromTitleBarOnly')
       ImGui.SameLine(ctx); demo.HelpMarker('Does not apply to windows without a title bar.')
-      -- configVarCheckbox('WindowsCopyContentsWithCtrlC') -- [EXPERIMENTAL]
+      -- demo.ConfigVarCheckbox('WindowsCopyContentsWithCtrlC') -- [EXPERIMENTAL]
       -- ImGui.SameLine(ctx); demo.HelpMarker('*EXPERIMENTAL* CTRL+C copy the contents of focused window into the clipboard.');
-      configVarCheckbox('ScrollbarScrollByPage')
+      demo.ConfigVarCheckbox('ScrollbarScrollByPage')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable scrolling page by page when clicking outside the scrollbar grab.\nWhen disabled, always scroll to clicked location.\nWhen enabled, Shift+Click scrolls to clicked location.')
 
       ImGui.SeparatorText(ctx, 'Widgets')
-      configVarCheckbox('InputTextCursorBlink')
+      demo.ConfigVarCheckbox('InputTextCursorBlink')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable blinking cursor (optional as some users consider it to be distracting).')
-      configVarCheckbox('InputTextEnterKeepActive')
+      demo.ConfigVarCheckbox('InputTextEnterKeepActive')
       ImGui.SameLine(ctx); demo.HelpMarker('Pressing Enter will keep item active and select contents (single-line only).')
-      configVarCheckbox('DragClickToInputText')
+      demo.ConfigVarCheckbox('DragClickToInputText')
       ImGui.SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
-      configVarCheckbox('MacOSXBehaviors')
+      demo.ConfigVarCheckbox('MacOSXBehaviors')
       ImGui.SameLine(ctx); demo.HelpMarker('Swap Cmd<>Ctrl keys, enable various MacOS style behaviors.')
       ImGui.Text(ctx, "Also see Style->Rendering for rendering options.")
 
       -- Also read: https://github.com/ocornut/imgui/wiki/Error-Handling
       -- ImGui.SeparatorText(ctx, 'Error Handling')
-      -- configVarCheckbox('ErrorRecovery')
+      -- demo.ConfigVarCheckbox('ErrorRecovery')
       -- ImGui.SameLine(ctx); demo.HelpMarker(
       --   'Options to configure how we handle recoverable errors.\n\z
       --   - Error recovery is not perfect nor guaranteed! It is a feature to ease development.\n"
@@ -460,9 +461,9 @@ function demo.ShowDemoWindow(open)
       --   - Possible usage: facilitate recovery from errors triggered from a scripting language or after specific exceptions handlers.\n"
       --   - Always ensure that on programmers seat you have at minimum Asserts or Tooltips enabled when making direct imgui API call!\z
       --   Otherwise it would severely hinder your ability to catch and correct mistakes!')
-      -- configVarCheckbox('ErrorRecoveryEnableAssert')
-      -- configVarCheckbox('ErrorRecoveryEnableDebugLog')
-      -- configVarCheckbox('ErrorRecoveryEnableTooltip')
+      -- demo.ConfigVarCheckbox('ErrorRecoveryEnableAssert')
+      -- demo.ConfigVarCheckbox('ErrorRecoveryEnableDebugLog')
+      -- demo.ConfigVarCheckbox('ErrorRecoveryEnableTooltip')
       -- if ImGui.GetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableAssert) == 0 and
       --     ImGui.GetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableDebugLog) == 0 and
       --     ImGui.GetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableTooltip) == 0 then
@@ -473,19 +474,19 @@ function demo.ShowDemoWindow(open)
 
       -- Also read: https://github.com/ocornut/imgui/wiki/Debug-Tools
       ImGui.SeparatorText(ctx, 'Debug')
-      -- configVarCheckbox('DebugIsDebuggerPresent')
+      -- demo.ConfigVarCheckbox('DebugIsDebuggerPresent')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Enable various tools calling IM_DEBUG_BREAK().\n\nRequires a debugger being attached, otherwise IM_DEBUG_BREAK() options will appear to crash your application.')
-      configVarCheckbox('DebugHighlightIdConflicts')
+      demo.ConfigVarCheckbox('DebugHighlightIdConflicts')
       ImGui.SameLine(ctx); demo.HelpMarker('Highlight and show an error message when multiple items have conflicting identifiers.')
       ImGui.BeginDisabled(ctx)
-      configVarCheckbox('DebugBeginReturnValueOnce')
+      demo.ConfigVarCheckbox('DebugBeginReturnValueOnce')
       ImGui.EndDisabled(ctx)
       ImGui.SameLine(ctx); demo.HelpMarker('First calls to Begin()/BeginChild() will return false.\n\nTHIS OPTION IS DISABLED because it needs to be set at application boot-time to make sense. Showing the disabled option is a way to make this feature easier to discover')
-      configVarCheckbox('DebugBeginReturnValueLoop')
+      demo.ConfigVarCheckbox('DebugBeginReturnValueLoop')
       ImGui.SameLine(ctx); demo.HelpMarker('Some calls to Begin()/BeginChild() will return false.\n\nWill cycle through window depths then repeat. Windows should be flickering while running.')
-      -- configVarCheckbox('DebugIgnoreFocusLoss')
+      -- demo.ConfigVarCheckbox('DebugIgnoreFocusLoss')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Option to deactivate io.AddFocusEvent(false) handling. May facilitate interactions with a debugger when focus loss leads to clearing inputs data.')
-      -- configVarCheckbox('DebugIniSettings')
+      -- demo.ConfigVarCheckbox('DebugIniSettings')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Option to save .ini data with extra comments (particularly helpful for Docking, but makes saving slower).')
 
       ImGui.SeparatorText(ctx, 'Tooltips')
@@ -686,24 +687,22 @@ function demo.ShowDemoWindowMenuBar()
   -- if ImGui.MenuItem(ctx, 'MenuItem') then end -- You can also use MenuItem() inside a menu bar!
   if ImGui.BeginMenu(ctx, 'Tools') then
     rv,show_app.metrics       = ImGui.MenuItem(ctx, 'Metrics/Debugger', nil, show_app.metrics)
+    if ImGui.BeginMenu(ctx, 'Debug Options') then
+      demo.ConfigVarCheckbox('DebugHighlightIdConflicts', 'Highlight ID Conflicts')
+      -- demo.ConfigVarCheckbox('ErrorRecoveryEnableAssert', 'Assert on error recovery')
+      ImGui.TextDisabled(ctx, '(see Demo->Configuration for details & more)')
+      ImGui.EndMenu(ctx)
+    end
     rv,show_app.debug_log     = ImGui.MenuItem(ctx, 'Debug Log',        nil, show_app.debug_log)
     rv,show_app.id_stack_tool = ImGui.MenuItem(ctx, 'ID Stack Tool',    nil, show_app.id_stack_tool)
-    local is_debugger_present = true -- ImGui::GetIO().ConfigDebugIsDebuggerPresent
-    if ImGui.MenuItem(ctx, 'Item Picker', nil, false, is_debugger_present) then
+    if ImGui.MenuItem(ctx, 'Item Picker', nil, false) then
       ImGui.DebugStartItemPicker(ctx)
     end
     if not is_debugger_present then
-      ImGui.SetItemTooltip(ctx, 'Requires ConfigVar_ConfigDebugIsDebuggerPresent=true to be set.\n\nWe otherwise disable the menu option to avoid casual users crashing the application.\n\nYou can however always access the Item Picker in Metrics->Tools.')
+      ImGui.SetItemTooltip(ctx, 'Requires ConfigVar_ConfigDebugIsDebuggerPresent to be set.\n\nWe otherwise disable some extra features to avoid casual users crashing the application.')
     end
     rv,show_app.style_editor  = ImGui.MenuItem(ctx, 'Style Editor',     nil, show_app.style_editor)
     rv,show_app.about = ImGui.MenuItem(ctx, 'About Dear ImGui', nil, show_app.about)
-
-    ImGui.SeparatorText(ctx, 'Debug Options')
-    local highlight_id_conflicts = 0 ~= ImGui.GetConfigVar(ctx, ImGui.ConfigVar_DebugHighlightIdConflicts)
-    if ImGui.MenuItem(ctx, 'Highlight ID Conflicts', nil, highlight_id_conflicts) then
-      highlight_id_conflicts = not highlight_id_conflicts
-      ImGui.SetConfigVar(ctx, ImGui.ConfigVar_DebugHighlightIdConflicts, highlight_id_conflicts and 1 or 0)
-    end
 
     ImGui.EndMenu(ctx)
   end
@@ -1055,7 +1054,7 @@ function demo.ShowDemoWindowWidgets()
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_OpenOnDoubleClick', widgets.trees.base_flags, ImGui.TreeNodeFlags_OpenOnDoubleClick)
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAvailWidth',    widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanAvailWidth); ImGui.SameLine(ctx); demo.HelpMarker('Extend hit area to all available width instead of allowing more items to be laid out after the node.')
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanFullWidth',     widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanFullWidth)
-      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanTextWidth',     widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanTextWidth); ImGui.SameLine(ctx); demo.HelpMarker('Reduce hit area to the text label and a bit of margin.')
+      rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanLabelWidth',     widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanLabelWidth); ImGui.SameLine(ctx); demo.HelpMarker('Reduce hit area to the text label and a bit of margin.')
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAllColumns',    widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanAllColumns); ImGui.SameLine(ctx); demo.HelpMarker('For use in Tables only.')
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_AllowOverlap',     widgets.trees.base_flags, ImGui.TreeNodeFlags_AllowOverlap);
       rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_Framed',           widgets.trees.base_flags, ImGui.TreeNodeFlags_Framed); ImGui.SameLine(ctx); demo.HelpMarker('Draw frame with background (e.g. for CollapsingHeader)')
@@ -1092,8 +1091,8 @@ function demo.ShowDemoWindowWidgets()
             ImGui.Text(ctx, 'This is a drag and drop source')
             ImGui.EndDragDropSource(ctx)
           end
-          if i == 2 and widgets.trees.base_flags & ImGui.TreeNodeFlags_SpanTextWidth ~= 0 then
-             -- Item 2 has an additional inline button to help demonstrate SpanTextWidth.
+          if i == 2 and widgets.trees.base_flags & ImGui.TreeNodeFlags_SpanLabelWidth ~= 0 then
+             -- Item 2 has an additional inline button to help demonstrate SpanLabelWidth.
              ImGui.SameLine(ctx)
              if ImGui.SmallButton(ctx, 'button') then end
           end
@@ -1740,7 +1739,14 @@ function demo.ShowDemoWindowWidgets()
   if ImGui.TreeNode(ctx, 'Text Input') then
     if not widgets.input then
       widgets.input = {
-        multiline = {
+        buf = { '', '', '', '', '', '', '', '', '', '' },
+        password = 'hunter2',
+      }
+    end
+
+    if ImGui.TreeNode(ctx, 'Multi-line Text Input') then
+      if not widgets.input.multiline then
+        widgets.input.multiline = {
           text = [[/*
  The Pentium F00F bug, shorthand for F0 0F C7 C8,
  the hexadecimal encoding of one offending instruction,
@@ -1754,13 +1760,8 @@ label:
 	lock cmpxchg8b eax
 ]],
           flags = ImGui.InputTextFlags_AllowTabInput,
-        },
-        buf = { '', '', '', '', '', '', '', '', '', '' },
-        password = 'hunter2',
-      }
-    end
-
-    if ImGui.TreeNode(ctx, 'Multi-line Text Input') then
+        }
+      end
       rv,widgets.input.multiline.flags = ImGui.CheckboxFlags(ctx, 'InputTextFlags_ReadOnly', widgets.input.multiline.flags, ImGui.InputTextFlags_ReadOnly);
       rv,widgets.input.multiline.flags = ImGui.CheckboxFlags(ctx, 'InputTextFlags_AllowTabInput', widgets.input.multiline.flags, ImGui.InputTextFlags_AllowTabInput);
       ImGui.SameLine(ctx); demo.HelpMarker("When _AllowTabInput is set, passing through the widget with Tabbing doesn't automatically activate it, in order to also cycling through subsequent widgets.")
@@ -2428,7 +2429,9 @@ label:
     rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_NoRoundToFormat', widgets.sliders.flags, ImGui.SliderFlags_NoRoundToFormat)
     ImGui.SameLine(ctx); demo.HelpMarker('Disable rounding underlying value to match precision of the format string (e.g. %.3f values are rounded to those 3 digits).')
     rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_NoInput', widgets.sliders.flags, ImGui.SliderFlags_NoInput)
-    ImGui.SameLine(ctx); demo.HelpMarker('Disable CTRL+Click or Enter key allowing to input text directly into the widget.')
+    ImGui.SameLine(ctx); demo.HelpMarker('Disable Ctrl+Click or Enter key allowing to input text directly into the widget.')
+    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_NoSpeedTweaks', widgets.sliders.flags, ImGui.SliderFlags_NoSpeedTweaks)
+    ImGui.SameLine(ctx); demo.HelpMarker('Disable keyboard modifiers altering tweak speed. Useful if you want to alter tweak speed yourself based on your own logic.')
     rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_WrapAround', widgets.sliders.flags, ImGui.SliderFlags_WrapAround)
     ImGui.SameLine(ctx); demo.HelpMarker('Enable wrapping around from max to min and from min to max (only supported by DragXXX() functions)')
 
@@ -5660,22 +5663,25 @@ function demo.ShowDemoWindowTables()
   if ImGui.TreeNode(ctx, 'Tree view') then
     if not tables.tree_view then
       tables.tree_view = {
-        tree_node_flags = ImGui.TreeNodeFlags_SpanAllColumns,
+        tree_node_flags_base = ImGui.TreeNodeFlags_SpanAllColumns,
       }
     end
 
-    local flags = ImGui.TableFlags_BordersV      |
-                  ImGui.TableFlags_BordersOuterH |
-                  ImGui.TableFlags_Resizable     |
-                  ImGui.TableFlags_RowBg --      |
-                  -- ImGui.TableFlags_NoBordersInBody
+    local table_flags =
+      ImGui.TableFlags_BordersV      |
+      ImGui.TableFlags_BordersOuterH |
+      ImGui.TableFlags_Resizable     |
+      ImGui.TableFlags_RowBg --      |
+      -- ImGui.TableFlags_NoBordersInBody
 
-    rv,tables.tree_view.tree_node_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanFullWidth',  tables.tree_view.tree_node_flags, ImGui.TreeNodeFlags_SpanFullWidth)
-    rv,tables.tree_view.tree_node_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanTextWidth',  tables.tree_view.tree_node_flags, ImGui.TreeNodeFlags_SpanTextWidth)
-    rv,tables.tree_view.tree_node_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAllColumns', tables.tree_view.tree_node_flags, ImGui.TreeNodeFlags_SpanAllColumns)
+    rv,tables.tree_view.tree_node_flags_base = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanFullWidth',  tables.tree_view.tree_node_flags_base, ImGui.TreeNodeFlags_SpanFullWidth)
+    rv,tables.tree_view.tree_node_flags_base = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanLabelWidth',  tables.tree_view.tree_node_flags_base, ImGui.TreeNodeFlags_SpanLabelWidth)
+    rv,tables.tree_view.tree_node_flags_base = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAllColumns', tables.tree_view.tree_node_flags_base, ImGui.TreeNodeFlags_SpanAllColumns)
+    rv,tables.tree_view.tree_node_flags_base = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_LabelSpanAllColumns', tables.tree_view.tree_node_flags_base, ImGui.TreeNodeFlags_LabelSpanAllColumns)
+    ImGui.SameLine(ctx); demo.HelpMarker("Useful if you know that you aren't displaying contents in other columns")
 
     demo.HelpMarker('See "Columns flags" section to configure how indentation is applied to individual columns.')
-    if ImGui.BeginTable(ctx, '3ways', 3, flags) then
+    if ImGui.BeginTable(ctx, '3ways', 3, table_flags) then
       -- The first column will use the default _WidthStretch when ScrollX is Off and _WidthFixed when ScrollX is On
       ImGui.TableSetupColumn(ctx, 'Name', ImGui.TableColumnFlags_NoHide)
       ImGui.TableSetupColumn(ctx, 'Size', ImGui.TableColumnFlags_WidthFixed, TEXT_BASE_WIDTH * 12.0)
@@ -5684,7 +5690,7 @@ function demo.ShowDemoWindowTables()
 
       -- Simple storage to output a dummy file-system.
       local nodes = {
-        { name='Root',                          type='Folder',      size=-1,     child_idx= 1,  child_count= 3 }, -- 0
+        { name='Root with Long Name',           type='Folder',      size=-1,     child_idx= 1,  child_count= 3 }, -- 0
         { name='Music',                         type='Folder',      size=-1,     child_idx= 4,  child_count= 2 }, -- 1
         { name='Textures',                      type='Folder',      size=-1,     child_idx= 6,  child_count= 3 }, -- 2
         { name='desktop.ini',                   type='System file', size= 1024,   child_idx=-1, child_count=-1 }, -- 3
@@ -5699,12 +5705,20 @@ function demo.ShowDemoWindowTables()
         ImGui.TableNextRow(ctx)
         ImGui.TableNextColumn(ctx)
         local is_folder = node.child_count > 0
+
+        local node_flags = tables.tree_view.tree_node_flags_base
+        if node ~= nodes[1] then
+          node_flags = node_flags & ~ImGui.TreeNodeFlags_LabelSpanAllColumns -- Only demonstrate this on the root node.
+        end
+
         if is_folder then
-          local open = ImGui.TreeNode(ctx, node.name, tables.tree_view.tree_node_flags)
-          ImGui.TableNextColumn(ctx)
-          ImGui.TextDisabled(ctx, '--')
-          ImGui.TableNextColumn(ctx)
-          ImGui.Text(ctx, node.type)
+          local open = ImGui.TreeNode(ctx, node.name, node_flags)
+          if node_flags & ImGui.TreeNodeFlags_LabelSpanAllColumns == 0 then
+            ImGui.TableNextColumn(ctx)
+            ImGui.TextDisabled(ctx, '--')
+            ImGui.TableNextColumn(ctx)
+            ImGui.Text(ctx, node.type)
+          end
           if open then
             for child_n = 1, node.child_count do
               DisplayNode(nodes[node.child_idx + child_n])
@@ -5712,7 +5726,7 @@ function demo.ShowDemoWindowTables()
             ImGui.TreePop(ctx)
           end
         else
-          ImGui.TreeNode(ctx, node.name, tables.tree_view.tree_node_flags | ImGui.TreeNodeFlags_Leaf | ImGui.TreeNodeFlags_Bullet | ImGui.TreeNodeFlags_NoTreePushOnOpen)
+          ImGui.TreeNode(ctx, node.name, node_flags | ImGui.TreeNodeFlags_Leaf | ImGui.TreeNodeFlags_Bullet | ImGui.TreeNodeFlags_NoTreePushOnOpen)
           ImGui.TableNextColumn(ctx)
           ImGui.Text(ctx, ('%d'):format(node.size))
           ImGui.TableNextColumn(ctx)
@@ -7027,6 +7041,8 @@ end
 --             ImGui.PushID((void*)font);
 --             if (ImGui.Selectable(font->GetDebugName(), font == font_current))
 --                 io.FontDefault = font;
+--             if (font == font_current)
+--                ImGui::SetItemDefaultFocus();
 --             ImGui.PopID();
 --         }
 --         ImGui.EndCombo();
