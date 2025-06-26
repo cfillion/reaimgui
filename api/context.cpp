@@ -133,6 +133,7 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   &ImGuiIO::ConfigDragClickToInputText,
   &ImGuiIO::ConfigWindowsResizeFromEdges,
   &ImGuiIO::ConfigWindowsMoveFromTitleBarOnly,
+  // &ImGuiIO::ConfigWindowsCopyContentsWithCtrlC,
   &ImGuiIO::ConfigScrollbarScrollByPage,
 
   // &ImGuiIO::ConfigErrorRecovery,
@@ -230,6 +231,8 @@ API_CONFIGVAR(0_7, WindowsResizeFromEdges,
 API_CONFIGVAR(0_7, WindowsMoveFromTitleBarOnly,
 R"(Enable allowing to move windows only when clicking on their title bar.
    Does not apply to windows without a title bar.)");
+// API_CONFIGVAR(?, WindowsCopyContentsWithCtrlC,
+//   "Ctrl+C copy the contents of focused window into the clipboard.");
 API_CONFIGVAR(0_10, ScrollbarScrollByPage,
 R"(Enable scrolling page by page when clicking outside the scrollbar grab.
    When disabled, always scroll to clicked location.

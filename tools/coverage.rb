@@ -206,7 +206,7 @@ RENAMES = {
   'const ImVec4& ImGui::GetStyleColorVec4(ImGuiCol)'        => 'GetStyleColor',
   'bool ImGui::IsRectVisible(const ImVec2&, const ImVec2&)' => 'IsRectVisibleEx',
   'ImGuiTableSortSpecs* ImGui::TableGetSortSpecs()'         => 'TableGetColumnSortSpecs',
-  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'DrawList_AddTextEx',
+  'void ImDrawList::AddText(ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'DrawList_AddTextEx',
 
   # variable-component input only supports double
   'bool ImGui::DragScalarN(const char*, ImGuiDataType, void*, int, float, const void*, const void*, const char*, ImGuiSliderFlags)' => 'DragDoubleN',
@@ -253,7 +253,7 @@ OVERRIDES = {
   # no text_end argument
   'ImVec2 ImGui::CalcTextSize(const char*, const char*, bool, float)'        => 'void CalcTextSize(const char*, double*, double*, bool*, double*)',
   'void ImDrawList::AddText(const ImVec2&, ImU32, const char*, const char*)' => 'void DrawList_AddText(double, double, int, const char*)',
-  'void ImDrawList::AddText(const ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'void DrawList_AddTextEx(Font*, double, double, double, int, const char*, double*, double*, double*, double*, double*)',
+  'void ImDrawList::AddText(ImFont*, float, const ImVec2&, ImU32, const char*, const char*, float, const ImVec4*)' => 'void DrawList_AddTextEx(Font*, double, double, double, int, const char*, double*, double*, double*, double*, double*)',
 
   'bool ImGui::DragScalarN(const char*, ImGuiDataType, void*, int, float, const void*, const void*, const char*, ImGuiSliderFlags)' => 'bool DragDoubleN(const char*, reaper_array*, double*, double*, double*, const char*, int*)',
   'bool ImGui::SliderScalarN(const char*, ImGuiDataType, void*, int, const void*, const void*, const char*, ImGuiSliderFlags)'      => 'bool SliderDoubleN(const char*, reaper_array*, double, double, const char*, int*)',

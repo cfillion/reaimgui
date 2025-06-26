@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.4)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.5)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -429,6 +429,16 @@ function demo.ShowDemoWindow(open)
       --     ImGui::Unindent();
       -- }
 
+      ImGui.SeparatorText(ctx, 'Windows')
+      configVarCheckbox('WindowsResizeFromEdges')
+      ImGui.SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.')
+      configVarCheckbox('WindowsMoveFromTitleBarOnly')
+      ImGui.SameLine(ctx); demo.HelpMarker('Does not apply to windows without a title bar.')
+      -- configVarCheckbox('WindowsCopyContentsWithCtrlC') -- [EXPERIMENTAL]
+      -- ImGui.SameLine(ctx); demo.HelpMarker('*EXPERIMENTAL* CTRL+C copy the contents of focused window into the clipboard.');
+      configVarCheckbox('ScrollbarScrollByPage')
+      ImGui.SameLine(ctx); demo.HelpMarker('Enable scrolling page by page when clicking outside the scrollbar grab.\nWhen disabled, always scroll to clicked location.\nWhen enabled, Shift+Click scrolls to clicked location.')
+
       ImGui.SeparatorText(ctx, 'Widgets')
       configVarCheckbox('InputTextCursorBlink')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable blinking cursor (optional as some users consider it to be distracting).')
@@ -436,12 +446,6 @@ function demo.ShowDemoWindow(open)
       ImGui.SameLine(ctx); demo.HelpMarker('Pressing Enter will keep item active and select contents (single-line only).')
       configVarCheckbox('DragClickToInputText')
       ImGui.SameLine(ctx); demo.HelpMarker("Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving).")
-      configVarCheckbox('WindowsResizeFromEdges')
-      ImGui.SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.')
-      configVarCheckbox('WindowsMoveFromTitleBarOnly')
-      ImGui.SameLine(ctx); demo.HelpMarker('Does not apply to windows without a title bar.')
-      configVarCheckbox('ScrollbarScrollByPage')
-      ImGui.SameLine(ctx); demo.HelpMarker('Enable scrolling page by page when clicking outside the scrollbar grab.\nWhen disabled, always scroll to clicked location.\nWhen enabled, Shift+Click scrolls to clicked location.')
       configVarCheckbox('MacOSXBehaviors')
       ImGui.SameLine(ctx); demo.HelpMarker('Swap Cmd<>Ctrl keys, enable various MacOS style behaviors.')
       ImGui.Text(ctx, "Also see Style->Rendering for rendering options.")
