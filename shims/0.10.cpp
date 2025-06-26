@@ -35,6 +35,8 @@ SHIM("0.10",
   (Context*, CreateContext, const char*, RO<int*>)
   (void, SetConfigVar, Context*, int, double)
   (int, ConfigVar_DebugHighlightIdConflicts)
+
+  (int, SliderFlags_ClampOnInput)
 );
 
 // dear imgui v1.91
@@ -97,3 +99,6 @@ SHIM_FUNC(0_5, Context*, CreateContext,
   api.SetConfigVar(ctx, api.ConfigVar_DebugHighlightIdConflicts(), false);
   return ctx;
 }
+
+// dear imgui v1.91.3
+SHIM_ALIAS(0_1, SliderFlags_AlwaysClamp, SliderFlags_ClampOnInput);

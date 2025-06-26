@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.2)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.3)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -428,10 +428,34 @@ function demo.ShowDemoWindow(open)
       ImGui.SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.')
       configVarCheckbox('WindowsMoveFromTitleBarOnly')
       ImGui.SameLine(ctx); demo.HelpMarker('Does not apply to windows without a title bar.')
+      configVarCheckbox('ScrollbarScrollByPage')
+      ImGui.SameLine(ctx); demo.HelpMarker('Enable scrolling page by page when clicking outside the scrollbar grab.\nWhen disabled, always scroll to clicked location.\nWhen enabled, Shift+Click scrolls to clicked location.')
       configVarCheckbox('MacOSXBehaviors')
       ImGui.SameLine(ctx); demo.HelpMarker('Swap Cmd<>Ctrl keys, enable various MacOS style behaviors.')
       ImGui.Text(ctx, "Also see Style->Rendering for rendering options.")
 
+      -- Also read: https://github.com/ocornut/imgui/wiki/Error-Handling
+      -- ImGui.SeparatorText(ctx, 'Error Handling')
+      -- configVarCheckbox('ErrorRecovery')
+      -- ImGui.SameLine(ctx); demo.HelpMarker(
+      --   'Options to configure how we handle recoverable errors.\n\z
+      --   - Error recovery is not perfect nor guaranteed! It is a feature to ease development.\n"
+      --   - You not are not supposed to rely on it in the course of a normal application run.\n"
+      --   - Possible usage: facilitate recovery from errors triggered from a scripting language or after specific exceptions handlers.\n"
+      --   - Always ensure that on programmers seat you have at minimum Asserts or Tooltips enabled when making direct imgui API call!\z
+      --   Otherwise it would severely hinder your ability to catch and correct mistakes!')
+      -- configVarCheckbox('ErrorRecoveryEnableAssert')
+      -- configVarCheckbox('ErrorRecoveryEnableDebugLog')
+      -- configVarCheckbox('ErrorRecoveryEnableTooltip')
+      -- if ImGui.GetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableAssert) == 0 and
+      --     ImGui.GetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableDebugLog) == 0 and
+      --     ImGui.GetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableTooltip) == 0 then
+      --   ImGui.SetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableAssert, 1)
+      --   ImGui.SetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableDebugLog, 1)
+      --   ImGui.SetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableTooltip, 1)
+      -- end
+
+      -- Also read: https://github.com/ocornut/imgui/wiki/Debug-Tools
       ImGui.SeparatorText(ctx, 'Debug')
       -- configVarCheckbox('DebugIsDebuggerPresent')
       -- ImGui.SameLine(ctx); demo.HelpMarker('Enable various tools calling IM_DEBUG_BREAK().\n\nRequires a debugger being attached, otherwise IM_DEBUG_BREAK() options will appear to crash your application.')
@@ -2367,7 +2391,10 @@ label:
 
     -- Demonstrate using advanced flags for DragXXX and SliderXXX functions. Note that the flags are the same!
     rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_AlwaysClamp', widgets.sliders.flags, ImGui.SliderFlags_AlwaysClamp)
-    ImGui.SameLine(ctx); demo.HelpMarker('Always clamp value to min/max bounds (if any) when input manually with CTRL+Click.')
+    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_ClampOnInput', widgets.sliders.flags, ImGui.SliderFlags_ClampOnInput)
+    ImGui.SameLine(ctx); demo.HelpMarker('Clamp value to min/max bounds when input manually with Ctrl+Click. By default Ctrl+Click allows going out of bounds.')
+    rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_ClampZeroRange', widgets.sliders.flags, ImGui.SliderFlags_ClampZeroRange)
+    ImGui.SameLine(ctx); demo.HelpMarker("Clamp even if min==max==0. Otherwise DragXXX functions don't clamp.")
     rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_Logarithmic', widgets.sliders.flags, ImGui.SliderFlags_Logarithmic)
     ImGui.SameLine(ctx); demo.HelpMarker('Enable logarithmic editing (more precision for small values).')
     rv,widgets.sliders.flags = ImGui.CheckboxFlags(ctx, 'SliderFlags_NoRoundToFormat', widgets.sliders.flags, ImGui.SliderFlags_NoRoundToFormat)
@@ -2383,6 +2410,8 @@ label:
     rv,widgets.sliders.drag_d = ImGui.DragDouble(ctx, 'DragDouble (0 -> +inf)', widgets.sliders.drag_d, 0.005, 0.0, DBL_MAX, '%.3f', widgets.sliders.flags)
     rv,widgets.sliders.drag_d = ImGui.DragDouble(ctx, 'DragDouble (-inf -> 1)', widgets.sliders.drag_d, 0.005, -DBL_MAX, 1.0, '%.3f', widgets.sliders.flags)
     rv,widgets.sliders.drag_d = ImGui.DragDouble(ctx, 'DragDouble (-inf -> +inf)', widgets.sliders.drag_d, 0.005, -DBL_MAX, DBL_MAX, '%.3f', widgets.sliders.flags)
+    -- rv,widgets.sliders.drag_d = ImGui.DragDouble(ctx, 'DragDouble (0 -> 0)', widgets.sliders.drag_d, 0.005, 0, 0, '%.3f', widgets.sliders.flags) -- To test ClampZeroRange
+    -- rv,widgets.sliders.drag_d = ImGui.DragDouble(ctx, 'DragDouble (100 -> 100)', widgets.sliders.drag_d, 0.005, 100, 100, '%.3f', widgets.sliders.flags)
     rv,widgets.sliders.drag_i = ImGui.DragInt(ctx, 'DragInt (0 -> 100)', widgets.sliders.drag_i, 0.5, 0, 100, '%d', widgets.sliders.flags)
 
     -- Sliders
@@ -3203,6 +3232,10 @@ function demo.ShowDemoWindowLayout()
     ImGui.SeparatorText(ctx, 'Manual-resize')
     do
       demo.HelpMarker('Drag bottom border to resize. Double-click bottom border to auto-fit to vertical contents.')
+      -- if ImGui.Button(ctx, 'Set Height to 200') then
+      --   ImGui.SetNextWindowSize(ctx, -FLT_MIN, 200)
+      -- end
+
       ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg, ImGui.GetStyleColor(ctx, ImGui.Col_FrameBg))
       if ImGui.BeginChild(ctx, 'ResizableChild', -FLT_MIN, ImGui.GetTextLineHeightWithSpacing(ctx) * 8, ImGui.ChildFlags_Borders | ImGui.ChildFlags_ResizeY) then
         for n = 0, 9 do

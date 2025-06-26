@@ -39,9 +39,10 @@ Those can be nested but it cannot be used to enable an already disabled section
 
 Tooltips windows by exception are opted out of disabling.
 
-BeginDisabled(false) essentially does nothing useful but is provided to
-facilitate use of boolean expressions.
-If you can avoid calling BeginDisabled(false)/EndDisabled() best to avoid it.)")
+BeginDisabled(false)/EndDisabled essentially does nothing but is provided to
+facilitate use of boolean expressions (as a micro-optimization: if you have tens
+of thousands of BeginDisabled(false)/EndDisabled() pairs, you might want to
+refactor your code to avoid making those calls))")
 {
   FRAME_GUARD;
   ImGui::BeginDisabled(API_GET(disabled));
