@@ -114,9 +114,7 @@ void Viewport::install()
   pio.Platform_UpdateWindow       = &Forwarder::wrap<&Viewport::update>;
   pio.Platform_GetWindowDpiScale  = &Forwarder::wrap<&Viewport::scaleFactor>;
   pio.Platform_OnChangedViewport  = &Forwarder::wrap<&Viewport::onChanged>;
-
-  ImGuiIO &io {ImGui::GetIO()};
-  io.PlatformSetImeDataFn = &Forwarder::wrapWithCtx<&Viewport::setIME>;
+  pio.Platform_SetImeDataFn = &Forwarder::wrapWithCtx<&Viewport::setIME>;
 
   new MainViewport; // lifetime managed by Dear ImGui
 }

@@ -113,11 +113,12 @@ API_ENUM(0_1, ImGui, TreeNodeFlags_NoAutoOpenOnLog,
 R"(Don't automatically and temporarily open node when Logging is active
    (by default logging will automatically open tree nodes).)");
 API_ENUM(0_1, ImGui, TreeNodeFlags_DefaultOpen,       "Default node to be open.");
-API_ENUM(0_1, ImGui, TreeNodeFlags_OpenOnDoubleClick, "Need double-click to open node.");
+API_ENUM(0_1, ImGui, TreeNodeFlags_OpenOnDoubleClick,
+R"(Open on double-click instead of simple click (default for multi-select unless
+   any _OpenOnXXX behavior is set explicitly). Both behaviors may be combined.)");
 API_ENUM(0_1, ImGui, TreeNodeFlags_OpenOnArrow,
-R"(Only open when clicking on the arrow part.
-   If TreeNodeFlags_OpenOnDoubleClick is also set, single-click arrow or
-   double-click all box to open.)");
+R"(Open when clicking on the arrow part (default for multi-select unless any
+   _OpenOnXXX behavior is set explicitly). Both behaviors may be combined.)");
 API_ENUM(0_1, ImGui, TreeNodeFlags_Leaf,
   "No collapsing, no arrow (use as a convenience for leaf nodes).");
 API_ENUM(0_1, ImGui, TreeNodeFlags_Bullet,

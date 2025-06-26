@@ -27,7 +27,7 @@
 #undef CF_TEXT
 #define CF_TEXT RegisterClipboardFormat("SWELL__CF_TEXT")
 
-static const char *getClipboardText(void *)
+static const char *getClipboardText(ImGuiContext *)
 {
   static std::string text;
 
@@ -43,7 +43,7 @@ static const char *getClipboardText(void *)
   return text.c_str();
 }
 
-static void setClipboardText(void *, const char *text)
+static void setClipboardText(ImGuiContext *, const char *text)
 {
   const size_t size {strlen(text) + 1};
   HANDLE mem {GlobalAlloc(GMEM_MOVEABLE, size)};
@@ -60,8 +60,9 @@ void Platform::install()
 {
   ImGuiIO &io {ImGui::GetIO()};
   io.BackendPlatformName = "reaper_imgui_gdk";
-  io.GetClipboardTextFn = &getClipboardText;
-  io.SetClipboardTextFn = &setClipboardText;
+  ImGuiPlatformIO &pio {ImGui::GetPlatformIO()};
+  pio.Platform_GetClipboardTextFn = &getClipboardText;
+  pio.Platform_SetClipboardTextFn = &setClipboardText;
 }
 
 Window *Platform::createWindow(ImGuiViewport *viewport, DockerHost *dockerHost)

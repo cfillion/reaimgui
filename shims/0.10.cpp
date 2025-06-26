@@ -30,6 +30,7 @@ SHIM("0.10",
   (void, GetWindowPos, Context*, W<double *>, W<double *>)
 
   (int, SelectableFlags_NoAutoClosePopups)
+  (int, ChildFlags_Borders)
 );
 
 // dear imgui v1.91
@@ -80,3 +81,6 @@ SHIM_FUNC(0_1, void, GetWindowContentRegionMax,
 }
 
 SHIM_ALIAS(0_1, SelectableFlags_DontClosePopups, SelectableFlags_NoAutoClosePopups);
+
+// dear imgui v1.91.1
+SHIM_ALIAS(0_9, ChildFlags_Border, ChildFlags_Borders);

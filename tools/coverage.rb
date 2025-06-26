@@ -167,7 +167,7 @@ NATIVE_ONLY = [
 ]
 
 NATIVE_ONLY_CLASSES = %w[
-  ImGuiIO ImFontAtlas ImFont ImDrawData ImGuiStorage
+  ImGuiIO ImGuiPlatformIO ImFontAtlas ImFont ImDrawData ImGuiStorage
   ImGuiStyle ImGuiInputTextCallbackData ImFontGlyphRangesBuilder
   ImGuiTextBuffer ImFontConfig
 ]

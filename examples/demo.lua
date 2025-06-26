@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.0)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.1)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -2066,6 +2066,10 @@ label:
     ImGui.PlotLines(ctx, 'Lines', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
     ImGui.PlotHistogram(ctx, 'Histogram', widgets.plots.plot2.data, 0, nil, -1.0, 1.0, 0, 80)
 
+    -- ImGui.Text(ctx, 'Need better plotting and graphing? Consider using ImPlot:')
+    -- ImGui.TextLinkOpenURL(ctx, 'https://github.com/epezent/implot')
+    -- ImGui.Separator(ctx)
+
     ImGui.TreePop(ctx)
   end
 
@@ -2957,7 +2961,7 @@ label:
       widgets.query_window.embed_all_inside_a_child_window)
     local visible = true
     if widgets.query_window.embed_all_inside_a_child_window then
-      visible = ImGui.BeginChild(ctx, 'outer_child', 0, ImGui.GetFontSize(ctx) * 20.0, ImGui.ChildFlags_Border)
+      visible = ImGui.BeginChild(ctx, 'outer_child', 0, ImGui.GetFontSize(ctx) * 20, ImGui.ChildFlags_Borders)
     end
 
     if visible then
@@ -3019,7 +3023,7 @@ label:
         ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_AnyWindow),
         ImGui.IsWindowHovered(ctx, ImGui.HoveredFlags_Stationary)))
 
-      if ImGui.BeginChild(ctx, 'child', 0, 50, ImGui.ChildFlags_Border) then
+      if ImGui.BeginChild(ctx, 'child', 0, 50, ImGui.ChildFlags_Borders) then
         ImGui.Text(ctx, 'This is another child window for testing the _ChildWindows flag.')
         ImGui.EndChild(ctx)
       end
@@ -3122,7 +3126,7 @@ function demo.ShowDemoWindowLayout()
         max_height_in_lines = 10,
         offset_x            = 0,
         override_bg_color   = true,
-        flags               = ImGui.ChildFlags_Border | ImGui.ChildFlags_ResizeX | ImGui.ChildFlags_ResizeY,
+        flags               = ImGui.ChildFlags_Borders | ImGui.ChildFlags_ResizeX | ImGui.ChildFlags_ResizeY,
       }
     end
 
@@ -3157,7 +3161,7 @@ function demo.ShowDemoWindowLayout()
         window_flags = window_flags | ImGui.WindowFlags_MenuBar
       end
       ImGui.PushStyleVar(ctx, ImGui.StyleVar_ChildRounding, 5.0)
-      local visible = ImGui.BeginChild(ctx, 'ChildR', 0, 260, ImGui.ChildFlags_Border, window_flags)
+      local visible = ImGui.BeginChild(ctx, 'ChildR', 0, 260, ImGui.ChildFlags_Borders, window_flags)
       if visible then
         if not layout.child.disable_menu and ImGui.BeginMenuBar(ctx) then
           if ImGui.BeginMenu(ctx, 'Menu') then
@@ -3183,7 +3187,7 @@ function demo.ShowDemoWindowLayout()
     do
       demo.HelpMarker('Drag bottom border to resize. Double-click bottom border to auto-fit to vertical contents.')
       ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg, ImGui.GetStyleColor(ctx, ImGui.Col_FrameBg))
-      if ImGui.BeginChild(ctx, 'ResizableChild', -FLT_MIN, ImGui.GetTextLineHeightWithSpacing(ctx) * 8, ImGui.ChildFlags_Border | ImGui.ChildFlags_ResizeY) then
+      if ImGui.BeginChild(ctx, 'ResizableChild', -FLT_MIN, ImGui.GetTextLineHeightWithSpacing(ctx) * 8, ImGui.ChildFlags_Borders | ImGui.ChildFlags_ResizeY) then
         for n = 0, 9 do
           ImGui.Text(ctx, ('Line %04d'):format(n))
         end
@@ -3201,7 +3205,7 @@ function demo.ShowDemoWindowLayout()
       rv,layout.child.max_height_in_lines = ImGui.DragInt(ctx, 'Max Height (in Lines)', layout.child.max_height_in_lines, 0.2)
 
       ImGui.SetNextWindowSizeConstraints(ctx, 0.0, ImGui.GetTextLineHeightWithSpacing(ctx) * 1, FLT_MAX, ImGui.GetTextLineHeightWithSpacing(ctx) * layout.child.max_height_in_lines)
-      if ImGui.BeginChild(ctx, 'ConstrainedChild', -FLT_MIN, 0.0, ImGui.ChildFlags_Border | ImGui.ChildFlags_AutoResizeY) then
+      if ImGui.BeginChild(ctx, 'ConstrainedChild', -FLT_MIN, 0.0, ImGui.ChildFlags_Borders | ImGui.ChildFlags_AutoResizeY) then
         for n = 0, layout.child.draw_lines - 1 do
           ImGui.Text(ctx, ('Line %04d'):format(n))
         end
@@ -3222,7 +3226,7 @@ function demo.ShowDemoWindowLayout()
       ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 8)
       rv,layout.child.offset_x = ImGui.DragInt(ctx, 'Offset X', layout.child.offset_x, 1.0, -1000, 1000)
       rv,layout.child.override_bg_color = ImGui.Checkbox(ctx, 'Override ChildBg color', layout.child.override_bg_color)
-      rv,layout.child.flags = ImGui.CheckboxFlags(ctx, 'ChildFlags_Border', layout.child.flags, ImGui.ChildFlags_Border)
+      rv,layout.child.flags = ImGui.CheckboxFlags(ctx, 'ChildFlags_Borders', layout.child.flags, ImGui.ChildFlags_Borders)
       rv,layout.child.flags = ImGui.CheckboxFlags(ctx, 'ChildFlags_AlwaysUseWindowPadding', layout.child.flags, ImGui.ChildFlags_AlwaysUseWindowPadding)
       rv,layout.child.flags = ImGui.CheckboxFlags(ctx, 'ChildFlags_ResizeX', layout.child.flags, ImGui.ChildFlags_ResizeX)
       rv,layout.child.flags = ImGui.CheckboxFlags(ctx, 'ChildFlags_ResizeY', layout.child.flags, ImGui.ChildFlags_ResizeY)
@@ -3649,7 +3653,7 @@ function demo.ShowDemoWindowLayout()
       ImGui.BeginGroup(ctx)
       ImGui.Text(ctx, name)
 
-      if ImGui.BeginChild(ctx, i, child_w, 200.0, ImGui.ChildFlags_Border, child_flags) then
+      if ImGui.BeginChild(ctx, i, child_w, 200.0, ImGui.ChildFlags_Borders, child_flags) then
         if ImGui.BeginMenuBar(ctx) then
           ImGui.Text(ctx, 'abc')
           ImGui.EndMenuBar(ctx)
@@ -3696,7 +3700,7 @@ function demo.ShowDemoWindowLayout()
     end
     for i,name in ipairs(names) do
       local scroll_x, scroll_max_x = 0.0, 0.0
-      if ImGui.BeginChild(ctx, i, -100, child_height, ImGui.ChildFlags_Border, child_flags) then
+      if ImGui.BeginChild(ctx, i, -100, child_height, ImGui.ChildFlags_Borders, child_flags) then
         if scroll_to_off then
           ImGui.SetScrollX(ctx, layout.scrolling.scroll_to_off_px)
         end
@@ -3733,7 +3737,7 @@ function demo.ShowDemoWindowLayout()
     ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, 2.0, 1.0)
     local scrolling_child_width = ImGui.GetFrameHeightWithSpacing(ctx) * 7 + 30
     local scroll_x, scroll_max_x = 0.0, 0.0
-    if ImGui.BeginChild(ctx, 'scrolling', 0, scrolling_child_width, ImGui.ChildFlags_Border, ImGui.WindowFlags_HorizontalScrollbar) then
+    if ImGui.BeginChild(ctx, 'scrolling', 0, scrolling_child_width, ImGui.ChildFlags_Borders, ImGui.WindowFlags_HorizontalScrollbar) then
       for line = 0, layout.scrolling.lines - 1 do
         -- Display random stuff. For the sake of this trivial demo we are using basic Button() + SameLine()
         -- If you want to create your own time line for a real application you may be better off manipulating
@@ -3892,7 +3896,7 @@ function demo.ShowDemoWindowLayout()
           ImGui.EndTabBar(ctx)
         end
         if layout.horizontal_window.show_child then
-          if ImGui.BeginChild(ctx, 'child', 0, 0, ImGui.ChildFlags_Border) then
+          if ImGui.BeginChild(ctx, 'child', 0, 0, ImGui.ChildFlags_Borders) then
             ImGui.EndChild(ctx)
           end
         end
@@ -4349,10 +4353,10 @@ end
 
 -- Make the UI compact because there are so many fields
 function demo.PushStyleCompact()
-  local frame_padding_x, frame_padding_y = ImGui.GetStyleVar(ctx, ImGui.StyleVar_FramePadding)
-  local item_spacing_x,  item_spacing_y  = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing)
-  ImGui.PushStyleVar(ctx, ImGui.StyleVar_FramePadding, frame_padding_x, math.floor(frame_padding_y * 0.60))
-  ImGui.PushStyleVar(ctx, ImGui.StyleVar_ItemSpacing,  item_spacing_x,  math.floor(item_spacing_y  * 0.60))
+  local frame_padding_y = select(2, ImGui.GetStyleVar(ctx, ImGui.StyleVar_FramePadding))
+  local item_spacing_y  = select(2, ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemSpacing))
+  ImGui.PushStyleVarY(ctx, ImGui.StyleVar_FramePadding, math.floor(frame_padding_y * .60))
+  ImGui.PushStyleVarY(ctx, ImGui.StyleVar_ItemSpacing,  math.floor(item_spacing_y  * .60))
 end
 
 function demo.PopStyleCompact()
@@ -5435,9 +5439,8 @@ function demo.ShowDemoWindowTables()
     demo.HelpMarker('Showcase altering CellPadding.y between rows. Note that CellPadding.x is locked for the entire table.')
     if ImGui.BeginTable(ctx, 'table_changing_cellpadding_y', 1, ImGui.TableFlags_Borders) then
       for row = 0, 7 do
-        local cell_padding_x = ImGui.GetStyleVar(ctx, ImGui.StyleVar_CellPadding)
         if (row % 3) == 2 then
-          ImGui.PushStyleVar(ctx, ImGui.StyleVar_CellPadding, cell_padding_x, 20.0)
+          ImGui.PushStyleVarY(ctx, ImGui.StyleVar_CellPadding, 20)
         end
         ImGui.TableNextRow(ctx, ImGui.TableRowFlags_None)
         ImGui.TableNextColumn(ctx)
@@ -5706,7 +5709,11 @@ function demo.ShowDemoWindowTables()
       ImGui.TableSetupColumn(ctx, 'Banana')
       ImGui.TableSetupColumn(ctx, 'Cherry')
 
-      -- Instead of calling TableHeadersRow() we'll submit custom headers ourselves
+      -- Instead of calling TableHeadersRow() we'll submit custom headers ourselves.
+      -- (A different approach is also possible:
+      --   - Specify ImGuiTableColumnFlags_NoHeaderLabel in some TableSetupColumn() call.
+      --   - Call TableHeadersRow() normally. This will submit TableHeader() with no name.
+      --   - Then call TableSetColumnIndex() to position yourself in the column and submit your stuff e.g. Checkbox().)
       ImGui.TableNextRow(ctx, ImGui.TableRowFlags_Headers)
       for column = 0, COLUMNS_COUNT - 1 do
         ImGui.TableSetColumnIndex(ctx, column)
@@ -5721,6 +5728,7 @@ function demo.ShowDemoWindowTables()
         ImGui.PopID(ctx)
       end
 
+      -- Submit table contents
       for row = 0, 4 do
         ImGui.TableNextRow(ctx)
         for column = 0, 2 do
@@ -5764,6 +5772,7 @@ function demo.ShowDemoWindowTables()
     rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_ScrollX',   tables.angled.table_flags, ImGui.TableFlags_ScrollX)
     rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_ScrollY',   tables.angled.table_flags, ImGui.TableFlags_ScrollY)
     rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_Resizable', tables.angled.table_flags, ImGui.TableFlags_Resizable)
+    rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_Sortable',  tables.angled.table_flags, ImGui.TableFlags_Sortable)
     -- rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_NoBordersInBody', tables.angled.table_flags, ImGui.TableFlags_NoBordersInBody)
     rv,tables.angled.table_flags = ImGui.CheckboxFlags(ctx, '_HighlightHoveredColumn', tables.angled.table_flags, ImGui.TableFlags_HighlightHoveredColumn)
     ImGui.SetNextItemWidth(ctx, ImGui.GetFontSize(ctx) * 8)
@@ -6740,7 +6749,7 @@ function demo.ShowDemoWindowInputs()
 
     ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg, 0xff00ff20)
 
-    if ImGui.BeginChild(ctx, 'WindowA', -FLT_MIN, line_height * 14, ImGui.ChildFlags_Border) then
+    if ImGui.BeginChild(ctx, 'WindowA', -FLT_MIN, line_height * 14, ImGui.ChildFlags_Borders) then
       ImGui.Text(ctx, 'Press Ctrl+A and see who receives it!')
       ImGui.Separator(ctx)
 
@@ -6758,14 +6767,14 @@ function demo.ShowDemoWindowInputs()
       --ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags, item_id) and 'PRESSED' or '...'))
 
       -- 3: Dummy child is not claiming the route: focusing them shouldn't steal route away from WindowA
-      if ImGui.BeginChild(ctx, 'ChildD', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Border) then
+      if ImGui.BeginChild(ctx, 'ChildD', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Borders) then
         ImGui.Text(ctx, '(in ChildD: not using same Shortcut)')
         ImGui.Text(ctx, ('IsWindowFocused: %s'):format(ImGui.IsWindowFocused(ctx)))
         ImGui.EndChild(ctx)
       end
 
       -- 4: Child window polling for CTRL+A. It is deeper than WindowA and gets priority when focused.
-      if ImGui.BeginChild(ctx, 'ChildE', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Border) then
+      if ImGui.BeginChild(ctx, 'ChildE', -FLT_MIN, line_height * 4, ImGui.ChildFlags_Borders) then
         ImGui.Text(ctx, '(in ChildE: using same Shortcut)')
         ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
         ImGui.EndChild(ctx)
@@ -7230,7 +7239,7 @@ function demo.ShowStyleEditor()
          Right-click to open edit options menu.')
 
       ImGui.SetNextWindowSizeConstraints(ctx, 0.0, ImGui.GetTextLineHeightWithSpacing(ctx) * 10, FLT_MAX, FLT_MAX)
-      if ImGui.BeginChild(ctx, '##colors', 0, 0, ImGui.ChildFlags_Border | ImGui.ChildFlags_NavFlattened,
+      if ImGui.BeginChild(ctx, '##colors', 0, 0, ImGui.ChildFlags_Borders | ImGui.ChildFlags_NavFlattened,
           ImGui.WindowFlags_AlwaysVerticalScrollbar | ImGui.WindowFlags_AlwaysHorizontalScrollbar) then
         ImGui.PushItemWidth(ctx, ImGui.GetFontSize(ctx) * -12)
         local inner_spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
@@ -7458,7 +7467,7 @@ function demo.ShowExampleMenuFile()
   ImGui.Separator(ctx)
   if ImGui.BeginMenu(ctx, 'Options') then
     rv,demo.menu.enabled = ImGui.MenuItem(ctx, 'Enabled', '', demo.menu.enabled)
-    if ImGui.BeginChild(ctx, 'child', 0, 60, ImGui.ChildFlags_Border) then
+    if ImGui.BeginChild(ctx, 'child', 0, 60, ImGui.ChildFlags_Borders) then
       for i = 0, 9 do
         ImGui.Text(ctx, ('Scrolling Text %d'):format(i))
       end
@@ -8060,7 +8069,7 @@ function demo.ShowExampleAppLayout()
   end
 
   -- Left
-  if ImGui.BeginChild(ctx, 'left pane', 150, 0, ImGui.ChildFlags_Border | ImGui.ChildFlags_ResizeX) then
+  if ImGui.BeginChild(ctx, 'left pane', 150, 0, ImGui.ChildFlags_Borders | ImGui.ChildFlags_ResizeX) then
     for i = 0, 100 - 1 do
       if ImGui.Selectable(ctx, ('MyObject %d'):format(i), app.layout.selected == i) then
         app.layout.selected = i
@@ -8704,7 +8713,7 @@ function demo.ShowExampleAppCustomRendering()
       -- To use a child window instead we could use, e.g:
       --   ImGui.PushStyleVar(ctx, ImGui.StyleVar_WindowPadding, 0, 0) -- Disable padding
       --   ImGui.PushStyleColor(ctx, ImGui.Col_ChildBg, 0x323232ff)    -- Set a background color
-      --   if ImGui.BeginChild(ctx, 'canvas', 0.0, 0.0, ImGui.ChildFlags_Border, ImGui.WindowFlags_NoMove) then
+      --   if ImGui.BeginChild(ctx, 'canvas', 0.0, 0.0, ImGui.ChildFlags_Borders, ImGui.WindowFlags_NoMove) then
       --     ImGui.PopStyleColor(ctx)
       --     ImGui.PopStyleVar(ctx)
       --     [...]

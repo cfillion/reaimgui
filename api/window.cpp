@@ -149,7 +149,7 @@ R"(About using AutoResizeX/AutoResizeY flags:
     clipping.)");
 
 API_ENUM(0_9, ImGui, ChildFlags_None, "");
-API_ENUM(0_9, ImGui, ChildFlags_Border, "Show an outer border and enable WindowPadding.");
+API_ENUM(0_10, ImGui, ChildFlags_Borders, "Show an outer border and enable WindowPadding.");
 API_ENUM(0_9, ImGui, ChildFlags_AlwaysUseWindowPadding,
 R"(Pad with StyleVar_WindowPadding even if no border are drawn (no padding by
 default for non-bordered child windows because it makes more sense).)");

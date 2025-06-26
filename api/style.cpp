@@ -80,29 +80,52 @@ static_assert(std::size(g_styleVars) == ImGuiStyleVar_COUNT);
 
 API_SUBSECTION("Variables");
 
+static void assertStyleVar(const size_t var_idx)
+{
+  if(var_idx >= std::size(g_styleVars))
+    throw reascript_error {"unknown style variable"};
+}
+
 API_FUNC(0_1, void, PushStyleVar, (Context*,ctx)
-(int,var_idx) (double,val1) (RO<double*>,val2),
+(int,idx) (double,val1) (RO<double*>,val2),
 R"(Temporarily modify a style variable.
 Call PopStyleVar to undo after use (before the end of the frame).
-See StyleVar_* for possible values of 'var_idx'.)")
+See StyleVar_* for possible values of 'idx'.)")
 {
   FRAME_GUARD;
-  if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
-    throw reascript_error {"unknown style variable"};
+  assertStyleVar(idx);
 
-  std::visit([var_idx, val1, val2](auto ImGuiStyle::*field) {
+  std::visit([idx, val1, val2](auto ImGuiStyle::*field) {
     if constexpr(std::is_same_v<ImVec2,
                             std::decay_t<decltype(ImGui::GetStyle().*field)>>) {
       if(!val2)
         throw reascript_error {"this variable requires two values (x, y)"};
-      ImGui::PushStyleVar(var_idx, ImVec2(val1, *val2));
+      ImGui::PushStyleVar(idx, ImVec2(val1, *val2));
     }
     else {
       if(val2)
         throw reascript_error {"second value ignored for this variable"};
-      ImGui::PushStyleVar(var_idx, val1);
+      ImGui::PushStyleVar(idx, val1);
     }
-  }, g_styleVars[var_idx]);
+  }, g_styleVars[idx]);
+}
+
+API_FUNC(0_10, void, PushStyleVarX, (Context*,ctx)
+(int,idx) (double,val_x),
+"Modify the X component of a style variable. See PushStyleVar.")
+{
+  FRAME_GUARD;
+  // not using the g_styleVars table so assertStyleVar is unnecessary here
+  // ImGui already validates internally via GetStyleVarInfo
+  ImGui::PushStyleVarX(idx, val_x);
+}
+
+API_FUNC(0_10, void, PushStyleVarY, (Context*,ctx)
+(int,idx) (double,val_y),
+"Modify the X component of a style variable. See PushStyleVar.")
+{
+  FRAME_GUARD;
+  ImGui::PushStyleVarY(idx, val_y);
 }
 
 API_FUNC(0_1, void, PopStyleVar, (Context*,ctx)
@@ -118,8 +141,7 @@ API_FUNC(0_1, void, GetStyleVar, (Context*,ctx)
 "")
 {
   FRAME_GUARD;
-  if(static_cast<size_t>(var_idx) >= std::size(g_styleVars))
-    throw reascript_error {"unknown style variable"};
+  assertStyleVar(var_idx);
 
   std::visit([val1, val2](auto ImGuiStyle::*field) {
     const ImGuiStyle &style {ImGui::GetStyle()};

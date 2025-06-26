@@ -256,9 +256,11 @@ API_ENUM(0_1, ImGui, TableColumnFlags_NoSortAscending,
 API_ENUM(0_1, ImGui, TableColumnFlags_NoSortDescending,
   "Disable ability to sort in the descending direction.");
 API_ENUM(0_5_5, ImGui, TableColumnFlags_NoHeaderLabel,
-R"(TableHeadersRow will not submit horizontal label for this column.
-   Convenient for some small columns. Name will still appear in context menu
-   or in angled headers.)");
+R"(TableHeadersRow will submit an empty label for this column.
+   Convenient for some small columns.
+   Name will still appear in context menu or in angled headers.
+   You may append into this cell by calling TableSetColumnIndex right after
+   the TableHeadersRow call.)");
 API_ENUM(0_1, ImGui, TableColumnFlags_NoHeaderWidth,
   "Disable header text width contribution to automatic column width.");
 API_ENUM(0_1, ImGui, TableColumnFlags_PreferSortAscending,
