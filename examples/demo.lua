@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.5)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.6)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -1867,6 +1867,18 @@ label:
       local edit_count = ImGui.Function_GetValue(widgets.input.callback, 'edit_count')
       ImGui.SameLine(ctx); ImGui.Text(ctx, ('(%d)'):format(edit_count))
 
+      ImGui.TreePop(ctx)
+    end
+
+    if ImGui.TreeNode(ctx, 'Eliding, Alignment') then
+      if not widgets.input.align then
+        widgets.input.align = {
+          buf = '/path/to/some/folder/with/long/filename.cpp',
+          flags = ImGui.InputTextFlags_ElideLeft,
+        }
+      end
+      rv,widgets.input.align.flags = ImGui.CheckboxFlags(ctx, 'InputTextFlags_ElideLeft', widgets.input.align.flags, ImGui.InputTextFlags_ElideLeft)
+      rv,widgets.input.align.buf = ImGui.InputText(ctx, 'Path', widgets.input.align.buf, widgets.input.align.flags)
       ImGui.TreePop(ctx)
     end
 

@@ -285,7 +285,7 @@ R"(In multi-line mode, unfocus with Enter, add new line with Ctrl+Enter
    (default is opposite: unfocus with Ctrl+Enter, add line with Enter).)");
 
 API_SECTION_P(flags, "Other options");
-API_ENUM(0_1, ImGui, InputTextFlags_ReadOnly,        "Read-only mode.");
+API_ENUM(0_1, ImGui, InputTextFlags_ReadOnly, "Read-only mode.");
 API_ENUM(0_1, ImGui, InputTextFlags_Password,
     "Password mode, display all characters as '*'.");
 API_ENUM(0_2, ImGui, InputTextFlags_AlwaysOverwrite, "Overwrite mode.");
@@ -299,7 +299,12 @@ R"(InputDouble(), InputInt() etc. only: when value is zero, do not display it.
 API_ENUM(0_1, ImGui, InputTextFlags_NoHorizontalScroll,
   "Disable following the cursor horizontally.");
 API_ENUM(0_1, ImGui, InputTextFlags_NoUndoRedo,
-    "Disable undo/redo. Note that input text owns the text data while active.");
+  "Disable undo/redo. Note that input text owns the text data while active.");
+
+// Elide display / Alignment
+API_ENUM(0_10, ImGui, InputTextFlags_ElideLeft,
+R"(When text doesn't fit, elide left side to ensure right side stays visible.
+   Useful for path/filenames. Single-line only!)");
 
 API_SECTION_P(flags, "Callback features");
 API_ENUM(0_8_5, ImGui, InputTextFlags_CallbackCompletion,

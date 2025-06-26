@@ -129,7 +129,8 @@ API_FUNC(0_8, bool, ImageButton, (Context*,ctx)
 (RO<double*>,uv0_x,0.0) (RO<double*>,uv0_y,0.0)
 (RO<double*>,uv1_x,1.0) (RO<double*>,uv1_y,1.0)
 (RO<int*>,bg_col_rgba,0x00000000) (RO<int*>,tint_col_rgba,0xFFFFFFFF),
-"Adds StyleVar_FramePadding*2.0 to provided size.")
+R"(Draws a background based on regular Button color + optionally an inner
+background if specified. Adds StyleVar_FramePadding*2.0 to provided size.)")
 {
   FRAME_GUARD;
   assertValid(image);
