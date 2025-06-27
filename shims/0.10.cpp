@@ -35,7 +35,10 @@ SHIM("0.10",
   (int, ChildFlags_Borders)
 
   (Context*, CreateContext, const char*, RO<int*>)
+  (double, GetConfigVar, Context*, int)
   (void, SetConfigVar, Context*, int, double)
+  (int, ConfigFlags_NavEnableKeyboard)
+  (int, ConfigVar_Flags)
   (int, ConfigVar_DebugHighlightIdConflicts)
 
   (int, Col_NavCursor)
@@ -107,10 +110,17 @@ SHIM_ALIAS(0_9, ChildFlags_Border, ChildFlags_Borders);
 
 // dear imgui v1.91.2
 SHIM_FUNC(0_5, Context*, CreateContext,
-(const char*,label) (RO<int*>,config_flags))
+(const char*,label) (RO<int*>,config_flags,0))
 {
   Context *ctx {api.CreateContext(label, config_flags)};
   api.SetConfigVar(ctx, api.ConfigVar_DebugHighlightIdConflicts(), false);
+
+  if(!(API_GET(config_flags) & api.ConfigFlags_NavEnableKeyboard())) {
+    int flags {static_cast<int>(api.GetConfigVar(ctx, api.ConfigVar_Flags()))};
+    flags &= ~api.ConfigFlags_NavEnableKeyboard();
+    api.SetConfigVar(ctx, api.ConfigVar_Flags(), flags);
+  }
+
   return ctx;
 }
 

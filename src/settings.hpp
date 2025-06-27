@@ -35,6 +35,8 @@ namespace Settings {
   SETTING bool NoSavedSettings;
   SETTING bool DockingEnable,
                DockingNoSplit, DockingWithShift, DockingTransparentPayload;
+  SETTING bool NavEnable,
+               NavCaptureKbd, NavCurAlways, NavMoveMouse;
   SETTING const RendererType *Renderer;
   SETTING bool ForceSoftware;
 }

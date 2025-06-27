@@ -127,6 +127,9 @@ Context::Context(const char *label, const int userConfigFlags)
   io.ConfigDockingNoSplit = Settings::DockingNoSplit;
   io.ConfigDockingTransparentPayload = Settings::DockingTransparentPayload;
   io.ConfigDockingWithShift = Settings::DockingWithShift;
+  io.ConfigNavCaptureKeyboard = Settings::NavCaptureKbd;
+  io.ConfigNavCursorVisibleAlways = Settings::NavCurAlways;
+  io.ConfigNavMoveSetMousePos = Settings::NavMoveMouse;
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
@@ -141,6 +144,8 @@ Context::Context(const char *label, const int userConfigFlags)
   setUserConfigFlags(userConfigFlags);
   if(Settings::DockingEnable)
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+  if(Settings::NavEnable)
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
   Platform::install();
   Renderer::install();

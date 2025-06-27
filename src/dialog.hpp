@@ -30,6 +30,10 @@
 #define IDC_RESETDEFAULTS   208
 #define IDC_FORCESOFTWARE   209
 #define IDC_VERSION         210
+#define IDC_NAVENABLE       211
+#define IDC_NAVCAPTUREKBD   212
+#define IDC_NAVCURALWAYS    213
+#define IDC_NAVMOVEMOUSE    214
 
 #define IDD_ERROR    101
 #define IDC_MESSAGE  200

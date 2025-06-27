@@ -641,11 +641,20 @@ int main()
     GroupBox {IDC_GROUPBOX, "ReaImGui settings", VLayout {
       CheckBox {IDC_SAVEDSETTINGS, ""},
       Spacing {},
+
       CheckBox {IDC_DOCKINGENABLE, ""},
       Indent {VLayout {
         CheckBox {IDC_DOCKWITHSHIFT,   ""},
         CheckBox {IDC_DOCKSPLIT,       ""},
         CheckBox {IDC_DOCKTRANSPARENT, ""},
+      }},
+      Spacing {},
+
+      CheckBox {IDC_NAVENABLE, ""},
+      Indent {VLayout {
+        CheckBox {IDC_NAVCAPTUREKBD, ""},
+        CheckBox {IDC_NAVCURALWAYS,  ""},
+        CheckBox {IDC_NAVMOVEMOUSE,  ""},
       }},
       Spacing {},
 
