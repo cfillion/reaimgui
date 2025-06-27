@@ -62,6 +62,7 @@ static constexpr StyleFields<float, ImVec2> g_styleVars[] {
   STYLEVAR(ScrollbarRounding),
   STYLEVAR(GrabMinSize),
   STYLEVAR(GrabRounding),
+  STYLEVAR(ImageBorderSize),
   STYLEVAR(TabRounding),
   STYLEVAR(TabBorderSize),
   STYLEVAR(TabBarBorderSize),
@@ -211,6 +212,7 @@ API_ENUM(0_1, ImGui, StyleVar_GrabMinSize,
   "Minimum width/height of a grab box for slider/scrollbar.");
 API_ENUM(0_1, ImGui, StyleVar_GrabRounding,
   "Radius of grabs corners rounding. Set to 0.0 to have rectangular slider grabs.");
+API_ENUM(0_10, ImGui, StyleVar_ImageBorderSize, "Thickness of border around Image calls.");
 API_ENUM(0_1, ImGui, StyleVar_TabRounding,
   "Radius of upper corners of a tab. Set to 0.0 to have rectangular tabs.");
 API_ENUM(0_9, ImGui, StyleVar_TabBorderSize, "Thickness of border around tabs.");

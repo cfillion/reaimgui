@@ -17,6 +17,8 @@
 
 #include "shims.hpp"
 
+#include "../src/image.hpp"
+
 #include <imgui/imgui_internal.h>
 
 SHIM("0.10",
@@ -36,9 +38,19 @@ SHIM("0.10",
   (void, SetConfigVar, Context*, int, double)
   (int, ConfigVar_DebugHighlightIdConflicts)
 
-  (int, SliderFlags_ClampOnInput)
   (int, Col_NavCursor)
+  (int, SliderFlags_ClampOnInput)
   (int, TreeNodeFlags_SpanLabelWidth)
+
+  (void, GetStyleVar, Context*, int, W<double*>, W<double*>)
+  (void, PushStyleVar, Context*, int, double, RO<double*>)
+  (void, PushStyleColor, Context*, int, int)
+  (void, PopStyleColor, Context*, RO<int*>)
+  (void, PopStyleVar, Context*, RO<int*>)
+  (int, Col_Border)
+  (int, StyleVar_ImageBorderSize)
+  (void, ImageWithBg, Context*, Image*, double, double,
+    RO<double*>, RO<double*>, RO<double*>, RO<double*>, RO<int*>, RO<int*>)
 );
 
 // dear imgui v1.91
@@ -116,3 +128,25 @@ SHIM_ALIAS(0_9_1, TreeNodeFlags_SpanTextWidth, TreeNodeFlags_SpanLabelWidth);
 
 // dear imgui v1.91.8
 SHIM_CONST(0_1, ColorEditFlags_AlphaPreview, 0); // no replacement
+
+// dear imgui v1.91.9
+SHIM_FUNC(0_8, void, Image, (Context*,ctx) (class Image*,image)
+  (double,image_size_w) (double,image_size_h)
+  (RO<double*>,uv0_x) (RO<double*>,uv0_y)
+  (RO<double*>,uv1_x) (RO<double*>,uv1_y)
+  (RO<int*>,tint_col_rgba/*,0xFFFFFFFF*/) (RO<int*>,border_col_rgba,0x00000000))
+{
+  // Copied from upstream's own temporary shim
+  // Preserve behavior where border is always visible when border_col's Alpha is >0.0f
+  double image_border_size;
+  api.GetStyleVar(ctx, api.StyleVar_ImageBorderSize(), &image_border_size, nullptr);
+
+  const double border_size
+    {API_GET(border_col_rgba) & 0xFF ? std::max(1.0, image_border_size) : 0.0f};
+  api.PushStyleVar(ctx, api.StyleVar_ImageBorderSize(), border_size, nullptr);
+  api.PushStyleColor(ctx, api.Col_Border(), API_GET(border_col_rgba));
+  api.ImageWithBg(ctx, image, image_size_w, image_size_h,
+    uv0_x, uv0_y, uv1_x, uv1_y, 0, tint_col_rgba);
+  api.PopStyleColor(ctx, nullptr);
+  api.PopStyleVar(ctx, nullptr);
+}

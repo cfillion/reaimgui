@@ -142,6 +142,7 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   // &ImGuiIO::ConfigErrorRecoveryEnableTooltip,
 
   &ImGuiIO::ConfigDebugHighlightIdConflicts,
+  // &ImGuiIO::ConfigDebugHighlightIdConflictsShowItemPicker,
   &ImGuiIO::ConfigDebugBeginReturnValueOnce,
   &ImGuiIO::ConfigDebugBeginReturnValueLoop,
 
@@ -239,10 +240,12 @@ R"(Enable scrolling page by page when clicking outside the scrollbar grab.
    When enabled, Shift+Click scrolls to clicked location.)");
 
 API_CONFIGVAR(0_10, DebugHighlightIdConflicts,
-R"(Highlight and show an error message when multiple items have conflicting
+R"(Highlight and show an error message popup when multiple items have conflicting
    identifiers.
    - Code should use PushID/PopID in loops, or append "##xx" to same-label identifiers.
    - Empty label e.g. Button("") == same ID as parent widget/node. Use Button("##xx") instead!)");
+// API_CONFIGVAR(?, DebugHighlightIdConflictsShowItemPicker,
+// R"(Show "Item Picker" button in ConfigVar_DebugHighlightIdConflicts's popup.)");
 API_CONFIGVAR(0_8_5, DebugBeginReturnValueOnce,
 R"(First-time calls to Begin()/BeginChild() will return false.
 **Needs to be set at context startup time** if you don't want to miss windows.)");

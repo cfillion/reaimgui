@@ -276,7 +276,7 @@ HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
 
   static const Cursor cursors[ImGuiMouseCursor_COUNT] {
     IDC_ARROW, IDC_IBEAM, IDC_SIZEALL, IDC_SIZENS, IDC_SIZEWE, IDC_SIZENESW,
-    IDC_SIZENWSE, IDC_HAND, IDC_NO,
+    IDC_SIZENWSE, IDC_HAND, IDC_WAIT, IDC_APPSTARTING, IDC_NO,
   };
 
   return cursors[cur];

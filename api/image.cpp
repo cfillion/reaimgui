@@ -107,12 +107,11 @@ API_FUNC(0_8, void, Image_GetSize, (class Image*,image)
   if(h) *h = image->height();
 }
 
-API_FUNC(0_8, void, Image, (Context*,ctx)
+API_FUNC(0_10, void, Image, (Context*,ctx)
 (class Image*,image) (double,image_size_w) (double,image_size_h)
 (RO<double*>,uv0_x,0.0) (RO<double*>,uv0_y,0.0)
-(RO<double*>,uv1_x,1.0) (RO<double*>,uv1_y,1.0)
-(RO<int*>,tint_col_rgba,0xFFFFFFFF) (RO<int*>,border_col_rgba,0x00000000),
-"Adds 2.0 to the provided size if a border is visible.")
+(RO<double*>,uv1_x,1.0) (RO<double*>,uv1_y,1.0),
+"Adds StyleVar_ImageBorderSize on each side.")
 {
   FRAME_GUARD;
   assertValid(image);
@@ -120,17 +119,34 @@ API_FUNC(0_8, void, Image, (Context*,ctx)
   const ImTextureID tex {image->makeTexture(ctx->textureManager())};
   ImGui::Image(tex, ImVec2(image_size_w, image_size_h),
     ImVec2(API_GET(uv0_x), API_GET(uv0_y)),
-    ImVec2(API_GET(uv1_x), API_GET(uv1_y)),
-    Color(API_GET(tint_col_rgba)), Color(API_GET(border_col_rgba)));
+    ImVec2(API_GET(uv1_x), API_GET(uv1_y)));
 }
 
-API_FUNC(0_8, bool, ImageButton, (Context*,ctx)
-(const char*,str_id) (class Image*,image) (double,image_size_w) (double,image_size_h)
+API_FUNC(0_10, void, ImageWithBg, (Context*,ctx)
+(class Image*,image) (double,image_size_w) (double,image_size_h)
 (RO<double*>,uv0_x,0.0) (RO<double*>,uv0_y,0.0)
 (RO<double*>,uv1_x,1.0) (RO<double*>,uv1_y,1.0)
 (RO<int*>,bg_col_rgba,0x00000000) (RO<int*>,tint_col_rgba,0xFFFFFFFF),
 R"(Draws a background based on regular Button color + optionally an inner
-background if specified. Adds StyleVar_FramePadding*2.0 to provided size.)")
+background if specified. Adds StyleVar_FramePadding to provided size.)")
+{
+  FRAME_GUARD;
+  assertValid(image);
+
+  const ImTextureID tex {image->makeTexture(ctx->textureManager())};
+  ImGui::ImageWithBg(tex, ImVec2(image_size_w, image_size_h),
+    ImVec2(API_GET(uv0_x), API_GET(uv0_y)),
+    ImVec2(API_GET(uv1_x), API_GET(uv1_y)),
+    Color(API_GET(bg_col_rgba)), Color(API_GET(tint_col_rgba)));
+}
+
+API_FUNC(0_8, bool, ImageButton, (Context*,ctx) (const char*,str_id)
+(class Image*,image) (double,image_size_w) (double,image_size_h)
+(RO<double*>,uv0_x,0.0) (RO<double*>,uv0_y,0.0)
+(RO<double*>,uv1_x,1.0) (RO<double*>,uv1_y,1.0)
+(RO<int*>,bg_col_rgba,0x00000000) (RO<int*>,tint_col_rgba,0xFFFFFFFF),
+R"(Draws a background based on regular Button color + optionally an inner
+background if specified. Adds StyleVar_FramePadding to provided size.)")
 {
   FRAME_GUARD;
   assertValid(image);

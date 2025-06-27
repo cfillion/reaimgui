@@ -256,6 +256,9 @@ API_ENUM(0_1, ImGui, MouseCursor_ResizeNWSE,
   "When hovering over the bottom-right corner of a window.");
 API_ENUM(0_1, ImGui, MouseCursor_Hand,
   "(Unused by Dear ImGui functions. Use for e.g. hyperlinks)");
+API_ENUM(0_10, ImGui, MouseCursor_Wait, "When waiting for something to process/load.");
+API_ENUM(0_10, ImGui, MouseCursor_Progress,
+  "When waiting for something to process/load, but application is still interactive.");
 API_ENUM(0_1, ImGui, MouseCursor_NotAllowed,
   "When hovering something with disallowed interaction. Usually a crossed circle.");
 

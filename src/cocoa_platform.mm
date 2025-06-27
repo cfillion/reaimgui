@@ -107,11 +107,12 @@ float Platform::scaleForWindow(HWND hwnd)
   return [[(__bridge NSView *)hwnd window] backingScaleFactor];
 }
 
-@interface NSCursor()
+@interface NSCursor (Undocumented)
 + (NSCursor *)_windowResizeNorthWestSouthEastCursor;
 + (NSCursor *)_windowResizeNorthEastSouthWestCursor;
 + (NSCursor *)_windowResizeNorthSouthCursor;
 + (NSCursor *)_windowResizeEastWestCursor;
++ (NSCursor *)busyButClickableCursor;
 @end
 
 HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
@@ -137,6 +138,8 @@ HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
     [NSCursor _windowResizeNorthEastSouthWestCursor],
     [NSCursor _windowResizeNorthWestSouthEastCursor],
     [NSCursor pointingHandCursor],
+    [NSCursor busyButClickableCursor],
+    [NSCursor busyButClickableCursor],
     [NSCursor operationNotAllowedCursor],
   };
 

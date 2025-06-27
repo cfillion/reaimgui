@@ -160,16 +160,16 @@ float Platform::scaleForWindow(HWND hwnd)
 HCURSOR Platform::getCursor(const ImGuiMouseCursor cur)
 {
   struct Cursor {
-    Cursor(const GdkCursorType type)
-      : m_cur {gdk_cursor_new_for_display(gdk_display_get_default(), type)} {}
+    Cursor(const char *type)
+      : m_cur {gdk_cursor_new_from_name(gdk_display_get_default(), type)} {}
     operator HCURSOR() const { return reinterpret_cast<HCURSOR>(m_cur); }
     GdkCursor *m_cur;
   };
 
   static const Cursor cursors[ImGuiMouseCursor_COUNT + 1] {
-    GDK_BLANK_CURSOR,
-    GDK_ARROW, GDK_XTERM, GDK_FLEUR, GDK_TOP_SIDE, GDK_RIGHT_SIDE,
-    GDK_BOTTOM_LEFT_CORNER, GDK_BOTTOM_RIGHT_CORNER, GDK_HAND1, GDK_PIRATE,
+    "none", "default", "text", "move",
+    "ns-resize", "ew-resize", "nesw-resize", "nwse-resize",
+    "pointer", "wait", "progress", "not-allowed",
   };
 
   return cursors[cur + 1]; // ImGuiMouseCursor_None is -1, shift to 0
