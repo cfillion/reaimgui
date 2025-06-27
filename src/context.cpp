@@ -130,6 +130,14 @@ Context::Context(const char *label, const int userConfigFlags)
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
+  m_imgui->ErrorCallback = [](ImGuiContext *ctx, void *, const char *msg) {
+    // report clean error messages without assertion decorations ('0 && "msg"')
+    if(ctx->IO.ConfigErrorRecoveryEnableAssert)
+      throw imgui_error {msg};
+  };
+  io.ConfigErrorRecoveryEnableTooltip = false;
+  io.ConfigErrorRecoveryEnableDebugLog = false;
+
   setUserConfigFlags(userConfigFlags);
   if(Settings::DockingEnable)
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
