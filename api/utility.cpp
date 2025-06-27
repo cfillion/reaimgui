@@ -279,6 +279,14 @@ API_FUNC(0_1, void, LogText, (Context*,ctx)
   ImGui::LogText("%s", text);
 }
 
+API_FUNC(0_10, void, DebugLog, (Context*,ctx)
+(const char*,text),
+"Add a line to the debug log window. See ShowDebugLogWindow.")
+{
+  FRAME_GUARD;
+  ImGui::DebugLog("%s\n", text);
+}
+
 API_SUBSECTION("Clipboard");
 
 API_FUNC(0_1, const char*, GetClipboardText, (Context*,ctx),

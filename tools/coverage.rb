@@ -79,6 +79,7 @@ NATIVE_ONLY = [
   'ImGuiID ImGui::GetID(const char*)',
   'ImGuiID ImGui::GetID(const char*, const char*)',
   'ImGuiID ImGui::GetID(const void*)',
+  'ImGuiID ImGui::GetItemID()',
 
   'void ImGui::TreePush(const void*)',
   'bool ImGui::TreeNode(const void*, const char*, ...)',
@@ -110,6 +111,7 @@ NATIVE_ONLY = [
   'void ImGui::LabelTextV(const char*, const char*, va_list)',
   'void ImGui::BulletTextV(const char*, va_list)',
   'void ImGui::LogTextV(const char*, va_list)',
+  'void ImGui::DebugLogV(const char*, va_list)',
 
   # single-component scalar input
   'bool ImGui::DragScalar(const char*, ImGuiDataType, void*, float, const void*, const void*, const char*, ImGuiSliderFlags)',
