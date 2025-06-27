@@ -308,8 +308,11 @@ bool Context::endFrame(const bool render) try
   return true;
 }
 catch(const imgui_error &e) {
-  if(render) // silence further errors on the way out (during destruction)
-    Error::report(this, e);
+  if(render) { // silence further errors on the way out (during destruction)
+    ImGuiWindow *window {m_imgui->CurrentWindow};
+    const char *name {window ? window->Name : "NULL"};
+    Error::report(this, imgui_error {"In window \"{}\": {}", name, e.what()});
+  }
   // don't retry EndFrame and error out again during destruction
   m_imgui->WithinFrameScope = false;
   return false;
