@@ -77,8 +77,8 @@ API_FUNC(0_9, void, TableNextRow, (Context*,ctx)
   ImGui::TableNextRow(API_GET(row_flags), API_GET(min_row_height));
 }
 
-API_ENUM(0_1, ImGui, TableRowFlags_None, "For TableNextRow.");
-API_ENUM(0_1, ImGui, TableRowFlags_Headers,
+API_ENUM(0_1, TableRowFlags_None, "For TableNextRow.");
+API_ENUM(0_1, TableRowFlags_Headers,
 R"(Identify header row (set default background color + width of its contents
    accounted different for auto column width).)");
 
@@ -225,65 +225,65 @@ Can also use (TableGetColumnFlags() & TableColumnFlags_IsHovered) instead.)")
 }
 
 API_SECTION_DEF(columnFlags, columns, "Column Flags", "For TableSetupColumn.");
-API_ENUM(0_1, ImGui, TableColumnFlags_None, "");
+API_ENUM(0_1, TableColumnFlags_None, "");
 API_SECTION_P(columnFlags, "Input Configuration");
-API_ENUM(0_5_5, ImGui, TableColumnFlags_Disabled,
+API_ENUM(0_5_5, TableColumnFlags_Disabled,
 R"(Overriding/master disable flag: hide column, won't show in context menu
    (unlike calling TableSetColumnEnabled which manipulates the user accessible state).)");
-API_ENUM(0_1, ImGui, TableColumnFlags_DefaultHide,
+API_ENUM(0_1, TableColumnFlags_DefaultHide,
   "Default as a hidden/disabled column.");
-API_ENUM(0_1, ImGui, TableColumnFlags_DefaultSort, "Default as a sorting column.");
-API_ENUM(0_1, ImGui, TableColumnFlags_WidthStretch,
+API_ENUM(0_1, TableColumnFlags_DefaultSort, "Default as a sorting column.");
+API_ENUM(0_1, TableColumnFlags_WidthStretch,
 R"(Column will stretch. Preferable with horizontal scrolling disabled
    (default if table sizing policy is _SizingStretchSame or _SizingStretchProp).)");
-API_ENUM(0_1, ImGui, TableColumnFlags_WidthFixed,
+API_ENUM(0_1, TableColumnFlags_WidthFixed,
 R"(Column will not stretch. Preferable with horizontal scrolling enabled
    (default if table sizing policy is _SizingFixedFit and table is resizable).)");
-API_ENUM(0_1, ImGui, TableColumnFlags_NoResize, "Disable manual resizing.");
-API_ENUM(0_1, ImGui, TableColumnFlags_NoReorder,
+API_ENUM(0_1, TableColumnFlags_NoResize, "Disable manual resizing.");
+API_ENUM(0_1, TableColumnFlags_NoReorder,
 R"(Disable manual reordering this column, this will also prevent other columns
    from crossing over this column.)");
-API_ENUM(0_1, ImGui, TableColumnFlags_NoHide,
+API_ENUM(0_1, TableColumnFlags_NoHide,
   "Disable ability to hide/disable this column.");
-API_ENUM(0_1, ImGui, TableColumnFlags_NoClip,
+API_ENUM(0_1, TableColumnFlags_NoClip,
 R"(Disable clipping for this column
    (all NoClip columns will render in a same draw command).)");
-API_ENUM(0_1, ImGui, TableColumnFlags_NoSort,
+API_ENUM(0_1, TableColumnFlags_NoSort,
 R"(Disable ability to sort on this field
    (even if TableFlags_Sortable is set on the table).)");
-API_ENUM(0_1, ImGui, TableColumnFlags_NoSortAscending,
+API_ENUM(0_1, TableColumnFlags_NoSortAscending,
   "Disable ability to sort in the ascending direction.");
-API_ENUM(0_1, ImGui, TableColumnFlags_NoSortDescending,
+API_ENUM(0_1, TableColumnFlags_NoSortDescending,
   "Disable ability to sort in the descending direction.");
-API_ENUM(0_5_5, ImGui, TableColumnFlags_NoHeaderLabel,
+API_ENUM(0_5_5, TableColumnFlags_NoHeaderLabel,
 R"(TableHeadersRow will submit an empty label for this column.
    Convenient for some small columns.
    Name will still appear in context menu or in angled headers.
    You may append into this cell by calling TableSetColumnIndex right after
    the TableHeadersRow call.)");
-API_ENUM(0_1, ImGui, TableColumnFlags_NoHeaderWidth,
+API_ENUM(0_1, TableColumnFlags_NoHeaderWidth,
   "Disable header text width contribution to automatic column width.");
-API_ENUM(0_1, ImGui, TableColumnFlags_PreferSortAscending,
+API_ENUM(0_1, TableColumnFlags_PreferSortAscending,
   "Make the initial sort direction Ascending when first sorting on this column (default).");
-API_ENUM(0_1, ImGui, TableColumnFlags_PreferSortDescending,
+API_ENUM(0_1, TableColumnFlags_PreferSortDescending,
   "Make the initial sort direction Descending when first sorting on this column.");
-API_ENUM(0_1, ImGui, TableColumnFlags_IndentEnable,
+API_ENUM(0_1, TableColumnFlags_IndentEnable,
   "Use current Indent value when entering cell (default for column 0).");
-API_ENUM(0_1, ImGui, TableColumnFlags_IndentDisable,
+API_ENUM(0_1, TableColumnFlags_IndentDisable,
 R"(Ignore current Indent value when entering cell (default for columns > 0).
    Indentation changes _within_ the cell will still be honored.)");
-API_ENUM(0_9, ImGui, TableColumnFlags_AngledHeader,
+API_ENUM(0_9, TableColumnFlags_AngledHeader,
 R"(TableHeadersRow will submit an angled header row for this column.
    Note this will add an extra row.)");
 API_SECTION_P(columnFlags, "Output Status", "Read-only via TableGetColumnFlags");
-API_ENUM(0_1, ImGui, TableColumnFlags_IsEnabled,
+API_ENUM(0_1, TableColumnFlags_IsEnabled,
 R"(Status: is enabled == not hidden by user/api (referred to as "Hide" in
    _DefaultHide and _NoHide) flags.)");
-API_ENUM(0_1, ImGui, TableColumnFlags_IsVisible,
+API_ENUM(0_1, TableColumnFlags_IsVisible,
   "Status: is visible == is enabled AND not clipped by scrolling.");
-API_ENUM(0_1, ImGui, TableColumnFlags_IsSorted,
+API_ENUM(0_1, TableColumnFlags_IsSorted,
   "Status: is currently part of the sort specs.");
-API_ENUM(0_1, ImGui, TableColumnFlags_IsHovered, "Status: is hovered by mouse.");
+API_ENUM(0_1, TableColumnFlags_IsHovered, "Status: is hovered by mouse.");
 
 API_SUBSECTION("Sorting");
 
@@ -334,9 +334,9 @@ See TableNeedSort.)")
   return true;
 }
 
-API_ENUM(0_1, ImGui, SortDirection_None,       "");
-API_ENUM(0_1, ImGui, SortDirection_Ascending,  "Ascending = 0->9, A->Z etc.");
-API_ENUM(0_1, ImGui, SortDirection_Descending, "Descending = 9->0, Z->A etc.");
+API_ENUM(0_1, SortDirection_None,       "");
+API_ENUM(0_1, SortDirection_Ascending,  "Ascending = 0->9, A->Z etc.");
+API_ENUM(0_1, SortDirection_Descending, "Descending = 9->0, Z->A etc.");
 
 API_SUBSECTION("Background",
 R"(Background colors are rendering in 3 layers:
@@ -364,13 +364,13 @@ See TableBgTarget_* flags for details.)")
     Color::fromBigEndian(color_rgba), API_GET(column_n));
 }
 
-API_ENUM(0_1, ImGui, TableBgTarget_None, "");
-API_ENUM(0_1, ImGui, TableBgTarget_RowBg0,
+API_ENUM(0_1, TableBgTarget_None, "");
+API_ENUM(0_1, TableBgTarget_RowBg0,
 R"(Set row background color 0 (generally used for background,
    automatically set when TableFlags_RowBg is used).)");
-API_ENUM(0_1, ImGui, TableBgTarget_RowBg1,
+API_ENUM(0_1, TableBgTarget_RowBg1,
   "Set row background color 1 (generally used for selection marking).");
-API_ENUM(0_1, ImGui, TableBgTarget_CellBg,
+API_ENUM(0_1, TableBgTarget_CellBg,
   "Set cell background color (top-most color).");
 
 API_SECTION_DEF(tableFlags, ROOT_SECTION, "Table Flags",
@@ -412,37 +412,37 @@ R"(For BeginTable.
      again.
 - Read on documentation at the top of imgui_tables.cpp for details.)");
 
-API_ENUM(0_1, ImGui, TableFlags_None, "");
+API_ENUM(0_1, TableFlags_None, "");
 
 API_SECTION_P(tableFlags, "Features");
-API_ENUM(0_1, ImGui, TableFlags_Resizable, "Enable resizing columns.");
-API_ENUM(0_1, ImGui, TableFlags_Reorderable,
+API_ENUM(0_1, TableFlags_Resizable, "Enable resizing columns.");
+API_ENUM(0_1, TableFlags_Reorderable,
 R"(Enable reordering columns in header row
    (need calling TableSetupColumn + TableHeadersRow to display headers).)");
-API_ENUM(0_1, ImGui, TableFlags_Hideable,
+API_ENUM(0_1, TableFlags_Hideable,
   "Enable hiding/disabling columns in context menu.");
-API_ENUM(0_1, ImGui, TableFlags_Sortable,
+API_ENUM(0_1, TableFlags_Sortable,
 R"(Enable sorting. Call TableNeedSort/TableGetColumnSortSpecs to obtain sort specs.
    Also see TableFlags_SortMulti and TableFlags_SortTristate.)");
-API_ENUM(0_4, ImGui, TableFlags_NoSavedSettings,
+API_ENUM(0_4, TableFlags_NoSavedSettings,
   "Disable persisting columns order, width and sort settings in the .ini file.");
-API_ENUM(0_1, ImGui, TableFlags_ContextMenuInBody,
+API_ENUM(0_1, TableFlags_ContextMenuInBody,
 R"(Right-click on columns body/contents will display table context menu.
    By default it is available in TableHeadersRow.)");
 
 API_SECTION_P(tableFlags, "Decorations");
-API_ENUM(0_1, ImGui, TableFlags_RowBg,
+API_ENUM(0_1, TableFlags_RowBg,
 R"(Set each RowBg color with Col_TableRowBg or Col_TableRowBgAlt (equivalent of
    calling TableSetBgColor with TableBgTarget_RowBg0 on each row manually).)");
-API_ENUM(0_1, ImGui, TableFlags_BordersInnerH, "Draw horizontal borders between rows.");
-API_ENUM(0_1, ImGui, TableFlags_BordersOuterH, "Draw horizontal borders at the top and bottom.");
-API_ENUM(0_1, ImGui, TableFlags_BordersInnerV, "Draw vertical borders between columns.");
-API_ENUM(0_1, ImGui, TableFlags_BordersOuterV, "Draw vertical borders on the left and right sides.");
-API_ENUM(0_1, ImGui, TableFlags_BordersH,      "Draw horizontal borders.");
-API_ENUM(0_1, ImGui, TableFlags_BordersV,      "Draw vertical borders.");
-API_ENUM(0_1, ImGui, TableFlags_BordersInner,  "Draw inner borders.");
-API_ENUM(0_1, ImGui, TableFlags_BordersOuter,  "Draw outer borders.");
-API_ENUM(0_1, ImGui, TableFlags_Borders,       "Draw all borders.");
+API_ENUM(0_1, TableFlags_BordersInnerH, "Draw horizontal borders between rows.");
+API_ENUM(0_1, TableFlags_BordersOuterH, "Draw horizontal borders at the top and bottom.");
+API_ENUM(0_1, TableFlags_BordersInnerV, "Draw vertical borders between columns.");
+API_ENUM(0_1, TableFlags_BordersOuterV, "Draw vertical borders on the left and right sides.");
+API_ENUM(0_1, TableFlags_BordersH,      "Draw horizontal borders.");
+API_ENUM(0_1, TableFlags_BordersV,      "Draw vertical borders.");
+API_ENUM(0_1, TableFlags_BordersInner,  "Draw inner borders.");
+API_ENUM(0_1, TableFlags_BordersOuter,  "Draw outer borders.");
+API_ENUM(0_1, TableFlags_Borders,       "Draw all borders.");
 // API_ENUM(ImGui, TableFlags_NoBordersInBody,
 // R"([ALPHA] Disable vertical borders in columns Body
 //    (borders will always appear in Headers). -> May move to style.)");
@@ -451,71 +451,71 @@ API_ENUM(0_1, ImGui, TableFlags_Borders,       "Draw all borders.");
 //    (borders will always appear in Headers). -> May move to style.)");
 
 API_SECTION_P(tableFlags, "Sizing Policy", "(read above for defaults)");
-API_ENUM(0_1, ImGui, TableFlags_SizingFixedFit,
+API_ENUM(0_1, TableFlags_SizingFixedFit,
 R"(Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable),
    matching contents width.)");
-API_ENUM(0_1, ImGui, TableFlags_SizingFixedSame,
+API_ENUM(0_1, TableFlags_SizingFixedSame,
 R"(Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable),
    matching the maximum contents width of all columns.
    Implicitly enable TableFlags_NoKeepColumnsVisible.)");
-API_ENUM(0_1, ImGui, TableFlags_SizingStretchProp,
+API_ENUM(0_1, TableFlags_SizingStretchProp,
 R"(Columns default to _WidthStretch with default weights proportional to each
    columns contents widths.)");
-API_ENUM(0_1, ImGui, TableFlags_SizingStretchSame,
+API_ENUM(0_1, TableFlags_SizingStretchSame,
 R"(Columns default to _WidthStretch with default weights all equal,
    unless overriden by TableSetupColumn.)");
 
 API_SECTION_P(tableFlags, "Sizing Extra Options");
-API_ENUM(0_1, ImGui, TableFlags_NoHostExtendX,
+API_ENUM(0_1, TableFlags_NoHostExtendX,
 R"(Make outer width auto-fit to columns, overriding outer_size.x value. Only
    available when ScrollX/ScrollY are disabled and Stretch columns are not used.)");
-API_ENUM(0_1, ImGui, TableFlags_NoHostExtendY,
+API_ENUM(0_1, TableFlags_NoHostExtendY,
 R"(Make outer height stop exactly at outer_size.y (prevent auto-extending table
    past the limit). Only available when ScrollX/ScrollY are disabled.
    Data below the limit will be clipped and not visible.)");
-API_ENUM(0_1, ImGui, TableFlags_NoKeepColumnsVisible,
+API_ENUM(0_1, TableFlags_NoKeepColumnsVisible,
 R"(Disable keeping column always minimally visible when ScrollX is off and table
    gets too small. Not recommended if columns are resizable.)");
-API_ENUM(0_1, ImGui, TableFlags_PreciseWidths,
+API_ENUM(0_1, TableFlags_PreciseWidths,
 R"(Disable distributing remainder width to stretched columns (width allocation
    on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this
    flag: 33,33,33).
    With larger number of columns, resizing will appear to be less smooth.)");
 
 API_SECTION_P(tableFlags, "Clipping");
-API_ENUM(0_1, ImGui, TableFlags_NoClip,
+API_ENUM(0_1, TableFlags_NoClip,
 R"(Disable clipping rectangle for every individual columns
    (reduce draw command count, items will be able to overflow into other columns).
    Generally incompatible with TableSetupScrollFreeze.)");
 
 API_SECTION_P(tableFlags, "Padding");
-API_ENUM(0_1, ImGui, TableFlags_PadOuterX,
+API_ENUM(0_1, TableFlags_PadOuterX,
 R"(Default if TableFlags_BordersOuterV is on. Enable outermost padding.
    Generally desirable if you have headers.)");
-API_ENUM(0_1, ImGui, TableFlags_NoPadOuterX,
+API_ENUM(0_1, TableFlags_NoPadOuterX,
   "Default if TableFlags_BordersOuterV is off. Disable outermost padding.");
-API_ENUM(0_1, ImGui, TableFlags_NoPadInnerX,
+API_ENUM(0_1, TableFlags_NoPadInnerX,
 R"(Disable inner padding between columns (double inner padding if
    TableFlags_BordersOuterV is on, single inner padding if BordersOuterV is off).)");
 
 API_SECTION_P(tableFlags, "Scrolling");
-API_ENUM(0_1, ImGui, TableFlags_ScrollX,
+API_ENUM(0_1, TableFlags_ScrollX,
 R"(Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable to
    specify the container size. Changes default sizing policy.
    Because this creates a child window, ScrollY is currently generally
    recommended when using ScrollX.)");
-API_ENUM(0_1, ImGui, TableFlags_ScrollY,
+API_ENUM(0_1, TableFlags_ScrollY,
 R"(Enable vertical scrolling.
    Require 'outer_size' parameter of BeginTable to specify the container size.)");
 
 API_SECTION_P(tableFlags, "Sorting");
-API_ENUM(0_1, ImGui, TableFlags_SortMulti,
+API_ENUM(0_1, TableFlags_SortMulti,
 R"(Hold shift when clicking headers to sort on multiple column.
    TableGetColumnSortSpecs may return specs where (SpecsCount > 1).)");
-API_ENUM(0_1, ImGui, TableFlags_SortTristate,
+API_ENUM(0_1, TableFlags_SortTristate,
 R"(Allow no sorting, disable default sorting.
    TableGetColumnSortSpecs may return specs where (SpecsCount == 0).)");
 
 API_SECTION_P(tableFlags, "Miscellaneous");
-API_ENUM(0_9, ImGui, TableFlags_HighlightHoveredColumn,
+API_ENUM(0_9, TableFlags_HighlightHoveredColumn,
   "Highlight column headers when hovered (may evolve into a fuller highlight.)");

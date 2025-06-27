@@ -333,20 +333,20 @@ API_FUNC(0_7, void, SetConfigVar, (Context*,ctx)
 }
 
 API_SUBSECTION("Flags", "For CreateContext and SetConfigVar(ConfigVar_Flags()).");
-API_ENUM(0_1, ImGui, ConfigFlags_None, "");
-API_ENUM(0_1, ImGui, ConfigFlags_NavEnableKeyboard,
+API_ENUM(0_1, ConfigFlags_None, "");
+API_ENUM(0_1, ConfigFlags_NavEnableKeyboard,
 R"(Master keyboard navigation enable flag.
    Enable full Tabbing + directional arrows + space/enter to activate.)");
 // API_ENUM(ImGui, ConfigFlags_NavEnableGamepad,
 //"Master gamepad navigation enable flag.");
-API_ENUM(0_1, ImGui, ConfigFlags_NoMouse,
+API_ENUM(0_1, ConfigFlags_NoMouse,
   "Instruct dear imgui to disable mouse inputs and interactions");
-API_ENUM(0_1, ImGui, ConfigFlags_NoMouseCursorChange,
+API_ENUM(0_1, ConfigFlags_NoMouseCursorChange,
   "Instruct backend to not alter mouse cursor shape and visibility.");
-API_ENUM(0_5, ImGui, ConfigFlags_DockingEnable, "Enable docking functionality.");
-API_ENUM(0_9_2, ImGui, ConfigFlags_NoKeyboard,
+API_ENUM(0_5, ConfigFlags_DockingEnable, "Enable docking functionality.");
+API_ENUM(0_9_2, ConfigFlags_NoKeyboard,
 R"(Instruct dear imgui to disable keyboard inputs and interactions.
 This is done by ignoring keyboard events and clearing existing states.)");
 
-API_ENUM(0_4, ReaImGui, ConfigFlags_NoSavedSettings,
+API_ENUM_NS(0_4, ReaImGui, ConfigFlags_NoSavedSettings,
   "Disable state restoration and persistence for the whole context.");

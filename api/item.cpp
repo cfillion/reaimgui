@@ -276,17 +276,17 @@ API_FUNC(0_1, bool, IsAnyItemFocused, (Context*,ctx),
 
 API_SECTION_DEF(hoveredFlags, ROOT_SECTION, "Hovered Flags",
   "For IsItemHovered and IsWindowHovered.");
-API_ENUM(0_1, ImGui, HoveredFlags_None,
+API_ENUM(0_1, HoveredFlags_None,
 R"(Return true if directly over the item/window, not obstructed by another
    window, not obstructed by an active popup or modal blocking inputs under them.)");
-API_ENUM(0_1, ImGui, HoveredFlags_AllowWhenBlockedByPopup,
+API_ENUM(0_1, HoveredFlags_AllowWhenBlockedByPopup,
   "Return true even if a popup window is normally blocking access to this item/window.");
-API_ENUM(0_1, ImGui, HoveredFlags_AllowWhenBlockedByActiveItem,
+API_ENUM(0_1, HoveredFlags_AllowWhenBlockedByActiveItem,
 R"(Return true even if an active item is blocking access to this item/window.
    Useful for Drag and Drop patterns.)");
-API_ENUM(0_7, ImGui, HoveredFlags_NoNavOverride,
+API_ENUM(0_7, HoveredFlags_NoNavOverride,
   "Disable using keyboard/gamepad navigation state when active, always query mouse.");
-API_ENUM(0_9, ImGui, HoveredFlags_ForTooltip,
+API_ENUM(0_9, HoveredFlags_ForTooltip,
 R"(Typically used with IsItemHovered() before SetTooltip().
    This is a shortcut to pull flags from ConfigVar_HoverFlagsForTooltip* where
    you can reconfigure the desired behavior.
@@ -296,79 +296,79 @@ R"(Typically used with IsItemHovered() before SetTooltip().
    For items which main purpose is to be hovered, or items with low affordance,
    or in less consistent apps, prefer no delay or shorter delay.)");
 
-API_ENUM(0_9, ImGui, HoveredFlags_Stationary,
+API_ENUM(0_9, HoveredFlags_Stationary,
 R"(Require mouse to be stationary for ConfigVar_HoverStationaryDelay (~0.15 sec)
    _at least one time_. After this, can move on same item/window.
    Using the stationary test tends to reduces the need for a long delay.)");
 
 API_SECTION_DEF(itemHoveredFlags, hoveredFlags, "For IsItemHovered");
-API_ENUM(0_9, ImGui, HoveredFlags_AllowWhenOverlappedByItem,
+API_ENUM(0_9, HoveredFlags_AllowWhenOverlappedByItem,
 R"(Return true even if the item uses AllowOverlap mode and is overlapped by
    another hoverable item.)");
-API_ENUM(0_9, ImGui, HoveredFlags_AllowWhenOverlappedByWindow,
+API_ENUM(0_9, HoveredFlags_AllowWhenOverlappedByWindow,
   "Return true even if the position is obstructed or overlapped by another window.");
-API_ENUM(0_1, ImGui, HoveredFlags_AllowWhenOverlapped,
+API_ENUM(0_1, HoveredFlags_AllowWhenOverlapped,
   "HoveredFlags_AllowWhenOverlappedByItem | HoveredFlags_AllowWhenOverlappedByWindow");
-API_ENUM(0_1, ImGui, HoveredFlags_AllowWhenDisabled,
+API_ENUM(0_1, HoveredFlags_AllowWhenDisabled,
   "Return true even if the item is disabled.");
-API_ENUM(0_1, ImGui, HoveredFlags_RectOnly,
+API_ENUM(0_1, HoveredFlags_RectOnly,
 R"(HoveredFlags_AllowWhenBlockedByPopup |
    HoveredFlags_AllowWhenBlockedByActiveItem | HoveredFlags_AllowWhenOverlapped)");
 
 API_SECTION_P(itemHoveredFlags, "Mouse Hovering Delays",
 R"(Generally you can use HoveredFlags_ForTooltip to use application-standardized flags.
   Use those if you need specific overrides. See also HoveredFlags_Stationary.)");
-API_ENUM(0_9, ImGui, HoveredFlags_DelayNone,
+API_ENUM(0_9, HoveredFlags_DelayNone,
   "Return true immediately (default). As this is the default you generally ignore this.");
-API_ENUM(0_8, ImGui, HoveredFlags_DelayShort,
+API_ENUM(0_8, HoveredFlags_DelayShort,
 R"(Return true after ConfigVar_HoverDelayShort elapsed (~0.15 sec)
    (shared between items) + requires mouse to be stationary for
    ConfigVar_HoverStationaryDelay (once per item).)");
-API_ENUM(0_8, ImGui, HoveredFlags_DelayNormal,
+API_ENUM(0_8, HoveredFlags_DelayNormal,
 R"(Return true after ConfigVar_HoverDelayNormal elapsed (~0.40 sec)
    (shared between items) + requires mouse to be stationary for
    ConfigVar_HoverStationaryDelay (once per item).)");
-API_ENUM(0_8, ImGui, HoveredFlags_NoSharedDelay,
+API_ENUM(0_8, HoveredFlags_NoSharedDelay,
 R"(Disable shared delay system where moving from one item to the next keeps
    the previous timer for a short time (standard for tooltips with long delays)");
 
 API_SECTION_P(hoveredFlags, "For IsWindowHovered");
-API_ENUM(0_1, ImGui, HoveredFlags_ChildWindows,
+API_ENUM(0_1, HoveredFlags_ChildWindows,
   "Return true if any children of the window is hovered.");
-API_ENUM(0_1, ImGui, HoveredFlags_RootWindow,
+API_ENUM(0_1, HoveredFlags_RootWindow,
   "Test from root window (top most parent of the current hierarchy).");
-API_ENUM(0_1, ImGui, HoveredFlags_AnyWindow,
+API_ENUM(0_1, HoveredFlags_AnyWindow,
   "Return true if any window is hovered.");
-API_ENUM(0_5_10, ImGui, HoveredFlags_NoPopupHierarchy,
+API_ENUM(0_5_10, HoveredFlags_NoPopupHierarchy,
   R"(Do not consider popup hierarchy (do not treat popup
   emitter as parent of popup) (when used with _ChildWindows or _RootWindow).)");
-API_ENUM(0_5_10, ImGui, HoveredFlags_DockHierarchy,
+API_ENUM(0_5_10, HoveredFlags_DockHierarchy,
   R"(Consider docking hierarchy (treat dockspace host as
   parent of docked window) (when used with _ChildWindows or _RootWindow).)");
-API_ENUM(0_1, ImGui, HoveredFlags_RootAndChildWindows,
+API_ENUM(0_1, HoveredFlags_RootAndChildWindows,
   "HoveredFlags_RootWindow | HoveredFlags_ChildWindows");
 
 API_SECTION_DEF(itemFlags, ROOT_SECTION, "Item Flags",
   "For PushItemFlag, shared by all items.");
-API_ENUM(0_10, ImGui, ItemFlags_None, "");
-API_ENUM(0_10, ImGui, ItemFlags_NoTabStop,
+API_ENUM(0_10, ItemFlags_None, "");
+API_ENUM(0_10, ItemFlags_NoTabStop,
 R"(Disable keyboard tabbing. This is a "lighter" version of ItemFlags_NoNav.
    Default = false.)");
-API_ENUM(0_10, ImGui, ItemFlags_NoNav,
+API_ENUM(0_10, ItemFlags_NoNav,
 R"(Disable any form of focusing (keyboard/gamepad directional navigation and
    SetKeyboardFocusHere calls). Default = false)");
-API_ENUM(0_10, ImGui, ItemFlags_NoNavDefaultFocus,
+API_ENUM(0_10, ItemFlags_NoNavDefaultFocus,
 R"(Disable item being a candidate for default focus (e.g. used by title bar
    items). Default = false)");
-API_ENUM(0_10, ImGui, ItemFlags_ButtonRepeat,
+API_ENUM(0_10, ItemFlags_ButtonRepeat,
 R"(Any button-like behavior will have repeat mode enabled (based on
    ConfigVar_KeyRepeatDelay and ConfigVar_KeyRepeatRate values). Note that you
    can also call IsItemActive after any button to tell if it is being held.
    Default = false)");
-API_ENUM(0_10, ImGui, ItemFlags_AutoClosePopups,
+API_ENUM(0_10, ItemFlags_AutoClosePopups,
 R"(MenuItem/Selectable automatically close their parent popup window.
    Default = true)");
-API_ENUM(0_10, ImGui, ItemFlags_AllowDuplicateId,
+API_ENUM(0_10, ItemFlags_AllowDuplicateId,
 R"(Allow submitting an item with the same identifier as an item already
    submitted this frame without triggering a warning tooltip if
    ConfigVar_ConfigDebugHighlightIdConflicts is set.)");

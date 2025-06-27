@@ -220,9 +220,9 @@ API_FUNC(0_1, void, ResetMouseDragDelta, (Context*,ctx)
   ImGui::ResetMouseDragDelta(API_GET(button));
 }
 
-API_ENUM(0_1, ImGui, MouseButton_Left,   "");
-API_ENUM(0_1, ImGui, MouseButton_Right,  "");
-API_ENUM(0_1, ImGui, MouseButton_Middle, "");
+API_ENUM(0_1, MouseButton_Left,   "");
+API_ENUM(0_1, MouseButton_Right,  "");
+API_ENUM(0_1, MouseButton_Middle, "");
 
 API_SECTION_DEF(cursor, mouse, "Mouse Cursor");
 
@@ -242,24 +242,24 @@ API_FUNC(0_1, void, SetMouseCursor, (Context*,ctx)
   ImGui::SetMouseCursor(cursor_type);
 }
 
-API_ENUM(0_8_4, ImGui, MouseCursor_None,   "");
-API_ENUM(0_1, ImGui, MouseCursor_Arrow,  "");
-API_ENUM(0_1, ImGui, MouseCursor_TextInput, "When hovering over InputText, etc.");
-API_ENUM(0_1, ImGui, MouseCursor_ResizeAll, "(Unused by Dear ImGui functions)");
-API_ENUM(0_1, ImGui, MouseCursor_ResizeNS,
+API_ENUM(0_8_4, MouseCursor_None,   "");
+API_ENUM(0_1, MouseCursor_Arrow,  "");
+API_ENUM(0_1, MouseCursor_TextInput, "When hovering over InputText, etc.");
+API_ENUM(0_1, MouseCursor_ResizeAll, "(Unused by Dear ImGui functions)");
+API_ENUM(0_1, MouseCursor_ResizeNS,
   "When hovering over a horizontal border.");
-API_ENUM(0_1, ImGui, MouseCursor_ResizeEW,
+API_ENUM(0_1, MouseCursor_ResizeEW,
   "When hovering over a vertical border or a column.");
-API_ENUM(0_1, ImGui, MouseCursor_ResizeNESW,
+API_ENUM(0_1, MouseCursor_ResizeNESW,
   "When hovering over the bottom-left corner of a window.");
-API_ENUM(0_1, ImGui, MouseCursor_ResizeNWSE,
+API_ENUM(0_1, MouseCursor_ResizeNWSE,
   "When hovering over the bottom-right corner of a window.");
-API_ENUM(0_1, ImGui, MouseCursor_Hand,
+API_ENUM(0_1, MouseCursor_Hand,
   "(Unused by Dear ImGui functions. Use for e.g. hyperlinks)");
-API_ENUM(0_10, ImGui, MouseCursor_Wait, "When waiting for something to process/load.");
-API_ENUM(0_10, ImGui, MouseCursor_Progress,
+API_ENUM(0_10, MouseCursor_Wait, "When waiting for something to process/load.");
+API_ENUM(0_10, MouseCursor_Progress,
   "When waiting for something to process/load, but application is still interactive.");
-API_ENUM(0_1, ImGui, MouseCursor_NotAllowed,
+API_ENUM(0_1, MouseCursor_NotAllowed,
   "When hovering something with disallowed interaction. Usually a crossed circle.");
 
 API_SECTION_DEF(keyboard, ROOT_SECTION, "Keyboard");
@@ -339,144 +339,144 @@ R"(Request capture of keyboard shortcuts in REAPER's global scope for the next f
 
 API_SECTION_DEF(namedKeys, keyboard, "Named Keys");
 API_SECTION_P(namedKeys, "Keyboard");
-API_ENUM(0_6, ImGui, Key_Tab,        "");
-API_ENUM(0_6, ImGui, Key_LeftArrow,  "");
-API_ENUM(0_6, ImGui, Key_RightArrow, "");
-API_ENUM(0_6, ImGui, Key_UpArrow,    "");
-API_ENUM(0_6, ImGui, Key_DownArrow,  "");
-API_ENUM(0_6, ImGui, Key_PageUp,     "");
-API_ENUM(0_6, ImGui, Key_PageDown,   "");
-API_ENUM(0_6, ImGui, Key_Home,       "");
-API_ENUM(0_6, ImGui, Key_End,        "");
-API_ENUM(0_6, ImGui, Key_Insert,     "");
-API_ENUM(0_6, ImGui, Key_Delete,     "");
-API_ENUM(0_6, ImGui, Key_Backspace,  "");
-API_ENUM(0_6, ImGui, Key_Space,      "");
-API_ENUM(0_6, ImGui, Key_Enter,      "");
-API_ENUM(0_6, ImGui, Key_Escape,     "");
-API_ENUM(0_6, ImGui, Key_LeftCtrl,   "");
-API_ENUM(0_6, ImGui, Key_LeftShift,  "");
-API_ENUM(0_6, ImGui, Key_LeftAlt,    "");
-API_ENUM(0_6, ImGui, Key_LeftSuper,  "");
-API_ENUM(0_6, ImGui, Key_RightCtrl,  "");
-API_ENUM(0_6, ImGui, Key_RightShift, "");
-API_ENUM(0_6, ImGui, Key_RightAlt,   "");
-API_ENUM(0_6, ImGui, Key_RightSuper, "");
-API_ENUM(0_6, ImGui, Key_Menu,       "");
-API_ENUM(0_6, ImGui, Key_0, "");
-API_ENUM(0_6, ImGui, Key_1, "");
-API_ENUM(0_6, ImGui, Key_2, "");
-API_ENUM(0_6, ImGui, Key_3, "");
-API_ENUM(0_6, ImGui, Key_4, "");
-API_ENUM(0_6, ImGui, Key_5, "");
-API_ENUM(0_6, ImGui, Key_6, "");
-API_ENUM(0_6, ImGui, Key_7, "");
-API_ENUM(0_6, ImGui, Key_8, "");
-API_ENUM(0_6, ImGui, Key_9, "");
-API_ENUM(0_6, ImGui, Key_A, "");
-API_ENUM(0_6, ImGui, Key_B, "");
-API_ENUM(0_6, ImGui, Key_C, "");
-API_ENUM(0_6, ImGui, Key_D, "");
-API_ENUM(0_6, ImGui, Key_E, "");
-API_ENUM(0_6, ImGui, Key_F, "");
-API_ENUM(0_6, ImGui, Key_G, "");
-API_ENUM(0_6, ImGui, Key_H, "");
-API_ENUM(0_6, ImGui, Key_I, "");
-API_ENUM(0_6, ImGui, Key_J, "");
-API_ENUM(0_6, ImGui, Key_K, "");
-API_ENUM(0_6, ImGui, Key_L, "");
-API_ENUM(0_6, ImGui, Key_M, "");
-API_ENUM(0_6, ImGui, Key_N, "");
-API_ENUM(0_6, ImGui, Key_O, "");
-API_ENUM(0_6, ImGui, Key_P, "");
-API_ENUM(0_6, ImGui, Key_Q, "");
-API_ENUM(0_6, ImGui, Key_R, "");
-API_ENUM(0_6, ImGui, Key_S, "");
-API_ENUM(0_6, ImGui, Key_T, "");
-API_ENUM(0_6, ImGui, Key_U, "");
-API_ENUM(0_6, ImGui, Key_V, "");
-API_ENUM(0_6, ImGui, Key_W, "");
-API_ENUM(0_6, ImGui, Key_X, "");
-API_ENUM(0_6, ImGui, Key_Y, "");
-API_ENUM(0_6, ImGui, Key_Z, "");
-API_ENUM(0_6, ImGui, Key_F1,  "");
-API_ENUM(0_6, ImGui, Key_F2,  "");
-API_ENUM(0_6, ImGui, Key_F3,  "");
-API_ENUM(0_6, ImGui, Key_F4,  "");
-API_ENUM(0_6, ImGui, Key_F5,  "");
-API_ENUM(0_6, ImGui, Key_F6,  "");
-API_ENUM(0_6, ImGui, Key_F7,  "");
-API_ENUM(0_6, ImGui, Key_F8,  "");
-API_ENUM(0_6, ImGui, Key_F9,  "");
-API_ENUM(0_6, ImGui, Key_F10, "");
-API_ENUM(0_6, ImGui, Key_F11, "");
-API_ENUM(0_6, ImGui, Key_F12, "");
-API_ENUM(0_9, ImGui, Key_F13, "");
-API_ENUM(0_9, ImGui, Key_F14, "");
-API_ENUM(0_9, ImGui, Key_F15, "");
-API_ENUM(0_9, ImGui, Key_F16, "");
-API_ENUM(0_9, ImGui, Key_F17, "");
-API_ENUM(0_9, ImGui, Key_F18, "");
-API_ENUM(0_9, ImGui, Key_F19, "");
-API_ENUM(0_9, ImGui, Key_F20, "");
-API_ENUM(0_9, ImGui, Key_F21, "");
-API_ENUM(0_9, ImGui, Key_F22, "");
-API_ENUM(0_9, ImGui, Key_F23, "");
-API_ENUM(0_9, ImGui, Key_F24, "");
-API_ENUM(0_6, ImGui, Key_Apostrophe,   "'");
-API_ENUM(0_6, ImGui, Key_Comma,        ",");
-API_ENUM(0_6, ImGui, Key_Minus,        "-");
-API_ENUM(0_6, ImGui, Key_Period,       ".");
-API_ENUM(0_6, ImGui, Key_Slash,        "/");
-API_ENUM(0_6, ImGui, Key_Semicolon,    ";");
-API_ENUM(0_6, ImGui, Key_Equal,        "=");
-API_ENUM(0_6, ImGui, Key_LeftBracket,  "[");
-API_ENUM(0_6, ImGui, Key_Backslash,    "\\");
-API_ENUM(0_6, ImGui, Key_RightBracket, "]");
-API_ENUM(0_6, ImGui, Key_GraveAccent,  "`");
-API_ENUM(0_6, ImGui, Key_CapsLock,     "");
-API_ENUM(0_6, ImGui, Key_ScrollLock,   "");
-API_ENUM(0_6, ImGui, Key_NumLock,      "");
-API_ENUM(0_6, ImGui, Key_PrintScreen,  "");
-API_ENUM(0_6, ImGui, Key_Pause,        "");
-API_ENUM(0_6, ImGui, Key_Keypad0, "");
-API_ENUM(0_6, ImGui, Key_Keypad1, "");
-API_ENUM(0_6, ImGui, Key_Keypad2, "");
-API_ENUM(0_6, ImGui, Key_Keypad3, "");
-API_ENUM(0_6, ImGui, Key_Keypad4, "");
-API_ENUM(0_6, ImGui, Key_Keypad5, "");
-API_ENUM(0_6, ImGui, Key_Keypad6, "");
-API_ENUM(0_6, ImGui, Key_Keypad7, "");
-API_ENUM(0_6, ImGui, Key_Keypad8, "");
-API_ENUM(0_6, ImGui, Key_Keypad9, "");
-API_ENUM(0_6, ImGui, Key_KeypadDecimal,  "");
-API_ENUM(0_6, ImGui, Key_KeypadDivide,   "");
-API_ENUM(0_6, ImGui, Key_KeypadMultiply, "");
-API_ENUM(0_6, ImGui, Key_KeypadSubtract, "");
-API_ENUM(0_6, ImGui, Key_KeypadAdd,      "");
-API_ENUM(0_6, ImGui, Key_KeypadEnter,    "");
-API_ENUM(0_6, ImGui, Key_KeypadEqual,    "");
-API_ENUM(0_9, ImGui, Key_AppBack,
+API_ENUM(0_6, Key_Tab,        "");
+API_ENUM(0_6, Key_LeftArrow,  "");
+API_ENUM(0_6, Key_RightArrow, "");
+API_ENUM(0_6, Key_UpArrow,    "");
+API_ENUM(0_6, Key_DownArrow,  "");
+API_ENUM(0_6, Key_PageUp,     "");
+API_ENUM(0_6, Key_PageDown,   "");
+API_ENUM(0_6, Key_Home,       "");
+API_ENUM(0_6, Key_End,        "");
+API_ENUM(0_6, Key_Insert,     "");
+API_ENUM(0_6, Key_Delete,     "");
+API_ENUM(0_6, Key_Backspace,  "");
+API_ENUM(0_6, Key_Space,      "");
+API_ENUM(0_6, Key_Enter,      "");
+API_ENUM(0_6, Key_Escape,     "");
+API_ENUM(0_6, Key_LeftCtrl,   "");
+API_ENUM(0_6, Key_LeftShift,  "");
+API_ENUM(0_6, Key_LeftAlt,    "");
+API_ENUM(0_6, Key_LeftSuper,  "");
+API_ENUM(0_6, Key_RightCtrl,  "");
+API_ENUM(0_6, Key_RightShift, "");
+API_ENUM(0_6, Key_RightAlt,   "");
+API_ENUM(0_6, Key_RightSuper, "");
+API_ENUM(0_6, Key_Menu,       "");
+API_ENUM(0_6, Key_0, "");
+API_ENUM(0_6, Key_1, "");
+API_ENUM(0_6, Key_2, "");
+API_ENUM(0_6, Key_3, "");
+API_ENUM(0_6, Key_4, "");
+API_ENUM(0_6, Key_5, "");
+API_ENUM(0_6, Key_6, "");
+API_ENUM(0_6, Key_7, "");
+API_ENUM(0_6, Key_8, "");
+API_ENUM(0_6, Key_9, "");
+API_ENUM(0_6, Key_A, "");
+API_ENUM(0_6, Key_B, "");
+API_ENUM(0_6, Key_C, "");
+API_ENUM(0_6, Key_D, "");
+API_ENUM(0_6, Key_E, "");
+API_ENUM(0_6, Key_F, "");
+API_ENUM(0_6, Key_G, "");
+API_ENUM(0_6, Key_H, "");
+API_ENUM(0_6, Key_I, "");
+API_ENUM(0_6, Key_J, "");
+API_ENUM(0_6, Key_K, "");
+API_ENUM(0_6, Key_L, "");
+API_ENUM(0_6, Key_M, "");
+API_ENUM(0_6, Key_N, "");
+API_ENUM(0_6, Key_O, "");
+API_ENUM(0_6, Key_P, "");
+API_ENUM(0_6, Key_Q, "");
+API_ENUM(0_6, Key_R, "");
+API_ENUM(0_6, Key_S, "");
+API_ENUM(0_6, Key_T, "");
+API_ENUM(0_6, Key_U, "");
+API_ENUM(0_6, Key_V, "");
+API_ENUM(0_6, Key_W, "");
+API_ENUM(0_6, Key_X, "");
+API_ENUM(0_6, Key_Y, "");
+API_ENUM(0_6, Key_Z, "");
+API_ENUM(0_6, Key_F1,  "");
+API_ENUM(0_6, Key_F2,  "");
+API_ENUM(0_6, Key_F3,  "");
+API_ENUM(0_6, Key_F4,  "");
+API_ENUM(0_6, Key_F5,  "");
+API_ENUM(0_6, Key_F6,  "");
+API_ENUM(0_6, Key_F7,  "");
+API_ENUM(0_6, Key_F8,  "");
+API_ENUM(0_6, Key_F9,  "");
+API_ENUM(0_6, Key_F10, "");
+API_ENUM(0_6, Key_F11, "");
+API_ENUM(0_6, Key_F12, "");
+API_ENUM(0_9, Key_F13, "");
+API_ENUM(0_9, Key_F14, "");
+API_ENUM(0_9, Key_F15, "");
+API_ENUM(0_9, Key_F16, "");
+API_ENUM(0_9, Key_F17, "");
+API_ENUM(0_9, Key_F18, "");
+API_ENUM(0_9, Key_F19, "");
+API_ENUM(0_9, Key_F20, "");
+API_ENUM(0_9, Key_F21, "");
+API_ENUM(0_9, Key_F22, "");
+API_ENUM(0_9, Key_F23, "");
+API_ENUM(0_9, Key_F24, "");
+API_ENUM(0_6, Key_Apostrophe,   "'");
+API_ENUM(0_6, Key_Comma,        ",");
+API_ENUM(0_6, Key_Minus,        "-");
+API_ENUM(0_6, Key_Period,       ".");
+API_ENUM(0_6, Key_Slash,        "/");
+API_ENUM(0_6, Key_Semicolon,    ";");
+API_ENUM(0_6, Key_Equal,        "=");
+API_ENUM(0_6, Key_LeftBracket,  "[");
+API_ENUM(0_6, Key_Backslash,    "\\");
+API_ENUM(0_6, Key_RightBracket, "]");
+API_ENUM(0_6, Key_GraveAccent,  "`");
+API_ENUM(0_6, Key_CapsLock,     "");
+API_ENUM(0_6, Key_ScrollLock,   "");
+API_ENUM(0_6, Key_NumLock,      "");
+API_ENUM(0_6, Key_PrintScreen,  "");
+API_ENUM(0_6, Key_Pause,        "");
+API_ENUM(0_6, Key_Keypad0, "");
+API_ENUM(0_6, Key_Keypad1, "");
+API_ENUM(0_6, Key_Keypad2, "");
+API_ENUM(0_6, Key_Keypad3, "");
+API_ENUM(0_6, Key_Keypad4, "");
+API_ENUM(0_6, Key_Keypad5, "");
+API_ENUM(0_6, Key_Keypad6, "");
+API_ENUM(0_6, Key_Keypad7, "");
+API_ENUM(0_6, Key_Keypad8, "");
+API_ENUM(0_6, Key_Keypad9, "");
+API_ENUM(0_6, Key_KeypadDecimal,  "");
+API_ENUM(0_6, Key_KeypadDivide,   "");
+API_ENUM(0_6, Key_KeypadMultiply, "");
+API_ENUM(0_6, Key_KeypadSubtract, "");
+API_ENUM(0_6, Key_KeypadAdd,      "");
+API_ENUM(0_6, Key_KeypadEnter,    "");
+API_ENUM(0_6, Key_KeypadEqual,    "");
+API_ENUM(0_9, Key_AppBack,
 R"(Available on some keyboard/mouses. Often referred as "Browser Back".)");
-API_ENUM(0_9, ImGui, Key_AppForward, "");
+API_ENUM(0_9, Key_AppForward, "");
 API_SECTION_P(namedKeys, "Gamepad");
 // TODO
 API_SECTION_P(namedKeys, "Mouse Buttons",
 R"(This is mirroring the data also written accessible via IsMouseDown,
 GetMouseWheel etc, in a format allowing them to be accessed via standard key API.)");
-API_ENUM(0_8, ImGui, Key_MouseLeft,   "");
-API_ENUM(0_8, ImGui, Key_MouseRight,  "");
-API_ENUM(0_8, ImGui, Key_MouseMiddle, "");
-API_ENUM(0_8, ImGui, Key_MouseX1,     "");
-API_ENUM(0_8, ImGui, Key_MouseX2,     "");
-API_ENUM(0_8, ImGui, Key_MouseWheelX, "");
-API_ENUM(0_8, ImGui, Key_MouseWheelY, "");
+API_ENUM(0_8, Key_MouseLeft,   "");
+API_ENUM(0_8, Key_MouseRight,  "");
+API_ENUM(0_8, Key_MouseMiddle, "");
+API_ENUM(0_8, Key_MouseX1,     "");
+API_ENUM(0_8, Key_MouseX2,     "");
+API_ENUM(0_8, Key_MouseWheelX, "");
+API_ENUM(0_8, Key_MouseWheelY, "");
 API_SECTION_P(namedKeys, "Modifiers");
-API_ENUM(0_8,   ImGui, Mod_None,  "");
-API_ENUM(0_9_2, ImGui, Mod_Ctrl,  "Cmd when ConfigVar_MacOSXBehaviors is enabled.");
-API_ENUM(0_8,   ImGui, Mod_Shift, "");
-API_ENUM(0_8,   ImGui, Mod_Alt,   "");
-API_ENUM(0_9_2, ImGui, Mod_Super, "Ctrl when ConfigVar_MacOSXBehaviors is enabled.");
+API_ENUM(0_8,   Mod_None,  "");
+API_ENUM(0_9_2, Mod_Ctrl,  "Cmd when ConfigVar_MacOSXBehaviors is enabled.");
+API_ENUM(0_8,   Mod_Shift, "");
+API_ENUM(0_8,   Mod_Alt,   "");
+API_ENUM(0_9_2, Mod_Super, "Ctrl when ConfigVar_MacOSXBehaviors is enabled.");
 
 API_SECTION_DEF(shortcuts, ROOT_SECTION, "Shortcuts", R"(
 Key chords can combine a Key_* and a Mod_* value. For example: `Mod_Ctrl | Key_C`.
@@ -526,34 +526,34 @@ API_FUNC(0_9_2, void, SetNextItemShortcut, (Context*,ctx)
 }
 
 API_SECTION_DEF(shortcutFlags, shortcuts, "Flags");
-API_ENUM(0_9_2, ImGui, InputFlags_None, "");
-API_ENUM(0_9_2, ImGui, InputFlags_Repeat,
+API_ENUM(0_9_2, InputFlags_None, "");
+API_ENUM(0_9_2, InputFlags_Repeat,
   "Enable repeat. Return true on successive repeats.");
-API_ENUM(0_9_2, ImGui, InputFlags_Tooltip,
+API_ENUM(0_9_2, InputFlags_Tooltip,
   "Automatically display a tooltip when hovering item");
-API_ENUM(0_9_2, ImGui, InputFlags_RouteOverFocused,
+API_ENUM(0_9_2, InputFlags_RouteOverFocused,
 R"(Global route: higher priority than focused route
    (unless active item in focused route).)");
-API_ENUM(0_9_2, ImGui, InputFlags_RouteOverActive,
+API_ENUM(0_9_2, InputFlags_RouteOverActive,
 R"(Global route: higher priority than active item. Unlikely you need to
    use that: will interfere with every active items, e.g. Ctrl+A registered by
    InputText will be overridden by this. May not be fully honored as user/internal
    code is likely to always assume they can access keys when active.)");
-API_ENUM(0_9_2, ImGui, InputFlags_RouteUnlessBgFocused,
+API_ENUM(0_9_2, InputFlags_RouteUnlessBgFocused,
 R"(Option: global route: will not be applied if underlying background/void is
    focused (== no Dear ImGui windows are focused). Useful for overlay applications.)");
-API_ENUM(0_9_2, ImGui, InputFlags_RouteFromRootWindow,
+API_ENUM(0_9_2, InputFlags_RouteFromRootWindow,
 R"(Option: route evaluated from the point of view of root window rather than current window.)");
 API_SECTION_P(shortcutFlags, "Routing policies",
 R"(RouteGlobal+OverActive >> RouteActive or RouteFocused (if owner is active item)
    \>> RouteGlobal+OverFocused >> RouteFocused (if in focused window stack) >> RouteGlobal.
 
    Default policy is RouteFocused. Can select only one policy among all available.)");
-API_ENUM(0_9_2, ImGui, InputFlags_RouteActive, "Route to active item only.");
-API_ENUM(0_9_2, ImGui, InputFlags_RouteFocused,
+API_ENUM(0_9_2, InputFlags_RouteActive, "Route to active item only.");
+API_ENUM(0_9_2, InputFlags_RouteFocused,
 R"(Route to windows in the focus stack. Deep-most focused window takes inputs.
    Active item takes inputs over deep-most focused window.)");
-API_ENUM(0_9_2, ImGui, InputFlags_RouteGlobal,
+API_ENUM(0_9_2, InputFlags_RouteGlobal,
   "Global route (unless a focused window or active item registered the route).");
-API_ENUM(0_9_2, ImGui, InputFlags_RouteAlways,
+API_ENUM(0_9_2, InputFlags_RouteAlways,
   "Do not register route, poll keys directly.");

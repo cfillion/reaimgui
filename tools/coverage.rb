@@ -541,7 +541,7 @@ puts "imgui:    found %d functions, %d enums (total: %d symbols)" %
 
 # load ReaImGui definitions
 REAIMGUI_FUNC_R = /\AAPI_FUNC \s*\(\s* (?<version>[0-9_]+) \s*,\s* (?<type>[\w\s\*]+) \s*,\s* (?<name>[\w]+) \s*,\s* (?<args>.*?) \s*(?<arg_end>,)?\s*(\/|\Z)/x
-REAIMGUI_ENUM_R = /\AAPI_ENUM \s*\(\s* (?<version>[0-9_]+) \s*,\s* (?<prefix>\w+) \s*,\s* (?<name>\w+) \s*,\s*/x
+REAIMGUI_ENUM_R = /\AAPI_ENUM(?:_NS)? \s*\(\s* (?<version>[0-9_]+) \s*,\s* (?:(?<prefix>\w+) \s*,\s*)? (?<name>\w+) \s*,\s*/x
 REAIMGUI_ARGS_R = /\A\s* (?<args>\(.+?\)) \s*(?<arg_end>,)?\s*(\/|\Z)/x
 REAIMGUI_ARGT_R = /\A(?<decoration>[A-Z]+)\s*<\s*(?<type>.+)\s*>\z/
 

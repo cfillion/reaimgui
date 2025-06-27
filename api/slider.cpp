@@ -473,28 +473,28 @@ API_SUBSECTION("Flags",
 R"(For DragDouble, DragInt, SliderDouble, SliderInt etc.
    (Those are per-item flags. There is a shared behavior flag too:
    SetConfigVar(ConfigVar_DragClickToInputText))");
-API_ENUM(0_1, ImGui, SliderFlags_None, "");
-API_ENUM(0_10, ImGui, SliderFlags_ClampOnInput,
+API_ENUM(0_1, SliderFlags_None, "");
+API_ENUM(0_10, SliderFlags_ClampOnInput,
 R"(Clamp value to min/max bounds when input manually with Ctrl+Click.
    By default Ctrl+Click allows going out of bounds.)");
-API_ENUM(0_10, ImGui, SliderFlags_ClampZeroRange,
+API_ENUM(0_10, SliderFlags_ClampZeroRange,
 R"(Clamp even if min==max==0. Otherwise due to legacy reason DragXXX functions
    don't clamp with those values. When your clamping limits are dynamic you
    almost always want to use it.)");
-API_ENUM(0_10, ImGui, SliderFlags_AlwaysClamp,
+API_ENUM(0_10, SliderFlags_AlwaysClamp,
   "SliderFlags_ClampOnInput | SliderFlags_ClampZeroRange");
-API_ENUM(0_10, ImGui, SliderFlags_NoSpeedTweaks,
+API_ENUM(0_10, SliderFlags_NoSpeedTweaks,
 R"(Disable keyboard modifiers altering tweak speed.
    Useful if you want to alter tweak speed yourself based on your own logic.)");
-API_ENUM(0_1, ImGui, SliderFlags_Logarithmic,
+API_ENUM(0_1, SliderFlags_Logarithmic,
 R"(Make the widget logarithmic (linear otherwise).
    Consider using SliderFlags_NoRoundToFormat with this if using a format-string
    with small amount of digits.)");
-API_ENUM(0_1, ImGui, SliderFlags_NoRoundToFormat,
+API_ENUM(0_1, SliderFlags_NoRoundToFormat,
 R"(Disable rounding underlying value to match precision of the display format
    string (e.g. %.3f values are rounded to those 3 digits).)");
-API_ENUM(0_1, ImGui, SliderFlags_NoInput,
+API_ENUM(0_1, SliderFlags_NoInput,
   "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
-API_ENUM(0_9_2, ImGui, SliderFlags_WrapAround,
+API_ENUM(0_9_2, SliderFlags_WrapAround,
 R"(Enable wrapping around from max to min and from min to max.
    Only supported by DragXXX() functions for now.)");

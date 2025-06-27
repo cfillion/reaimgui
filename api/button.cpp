@@ -93,19 +93,19 @@ API_FUNC(0_1, bool, RadioButtonEx, (Context*,ctx)
 }
 
 API_SUBSECTION("Flags", "For InvisibleButton.");
-API_ENUM(0_1, ImGui, ButtonFlags_None, "");
-API_ENUM(0_1, ImGui, ButtonFlags_MouseButtonLeft,
+API_ENUM(0_1, ButtonFlags_None, "");
+API_ENUM(0_1, ButtonFlags_MouseButtonLeft,
   "React on left mouse button (default).");
-API_ENUM(0_1, ImGui, ButtonFlags_MouseButtonRight,
+API_ENUM(0_1, ButtonFlags_MouseButtonRight,
   "React on right mouse button.");
-API_ENUM(0_1, ImGui, ButtonFlags_MouseButtonMiddle,
+API_ENUM(0_1, ButtonFlags_MouseButtonMiddle,
   "React on center mouse button.");
-API_ENUM(0_10, ImGui, ButtonFlags_EnableNav,
+API_ENUM(0_10, ButtonFlags_EnableNav,
   "Do not disable navigation/tabbing. Otherwise disabled by default.");
 
 API_SUBSECTION("Cardinal Directions", "For ArrowButton.");
-API_ENUM(0_1, ImGui, Dir_None,  "");
-API_ENUM(0_1, ImGui, Dir_Left,  "");
-API_ENUM(0_1, ImGui, Dir_Right, "");
-API_ENUM(0_1, ImGui, Dir_Up,    "");
-API_ENUM(0_1, ImGui, Dir_Down,  "");
+API_ENUM(0_1, Dir_None,  "");
+API_ENUM(0_1, Dir_Left,  "");
+API_ENUM(0_1, Dir_Right, "");
+API_ENUM(0_1, Dir_Up,    "");
+API_ENUM(0_1, Dir_Down,  "");

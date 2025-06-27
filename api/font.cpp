@@ -94,6 +94,6 @@ applied.)")
   return ImGui::GetFontSize();
 }
 
-API_ENUM(0_4, ReaImGui, FontFlags_None,   "");
-API_ENUM(0_4, ReaImGui, FontFlags_Bold,   "");
-API_ENUM(0_4, ReaImGui, FontFlags_Italic, "");
+API_ENUM_NS(0_4, ReaImGui, FontFlags_None,   "");
+API_ENUM_NS(0_4, ReaImGui, FontFlags_Bold,   "");
+API_ENUM_NS(0_4, ReaImGui, FontFlags_Italic, "");

@@ -301,13 +301,13 @@ or easily output text data to the clipboard.)")
 
 API_SUBSECTION("Conditions",
   "Used for SetNextWindow*(), SetWindow*() and SetNextItem*() functions.");
-API_ENUM(0_1, ImGui, Cond_Always,
+API_ENUM(0_1, Cond_Always,
   "No condition (always set the variable).");
-API_ENUM(0_1, ImGui, Cond_Once,
+API_ENUM(0_1, Cond_Once,
   "Set the variable once per runtime session (only the first call will succeed).");
-API_ENUM(0_1, ImGui, Cond_FirstUseEver,
+API_ENUM(0_1, Cond_FirstUseEver,
 R"(Set the variable if the object/window has no persistently saved data
    (no entry in .ini file).)");
-API_ENUM(0_1, ImGui, Cond_Appearing,
+API_ENUM(0_1, Cond_Appearing,
 R"(Set the variable if the object/window is appearing after being
    hidden/inactive (or the first time).)");

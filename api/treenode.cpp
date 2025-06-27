@@ -100,49 +100,49 @@ API_FUNC(0_1, bool, IsItemToggledOpen, (Context*,ctx),
 
 API_SUBSECTION("Flags", "For TreeNode, TreeNodeEx and CollapsingHeader.");
 
-API_ENUM(0_1, ImGui, TreeNodeFlags_None,     "");
-API_ENUM(0_1, ImGui, TreeNodeFlags_Selected, "Draw as selected.");
-API_ENUM(0_1, ImGui, TreeNodeFlags_Framed,
+API_ENUM(0_1, TreeNodeFlags_None,     "");
+API_ENUM(0_1, TreeNodeFlags_Selected, "Draw as selected.");
+API_ENUM(0_1, TreeNodeFlags_Framed,
   "Draw frame with background (e.g. for CollapsingHeader).");
-API_ENUM(0_9, ImGui, TreeNodeFlags_AllowOverlap,
+API_ENUM(0_9, TreeNodeFlags_AllowOverlap,
   "Hit testing to allow subsequent widgets to overlap this one.");
-API_ENUM(0_1, ImGui, TreeNodeFlags_NoTreePushOnOpen,
+API_ENUM(0_1, TreeNodeFlags_NoTreePushOnOpen,
 R"(Don't do a TreePush when open (e.g. for CollapsingHeader)
    = no extra indent nor pushing on ID stack.)");
-API_ENUM(0_1, ImGui, TreeNodeFlags_NoAutoOpenOnLog,
+API_ENUM(0_1, TreeNodeFlags_NoAutoOpenOnLog,
 R"(Don't automatically and temporarily open node when Logging is active
    (by default logging will automatically open tree nodes).)");
-API_ENUM(0_1, ImGui, TreeNodeFlags_DefaultOpen,       "Default node to be open.");
-API_ENUM(0_1, ImGui, TreeNodeFlags_OpenOnDoubleClick,
+API_ENUM(0_1, TreeNodeFlags_DefaultOpen,       "Default node to be open.");
+API_ENUM(0_1, TreeNodeFlags_OpenOnDoubleClick,
 R"(Open on double-click instead of simple click (default for multi-select unless
    any _OpenOnXXX behavior is set explicitly). Both behaviors may be combined.)");
-API_ENUM(0_1, ImGui, TreeNodeFlags_OpenOnArrow,
+API_ENUM(0_1, TreeNodeFlags_OpenOnArrow,
 R"(Open when clicking on the arrow part (default for multi-select unless any
    _OpenOnXXX behavior is set explicitly). Both behaviors may be combined.)");
-API_ENUM(0_1, ImGui, TreeNodeFlags_Leaf,
+API_ENUM(0_1, TreeNodeFlags_Leaf,
   "No collapsing, no arrow (use as a convenience for leaf nodes).");
-API_ENUM(0_1, ImGui, TreeNodeFlags_Bullet,
+API_ENUM(0_1, TreeNodeFlags_Bullet,
 R"(Display a bullet instead of arrow. IMPORTANT: node can still be marked
    open/close if you don't set the _Leaf flag!)");
-API_ENUM(0_1, ImGui, TreeNodeFlags_FramePadding,
+API_ENUM(0_1, TreeNodeFlags_FramePadding,
 R"(Use FramePadding (even for an unframed text node) to vertically align text
    baseline to regular widget height.
    Equivalent to calling AlignTextToFramePadding before the node.)");
-API_ENUM(0_1, ImGui, TreeNodeFlags_SpanAvailWidth,
+API_ENUM(0_1, TreeNodeFlags_SpanAvailWidth,
 R"(Extend hit box to the right-most edge, even if not framed.
    This is not the default in order to allow adding other items on the same line.
    In the future we may refactor the hit system to be front-to-back,
    allowing natural overlaps and then this can become the default.)");
-API_ENUM(0_1, ImGui, TreeNodeFlags_SpanFullWidth,
+API_ENUM(0_1, TreeNodeFlags_SpanFullWidth,
   "Extend hit box to the left-most and right-most edges (bypass the indented area).");
-API_ENUM(0_9_1, ImGui, TreeNodeFlags_SpanLabelWidth,
+API_ENUM(0_9_1, TreeNodeFlags_SpanLabelWidth,
   "Narrow hit box + narrow hovering highlight, will only cover the label text.");
-API_ENUM(0_9, ImGui, TreeNodeFlags_SpanAllColumns,
+API_ENUM(0_9, TreeNodeFlags_SpanAllColumns,
   "Frame will span all columns of its container table (label will still fit in current column).");
-API_ENUM(0_10, ImGui, TreeNodeFlags_LabelSpanAllColumns,
+API_ENUM(0_10, TreeNodeFlags_LabelSpanAllColumns,
   "Label will span all columns of its container table");
 // API_ENUM(?, ImGui, TreeNodeFlags_NavLeftJumpsBackHere,
 // R"((WIP) Nav: left direction may move to this TreeNode from any of its child
 //    (items submitted between TreeNode and TreePop).)");
-API_ENUM(0_1, ImGui, TreeNodeFlags_CollapsingHeader,
+API_ENUM(0_1, TreeNodeFlags_CollapsingHeader,
   "TreeNodeFlags_Framed | TreeNodeFlags_NoTreePushOnOpen | TreeNodeFlags_NoAutoOpenOnLog");

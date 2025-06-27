@@ -116,32 +116,32 @@ popup stack.
 }
 
 API_SECTION_DEF(flags, ROOT_SECTION, "Flags");
-API_ENUM(0_1, ImGui, PopupFlags_None, "");
+API_ENUM(0_1, PopupFlags_None, "");
 API_SECTION_P(flags, "For OpenPopup* and BeginPopupContext*");
-API_ENUM(0_1, ImGui, PopupFlags_NoOpenOverExistingPopup,
+API_ENUM(0_1, PopupFlags_NoOpenOverExistingPopup,
   "Don't open if there's already a popup at the same level of the popup stack.");
-API_ENUM(0_9, ImGui, PopupFlags_NoReopen,
+API_ENUM(0_9, PopupFlags_NoReopen,
 R"(Don't reopen same popup if already open
    (won't reposition, won't reinitialize navigation).)");
 API_SECTION_P(flags, "For BeginPopupContext*");
-API_ENUM(0_1, ImGui, PopupFlags_NoOpenOverItems,
+API_ENUM(0_1, PopupFlags_NoOpenOverItems,
 R"(For BeginPopupContextWindow: don't return true when hovering items,
    only when hovering empty space.)");
-API_ENUM(0_1, ImGui, PopupFlags_MouseButtonLeft,
+API_ENUM(0_1, PopupFlags_MouseButtonLeft,
 R"(Open on Left Mouse release.
    Guaranteed to always be == 0 (same as MouseButton_Left).)");
-API_ENUM(0_1, ImGui, PopupFlags_MouseButtonRight,
+API_ENUM(0_1, PopupFlags_MouseButtonRight,
 R"(Open on Right Mouse release.
    Guaranteed to always be == 1 (same as MouseButton_Right).)");
-API_ENUM(0_1, ImGui, PopupFlags_MouseButtonMiddle,
+API_ENUM(0_1, PopupFlags_MouseButtonMiddle,
 R"(Open on Middle Mouse release.
    Guaranteed to always be == 2 (same as MouseButton_Middle).)");
 API_SECTION_P(flags, "For IsPopupOpen");
-API_ENUM(0_1, ImGui, PopupFlags_AnyPopupId,
+API_ENUM(0_1, PopupFlags_AnyPopupId,
   "Ignore the str_id parameter and test for any popup.");
-API_ENUM(0_1, ImGui, PopupFlags_AnyPopupLevel,
+API_ENUM(0_1, PopupFlags_AnyPopupLevel,
   "Search/test at any level of the popup stack (default test in the current level).");
-API_ENUM(0_1, ImGui, PopupFlags_AnyPopup,
+API_ENUM(0_1, PopupFlags_AnyPopup,
   "PopupFlags_AnyPopupId | PopupFlags_AnyPopupLevel");
 
 API_SUBSECTION("Open+Begin Combined Helpers", R"(

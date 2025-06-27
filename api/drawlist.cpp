@@ -81,30 +81,30 @@ API_FUNC(0_1, void, DrawList_PopClipRect, (DrawListProxy*,draw_list),
   draw_list->get()->PopClipRect();
 }
 
-API_ENUM(0_2, Im, DrawFlags_None, "");
-API_ENUM(0_2, Im, DrawFlags_Closed,
+API_ENUM_NS(0_2, Im, DrawFlags_None, "");
+API_ENUM_NS(0_2, Im, DrawFlags_Closed,
 R"(DrawList_PathStroke, DrawList_AddPolyline: specify that shape should be
    closed (Important: this is always == 1 for legacy reason).)");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersTopLeft,
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersTopLeft,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
    top-left corner only (when rounding > 0.0, we default to all corners).)");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersTopRight,
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersTopRight,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
    top-right corner only (when rounding > 0.0, we default to all corners).)");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersBottomLeft,
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersBottomLeft,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
    bottom-left corner only (when rounding > 0.0, we default to all corners).)");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersBottomRight,
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersBottomRight,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: enable rounding
    bottom-right corner only (when rounding > 0.0, we default to all corners).)");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersNone,
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersNone,
 R"(DrawList_AddRect, DrawList_AddRectFilled, DrawList_PathRect: disable rounding
    on all corners (when rounding > 0.0). This is NOT zero, NOT an implicit flag!.)");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersTop,    "");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersBottom, "");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersLeft,   "");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersRight,  "");
-API_ENUM(0_2, Im, DrawFlags_RoundCornersAll,    "");
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersTop,    "");
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersBottom, "");
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersLeft,   "");
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersRight,  "");
+API_ENUM_NS(0_2, Im, DrawFlags_RoundCornersAll,    "");
 
 API_SUBSECTION("Primitives",
 R"(Filled shapes must always use clockwise winding order! The anti-aliasing

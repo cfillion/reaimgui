@@ -75,19 +75,19 @@ null-terminated (requires REAPER v6.44 or newer for EEL and Lua).)")
     strings.data(), strings.size(), API_GET(popup_max_height_in_items));
 }
 
-API_ENUM(0_1, ImGui, ComboFlags_None, "");
-API_ENUM(0_1, ImGui, ComboFlags_PopupAlignLeft,
+API_ENUM(0_1, ComboFlags_None, "");
+API_ENUM(0_1, ComboFlags_PopupAlignLeft,
   "Align the popup toward the left by default.");
-API_ENUM(0_1, ImGui, ComboFlags_HeightSmall,
+API_ENUM(0_1, ComboFlags_HeightSmall,
 R"(Max ~4 items visible. Tip: If you want your combo popup to be a specific size
 you can use SetNextWindowSizeConstraints prior to calling BeginCombo.)");
-API_ENUM(0_1, ImGui, ComboFlags_HeightRegular,  "Max ~8 items visible (default).");
-API_ENUM(0_1, ImGui, ComboFlags_HeightLarge,    "Max ~20 items visible.");
-API_ENUM(0_1, ImGui, ComboFlags_HeightLargest,  "As many fitting items as possible.");
-API_ENUM(0_1, ImGui, ComboFlags_NoArrowButton,
+API_ENUM(0_1, ComboFlags_HeightRegular,  "Max ~8 items visible (default).");
+API_ENUM(0_1, ComboFlags_HeightLarge,    "Max ~20 items visible.");
+API_ENUM(0_1, ComboFlags_HeightLargest,  "As many fitting items as possible.");
+API_ENUM(0_1, ComboFlags_NoArrowButton,
   "Display on the preview box without the square arrow button.");
-API_ENUM(0_1, ImGui, ComboFlags_NoPreview,      "Display only a square arrow button.");
-API_ENUM(0_9, ImGui, ComboFlags_WidthFitPreview,
+API_ENUM(0_1, ComboFlags_NoPreview,      "Display only a square arrow button.");
+API_ENUM(0_9, ComboFlags_WidthFitPreview,
   "Width dynamically calculated from preview contents.");
 
 API_SUBSECTION("List Boxes",
@@ -160,16 +160,16 @@ API_FUNC(0_1, bool, Selectable, (Context*,ctx)
     ImVec2(API_GET(size_w), API_GET(size_h)));
 }
 
-API_ENUM(0_1, ImGui, SelectableFlags_None, "");
-API_ENUM(0_10, ImGui, SelectableFlags_NoAutoClosePopups,
+API_ENUM(0_1, SelectableFlags_None, "");
+API_ENUM(0_10, SelectableFlags_NoAutoClosePopups,
   "Clicking this doesn't close parent popup window (overrides ItemFlags_AutoClosePopups)");
-API_ENUM(0_1, ImGui, SelectableFlags_SpanAllColumns,
+API_ENUM(0_1, SelectableFlags_SpanAllColumns,
   "Frame will span all columns of its container table (text will still fit in current column).");
-API_ENUM(0_1, ImGui, SelectableFlags_AllowDoubleClick,
+API_ENUM(0_1, SelectableFlags_AllowDoubleClick,
   "Generate press events on double clicks too.");
-API_ENUM(0_1, ImGui, SelectableFlags_Disabled,
+API_ENUM(0_1, SelectableFlags_Disabled,
   "Cannot be selected, display grayed out text.");
-API_ENUM(0_9, ImGui, SelectableFlags_AllowOverlap,
+API_ENUM(0_9, SelectableFlags_AllowOverlap,
   "Hit testing to allow subsequent widgets to overlap this one.");
-API_ENUM(0_10, ImGui, SelectableFlags_Highlight,
+API_ENUM(0_10, SelectableFlags_Highlight,
   "Make the item be displayed as if it is hovered.");

@@ -215,41 +215,41 @@ Returns false if index is out of bounds.)")
 }
 
 API_SECTION_DEF(flags, ROOT_SECTION, "Flags");
-API_ENUM(0_1, ImGui, DragDropFlags_None, "");
+API_ENUM(0_1, DragDropFlags_None, "");
 API_SECTION_P(flags, "Source", "For BeginDragDropSource");
-API_ENUM(0_1, ImGui, DragDropFlags_SourceNoPreviewTooltip,
+API_ENUM(0_1, DragDropFlags_SourceNoPreviewTooltip,
 R"(By default, a successful call to BeginDragDropSource opens a tooltip so you
    can display a preview or description of the source contents.
    This flag disables this behavior.)");
-API_ENUM(0_1, ImGui, DragDropFlags_SourceNoDisableHover,
+API_ENUM(0_1, DragDropFlags_SourceNoDisableHover,
 R"(By default, when dragging we clear data so that IsItemHovered will return
    false, to avoid subsequent user code submitting tooltips. This flag disables
    this behavior so you can still call IsItemHovered on the source item.)");
-API_ENUM(0_1, ImGui, DragDropFlags_SourceNoHoldToOpenOthers,
+API_ENUM(0_1, DragDropFlags_SourceNoHoldToOpenOthers,
 R"(Disable the behavior that allows to open tree nodes and collapsing header by
    holding over them while dragging a source item.)");
-API_ENUM(0_1, ImGui, DragDropFlags_SourceAllowNullID,
+API_ENUM(0_1, DragDropFlags_SourceAllowNullID,
 R"(Allow items such as Text, Image that have no unique identifier to be used as
    drag source, by manufacturing a temporary identifier based on their
    window-relative position. This is extremely unusual within the dear imgui
    ecosystem and so we made it explicit.)");
-API_ENUM(0_1, ImGui, DragDropFlags_SourceExtern,
+API_ENUM(0_1, DragDropFlags_SourceExtern,
 R"(External source (from outside of dear imgui), won't attempt to read current
    item/window info. Will always return true.
    Only one Extern source can be active simultaneously.)");
-API_ENUM(0_9_2, ImGui, DragDropFlags_PayloadAutoExpire,
+API_ENUM(0_9_2, DragDropFlags_PayloadAutoExpire,
 R"(Automatically expire the payload if the source cease to be submitted
    (otherwise payloads are persisting while being dragged).)");
 API_SECTION_P(flags, "Payload", "For AcceptDragDropPayload");
-API_ENUM(0_1, ImGui, DragDropFlags_AcceptBeforeDelivery,
+API_ENUM(0_1, DragDropFlags_AcceptBeforeDelivery,
 R"(AcceptDragDropPayload will returns true even before the mouse button is
    released. You can then check GetDragDropPayload/is_delivery to test if the
    payload needs to be delivered.)");
-API_ENUM(0_1, ImGui, DragDropFlags_AcceptNoDrawDefaultRect,
+API_ENUM(0_1, DragDropFlags_AcceptNoDrawDefaultRect,
   "Do not draw the default highlight rectangle when hovering over target.");
-API_ENUM(0_1, ImGui, DragDropFlags_AcceptNoPreviewTooltip,
+API_ENUM(0_1, DragDropFlags_AcceptNoPreviewTooltip,
   "Request hiding the BeginDragDropSource tooltip from the BeginDragDropTarget site.");
-API_ENUM(0_1, ImGui, DragDropFlags_AcceptPeekOnly,
+API_ENUM(0_1, DragDropFlags_AcceptPeekOnly,
 R"(For peeking ahead and inspecting the payload before delivery.
    Equivalent to DragDropFlags_AcceptBeforeDelivery |
    DragDropFlags_AcceptNoDrawDefaultRect.)");

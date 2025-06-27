@@ -128,68 +128,68 @@ the _NoOptions flag to your calls.)")
 }
 
 API_SECTION_DEF(colorFlags, ROOT_SECTION, "Flags");
-API_ENUM(0_1, ImGui, ColorEditFlags_None, "");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoAlpha,
+API_ENUM(0_1, ColorEditFlags_None, "");
+API_ENUM(0_1, ColorEditFlags_NoAlpha,
 R"(ColorEdit, ColorPicker, ColorButton: ignore Alpha component
   (will only read 3 components from the input pointer).)");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoPicker,
+API_ENUM(0_1, ColorEditFlags_NoPicker,
   "ColorEdit: disable picker when clicking on color square.");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoOptions,
+API_ENUM(0_1, ColorEditFlags_NoOptions,
   "ColorEdit: disable toggling options menu when right-clicking on inputs/small preview.");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoSmallPreview,
+API_ENUM(0_1, ColorEditFlags_NoSmallPreview,
 R"(ColorEdit, ColorPicker: disable color square preview next to the inputs.
    (e.g. to show only the inputs).)");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoInputs,
+API_ENUM(0_1, ColorEditFlags_NoInputs,
 R"(ColorEdit, ColorPicker: disable inputs sliders/text widgets
    (e.g. to show only the small preview color square).)");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoTooltip,
+API_ENUM(0_1, ColorEditFlags_NoTooltip,
   "ColorEdit, ColorPicker, ColorButton: disable tooltip when hovering the preview.");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoLabel,
+API_ENUM(0_1, ColorEditFlags_NoLabel,
 R"(ColorEdit, ColorPicker: disable display of inline text label
    (the label is still forwarded to the tooltip and picker).)");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoSidePreview,
+API_ENUM(0_1, ColorEditFlags_NoSidePreview,
 R"(ColorPicker: disable bigger color preview on right side of the picker,
    use small color square preview instead.)");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoDragDrop,
+API_ENUM(0_1, ColorEditFlags_NoDragDrop,
   "ColorEdit: disable drag and drop target. ColorButton: disable drag and drop source.");
-API_ENUM(0_1, ImGui, ColorEditFlags_NoBorder,
+API_ENUM(0_1, ColorEditFlags_NoBorder,
   "ColorButton: disable border (which is enforced by default).");
 
 API_SECTION_P(colorFlags, "Alpha Preview", "For ColorEdit, ColorPicker, ColorButton");
-API_ENUM(0_10, ImGui, ColorEditFlags_AlphaOpaque,
+API_ENUM(0_10, ColorEditFlags_AlphaOpaque,
 R"(Disable alpha in the preview.
    Contrary to _NoAlpha it may still be edited when calling ColorEdit4/ColorPicker4.
    For ColorButton this does the same as _NoAlpha.)");
-API_ENUM(0_10, ImGui, ColorEditFlags_AlphaNoBg,
+API_ENUM(0_10, ColorEditFlags_AlphaNoBg,
   "Disable rendering a checkerboard background behind transparent color.");
-API_ENUM(0_1, ImGui, ColorEditFlags_AlphaPreviewHalf,
+API_ENUM(0_1, ColorEditFlags_AlphaPreviewHalf,
   "Display half opaque / half transparent preview.");
 
 API_SECTION_P(colorFlags, "User Options", "(right-click on widget to change some of them)");
-API_ENUM(0_1, ImGui, ColorEditFlags_AlphaBar,
+API_ENUM(0_1, ColorEditFlags_AlphaBar,
   "ColorEdit, ColorPicker: show vertical alpha bar/gradient in picker.");
 // API_ENUM(ImGui, ColorEditFlags_HDR,
 // R"((WIP) ColorEdit: Currently only disable 0.0..1.0 limits in RGBA edition
 //    (note: you probably want to use ImGuiColorEditFlags_Float flag as well).)");
-API_ENUM(0_1, ImGui, ColorEditFlags_DisplayRGB,
+API_ENUM(0_1, ColorEditFlags_DisplayRGB,
 R"(ColorEdit: override _display_ type to RGB. ColorPicker:
    select any combination using one or more of RGB/HSV/Hex.)");
-API_ENUM(0_1, ImGui, ColorEditFlags_DisplayHSV,
+API_ENUM(0_1, ColorEditFlags_DisplayHSV,
 R"(ColorEdit: override _display_ type to HSV. ColorPicker:
    select any combination using one or more of RGB/HSV/Hex.)");
-API_ENUM(0_1, ImGui, ColorEditFlags_DisplayHex,
+API_ENUM(0_1, ColorEditFlags_DisplayHex,
 R"(ColorEdit: override _display_ type to Hex. ColorPicker:
    select any combination using one or more of RGB/HSV/Hex.)");
-API_ENUM(0_1, ImGui, ColorEditFlags_Uint8,
+API_ENUM(0_1, ColorEditFlags_Uint8,
   "ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0..255.");
-API_ENUM(0_1, ImGui, ColorEditFlags_Float,
+API_ENUM(0_1, ColorEditFlags_Float,
 R"(ColorEdit, ColorPicker, ColorButton: _display_ values formatted as 0.0..1.0
    floats instead of 0..255 integers. No round-trip of value via integers.)");
-API_ENUM(0_1, ImGui, ColorEditFlags_PickerHueBar,
+API_ENUM(0_1, ColorEditFlags_PickerHueBar,
   "ColorPicker: bar for Hue, rectangle for Sat/Value.");
-API_ENUM(0_1, ImGui, ColorEditFlags_PickerHueWheel,
+API_ENUM(0_1, ColorEditFlags_PickerHueWheel,
   "ColorPicker: wheel for Hue, triangle for Sat/Value.");
-API_ENUM(0_1, ImGui, ColorEditFlags_InputRGB,
+API_ENUM(0_1, ColorEditFlags_InputRGB,
   "ColorEdit, ColorPicker: input and output data in RGB format.");
-API_ENUM(0_1, ImGui, ColorEditFlags_InputHSV,
+API_ENUM(0_1, ColorEditFlags_InputHSV,
   "ColorEdit, ColorPicker: input and output data in HSV format.");

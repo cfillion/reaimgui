@@ -148,28 +148,28 @@ R"(About using AutoResizeX/AutoResizeY flags:
     PREVENT BeginChild FROM EVER RETURNING FALSE, disabling benefits of coarse
     clipping.)");
 
-API_ENUM(0_9, ImGui, ChildFlags_None, "");
-API_ENUM(0_10, ImGui, ChildFlags_Borders, "Show an outer border and enable WindowPadding.");
-API_ENUM(0_9, ImGui, ChildFlags_AlwaysUseWindowPadding,
+API_ENUM(0_9, ChildFlags_None, "");
+API_ENUM(0_10, ChildFlags_Borders, "Show an outer border and enable WindowPadding.");
+API_ENUM(0_9, ChildFlags_AlwaysUseWindowPadding,
 R"(Pad with StyleVar_WindowPadding even if no border are drawn (no padding by
 default for non-bordered child windows because it makes more sense).)");
-API_ENUM(0_9, ImGui, ChildFlags_ResizeX,
+API_ENUM(0_9, ChildFlags_ResizeX,
 R"(Allow resize from right border (layout direction).
 Enables .ini saving (unless WindowFlags_NoSavedSettings passed to window flags).)");
-API_ENUM(0_9, ImGui, ChildFlags_ResizeY,
+API_ENUM(0_9, ChildFlags_ResizeY,
 R"(Allow resize from bottom border (layout direction).
 Enables .ini saving (unless WindowFlags_NoSavedSettings passed to window flags).)");
-API_ENUM(0_9, ImGui, ChildFlags_AutoResizeX, "Enable auto-resizing width. Read notes above.");
-API_ENUM(0_9, ImGui, ChildFlags_AutoResizeY, "Enable auto-resizing height. Read notes above.");
-API_ENUM(0_9, ImGui, ChildFlags_AlwaysAutoResize,
+API_ENUM(0_9, ChildFlags_AutoResizeX, "Enable auto-resizing width. Read notes above.");
+API_ENUM(0_9, ChildFlags_AutoResizeY, "Enable auto-resizing height. Read notes above.");
+API_ENUM(0_9, ChildFlags_AlwaysAutoResize,
 R"(Combined with AutoResizeX/AutoResizeY. Always measure size even when child
 is hidden, always return true, always disable clipping optimization! NOT RECOMMENDED.)");
-API_ENUM(0_9, ImGui, ChildFlags_FrameStyle,
+API_ENUM(0_9, ChildFlags_FrameStyle,
 R"(Style the child window like a framed item: use Col_FrameBg,
    StyleVar_FrameRounding, StyleVar_FrameBorderSize, StyleVar_FramePadding
    instead of Col_ChildBg, StyleVar_ChildRounding, StyleVar_ChildBorderSize,
    StyleVar_WindowPadding.)");
-API_ENUM(0_9_2, ImGui, ChildFlags_NavFlattened,
+API_ENUM(0_9_2, ChildFlags_NavFlattened,
 R"(Share focus scope, allow keyboard/gamepad navigation to cross over parent
    border to this child or between sibling child windows.)");
 
@@ -403,20 +403,20 @@ API_FUNC(0_5, void, SetWindowFocusEx, (Context*,ctx)
 
 API_SECTION_P(properties, "Focused Flags", "For IsWindowFocused.");
 
-API_ENUM(0_1, ImGui, FocusedFlags_None, "");
-API_ENUM(0_1, ImGui, FocusedFlags_ChildWindows,
+API_ENUM(0_1, FocusedFlags_None, "");
+API_ENUM(0_1, FocusedFlags_ChildWindows,
   "Return true if any children of the window is focused.");
-API_ENUM(0_1, ImGui, FocusedFlags_RootWindow,
+API_ENUM(0_1, FocusedFlags_RootWindow,
   "Test from root window (top most parent of the current hierarchy).");
-API_ENUM(0_1, ImGui, FocusedFlags_AnyWindow,
+API_ENUM(0_1, FocusedFlags_AnyWindow,
   "Return true if any window is focused.");
-API_ENUM(0_5_10, ImGui, FocusedFlags_NoPopupHierarchy,
+API_ENUM(0_5_10, FocusedFlags_NoPopupHierarchy,
 R"(Do not consider popup hierarchy (do not treat popup emitter as parent of
    popup) (when used with _ChildWindows or _RootWindow).)");
-API_ENUM(0_5_10, ImGui, FocusedFlags_DockHierarchy,
+API_ENUM(0_5_10, FocusedFlags_DockHierarchy,
 R"(Consider docking hierarchy (treat dockspace host as parent of docked window)
    (when used with _ChildWindows or _RootWindow).)");
-API_ENUM(0_1, ImGui, FocusedFlags_RootAndChildWindows,
+API_ENUM(0_1, FocusedFlags_RootAndChildWindows,
   "FocusedFlags_RootWindow | FocusedFlags_ChildWindows");
 
 API_SECTION_P(properties, "Size Callback", "For SetNextWindowSizeConstraints.");
@@ -644,61 +644,61 @@ R"(For Begin and BeginChild.
 (Those are per-window flags. There are shared flags in SetConfigVar:
 ConfigVar_WindowsResizeFromEdges and ConfigVar_WindowsMoveFromTitleBarOnly))");
 
-API_ENUM(0_1, ImGui, WindowFlags_None,       "Default flag.");
-API_ENUM(0_1, ImGui, WindowFlags_NoTitleBar, "Disable title-bar.");
-API_ENUM(0_1, ImGui, WindowFlags_NoResize,   "Disable user resizing with the lower-right grip.");
-API_ENUM(0_1, ImGui, WindowFlags_NoMove,     "Disable user moving the window.");
-API_ENUM(0_1, ImGui, WindowFlags_NoScrollbar,
+API_ENUM(0_1, WindowFlags_None,       "Default flag.");
+API_ENUM(0_1, WindowFlags_NoTitleBar, "Disable title-bar.");
+API_ENUM(0_1, WindowFlags_NoResize,   "Disable user resizing with the lower-right grip.");
+API_ENUM(0_1, WindowFlags_NoMove,     "Disable user moving the window.");
+API_ENUM(0_1, WindowFlags_NoScrollbar,
   "Disable scrollbars (window can still scroll with mouse or programmatically).");
-API_ENUM(0_1, ImGui, WindowFlags_NoScrollWithMouse,
+API_ENUM(0_1, WindowFlags_NoScrollWithMouse,
 R"(Disable user vertically scrolling with mouse wheel.
    On child window, mouse wheel will be forwarded to the parent unless
    NoScrollbar is also set.)");
-API_ENUM(0_1, ImGui, WindowFlags_NoCollapse,
+API_ENUM(0_1, WindowFlags_NoCollapse,
 R"(Disable user collapsing window by double-clicking on it.
    Also referred to as Window Menu Button (e.g. within a docking node).)");
-API_ENUM(0_1, ImGui, WindowFlags_AlwaysAutoResize,
+API_ENUM(0_1, WindowFlags_AlwaysAutoResize,
   "Resize every window to its content every frame.");
-API_ENUM(0_1, ImGui, WindowFlags_NoBackground,
+API_ENUM(0_1, WindowFlags_NoBackground,
 R"(Disable drawing background color (WindowBg, etc.) and outside border.
    Similar as using SetNextWindowBgAlpha(0.0).)");
-API_ENUM(0_4, ImGui, WindowFlags_NoSavedSettings,
+API_ENUM(0_4, WindowFlags_NoSavedSettings,
   "Never load/save settings in .ini file.");
-API_ENUM(0_1, ImGui, WindowFlags_NoMouseInputs,
+API_ENUM(0_1, WindowFlags_NoMouseInputs,
   "Disable catching mouse, hovering test with pass through.");
-API_ENUM(0_1, ImGui, WindowFlags_MenuBar, "Has a menu-bar.");
-API_ENUM(0_1, ImGui, WindowFlags_HorizontalScrollbar,
+API_ENUM(0_1, WindowFlags_MenuBar, "Has a menu-bar.");
+API_ENUM(0_1, WindowFlags_HorizontalScrollbar,
 R"(Allow horizontal scrollbar to appear (off by default).
    You may use SetNextWindowContentSize(width, 0.0) prior to calling Begin() to
    specify width. Read code in the demo's "Horizontal Scrolling" section.)");
-API_ENUM(0_1, ImGui, WindowFlags_NoFocusOnAppearing,
+API_ENUM(0_1, WindowFlags_NoFocusOnAppearing,
   "Disable taking focus when transitioning from hidden to visible state.");
 // API_ENUM(ImGui, WindowFlags_NoBringToFrontOnFocus,
 // R"(Disable bringing window to front when taking focus
 //    (e.g. clicking on it or programmatically giving it focus).)");
-API_ENUM(0_1, ImGui, WindowFlags_AlwaysVerticalScrollbar,
+API_ENUM(0_1, WindowFlags_AlwaysVerticalScrollbar,
   "Always show vertical scrollbar (even if ContentSize.y < Size.y).");
-API_ENUM(0_1, ImGui, WindowFlags_AlwaysHorizontalScrollbar,
+API_ENUM(0_1, WindowFlags_AlwaysHorizontalScrollbar,
   "Always show horizontal scrollbar (even if ContentSize.x < Size.x).");
-API_ENUM(0_1, ImGui, WindowFlags_NoNavInputs,
+API_ENUM(0_1, WindowFlags_NoNavInputs,
   "No keyboard/gamepad navigation within the window.");
-API_ENUM(0_1, ImGui, WindowFlags_NoNavFocus,
+API_ENUM(0_1, WindowFlags_NoNavFocus,
 R"(No focusing toward this window with keyboard/gamepad navigation
    (e.g. skipped by CTRL+TAB).)");
-API_ENUM(0_1, ImGui, WindowFlags_UnsavedDocument,
+API_ENUM(0_1, WindowFlags_UnsavedDocument,
 R"(Display a dot next to the title. When used in a tab/docking context,
    tab is selected when clicking the X + closure is not assumed
    (will wait for user to stop submitting the tab).
    Otherwise closure is assumed when pressing the X,
    so if you keep submitting the tab may reappear at end of tab bar.)");
-API_ENUM(0_5, ImGui, WindowFlags_NoDocking, "Disable docking of this window.");
-API_ENUM(0_1, ImGui, WindowFlags_NoNav,
+API_ENUM(0_5, WindowFlags_NoDocking, "Disable docking of this window.");
+API_ENUM(0_1, WindowFlags_NoNav,
   "WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
-API_ENUM(0_1, ImGui, WindowFlags_NoDecoration,
+API_ENUM(0_1, WindowFlags_NoDecoration,
 R"(WindowFlags_NoTitleBar | WindowFlags_NoResize | WindowFlags_NoScrollbar |
    WindowFlags_NoCollapse)");
-API_ENUM(0_1, ImGui, WindowFlags_NoInputs,
+API_ENUM(0_1, WindowFlags_NoInputs,
   "WindowFlags_NoMouseInputs | WindowFlags_NoNavInputs | WindowFlags_NoNavFocus");
 
-API_ENUM(0_5_5, ReaImGui, WindowFlags_TopMost,
+API_ENUM_NS(0_5_5, ReaImGui, WindowFlags_TopMost,
   "Show the window above all non-topmost windows.");

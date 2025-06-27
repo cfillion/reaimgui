@@ -34,28 +34,28 @@ API_FUNC(0_1, void, EndTabBar, (Context*,ctx),
   ImGui::EndTabBar();
 }
 
-API_ENUM(0_1, ImGui, TabBarFlags_None, "");
-API_ENUM(0_1, ImGui, TabBarFlags_Reorderable,
+API_ENUM(0_1, TabBarFlags_None, "");
+API_ENUM(0_1, TabBarFlags_Reorderable,
 R"(Allow manually dragging tabs to re-order them + New tabs are appended at
    the end of list.)");
-API_ENUM(0_1, ImGui, TabBarFlags_AutoSelectNewTabs,
+API_ENUM(0_1, TabBarFlags_AutoSelectNewTabs,
   "Automatically select new tabs when they appear.");
-API_ENUM(0_1, ImGui, TabBarFlags_TabListPopupButton,
+API_ENUM(0_1, TabBarFlags_TabListPopupButton,
   "Disable buttons to open the tab list popup.");
-API_ENUM(0_1, ImGui, TabBarFlags_NoCloseWithMiddleMouseButton,
+API_ENUM(0_1, TabBarFlags_NoCloseWithMiddleMouseButton,
 R"(Disable behavior of closing tabs (that are submitted with p_open != nil)
    with middle mouse button. You may handle this behavior manually on user's
    side with if(IsItemHovered() && IsMouseClicked(2)) p_open = false.)");
-API_ENUM(0_1, ImGui, TabBarFlags_NoTabListScrollingButtons,
+API_ENUM(0_1, TabBarFlags_NoTabListScrollingButtons,
 R"(Disable scrolling buttons (apply when fitting policy is
    TabBarFlags_FittingPolicyScroll).)");
-API_ENUM(0_1, ImGui, TabBarFlags_NoTooltip,
+API_ENUM(0_1, TabBarFlags_NoTooltip,
   "Disable tooltips when hovering a tab.");
-API_ENUM(0_9_2, ImGui, TabBarFlags_DrawSelectedOverline,
+API_ENUM(0_9_2, TabBarFlags_DrawSelectedOverline,
   "Draw selected overline markers over selected tab");
-API_ENUM(0_1, ImGui, TabBarFlags_FittingPolicyResizeDown,
+API_ENUM(0_1, TabBarFlags_FittingPolicyResizeDown,
   "Resize tabs when they don't fit.");
-API_ENUM(0_1, ImGui, TabBarFlags_FittingPolicyScroll,
+API_ENUM(0_1, TabBarFlags_FittingPolicyScroll,
   "Add scroll buttons when tabs don't fit.");
 
 API_SUBSECTION("Tab Item");
@@ -96,26 +96,26 @@ Otherwise call with a window name.)")
   ImGui::SetTabItemClosed(tab_or_docked_window_label);
 }
 
-API_ENUM(0_1, ImGui, TabItemFlags_None, "");
-API_ENUM(0_1, ImGui, TabItemFlags_UnsavedDocument,
+API_ENUM(0_1, TabItemFlags_None, "");
+API_ENUM(0_1, TabItemFlags_UnsavedDocument,
   "Display a dot next to the title + set TabItemFlags_NoAssumedClosure.");
-API_ENUM(0_1, ImGui, TabItemFlags_SetSelected,
+API_ENUM(0_1, TabItemFlags_SetSelected,
   "Trigger flag to programmatically make the tab selected when calling BeginTabItem.");
-API_ENUM(0_1, ImGui, TabItemFlags_NoCloseWithMiddleMouseButton,
+API_ENUM(0_1, TabItemFlags_NoCloseWithMiddleMouseButton,
 R"(Disable behavior of closing tabs (that are submitted with p_open != nil) with
    middle mouse button. You can still repro this behavior on user's side with
    if(IsItemHovered() && IsMouseClicked(2)) p_open = false.)");
-API_ENUM(0_1, ImGui, TabItemFlags_NoPushId,
+API_ENUM(0_1, TabItemFlags_NoPushId,
   "Don't call PushID()/PopID() on BeginTabItem/EndTabItem.");
-API_ENUM(0_1, ImGui, TabItemFlags_NoTooltip,
+API_ENUM(0_1, TabItemFlags_NoTooltip,
   "Disable tooltip for the given tab.");
-API_ENUM(0_1, ImGui, TabItemFlags_NoReorder,
+API_ENUM(0_1, TabItemFlags_NoReorder,
   "Disable reordering this tab or having another tab cross over this tab.");
-API_ENUM(0_1, ImGui, TabItemFlags_Leading,
+API_ENUM(0_1, TabItemFlags_Leading,
   "Enforce the tab position to the left of the tab bar (after the tab list popup button).");
-API_ENUM(0_1, ImGui, TabItemFlags_Trailing,
+API_ENUM(0_1, TabItemFlags_Trailing,
   "Enforce the tab position to the right of the tab bar (before the scrolling buttons).");
-API_ENUM(0_9, ImGui, TabItemFlags_NoAssumedClosure,
+API_ENUM(0_9, TabItemFlags_NoAssumedClosure,
 R"(Tab is selected when trying to close + closure is not immediately assumed
    (will wait for user to stop submitting the tab).
    Otherwise closure is assumed when pressing the X, so if you keep submitting

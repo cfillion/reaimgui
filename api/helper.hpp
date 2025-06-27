@@ -130,8 +130,10 @@ struct DefVal<Tag<T, tags>> { using type = typename DefVal<T>::type; };
   };                                                             \
   _API_FUNC_DEF(vernum, type, name, args)
 
-#define API_ENUM _API_STORE_LINE _API_ENUM
-#define _API_ENUM(vernum, prefix, name, doc) \
+#define API_ENUM    _API_STORE_LINE _API_ENUM
+#define API_ENUM_NS _API_STORE_LINE _API_ENUM_NS
+#define _API_ENUM(vernum, name, doc) _API_ENUM_NS(vernum, ImGui, name, doc)
+#define _API_ENUM_NS(vernum, prefix, name, doc) \
   _API_FUNC(vernum, int, name, API_NO_ARGS, doc) { return prefix##name; }
 
 #define API_EELFUNC _API_STORE_LINE _API_EELFUNC
