@@ -300,7 +300,8 @@ bool Context::endFrame(const bool render) try
   return true;
 }
 catch(const imgui_error &e) {
-  Error::report(this, e);
+  if(render) // silence further errors on the way out (during destruction)
+    Error::report(this, e);
   // don't retry EndFrame and error out again during destruction
   m_imgui->WithinFrameScope = false;
   return false;

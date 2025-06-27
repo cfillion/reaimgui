@@ -346,7 +346,7 @@ void API::handleError(const char *fnName, const reascript_error &e)
 
 void API::handleError(const char *fnName, const imgui_error &e)
 {
-  setError("!" API_PREFIX "{}: ImGui assertion failed: {}", fnName, e.what());
+  setError("!" API_PREFIX "{}: {}", fnName, e.what());
   assert(Context::current());
   delete Context::current();
 }

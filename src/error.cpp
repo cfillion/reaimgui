@@ -220,10 +220,10 @@ void Error::report(Context *ctx, const backend_error &ex)
 
 void Error::imguiAssertionFailure(const char *message)
 {
-  throw imgui_error {message};
+  throw imgui_error {"ImGui assertion failed: {}", message};
 }
 
 void Error::imguiDebugBreak()
 {
-  throw reascript_error {"debug break"};
+  throw imgui_error {"debug break"};
 }
