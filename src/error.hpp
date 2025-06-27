@@ -42,7 +42,7 @@ public:
   };
 
 DEFINE_EXCEPT(backend_error);
-DEFINE_EXCEPT(imgui_error);
+DEFINE_EXCEPT(imgui_error); // API::handleError destroys the active context
 DEFINE_EXCEPT(reascript_error);
 
 #undef DEFINE_EXCEPT
@@ -50,8 +50,8 @@ DEFINE_EXCEPT(reascript_error);
 class Context;
 
 namespace Error {
-  [[noreturn]] void imguiAssertionFailure(const char *message);
-  [[noreturn]] void imguiDebugBreak();
+  [[noreturn]] void throwAssertionFailure(const char *message);
+  [[noreturn]] void throwDebugBreak();
 
   template<typename T>
   [[noreturn]] void invalidObject(const T *ptr)

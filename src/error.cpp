@@ -198,9 +198,8 @@ void ErrorReporter::setIndex(const size_t index)
 void Error::report(Context *ctx, const imgui_error &ex)
 {
   ErrorReporter::report({
-    ctx->name(), ex,
-    TEXT("ImGui assertion failed"),
-    TEXT("The ImGui context was left in an invalid state and cannot continue.\n")
+    ctx->name(), ex, TEXT("ImGui programming error"),
+    TEXT("The ReaImGui context was left in an invalid state and cannot continue.\n")
     TEXT("Report this problem along with the error description below to the script")
     TEXT(" or plugin developer.\n(Disable state restoration in ") PREF_PATH
     TEXT(" to reset saved settings.)"),
@@ -210,20 +209,19 @@ void Error::report(Context *ctx, const imgui_error &ex)
 void Error::report(Context *ctx, const backend_error &ex)
 {
   ErrorReporter::report({
-    ctx->name(), ex,
-    TEXT("ReaImGui backend error"),
-    TEXT("The current graphics rendering engine may not be compatible with your")
-    TEXT(" computer.\nTry selecting a different graphics renderer in ") PREF_PATH
-    TEXT(" or report this problem if the issue persists."),
+    ctx->name(), ex, TEXT("ImGui backend error"),
+    TEXT("The current graphics rendering engine may not be compatible with ")
+    TEXT("your computer.\nTry selecting a different graphics renderer in ")
+    PREF_PATH TEXT(" or report this problem if the issue persists."),
   });
 }
 
-void Error::imguiAssertionFailure(const char *message)
+void Error::throwAssertionFailure(const char *message)
 {
-  throw imgui_error {"ImGui assertion failed: {}", message};
+  throw imgui_error {"Assertion failed: {}", message};
 }
 
-void Error::imguiDebugBreak()
+void Error::throwDebugBreak()
 {
-  throw imgui_error {"debug break"};
+  throw imgui_error {"Debug break"};
 }

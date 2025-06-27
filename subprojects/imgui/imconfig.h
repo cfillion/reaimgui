@@ -2,8 +2,8 @@
 #define REAIMGUI_IMCONFIG_H
 
 namespace Error {
-  [[noreturn]] void imguiAssertionFailure(const char *);
-  [[noreturn]] void imguiDebugBreak();
+  [[noreturn]] void throwAssertionFailure(const char *);
+  [[noreturn]] void throwDebugBreak();
 };
 
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
@@ -14,7 +14,7 @@ namespace Error {
 
 #define ImTextureID size_t
 
-#define IM_ASSERT(_EXPR) (_EXPR ? (void)0 : Error::imguiAssertionFailure(#_EXPR))
-#define IM_DEBUG_BREAK() Error::imguiDebugBreak();
+#define IM_ASSERT(_EXPR) (_EXPR ? (void)0 : Error::throwAssertionFailure(#_EXPR))
+#define IM_DEBUG_BREAK() Error::throwDebugBreak();
 
 #endif
