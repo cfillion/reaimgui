@@ -27,7 +27,9 @@ eel_dep = declare_dependency(dependencies: [wdl_dep], link_with: eel)
 meson.override_dependency('EEL2', eel_dep)
 
 # SWELL
-if host_machine.system() != 'windows'
+if host_machine.system() == 'windows'
+  swell_dep = dependency('', required: false)
+else
   swell_dependencies = [wdl_dep]
   swell_dir = wdl_dir / 'swell'
   swell_public_args = ['-DSWELL_PROVIDED_BY_APP']
@@ -43,8 +45,14 @@ if host_machine.system() != 'windows'
     dependencies: swell_dependencies,
     cpp_args: swell_public_args, objcpp_args: swell_public_args)
   swell_dep = declare_dependency(
-    compile_args: swell_public_args,
-    dependencies: [wdl_dep],
-    link_with: swell)
-  meson.override_dependency('SWELL', swell_dep)
+    compile_args: swell_public_args, dependencies: [wdl_dep], link_with: swell)
 endif
+meson.override_dependency('SWELL', swell_dep)
+
+wingui_dir = wdl_dir / 'wingui'
+wingui_sources = [
+  wingui_dir / 'wndsize.cpp',
+]
+wingui = library('WDL_wingui', wingui_sources, dependencies: [swell_dep])
+wingui_dep = declare_dependency(link_with: wingui)
+meson.override_dependency('WDL_wingui', wingui_dep)

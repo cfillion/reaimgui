@@ -30,6 +30,7 @@
 #include <reaper_plugin_functions.h>
 #include <variant>
 #include <WDL/wdltypes.h> // WDL_DLGRET
+#include <WDL/wingui/wndsize.h>
 
 template<typename T>
 struct Setting;
@@ -407,6 +408,7 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
   const WPARAM wParam, const LPARAM)
 {
   constexpr int WM_PREFS_APPLY {WM_USER * 2};
+  static WDL_WndSizer resizer;
 
   switch(message) {
   case WM_INITDIALOG: {
@@ -418,18 +420,15 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
     }
     updateRendererOptions(hwnd);
     EnableWindow(GetDlgItem(hwnd, IDC_VERSION), false);
+    resizer.init(hwnd);
+    resizer.init_item(IDC_GROUPBOX, 0.f, 0.f, 1.f, 1.f);
+    resizer.init_item(IDC_VERSION, 0.f, 1.f, 0.f, 1.f);
+    resizer.init_item(IDC_RESETDEFAULTS, 1.f, 1.f, 1.f, 1.f);
     return 0; // don't focus the first control
   }
-  case WM_SIZE: {
-    RECT pageRect;
-    GetClientRect(hwnd, &pageRect);
-    const auto pageWidth  {pageRect.right - pageRect.left},
-               pageHeight {pageRect.bottom - pageRect.top};
-    SetWindowPos(GetDlgItem(hwnd, IDC_GROUPBOX), nullptr,
-      0, 0, pageWidth, pageHeight,
-      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
+  case WM_SIZE:
+    resizer.onResize();
     return 0;
-  }
   case WM_SHOWWINDOW: // to clear shownText when the page becomes inactive
   case WM_SETCURSOR:  // WM_MOUSEMOVE is not sent over children controls (win32)
     updateHelp(hwnd);

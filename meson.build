@@ -135,14 +135,10 @@ imgui_dep      = dependency('imgui')
 libjpeg_dep    = dependency('libjpeg')
 libpng_dep     = dependency('libpng')
 reaper_sdk_dep = dependency('reaper-sdk')
+swell_dep      = dependency('SWELL', required: host_machine.system() != 'windows')
 wdl_dep        = dependency('WDL')
+wingui_dep     = dependency('WDL_wingui')
 zlib_dep       = dependency('zlib')
-
-if host_machine.system() == 'windows'
-  swell_dep = dependency('', required: false)
-else
-  swell_dep = dependency('SWELL')
-endif
 
 arch_suffix = host_machine.cpu()
 if host_machine.system() == 'windows' and arch_suffix == 'x86_64'
@@ -175,7 +171,7 @@ subdir('tools')
 
 common_dep = declare_dependency(
   dependencies: [
-    boost_dep, compat_dep, imgui_dep, reaper_sdk_dep, swell_dep, wdl_dep,
+    boost_dep, compat_dep, imgui_dep, reaper_sdk_dep, swell_dep, wdl_dep, wingui_dep,
   ],
   sources: [version])
 win32_resources = []
