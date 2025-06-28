@@ -412,6 +412,10 @@ int Window::hwndInfo(HWND hwnd, const intptr_t infoType)
 
 void Window::contextMenu(const short x, const short y)
 {
+  // VK_APPS key pressed on Windows (could WM_CONTEXTMENU be prevented instead?)
+  if(x == -1 && y == -1)
+    return;
+
   enum Action { NoOp = 0, Close, Undock, SetDock };
   Menu menu;
 

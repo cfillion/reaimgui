@@ -319,6 +319,7 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
   case GDK_KEY_Super_L:      return ImGuiKey_LeftSuper;
   case GDK_KEY_Super_R:      return ImGuiKey_RightSuper;
   case GDK_KEY_KP_Enter:     return ImGuiKey_KeypadEnter;
+  case GDK_KEY_Menu:         return ImGuiKey_Menu;
   case GDK_KEY_apostrophe:   return ImGuiKey_Apostrophe;
   case GDK_KEY_comma:        return ImGuiKey_Comma;
   case GDK_KEY_minus:        return ImGuiKey_Minus;
