@@ -34,7 +34,7 @@ constexpr int
   VK_OEM_5      {0xDC}, // \|
   VK_OEM_6      {0xDD}, // ])
   VK_OEM_7      {0xDE}, // '"
-  // VK_OEM_102    {0xE2},
+  VK_OEM_102    {0xE2},
   VK_LSHIFT     {0xA0},
   VK_RSHIFT     {0xA1},
   VK_LCONTROL   {0xA2},

@@ -459,6 +459,8 @@ API_ENUM(0_6, Key_KeypadEqual,    "");
 API_ENUM(0_9, Key_AppBack,
 R"(Available on some keyboard/mouses. Often referred as "Browser Back".)");
 API_ENUM(0_9, Key_AppForward, "");
+API_ENUM(0_10, Key_Oem102, "Key next to the left shift on ISO keyboards.");
+
 API_SECTION_P(namedKeys, "Gamepad");
 // TODO
 API_SECTION_P(namedKeys, "Mouse Buttons",
@@ -471,6 +473,7 @@ API_ENUM(0_8, Key_MouseX1,     "");
 API_ENUM(0_8, Key_MouseX2,     "");
 API_ENUM(0_8, Key_MouseWheelX, "");
 API_ENUM(0_8, Key_MouseWheelY, "");
+
 API_SECTION_P(namedKeys, "Modifiers");
 API_ENUM(0_8,   Mod_None,  "");
 API_ENUM(0_9_2, Mod_Ctrl,  "Cmd when ConfigVar_MacOSXBehaviors is enabled.");

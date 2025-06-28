@@ -61,6 +61,7 @@ ImGuiKey KeyMap::translateVirtualKey(const int vkey)
   case VK_OEM_5:      return ImGuiKey_Backslash;
   case VK_OEM_6:      return ImGuiKey_RightBracket;
   case VK_OEM_3:      return ImGuiKey_GraveAccent;
+  case VK_OEM_102:    return ImGuiKey_Oem102;
   case VK_CAPITAL:    return ImGuiKey_CapsLock;
   case VK_SCROLL:     return ImGuiKey_ScrollLock;
   case VK_NUMLOCK:    return ImGuiKey_NumLock;

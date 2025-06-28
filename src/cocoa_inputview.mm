@@ -89,7 +89,7 @@ static int translateKeyCode(NSEvent *event)
   case 0x7e: return VK_UP;
   case 0x7d: return VK_DOWN;
 
-  // case 0x0a: return VK_OEM_102;
+  case 0x0a: return VK_OEM_102;
   case 0x2a: return VK_OEM_5;
 
   // number row

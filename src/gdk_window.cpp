@@ -309,6 +309,11 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
   if(event->keyval >= GDK_KEY_F1 && event->keyval <= GDK_KEY_F24)
     return static_cast<ImGuiKey>(ImGuiKey_F1 + (event->keyval - GDK_KEY_F1));
 
+  // when the GDK_KEY_* mapping undesirably depends on the current layout
+  switch(event->hardware_keycode) {
+  case 94: return ImGuiKey_Oem102;
+  }
+
   switch(event->keyval) {
   case GDK_KEY_Control_L:    return ImGuiKey_LeftCtrl;
   case GDK_KEY_Control_R:    return ImGuiKey_RightCtrl;
@@ -338,8 +343,9 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
   case GDK_KEY_Pause:        return ImGuiKey_Pause;
   case GDK_KEY_Back:         return ImGuiKey_AppBack;
   case GDK_KEY_Forward:      return ImGuiKey_AppForward;
-  default:                   return ImGuiKey_None;
   }
+
+  return ImGuiKey_None;
 }
 
 void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
