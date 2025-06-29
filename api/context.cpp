@@ -137,7 +137,7 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   &ImGuiIO::ConfigScrollbarScrollByPage,
 
   // &ImGuiIO::ConfigErrorRecovery,
-  // &ImGuiIO::ConfigErrorRecoveryEnableAssert,
+  &ImGuiIO::ConfigErrorRecoveryEnableAssert,
   // &ImGuiIO::ConfigErrorRecoveryEnableDebugLog,
   // &ImGuiIO::ConfigErrorRecoveryEnableTooltip,
 
@@ -239,6 +239,9 @@ R"(Enable scrolling page by page when clicking outside the scrollbar grab.
    When disabled, always scroll to clicked location.
    When enabled, Shift+Click scrolls to clicked location.)");
 
+API_CONFIGVAR(0_10, ErrorRecoveryEnableAssert,
+  "Enable asserts on recoverable errors (pre-v0.10 behavior).");
+
 API_CONFIGVAR(0_10, DebugHighlightIdConflicts,
 R"(Highlight and show an error message popup when multiple items have conflicting
    identifiers.
@@ -337,7 +340,7 @@ API_ENUM(0_1, ConfigFlags_None, "");
 API_ENUM(0_1, ConfigFlags_NavEnableKeyboard,
 R"(Master keyboard navigation enable flag.
    Enable full Tabbing + directional arrows + space/enter to activate.)");
-// API_ENUM(ImGui, ConfigFlags_NavEnableGamepad,
+// API_ENUM(?, ConfigFlags_NavEnableGamepad,
 //"Master gamepad navigation enable flag.");
 API_ENUM(0_1, ConfigFlags_NoMouse,
   "Instruct dear imgui to disable mouse inputs and interactions");

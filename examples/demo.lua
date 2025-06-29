@@ -471,16 +471,15 @@ function demo.ShowDemoWindow(open)
       ImGui.Text(ctx, "Also see Style->Rendering for rendering options.")
 
       -- Also read: https://github.com/ocornut/imgui/wiki/Error-Handling
-      -- ImGui.SeparatorText(ctx, 'Error Handling')
+      ImGui.SeparatorText(ctx, 'Error Handling')
       -- demo.ConfigVarCheckbox('ErrorRecovery')
       -- ImGui.SameLine(ctx); demo.HelpMarker(
       --   'Options to configure how we handle recoverable errors.\n\z
-      --   - Error recovery is not perfect nor guaranteed! It is a feature to ease development.\n"
-      --   - You not are not supposed to rely on it in the course of a normal application run.\n"
-      --   - Possible usage: facilitate recovery from errors triggered from a scripting language or after specific exceptions handlers.\n"
+      --   - Error recovery is not perfect nor guaranteed! It is a feature to ease development.\n\z
+      --   - You not are not supposed to rely on it in the course of a normal application run.\n\z
       --   - Always ensure that on programmers seat you have at minimum Asserts or Tooltips enabled when making direct imgui API call! \z
       --     Otherwise it would severely hinder your ability to catch and correct mistakes!')
-      -- demo.ConfigVarCheckbox('ErrorRecoveryEnableAssert')
+      demo.ConfigVarCheckbox('ErrorRecoveryEnableAssert')
       -- demo.ConfigVarCheckbox('ErrorRecoveryEnableDebugLog')
       -- demo.ConfigVarCheckbox('ErrorRecoveryEnableTooltip')
       -- if ImGui.GetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableAssert) == 0 and
@@ -685,7 +684,7 @@ function demo.DemoWindowMenuBar()
     --   ImGui.MenuItem(ctx, 'Main menu bar', nil, show_app.main_menu_bar)
 
     ImGui.SeparatorText(ctx, 'Mini apps')
-    rv,show_app.assets_browser   = ImGui.MenuItem(ctx, 'Assets browser', nil, show_app.assets_browser)
+    rv,show_app.assets_browser   = ImGui.MenuItem(ctx, 'Assets browser', nil, show_app.assets_browser, false)
     rv,show_app.console          = ImGui.MenuItem(ctx, 'Console', nil, show_app.console)
     rv,show_app.custom_rendering = ImGui.MenuItem(ctx, 'Custom rendering', nil, show_app.custom_rendering)
     -- rv,show_app.dockspace     = ImGui.MenuItem(ctx, 'Dockspace', nil, show_app.dockspace, false)

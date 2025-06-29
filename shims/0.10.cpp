@@ -39,6 +39,7 @@ SHIM("0.10",
   (void, SetConfigVar, Context*, int, double)
   (int, ConfigFlags_NavEnableKeyboard)
   (int, ConfigVar_Flags)
+  (int, ConfigVar_ErrorRecoveryEnableAssert)
   (int, ConfigVar_DebugHighlightIdConflicts)
 
   (int, Col_NavCursor)
@@ -114,6 +115,7 @@ SHIM_FUNC(0_5, Context*, CreateContext,
 {
   Context *ctx {api.CreateContext(label, config_flags)};
   api.SetConfigVar(ctx, api.ConfigVar_DebugHighlightIdConflicts(), false);
+  api.SetConfigVar(ctx, api.ConfigVar_ErrorRecoveryEnableAssert(), true);
 
   if(!(API_GET(config_flags) & api.ConfigFlags_NavEnableKeyboard())) {
     int flags {static_cast<int>(api.GetConfigVar(ctx, api.ConfigVar_Flags()))};
