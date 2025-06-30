@@ -96,6 +96,15 @@ components of a multiple component widget. Use -1 to access previous widget.)")
   ImGui::SetKeyboardFocusHere(API_GET(offset));
 }
 
+API_FUNC(0_10, void, SetNavCursorVisible, (Context*,ctx)
+(bool,visible),
+R"(Alter visibility of keyboard/gamepad cursor. By default: shown when using an
+arrow key, hidden when clicking with the mouse.)")
+{
+  FRAME_GUARD;
+  ImGui::SetNavCursorVisible(visible);
+}
+
 API_SUBSECTION("Dimensions");
 
 API_FUNC(0_1, void, GetItemRectMin, (Context*,ctx)
