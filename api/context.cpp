@@ -136,11 +136,6 @@ static constexpr IOFields<bool, float, int> g_configVars[] {
   // &ImGuiIO::ConfigWindowsCopyContentsWithCtrlC,
   &ImGuiIO::ConfigScrollbarScrollByPage,
 
-  // &ImGuiIO::ConfigErrorRecovery,
-  &ImGuiIO::ConfigErrorRecoveryEnableAssert,
-  // &ImGuiIO::ConfigErrorRecoveryEnableDebugLog,
-  // &ImGuiIO::ConfigErrorRecoveryEnableTooltip,
-
   &ImGuiIO::ConfigDebugHighlightIdConflicts,
   // &ImGuiIO::ConfigDebugHighlightIdConflictsShowItemPicker,
   &ImGuiIO::ConfigDebugBeginReturnValueOnce,
@@ -238,9 +233,6 @@ API_CONFIGVAR(0_10, ScrollbarScrollByPage,
 R"(Enable scrolling page by page when clicking outside the scrollbar grab.
    When disabled, always scroll to clicked location.
    When enabled, Shift+Click scrolls to clicked location.)");
-
-API_CONFIGVAR(0_10, ErrorRecoveryEnableAssert,
-  "Enable asserts on recoverable errors (pre-v0.10 behavior).");
 
 API_CONFIGVAR(0_10, DebugHighlightIdConflicts,
 R"(Highlight and show an error message popup when multiple items have conflicting

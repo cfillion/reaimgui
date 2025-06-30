@@ -471,7 +471,7 @@ function demo.ShowDemoWindow(open)
       ImGui.Text(ctx, "Also see Style->Rendering for rendering options.")
 
       -- Also read: https://github.com/ocornut/imgui/wiki/Error-Handling
-      ImGui.SeparatorText(ctx, 'Error Handling')
+      -- ImGui.SeparatorText(ctx, 'Error Handling')
       -- demo.ConfigVarCheckbox('ErrorRecovery')
       -- ImGui.SameLine(ctx); demo.HelpMarker(
       --   'Options to configure how we handle recoverable errors.\n\z
@@ -479,7 +479,7 @@ function demo.ShowDemoWindow(open)
       --   - You not are not supposed to rely on it in the course of a normal application run.\n\z
       --   - Always ensure that on programmers seat you have at minimum Asserts or Tooltips enabled when making direct imgui API call! \z
       --     Otherwise it would severely hinder your ability to catch and correct mistakes!')
-      demo.ConfigVarCheckbox('ErrorRecoveryEnableAssert')
+      -- demo.ConfigVarCheckbox('ErrorRecoveryEnableAssert')
       -- demo.ConfigVarCheckbox('ErrorRecoveryEnableDebugLog')
       -- demo.ConfigVarCheckbox('ErrorRecoveryEnableTooltip')
       -- if ImGui.GetConfigVar(ctx, ImGui.ConfigVar_ErrorRecoveryEnableAssert) == 0 and

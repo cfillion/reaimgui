@@ -138,8 +138,8 @@ Context::Context(const char *label, const int userConfigFlags)
     if(ctx->IO.ConfigErrorRecoveryEnableAssert)
       throw imgui_error {msg};
   };
-  io.ConfigErrorRecoveryEnableAssert = false;
-  io.ConfigErrorRecoveryEnableTooltip = true;
+  io.ConfigErrorRecoveryEnableAssert = true;
+  io.ConfigErrorRecoveryEnableTooltip = false;
   io.ConfigErrorRecoveryEnableDebugLog = false;
 
   setUserConfigFlags(userConfigFlags);
