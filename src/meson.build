@@ -17,7 +17,6 @@ src_sources = files([
   'renderer.cpp',
   'resource.cpp',
   'settings.cpp',
-  'texture.cpp',
   'viewport.cpp',
   'window.cpp',
 ])

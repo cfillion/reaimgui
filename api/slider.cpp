@@ -478,7 +478,7 @@ API_ENUM(0_10, SliderFlags_ClampOnInput,
 R"(Clamp value to min/max bounds when input manually with Ctrl+Click.
    By default Ctrl+Click allows going out of bounds.)");
 API_ENUM(0_10, SliderFlags_ClampZeroRange,
-R"(Clamp even if min==max==0. Otherwise due to legacy reason DragXXX functions
+R"(Clamp even if min==max==0. Otherwise due to legacy reason Drag* functions
    don't clamp with those values. When your clamping limits are dynamic you
    almost always want to use it.)");
 API_ENUM(0_10, SliderFlags_AlwaysClamp,
@@ -497,4 +497,4 @@ API_ENUM(0_1, SliderFlags_NoInput,
   "Disable CTRL+Click or Enter key allowing to input text directly into the widget.");
 API_ENUM(0_9_2, SliderFlags_WrapAround,
 R"(Enable wrapping around from max to min and from min to max.
-   Only supported by DragXXX() functions for now.)");
+   Only supported by Drag* functions for now.)");

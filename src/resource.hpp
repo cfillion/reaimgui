@@ -18,10 +18,36 @@
 #ifndef REAIMGUI_RESOURCE_HPP
 #define REAIMGUI_RESOURCE_HPP
 
+#include <cassert>
+
 #include "../api/types.hpp"
 #include "flat_set.hpp"
 
 class Context;
+
+class SubresourceData {
+public:
+  template<typename T>
+  SubresourceData(T *data, void (*uninstaller)(Context *, T *))
+    : m_ptr {data},
+      m_deleter {reinterpret_cast<void(*)(Context *, void *)>(uninstaller)}
+  {}
+  SubresourceData(const SubresourceData &) = delete;
+  SubresourceData(SubresourceData &&o) noexcept { *this = std::move(o); }
+  SubresourceData &operator=(SubresourceData &&o) noexcept {
+    m_ptr = o.m_ptr, m_deleter = o.m_deleter;
+    o.m_ptr = nullptr;
+    return *this;
+  }
+  ~SubresourceData() { assert(!m_ptr); };
+
+  operator void *() const { return m_ptr; }
+  void uninstall(Context *ctx) { m_deleter(ctx, m_ptr); m_ptr = nullptr; }
+
+private:
+  void *m_ptr;
+  void (*m_deleter)(Context *, void *);
+};
 
 class Resource {
 public:
@@ -30,8 +56,10 @@ public:
   virtual ~Resource();
 
   void keepAlive();
+  unsigned int uniqId() const { return m_uniqId; }
 
   virtual bool attachable(const Context *) const = 0;
+  virtual SubresourceData install(Context *) { throw nullptr; }
 
   template<typename T>
   static bool isValid(T *userData)
@@ -73,6 +101,7 @@ private:
   static FlatSet<Resource *> g_rsx;
   static Timer *g_timer;
 
+  unsigned int m_uniqId;
   signed char m_keepAlive;
   unsigned char m_flags;
 };

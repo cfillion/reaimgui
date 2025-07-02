@@ -20,7 +20,6 @@
 #include "context.hpp"
 #include "error.hpp"
 #include "import.hpp"
-#include "texture.hpp"
 #include "window.hpp"
 
 #include <atlbase.h>
@@ -56,7 +55,10 @@ private:
     Shared(bool forceSoftware);
     ~Shared();
 
-    void textureCommand(const TextureCmd &);
+    void processTexture(ImTextureData *);
+    void createTexture(ImTextureData *);
+    void updateTexture(ImTextureData *);
+    void deleteTexture(ImTextureData *);
 
     CComPtr<ID3D10Device> m_device;
     CComPtr<IDXGIFactory> m_factory;
@@ -67,9 +69,6 @@ private:
     CComPtr<ID3D10RasterizerState> m_rasterizerState;
     CComPtr<ID3D10DepthStencilState> m_depthStencilState;
     CComPtr<ID3D10SamplerState> m_samplerState;
-
-    TextureCookie m_cookie;
-    std::vector<CComPtr<ID3D10ShaderResourceView>> m_textures;
   };
 
   struct Buffer {
@@ -90,7 +89,6 @@ private:
   CComPtr<ID3D10RenderTargetView> m_renderTarget;
   std::array<Buffer, 3> m_buffers;
 };
-
 
 D3D10Renderer::Shared::Shared(const bool forceSoftware)
 {
@@ -201,54 +199,87 @@ D3D10Renderer::Shared::Shared(const bool forceSoftware)
 
 D3D10Renderer::Shared::~Shared()
 {
+  for(ImTextureData *tex : ImGui::GetPlatformIO().Textures) {
+    if(tex->GetTexID() != ImTextureID_Invalid)
+      deleteTexture(tex);
+  }
 }
 
-void D3D10Renderer::Shared::textureCommand(const TextureCmd &cmd)
+void D3D10Renderer::Shared::processTexture(ImTextureData *tex)
 {
-  switch(cmd.type) {
-  case TextureCmd::Insert:
-    m_textures.insert(m_textures.begin() + cmd.offset, cmd.size, nullptr);
+  switch(tex->Status) {
+  case ImTextureStatus_WantCreate: {
+    createTexture(tex);
     break;
-  case TextureCmd::Update:
-    // calls Release() on the textures in the range to replace
-    std::fill_n(m_textures.begin() + cmd.offset, cmd.size, nullptr);
+  }
+  case ImTextureStatus_WantUpdates:
+    updateTexture(tex);
     break;
-  case TextureCmd::Remove:
-    m_textures.erase(m_textures.begin() + cmd.offset,
-                     m_textures.begin() + cmd.offset + cmd.size);
-    return;
+  case ImTextureStatus_WantDestroy:
+    deleteTexture(tex);
+    break;
+  case ImTextureStatus_OK:
+  case ImTextureStatus_Destroyed:
+    break;
   }
+}
 
-  for(size_t i {}; i < cmd.size; ++i) {
-    int width, height;
-    const unsigned char *pixels {cmd[i].getPixels(&width, &height)};
+void D3D10Renderer::Shared::createTexture(ImTextureData *tex)
+{
+  IM_ASSERT(tex->Format == ImTextureFormat_RGBA32);
 
-    CComPtr<ID3D10Texture2D> texture;
-    const D3D10_TEXTURE2D_DESC textureDesc {
-      .Width = static_cast<unsigned int>(width),
-      .Height = static_cast<unsigned int>(height),
-      .MipLevels = 1,
-      .ArraySize = 1,
-      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-      .SampleDesc = {.Count = 1},
-      .Usage = D3D10_USAGE_DEFAULT,
-      .BindFlags = D3D10_BIND_SHADER_RESOURCE,
-    };
-    const D3D10_SUBRESOURCE_DATA subResourceDesc {
-      .pSysMem = pixels,
-      .SysMemPitch = textureDesc.Width * 4,
-    };
-    if(FAILED(m_device->CreateTexture2D(&textureDesc, &subResourceDesc, &texture)))
-      throw backend_error {"failed to create texture"};
+  CComPtr<ID3D10Texture2D> texture;
+  const D3D10_TEXTURE2D_DESC textureDesc {
+    .Width = static_cast<UINT>(tex->Width),
+    .Height = static_cast<UINT>(tex->Height),
+    .MipLevels = 1,
+    .ArraySize = 1,
+    .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+    .SampleDesc = {.Count = 1},
+    .Usage = D3D10_USAGE_DEFAULT,
+    .BindFlags = D3D10_BIND_SHADER_RESOURCE,
+  };
+  const D3D10_SUBRESOURCE_DATA subResourceDesc {
+    .pSysMem = tex->GetPixels(),
+    .SysMemPitch = static_cast<UINT>(tex->GetPitch()),
+  };
+  if(FAILED(m_device->CreateTexture2D(&textureDesc, &subResourceDesc, &texture)))
+    throw backend_error {"failed to create texture"};
 
-    const D3D10_SHADER_RESOURCE_VIEW_DESC resourceViewDesc {
-      .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
-      .ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D,
-      .Texture2D = {.MipLevels = textureDesc.MipLevels},
+  const D3D10_SHADER_RESOURCE_VIEW_DESC resourceViewDesc {
+    .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+    .ViewDimension = D3D10_SRV_DIMENSION_TEXTURE2D,
+    .Texture2D = {.MipLevels = textureDesc.MipLevels},
+  };
+  CComPtr<ID3D10ShaderResourceView> view;
+  m_device->CreateShaderResourceView(texture, &resourceViewDesc, &view);
+
+  static_assert(sizeof(ImTextureID) >= sizeof(ID3D10ShaderResourceView *));
+  tex->SetTexID((ImTextureID)view.Detach());
+  tex->BackendUserData = texture.Detach();
+  tex->SetStatus(ImTextureStatus_OK);
+}
+
+void D3D10Renderer::Shared::updateTexture(ImTextureData *tex)
+{
+  auto texture {static_cast<ID3D10Texture2D *>(tex->BackendUserData)};
+  for(const ImTextureRect &rect : tex->Updates) {
+    D3D10_BOX box {
+      static_cast<UINT>(rect.x), static_cast<UINT>(rect.y), 0,
+      static_cast<UINT>(rect.x + rect.w), static_cast<UINT>(rect.y + rect.h), 1
     };
-    m_device->CreateShaderResourceView(texture,
-      &resourceViewDesc, &m_textures[cmd.offset + i]);
+    m_device->UpdateSubresource(texture, 0, &box, tex->GetPixelsAt(rect.x, rect.y), tex->GetPitch(), 0);
   }
+  tex->SetStatus(ImTextureStatus_OK);
+}
+
+void D3D10Renderer::Shared::deleteTexture(ImTextureData *tex)
+{
+  static_cast<ID3D10ShaderResourceView *>((void *)tex->GetTexID())->Release();
+  static_cast<ID3D10Texture2D *>(tex->BackendUserData)->Release();
+  tex->SetTexID(ImTextureID_Invalid);
+  tex->BackendUserData = nullptr;
+  tex->SetStatus(ImTextureStatus_Destroyed);
 }
 
 D3D10Renderer::D3D10Renderer(RendererFactory *factory, Window *window)
@@ -338,12 +369,11 @@ void D3D10Renderer::setSize(const ImVec2 size)
 
 void D3D10Renderer::render(void *)
 {
-  using namespace std::placeholders;
-  m_window->context()->textureManager()->update(&m_shared->m_cookie,
-    std::bind(&Shared::textureCommand, m_shared.get(), _1));
-
   const ImGuiViewport *viewport {m_window->viewport()};
   const ImDrawData *drawData {viewport->DrawData};
+
+  for(ImTextureData *tex : *drawData->Textures)
+    m_shared->processTexture(tex);
 
   ID3D10Device *device {m_shared->m_device};
   device->OMSetRenderTargets(1, &m_renderTarget.p, nullptr);
@@ -355,9 +385,9 @@ void D3D10Renderer::render(void *)
 
   const D3D10_VIEWPORT viewportDesc {
     .Width  =
-      static_cast<unsigned int>(drawData->DisplaySize.x * viewport->DpiScale),
+      static_cast<UINT>(drawData->DisplaySize.x * viewport->DpiScale),
     .Height =
-      static_cast<unsigned int>(drawData->DisplaySize.y * viewport->DpiScale),
+      static_cast<UINT>(drawData->DisplaySize.y * viewport->DpiScale),
     .MinDepth = 0.0f, .MaxDepth = 1.0f,
   };
   device->RSSetViewports(1, &viewportDesc);
@@ -380,8 +410,7 @@ void D3D10Renderer::render(void *)
   if(FAILED(m_buffers[IndexBuf]->Map(
       D3D10_MAP_WRITE_DISCARD, 0, reinterpret_cast<void **>(&indexData))))
     return;
-  for(int i {}; i < drawData->CmdListsCount; ++i) {
-    const ImDrawList *cmdList {drawData->CmdLists[i]};
+  for(const ImDrawList *cmdList : drawData->CmdLists) {
     memcpy(vertexData, cmdList->VtxBuffer.Data,
            cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
     memcpy(indexData, cmdList->IdxBuffer.Data,
@@ -408,23 +437,21 @@ void D3D10Renderer::render(void *)
   const ImVec2 &clipOffset {drawData->DisplayPos},
                &clipScale  {viewport->DpiScale, viewport->DpiScale};
   int globalVtxOffset {}, globalIdxOffset {};
-  for(int i {}; i < drawData->CmdListsCount; ++i) {
-    const ImDrawList *cmdList {drawData->CmdLists[i]};
-    for(int j {}; j < cmdList->CmdBuffer.Size; ++j) {
-      const ImDrawCmd *cmd {&cmdList->CmdBuffer[j]};
-      if(cmd->UserCallback)
+  for(const ImDrawList *cmdList : drawData->CmdLists) {
+    for(const ImDrawCmd &cmd : cmdList->CmdBuffer) {
+      if(cmd.UserCallback)
         continue; // no need to call the callback, not using them
 
-      const ClipRect clipRect {cmd->ClipRect, clipOffset, clipScale};
+      const ClipRect clipRect {cmd.ClipRect, clipOffset, clipScale};
       static_assert(sizeof(ClipRect) == sizeof(D3D10_RECT));
       if(!clipRect)
         continue;
       device->RSSetScissorRects(1, reinterpret_cast<const D3D10_RECT *>(&clipRect));
 
-      ID3D10ShaderResourceView *texture {m_shared->m_textures[cmd->GetTexID()]};
+      auto texture {static_cast<ID3D10ShaderResourceView *>((void *)cmd.GetTexID())};
       device->PSSetShaderResources(0, 1, &texture);
-      device->DrawIndexed(cmd->ElemCount, cmd->IdxOffset + globalIdxOffset,
-                                          cmd->VtxOffset + globalVtxOffset);
+      device->DrawIndexed(cmd.ElemCount, cmd.IdxOffset + globalIdxOffset,
+                                         cmd.VtxOffset + globalVtxOffset);
     }
 
     globalVtxOffset += cmdList->VtxBuffer.Size;

@@ -66,12 +66,7 @@ R"(Link the object's lifetime to the given context.
 Objects can be draw list splitters, fonts, images, list clippers, etc.
 Call Detach to let the object be garbage-collected after unuse again.
 
-List clipper objects may only be attached to the context they were created for.
-
-Fonts are (currently) a special case: they must be attached to the context
-before usage. Furthermore, fonts may only be attached or detached immediately
-after the context is created or before any other function calls modifying the
-context per defer cycle. See "limitations" in the font API documentation.)")
+List clipper objects may only be attached to the context they were created for.)")
 {
   assertValid(ctx);
   assertValid(obj);

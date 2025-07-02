@@ -20,7 +20,6 @@
 #include "context.hpp"
 #include "error.hpp"
 #include "import.hpp"
-#include "texture.hpp"
 #include "window.hpp"
 
 #include <AppKit/AppKit.h>
@@ -66,15 +65,15 @@ private:
     Shared();
     ~Shared();
 
-    void textureCommand(const TextureCmd &);
+    void processTexture(ImTextureData *);
+    void createTexture(ImTextureData *);
+    void updateTexture(ImTextureData *);
+    void deleteTexture(ImTextureData *);
 
     id<MTLDevice> m_device;
     id<MTLCommandQueue> m_commandQueue;
     id<MTLDepthStencilState> m_depthStencilState;
     id<MTLRenderPipelineState> m_renderPipelineState;
-
-    TextureCookie m_cookie;
-    std::vector<id<MTLTexture>> m_textures;
   };
 
   void resizeBuffer(size_t buf,
@@ -180,53 +179,83 @@ MetalRenderer::Shared::Shared()
 
 MetalRenderer::Shared::~Shared()
 {
+  for(ImTextureData *tex : ImGui::GetPlatformIO().Textures) {
+    if(tex->GetTexID() != ImTextureID_Invalid)
+      deleteTexture(tex);
+  }
 }
 
-void MetalRenderer::Shared::textureCommand(const TextureCmd &cmd)
+void MetalRenderer::Shared::processTexture(ImTextureData *tex)
 {
-  switch(cmd.type) {
-  case TextureCmd::Insert:
-    m_textures.insert(m_textures.begin() + cmd.offset, cmd.size, nil);
+  switch(tex->Status) {
+  case ImTextureStatus_WantCreate: {
+    createTexture(tex);
     break;
-  case TextureCmd::Update:
-    break;
-  case TextureCmd::Remove:
-    m_textures.erase(m_textures.begin() + cmd.offset,
-                     m_textures.begin() + cmd.offset + cmd.size);
-    return;
   }
+  case ImTextureStatus_WantUpdates:
+    updateTexture(tex);
+    break;
+  case ImTextureStatus_WantDestroy:
+    deleteTexture(tex);
+    break;
+  case ImTextureStatus_OK:
+  case ImTextureStatus_Destroyed:
+    break;
+  }
+}
 
+void MetalRenderer::Shared::createTexture(ImTextureData *tex)
+{
   static ClassImport _MTLTextureDescriptor
     {METAL, "MTLTextureDescriptor"};
   if(!_MTLTextureDescriptor)
     throw backend_error {"failed to import MTLTextureDescriptor"};
 
-  for(size_t i {}; i < cmd.size; ++i) {
-    int width, height;
-    const unsigned char *pixels {cmd[i].getPixels(&width, &height)};
+  IM_ASSERT(tex->Format == ImTextureFormat_RGBA32);
 
-    // [m_device maxTexture{Width,Height}2D] is private undocumented API
-    constexpr int metalMaxSize {16384};
-    if(width > metalMaxSize || height > metalMaxSize)
-      throw backend_error("texture size is greater than Metal limits");
+  // [m_device maxTexture{Width,Height}2D] is private undocumented API
+  constexpr int metalMaxSize {16384};
+  if(tex->Width > metalMaxSize || tex->Height > metalMaxSize)
+    throw backend_error("texture size is greater than Metal limits");
 
-    MTLTextureDescriptor *texDesc =
-      [_MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
-                                                          width:width
-                                                         height:height
-                                                      mipmapped:NO];
-    texDesc.storageMode = MTLStorageModeManaged;
-    texDesc.usage = MTLTextureUsageShaderRead;
+  MTLTextureDescriptor *texDesc
+    {[_MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatRGBA8Unorm
+                                                         width:tex->Width
+                                                        height:tex->Height
+                                                       mipmapped:NO]};
+  texDesc.storageMode = MTLStorageModeManaged;
+  texDesc.usage = MTLTextureUsageShaderRead;
 
-    id<MTLTexture> texture {[m_device newTextureWithDescriptor:texDesc]};
-    if(!texture)
-      throw backend_error {"failed to create texture"};
-    [texture replaceRegion:MTLRegionMake2D(0, 0, width, height)
+  id<MTLTexture> texture {[m_device newTextureWithDescriptor:texDesc]};
+  if(!texture)
+    throw backend_error {"failed to create texture"};
+  [texture replaceRegion:MTLRegionMake2D(0, 0, tex->Width, tex->Height)
+             mipmapLevel:0
+               withBytes:tex->GetPixels()
+             bytesPerRow:tex->GetPitch()];
+  static_assert(sizeof(ImTextureID) >= sizeof(texture));
+  tex->SetTexID((ImTextureID)(__bridge_retained void *)texture);
+  tex->SetStatus(ImTextureStatus_OK);
+}
+
+void MetalRenderer::Shared::updateTexture(ImTextureData *tex)
+{
+  auto texture {(__bridge id<MTLTexture>)(void *)tex->GetTexID()};
+  for(const ImTextureRect &rect : tex->Updates) {
+    [texture replaceRegion:MTLRegionMake2D(rect.x, rect.y, rect.w, rect.h)
                mipmapLevel:0
-                 withBytes:pixels
-               bytesPerRow:width * 4];
-    m_textures[cmd.offset + i] = texture;
+                 withBytes:tex->GetPixelsAt(rect.x, rect.y)
+               bytesPerRow:tex->GetPitch()];
   }
+  tex->SetStatus(ImTextureStatus_OK);
+}
+
+void MetalRenderer::Shared::deleteTexture(ImTextureData *tex)
+{
+  auto texture {(__bridge_transfer id<MTLTexture>)(void *)tex->GetTexID()};
+  (void)texture; // ARC will release
+  tex->SetTexID(ImTextureID_Invalid);
+  tex->SetStatus(ImTextureStatus_Destroyed);
 }
 
 MetalRenderer::MetalRenderer(RendererFactory *factory, Window *window)
@@ -286,14 +315,13 @@ void MetalRenderer::setSize(const ImVec2 size)
 
 void MetalRenderer::render(void *)
 {
-  using namespace std::placeholders;
-  m_window->context()->textureManager()->update(&m_shared->m_cookie,
-    std::bind(&Shared::textureCommand, m_shared.get(), _1));
-
   const ImGuiViewport *viewport {m_window->viewport()};
   const ImDrawData *drawData {viewport->DrawData};
   const ImVec2 position {drawData->DisplayPos},
                scale    {viewport->DpiScale, viewport->DpiScale};
+
+  for(ImTextureData *tex : *drawData->Textures)
+    m_shared->processTexture(tex);
 
   id<CAMetalDrawable> drawable {};
   if(m_firstFrame) {
@@ -347,20 +375,17 @@ void MetalRenderer::render(void *)
   [commandEncoder setVertexBytes:&projMatrix length:sizeof(ProjMtx) atIndex:1];
 
   size_t vtxOffset {}, idxOffset {};
-  for(int i {}; i < drawData->CmdListsCount; ++i) {
-    const ImDrawList *cmdList {drawData->CmdLists[i]};
-
+  for(const ImDrawList *cmdList : drawData->CmdLists) {
     memcpy(static_cast<char *>(m_buffers[VertexBuf].contents) + vtxOffset,
       cmdList->VtxBuffer.Data, cmdList->VtxBuffer.Size * sizeof(ImDrawVert));
     memcpy(static_cast<char *>(m_buffers[IndexBuf].contents) + idxOffset,
       cmdList->IdxBuffer.Data, cmdList->IdxBuffer.Size * sizeof(ImDrawIdx));
 
-    for(int j {}; j < cmdList->CmdBuffer.Size; ++j) {
-      const ImDrawCmd *cmd {&cmdList->CmdBuffer[j]};
-      if(cmd->UserCallback)
+    for(const ImDrawCmd &cmd : cmdList->CmdBuffer) {
+      if(cmd.UserCallback)
         continue; // no need to call the callback, not using them
 
-      const ClipRect clipRect {cmd->ClipRect, position, scale};
+      const ClipRect clipRect {cmd.ClipRect, position, scale};
       if(!clipRect)
         continue;
       [commandEncoder setScissorRect:MTLScissorRect {
@@ -370,13 +395,13 @@ void MetalRenderer::render(void *)
         .height = static_cast<NSUInteger>(clipRect.bottom - clipRect.top),
       }];
 
-      [commandEncoder setFragmentTexture:m_shared->m_textures[cmd->GetTexID()] atIndex:0];
-      [commandEncoder setVertexBufferOffset:vtxOffset + (cmd->VtxOffset * sizeof(ImDrawVert)) atIndex:0];
+      [commandEncoder setFragmentTexture:(__bridge id<MTLTexture>)(void *)cmd.GetTexID() atIndex:0];
+      [commandEncoder setVertexBufferOffset:vtxOffset + (cmd.VtxOffset * sizeof(ImDrawVert)) atIndex:0];
       [commandEncoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
-                                 indexCount:cmd->ElemCount
+                                 indexCount:cmd.ElemCount
                                   indexType:sizeof(ImDrawIdx) == 2 ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32
                                 indexBuffer:m_buffers[IndexBuf]
-                          indexBufferOffset:idxOffset + (cmd->IdxOffset * sizeof(ImDrawIdx))];
+                          indexBufferOffset:idxOffset + (cmd.IdxOffset * sizeof(ImDrawIdx))];
     }
 
     vtxOffset += cmdList->VtxBuffer.Size * sizeof(ImDrawVert);

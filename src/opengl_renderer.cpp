@@ -73,7 +73,6 @@ void main()
 
 // these must match with the sizes of the corresponding member arrays
 enum Buffers   {VertexBuf, IndexBuf};
-enum Textures  {FontTex};
 enum Locations {ProjMtxUniLoc, TexUniLoc,
                 VtxColorAttrLoc, VtxPosAttrLoc, VtxUVAttrLoc};
 
@@ -119,33 +118,109 @@ void OpenGLRenderer::Shared::setup()
 void OpenGLRenderer::Shared::teardown()
 {
   glDeleteProgram(m_program);
-  glDeleteTextures(m_textures.size(), m_textures.data());
+
+  for(ImTextureData *tex : ImGui::GetPlatformIO().Textures) {
+    if(tex->GetTexID() != ImTextureID_Invalid)
+      deleteTexture(tex);
+  }
+
+  for(const LocalTex &local : m_textures)
+    IM_ASSERT(!local.id && "Texture leak");
 }
 
-void OpenGLRenderer::Shared::textureCommand(const TextureCmd &cmd)
+// The extra {Local,Shared}Tex complexity layer is for handling non-shared
+// OpenGL contexts created using OpenGLRenderer{share = false} (eg. GDKOpenGL)
+struct SharedTex {
+  unsigned int version, refCount;
+};
+
+void OpenGLRenderer::Shared::processTexture(ImTextureData *tex)
 {
-  switch(cmd.type) {
-  case TextureCmd::Insert:
-    m_textures.insert(m_textures.begin() + cmd.offset, cmd.size, 0);
-    glGenTextures(cmd.size, m_textures.data() + cmd.offset);
-    [[fallthrough]];
-  case TextureCmd::Update:
-    for(size_t i {}; i < cmd.size; ++i) {
-      int width, height;
-      const unsigned char *pixels {cmd[i].getPixels(&width, &height)};
-      glBindTexture(GL_TEXTURE_2D, m_textures[cmd.offset + i]);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+  switch(tex->Status) {
+  case ImTextureStatus_OK: {
+    if(tex->TexID >= m_textures.size())
+      m_textures.resize(tex->TexID + 1);
+    LocalTex &local {m_textures[tex->TexID]};
+    if(!local.id)
+      createTexture(local, tex);
+    else if(local.version != static_cast<SharedTex *>(tex->BackendUserData)->version)
+      updateTexture(local, tex);
+    break;
+  }
+  case ImTextureStatus_WantCreate: {
+    auto slot {std::find_if(m_textures.begin(), m_textures.end(),
+      [](const LocalTex &l) { return l.id == 0; })};
+    if(slot == m_textures.end()) {
+      m_textures.resize(m_textures.size() + 1);
+      slot = m_textures.end() - 1;
     }
+    tex->SetTexID(slot - m_textures.begin());
+    tex->BackendUserData = new SharedTex {};
+    createTexture(*slot, tex);
+    tex->SetStatus(ImTextureStatus_OK);
     break;
-  case TextureCmd::Remove:
-    glDeleteTextures(cmd.size, m_textures.data() + cmd.offset);
-    m_textures.erase(m_textures.begin() + cmd.offset,
-                     m_textures.begin() + cmd.offset + cmd.size);
+  }
+  case ImTextureStatus_WantUpdates:
+    ++static_cast<SharedTex *>(tex->BackendUserData)->version;
+    updateTexture(m_textures[tex->TexID], tex);
+    tex->SetStatus(ImTextureStatus_OK);
     break;
+  case ImTextureStatus_WantDestroy:
+    deleteTexture(tex);
+    break;
+  case ImTextureStatus_Destroyed:
+    break;
+  }
+}
+
+void OpenGLRenderer::Shared::createTexture(LocalTex &local, ImTextureData *tex)
+{
+  auto shared = static_cast<SharedTex *>(tex->BackendUserData);
+  local.version = shared->version;
+  ++shared->refCount;
+
+  IM_ASSERT(!local.id && tex->Format == ImTextureFormat_RGBA32);
+  glGenTextures(1, &local.id);
+  glBindTexture(GL_TEXTURE_2D, local.id);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex->Width, tex->Height,
+    0, GL_RGBA, GL_UNSIGNED_BYTE, tex->GetPixels());
+}
+
+void OpenGLRenderer::Shared::updateTexture(LocalTex &local, ImTextureData *tex)
+{
+  local.version = reinterpret_cast<SharedTex *>(tex->BackendUserData)->version;
+  glBindTexture(GL_TEXTURE_2D, local.id);
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, tex->Width);
+
+  for(const ImTextureRect &rect : tex->Updates) {
+    glTexSubImage2D(GL_TEXTURE_2D, 0,
+      rect.x, rect.y, rect.w, rect.h, GL_RGBA, GL_UNSIGNED_BYTE,
+      tex->GetPixelsAt(rect.x, rect.y));
+  }
+
+  glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+}
+
+void OpenGLRenderer::Shared::deleteTexture(ImTextureData *tex)
+{
+  LocalTex &local {m_textures[tex->TexID]};
+  auto shared = static_cast<SharedTex *>(tex->BackendUserData);
+
+  if(local.id) {
+    glDeleteTextures(1, &local.id);
+    local.id = 0; // mark ready for reuse
+  }
+
+  if(!--shared->refCount) {
+    delete shared;
+    tex->SetTexID(ImTextureID_Invalid);
+    tex->BackendUserData = nullptr;
+    tex->SetStatus(ImTextureStatus_Destroyed);
   }
 }
 
@@ -203,12 +278,11 @@ void OpenGLRenderer::teardown()
 
 void OpenGLRenderer::render(const bool flip)
 {
-  using namespace std::placeholders;
-  m_window->context()->textureManager()->update(&m_shared->m_cookie,
-    std::bind(&Shared::textureCommand, m_shared.get(), _1));
-
   const ImGuiViewport *viewport {m_window->viewport()};
   const ImDrawData *drawData {viewport->DrawData};
+
+  for(ImTextureData *tex : *drawData->Textures)
+    m_shared->processTexture(tex);
 
   if(!(viewport->Flags & ImGuiViewportFlags_NoRendererClear)) {
     glClearColor(0.f, 0.f, 0.f, 0.f); // premultiplied alpha
@@ -231,9 +305,7 @@ void OpenGLRenderer::render(const bool flip)
 
   const ImVec2 &clipOffset {drawData->DisplayPos},
                &clipScale  {viewport->DpiScale, viewport->DpiScale};
-  for(int i {0}; i < drawData->CmdListsCount; ++i) {
-    const ImDrawList *cmdList {drawData->CmdLists[i]};
-
+  for(const ImDrawList *cmdList : drawData->CmdLists) {
     glBufferData(GL_ARRAY_BUFFER,
       static_cast<GLsizeiptr>(cmdList->VtxBuffer.Size * sizeof(ImDrawVert)),
       static_cast<const void *>(cmdList->VtxBuffer.Data), GL_STREAM_DRAW);
@@ -241,23 +313,20 @@ void OpenGLRenderer::render(const bool flip)
       static_cast<GLsizeiptr>(cmdList->IdxBuffer.Size * sizeof(ImDrawIdx)),
       static_cast<const void *>(cmdList->IdxBuffer.Data), GL_STREAM_DRAW);
 
-    for(int j {0}; j < cmdList->CmdBuffer.Size; ++j) {
-      const ImDrawCmd *cmd {&cmdList->CmdBuffer[j]};
-      if(cmd->UserCallback)
+    for(const ImDrawCmd &cmd : cmdList->CmdBuffer) {
+      if(cmd.UserCallback)
         continue; // no need to call the callback, not using them
 
-      const ClipRect clipRect {cmd->ClipRect, clipOffset, clipScale};
+      const ClipRect clipRect {cmd.ClipRect, clipOffset, clipScale};
       if(!clipRect)
         continue;
       glScissor(clipRect.left, flip ? clipRect.top : height - clipRect.bottom,
         clipRect.right - clipRect.left, clipRect.bottom - clipRect.top);
 
-      // Bind texture, Draw
-      glBindTexture(GL_TEXTURE_2D, m_shared->m_textures[cmd->GetTexID()]);
-      glDrawElementsBaseVertex(GL_TRIANGLES, cmd->ElemCount,
+      glBindTexture(GL_TEXTURE_2D, m_shared->m_textures[cmd.GetTexID()].id);
+      glDrawElementsBaseVertex(GL_TRIANGLES, cmd.ElemCount,
         sizeof(ImDrawIdx) == 2 ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-        (void*)(intptr_t)(cmd->IdxOffset * sizeof(ImDrawIdx)),
-        cmd->VtxOffset);
+        (void*)(intptr_t)(cmd.IdxOffset * sizeof(ImDrawIdx)), cmd.VtxOffset);
     }
   }
 

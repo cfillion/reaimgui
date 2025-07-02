@@ -6,7 +6,6 @@ test_src = files([
   'function_test.cpp',
   'resource_proxy_test.cpp',
   'resource_test.cpp',
-  'texture_test.cpp',
   'types_test.cpp',
   'vernum_test.cpp',
 ])

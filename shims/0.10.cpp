@@ -17,6 +17,7 @@
 
 #include "shims.hpp"
 
+#include "../src/font.hpp"
 #include "../src/image.hpp"
 
 #include <imgui/imgui_internal.h>
@@ -159,4 +160,36 @@ SHIM_FUNC(0_8, void, Image, (Context*,ctx) (class Image*,image)
     uv0_x, uv0_y, uv1_x, uv1_y, 0, tint_col_rgba);
   api.PopStyleColor(ctx, nullptr);
   api.PopStyleVar(ctx, nullptr);
+}
+
+// dear imgui v1.92.0
+SHIM_FUNC(0_9, Font*, CreateFont,
+(const char*,family_or_file) (int,size) (RO<int*>,flags,ReaImGuiFontFlags_None))
+{
+  return new Font {family_or_file, API_GET(flags), size};
+}
+
+SHIM_FUNC(0_9_3, Font*, CreateFontFromMem,
+(const char*,data) (int,data_sz) (int,size) (RO<int*>,flags,ReaImGuiFontFlags_None))
+{
+  std::vector<unsigned char> buffer;
+  buffer.reserve(data_sz);
+  std::copy(data, data + data_sz, std::back_inserter(buffer));
+  return new Font {std::move(buffer), API_GET(flags), size};
+}
+
+SHIM_FUNC(0_4, void, PushFont, (Context*,ctx) (Font*,font))
+{
+  FRAME_GUARD;
+
+  ImFont *imfont;
+  if(font) {
+    assertValid(font);
+    imfont = font->instance(ctx);
+  }
+  else
+    imfont = ImGui::GetDefaultFont();
+
+  // TODO: use api.GetDefaultFont once implemented (and api.PushFont)
+  ImGui::PushFont(imfont, imfont->LegacySize);
 }

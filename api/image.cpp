@@ -116,8 +116,8 @@ API_FUNC(0_10, void, Image, (Context*,ctx)
   FRAME_GUARD;
   assertValid(image);
 
-  const ImTextureID tex {image->makeTexture(ctx->textureManager())};
-  ImGui::Image(tex, ImVec2(image_size_w, image_size_h),
+  ImGui::Image(image->texture(ctx),
+    ImVec2(image_size_w, image_size_h),
     ImVec2(API_GET(uv0_x), API_GET(uv0_y)),
     ImVec2(API_GET(uv1_x), API_GET(uv1_y)));
 }
@@ -133,8 +133,8 @@ background if specified. Adds StyleVar_FramePadding to provided size.)")
   FRAME_GUARD;
   assertValid(image);
 
-  const ImTextureID tex {image->makeTexture(ctx->textureManager())};
-  ImGui::ImageWithBg(tex, ImVec2(image_size_w, image_size_h),
+  ImGui::ImageWithBg(image->texture(ctx),
+    ImVec2(image_size_w, image_size_h),
     ImVec2(API_GET(uv0_x), API_GET(uv0_y)),
     ImVec2(API_GET(uv1_x), API_GET(uv1_y)),
     Color(API_GET(bg_col_rgba)), Color(API_GET(tint_col_rgba)));
@@ -151,8 +151,8 @@ background if specified. Adds StyleVar_FramePadding to provided size.)")
   FRAME_GUARD;
   assertValid(image);
 
-  const ImTextureID tex {image->makeTexture(ctx->textureManager())};
-  return ImGui::ImageButton(str_id, tex, ImVec2(image_size_w, image_size_h),
+  return ImGui::ImageButton(str_id, image->texture(ctx),
+    ImVec2(image_size_w, image_size_h),
     ImVec2(API_GET(uv0_x), API_GET(uv0_y)),
     ImVec2(API_GET(uv1_x), API_GET(uv1_y)),
     Color(API_GET(bg_col_rgba)), Color(API_GET(tint_col_rgba)));

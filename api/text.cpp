@@ -99,12 +99,12 @@ API_FUNC(0_10, bool, TextLink, (Context*,ctx)
   return ImGui::TextLink(label);
 }
 
-API_FUNC(0_10, void, TextLinkOpenURL, (Context*,ctx)
+API_FUNC(0_10, bool, TextLinkOpenURL, (Context*,ctx)
 (const char*,label) (RO<const char*>,url),
 "Hyperlink text button, automatically open file/url when clicked")
 {
   FRAME_GUARD;
-  ImGui::TextLinkOpenURL(label, url);
+  return ImGui::TextLinkOpenURL(label, url);
 }
 
 API_FUNC(0_1, void, PushTextWrapPos, (Context*,ctx)

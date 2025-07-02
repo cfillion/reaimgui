@@ -57,6 +57,7 @@ public:
   virtual void setAlpha(float) = 0;
   virtual void update() = 0;
   virtual float scaleFactor() const = 0;
+  virtual ImVec2 framebufScale() const;
   virtual void onChanged() = 0;
   virtual void setIME(ImGuiPlatformImeData *) = 0;
 

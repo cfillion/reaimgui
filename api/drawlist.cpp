@@ -293,9 +293,16 @@ cpu_fine_clip_rect_* only takes effect if all four are non-nil.)")
     cpu_fine_clip_rect_ptr = nullptr;
 
   Context *ctx;
-  draw_list->get(&ctx)->AddText(ctx->fonts().instanceOf(font), font_size,
-    ImVec2(pos_x, pos_y), col_rgba, text, nullptr, API_GET(wrap_width),
-    cpu_fine_clip_rect_ptr);
+  ImDrawList *dl {draw_list->get(&ctx)};
+
+  ImFont *imfont = nullptr;
+  if(font) {
+    assertValid(font);
+    imfont = font->instance(ctx);
+  }
+
+  dl->AddText(imfont, font_size, ImVec2(pos_x, pos_y), col_rgba,
+    text, nullptr, API_GET(wrap_width), cpu_fine_clip_rect_ptr);
 }
 
 static std::vector<ImVec2> makePointsArray(const reaper_array *points)
@@ -375,7 +382,7 @@ API_FUNC(0_8, void, DrawList_AddImage, (DrawListProxy*,draw_list)
   Context *ctx;
   ImDrawList *dl {draw_list->get(&ctx)};
   assertValid(image);
-  dl->AddImage(image->makeTexture(ctx->textureManager()),
+  dl->AddImage(image->texture(ctx),
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     ImVec2(API_GET(uv_min_x), API_GET(uv_min_y)),
     ImVec2(API_GET(uv_max_x), API_GET(uv_max_y)),
@@ -395,7 +402,7 @@ API_FUNC(0_8, void, DrawList_AddImageQuad, (DrawListProxy*,draw_list)
   Context *ctx;
   ImDrawList *dl {draw_list->get(&ctx)};
   assertValid(image);
-  dl->AddImageQuad(image->makeTexture(ctx->textureManager()),
+  dl->AddImageQuad(image->texture(ctx),
     ImVec2(p1_x, p1_y), ImVec2(p2_x, p2_y),
     ImVec2(p3_x, p3_y), ImVec2(p4_x, p4_y),
     ImVec2(API_GET(uv1_x), API_GET(uv1_y)),
@@ -415,7 +422,7 @@ API_FUNC(0_8, void, DrawList_AddImageRounded, (DrawListProxy*,draw_list)
   Context *ctx;
   ImDrawList *dl {draw_list->get(&ctx)};
   assertValid(image);
-  dl->AddImageRounded(image->makeTexture(ctx->textureManager()),
+  dl->AddImageRounded(image->texture(ctx),
     ImVec2(p_min_x, p_min_y), ImVec2(p_max_x, p_max_y),
     ImVec2(uv_min_x, uv_min_y), ImVec2(uv_max_x, uv_max_y),
     Color::fromBigEndian(col_rgba), rounding, API_GET(flags));

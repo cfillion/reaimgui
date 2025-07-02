@@ -236,7 +236,7 @@ bool Window::isMinimized() const
 
 void Window::onChanged()
 {
-  m_ctx->fonts().setScale(m_viewport->DpiScale);
+  // m_ctx->fonts().setScale(m_viewport->DpiScale);
 }
 
 void Window::mouseDown(const ImGuiMouseButton btn)

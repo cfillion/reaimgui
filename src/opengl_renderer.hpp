@@ -19,9 +19,11 @@
 #define REAIMGUI_OPENGL_RENDERER_HPP
 
 #include "renderer.hpp"
-#include "texture.hpp"
 
 #include <array>
+#include <vector>
+
+struct ImTextureData;
 
 class OpenGLRenderer : public Renderer {
 public:
@@ -36,15 +38,21 @@ protected:
   void render(bool flip);
 
   struct Shared {
+    struct LocalTex {
+      unsigned int id, version;
+    };
+
     Shared();
     void setup();
     void teardown();
-    void textureCommand(const TextureCmd &);
+    void processTexture(ImTextureData *);
+    void createTexture(LocalTex &, ImTextureData *);
+    void updateTexture(LocalTex &, ImTextureData *);
+    void deleteTexture(ImTextureData *);
 
     unsigned int m_setupCount;
     unsigned int m_program;
-    TextureCookie m_cookie;
-    std::vector<unsigned int> m_textures;
+    std::vector<LocalTex> m_textures;
     std::array<unsigned int, 5> m_locations;
     std::shared_ptr<void> m_platform;
   };

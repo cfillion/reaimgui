@@ -21,7 +21,6 @@
 #include "context.hpp"
 #include "error.hpp"
 
-#include <cassert>
 #include <functional>
 
 #include <reaper_plugin_functions.h>
@@ -53,7 +52,7 @@ enum ResourceFlags {
 FlatSet<Resource *> Resource::g_rsx;
 Resource::Timer *Resource::g_timer;
 
-static unsigned int  g_reentrant, g_scriptRunCount;
+static unsigned int  g_reentrant, g_scriptRunCount, g_nextUniqId;
 static unsigned char g_consecutiveGcFrames, g_flags;
 static WNDPROC g_mainProc;
 
@@ -164,7 +163,7 @@ LRESULT CALLBACK Resource::Timer::mainProcOverride(HWND hwnd,
 }
 
 Resource::Resource()
-  : m_keepAlive {KEEP_ALIVE_FRAMES}, m_flags {}
+  : m_uniqId {g_nextUniqId++}, m_keepAlive {KEEP_ALIVE_FRAMES}, m_flags {}
 {
   if(g_flags & BypassGCCheckOnce) {
     // < 0.9 backward compatibility
