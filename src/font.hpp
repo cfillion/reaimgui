@@ -20,24 +20,21 @@
 
 #include "resource.hpp"
 
-#include <memory>
 #include <string>
-#include <unordered_map>
 #include <variant>
 #include <vector>
 
-class TextureManager;
-
 enum FontFlags {
+  // the first 8 bits were reserved to font face index until v0.10
   ReaImGuiFontFlags_None      = 0,
-  ReaImGuiFontFlags_IndexMask = 0xFF, // font index when loading from a collection file
   ReaImGuiFontFlags_Bold      = 1<<8,
   ReaImGuiFontFlags_Italic    = 1<<9,
+
+  ReaImGuiFontFlags_IndexMask = 0xFF, // font index when loading from a collection file
   ReaImGuiFontFlags_StyleMask = ~0xFF,
 };
 
 struct ImFont;
-struct ImFontAtlas;
 
 class Font final : public Resource {
 public:
@@ -49,11 +46,14 @@ public:
     *SANS_SERIF {"sans-serif"},
     *SERIF      {"serif"};
 
-  Font(const char *family, int size, int style);
-  Font(std::vector<unsigned char> &&, int size, int style);
-  ImFont *load(ImFontAtlas *, float scale);
+  Font(const char *family, int style, int legacySize = 0);
+  Font(std::vector<unsigned char> &&, int style, int legacySize = 0);
 
   bool attachable(const Context *) const override { return true; }
+  SubresourceData install(Context *) override;
+
+  ImFont *instance(Context *ctx);
+  int legacySize() const { return m_size; }
 
 private:
   bool resolve(const char *family, int style);
@@ -63,31 +63,5 @@ private:
 };
 
 API_REGISTER_OBJECT_TYPE(Font);
-
-class FontList {
-public:
-  FontList(TextureManager *);
-  ~FontList();
-
-  void add(Font *);
-  void remove(Font *);
-  void update();
-  void setScale(float scale);
-  ImFontAtlas *getAtlas(float scale);
-  bool removeAtlas(float scale);
-  Font *get(ImFont *) const;
-  ImFont *instanceOf(Font *) const;
-
-private:
-  void invalidate();
-  void build(float scale);
-  void migrateActiveFonts();
-  ImFont *toCurrentAtlas(ImFont *) const;
-
-  TextureManager *m_textureManager;
-  std::vector<Font *> m_fonts;
-  std::unordered_map<float, std::unique_ptr<ImFontAtlas>> m_atlases;
-  bool m_rebuild;
-};
 
 #endif

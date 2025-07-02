@@ -21,12 +21,10 @@
 #include "configvar.hpp"
 #include "docker.hpp"
 #include "error.hpp"
-#include "font.hpp"
 #include "keymap.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
 #include "settings.hpp"
-#include "texture.hpp"
 #include "viewport.hpp"
 #include "window.hpp"
 
@@ -55,9 +53,6 @@ constexpr ImGuiMouseButton DND_MouseButton {ImGuiMouseButton_Left};
 constexpr ImGuiConfigFlags PRIVATE_CONFIG_FLAGS
   {ImGuiConfigFlags_ViewportsEnable};
 
-static ImFontAtlas * const NO_DEFAULT_ATLAS
-  {reinterpret_cast<ImFontAtlas *>(-1)};
-
 class TempCurrent {
 public:
   TempCurrent(Context *ctx)
@@ -66,6 +61,23 @@ public:
 
 private:
   ImGuiContext *m_old;
+};
+
+struct Subresource {
+  Subresource(Context *c, Resource *r)
+    : data {r->install(c)}, resource {r}, uniqId {r->uniqId()}, unusedFrames {}
+  {}
+
+  bool isResourceValid() const {
+    return Resource::isValid(resource) && uniqId == resource->uniqId(); }
+  bool operator==(Resource *other) const {
+    return resource == other && uniqId == other->uniqId(); }
+  bool operator==(void *other) const { return data == other; }
+
+  SubresourceData data;
+  Resource *resource;
+  unsigned int uniqId; // resource->uniqId() to detect pointer reuse
+  unsigned char unusedFrames;
 };
 
 static std::string generateIniFilename(const ImGuiID id)
@@ -101,10 +113,8 @@ Context::Context(const char *label, const int userConfigFlags)
     m_lastFrame       {decltype(m_lastFrame)::clock::now()               },
     m_name            {label, ImGui::FindRenderedTextEnd(label)          },
     m_iniFilename     {generateIniFilename(m_id)                         },
-    m_imgui           {ImGui::CreateContext(NO_DEFAULT_ATLAS)            },
+    m_imgui           {ImGui::CreateContext()                            },
     m_dockers         {std::make_unique<DockerList>()                    },
-    m_textureManager  {std::make_unique<TextureManager>()                },
-    m_fonts           {std::make_unique<FontList>(m_textureManager.get())},
     m_rendererFactory {std::make_unique<RendererFactory>()               }
 {
   if(!*label) // does not prohibit empty window titles
@@ -121,6 +131,7 @@ Context::Context(const char *label, const int userConfigFlags)
   io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport;
   io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;
   io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;
+  io.BackendFlags |= ImGuiBackendFlags_RendererHasTextures;
   io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;
   io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
   io.ConfigDebugIsDebuggerPresent = true;
@@ -130,6 +141,7 @@ Context::Context(const char *label, const int userConfigFlags)
   io.ConfigNavCaptureKeyboard = Settings::NavCaptureKbd;
   io.ConfigNavCursorVisibleAlways = Settings::NavCurAlways;
   io.ConfigNavMoveSetMousePos = Settings::NavMoveMouse;
+  io.Fonts->Flags |= ImFontAtlasFlags_NoMouseCursors;
   io.LogFilename = logFn.c_str();
   io.UserData = this;
 
@@ -170,6 +182,15 @@ Context::~Context()
 
   // destroy windows while this and m_imgui are still valid
   ImGui::DestroyPlatformWindows();
+  // ...and run usage data destructors
+  for(Subresource &sr : m_subresources)
+    sr.data.uninstall(this);
+
+  for(ImTextureData *tex : m_imgui->UserTextures) {
+    IM_ASSERT(tex->TexID == ImTextureID_Invalid); // renderer did clean up
+    tex->Pixels = nullptr;
+    delete tex;
+  }
 }
 
 void Context::ContextDeleter::operator()(ImGuiContext *imgui)
@@ -187,12 +208,6 @@ void Context::setUserConfigFlags(const int userFlags)
   m_imgui->IO.ConfigFlags = userFlags | PRIVATE_CONFIG_FLAGS;
 }
 
-void Context::assertOutOfFrame()
-{
-  if(m_imgui->WithinFrameScope)
-    throw reascript_error {"cannot modify font texture: a frame has already begun"};
-}
-
 void Context::attach(Resource *obj)
 {
   if(m_attachments.size() >= 0x400)
@@ -203,11 +218,6 @@ void Context::attach(Resource *obj)
   else if(!obj->attachable(this))
     throw reascript_error {"the object cannot be attached to this context"};
 
-  if(Font *font {dynamic_cast<Font *>(obj)}) {
-    assertOutOfFrame();
-    m_fonts->add(font);
-  }
-
   m_attachments.push_back(obj);
 }
 
@@ -217,23 +227,33 @@ void Context::detach(Resource *obj)
   if(it == m_attachments.end())
     throw reascript_error {"the object is not attached to this context"};
 
-  if(Font *font {dynamic_cast<Font *>(obj)}) {
-    assertOutOfFrame();
-    m_fonts->remove(font);
-  }
-
   m_attachments.erase(it);
+}
+
+void *Context::touch(Resource *obj)
+{
+  auto it {std::find(m_subresources.begin(), m_subresources.end(), obj)};
+  if(it == m_subresources.end()) {
+    m_subresources.emplace_back(this, obj);
+    it = m_subresources.end() - 1;
+  }
+  else
+    it->unusedFrames = 0;
+  return it->data;
+}
+
+Resource *Context::findSubresource(void *usageData)
+{
+  auto it {std::find(m_subresources.begin(), m_subresources.end(), usageData)};
+  if(it == m_subresources.end())
+    return nullptr;
+  return it->resource;
 }
 
 bool Context::heartbeat()
 {
-  if(m_imgui->WithinFrameScope) {
-    if(!endFrame(true))
-      return false;
-
-    for(Resource *obj : m_attachments)
-      obj->keepAlive();
-  }
+  if(m_imgui->WithinFrameScope && !endFrame(true))
+    return false;
 
   // Keep the frame alive for at least one full timer cycle to prevent contexts
   // created within a defer callback from being immediately destroyed.
@@ -260,10 +280,6 @@ bool Context::beginFrame() try
   assert(!m_imgui->WithinFrameScope);
 
   Platform::updateMonitors(); // TODO only if changed
-  m_fonts->update(); // uses the monitor list
-
-  // remove unused textures before texture IDs are given out for this frame
-  m_textureManager->cleanup();
 
   updateFrameInfo();
   updateMouseData();
@@ -300,11 +316,24 @@ bool Context::endFrame(const bool render) try
     return true;
   }
 
+  for(Resource *obj : m_attachments)
+    obj->keepAlive();
+
+  for(auto it = m_subresources.begin(); it != m_subresources.end();) {
+    if(it->isResourceValid() && it->unusedFrames++ < 120) {
+      ++it;
+      continue;
+    }
+    it->data.uninstall(this);
+    it = m_subresources.erase(it);
+  }
+
   updateCursor();
   updateDragDrop();
   ImGui::Render();
   ImGui::UpdatePlatformWindows();
   ImGui::RenderPlatformWindowsDefault();
+  cleanupTextures();
 
 #ifdef FOCUS_POLLING
   // WM_KILLFOCUS/WM_ACTIVATE+WA_INACTIVE are incomplete or missing in SWELL
@@ -577,6 +606,27 @@ void Context::endDrag(const bool drop)
   }
 
   m_imgui->IO.AddMouseButtonEvent(DND_MouseButton, false);
+}
+
+ImTextureData *Context::createTexture()
+{
+  auto tex {new ImTextureData};
+  m_imgui->UserTextures.push_back(tex);
+  return tex;
+}
+
+void Context::cleanupTextures()
+{
+  for(int i {}; i < m_imgui->UserTextures.Size; ++i) {
+    ImTextureData *tex {m_imgui->UserTextures[i]};
+    if(tex->Status == ImTextureStatus_Destroyed) {
+      IM_ASSERT(!tex->Pixels);
+      delete tex;
+      m_imgui->UserTextures.erase(m_imgui->UserTextures.begin() + i);
+      m_imgui->PlatformIO.Textures.find_erase(tex);
+      --i;
+    }
+  }
 }
 
 ImGuiViewport *Context::viewportUnder(const ImVec2 nativePos) const

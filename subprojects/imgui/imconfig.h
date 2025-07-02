@@ -12,7 +12,7 @@ namespace Error {
 #define IMGUI_ENABLE_OSX_DEFAULT_CLIPBOARD_FUNCTIONS
 #define IMGUI_USE_WCHAR32
 
-#define ImTextureID size_t
+#define ImTextureID_Invalid ((ImTextureID)-1)
 
 #define IM_ASSERT(_EXPR) (_EXPR ? (void)0 : Error::throwAssertionFailure(#_EXPR))
 #define IM_DEBUG_BREAK() Error::throwDebugBreak();

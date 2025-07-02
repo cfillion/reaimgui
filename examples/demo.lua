@@ -1,4 +1,4 @@
--- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.91.9)
+-- Lua/ReaImGui port of Dear ImGui's C++ demo code (v1.92.1)
 
 --[[
 This file can be imported in other scripts to help during development:
@@ -39,6 +39,7 @@ Index of this file:
 - [SECTION] DemoWindowWidgetsDisableBlocks()
 - [SECTION] DemoWindowWidgetsDragAndDrop()
 - [SECTION] DemoWindowWidgetsDragsAndSliders()
+- [SECTION] DemoWindowWidgetsFonts()
 - [SECTION] DemoWindowWidgetsImages()
 - [SECTION] DemoWindowWidgetsListBoxes()
 - [SECTION] DemoWindowWidgetsMultiComponents()
@@ -328,9 +329,19 @@ function demo.ShowDemoWindow(open)
   -- Early out if the window is collapsed
   if not rv then return open end
 
-  -- Most "big" widgets share a common width settings by default. See 'Demo->Layout->Widgets Width' for details.
-  ImGui.PushItemWidth(ctx, ImGui.GetFontSize(ctx) * -12)        -- e.g. Leave a fixed amount of width for labels (by passing a negative value), the rest goes to widgets.
-  --ImGui.PushItemWidth(ctx, -ImGui.GetWindowWidth(ctx) * 0.35) -- e.g. Use 2/3 of the space for widgets and 1/3 for labels (right align)
+  -- Most framed widgets share a common width settings. Remaining width is used for the label.
+  -- The width of the frame may be changed with PushItemWidth() or SetNextItemWidth().
+  -- - Positive value for absolute size, negative value for right-alignment.
+  -- - The default value is about GetWindowWidth() * 0.65.
+  -- - See 'Demo->Layout->Widgets Width' for details.
+  -- Here we change the frame width based on how much width we want to give to the label.
+  local label_width_base = ImGui.GetFontSize(ctx) * 12                -- Some amount of width for label, based on font size.
+  local label_width_max = ImGui.GetContentRegionAvail(ctx) * .40      -- ...but always leave some room for framed widgets.
+  local label_width = math.min(label_width_base, label_width_max)
+  ImGui.PushItemWidth(ctx, -label_width)                              -- Right-align: framed items will leave 'label_width' available for the label.
+  --ImGui.PushItemWidth(ctx, ImGui.GetContentRegionAvail(ctx) * .40)  -- e.g. Use 40% width for framed widgets, leaving 60% width for labels.
+  --ImGui.PushItemWidth(-ctx, ImGui.GetContentRegionAvail(ctx) * .40) -- e.g. Use 40% width for labels, leaving 60% width for framed widgets.
+  --ImGui.PushItemWidth(ctx, ImGui.GetFontSize(ctx) * -12)            -- e.g. Use XXX width for labels, leaving the rest for framed widgets.
 
   -- Menu Bar
   demo.DemoWindowMenuBar()
@@ -449,6 +460,12 @@ function demo.ShowDemoWindow(open)
       --     ImGui::Unindent();
       -- }
 
+      -- ImGui.SeparatorText(ctx, 'DPI/Scaling')
+      -- ImGui::Checkbox("io.ConfigDpiScaleFonts", &io.ConfigDpiScaleFonts);
+      -- ImGui::SameLine(); HelpMarker("Experimental: Automatically update style.FontScaleDpi when Monitor DPI changes. This will scale fonts but NOT style sizes/padding for now.");
+      -- ImGui::Checkbox("io.ConfigDpiScaleViewports", &io.ConfigDpiScaleViewports);
+      -- ImGui::SameLine(); HelpMarker("Experimental: Scale Dear ImGui and Platform Windows when Monitor DPI changes.");
+
       ImGui.SeparatorText(ctx, 'Windows')
       demo.ConfigVarCheckbox('WindowsResizeFromEdges')
       ImGui.SameLine(ctx); demo.HelpMarker('Enable resizing of windows from their edges and from the lower-left corner.')
@@ -527,28 +544,28 @@ function demo.ShowDemoWindow(open)
       ImGui.Spacing(ctx)
     end
 
---         if (ImGui.TreeNode("Backend Flags"))
---         {
---             HelpMarker(
---                 "Those flags are set by the backends (imgui_impl_xxx files) to specify their capabilities.\n"
---                 "Here we expose then as read-only fields to avoid breaking interactions with your backend.");
---
---             // Make a local copy to avoid modifying actual backend flags.
---             // FIXME: Maybe we need a BeginReadonly() equivalent to keep label bright?
---             ImGui::BeginDisabled();
---             ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",             &io.BackendFlags, ImGuiBackendFlags_HasGamepad);
---             ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",        &io.BackendFlags, ImGuiBackendFlags_HasMouseCursors);
---             ImGui::CheckboxFlags("io.BackendFlags: HasSetMousePos",         &io.BackendFlags, ImGuiBackendFlags_HasSetMousePos);
---             ImGui::CheckboxFlags("io.BackendFlags: PlatformHasViewports",   &io.BackendFlags, ImGuiBackendFlags_PlatformHasViewports);
---             ImGui::CheckboxFlags("io.BackendFlags: HasMouseHoveredViewport",&io.BackendFlags, ImGuiBackendFlags_HasMouseHoveredViewport);
---             ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset",   &io.BackendFlags, ImGuiBackendFlags_RendererHasVtxOffset);
---             ImGui::CheckboxFlags("io.BackendFlags: RendererHasViewports",   &io.BackendFlags, ImGuiBackendFlags_RendererHasViewports);
---             ImGui::EndDisabled();
---             ImGui.TreePop();
---             ImGui.Spacing();
---         }
+    -- if ImGui.TreeNode(ctx, 'Backend Flags') then
+    --   demo.HelpMarker(
+    --     'Those flags are set by the backends (imgui_impl_xxx files) to specify their capabilities.\n\z
+    --      Here we expose then as read-only fields to avoid breaking interactions with your backend.')
+    --
+    --   -- Make a local copy to avoid modifying actual backend flags.
+    --   -- FIXME: Maybe we need a BeginReadonly() equivalent to keep label bright?
+    --   ImGui.BeginDisabled(ctx)
+    --   ImGui::CheckboxFlags("io.BackendFlags: HasGamepad",             &io.BackendFlags, ImGuiBackendFlags_HasGamepad);
+    --   ImGui::CheckboxFlags("io.BackendFlags: HasMouseCursors",        &io.BackendFlags, ImGuiBackendFlags_HasMouseCursors);
+    --   ImGui::CheckboxFlags("io.BackendFlags: HasSetMousePos",         &io.BackendFlags, ImGuiBackendFlags_HasSetMousePos);
+    --   ImGui::CheckboxFlags("io.BackendFlags: PlatformHasViewports",   &io.BackendFlags, ImGuiBackendFlags_PlatformHasViewports);
+    --   ImGui::CheckboxFlags("io.BackendFlags: HasMouseHoveredViewport",&io.BackendFlags, ImGuiBackendFlags_HasMouseHoveredViewport);
+    --   ImGui::CheckboxFlags("io.BackendFlags: RendererHasVtxOffset",   &io.BackendFlags, ImGuiBackendFlags_RendererHasVtxOffset);
+    --   ImGui::CheckboxFlags("io.BackendFlags: RendererHasTextures",    &io.BackendFlags, ImGuiBackendFlags_RendererHasTextures);
+    --   ImGui::CheckboxFlags("io.BackendFlags: RendererHasViewports",   &io.BackendFlags, ImGuiBackendFlags_RendererHasViewports);
+    --   ImGui.EndDisabled(ctx)
+    --   ImGui.TreePop(ctx)
+    --   ImGui.Spacing(ctx)
+    -- end
 
-    if ImGui.TreeNode(ctx, 'Style') then
+    if ImGui.TreeNode(ctx, 'Style, Fonts') then
       rv, show_app.style_editor = ImGui.Checkbox(ctx, 'Style Editor', show_app.style_editor);
       ImGui.SameLine(ctx)
       demo.HelpMarker("The same contents can be accessed in 'Tools->Style Editor'.")
@@ -786,6 +803,9 @@ local function DemoWindowWidgetsBasic()
   rv,widgets.basic.radio = ImGui.RadioButtonEx(ctx, 'radio a', widgets.basic.radio, 0); ImGui.SameLine(ctx)
   rv,widgets.basic.radio = ImGui.RadioButtonEx(ctx, 'radio b', widgets.basic.radio, 1); ImGui.SameLine(ctx)
   rv,widgets.basic.radio = ImGui.RadioButtonEx(ctx, 'radio c', widgets.basic.radio, 2)
+
+  ImGui.AlignTextToFramePadding(ctx)
+  ImGui.TextLinkOpenURL(ctx, 'Hyperlink', 'https://forum.cockos.com/showthread.php?t=250419')
 
   -- Color buttons, demonstrate using PushID() to add unique identifier in the ID stack, and changing style.
   for i = 0, 6 do
@@ -1573,6 +1593,18 @@ local function DemoWindowWidgetsDragsAndSliders()
 
   ImGui.TreePop(ctx)
 end
+
+-------------------------------------------------------------------------------
+-- [SECTION] DemoWindowWidgetsFonts()
+-------------------------------------------------------------------------------
+
+-- local function DemoWindowWidgetsFonts()
+--   if not ImGui.TreeNode(ctx, 'Fonts') then return end
+--   ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+--   ImGui.ShowFontAtlas(ctx, atlas)
+--   -- FIXME-NEWATLAS: Provide a demo to add/create a procedural font?
+--   ImGui.TreePop(ctx)
+-- end
 
 -------------------------------------------------------------------------------
 -- [SECTION] DemoWindowWidgetsImages()
@@ -2655,6 +2687,8 @@ local function DemoWindowWidgetsText()
     widgets.text = {
       wrap_width = 200.0,
       utf8 = '日本語',
+      custom_size = 16,
+      custom_scale = 1.0,
     }
   end
 
@@ -2664,6 +2698,38 @@ local function DemoWindowWidgetsText()
     ImGui.TextColored(ctx, 0xFFFF00FF, 'Yellow')
     ImGui.TextDisabled(ctx, 'Disabled')
     ImGui.SameLine(ctx); demo.HelpMarker('The TextDisabled color is stored in ImGuiStyle.')
+    ImGui.TreePop(ctx)
+  end
+
+  if ImGui.TreeNode(ctx, 'Font Size') then
+    -- local global_scale = style.FontScaleMain * style.FontScaleDpi
+    -- ImGui.Text(ctx, ('style.FontScaleMain = %0.2f'):format(style.FontScaleMain))
+    -- ImGui.Text(ctx, ('style.FontScaleDpi = %0.2f'):format(style.FontScaleDpi))
+    -- ImGui.Text(ctx, ('global_scale = ~%0.2f'):format(global_scale)) -- This is not technically accurate as internal scales may apply, but conceptually let's pretend it is.
+    ImGui.Text(ctx, ('FontSize = %0.2f'):format(ImGui.GetFontSize(ctx)))
+
+    -- ImGui.SeparatorText(ctx, '')
+    rv, widgets.text.custom_size = ImGui.SliderDouble(ctx, 'Custom size', widgets.text.custom_size, 10.0, 100.0, '%.0f')
+    ImGui.Text(ctx, 'ImGui.PushFont(nil, custom_size)')
+    ImGui.PushFont(ctx, nil, widgets.text.custom_size)
+    ImGui.Text(ctx, 'The quick brown fox jumps over the lazy dog.')
+    -- ImGui.Text(ctx, ('FontSize = %.2f (== %.2f * global_scale)'):format(ImGui.GetFontSize(ctx), widgets.text.custom_size))
+    ImGui.PopFont(ctx)
+
+    -- ImGui.SeparatorText(ctx, '')
+    -- rv, widgets.text.custom_scale = ImGui.SliderDouble(ctx, 'Custom scale', widgets.text.custom_scale, 0.5, 4.0, '%.2f')
+    -- ImGui.Text(ctx, 'ImGui.PushFont(nil, style.FontSizeBase * custom_scale)')
+    -- ImGui.PushFont(ctx, nil, style.FontSizeBase * widgets.text.custom_scale)
+    -- ImGui.Text(ctx, ('FontSize = %.2f (== style.FontSizeBase * %.2f * global_scale)'):format(ImGui.GetFontSize(ctx), widgets.text.custom_scale))
+    -- ImGui.PopFont(ctx)
+
+    -- ImGui.SeparatorText(ctx, '')
+    -- for scaling = 0.5, 4.0, 0.5 do
+    --   ImGui.PushFont(ctx, nil, style.FontSizeBase * scaling)
+    --   ImGui.Text(ctx, ('FontSize = %.2f (== style.FontSizeBase * %.2f * global_scale)'):format(ImGui.GetFontSize(ctx), scaling))
+    --   ImGui.PopFont(ctx)
+    -- end
+
     ImGui.TreePop(ctx)
   end
 
@@ -2708,17 +2774,7 @@ local function DemoWindowWidgetsText()
   -- Not supported by the default built-in font TODO
   if ImGui.TreeNode(ctx, 'UTF-8 Text') then
     -- UTF-8 test with Japanese characters
-    -- (Needs a suitable font? Try "Google Noto" or "Arial Unicode". See docs/FONTS.md for details.)
-    -- so you can safely copy & paste garbled characters into another application.
-    ImGui.TextWrapped(ctx,
-      'CJK text cannot be rendered due to current limitations regarding font rasterization. \z
-       It is however safe to copy & paste from/into another application.')
-    ImGui.TextLinkOpenURL(ctx, 'https://github.com/cfillion/reaimgui/issues/5')
-    ImGui.Spacing(ctx)
-    -- ImGui.TextWrapped(ctx,
-    --   'CJK text will only appear if the font was loaded with the appropriate CJK character ranges. \z
-    --    Call io.Fonts->AddFontFromFileTTF() manually to load extra character ranges. \z
-    --    Read docs/FONTS.md for details.')
+    -- (Needs a suitable font? Try "Noto Sans CJK JP" or "Arial Unicode". See docs/FONTS.md for details.)
     ImGui.Text(ctx, 'Hiragana: かきくけこ (kakikukeko)')
     ImGui.Text(ctx, 'Kanjis: 日本語 (nihongo)')
     rv,widgets.text.utf8 = ImGui.InputText(ctx, 'UTF-8 input', widgets.text.utf8)
@@ -3046,16 +3102,10 @@ local function DemoWindowWidgetsTreeNodes()
   if not ImGui.TreeNode(ctx, 'Trees Nodes') then return end
 
   if not widgets.trees then
-    widgets.trees = {
-      base_flags = ImGui.TreeNodeFlags_OpenOnArrow |
-                   ImGui.TreeNodeFlags_OpenOnDoubleClick |
-                   ImGui.TreeNodeFlags_SpanAvailWidth,
-      align_label_with_current_x_position = false,
-      test_drag_and_drop = false,
-      selection_mask = 1 << 2,
-    }
+    widgets.trees = {}
   end
 
+  -- See see "Examples -> Property Editor" (ShowExampleAppPropertyEditor() function) for a fancier, data-driven tree.
   if ImGui.TreeNode(ctx, 'Basic trees') then
     for i = 0, 4 do
       -- Use SetNextItemOpen() so set the default state of a node to be open. We could
@@ -3074,23 +3124,68 @@ local function DemoWindowWidgetsTreeNodes()
     ImGui.TreePop(ctx)
   end
 
+  if ImGui.TreeNode(ctx, "Hierarchy lines") then
+    if not widgets.trees.hierarchy then
+      widgets.trees.hierarchy = {
+        base_flags = --ImGui.TreeNodeFlags_DrawLinesFull |
+                     ImGui.TreeNodeFlags_DefaultOpen,
+      }
+    end
+
+    -- demo.HelpMarker('Default option for DrawLinesXXX is stored in style.TreeLinesFlags')
+    -- rv,widgets.trees.hierarchy = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesNone', widgets.trees.hierarchy.base_flags, ImGui.TreeNodeFlags_DrawLinesNone)
+    -- rv,widgets.trees.hierarchy = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesFull', widgets.trees.hierarchy.base_flags, ImGui.TreeNodeFlags_DrawLinesFull)
+    -- rv,widgets.trees.hierarchy = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesToNodes', widgets.trees.hierarchy.base_flags, ImGui.TreeNodeFlags_DrawLinesToNodes)
+
+    if ImGui.TreeNode(ctx, 'Parent', widgets.trees.hierarchy.base_flags) then
+      if ImGui.TreeNode(ctx, 'Child 1', widgets.trees.hierarchy.base_flags) then
+        ImGui.Button(ctx, 'Button for Child 1')
+        ImGui.TreePop(ctx)
+      end
+      if ImGui.TreeNode(ctx, 'Child 2', widgets.trees.hierarchy.base_flags) then
+        ImGui.Button(ctx, 'Button for Child 2')
+        ImGui.TreePop(ctx)
+      end
+      ImGui.Text(ctx, 'Remaining contents')
+      ImGui.Text(ctx, 'Remaining contents')
+      ImGui.TreePop(ctx)
+    end
+    ImGui.TreePop(ctx)
+  end
+
   if ImGui.TreeNode(ctx, 'Advanced, with Selectable nodes') then
+    if not widgets.trees.advanced then
+      widgets.trees.advanced = {
+        base_flags = ImGui.TreeNodeFlags_OpenOnArrow |
+                    ImGui.TreeNodeFlags_OpenOnDoubleClick |
+                    ImGui.TreeNodeFlags_SpanAvailWidth,
+        align_label_with_current_x_position = false,
+        test_drag_and_drop = false,
+        selection_mask = 1 << 2,
+      }
+    end
     demo.HelpMarker(
       'This is a more typical looking tree with selectable nodes.\n\z
        Click to select, Ctrl+Click to toggle, click on arrows or double-click to open.')
-    rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_OpenOnArrow',       widgets.trees.base_flags, ImGui.TreeNodeFlags_OpenOnArrow)
-    rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_OpenOnDoubleClick', widgets.trees.base_flags, ImGui.TreeNodeFlags_OpenOnDoubleClick)
-    rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAvailWidth',    widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanAvailWidth); ImGui.SameLine(ctx); demo.HelpMarker('Extend hit area to all available width instead of allowing more items to be laid out after the node.')
-    rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanFullWidth',     widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanFullWidth)
-    rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanLabelWidth',     widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanLabelWidth); ImGui.SameLine(ctx); demo.HelpMarker('Reduce hit area to the text label and a bit of margin.')
-    rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAllColumns',    widgets.trees.base_flags, ImGui.TreeNodeFlags_SpanAllColumns); ImGui.SameLine(ctx); demo.HelpMarker('For use in Tables only.')
-    rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_AllowOverlap',     widgets.trees.base_flags, ImGui.TreeNodeFlags_AllowOverlap);
-    rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_Framed',           widgets.trees.base_flags, ImGui.TreeNodeFlags_Framed); ImGui.SameLine(ctx); demo.HelpMarker('Draw frame with background (e.g. for CollapsingHeader)')
-    -- rv,widgets.trees.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_NavLeftJumpsBackHere', widgets.trees.base_flags, ImGui.TreeNodeFlags_NavLeftJumpsBackHere)
-    rv,widgets.trees.align_label_with_current_x_position = ImGui.Checkbox(ctx, 'Align label with current X position', widgets.trees.align_label_with_current_x_position)
-    rv,widgets.trees.test_drag_and_drop = ImGui.Checkbox(ctx, 'Test tree node as drag source',      widgets.trees.test_drag_and_drop)
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_OpenOnArrow',       widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_OpenOnArrow)
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_OpenOnDoubleClick', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_OpenOnDoubleClick)
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAvailWidth',    widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_SpanAvailWidth); ImGui.SameLine(ctx); demo.HelpMarker('Extend hit area to all available width instead of allowing more items to be laid out after the node.')
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanFullWidth',     widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_SpanFullWidth)
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanLabelWidth',     widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_SpanLabelWidth); ImGui.SameLine(ctx); demo.HelpMarker('Reduce hit area to the text label and a bit of margin.')
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_SpanAllColumns',    widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_SpanAllColumns); ImGui.SameLine(ctx); demo.HelpMarker('For use in Tables only.')
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_AllowOverlap',     widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_AllowOverlap);
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_Framed',           widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_Framed); ImGui.SameLine(ctx); demo.HelpMarker('Draw frame with background (e.g. for CollapsingHeader)')
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_NavLeftJumpsToParent', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_NavLeftJumpsToParent)
+
+    -- demo.HelpMarker('Default option for DrawLinesXXX is stored in style.TreeLinesFlags')
+    -- rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesNone', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_DrawLinesNone)
+    -- rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesFull', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_DrawLinesFull)
+    -- rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesToNodes', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_DrawLinesToNodes)
+
+    rv,widgets.trees.advanced.align_label_with_current_x_position = ImGui.Checkbox(ctx, 'Align label with current X position', widgets.trees.advanced.align_label_with_current_x_position)
+    rv,widgets.trees.advanced.test_drag_and_drop = ImGui.Checkbox(ctx, 'Test tree node as drag source',      widgets.trees.advanced.test_drag_and_drop)
     ImGui.Text(ctx, 'Hello!')
-    if widgets.trees.align_label_with_current_x_position then
+    if widgets.trees.advanced.align_label_with_current_x_position then
       ImGui.Unindent(ctx, ImGui.GetTreeNodeToLabelSpacing(ctx))
     end
 
@@ -3103,8 +3198,8 @@ local function DemoWindowWidgetsTreeNodes()
     for i = 0, 5 do
       -- Disable the default "open on single-click behavior" + set Selected flag according to our selection.
       -- To alter selection we use IsItemClicked() && !IsItemToggledOpen(), so clicking on an arrow doesn't alter selection.
-      local node_flags = widgets.trees.base_flags
-      local is_selected = (widgets.trees.selection_mask & (1 << i)) ~= 0
+      local node_flags = widgets.trees.advanced.base_flags
+      local is_selected = (widgets.trees.advanced.selection_mask & (1 << i)) ~= 0
       if is_selected then
         node_flags = node_flags | ImGui.TreeNodeFlags_Selected
       end
@@ -3114,12 +3209,12 @@ local function DemoWindowWidgetsTreeNodes()
         if ImGui.IsItemClicked(ctx) and not ImGui.IsItemToggledOpen(ctx) then
           node_clicked = i
         end
-        if widgets.trees.test_drag_and_drop and ImGui.BeginDragDropSource(ctx) then
+        if widgets.trees.advanced.test_drag_and_drop and ImGui.BeginDragDropSource(ctx) then
           ImGui.SetDragDropPayload(ctx, 'TREENODE', '')
           ImGui.Text(ctx, 'This is a drag and drop source')
           ImGui.EndDragDropSource(ctx)
         end
-        if i == 2 and widgets.trees.base_flags & ImGui.TreeNodeFlags_SpanLabelWidth ~= 0 then
+        if i == 2 and widgets.trees.advanced.base_flags & ImGui.TreeNodeFlags_SpanLabelWidth ~= 0 then
             -- Item 2 has an additional inline button to help demonstrate SpanLabelWidth.
             ImGui.SameLine(ctx)
             if ImGui.SmallButton(ctx, 'button') then end
@@ -3139,7 +3234,7 @@ local function DemoWindowWidgetsTreeNodes()
         if ImGui.IsItemClicked(ctx) and not ImGui.IsItemToggledOpen(ctx) then
           node_clicked = i
         end
-        if widgets.trees.test_drag_and_drop and ImGui.BeginDragDropSource(ctx) then
+        if widgets.trees.advanced.test_drag_and_drop and ImGui.BeginDragDropSource(ctx) then
           ImGui.SetDragDropPayload(ctx, 'TREENODE', '')
           ImGui.Text(ctx, 'This is a drag and drop source')
           ImGui.EndDragDropSource(ctx)
@@ -3151,13 +3246,13 @@ local function DemoWindowWidgetsTreeNodes()
       -- Update selection state
       -- (process outside of tree loop to avoid visual inconsistencies during the clicking frame)
       if ImGui.IsKeyDown(ctx, ImGui.Mod_Ctrl) then -- Ctrl+click to toggle
-        widgets.trees.selection_mask = widgets.trees.selection_mask ~ (1 << node_clicked)
-      elseif widgets.trees.selection_mask & (1 << node_clicked) == 0 then -- Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
-        widgets.trees.selection_mask = (1 << node_clicked)                -- Click to single-select
+        widgets.trees.advanced.selection_mask = widgets.trees.advanced.selection_mask ~ (1 << node_clicked)
+      elseif widgets.trees.advanced.selection_mask & (1 << node_clicked) == 0 then -- Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
+        widgets.trees.advanced.selection_mask = (1 << node_clicked)                -- Click to single-select
       end
     end
 
-    if widgets.trees.align_label_with_current_x_position then
+    if widgets.trees.advanced.align_label_with_current_x_position then
       ImGui.Indent(ctx, ImGui.GetTreeNodeToLabelSpacing(ctx))
     end
 
@@ -3267,6 +3362,7 @@ function demo.DemoWindowWidgets()
 
   DemoWindowWidgetsDragAndDrop()
   DemoWindowWidgetsDragsAndSliders()
+  -- DemoWindowWidgetsFonts()
   DemoWindowWidgetsImages()
   DemoWindowWidgetsListBoxes()
   DemoWindowWidgetsMultiComponents()
@@ -3461,10 +3557,10 @@ function demo.DemoWindowLayout()
     ImGui.Text(ctx, 'SetNextItemWidth/PushItemWidth(100)')
     ImGui.SameLine(ctx); demo.HelpMarker('Fixed width.')
     ImGui.PushItemWidth(ctx, 100)
-    rv,layout.width.d = ImGui.DragDouble(ctx, 'float##1b', layout.width.d)
+    rv,layout.width.d = ImGui.DragDouble(ctx, 'double##1b', layout.width.d)
     if layout.width.show_indented_items then
       ImGui.Indent(ctx)
-      rv,layout.width.d = ImGui.DragDouble(ctx, 'float (indented)##1b', layout.width.d)
+      rv,layout.width.d = ImGui.DragDouble(ctx, 'double (indented)##1b', layout.width.d)
       ImGui.Unindent(ctx)
     end
     ImGui.PopItemWidth(ctx)
@@ -3472,10 +3568,10 @@ function demo.DemoWindowLayout()
     ImGui.Text(ctx, 'SetNextItemWidth/PushItemWidth(-100)')
     ImGui.SameLine(ctx); demo.HelpMarker('Align to right edge minus 100')
     ImGui.PushItemWidth(ctx, -100)
-    rv,layout.width.d = ImGui.DragDouble(ctx, 'float##2a', layout.width.d)
+    rv,layout.width.d = ImGui.DragDouble(ctx, 'double##2a', layout.width.d)
     if layout.width.show_indented_items then
       ImGui.Indent(ctx)
-      rv,layout.width.d = ImGui.DragDouble(ctx, 'float (indented)##2b', layout.width.d)
+      rv,layout.width.d = ImGui.DragDouble(ctx, 'double (indented)##2b', layout.width.d)
       ImGui.Unindent(ctx)
     end
     ImGui.PopItemWidth(ctx)
@@ -3483,10 +3579,10 @@ function demo.DemoWindowLayout()
     ImGui.Text(ctx, 'SetNextItemWidth/PushItemWidth(GetContentRegionAvail().x * 0.5)')
     ImGui.SameLine(ctx); demo.HelpMarker('Half of available width.\n(~ right-cursor_pos)\n(works within a column set)')
     ImGui.PushItemWidth(ctx, ImGui.GetContentRegionAvail(ctx) * 0.5)
-    rv,layout.width.d = ImGui.DragDouble(ctx, 'float##3a', layout.width.d)
+    rv,layout.width.d = ImGui.DragDouble(ctx, 'double##3a', layout.width.d)
     if layout.width.show_indented_items then
       ImGui.Indent(ctx)
-      rv,layout.width.d = ImGui.DragDouble(ctx, 'float (indented)##3b', layout.width.d)
+      rv,layout.width.d = ImGui.DragDouble(ctx, 'double (indented)##3b', layout.width.d)
       ImGui.Unindent(ctx)
     end
     ImGui.PopItemWidth(ctx)
@@ -3494,10 +3590,20 @@ function demo.DemoWindowLayout()
     ImGui.Text(ctx, 'SetNextItemWidth/PushItemWidth(-GetContentRegionAvail().x * 0.5)')
     ImGui.SameLine(ctx); demo.HelpMarker('Align to right edge minus half')
     ImGui.PushItemWidth(ctx, -ImGui.GetContentRegionAvail(ctx) * 0.5)
-    rv,layout.width.d = ImGui.DragDouble(ctx, 'float##4a', layout.width.d)
+    rv,layout.width.d = ImGui.DragDouble(ctx, 'double##4a', layout.width.d)
     if layout.width.show_indented_items then
       ImGui.Indent(ctx)
-      rv,layout.width.d = ImGui.DragDouble(ctx, 'float (indented)##4b', layout.width.d)
+      rv,layout.width.d = ImGui.DragDouble(ctx, 'double (indented)##4b', layout.width.d)
+      ImGui.Unindent(ctx)
+    end
+    ImGui.PopItemWidth(ctx)
+
+    ImGui.Text(ctx, 'SetNextItemWidth/PushItemWidth(-Min(GetContentRegionAvail().x * .40, GetFontSize() * 12))');
+    ImGui.PushItemWidth(ctx, -math.min(ImGui.GetFontSize(ctx) * 12, ImGui.GetContentRegionAvail(ctx) * .40))
+    rv,layout.width.d = ImGui.DragDouble(ctx, 'double##5a', layout.width.d)
+    if layout.width.show_indented_items then
+      ImGui.Indent(ctx)
+      rv,layout.width.d = ImGui.DragDouble(ctx, 'double (indented)##5b', layout.width.d);
       ImGui.Unindent(ctx)
     end
     ImGui.PopItemWidth(ctx)
@@ -3507,10 +3613,10 @@ function demo.DemoWindowLayout()
     ImGui.Text(ctx, 'SetNextItemWidth/PushItemWidth(-FLT_MIN)')
     ImGui.SameLine(ctx); demo.HelpMarker('Align to right edge')
     ImGui.PushItemWidth(ctx, -FLT_MIN)
-    rv,layout.width.d = ImGui.DragDouble(ctx, '##float5a', layout.width.d)
+    rv,layout.width.d = ImGui.DragDouble(ctx, '##double6a', layout.width.d)
     if layout.width.show_indented_items then
       ImGui.Indent(ctx)
-      rv,layout.width.d = ImGui.DragDouble(ctx, 'float (indented)##5b', layout.width.d)
+      rv,layout.width.d = ImGui.DragDouble(ctx, 'double (indented)##6b', layout.width.d)
       ImGui.Unindent(ctx)
     end
     ImGui.PopItemWidth(ctx)
@@ -3736,10 +3842,11 @@ function demo.DemoWindowLayout()
       ImGui.SmallButton(ctx, 'SmallButton()')
 
       -- Tree
+      -- (here the node appears after a button and has odd intent, so we use ImGui.TreeNodeFlags_DrawLinesNone to disable hierarchy outline)
       local spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
       ImGui.Button(ctx, 'Button##1')
       ImGui.SameLine(ctx, 0.0, spacing)
-      if ImGui.TreeNode(ctx, 'Node##1') then
+      if ImGui.TreeNode(ctx, 'Node##1', 0--[[ImGui.TreeNodeFlags_DrawLinesNone--]]) then
         -- Placeholder tree data
         for i = 0, 5 do
           ImGui.BulletText(ctx, ('Item %d..'):format(i))
@@ -5764,7 +5871,9 @@ function demo.DemoWindowTables()
   if ImGui.TreeNode(ctx, 'Tree view') then
     if not tables.tree_view then
       tables.tree_view = {
-        tree_node_flags_base = ImGui.TreeNodeFlags_SpanAllColumns,
+        tree_node_flags_base = ImGui.TreeNodeFlags_SpanAllColumns |
+                               ImGui.TreeNodeFlags_DefaultOpen |
+                               0 -- ImGui.TreeNodeFlags_DrawLinesFull,
       }
     end
 
@@ -6761,7 +6870,7 @@ function demo.DemoWindowInputs()
       ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
 
       -- 2: InputText also polling for Ctrl+A: it always uses _RouteFocused internally (gets priority when active)
-      -- (Commmented because the owner-aware version of Shortcut() is still in imgui_internal.h)
+      -- (Commented because the owner-aware version of Shortcut() is still in imgui_internal.h)
       --local str = 'Press Ctrl+A'
       --ImGui.Spacing(ctx)
       --ImGui.InputText(ctx, 'InputTextB', str, ImGui.InputTextFlags_ReadOnly)
@@ -6790,7 +6899,7 @@ function demo.DemoWindowInputs()
       if ImGui.BeginPopup(ctx, 'PopupF') then
         ImGui.Text(ctx, '(in PopupF)')
         ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags) and 'PRESSED' or '...'))
-        -- (Commmented because the owner-aware version of Shortcut() is still in imgui_internal.h)
+        -- (Commented because the owner-aware version of Shortcut() is still in imgui_internal.h)
         --ImGui.InputText(ctx, 'InputTextG', str, ImGui.InputTextFlags_ReadOnly)
         --ImGui.Text(ctx, ('IsWindowFocused: %s, Shortcut: %s'):format(ImGui.IsWindowFocused(ctx), ImGui.Shortcut(ctx, key_chord, flags, ImGui.GetItemID(ctx)) and 'PRESSED' or '...'))
         ImGui.EndPopup(ctx)
@@ -6889,7 +6998,7 @@ function demo.DemoWindowInputs()
     if ImGui.Button(ctx, 'Focus on Z') then focus_ahead = 2 end
     if focus_ahead ~= -1 then ImGui.SetKeyboardFocusHere(ctx, focus_ahead) end
     rv,misc.focus.d3[1],misc.focus.d3[2],misc.focus.d3[3] =
-      ImGui.SliderDouble3(ctx, 'Float3', misc.focus.d3[1], misc.focus.d3[2], misc.focus.d3[3], 0.0, 1.0)
+      ImGui.SliderDouble3(ctx, 'Double3', misc.focus.d3[1], misc.focus.d3[2], misc.focus.d3[3], 0.0, 1.0)
 
     ImGui.TextWrapped(ctx, 'NB: Cursor & selection are preserved when refocusing last used item in code.')
     ImGui.TreePop(ctx)
@@ -6931,38 +7040,9 @@ end
 -------------------------------------------------------------------------------
 -- [SECTION] Style Editor / ShowStyleEditor()
 -------------------------------------------------------------------------------
--- - ShowFontSelector()
 -- - ShowStyleSelector()
 -- - ShowStyleEditor()
 -------------------------------------------------------------------------------
-
--- Demo helper function to select among loaded fonts.
--- Here we use the regular BeginCombo()/EndCombo() api which the more flexible one.
--- void ImGui::ShowFontSelector(const char* label)
--- {
---     ImGuiIO& io = ImGui.GetIO();
---     ImFont* font_current = ImGui.GetFont();
---     if (ImGui.BeginCombo(label, font_current->GetDebugName()))
---     {
---         for (ImFont* font : io.Fonts->Fonts)
---         {
---             ImFont* font = io.Fonts->Fonts[n];
---             ImGui.PushID((void*)font);
---             if (ImGui.Selectable(font->GetDebugName(), font == font_current))
---                 io.FontDefault = font;
---             if (font == font_current)
---                ImGui::SetItemDefaultFocus();
---             ImGui.PopID();
---         }
---         ImGui.EndCombo();
---     }
---     ImGui.SameLine();
---     HelpMarker(
---         "- Load additional fonts with io.Fonts->AddFontFromFileTTF().\n"
---         "- The font atlas is built when calling io.Fonts->GetTexDataAsXXXX() or io.Fonts->Build().\n"
---         "- Read FAQ and docs/FONTS.md for more details.\n"
---         "- If you need to add/remove fonts at runtime (e.g. for DPI change), do it before calling NewFrame().");
--- }
 
 -- Demo helper function to select among default colors. See ShowStyleEditor() for more advanced options.
 -- Here we use the simplified Combo() api that packs items into a single literal string.
@@ -6981,6 +7061,14 @@ end
 --         return true;
 --     }
 --     return false;
+-- }
+
+-- static const char* GetTreeLinesFlagsName(ImGuiTreeNodeFlags flags)
+-- {
+--   if (flags == ImGuiTreeNodeFlags_DrawLinesNone) return "DrawLinesNone";
+--   if (flags == ImGuiTreeNodeFlags_DrawLinesFull) return "DrawLinesFull";
+--   if (flags == ImGuiTreeNodeFlags_DrawLinesToNodes) return "DrawLinesToNodes";
+--   return "";
 -- }
 
 function demo.GetStyleData()
@@ -7062,25 +7150,37 @@ function demo.ShowStyleEditor()
 
   ImGui.PushItemWidth(ctx, ImGui.GetWindowWidth(ctx) * 0.50)
 
---     if (ImGui.ShowStyleSelector("Colors##Selector"))
---         ref_saved_style = style;
---     ImGui.ShowFontSelector("Fonts##Selector");
+  do
+    ImGui.SeparatorText(ctx, 'General')
 
-  -- Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0 or 1.0)
-  local FrameRounding, GrabRounding = ImGui.StyleVar_FrameRounding,
-                                      ImGui.StyleVar_GrabRounding
-  rv,app.style_editor.style.vars[FrameRounding] = ImGui.SliderDouble(ctx, 'FrameRounding', app.style_editor.style.vars[FrameRounding], 0.0, 12.0, '%.0f')
-  if rv then
-    app.style_editor.style.vars[GrabRounding] = app.style_editor.style.vars[FrameRounding] -- Make GrabRounding always the same value as FrameRounding
-  end
+    -- if (ImGui.ShowStyleSelector("Colors##Selector"))
+    --   ref_saved_style = style;
+    -- ImGui.ShowFontSelector("Fonts##Selector");
+    -- if (DragFloat("FontSizeBase", &style.FontSizeBase, 0.20f, 5.0f, 100.0f, "%.0f"))
+    --   style._NextFrameFontSizeBase = style.FontSizeBase; // FIXME: Temporary hack until we finish remaining work.
+    -- SameLine(0.0f, 0.0f); Text(" (out %.2f)", GetFontSize());
+    -- DragFloat("FontScaleMain", &style.FontScaleMain, 0.02f, 0.5f, 4.0f);
+    -- //BeginDisabled(GetIO().ConfigDpiScaleFonts);
+    -- DragFloat("FontScaleDpi", &style.FontScaleDpi, 0.02f, 0.5f, 4.0f);
+    -- //SetItemTooltip("When io.ConfigDpiScaleFonts is set, this value is automatically overwritten.");
+    -- //EndDisabled();
 
-  local borders = {'WindowBorder', 'FrameBorder', 'PopupBorder'}
-  for i, name in ipairs(borders) do
-    local var = ImGui[('StyleVar_%sSize'):format(name)]
-    local enable = app.style_editor.style.vars[var] > 0
-    if i > 1 then ImGui.SameLine(ctx) end
-    rv, enable = ImGui.Checkbox(ctx, name, enable)
-    if rv then app.style_editor.style.vars[var] = enable and 1 or 0 end
+    -- Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0 or 1.0)
+    local FrameRounding, GrabRounding = ImGui.StyleVar_FrameRounding,
+                                        ImGui.StyleVar_GrabRounding
+    rv,app.style_editor.style.vars[FrameRounding] = ImGui.SliderDouble(ctx, 'FrameRounding', app.style_editor.style.vars[FrameRounding], 0.0, 12.0, '%.0f')
+    if rv then
+      app.style_editor.style.vars[GrabRounding] = app.style_editor.style.vars[FrameRounding] -- Make GrabRounding always the same value as FrameRounding
+    end
+
+    local borders = {'WindowBorder', 'FrameBorder', 'PopupBorder'}
+    for i, name in ipairs(borders) do
+      local var = ImGui[('StyleVar_%sSize'):format(name)]
+      local enable = app.style_editor.style.vars[var] > 0
+      if i > 1 then ImGui.SameLine(ctx) end
+      rv, enable = ImGui.Checkbox(ctx, name, enable)
+      if rv then app.style_editor.style.vars[var] = enable and 1 or 0 end
+    end
   end
 
   -- Save/Revert button
@@ -7141,8 +7241,7 @@ function demo.ShowStyleEditor()
   ImGui.SameLine(ctx); ImGui.SetNextItemWidth(ctx, 120); rv,app.style_editor.output_prefix = ImGui.Combo(ctx, '##output_prefix', app.style_editor.output_prefix, table.concat(funcPrefixes, '*\0') .. '*\0')
   ImGui.SameLine(ctx); rv,app.style_editor.output_only_modified = ImGui.Checkbox(ctx, 'Only Modified', app.style_editor.output_only_modified)
 
-  ImGui.Separator(ctx)
-
+  ImGui.SeparatorText(ctx, 'Details')
   if ImGui.BeginTabBar(ctx, '##tabs', ImGui.TabBarFlags_None) then
     if ImGui.BeginTabItem(ctx, 'Sizes') then
       local slider = function(varname, min, max, format, sliderFunc)
@@ -7203,6 +7302,22 @@ function demo.ShowStyleEditor()
       -- int window_menu_button_position = app.style_editor.style.WindowMenuButtonPosition + 1
       -- if (ImGui.Combo(ctx, 'WindowMenuButtonPosition', (int*)&window_menu_button_position, "None\0Left\0Right\0"))
       --     app.style_editor.style.WindowMenuButtonPosition = window_menu_button_position - 1
+
+      ImGui.SeparatorText(ctx, 'Trees')
+      -- local combo_open = ImGUi.BeginCombo(ctx, 'TreeLinesFlags', GetTreeLinesFlagsName(style.TreeLinesFlags))
+      -- ImGui.SameLine(ctx)
+      -- demo.HelpMarker("[Experimental] Tree lines may not work in all situations (e.g. using a clipper) and may incurs slight traversal overhead.\n\nTreeNodeFlags_DrawLinesFull is faster than TreeNodeFlags_DrawLinesToNode.")
+      -- if combo_open then
+      --   local options = {ImGui.TreeNodeFlags_DrawLinesNone, ImGui.TreeNodeFlags_DrawLinesFull, ImGui.TreeNodeFlags_DrawLinesToNodes}
+      --   for i, option in ipairs(options) do
+      --     if ImGui.Selectable(ctx, GetTreeLinesFlagsName(option), style.TreeLinesFlags == option) then
+      --       style.TreeLinesFlags = option
+      --     end
+      --   end
+      --   ImGui.EndCombo(ctx)
+      -- end
+      slider('TreeLinesSize', 0.0, 2.0, "%.0f")
+      slider('TreeLinesRounding', 0.0, 12.0, "%.0f")
 
       ImGui.SeparatorText(ctx, 'Widgets')
       -- ImGui.Combo(ctx, 'ColorButtonPosition', (ctx, int*)&app.style_editor.style.ColorButtonPosition, "Left\0Right\0")
@@ -7293,32 +7408,11 @@ function demo.ShowStyleEditor()
       ImGui.EndTabItem(ctx)
     end
 
---         if (ImGui.BeginTabItem("Fonts"))
---         {
---             ImGuiIO& io = ImGui.GetIO();
---             ImFontAtlas* atlas = io.Fonts;
---             HelpMarker("Read FAQ and docs/FONTS.md for details on font loading.");
---             ImGui.ShowFontAtlas(atlas);
---
---             // Post-baking font scaling. Note that this is NOT the nice way of scaling fonts, read below.
---             // (we enforce hard clamping manually as by default DragFloat/SliderFloat allows Ctrl+Click text to get out of bounds).
---             const float MIN_SCALE = 0.3f;
---             const float MAX_SCALE = 2.0f;
---             HelpMarker(
---                 "Those are old settings provided for convenience.\n"
---                 "However, the _correct_ way of scaling your UI is currently to reload your font at the designed size, "
---                 "rebuild the font atlas, and call app.style_editor.style.ScaleAllSizes() on a reference ImGuiStyle structure.\n"
---                 "Using those settings here will give you poor quality results.");
---             static float window_scale = 1.0f;
---             ImGui.PushItemWidth(ImGui.GetFontSize() * 8);
---             if (ImGui.DragFloat("window scale", &window_scale, 0.005f, MIN_SCALE, MAX_SCALE, "%.2f", ImGuiSliderFlags_AlwaysClamp)) // Scale only this window
---                 ImGui.SetWindowFontScale(window_scale);
---             ImGui.DragFloat("global scale", &io.FontGlobalScale, 0.005f, MIN_SCALE, MAX_SCALE, "%.2f", ImGuiSliderFlags_AlwaysClamp); // Scale everything
---             ImGui.PopItemWidth();
---
---             ImGui.EndTabItem();
---         }
---
+    -- Not implemented in ReaImGui
+    -- if ImGui.BeginTabItem(ctx, 'Fonts') then
+    --   ImGui.EndTabItem(ctx)
+    -- end
+
     if ImGui.BeginTabItem(ctx, 'Rendering') then
 --             ImGui.Checkbox("Anti-aliased lines", &style.AntiAliasedLines);
 --             ImGui.SameLine();
@@ -7405,7 +7499,7 @@ function demo.ShowUserGuide()
   ImGui.BulletText(ctx, 'TAB/Shift+TAB to cycle through keyboard editable fields.')
   ImGui.BulletText(ctx, 'Ctrl+Tab to select a window.')
   -- if (io.FontAllowUserScaling)
-  --     ImGui.BulletText(ctx, 'Ctrl+Mouse Wheel to zoom window contents.')
+  --   ImGui.BulletText(ctx, 'Ctrl+Mouse Wheel to zoom window contents.')
   ImGui.BulletText(ctx, 'While inputing text:\n')
   ImGui.Indent(ctx)
   ImGui.BulletText(ctx, 'Ctrl+Left/Right to word jump.')

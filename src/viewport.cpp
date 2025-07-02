@@ -24,6 +24,7 @@
 #include "viewport_forwarder.hpp"
 #include "window.hpp"
 
+#include <cmath>
 #include <imgui/imgui.h>
 #include <reaper_plugin_functions.h>
 
@@ -113,6 +114,7 @@ void Viewport::install()
   pio.Platform_SetWindowAlpha     = &Forwarder::wrap<&Viewport::setAlpha>;
   pio.Platform_UpdateWindow       = &Forwarder::wrap<&Viewport::update>;
   pio.Platform_GetWindowDpiScale  = &Forwarder::wrap<&Viewport::scaleFactor>;
+  pio.Platform_GetWindowFramebufferScale = &Forwarder::wrap<&Viewport::framebufScale>;
   pio.Platform_OnChangedViewport  = &Forwarder::wrap<&Viewport::onChanged>;
   pio.Platform_SetImeDataFn = &Forwarder::wrapWithCtx<&Viewport::setIME>;
 
@@ -147,6 +149,12 @@ ImVec2 Viewport::getSize() const
 #endif
 
   return size;
+}
+
+ImVec2 Viewport::framebufScale() const
+{
+  const float scale {ceilf(scaleFactor())};
+  return {scale, scale};
 }
 
 MainViewport::MainViewport()

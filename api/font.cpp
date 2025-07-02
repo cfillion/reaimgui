@@ -21,23 +21,11 @@
 
 API_SECTION("Font",
 R"(Supports loading fonts from the system by family name or from a file.
-Glyphs may contain colors in COLR/CPAL format.
+Glyphs may contain colors in COLR/CPAL format.)");
 
-This API currently has multiple limitations (v1.0 blockers):
-- ReaImGui rasterizes glyphs only from the Basic Latin and Latin Supplement
-  Unicode blocks (U+0020 to U+00FF). UTF-8 is fully supported internally,
-  however characters outside those blocks are displayed as '?'.
-  See [issue #5](https://github.com/cfillion/reaimgui/issues/5).
-- Dear ImGui does not support using new fonts in the middle of a frame.
-  Because of this, fonts must first be registered using Attach before any
-  other context functions are used in the same defer cycle.
-  (Attaching a font is a heavy operation and should ideally be done outside
-  of the defer loop.))");
-
-API_FUNC(0_9, Font*, CreateFont,
-(const char*,family_or_file) (int,size) (RO<int*>,flags,ReaImGuiFontFlags_None),
-R"(Load a font matching a font family name or from a font file.
-The font will remain valid while it's attached to a context. See Attach.
+API_FUNC(0_10, Font*, CreateFont,
+(const char*,family_or_file) (RO<int*>,flags,ReaImGuiFontFlags_None),
+R"(Load a font matching a font family name or from a font file if it contains a / or \\.
 
 The family name can be an installed font or one of the generic fonts:
 sans-serif, serif, monospace, cursive, fantasy.
@@ -46,11 +34,11 @@ If 'family_or_file' specifies a path to a font file (contains a / or \\):
 - The first byte of 'flags' is used as the font index within the file
 - The font styles in 'flags' are simulated by the font renderer)")
 {
-  return new Font {family_or_file, size, API_GET(flags)};
+  return new Font {family_or_file, API_GET(flags)};
 }
 
-API_FUNC(0_9_3, Font*, CreateFontFromMem,
-(const char*,data) (int,data_sz) (int,size) (RO<int*>,flags,ReaImGuiFontFlags_None),
+API_FUNC(0_10, Font*, CreateFontFromMem,
+(const char*,data) (int,data_sz) (RO<int*>,flags,ReaImGuiFontFlags_None),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Use CreateFont or
 explicitely specify data_sz to support older versions.
 
@@ -60,23 +48,28 @@ explicitely specify data_sz to support older versions.
   std::vector<unsigned char> buffer;
   buffer.reserve(data_sz);
   std::copy(data, data + data_sz, std::back_inserter(buffer));
-  return new Font {std::move(buffer), size, API_GET(flags)};
+  return new Font {std::move(buffer), API_GET(flags)};
 }
 
 API_FUNC(0_4, Font*, GetFont, (Context*,ctx),
 "Get the current font")
 {
   FRAME_GUARD;
-  return ctx->fonts().get(ImGui::GetFont());
+  // TODO: move compatibility with <0.10 where default font = nil to the shims
+  return dynamic_cast<Font *>(ctx->findSubresource(ImGui::GetFont()));
 }
 
-API_FUNC(0_4, void, PushFont, (Context*,ctx)
-(Font*,font),
-R"(Change the current font. Use nil to push the default font.
-The font object must have been registered using Attach. See PopFont.)")
+API_FUNC(0_10, void, PushFont, (Context*,ctx)
+(Font*,font) (double,font_size_base_unscaled),
+R"(Change the current font. Pass font=nil to only change the size. See PopFont.)")
 {
   FRAME_GUARD;
-  ImGui::PushFont(ctx->fonts().instanceOf(font));
+  ImFont *imfont = nullptr;
+  if(font) {
+    assertValid(font);
+    imfont = font->instance(ctx);
+  }
+  ImGui::PushFont(imfont, font_size_base_unscaled);
 }
 
 API_FUNC(0_4, void, PopFont, (Context*,ctx),
@@ -91,7 +84,7 @@ R"(Get current font size (= height in pixels) of current font with current scale
 applied.)")
 {
   FRAME_GUARD;
-  return ImGui::GetFontSize();
+  return ImGui::GetFontSize(); // ctx->style().FontSizeBase?
 }
 
 API_ENUM_NS(0_4, ReaImGui, FontFlags_None,   "");

@@ -69,6 +69,8 @@ static constexpr StyleFields<float, ImVec2> g_styleVars[] {
   STYLEVAR(TabBarOverlineSize),
   STYLEVAR(TableAngledHeadersAngle),
   STYLEVAR(TableAngledHeadersTextAlign),
+  STYLEVAR(TreeLinesSize),
+  STYLEVAR(TreeLinesRounding),
   STYLEVAR(ButtonTextAlign),
   STYLEVAR(SelectableTextAlign),
   STYLEVAR(SeparatorTextBorderSize),
@@ -224,6 +226,10 @@ API_ENUM(0_9, StyleVar_TableAngledHeadersAngle,
   "Angle of angled headers (supported values range from -50.0 degrees to +50.0 degrees).");
 API_ENUM(0_9_1, StyleVar_TableAngledHeadersTextAlign,
   "Alignment of angled headers within the cell");
+API_ENUM(0_10, StyleVar_TreeLinesSize,
+  "Thickness of outlines when using TreeNodeFlags_DrawLines.");
+API_ENUM(0_10, StyleVar_TreeLinesRounding,
+  "Radius of lines connecting child nodes to the vertical line.");
 API_ENUM(0_1, StyleVar_ButtonTextAlign,
 R"(Alignment of button text when button is larger than text.
    Defaults to (0.5, 0.5) (centered).)");
@@ -341,6 +347,7 @@ API_ENUM(0_1, Col_ResizeGrip,
   "Resize grip in lower-right and lower-left corners of windows.");
 API_ENUM(0_1, Col_ResizeGripHovered,     "");
 API_ENUM(0_1, Col_ResizeGripActive,      "");
+API_ENUM(0_10, Col_InputTextCursor,      "InputText cursor/caret");
 API_ENUM(0_1, Col_TabHovered,            "Tab background, when hovered");
 API_ENUM(0_1, Col_Tab,
   "Tab background, when tab-bar is focused & tab is unselected");
@@ -370,7 +377,9 @@ API_ENUM(0_1, Col_TableBorderLight,
 API_ENUM(0_1, Col_TableRowBg, "Table row background (even rows).");
 API_ENUM(0_1, Col_TableRowBgAlt, "Table row background (odd rows).");
 API_ENUM(0_10, Col_TextLink, "Hyperlink color");
-API_ENUM(0_1, Col_TextSelectedBg, "");
+API_ENUM(0_1, Col_TextSelectedBg, "Selected text inside an InputText");
+API_ENUM(0_10, Col_TreeLines,
+  "Tree node hierarchy outlines when using TreeNodeFlags_DrawLines");
 API_ENUM(0_1, Col_DragDropTarget, "Rectangle highlighting a drop target");
 API_ENUM(0_1, Col_NavCursor,
   "Color of keyboard/gamepad navigation cursor/rectangle, when visible");

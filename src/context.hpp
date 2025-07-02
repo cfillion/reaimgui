@@ -34,11 +34,8 @@
 #endif
 
 class DockerList;
-class FontList;
 class RendererFactory;
-class TextureManager;
-struct ImGuiContext;
-struct ImGuiViewport;
+struct Subresource;
 
 enum ConfigFlags {
   ReaImGuiConfigFlags_NoSavedSettings = 1<<20,
@@ -59,6 +56,9 @@ public:
   void setUserConfigFlags(int);
   void attach(Resource *);
   void detach(Resource *);
+  void *touch(Resource *);
+  ImTextureData *createTexture();
+  Resource *findSubresource(void *usageData);
 
   // api helpers
   void setCurrent();
@@ -80,10 +80,8 @@ public:
   ImGuiIO &IO();
   ImGuiStyle &style();
   DockerList &dockers() { return *m_dockers; }
-  FontList &fonts() { return *m_fonts; }
   HCURSOR cursor() const { return m_cursor; }
   ImGuiContext *imgui() const { return m_imgui.get(); }
-  TextureManager *textureManager() const { return m_textureManager.get(); }
   RendererFactory *rendererFactory() const { return m_rendererFactory.get(); }
   std::string screensetKey() const;
   const char *name() const { return m_name.c_str(); }
@@ -100,13 +98,13 @@ private:
 
   bool beginFrame();
   bool endFrame(bool render);
-  void assertOutOfFrame();
 
   void updateFrameInfo();
   void updateCursor();
   void updateMouseData();
   void updateSettings();
   void updateDragDrop();
+  void cleanupTextures();
 
   ImGuiViewport *viewportUnder(ImVec2) const;
   ImGuiViewport *focusedViewport() const;
@@ -123,13 +121,12 @@ private:
   std::chrono::time_point<std::chrono::steady_clock> m_lastFrame; // monotonic
   std::vector<std::string> m_draggedFiles;
   std::vector<Resource *> m_attachments;
+  std::vector<Subresource> m_subresources;
   std::string m_name, m_iniFilename;
 
   struct ContextDeleter { void operator()(ImGuiContext *); };
   std::unique_ptr<ImGuiContext, ContextDeleter> m_imgui;
   std::unique_ptr<DockerList> m_dockers;
-  std::unique_ptr<TextureManager> m_textureManager;
-  std::unique_ptr<FontList> m_fonts;
   std::unique_ptr<RendererFactory> m_rendererFactory;
 };
 

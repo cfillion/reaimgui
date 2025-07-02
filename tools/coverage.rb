@@ -70,6 +70,7 @@ NATIVE_ONLY = [
   'ImU32 ImGui::GetColorU32(const ImVec4&)',
 
   # only const char* IDs
+  # REAPER API only allows 32-bit ints, ImGuiID could be 64-bit in the future
   'void ImGui::PushID(int)',
   'void ImGui::PushID(const void*)',
   'void ImGui::PushID(const char*, const char*)',
@@ -79,6 +80,7 @@ NATIVE_ONLY = [
   'ImGuiID ImGui::GetID(const char*)',
   'ImGuiID ImGui::GetID(const char*, const char*)',
   'ImGuiID ImGui::GetID(const void*)',
+  'ImGuiID ImGui::GetID(int)',
   'ImGuiID ImGui::GetItemID()',
 
   'void ImGui::TreePush(const void*)',
@@ -137,9 +139,10 @@ NATIVE_ONLY = [
   'void ImDrawList::PrimQuadUV(const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, const ImVec2&, ImU32)',
 
   # images
+  'ImFontBaked* ImGui::GetFontBaked()',
   'ImVec2 ImGui::GetFontTexUvWhitePixel()',
-  'void ImDrawList::PushTextureID(ImTextureID)',
-  'void ImDrawList::PopTextureID()',
+  'void ImDrawList::PushTexture(ImTextureRef)',
+  'void ImDrawList::PopTexture()',
 
   # value helpers (just Text() with a "prefix: value" format string)
   'void ImGui::Value(const char*, bool)',
@@ -152,7 +155,6 @@ NATIVE_ONLY = [
 
   # not recommended for new designs
   'void ImGui::LogButtons()',
-  'void ImGui::SetWindowFontScale(float)',
 
   # no main viewport
   'bool ImGui::BeginMainMenuBar()',
@@ -169,9 +171,9 @@ NATIVE_ONLY = [
 ]
 
 NATIVE_ONLY_CLASSES = %w[
-  ImGuiIO ImGuiPlatformIO ImFontAtlas ImFont ImDrawList ImDrawData ImGuiStorage
-  ImGuiStyle ImGuiInputTextCallbackData ImFontGlyphRangesBuilder
-  ImGuiTextBuffer ImFontConfig
+  ImGuiIO ImGuiPlatformIO ImFontAtlas ImFont ImFontBaked ImDrawList ImDrawData
+  ImGuiStorage ImGuiStyle ImGuiInputTextCallbackData ImFontGlyphRangesBuilder
+  ImGuiTextBuffer ImFontConfig ImTextureData
 ]
 
 NATIVE_ONLY_ENUMS = [
@@ -180,14 +182,15 @@ NATIVE_ONLY_ENUMS = [
   'Key_None',
   /\AKey_(NamedKey|KeysData|Reserved)/,
   /\ABackendFlags_/,
-  /\AFontAtlasFlags_/,
+  /\A(FontAtlasFlags_|TextureFormat_|TextureStatus_)/,
+  /\AFontFlags_(NoLoad|LockBakedSizes)/,
   'Cond_None',          # alias for Cond_Always
   'ColorEditFlags_HDR', # not allowed, would break float[4]<->int conversion
   /\AViewportFlags_/,
-  'TreeNodeFlags_NavLeftJumpsBackHere', # marked as WIP
+  /\ATreeNodeFlags_DrawLines/, # marked as experimental
   /\ATableFlags_NoBordersInBody/,       # marked as alpha, to be moved to style
   /\AConfigFlags_(NavEnableGamepad)\z/, # not implemented
-  /\AConfigFlags_(IsSRGB|IsTouchScreen|ViewportsEnable|DpiEnableScale(Viewports|Fonts))\z/, # backend internal flags
+  /\AConfigFlags_(IsSRGB|IsTouchScreen|ViewportsEnable)\z/, # backend internal flags
   'WindowFlags_NoBringToFrontOnFocus', # not supported with per-window viewports
   /\AMouseSource_/, # for backends (io.AddMouseSoruceEvent)
   'StyleVar_DockingSeparatorSize', # only applicable mid-frame to DockSpace
@@ -368,7 +371,7 @@ private
       "double#{$~[1] && '*'}"
     when /unsigned int(\*)?/, /size_t(\*)?/
       "int#{$~[1]}"
-    when 'ImTextureID'
+    when 'ImTextureRef'
       'Image*'
     when /Callback\z/
       "Function*"

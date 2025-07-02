@@ -18,8 +18,8 @@
 #include "image.hpp"
 
 #include "color.hpp"
+#include "context.hpp"
 #include "error.hpp"
-#include "texture.hpp"
 #include "win32_unicode.hpp"
 
 #include <boost/iostreams/stream.hpp>
@@ -84,14 +84,6 @@ LICEBitmap::LICEBitmap(LICE_IBitmap *bitmap)
   }
 }
 
-const unsigned char *Bitmap::getPixels(
-  const Texture &texture, int *width, int *height)
-{
-  const Bitmap *image {static_cast<Bitmap *>(texture.object())};
-  *width = image->m_width, *height = image->m_height;
-  return image->m_pixels.data();
-}
-
 void Bitmap::resize(const int width, const int height, const int format)
 try
 {
@@ -119,9 +111,29 @@ std::vector<unsigned char *> Bitmap::makeScanlines()
   return scanlines;
 }
 
-size_t Bitmap::makeTexture(TextureManager *textureManager)
+ImTextureRef Bitmap::texture(Context *ctx)
 {
-  return textureManager->touch(this, 1.f, &getPixels, &Resource::isValid<void>);
+  return static_cast<ImTextureData *>(ctx->touch(this))->GetTexRef();
+}
+
+static void uninstall(Context *, ImTextureData *tex)
+{
+  tex->Status = ImTextureStatus_WantDestroy;
+  tex->Pixels = nullptr; // ensure it can't accidentally be used after free
+}
+
+SubresourceData Bitmap::install(Context *ctx)
+{
+  ImTextureData *tex {ctx->createTexture()};
+  tex->UniqueID = uniqId();
+  tex->Status = ImTextureStatus_WantCreate;
+  tex->Format = ImTextureFormat_RGBA32;
+  tex->Width = m_width;
+  tex->Height = m_height;
+  tex->BytesPerPixel = 4;
+  tex->Pixels = m_pixels.data();
+  tex->RefCount = 1;
+  return {tex, &uninstall};
 }
 
 void ImageSet::add(const float scale, Image *img)
@@ -168,9 +180,9 @@ size_t ImageSet::height() const
   return item.image->height() / item.scale;
 }
 
-size_t ImageSet::makeTexture(TextureManager *textureManager)
+ImTextureRef ImageSet::texture(Context *ctx)
 {
-  return select().image->makeTexture(textureManager);
+  return select().image->texture(ctx);
 }
 
 bool ImageSet::heartbeat()

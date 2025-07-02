@@ -141,8 +141,8 @@ API_ENUM(0_9, TreeNodeFlags_SpanAllColumns,
   "Frame will span all columns of its container table (label will still fit in current column).");
 API_ENUM(0_10, TreeNodeFlags_LabelSpanAllColumns,
   "Label will span all columns of its container table");
-// API_ENUM(?, ImGui, TreeNodeFlags_NavLeftJumpsBackHere,
-// R"((WIP) Nav: left direction may move to this TreeNode from any of its child
-//    (items submitted between TreeNode and TreePop).)");
+API_ENUM(0_10, TreeNodeFlags_NavLeftJumpsToParent,
+R"(Nav: left arrow moves back to parent. This is processed in TreePop when
+   there's an unfullfilled Left nav request remaining.)");
 API_ENUM(0_1, TreeNodeFlags_CollapsingHeader,
   "TreeNodeFlags_Framed | TreeNodeFlags_NoTreePushOnOpen | TreeNodeFlags_NoAutoOpenOnLog");
