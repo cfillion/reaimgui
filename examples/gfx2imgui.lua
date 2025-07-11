@@ -47,7 +47,7 @@ $TP_NO_ROTATE = 1<<3;
 ?>
 
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-local ImGui = require 'imgui' '0.9'
+local ImGui = require 'imgui' '0.10'
 
 local reaper, ogfx, print = reaper, gfx, print
 local debug, math, string, table, utf8 = debug, math, string, table, utf8
@@ -166,8 +166,6 @@ local DEBUG                        = GFX2IMGUI_DEBUG               or false
 local NO_LOG                       = GFX2IMGUI_NO_LOG              or false
 local MAX_DRAW_CALLS               = GFX2IMGUI_MAX_DRAW_CALLS      or 1<<13
 local PROFILER                     = GFX2IMGUI_PROFILER
-local THROTTLE_FONT_LOADING_FRAMES = 16
-local UNUSED_FONTS_CACHE_SIZE      = GFX2IMGUI_UNUSED_FONTS_CACHE_SIZE or 8
 
 local DL_AddCircle               = ImGui.DrawList_AddCircle
 local DL_AddCircleFilled         = ImGui.DrawList_AddCircleFilled
@@ -191,6 +189,7 @@ local gfx, global_state, state = {}, {
   commands   = {},
   font       = 0,
   fonts      = {},
+  fontmap    = {},
   funcs      = {},
   images     = {},
   log        = { ptr=0, size=0, max_size=64 },
@@ -622,108 +621,16 @@ local function put(array, ...)
   array[select(n - 1, ...)] = select(n, ...)
 end
 
-local function nearest(array, target_key)
-  local best_value, best_score
 
-  for key, value in pairs(array) do
-    local score = math.abs(key - target_key)
-    if best_score and score > best_score then break end
-    best_value, best_score = value, score
+local function instantiateFont(font)
+  local inst = font.inst
+  if not ImGui.ValidatePtr(inst.fontObject, 'ImGui_Font*') then
+    inst.fontObject = ImGui.CreateFont(font.family, font.flags)
+    inst.attached = false
   end
-
-  return best_value, best_score or 0
-end
-
-local function getCachedFont(font)
-  return dig(state.fontmap, font.family, font.flags & FONT_FLAG_IMMASK, font.size)
-end
-
-local function warnUnavailableFont(font)
-  warn("font '%s'@%d[%x] temporarily unavailable: \z
-    frame already started (falling back to nearest match for up to %d frames)",
-    font.family, font.size, font.flags & FONT_FLAG_IMMASK, THROTTLE_FONT_LOADING_FRAMES)
-end
-
-local function getNearestCachedFont(font)
-  if not font then return nil, nil, 0 end
-
-  local sizes = dig(state.fontmap, font.family, font.flags & FONT_FLAG_IMMASK)
-  if not sizes then
-    warnUnavailableFont(font)
-    return nil, nil, DEFAULT_FONT_SIZE - font.size
-  end
-
-  local match, score = sizes[font.size], 0
-  if not match then
-    warnUnavailableFont(font)
-    match, score = nearest(sizes, font.size)
-  end
-
-  if match then
-    match.last_use = state.frame_count
-    return match, match.instance, score
-  end
-
-  return nil, nil, DEFAULT_FONT_SIZE - font.size
-end
-
-local function unloadUnusedFonts()
-  local garbage = {}
-
-  for family, styles in pairs(state.fontmap) do
-    for style, sizes in pairs(styles) do
-      for size, cache in pairs(sizes) do
-        if not cache.keep_alive and cache.last_use + 1 < state.frame_count then
-          garbage[#garbage + 1] =
-            { cache = sizes, cache_key = size, cache_val = cache }
-        end
-      end
-    end
-  end
-
-  table.sort(garbage, function(a, b)
-    return a.cache_val.last_use > b.cache_val.last_use
-  end)
-
-  for i = UNUSED_FONTS_CACHE_SIZE + 1, #garbage do
-    local old_font = garbage[i]
-    -- print(('Detach() size=%d'):format(old_font.cache_key))
-    ImGui.Detach(state.ctx, old_font.cache_val.instance)
-    old_font.cache_val.attached = false
-    old_font.cache[old_font.cache_key] = nil
-  end
-end
-
-local function loadRequestedFonts()
-  local throttled = false
-
-  for _, font in ipairs(state.fontqueue) do
-    if not getCachedFont(font) then
-      if not throttled then
-        if state.font_frame and state.frame_count > 4 and
-           state.frame_count - state.font_frame < THROTTLE_FONT_LOADING_FRAMES then
-          return
-        else
-          state.font_frame = state.frame_count
-        end
-        throttled = true
-      end
-
-      -- print(('Attach() %s@%d[%d]'):format(font.family, font.size, font.flags))
-      local instance = ImGui.CreateFont(font.family, font.size, font.flags & FONT_FLAG_IMMASK)
-      local keep_alive = hasValue(global_state.fonts, font)
-      ImGui.Attach(state.ctx, instance)
-      put(state.fontmap, font.family, font.flags & FONT_FLAG_IMMASK, font.size, {
-        attached   = true,
-        last_use   = state.frame_count,
-        keep_alive = keep_alive,
-        instance   = instance,
-      })
-    end
-  end
-
-  if #state.fontqueue > 0 then
-    state.fontqueue = {}
+  if not inst.attached and state then
+    ImGui.Attach(state.ctx, inst.fontObject)
+    inst.attached = true
   end
 end
 
@@ -741,9 +648,6 @@ local function beginFrame()
   local this_frame = ImGui.GetFrameCount(state.canary)
   if state.frame_count == this_frame then return true end
   state.frame_count = this_frame
-
-  unloadUnusedFonts()
-  loadRequestedFonts()
 
   -- ImGui.ShowMetricsWindow(state.ctx)
   if global_state.log.size > 0 then showLog() end
@@ -763,7 +667,7 @@ local function center2D(points)
     center.x /= n_points; center.y /= n_points;
     ]])
     global_state.funcs.center2D = impl
-    if state and ImGui.ValidatePtr(state.ctx, 'ImGui_Context*') then
+    if state then
       ImGui.Attach(state.ctx, impl)
     end
   end
@@ -794,7 +698,7 @@ local function sort2D(points, center_x, center_y)
     );
     ]])
     global_state.funcs.sort2D = impl
-    if state and ImGui.ValidatePtr(state.ctx, 'ImGui_Context*') then
+    if state then
       ImGui.Attach(state.ctx, impl)
     end
   end
@@ -822,7 +726,7 @@ local function uniq2D(points)
     );
     ]])
     global_state.funcs.uniq2D = impl
-    if state and ImGui.ValidatePtr(state.ctx, 'ImGui_Context*') then
+    if state then
       ImGui.Attach(state.ctx, impl)
     end
   end
@@ -1192,25 +1096,13 @@ function gfx.drawnumber(n, ndigits)
 end
 
 local function drawString(draw_list, cmd, i, opts)
-  local c, str, size, xy, xy_off, rb, f, f_cache, f_inst, invert = $drawValues(10)
+  local c, str, size, xy, xy_off, rb, f_inst, invert = $drawValues(8)
   local x,     y      = unpackSigned(xy)
   local x_off, y_off  = unpackSigned(xy_off)
   local right, bottom = unpackSigned(rb)
 
   if right  == 0x7FFFFFFF then right  = nil end
   if bottom == 0x7FFFFFFF then bottom = nil end
-
-  -- search for a new font as the draw call may have been stored for a
-  -- long time in an offscreen buffer while the font instance got detached
-  -- or the script may have re-created the context with gfx.quit+gfx.init
-  if f_cache and not f_cache.attached then
-    f_cache, f_inst = getNearestCachedFont(f)
-  end
-
-  -- keep the font alive while the draw call is still in use (eg. from a blit)
-  if f_cache then
-    f_cache.last_use = state.frame_count
-  end
 
   $transformColor(c, opts)
   $transformPoint(x, y, opts)
@@ -1225,8 +1117,8 @@ local function drawString(draw_list, cmd, i, opts)
     DL_AddRectFilled(draw_list, x, y, x + w, y + h, c)
     c = (~c & 0xFFFFFF00) | (c & 0xFF) -- FIXME: transparent text
   end
-  DL_AddTextEx(
-    draw_list, f_inst, size, x + x_off, y + y_off, c, str, 0, x, y, right, bottom)
+  DL_AddTextEx(draw_list, f_inst and f_inst.fontObject, size,
+    x + x_off, y + y_off, c, str, 0, x, y, right, bottom)
 end
 
 function gfx.drawstr(str, flags, right, bottom)
@@ -1238,7 +1130,6 @@ function gfx.drawstr(str, flags, right, bottom)
   local w, h = gfx.measurestr(str) -- calls beginFrame()
   local f = global_state.fonts[global_state.font]
   local f_sz = f and f.size or DEFAULT_FONT_SIZE
-  local f_cache, f_inst = getNearestCachedFont(f)
   if right  then right  = $toint(right) end
   if bottom then bottom = $toint(bottom) end
 
@@ -1255,9 +1146,9 @@ function gfx.drawstr(str, flags, right, bottom)
   local xy, xy_off, rb =
     packSigned(x, y), packSigned(x_off, y_off),
     packSigned(right or 0x7FFFFFFF, bottom or 0x7FFFFFFF)
-  local invert = (f.flags & FONT_FLAG_INVERT) ~= 0 and
+  local invert = f and f.flags & FONT_FLAG_INVERT ~= 0 and
     packSigned(right and (right-x) or (w//1), bottom and (bottom-y) or (h//1))
-  $drawCall(drawString, c, str, f_sz, xy, xy_off, rb, f, f_cache, f_inst, invert)
+  $drawCall(drawString, c, str, f_sz, xy, xy_off, rb, f and f.inst, invert)
   return 0
 end
 
@@ -1391,8 +1282,6 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
       wnd_flags   = 1,
       collapsed   = false,
       want_close  = false,
-      fontmap     = {},
-      fontqueue   = {},
       frame_count = -1,
       charqueue   = { ptr=0, rptr=0, size=0, max_size=16 },
       drop_files  = {},
@@ -1401,15 +1290,19 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
 
     ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_ViewportsNoDecoration, 0)
     ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_DockingNoSplit, 1)
-
-    -- using pairs (not ipairs) to support gaps in requested font slots
-    for _, font in pairs(global_state.fonts) do
-      state.fontqueue[#state.fontqueue + 1] = font
-    end
+    local flags = ImGui.GetConfigVar(state.ctx, ImGui.ConfigVar_Flags)
+    flags = flags & ~ImGui.ConfigFlags_NavEnableKeyboard
+    ImGui.SetConfigVar(state.ctx, ImGui.ConfigVar_Flags, flags)
 
     for _, func in pairs(global_state.funcs) do
       if ImGui.ValidatePtr(func, 'ImGui_Function*') then
         ImGui.Attach(state.ctx, func)
+      end
+    end
+
+    for family, styles in pairs(global_state.fontmap) do
+      for style, inst in pairs(styles) do
+        instantiateFont({ family=family, flags=style, inst=inst })
       end
     end
 
@@ -1567,15 +1460,18 @@ end
 function gfx.measurestr(str)
   str = str or FALLBACK_STRING
   if not state or not beginFrame() then
+    -- TODO temporary context
     return gfx_vars.texth * utf8.len(str), gfx_vars.texth
   end
-  local _, font_inst, size_error =
-    getNearestCachedFont(global_state.fonts[global_state.font])
-  local correction_factor = gfx_vars.texth / (gfx_vars.texth + size_error)
-  ImGui.PushFont(state.ctx, font_inst)
+  local font = global_state.fonts[global_state.font]
+  if font then
+    ImGui.PushFont(state.ctx, font.inst.fontObject, font.size)
+  end
   local w, h = ImGui.CalcTextSize(state.ctx, str)
-  ImGui.PopFont(state.ctx)
-  return w * correction_factor, h * correction_factor
+  if font then
+    ImGui.PopFont(state.ctx)
+  end
+  return w, h
 end
 
 function gfx.muladdrect()
@@ -1591,11 +1487,9 @@ end
 function gfx.quit()
   if not state then return end
   -- context will already have been destroyed when calling quit() from atexit()
-  for family, styles in pairs(state.fontmap) do
-    for style, sizes in pairs(styles) do
-      for size, cache in pairs(sizes) do
-        cache.attached = false
-      end
+  for family, styles in pairs(global_state.fontmap) do
+    for style, inst in pairs(styles) do
+      inst.attached = false
     end
   end
   for i, image in pairs(global_state.images) do
@@ -1701,7 +1595,7 @@ function gfx.setcursor(resource_id, custom_cursor_name)
   return 0
 end
 
-function gfx.setfont(idx, fontface, sz, flags)
+function gfx.setfont(idx, fontface, sz, gfx_flags)
   idx = $tonumber(idx) -- Default_6.0_theme_adjuster.lua gives a string sometimes
 
   local font = global_state.fonts[idx]
@@ -1711,45 +1605,51 @@ function gfx.setfont(idx, fontface, sz, flags)
     if not fontface or #fontface == 0 then
       fontface = 'Arial'
     end
-    sz = math.min($toint(sz), 96) -- sane limit to prevent errors (p=2781729)
-    if sz < 2 then
-      sz = 10
-    end
+    sz = $tofloat(sz)
+    if sz < 2 then sz = 10 end
 
-    local imflags = 0
-    flags = $toint(tonumber(flags))
-    while flags and flags ~= 0 do
-      local flag = string.char(flags & 0xFF):lower()
-      local imflag = FONT_FLAGS[flag]
-      if imflag then
-        imflags = imflags | imflag
+    local flags = 0
+    gfx_flags = tonumber(gfx_flags)
+    gfx_flags = $toint(gfx_flags)
+    while gfx_flags and gfx_flags ~= 0 do
+      local gfx_flag = string.char(gfx_flags & 0xFF):lower()
+      local flag = FONT_FLAGS[gfx_flag]
+      if flag then
+        flags = flags | flag
       else
-        warn("unknown font flag '%s'", flags & 0xFF)
+        warn("unknown font flag '%s'", gfx_flags & 0xFF)
       end
-      flags = flags >> 8
+      gfx_flags = gfx_flags >> 8
     end
+    local imflags = flags & FONT_FLAG_IMMASK
 
-    local is_new, old_inst
-
+    local old_inst
     if font then
-      is_new = font.family ~= fontface or font.size ~= sz or font.flags ~= imflags
-      old_inst = is_new and state and getCachedFont(font)
+      old_inst = font.inst
     else
-      is_new = true
-    end
-
-    if is_new then
-      font = { family = fontface, size = sz, flags = imflags }
+      font = {}
       global_state.fonts[idx] = font
     end
 
-    if state then
-      local new_inst = getCachedFont(font)
-      if not new_inst then
-        state.fontqueue[#state.fontqueue + 1] = font
-      elseif old_inst and new_inst ~= old_inst then
-        old_inst.keep_alive = false
+    local new_inst = dig(global_state.fontmap, fontface, imflags)
+    if not new_inst then
+      new_inst = { ref_count = 0 }
+      put(global_state.fontmap, fontface, imflags, new_inst)
+    end
+
+    font.family, font.size, font.flags, font.inst = fontface, sz, flags, new_inst
+
+    if new_inst ~= old_inst then
+      if old_inst then
+        old_inst.ref_count = old_inst.ref_count - 1
+        if state and old_inst.ref_count < 1 then
+          ImGui.Detach(state.ctx, old_inst.fontObject)
+          old_inst.attached = false
+        end
       end
+
+      new_inst.ref_count = new_inst.ref_count + 1
+      instantiateFont(font)
     end
   end
 
