@@ -279,7 +279,10 @@ void D3D10Renderer::Shared::deleteTexture(ImTextureData *tex)
   static_cast<ID3D10Texture2D *>(tex->BackendUserData)->Release();
   tex->SetTexID(ImTextureID_Invalid);
   tex->BackendUserData = nullptr;
-  tex->SetStatus(ImTextureStatus_Destroyed);
+  if(tex->Status == ImTextureStatus_WantDestroy)
+    tex->SetStatus(ImTextureStatus_Destroyed);
+  else
+    tex->SetStatus(ImTextureStatus_WantCreate);
 }
 
 D3D10Renderer::D3D10Renderer(RendererFactory *factory, Window *window)
