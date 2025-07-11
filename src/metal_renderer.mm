@@ -255,7 +255,10 @@ void MetalRenderer::Shared::deleteTexture(ImTextureData *tex)
   auto texture {(__bridge_transfer id<MTLTexture>)(void *)tex->GetTexID()};
   (void)texture; // ARC will release
   tex->SetTexID(ImTextureID_Invalid);
-  tex->SetStatus(ImTextureStatus_Destroyed);
+  if(tex->Status == ImTextureStatus_WantDestroy)
+    tex->SetStatus(ImTextureStatus_Destroyed);
+  else
+    tex->SetStatus(ImTextureStatus_WantCreate);
 }
 
 MetalRenderer::MetalRenderer(RendererFactory *factory, Window *window)

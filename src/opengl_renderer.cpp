@@ -162,6 +162,7 @@ void OpenGLRenderer::Shared::processTexture(ImTextureData *tex)
   }
   case ImTextureStatus_WantUpdates:
     ++static_cast<SharedTex *>(tex->BackendUserData)->version;
+    IM_ASSERT(tex->TexID < m_textures.size());
     updateTexture(m_textures[tex->TexID], tex);
     tex->SetStatus(ImTextureStatus_OK);
     break;
@@ -208,6 +209,7 @@ void OpenGLRenderer::Shared::updateTexture(LocalTex &local, ImTextureData *tex)
 
 void OpenGLRenderer::Shared::deleteTexture(ImTextureData *tex)
 {
+  IM_ASSERT(tex->TexID < m_textures.size());
   LocalTex &local {m_textures[tex->TexID]};
   auto shared = static_cast<SharedTex *>(tex->BackendUserData);
 
@@ -220,7 +222,10 @@ void OpenGLRenderer::Shared::deleteTexture(ImTextureData *tex)
     delete shared;
     tex->SetTexID(ImTextureID_Invalid);
     tex->BackendUserData = nullptr;
-    tex->SetStatus(ImTextureStatus_Destroyed);
+    if(tex->Status == ImTextureStatus_WantDestroy)
+      tex->SetStatus(ImTextureStatus_Destroyed);
+    else
+      tex->SetStatus(ImTextureStatus_WantCreate);
   }
 }
 
