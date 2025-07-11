@@ -47,6 +47,7 @@ project_cpp_args = {
     '-Wno-multichar',
     '-Wno-nonnull-compare',  # dynamic_cast(this)
     '-Wno-unused-parameter', # for reaper-sdk and WDL
+    '-Wunused-const-variable=1',
   ],
   'msvc': [
     '/D_CRT_NONSTDC_NO_DEPRECATE',
