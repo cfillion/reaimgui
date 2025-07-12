@@ -1407,19 +1407,25 @@ end
 function gfx.loadimg(image, filename)
   image = $toint(image)
 
-  local bitmap
-  if not pcall(function() bitmap = ImGui.CreateImage(filename) end) then
-    return -1
+  local imageState, bitmap = global_state.images[image]
+  if imageState and imageState.filename == filename and imageState.inst then
+    bitmap = imageState.inst
+  else
+    if not pcall(function() bitmap = ImGui.CreateImage(filename) end) then
+      return -1
+    end
   end
 
   local w, h = ImGui.Image_GetSize(bitmap)
   gfx.setimgdim(image, w, h)
+  imageState = global_state.images[image] -- may be initialized by setimgdim
 
-  local imageState = global_state.images[image] -- initialized by setimgdim
-  if state and imageState.inst then ImGui.Detach(state.ctx, imageState.inst) end
+  if state then
+    if imageState.inst then ImGui.Detach(state.ctx, imageState.inst) end
+    ImGui.Attach(state.ctx, bitmap)
+  end
 
   imageState.filename, imageState.inst = filename, bitmap
-  if state then ImGui.Attach(state.ctx, imageState.inst) end
 
   local dest_backup = gfx_vars.dest
   gfx_vars.dest = image
