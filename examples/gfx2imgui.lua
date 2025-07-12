@@ -1254,12 +1254,11 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     if #ctx_name < 1 then ctx_name = 'gfx2imgui' end
 
     local ctx_flags    = ImGui.ConfigFlags_NoSavedSettings
-    local canary_flags = ImGui.ConfigFlags_NoSavedSettings
 
     state = {
       name        = name,
       ctx         = ImGui.CreateContext(ctx_name, ctx_flags),
-      canary      = ImGui.CreateContext(ctx_name, canary_flags),
+      canary      = ImGui.CreateContext(ctx_name, ctx_flags),
       wnd_flags   = 1,
       collapsed   = false,
       want_close  = false,
@@ -1444,18 +1443,23 @@ end
 
 function gfx.measurestr(str)
   str = str or FALLBACK_STRING
-  if not state or not beginFrame() then
-    -- TODO temporary context
-    return gfx_vars.texth * utf8.len(str), gfx_vars.texth
+
+  local ctx
+  if state and beginFrame() then
+    ctx = state.ctx
+  else
+    if not ImGui.ValidatePtr(global_state.tmp_ctx, 'ImGui_Context*') then
+      global_state.tmp_ctx =
+        ImGui.CreateContext('gfx2imgui', ImGui.ConfigFlags_NoSavedSettings)
+    end
+    ctx = global_state.tmp_ctx
   end
+
   local font = global_state.fonts[global_state.font]
-  if font then
-    ImGui.PushFont(state.ctx, font.inst.fontObject, font.size)
-  end
-  local w, h = ImGui.CalcTextSize(state.ctx, str)
-  if font then
-    ImGui.PopFont(state.ctx)
-  end
+  if font then ImGui.PushFont(ctx, font.inst.fontObject, font.size) end
+  local w, h = ImGui.CalcTextSize(ctx, str)
+  if font then ImGui.PopFont(ctx) end
+
   return w, h
 end
 
