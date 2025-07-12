@@ -47,6 +47,7 @@ static void EEL_STRING_DEBUGOUT(const char *fmt, ...) noexcept
   ReaScriptError(msg); // no leading '!' = non-fatal error (script can continue)
 }
 #define EEL_STRING_DEBUGOUT EEL_STRING_DEBUGOUT // eel_strings.h does ifdef
+#define EEL_STRING_MAXUSERSTRING_LENGTH_HINT (1<<16) // same as REAPER
 
 #include <eel2/eel_strings.h>
 #ifdef HAS_DEPRECATED_COPY
