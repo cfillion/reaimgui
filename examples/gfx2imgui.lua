@@ -621,19 +621,6 @@ local function put(array, ...)
   array[select(n - 1, ...)] = select(n, ...)
 end
 
-
-local function instantiateFont(font)
-  local inst = font.inst
-  if not ImGui.ValidatePtr(inst.fontObject, 'ImGui_Font*') then
-    inst.fontObject = ImGui.CreateFont(font.family, font.flags)
-    inst.attached = false
-  end
-  if not inst.attached and state then
-    ImGui.Attach(state.ctx, inst.fontObject)
-    inst.attached = true
-  end
-end
-
 local function beginFrame()
   -- disable everything if called from an reaper.atexit callback while REAPER
   -- is exiting (reaimgui has unloaded at that point)
@@ -667,9 +654,7 @@ local function center2D(points)
     center.x /= n_points; center.y /= n_points;
     ]])
     global_state.funcs.center2D = impl
-    if state then
-      ImGui.Attach(state.ctx, impl)
-    end
+    if state then ImGui.Attach(state.ctx, impl) end
   end
 
   ImGui.Function_SetValue(impl, 'n_coords',  #points)
@@ -698,9 +683,7 @@ local function sort2D(points, center_x, center_y)
     );
     ]])
     global_state.funcs.sort2D = impl
-    if state then
-      ImGui.Attach(state.ctx, impl)
-    end
+    if state then ImGui.Attach(state.ctx, impl) end
   end
 
   ImGui.Function_SetValue(impl, 'center.x', center_x)
@@ -726,9 +709,7 @@ local function uniq2D(points)
     );
     ]])
     global_state.funcs.uniq2D = impl
-    if state then
-      ImGui.Attach(state.ctx, impl)
-    end
+    if state then ImGui.Attach(state.ctx, impl) end
   end
 
   ImGui.Function_SetValue(impl, 'n_points',  #points)
@@ -1300,9 +1281,23 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
       end
     end
 
+    for _, imageState in pairs(global_state.images) do
+      if imageState.filename then
+        if not ImGui.ValidatePtr(imageState.inst, 'ImGui_Image*') then
+          imageState.inst = ImGui.CreateImage(imageState.filename)
+        end
+        ImGui.Attach(state.ctx, imageState.inst)
+      end
+    end
+
     for family, styles in pairs(global_state.fontmap) do
       for style, inst in pairs(styles) do
-        instantiateFont({ family=family, flags=style, inst=inst })
+        if inst.ref_count > 0 then
+          if not ImGui.ValidatePtr(inst.fontObject, 'ImGui_Font*') then
+            inst.fontObject = ImGui.CreateFont(family, style)
+          end
+          ImGui.Attach(state.ctx, inst.fontObject)
+        end
       end
     end
 
@@ -1381,16 +1376,7 @@ function gfx.lineto(x, y, aa)
 end
 
 local function drawImage(draw_list, cmd, i, opts)
-  local filename, imageState, x, y, w, h = $drawValues(6)
-
-  if not imageState.attached then
-    -- could not attach before in loadimg, as it can be called before gfx.init
-    if not ImGui.ValidatePtr(imageState.inst, 'ImGui_Image*') then
-      imageState.inst = ImGui.CreateImage(filename)
-    end
-    ImGui.Attach(state.ctx, imageState.inst)
-    imageState.attached = true
-  end
+  local imageState, x, y, w, h = $drawValues(5)
 
   $transformPoint(w, h, opts, <?= $TP_NO_ORIGIN | $TP_NO_ROTATE ?>)
   local uv0_x, uv0_y = opts.x1 / w, opts.y1 / h
@@ -1430,23 +1416,16 @@ function gfx.loadimg(image, filename)
   gfx.setimgdim(image, w, h)
 
   local imageState = global_state.images[image] -- initialized by setimgdim
-  if imageState.attached then
-    ImGui.Detach(state.ctx, imageState.inst)
-  end
+  if state and imageState.inst then ImGui.Detach(state.ctx, imageState.inst) end
 
-  imageState.inst = bitmap
-  if state then
-    ImGui.Attach(state.ctx, imageState.inst)
-    imageState.attached = true
-  else
-    imageState.attached = false
-  end
+  imageState.filename, imageState.inst = filename, bitmap
+  if state then ImGui.Attach(state.ctx, imageState.inst) end
 
   local dest_backup = gfx_vars.dest
   gfx_vars.dest = image
   local commands = global_state.commands[gfx_vars.dest]
   if commands then commands.want_clear = true end
-  $drawCall(drawImage, filename, imageState, x, y, w, h)
+  $drawCall(drawImage, imageState, x, y, w, h)
   gfx_vars.dest = dest_backup
 
   return image
@@ -1487,14 +1466,6 @@ end
 function gfx.quit()
   if not state then return end
   -- context will already have been destroyed when calling quit() from atexit()
-  for family, styles in pairs(global_state.fontmap) do
-    for style, inst in pairs(styles) do
-      inst.attached = false
-    end
-  end
-  for i, image in pairs(global_state.images) do
-    image.attached = false
-  end
   state = nil
   return 0
 end
@@ -1637,20 +1608,24 @@ function gfx.setfont(idx, fontface, sz, gfx_flags)
       put(global_state.fontmap, fontface, imflags, new_inst)
     end
 
-    font.family, font.size, font.flags, font.inst = fontface, sz, flags, new_inst
-
     if new_inst ~= old_inst then
       if old_inst then
         old_inst.ref_count = old_inst.ref_count - 1
         if state and old_inst.ref_count < 1 then
           ImGui.Detach(state.ctx, old_inst.fontObject)
-          old_inst.attached = false
         end
       end
 
       new_inst.ref_count = new_inst.ref_count + 1
-      instantiateFont(font)
+      if not ImGui.ValidatePtr(new_inst.fontObject, 'ImGui_Font*') then
+        new_inst.fontObject = ImGui.CreateFont(fontface, imflags)
+      end
+      if state and new_inst.ref_count == 1 then
+        ImGui.Attach(state.ctx, new_inst.fontObject)
+      end
     end
+
+    font.family, font.size, font.flags, font.inst = fontface, sz, flags, new_inst
   end
 
   global_state.font = font and idx or 0
