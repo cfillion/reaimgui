@@ -22,7 +22,6 @@
 #include "../src/font.hpp"
 #include "../src/image.hpp"
 
-#include <reaper_plugin_secrets.h> // reaper_array
 #include <vector>
 
 API_SECTION("Draw List",

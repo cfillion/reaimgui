@@ -19,7 +19,7 @@
 
 #include "../src/function.hpp"
 
-#include <reaper_plugin_secrets.h>
+#include <reaper_plugin_functions.h>
 
 API_SECTION("Function",
 R"(Create reusable programs that can passed to and called back from functions

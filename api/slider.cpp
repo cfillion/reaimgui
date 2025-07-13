@@ -19,8 +19,6 @@
 
 #include "flags.hpp"
 
-#include <reaper_plugin_secrets.h> // reaper_array
-
 API_SECTION("Drag & Slider",
 R"(We use the same sets of flags for Drag*() and Slider*() functions as the
 features are the same and it makes it easier to swap them.

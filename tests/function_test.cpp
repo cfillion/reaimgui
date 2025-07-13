@@ -6,7 +6,7 @@
 #include <eel2/ns-eel.h> // NSEEL_RAM_ITEMSPERBLOCK
 #include <gtest/gtest.h>
 #include <numeric>
-#include <reaper_plugin_secrets.h>
+#include <reaper_plugin_functions.h>
 
 using namespace std::string_view_literals;
 

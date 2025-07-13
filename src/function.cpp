@@ -20,7 +20,7 @@
 #include "api_eel.hpp"
 #include "error.hpp"
 
-#include <reaper_plugin_secrets.h> // reaper_array
+#include <reaper_plugin_functions.h>
 
 // WDL_FastString is missing a copy constructor/assignment operator
 #ifdef HAS_DEPRECATED_COPY // GCC 12
