@@ -45,7 +45,8 @@ TEST(ResourceTest, ValidateDangling) {
 
 TEST(ResourceTest, ValidateChild) {
   auto foo { std::make_unique<Foo>() };
-  EXPECT_FALSE(Resource::isValid<Bar>(static_cast<Bar *>(foo.get())));
+  auto bar {static_cast<Bar *>(static_cast<void *>(foo.get()))};
+  EXPECT_FALSE(Resource::isValid<Bar>(bar));
 }
 
 TEST(ResourceTest, ValidateParent) {
