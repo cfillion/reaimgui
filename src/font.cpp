@@ -41,7 +41,7 @@ Font::Font(std::vector<unsigned char> &&data, const int flags, const int size)
 
 ImFont *Font::instance(Context *ctx)
 {
-  return static_cast<ImFont *>(ctx->touch(this));
+  return ctx->touch<ImFont>(this);
 }
 
 static void uninstall(Context *ctx, ImFont *font)

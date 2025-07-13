@@ -230,7 +230,8 @@ void Context::detach(Resource *obj)
   m_attachments.erase(it);
 }
 
-void *Context::touch(Resource *obj)
+template<>
+void *Context::touch<void>(Resource *obj)
 {
   auto it {std::find(m_subresources.begin(), m_subresources.end(), obj)};
   if(it == m_subresources.end()) {
@@ -316,20 +317,9 @@ bool Context::endFrame(const bool render) try
     return true;
   }
 
-  for(Resource *obj : m_attachments)
-    obj->keepAlive();
-
-  for(auto it = m_subresources.begin(); it != m_subresources.end();) {
-    if(it->isResourceValid() && it->unusedFrames++ < 120) {
-      ++it;
-      continue;
-    }
-    it->data.uninstall(this);
-    it = m_subresources.erase(it);
-  }
-
   updateCursor();
   updateDragDrop();
+  updateSubresources();
   ImGui::Render();
   ImGui::UpdatePlatformWindows();
   ImGui::RenderPlatformWindowsDefault();
@@ -608,6 +598,23 @@ void Context::endDrag(const bool drop)
   m_imgui->IO.AddMouseButtonEvent(DND_MouseButton, false);
 }
 
+void Context::updateSubresources()
+{
+  for(Resource *obj : m_attachments)
+    obj->keepAlive();
+
+  for(auto it = m_subresources.begin(); it != m_subresources.end();) {
+    if(it->isResourceValid() && it->unusedFrames++ < 120) {
+      it->resource->update(this, it->data);
+      ++it;
+    }
+    else {
+      it->data.uninstall(this);
+      it = m_subresources.erase(it);
+    }
+  }
+}
+
 ImTextureData *Context::createTexture()
 {
   auto tex {new ImTextureData};
@@ -619,6 +626,8 @@ void Context::cleanupTextures()
 {
   for(int i {}; i < m_imgui->UserTextures.Size; ++i) {
     ImTextureData *tex {m_imgui->UserTextures[i]};
+    if(tex->Status != ImTextureStatus_WantUpdates)
+      tex->Updates.resize(0);
     if(tex->Status == ImTextureStatus_Destroyed) {
       IM_ASSERT(!tex->Pixels);
       delete tex;

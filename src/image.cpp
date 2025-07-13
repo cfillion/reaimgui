@@ -68,6 +68,15 @@ Image *Image::fromMemory(const char *data, const int size)
   return create(stream);
 }
 
+Bitmap::Bitmap() : m_version {}
+{}
+
+Bitmap::Bitmap(const int width, const int height, const int format)
+  : Bitmap {}
+{
+  resize(width, height, format);
+}
+
 LICEBitmap::LICEBitmap(LICE_IBitmap *bitmap)
 {
   resize(LICE__GetWidth(bitmap), LICE__GetHeight(bitmap), 4);
@@ -111,15 +120,72 @@ std::vector<unsigned char *> Bitmap::makeScanlines()
   return scanlines;
 }
 
-ImTextureRef Bitmap::texture(Context *ctx)
+template void Bitmap::copyPixels<false>(int, int, unsigned int, unsigned int,
+  reaper_array *, unsigned int, unsigned int);
+template void Bitmap::copyPixels<true>(int, int, unsigned int, unsigned int,
+  const reaper_array *, unsigned int, unsigned int);
+
+template<bool Write>
+void Bitmap::copyPixels(int x, int y, unsigned int w, unsigned int h,
+  std::conditional_t<Write, const reaper_array*, reaper_array*> pixels,
+  unsigned int offset, unsigned int pitch)
 {
-  return static_cast<ImTextureData *>(ctx->touch(this))->GetTexRef();
+  if(x >= m_width || y >= m_height)
+    return;
+
+  if(!pitch)
+    pitch = w;
+  else if(pitch < w)
+    throw reascript_error {"pitch is smaller than width"};
+
+  if(offset >= pixels->size || pitch * h > pixels->size - offset)
+    throw reascript_error
+      {"pixel array size must be at least {}", offset + (pitch * h)};
+
+  if(x < 0)
+    w += x, offset -= x, x = 0;
+  if(y < 0)
+    h += y, offset -= y * pitch, y = 0;
+
+  w = std::min<unsigned int>(w, m_width  - x);
+  h = std::min<unsigned int>(h, m_height - y);
+  if(w < 1 || h < 1)
+    return;
+
+  const auto outPitch {m_width * 4};
+  auto *out {m_pixels.data() + (x + (y * m_width)) * 4};
+  auto *in {pixels->data + offset};
+
+  for(unsigned short iy {}; iy < h; ++iy) {
+    for(unsigned short ix {}; ix < w; ++ix) {
+      auto pixel {reinterpret_cast<uint32_t *>(&out[ix * 4])};
+      if constexpr(Write)
+        *pixel = Color::fromBigEndian(in[ix]);
+      else
+        in[ix] = Color::toBigEndian(*pixel);
+    }
+    out += outPitch, in += pitch;
+  }
+
+  if constexpr(Write)
+    ++m_version; // TODO: keep track of modified rects
 }
 
-static void uninstall(Context *, ImTextureData *tex)
+struct ImageTextureData {
+  ImTextureData *tex;
+  unsigned int version;
+};
+
+ImTextureRef Bitmap::texture(Context *ctx)
 {
-  tex->Status = ImTextureStatus_WantDestroy;
-  tex->Pixels = nullptr; // ensure it can't accidentally be used after free
+  return ctx->touch<ImageTextureData>(this)->tex->GetTexRef();
+}
+
+static void uninstall(Context *, ImageTextureData *data)
+{
+  data->tex->Status = ImTextureStatus_WantDestroy;
+  data->tex->Pixels = nullptr; // ensure it can't accidentally be used after free
+  delete data;
 }
 
 SubresourceData Bitmap::install(Context *ctx)
@@ -133,7 +199,20 @@ SubresourceData Bitmap::install(Context *ctx)
   tex->BytesPerPixel = 4;
   tex->Pixels = m_pixels.data();
   tex->RefCount = 1;
-  return {tex, &uninstall};
+
+  return {new ImageTextureData {tex, m_version}, &uninstall};
+}
+
+void Bitmap::update(Context *, void *user)
+{
+  auto data {static_cast<ImageTextureData *>(user)};
+  if(data->version == m_version)
+    return;
+  if(data->tex->Status == ImTextureStatus_OK)
+    data->tex->SetStatus(ImTextureStatus_WantUpdates);
+  IM_ASSERT(data->tex->Updates.Size == 0);
+  data->tex->Updates.push_back({0, 0, m_width, m_height});
+  data->version = m_version;
 }
 
 void ImageSet::add(const float scale, Image *img)

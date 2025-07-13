@@ -159,8 +159,7 @@ static bool copyArray(NSEEL_VMCTX vm, std::optional<double> slot,
   if(!slot)
     return false;
 
-  auto *data {values->data},
-       *end  {values->data + values->size};
+  auto *data {values->data}, *end {values->data + values->size};
 
   while(data < end) {
     EEL_F *ram;

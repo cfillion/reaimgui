@@ -59,7 +59,10 @@ public:
   unsigned int uniqId() const { return m_uniqId; }
 
   virtual bool attachable(const Context *) const = 0;
+
+  // context subresources
   virtual SubresourceData install(Context *) { throw nullptr; }
+  virtual void update(Context *, void *) {}
 
   template<typename T>
   static bool isValid(T *userData)

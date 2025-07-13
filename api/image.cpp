@@ -98,6 +98,13 @@ API_FUNC(0_9_2, Image*, CreateImageFromLICE,
   return new LICEBitmap(bitmap);
 }
 
+API_FUNC(0_10, Image*, CreateImageFromSize,
+(int,width) (int,height) (RO<int*>,flags),
+"Create a blank image of the specified dimensions. See Image_SetPixels_Array.")
+{
+  return new Bitmap {width, height, 4};
+}
+
 API_FUNC(0_8, void, Image_GetSize, (class Image*,image)
 (W<double*>,w) (W<double*>,h),
 "")
@@ -105,6 +112,26 @@ API_FUNC(0_8, void, Image_GetSize, (class Image*,image)
   assertValid(image);
   if(w) *w = image->width();
   if(h) *h = image->height();
+}
+
+API_FUNC(0_10, void, Image_GetPixels_Array, (Bitmap*,image)
+(int,x) (int,y) (int,w) (int,h) (reaper_array*,pixels)
+(RO<int*>,offset,0) (RO<int*>,pitch,0),
+"Read the pixel data of the given rectangle. Pixel format is 0xRRGGBBAAp+0.")
+{
+  assertValid(image);
+  assertValid(pixels);
+  image->copyPixels<false>(x, y, w, h, pixels, API_GET(offset), API_GET(pitch));
+}
+
+API_FUNC(0_10, void, Image_SetPixels_Array, (Bitmap*,image)
+(int,x) (int,y) (int,w) (int,h) (reaper_array*,pixels)
+(RO<int*>,offset,0) (RO<int*>,pitch,0),
+"Write the pixel data of the given rectangle. Pixel format is 0xRRGGBBAAp+0.")
+{
+  assertValid(image);
+  assertValid(pixels);
+  image->copyPixels<true>(x, y, w, h, pixels, API_GET(offset), API_GET(pitch));
 }
 
 API_FUNC(0_10, void, Image, (Context*,ctx)
@@ -181,7 +208,7 @@ API_FUNC(0_9, ImageSet*, CreateImageSet, API_NO_ARGS,
   return new ImageSet;
 }
 
-API_FUNC(0_8, void, ImageSet_Add, (class ImageSet*,set)
+API_FUNC(0_8, void, ImageSet_Add, (ImageSet*,set)
 (double,scale) (class Image*,image),
 "'img' cannot be another ImageSet.")
 {

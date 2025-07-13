@@ -254,6 +254,7 @@ static void cppBinding(std::ostream &stream)
 #include <type_traits>
 #include <utility>
 
+class ImGui_Bitmap;
 class ImGui_Context;
 class ImGui_DrawList;
 class ImGui_DrawListSplitter;
@@ -495,6 +496,7 @@ const std = @import("std");
 
 pub const api_version = ")" << API_VERSION << R"(";
 
+pub const BitmapPtr           = ?*opaque {};
 pub const ContextPtr          = ?*opaque {};
 pub const DrawListPtr         = ?*opaque {};
 pub const DrawListSplitterPtr = ?*opaque {};
@@ -1492,6 +1494,7 @@ static void luaLSBinding(std::ostream &stream)
 --- @class (exact) ImGui_Font             : ImGui_Resource
 --- @class (exact) ImGui_Function         : ImGui_Resource
 --- @class (exact) ImGui_Image            : ImGui_Resource
+--- @class (exact) ImGui_Bitmap           : ImGui_Image
 --- @class (exact) ImGui_ImageSet         : ImGui_Image
 --- @class (exact) ImGui_ListClipper      : ImGui_Resource
 --- @class (exact) ImGui_TextFilter       : ImGui_Resource

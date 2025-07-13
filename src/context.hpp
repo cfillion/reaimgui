@@ -56,9 +56,11 @@ public:
   void setUserConfigFlags(int);
   void attach(Resource *);
   void detach(Resource *);
-  void *touch(Resource *);
-  ImTextureData *createTexture();
+
+  template<typename T>
+  T *touch(Resource *r) { return static_cast<T *>(touch<void>(r)); }
   Resource *findSubresource(void *usageData);
+  ImTextureData *createTexture();
 
   // api helpers
   void setCurrent();
@@ -104,6 +106,7 @@ private:
   void updateMouseData();
   void updateSettings();
   void updateDragDrop();
+  void updateSubresources();
   void cleanupTextures();
 
   ImGuiViewport *viewportUnder(ImVec2) const;
@@ -129,6 +132,8 @@ private:
   std::unique_ptr<DockerList> m_dockers;
   std::unique_ptr<RendererFactory> m_rendererFactory;
 };
+
+template<> void *Context::touch(Resource *);
 
 API_REGISTER_OBJECT_TYPE(Context);
 

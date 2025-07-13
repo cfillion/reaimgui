@@ -66,6 +66,7 @@ types (indentation represents inheritance):
 - ImGui_Font*
 - ImGui_Function*
 - ImGui_Image*
+  - ImGui_Bitmap*
   - ImGui_ImageSet*
 - ImGui_ListClipper*
 - ImGui_TextFilter*
@@ -77,6 +78,7 @@ types (indentation represents inheritance):
   RESOURCE_ISVALID(Font);
   RESOURCE_ISVALID(Function);
   RESOURCE_ISVALID(Image);
+  RESOURCE_ISVALID(Bitmap);
   RESOURCE_ISVALID(ImageSet);
   RESOURCE_ISVALID(ListClipper);
   RESOURCE_ISVALID(TextFilter);

@@ -25,8 +25,8 @@
 
 class Context;
 class LICE_IBitmap;
-class Texture;
 struct ImTextureRef;
+struct reaper_array;
 
 class Image : public Resource {
 public:
@@ -55,21 +55,34 @@ API_REGISTER_OBJECT_TYPE(Image);
 
 class Bitmap : public Image {
 public:
+  Bitmap(int width, int height, int format);
+
   size_t width()  const override { return m_width;  }
   size_t height() const override { return m_height; }
   ImTextureRef texture(Context *) override;
+
   SubresourceData install(Context *) override;
+  void update(Context *, void *) override;
+
+  template<bool Write>
+  void copyPixels(int x, int y,
+    unsigned int w, unsigned int h,
+    std::conditional_t<Write, const reaper_array *, reaper_array *>,
+    unsigned int offset = 0, unsigned int pitch = 0);
 
 protected:
-  Bitmap() = default;
+  Bitmap();
 
   void resize(int width, int height, int format);
   std::vector<unsigned char *> makeScanlines();
 
 private:
   std::vector<unsigned char> m_pixels;
-  size_t m_width, m_height;
+  unsigned int m_version;
+  unsigned short m_width, m_height;
 };
+
+API_REGISTER_OBJECT_TYPE(Bitmap);
 
 class LICEBitmap : public Bitmap {
 public:
