@@ -159,8 +159,8 @@ void Bitmap::copyPixels(int x, int y, unsigned int w, unsigned int h,
   for(unsigned short iy {}; iy < h; ++iy) {
     for(unsigned short ix {}; ix < w; ++ix) {
       auto pixel {reinterpret_cast<uint32_t *>(&out[ix * 4])};
-      if constexpr(Write)
-        *pixel = Color::fromBigEndian(in[ix]);
+      if constexpr(Write) // double to int overflow is undefined behavior!
+        *pixel = Color::fromBigEndian(static_cast<int64_t>(in[ix]));
       else
         in[ix] = Color::toBigEndian(*pixel);
     }
