@@ -381,7 +381,7 @@ API_ENUM(0_1, Col_TextSelectedBg, "Selected text inside an InputText");
 API_ENUM(0_10, Col_TreeLines,
   "Tree node hierarchy outlines when using TreeNodeFlags_DrawLines");
 API_ENUM(0_1, Col_DragDropTarget, "Rectangle highlighting a drop target");
-API_ENUM(0_1, Col_NavCursor,
+API_ENUM(0_10, Col_NavCursor,
   "Color of keyboard/gamepad navigation cursor/rectangle, when visible");
 API_ENUM(0_1, Col_NavWindowingHighlight, "Highlight window when using CTRL+TAB.");
 API_ENUM(0_1, Col_NavWindowingDimBg,
