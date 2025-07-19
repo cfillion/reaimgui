@@ -22,6 +22,11 @@
 
 #include <reaper_plugin_functions.h>
 
+enum ImageFlags {
+  ReaImGuiImageFlags_None = 0,
+  ReaImGuiImageFlags_NoErrors = 1<<0,
+};
+
 API_SECTION("Image",
 R"(ReaImGui currently supports loading PNG and JPEG bitmap images.
 Flat vector images may be loaded as fonts, see CreateFont.
@@ -56,23 +61,32 @@ Caching of image objects may be implemented like this:
     end)");
 
 API_FUNC(0_9, Image*, CreateImage,
-(const char*,file) (RO<int*>,flags),
+(const char*,file) (RO<int*>,flags,ReaImGuiImageFlags_None),
 R"(The returned object is valid as long as it is used in each defer cycle
 unless attached to a context (see Attach).
 
 ('flags' currently unused and reserved for future expansion))")
-{
-  (void)flags;
+try {
   return Image::fromFile(file);
+}
+catch(const reascript_error &) {
+  if(API_GET(flags) & ReaImGuiImageFlags_NoErrors)
+    return nullptr;
+  throw;
 }
 
 API_FUNC(0_9, Image*, CreateImageFromMem,
-(const char*,data) (int,data_sz) (RO<int*>,flags),
+(const char*,data) (int,data_sz) (RO<int*>,flags,ReaImGuiImageFlags_None),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Load from a file using
 CreateImage or explicitely specify data_sz to support older versions.)")
-{
+try {
   // data_sz is inaccurate before REAPER 6.44
   return Image::fromMemory(data, data_sz);
+}
+catch(const reascript_error &) {
+  if(API_GET(flags) & ReaImGuiImageFlags_NoErrors)
+    return nullptr;
+  throw;
 }
 
 API_REGISTER_BASIC_TYPE(LICE_IBitmap*);
@@ -91,18 +105,28 @@ void assertValid(LICE_IBitmap *ptr)
 }
 
 API_FUNC(0_9_2, Image*, CreateImageFromLICE,
-(LICE_IBitmap*,bitmap) (RO<int*>,flags),
+(LICE_IBitmap*,bitmap) (RO<int*>,flags,ReaImGuiImageFlags_None),
 "Copies pixel data from a LICE bitmap created using JS_LICE_CreateBitmap.")
-{
+try {
   assertValid(bitmap);
   return new LICEBitmap(bitmap);
 }
+catch(const reascript_error &) {
+  if(API_GET(flags) & ReaImGuiImageFlags_NoErrors)
+    return nullptr;
+  throw;
+}
 
 API_FUNC(0_10, Image*, CreateImageFromSize,
-(int,width) (int,height) (RO<int*>,flags),
+(int,width) (int,height) (RO<int*>,flags,ReaImGuiImageFlags_None),
 "Create a blank image of the specified dimensions. See Image_SetPixels_Array.")
-{
+try {
   return new Bitmap {width, height, 4};
+}
+catch(const reascript_error &) {
+  if(API_GET(flags) & ReaImGuiImageFlags_NoErrors)
+    return nullptr;
+  throw;
 }
 
 API_FUNC(0_8, void, Image_GetSize, (class Image*,image)
@@ -216,3 +240,7 @@ API_FUNC(0_8, void, ImageSet_Add, (ImageSet*,set)
   assertValid(image);
   set->add(scale, image);
 }
+
+API_ENUM_NS(0_10, ReaImGui, ImageFlags_None, "");
+API_ENUM_NS(0_10, ReaImGui, ImageFlags_NoErrors,
+  "Return nil instead of returning an error.");

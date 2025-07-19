@@ -1283,7 +1283,8 @@ function gfx.init(name, width, height, dockstate, xpos, ypos)
     for _, imageState in pairs(global_state.images) do
       if imageState.filename then
         if not ImGui.ValidatePtr(imageState.inst, 'ImGui_Image*') then
-          imageState.inst = ImGui.CreateImage(imageState.filename)
+          imageState.inst = ImGui.CreateImage(
+            imageState.filename, ImGui.ImageFlags_NoErrors)
         end
         ImGui.Attach(state.ctx, imageState.inst)
       end
@@ -1410,9 +1411,11 @@ function gfx.loadimg(image, filename)
   if imageState and imageState.filename == filename and imageState.inst then
     bitmap = imageState.inst
   else
-    if not pcall(function() bitmap = ImGui.CreateImage(filename) end) then
-      return -1
-    end
+    bitmap = ImGui.CreateImage(filename, ImGui.ImageFlags_NoErrors)
+  end
+
+  if not bitmap then
+    return -1
   end
 
   local w, h = ImGui.Image_GetSize(bitmap)
