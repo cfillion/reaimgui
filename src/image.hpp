@@ -20,8 +20,8 @@
 
 #include "resource.hpp"
 
-#include <vector>
 #include <istream>
+#include <vector>
 
 class Context;
 class LICE_IBitmap;
@@ -56,6 +56,7 @@ API_REGISTER_OBJECT_TYPE(Image);
 class Bitmap : public Image {
 public:
   Bitmap(int width, int height, int format);
+  ~Bitmap();
 
   size_t width()  const override { return m_width;  }
   size_t height() const override { return m_height; }
@@ -73,11 +74,14 @@ public:
 protected:
   Bitmap();
 
+  bool heartbeat() override;
   void resize(int width, int height, int format);
   std::vector<unsigned char *> makeScanlines();
 
 private:
+  struct Update;
   std::vector<unsigned char> m_pixels;
+  std::vector<Update> m_updates;
   unsigned int m_version;
   unsigned short m_width, m_height;
 };

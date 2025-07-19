@@ -604,8 +604,9 @@ void Context::updateSubresources()
     obj->keepAlive();
 
   for(auto it = m_subresources.begin(); it != m_subresources.end();) {
-    if(it->isResourceValid() && it->unusedFrames++ < 120) {
-      it->resource->update(this, it->data);
+    if(it->isResourceValid() && ++it->unusedFrames <= SUBRESOURCE_TTL) {
+      if(it->unusedFrames == 1)
+        it->resource->update(this, it->data);
       ++it;
     }
     else {

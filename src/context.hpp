@@ -45,6 +45,8 @@ constexpr const char *REAIMGUI_PAYLOAD_TYPE_FILES {"_FILES"};
 
 class Context final : public Resource {
 public:
+  static constexpr unsigned char SUBRESOURCE_TTL {120};
+
   static Context *current();
   static void clearCurrent();
 

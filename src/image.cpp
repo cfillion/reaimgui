@@ -71,6 +71,8 @@ Image *Image::fromMemory(const char *data, const int size)
 Bitmap::Bitmap() : m_version {}
 {}
 
+Bitmap::~Bitmap() = default;
+
 Bitmap::Bitmap(const int width, const int height, const int format)
   : Bitmap {}
 {
@@ -118,6 +120,35 @@ std::vector<unsigned char *> Bitmap::makeScanlines()
   for(auto it {m_pixels.begin()}; it < m_pixels.end(); it += rowStride)
     scanlines.push_back(&*it);
   return scanlines;
+}
+
+struct Bitmap::Update {
+  Update(unsigned short x, unsigned short y, unsigned short w, unsigned short h,
+      unsigned int v)
+    : rect {x, y, w, h}, version {v}, age{}
+  {}
+
+  ImTextureRect rect;
+  unsigned int version;
+  unsigned char age;
+};
+
+bool Bitmap::heartbeat()
+{
+  if(!Resource::heartbeat())
+    return false;
+
+  auto it {m_updates.begin()};
+  while(it != m_updates.end()) {
+    // must leave 1 grace frame because Context's heartbeat may be called after ours
+    constexpr unsigned char UPDATE_TTL {Context::SUBRESOURCE_TTL + 1};
+    if(++it->age >= UPDATE_TTL)
+      it = m_updates.erase(it);
+    else
+      ++it;
+  }
+
+  return true;
 }
 
 template void Bitmap::copyPixels<false>(int, int, unsigned int, unsigned int,
@@ -168,7 +199,7 @@ void Bitmap::copyPixels(int x, int y, unsigned int w, unsigned int h,
   }
 
   if constexpr(Write)
-    ++m_version; // TODO: keep track of modified rects
+    m_updates.emplace_back(x, y, w, h, ++m_version);
 }
 
 struct ImageTextureData {
@@ -206,13 +237,14 @@ SubresourceData Bitmap::install(Context *ctx)
 void Bitmap::update(Context *, void *user)
 {
   auto data {static_cast<ImageTextureData *>(user)};
-  if(data->version == m_version)
-    return;
-  if(data->tex->Status == ImTextureStatus_OK)
-    data->tex->SetStatus(ImTextureStatus_WantUpdates);
+  const auto prev {std::find_if(m_updates.rbegin(), m_updates.rend(),
+    [data](const Update &u) { return u.version == data->version; })};
   IM_ASSERT(data->tex->Updates.Size == 0);
-  data->tex->Updates.push_back({0, 0, m_width, m_height});
+  for(auto it = prev.base(); it != m_updates.end(); ++it)
+    data->tex->Updates.push_back(it->rect);
   data->version = m_version;
+  if(data->tex->Status == ImTextureStatus_OK && data->tex->Updates.Size > 0)
+    data->tex->SetStatus(ImTextureStatus_WantUpdates);
 }
 
 void ImageSet::add(const float scale, Image *img)
