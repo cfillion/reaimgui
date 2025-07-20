@@ -71,5 +71,8 @@ SubresourceData Font::install(Context *ctx)
     font = atlas->AddFontFromMemoryTTF(data.data(), data.size(), m_size, &cfg);
   }
 
+  if(!font) // imgui doesn't report what went wrong
+    throw reascript_error {"the font could not be loaded"};
+
   return {font, &uninstall};
 }
