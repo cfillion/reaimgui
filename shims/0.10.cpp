@@ -163,10 +163,21 @@ SHIM_FUNC(0_8, void, Image, (Context*,ctx) (class Image*,image)
 }
 
 // dear imgui v1.92.0
+enum { FONT_INDEX_MASK = 0xFF, FONT_STYLE_MASK = ~0xFF };
+
 SHIM_FUNC(0_9, Font*, CreateFont,
 (const char*,family_or_file) (int,size) (RO<int*>,flags,ReaImGuiFontFlags_None))
 {
-  return new Font {family_or_file, API_GET(flags), size};
+  const int index {API_GET(flags) & FONT_INDEX_MASK};
+  const int style {API_GET(flags) & FONT_STYLE_MASK};
+
+  Font *font;
+  if(strpbrk(family_or_file, "/\\"))
+    font = new Font {family_or_file, index, style};
+  else
+    font = new Font {family_or_file, style};
+  font->setLegacySize(size);
+  return font;
 }
 
 SHIM_FUNC(0_9_3, Font*, CreateFontFromMem,
@@ -175,7 +186,11 @@ SHIM_FUNC(0_9_3, Font*, CreateFontFromMem,
   std::vector<unsigned char> buffer;
   buffer.reserve(data_sz);
   std::copy(data, data + data_sz, std::back_inserter(buffer));
-  return new Font {std::move(buffer), API_GET(flags), size};
+  const int index {API_GET(flags) & FONT_INDEX_MASK};
+  const int style {API_GET(flags) & FONT_STYLE_MASK};
+  Font *font {new Font {std::move(buffer), index, style}};
+  font->setLegacySize(size);
+  return font;
 }
 
 SHIM_FUNC(0_4, void, PushFont, (Context*,ctx) (Font*,font))

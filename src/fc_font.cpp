@@ -120,11 +120,11 @@ bool Font::resolve(const char *family, const int style)
 
   // FC_WEIGHT is bold if requested in the query even if the chosen font doesn't
   // support that style. FC_EMBOLDEN is true in those cases.
-  m_missingStyles = style;
+  m_flags = style;
   if(font.get<int>(FC_WEIGHT) > FC_WEIGHT_NORMAL && !font.get<bool>(FC_EMBOLDEN))
-    m_missingStyles &= ~ReaImGuiFontFlags_Bold;
+    m_flags &= ~ReaImGuiFontFlags_Bold;
   if(font.get<int>(FC_SLANT) == FC_SLANT_ITALIC)
-    m_missingStyles &= ~ReaImGuiFontFlags_Italic;
+    m_flags &= ~ReaImGuiFontFlags_Italic;
 
   return true;
 }

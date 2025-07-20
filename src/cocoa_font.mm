@@ -130,6 +130,6 @@ bool Font::resolve(const char *family, const int style)
   }
 
   m_data = [[url path] UTF8String];
-  std::tie(m_index, m_missingStyles) = findClosestMatch(url, style);
+  std::tie(m_index, m_flags) = findClosestMatch(url, style);
   return true;
 }

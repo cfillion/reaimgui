@@ -95,10 +95,10 @@ bool Font::resolve(const char *family, const int style)
   m_data = std::move(fontData);
   m_index = 0;
 
-  m_missingStyles = style;
+  m_flags = style;
   GetTextFace(sel.dc(), LF_FACESIZE, desc.lfFaceName);
   EnumFontFamiliesEx(sel.dc(), &desc, &enumStyles,
-    reinterpret_cast<LPARAM>(&m_missingStyles), 0);
+    reinterpret_cast<LPARAM>(&m_flags), 0);
 
   return true;
 }

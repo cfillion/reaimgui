@@ -24,31 +24,46 @@ R"(Supports loading fonts from the system by family name or from a file.
 Glyphs may contain colors in COLR/CPAL format.)");
 
 API_FUNC(0_10, Font*, CreateFont,
-(const char*,family_or_file) (RO<int*>,flags,ReaImGuiFontFlags_None),
-R"(Load a font matching a font family name or from a font file if it contains a / or \\.
+(const char*,family) (RO<int*>,flags,ReaImGuiFontFlags_None),
+R"(Load a font matching a font family name.
 
 The family name can be an installed font or one of the generic fonts:
 sans-serif, serif, monospace, cursive, fantasy.
 
-If 'family_or_file' specifies a path to a font file (contains a / or \\):
-- The first byte of 'flags' is used as the font index within the file
-- The font styles in 'flags' are simulated by the font renderer)")
+See CreateFontFromFile.)")
 {
-  return new Font {family_or_file, API_GET(flags)};
+  return new Font {family, API_GET(flags)};
+}
+
+API_FUNC(0_10, Font*, CreateFontFromFile,
+(const char*,file) (RO<int*>,index,0) (RO<int*>,flags,ReaImGuiFontFlags_None),
+R"(Load a font from a file. Available characters are limited to those
+contained in the file.
+
+Bits 0-15 of 'index' are the the index of the face in the font file (starting
+from 0). Set to 0 if the font file contains only one font face.
+Bits 16-30 (for TrueType GX and OpenType Font Variations only) specify the
+named instance index for the current face index (starting from 1).
+0 ignores named instances.
+
+The font styles in 'flags' are simulated by the rasterizer.
+See also CreateFontFromMem.)")
+{
+  return new Font {file, API_GET(index), API_GET(flags)};
 }
 
 API_FUNC(0_10, Font*, CreateFontFromMem,
-(const char*,data) (int,data_sz) (RO<int*>,flags,ReaImGuiFontFlags_None),
+(const char*,data) (int,data_sz)
+(RO<int*>,index,0) (RO<int*>,flags,ReaImGuiFontFlags_None),
 R"(Requires REAPER v6.44 or newer for EEL and Lua. Use CreateFont or
 explicitely specify data_sz to support older versions.
 
-- The first byte of 'flags' is used as the font index within the file
-- The font styles in 'flags' are simulated by the font renderer)")
+See CreateFontFromFile for the meaning of 'index' and 'flags'.)")
 {
   std::vector<unsigned char> buffer;
   buffer.reserve(data_sz);
   std::copy(data, data + data_sz, std::back_inserter(buffer));
-  return new Font {std::move(buffer), API_GET(flags)};
+  return new Font {std::move(buffer), API_GET(index), API_GET(flags)};
 }
 
 API_FUNC(0_4, Font*, GetFont, (Context*,ctx),

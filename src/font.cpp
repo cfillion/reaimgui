@@ -18,24 +18,25 @@
 #include "font.hpp"
 
 #include "context.hpp"
+#include "error.hpp"
 
 #include <imgui/imgui.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
 
-Font::Font(const char *family, const int flags, const int size)
-  : m_size {size}
+Font::Font(const char *family, const int flags)
+  : m_size {}
 {
-  const int style {flags & ReaImGuiFontFlags_StyleMask};
-  if(strpbrk(family, "/\\") || !resolve(family, style)) {
-    m_data = family;
-    m_index = flags & ReaImGuiFontFlags_IndexMask;
-    m_missingStyles = style;
-  }
+  if(!resolve(family, flags) && !resolve(SANS_SERIF, flags))
+    throw reascript_error {"cannot find a suitable font"};
 }
 
-Font::Font(std::vector<unsigned char> &&data, const int flags, const int size)
-  : m_data {std::move(data)}, m_index {flags & ReaImGuiFontFlags_IndexMask},
-    m_size {size}, m_missingStyles {flags & ReaImGuiFontFlags_StyleMask}
+Font::Font(const char *file, const int index, const int flags)
+  : m_data {file}, m_index {index}, m_flags {flags}, m_size {}
+{
+}
+
+Font::Font(std::vector<unsigned char> &&data, const int index, const int flags)
+  : m_data {std::move(data)}, m_index {index}, m_flags {flags}, m_size {}
 {
 }
 
@@ -55,9 +56,9 @@ SubresourceData Font::install(Context *ctx)
   // light hinting solves uneven glyph height on macOS
   cfg.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_LightHinting |
                          ImGuiFreeTypeLoaderFlags_LoadColor;
-  if(m_missingStyles & ReaImGuiFontFlags_Bold)
+  if(m_flags & ReaImGuiFontFlags_Bold)
     cfg.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Bold;
-  if(m_missingStyles & ReaImGuiFontFlags_Italic)
+  if(m_flags & ReaImGuiFontFlags_Italic)
     cfg.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Oblique;
   cfg.FontNo = m_index;
 

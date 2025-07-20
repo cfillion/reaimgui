@@ -25,7 +25,7 @@
 #include <vector>
 
 enum FontFlags {
-  // the first 8 bits were reserved to font face index until v0.10
+  // skip the first 8 bits as they were reserved to font face index until v0.10
   ReaImGuiFontFlags_None      = 0,
   ReaImGuiFontFlags_Bold      = 1<<8,
   ReaImGuiFontFlags_Italic    = 1<<9,
@@ -46,20 +46,22 @@ public:
     *SANS_SERIF {"sans-serif"},
     *SERIF      {"serif"};
 
-  Font(const char *family, int style, int legacySize = 0);
-  Font(std::vector<unsigned char> &&, int style, int legacySize = 0);
+  Font(const char *family, int style);
+  Font(const char *file, int index, int style);
+  Font(std::vector<unsigned char> &&, int index, int style);
 
   bool attachable(const Context *) const override { return true; }
   SubresourceData install(Context *) override;
 
   ImFont *instance(Context *ctx);
   int legacySize() const { return m_size; }
+  void setLegacySize(int sz) { m_size = sz; }
 
 private:
   bool resolve(const char *family, int style);
 
   std::variant<std::string, std::vector<unsigned char>> m_data;
-  int m_index, m_size, m_missingStyles;
+  int m_index, m_flags, m_size;
 };
 
 API_REGISTER_OBJECT_TYPE(Font);
