@@ -41,9 +41,8 @@ inline std::string narrow(const std::wstring_view &input,
 inline std::wstring widen(const std::string_view &input,
   const unsigned int codepage = CP_UTF8)
 {
-  const int size {
-    MultiByteToWideChar(codepage, 0, input.data(), input.size(), nullptr, 0)
-  };
+  const int size {MultiByteToWideChar(codepage, 0,
+    input.data(), input.size(), nullptr, 0)};
 
   std::wstring output(size, L'\0');
   MultiByteToWideChar(codepage, 0, input.data(), input.size(), output.data(), size);

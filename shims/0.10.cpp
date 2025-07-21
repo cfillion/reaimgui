@@ -175,7 +175,7 @@ SHIM_FUNC(0_9, Font*, CreateFont,
   if(strpbrk(family_or_file, "/\\"))
     font = new Font {family_or_file, index, style};
   else
-    font = new Font {family_or_file, style};
+    font = new SysFont {family_or_file, style};
   font->setLegacySize(size);
   return font;
 }
