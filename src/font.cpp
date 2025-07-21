@@ -23,20 +23,18 @@
 #include <imgui/imgui.h>
 #include <imgui/misc/freetype/imgui_freetype.h>
 
-Font::Font(const char *family, const int flags)
+Font::Font()
   : m_size {}
 {
-  if(!resolve(family, flags) && !resolve(SANS_SERIF, flags))
-    throw reascript_error {"cannot find a suitable font"};
 }
 
 Font::Font(const char *file, const int index, const int flags)
-  : m_data {file}, m_index {index}, m_flags {flags}, m_size {}
+  : m_src {file, index, flags}, m_size {}
 {
 }
 
 Font::Font(std::vector<unsigned char> &&data, const int index, const int flags)
-  : m_data {std::move(data)}, m_index {index}, m_flags {flags}, m_size {}
+  : m_src {std::move(data), index, flags}, m_size {}
 {
 }
 
@@ -52,28 +50,70 @@ static void uninstall(Context *ctx, ImFont *font)
 
 SubresourceData Font::install(Context *ctx)
 {
+  if(ImFont *inst {m_src.install(ctx->IO().Fonts, this)})
+    return {inst, &uninstall};
+
+  // imgui doesn't report what went wrong
+  throw reascript_error {"the font could not be loaded"};
+}
+
+SysFont::SysFont(const char *family, const int flags)
+  : Font {}, m_family {family}, m_styles {flags}
+{
+  if(auto src {resolve()})
+    m_src = *src;
+  else
+    throw reascript_error {"cannot find a matching system font"};
+}
+
+bool SysFont::addFallback(ImFontAtlas *atlas, ImFont *inst, unsigned int codepoint)
+{
+  if(const auto src {resolve(codepoint)}) {
+    if(*src != m_src)
+      return src->install(atlas, this, inst) != nullptr;
+  }
+  return false;
+}
+
+ImFont *FontSource::install(ImFontAtlas *atlas, Font *parent, ImFont *inst) const
+{
   ImFontConfig cfg;
   // light hinting solves uneven glyph height on macOS
   cfg.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_LightHinting |
                          ImGuiFreeTypeLoaderFlags_LoadColor;
-  if(m_flags & ReaImGuiFontFlags_Bold)
+  if(m_styles & ReaImGuiFontFlags_Bold)
     cfg.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Bold;
-  if(m_flags & ReaImGuiFontFlags_Italic)
+  if(m_styles & ReaImGuiFontFlags_Italic)
     cfg.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Oblique;
   cfg.FontNo = m_index;
+  cfg.UserData = parent;
+  cfg.MergeMode = inst;
 
-  ImFont *font;
-  auto atlas {ctx->IO().Fonts};
+  const auto size {parent->legacySize()};
   if(const std::string *path {std::get_if<std::string>(&m_data)})
-    font = atlas->AddFontFromFileTTF(path->c_str(), m_size, &cfg);
+    return atlas->AddFontFromFileTTF(path->c_str(), size, &cfg);
   else {
     cfg.FontDataOwnedByAtlas = false;
     auto &data {std::get<std::vector<unsigned char>>(m_data)};
-    font = atlas->AddFontFromMemoryTTF(data.data(), data.size(), m_size, &cfg);
+    auto bytes {const_cast<unsigned char *>(data.data())};
+    return atlas->AddFontFromMemoryTTF(bytes, data.size(), size, &cfg);
   }
+}
 
-  if(!font) // imgui doesn't report what went wrong
-    throw reascript_error {"the font could not be loaded"};
+bool FontSource::operator==(const FontSource &o) const
+{
+  return m_data == o.m_data && m_index == o.m_index && m_styles == o.m_styles;
+}
 
-  return {font, &uninstall};
+bool ImFontAtlas_FontHookLookupFallback(ImFontAtlas *atlas, ImFont *inst, ImWchar c)
+{
+  if(c == '\t')
+    return false;
+
+  // imgui caches the result per baked font (per size per ctx)
+  auto font {static_cast<Font *>(inst->Sources.front()->UserData)};
+  if(SysFont *sysfont {dynamic_cast<SysFont *>(font)})
+    return sysfont->addFallback(atlas, inst, c);
+
+  return false;
 }

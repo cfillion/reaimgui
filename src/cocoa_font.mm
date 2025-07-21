@@ -32,11 +32,11 @@ static_assert(__has_feature(objc_arc),
 static const char *translateGenericFont(const char *family)
 {
   constexpr std::pair<const char *, const char *> genericMap[] {
-    {Font::CURSIVE,    "Apple Chancery"},
-    {Font::FANTASY,    "Papyrus"       },
-    {Font::MONOSPACE,  "Courier"       },
-    {Font::SANS_SERIF, "Helvetica"     },
-    {Font::SERIF,      "Times"         },
+    {SysFont::SANS_SERIF, "Helvetica"     },
+    {SysFont::SERIF,      "Times"         },
+    {SysFont::MONOSPACE,  "Courier"       },
+    {SysFont::CURSIVE,    "Apple Chancery"},
+    {SysFont::FANTASY,    "Papyrus"       },
   };
 
   for(const auto &generic : genericMap) {
@@ -47,21 +47,18 @@ static const char *translateGenericFont(const char *family)
   return family;
 }
 
-static int styleToTraits(const int style)
+static NSNumber *styleToTraits(const int style)
 {
   int traits {};
   if(style & ReaImGuiFontFlags_Bold)   traits |= NSFontBoldTrait;
   if(style & ReaImGuiFontFlags_Italic) traits |= NSFontItalicTrait;
-  return traits;
+  return [NSNumber numberWithInteger:traits];
 }
 
 static bool findExactMatch(NSArray *collection, const int style, int *index)
 {
-  const int traits {styleToTraits(style)};
   NSDictionary<NSFontDescriptorAttributeName, id> *attrs {@{
-    NSFontTraitsAttribute: @{
-      NSFontSymbolicTrait: [NSNumber numberWithInteger:traits]
-    }
+    NSFontTraitsAttribute: @{NSFontSymbolicTrait: styleToTraits(style)},
   }};
 
   NSSet *keys
@@ -105,31 +102,43 @@ static NSURL *findMatchingFile(NSDictionary *attrs)
 {
   NSFontDescriptor *match
     {[NSFontDescriptor fontDescriptorWithFontAttributes:attrs]};
+  match = [match matchingFontDescriptorWithMandatoryKeys:[NSSet set]];
   return (__bridge_transfer NSURL *)CTFontDescriptorCopyAttribute
     ((__bridge CTFontDescriptorRef)match, kCTFontURLAttribute);
 }
 
-bool Font::resolve(const char *family, const int style)
+std::optional<FontSource> SysFont::resolve(const unsigned int codepoint) const
 {
-  const int traits {styleToTraits(style)};
-  family = translateGenericFont(family);
+  const auto traits {@{NSFontSymbolicTrait: styleToTraits(m_styles)}};
+  const char *family = translateGenericFont(m_family.c_str());
 
   NSMutableDictionary *attrs {[NSMutableDictionary dictionaryWithCapacity:2]};
-  attrs[NSFontFamilyAttribute] = [NSString stringWithUTF8String:family];
-  attrs[NSFontTraitsAttribute] = @{
-    NSFontSymbolicTrait: [NSNumber numberWithInteger:traits]
-  };
+  if(codepoint) {
+    auto cs {[NSCharacterSet characterSetWithRange:NSMakeRange(codepoint, 1)]};
+    attrs[NSFontCharacterSetAttribute] = cs;
+  }
+  else
+    attrs[NSFontFamilyAttribute] = [NSString stringWithUTF8String:family];
+  attrs[NSFontTraitsAttribute] = traits;
 
   NSURL *url {findMatchingFile(attrs)};
 
   if(!url) {
-    family = translateGenericFont("sans-serif");
-    attrs[NSFontFamilyAttribute] = [NSString stringWithUTF8String:family];
-    if(!(url = findMatchingFile(attrs)))
-      return false;
+    [attrs removeObjectForKey:NSFontTraitsAttribute];
+    url = findMatchingFile(attrs);
+    attrs[NSFontTraitsAttribute] = traits;
   }
 
-  m_data = [[url path] UTF8String];
-  std::tie(m_index, m_flags) = findClosestMatch(url, style);
-  return true;
+  if(!url) {
+    family = translateGenericFont(SysFont::SANS_SERIF);
+    if(codepoint)
+      [attrs removeObjectForKey:NSFontCharacterSetAttribute];
+    attrs[NSFontFamilyAttribute] = [NSString stringWithUTF8String:family];
+    if(!(url = findMatchingFile(attrs)))
+      return std::nullopt;
+  }
+
+  FontSource src {[[url path] UTF8String]};
+  std::tie(src.m_index, src.m_styles) = findClosestMatch(url, m_styles);
+  return src;
 }

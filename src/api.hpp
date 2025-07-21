@@ -18,11 +18,13 @@
 #ifndef REAIMGUI_API_HPP
 #define REAIMGUI_API_HPP
 
-#include "error.hpp"
 #include "plugin_register.hpp"
 #include "vernum.hpp"
 
 #define API_PREFIX "ImGui_"
+
+class imgui_error;
+class reascript_error;
 
 namespace API {
   void setup();

@@ -32,7 +32,7 @@ sans-serif, serif, monospace, cursive, fantasy.
 
 See CreateFontFromFile.)")
 {
-  return new Font {family, API_GET(flags)};
+  return new SysFont {family, API_GET(flags)};
 }
 
 API_FUNC(0_10, Font*, CreateFontFromFile,
