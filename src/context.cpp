@@ -21,6 +21,7 @@
 #include "configvar.hpp"
 #include "docker.hpp"
 #include "error.hpp"
+#include "font.hpp"
 #include "keymap.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
@@ -163,6 +164,8 @@ Context::Context(const char *label, const int userConfigFlags)
   Platform::install();
   Renderer::install();
   Viewport::install();
+
+  io.Fonts->SetFontLoader(Font::loader());
 
   // prevent imgui from loading settings but not from saving them
   // (so that the saved state is reset to defaults)
