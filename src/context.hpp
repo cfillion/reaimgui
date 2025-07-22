@@ -34,6 +34,7 @@
 #endif
 
 class DockerList;
+class Font;
 class RendererFactory;
 struct Subresource;
 
@@ -61,7 +62,6 @@ public:
 
   template<typename T>
   T *touch(Resource *r) { return static_cast<T *>(touch<void>(r)); }
-  Resource *findSubresource(void *usageData);
   ImTextureData *createTexture();
 
   // api helpers
@@ -133,6 +133,7 @@ private:
   std::unique_ptr<ImGuiContext, ContextDeleter> m_imgui;
   std::unique_ptr<DockerList> m_dockers;
   std::unique_ptr<RendererFactory> m_rendererFactory;
+  Font *m_font;
 };
 
 template<> void *Context::touch(Resource *);

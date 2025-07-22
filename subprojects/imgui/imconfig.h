@@ -6,6 +6,7 @@ namespace Error {
   [[noreturn]] void throwDebugBreak();
 };
 
+#define IMGUI_DISABLE_DEFAULT_FONT
 #define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #define IMGUI_DISABLE_WIN32_DEFAULT_IME_FUNCTIONS
 #define IMGUI_ENABLE_FREETYPE

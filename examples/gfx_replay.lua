@@ -9,7 +9,7 @@ GFX2IMGUI_NO_BLIT_PREMULTIPLY = GFX2IMGUI_NO_BLIT_PREMULTIPLY or false
 GFX2IMGUI_NO_LOG              = GFX2IMGUI_NO_LOG or false
 
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-local ImGui = require 'imgui' '0.8.7'
+local ImGui = require 'imgui' '0.10'
 
 local FILE_EXT = 'gfx'
 local FLT_MIN = ImGui.NumericLimits_Float()
@@ -23,6 +23,10 @@ local colors = {
 }
 
 local ctx = ImGui.CreateContext(SCRIPT_NAME)
+
+local msf = ImGui.CreateFont('monospace')
+ImGui.Attach(ctx, msf)
+
 local clipper = ImGui.CreateListClipper(ctx)
 ImGui.Attach(ctx, clipper)
 
@@ -300,7 +304,9 @@ local function editFrame(frame)
   end
 
   local changed
+  ImGui.PushFont(ctx, msf, 0)
   changed, frame.code = ImGui.InputTextMultiline(ctx, '##code', frame.code, -FLT_MIN, -FLT_MIN)
+  ImGui.PopFont(ctx)
   if changed then dirty, frame.func = true, nil end
 
   ImGui.EndGroup(ctx)
