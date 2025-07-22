@@ -70,8 +70,7 @@ API_FUNC(0_4, Font*, GetFont, (Context*,ctx),
 "Get the current font")
 {
   FRAME_GUARD;
-  // TODO: move compatibility with <0.10 where default font = nil to the shims
-  return dynamic_cast<Font *>(ctx->findSubresource(ImGui::GetFont()));
+  return static_cast<Font *>(ImGui::GetFont()->Sources.front()->UserData);
 }
 
 API_FUNC(0_10, void, PushFont, (Context*,ctx)

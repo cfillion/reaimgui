@@ -1,10 +1,12 @@
 package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'
-local ImGui = require 'imgui' '0.9'
-
+local ImGui = require 'imgui' '0.10'
 local SCRIPT_NAME = 'imgui.lua 0.9 upgrader'
 local FLT_MIN, FLT_MAX = ImGui.NumericLimits_Float()
 local ctx = ImGui.CreateContext(SCRIPT_NAME)
+local msf = ImGui.CreateFont('monospace')
 local code
+
+ImGui.Attach(ctx, msf)
 
 local function upgrade()
   code = code:gsub('reaper%s*%.%s*ImGui_', 'ImGui.')
@@ -18,11 +20,13 @@ end
 
 local function window()
   if ImGui.Button(ctx, 'Upgrade', -FLT_MIN) then upgrade() end
+  ImGui.PushFont(ctx, msf, 0)
   ImGui.InputTextMultiline(ctx, '##preamble',
     "package.path = reaper.ImGui_GetBuiltinPath() .. '/?.lua'\n\z
      local ImGui = require 'imgui' '0.9'", -FLT_MIN, 40, ImGui.InputTextFlags_ReadOnly)
   code = select(2, ImGui.InputTextMultiline(ctx, '##code', code,
     -FLT_MIN, -FLT_MIN, ImGui.InputTextFlags_AllowTabInput))
+  ImGui.PopFont(ctx)
 end
 
 local function loop()
