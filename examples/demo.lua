@@ -2515,6 +2515,8 @@ local function DemoWindowWidgetsSelectionAndMultiSelect()
   end
 
   -- TODO Multi-selection API not exposed in ReaImGui yet!
+
+  ImGui.TreePop(ctx)
 end
 
 -------------------------------------------------------------------------------
@@ -8244,7 +8246,7 @@ local function ShowPlaceholderObject(prefix, uid)
     for i = 0, #app.property_editor.placeholder_members - 1 do
       ImGui.PushID(ctx, i) -- Use field index as identifier.
       if i < 2 then
-        demo.ShowPlaceholderObject('Child', 424242)
+        ShowPlaceholderObject('Child', 424242)
       else
         -- Here we use a TreeNode to highlight on hover (we could use e.g. Selectable as well)
         ImGui.TableNextRow(ctx)
@@ -8297,7 +8299,7 @@ function demo.ShowExampleAppPropertyEditor()
 
     -- Iterate placeholder objects (all the same data)
     for obj_i = 0, 4 - 1 do
-      demo.ShowPlaceholderObject('Object', obj_i)
+      ShowPlaceholderObject('Object', obj_i)
     end
     ImGui.EndTable(ctx)
   end
