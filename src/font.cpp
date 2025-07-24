@@ -87,7 +87,7 @@ ImFont *FontSource::install(ImFontAtlas *atlas, Font *parent, ImFont *inst) cons
     cfg.FontLoaderFlags |= ImGuiFreeTypeLoaderFlags_Oblique;
   cfg.FontNo = m_index;
   cfg.UserData = parent;
-  cfg.MergeMode = inst;
+  cfg.MergeTarget = inst;
 
   const auto size {parent->legacySize()};
   if(const std::string *path {std::get_if<std::string>(&m_data)})
