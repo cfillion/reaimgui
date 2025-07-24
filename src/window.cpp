@@ -234,11 +234,6 @@ bool Window::isMinimized() const
   return !IsWindowVisible(m_hwnd);
 }
 
-void Window::onChanged()
-{
-  // m_ctx->fonts().setScale(m_viewport->DpiScale);
-}
-
 void Window::mouseDown(const ImGuiMouseButton btn)
 {
   // Not needed on macOS for receiving mouse up messages outside of the

@@ -380,14 +380,11 @@ std::optional<LRESULT> Win32Window::handleMessage
     SetWindowPos(m_hwnd, nullptr,
       sugg->left, sugg->top, sugg->right - sugg->left, sugg->bottom - sugg->top,
       SWP_NOACTIVATE | SWP_NOZORDER);
-
-    // PlatformRequestResize doesn't work here to tell ImGui to fetch the new size
-    m_viewport->Pos  = getPosition();
-    m_viewport->Size = getSize();
+    m_viewport->PlatformRequestMove = m_viewport->PlatformRequestResize = true;
 
     // imgui won't call this if unscaled size didn't change
     if(m_renderer)
-      m_renderer->setSize(m_viewport->Size);
+      m_renderer->setSize(getSize());
     return 0;
   }
   case WM_DPICHANGED_BEFOREPARENT:

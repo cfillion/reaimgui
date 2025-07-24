@@ -55,7 +55,7 @@ public:
   void setFocus() override;
   bool hasFocus() const override;
   bool isMinimized() const override;
-  void onChanged() override;
+  void onChanged() override {}
 
   void mouseDown(ImGuiMouseButton);
   void mouseUp(ImGuiMouseButton);
