@@ -32,7 +32,7 @@ static_assert(__has_feature(objc_arc),
 static const char *translateGenericFont(const char *family)
 {
   constexpr std::pair<const char *, const char *> genericMap[] {
-    {SysFont::SANS_SERIF, "Helvetica"     },
+    {SysFont::SANS_SERIF, "Helvetica Neue"},
     {SysFont::SERIF,      "Times"         },
     {SysFont::MONOSPACE,  "Courier"       },
     {SysFont::CURSIVE,    "Apple Chancery"},
