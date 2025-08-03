@@ -107,7 +107,9 @@ ImFont *FontSource::install(ImFontAtlas *atlas, Font *parent, ImFont *inst) cons
   cfg.UserData = parent;
   cfg.MergeTarget = inst;
 
+  // sets the total pixel height (ascent-descent) instead of em square when >0
   const auto size {parent->legacySize()};
+
   if(const std::string *path {std::get_if<std::string>(&m_data)})
     return atlas->AddFontFromFileTTF(path->c_str(), size, &cfg);
   else {
