@@ -47,36 +47,40 @@ static const char *translateGenericFont(const char *family)
   return family;
 }
 
-static NSNumber *styleToTraits(const int style)
+static unsigned int styleToTraits(const int style)
 {
   int traits {};
   if(style & ReaImGuiFontFlags_Bold)   traits |= NSFontBoldTrait;
   if(style & ReaImGuiFontFlags_Italic) traits |= NSFontItalicTrait;
-  return [NSNumber numberWithInteger:traits];
+  return traits;
 }
 
-static bool findExactMatch(NSArray *collection, const int style, unsigned int *index)
+static std::optional<unsigned int> findExactMatch(
+  NSArray *collection, const unsigned int wantTraits)
 {
-  NSDictionary<NSFontDescriptorAttributeName, id> *attrs {@{
-    NSFontTraitsAttribute: @{NSFontSymbolicTrait: styleToTraits(style)},
-  }};
-
-  NSSet *keys
-    {[NSSet setWithArray:@[NSFontNameAttribute, NSFontTraitsAttribute]]};
-
-  *index = 0;
+  unsigned short index {};
 
   for(NSFontDescriptor __strong *font in collection) {
-    font = [font fontDescriptorByAddingAttributes:attrs];
-    font = [font matchingFontDescriptorWithMandatoryKeys:keys];
+    auto symTraits {[font symbolicTraits]};
+    symTraits &= NSFontBoldTrait | NSFontItalicTrait;
 
-    if(font)
-      return true;
-    else
-      ++*index;
+    NSDictionary<NSFontDescriptorAttributeName, id> *fontTraits
+      {[font objectForKey:NSFontTraitsAttribute]};
+    auto weight {[static_cast<NSNumber *>(fontTraits[NSFontWeightTrait]) floatValue]};
+    if(weight < NSFontWeightBold)
+      symTraits &= ~NSFontBoldTrait;
+
+    if(wantTraits == symTraits) {
+      NSDictionary<NSFontDescriptorVariationKey, id> *variation
+        {[font objectForKey:NSFontVariationAttribute]};
+      return variation ? (index + 1) << 16 : index;
+    }
+
+    if(index++ == 0xFFFF)
+      break;
   }
 
-  return false;
+  return std::nullopt;
 }
 
 static std::pair<unsigned int, int> findClosestMatch(NSURL *url, const int style)
@@ -84,15 +88,14 @@ static std::pair<unsigned int, int> findClosestMatch(NSURL *url, const int style
   NSArray *collection {(__bridge_transfer NSArray *)
     CTFontManagerCreateFontDescriptorsFromURL((__bridge CFURLRef)url)};
 
-  unsigned int index;
-  if(findExactMatch(collection, style, &index))
-    return {index, ReaImGuiFontFlags_None};
+  if(auto index {findExactMatch(collection, styleToTraits(style))})
+    return {*index, ReaImGuiFontFlags_None};
 
   static int fallbacks[] {ReaImGuiFontFlags_Bold, ReaImGuiFontFlags_Italic};
 
   for(const int fallback : fallbacks) {
-    if(findExactMatch(collection, fallback, &index))
-      return {index, style & ~fallback};
+    if(auto index {findExactMatch(collection, styleToTraits(fallback))})
+      return {*index, style & ~fallback};
   }
 
   return {0, style};
@@ -109,8 +112,11 @@ static NSURL *findMatchingFile(NSDictionary *attrs)
 
 std::optional<FontSource> SysFont::resolve(const unsigned int codepoint) const
 {
-  const auto traits {@{NSFontSymbolicTrait: styleToTraits(m_styles)}};
   const char *family = translateGenericFont(m_family.c_str());
+
+  const auto traits {@{
+    NSFontSymbolicTrait: [NSNumber numberWithInteger:styleToTraits(m_styles)]
+  }};
 
   NSMutableDictionary *attrs {[NSMutableDictionary dictionaryWithCapacity:2]};
   if(codepoint) {
