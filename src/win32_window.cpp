@@ -409,8 +409,9 @@ std::optional<LRESULT> Win32Window::handleMessage
   case WM_SYSKEYUP:
     keyEvent(msg, wParam, lParam);
     return 0;
-  case WM_CHAR:
-    if(wParam < 0 || wParam > 0xffff)
+  case WM_CHAR: {
+    const auto CTRL {2};
+    if(wParam < 0 || wParam > 0xffff || HIBYTE(VkKeyScan(wParam)) & CTRL)
       break;
 
     // https://learn.microsoft.com/en-us/windows/win32/inputdev/using-keyboard-input#processing-character-messages
@@ -425,6 +426,7 @@ std::optional<LRESULT> Win32Window::handleMessage
       m_ctx->charInputUTF16(wParam);
       return 0;
     }
+  }
   case WM_KILLFOCUS:
     m_ctx->updateFocus();
     return 0;
