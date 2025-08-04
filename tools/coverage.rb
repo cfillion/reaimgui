@@ -187,7 +187,6 @@ NATIVE_ONLY_ENUMS = [
   'Cond_None',          # alias for Cond_Always
   'ColorEditFlags_HDR', # not allowed, would break float[4]<->int conversion
   /\AViewportFlags_/,
-  /\ATreeNodeFlags_DrawLines/, # marked as experimental
   /\ATableFlags_NoBordersInBody/,       # marked as alpha, to be moved to style
   /\AConfigFlags_(NavEnableGamepad)\z/, # not implemented
   /\AConfigFlags_(IsSRGB|IsTouchScreen|ViewportsEnable)\z/, # backend internal flags

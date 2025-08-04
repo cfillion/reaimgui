@@ -3129,15 +3129,15 @@ local function DemoWindowWidgetsTreeNodes()
   if ImGui.TreeNode(ctx, "Hierarchy lines") then
     if not widgets.trees.hierarchy then
       widgets.trees.hierarchy = {
-        base_flags = --ImGui.TreeNodeFlags_DrawLinesFull |
+        base_flags = ImGui.TreeNodeFlags_DrawLinesFull |
                      ImGui.TreeNodeFlags_DefaultOpen,
       }
     end
 
     -- demo.HelpMarker('Default option for DrawLinesXXX is stored in style.TreeLinesFlags')
-    -- rv,widgets.trees.hierarchy = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesNone', widgets.trees.hierarchy.base_flags, ImGui.TreeNodeFlags_DrawLinesNone)
-    -- rv,widgets.trees.hierarchy = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesFull', widgets.trees.hierarchy.base_flags, ImGui.TreeNodeFlags_DrawLinesFull)
-    -- rv,widgets.trees.hierarchy = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesToNodes', widgets.trees.hierarchy.base_flags, ImGui.TreeNodeFlags_DrawLinesToNodes)
+    rv,widgets.trees.hierarchy.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesNone', widgets.trees.hierarchy.base_flags, ImGui.TreeNodeFlags_DrawLinesNone)
+    rv,widgets.trees.hierarchy.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesFull', widgets.trees.hierarchy.base_flags, ImGui.TreeNodeFlags_DrawLinesFull)
+    rv,widgets.trees.hierarchy.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesToNodes', widgets.trees.hierarchy.base_flags, ImGui.TreeNodeFlags_DrawLinesToNodes)
 
     if ImGui.TreeNode(ctx, 'Parent', widgets.trees.hierarchy.base_flags) then
       if ImGui.TreeNode(ctx, 'Child 1', widgets.trees.hierarchy.base_flags) then
@@ -3180,9 +3180,9 @@ local function DemoWindowWidgetsTreeNodes()
     rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_NavLeftJumpsToParent', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_NavLeftJumpsToParent)
 
     -- demo.HelpMarker('Default option for DrawLinesXXX is stored in style.TreeLinesFlags')
-    -- rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesNone', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_DrawLinesNone)
-    -- rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesFull', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_DrawLinesFull)
-    -- rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesToNodes', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_DrawLinesToNodes)
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesNone', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_DrawLinesNone)
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesFull', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_DrawLinesFull)
+    rv,widgets.trees.advanced.base_flags = ImGui.CheckboxFlags(ctx, 'TreeNodeFlags_DrawLinesToNodes', widgets.trees.advanced.base_flags, ImGui.TreeNodeFlags_DrawLinesToNodes)
 
     rv,widgets.trees.advanced.align_label_with_current_x_position = ImGui.Checkbox(ctx, 'Align label with current X position', widgets.trees.advanced.align_label_with_current_x_position)
     rv,widgets.trees.advanced.test_drag_and_drop = ImGui.Checkbox(ctx, 'Test tree node as drag source',      widgets.trees.advanced.test_drag_and_drop)
@@ -3848,7 +3848,7 @@ function demo.DemoWindowLayout()
       local spacing = ImGui.GetStyleVar(ctx, ImGui.StyleVar_ItemInnerSpacing)
       ImGui.Button(ctx, 'Button##1')
       ImGui.SameLine(ctx, 0.0, spacing)
-      if ImGui.TreeNode(ctx, 'Node##1', 0--[[ImGui.TreeNodeFlags_DrawLinesNone--]]) then
+      if ImGui.TreeNode(ctx, 'Node##1', ImGui.TreeNodeFlags_DrawLinesNone) then
         -- Placeholder tree data
         for i = 0, 5 do
           ImGui.BulletText(ctx, ('Item %d..'):format(i))
@@ -5875,7 +5875,7 @@ function demo.DemoWindowTables()
       tables.tree_view = {
         tree_node_flags_base = ImGui.TreeNodeFlags_SpanAllColumns |
                                ImGui.TreeNodeFlags_DefaultOpen |
-                               0 -- ImGui.TreeNodeFlags_DrawLinesFull,
+                               ImGui.TreeNodeFlags_DrawLinesFull,
       }
     end
 

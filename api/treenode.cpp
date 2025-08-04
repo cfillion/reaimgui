@@ -146,3 +146,12 @@ R"(Nav: left arrow moves back to parent. This is processed in TreePop when
    there's an unfullfilled Left nav request remaining.)");
 API_ENUM(0_1, TreeNodeFlags_CollapsingHeader,
   "TreeNodeFlags_Framed | TreeNodeFlags_NoTreePushOnOpen | TreeNodeFlags_NoAutoOpenOnLog");
+API_ENUM(0_10, TreeNodeFlags_DrawLinesNone, "No lines drawn");
+API_ENUM(0_10, TreeNodeFlags_DrawLinesFull,
+R"(Horizontal lines to child nodes.
+   Vertical line drawn down to TreePop() position: cover full contents.
+   Faster (for large trees).)");
+API_ENUM(0_10, TreeNodeFlags_DrawLinesToNodes,
+R"(Horizontal lines to child nodes.
+   Vertical line drawn down to bottom-most child node.
+   Slower (for large trees).)");
