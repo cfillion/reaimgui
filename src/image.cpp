@@ -68,6 +68,17 @@ Image *Image::fromMemory(const char *data, const int size)
   return create(stream);
 }
 
+struct Bitmap::Update {
+  Update(unsigned short x, unsigned short y, unsigned short w, unsigned short h,
+      unsigned int v)
+    : rect {x, y, w, h}, version {v}, age{}
+  {}
+
+  ImTextureRect rect;
+  unsigned int version;
+  unsigned char age;
+};
+
 Bitmap::Bitmap() : m_version {}
 {}
 
@@ -121,17 +132,6 @@ std::vector<unsigned char *> Bitmap::makeScanlines()
     scanlines.push_back(&*it);
   return scanlines;
 }
-
-struct Bitmap::Update {
-  Update(unsigned short x, unsigned short y, unsigned short w, unsigned short h,
-      unsigned int v)
-    : rect {x, y, w, h}, version {v}, age{}
-  {}
-
-  ImTextureRect rect;
-  unsigned int version;
-  unsigned char age;
-};
 
 bool Bitmap::heartbeat()
 {
