@@ -323,7 +323,14 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
   case GDK_KEY_Alt_R:        return ImGuiKey_RightAlt;
   case GDK_KEY_Super_L:      return ImGuiKey_LeftSuper;
   case GDK_KEY_Super_R:      return ImGuiKey_RightSuper;
+  case GDK_KEY_Delete:       return ImGuiKey_Delete;
+  case GDK_KEY_KP_Add:       return ImGuiKey_KeypadAdd;
+  case GDK_KEY_KP_Decimal:   return ImGuiKey_KeypadDecimal;
+  case GDK_KEY_KP_Divide:    return ImGuiKey_KeypadDivide;
   case GDK_KEY_KP_Enter:     return ImGuiKey_KeypadEnter;
+  case GDK_KEY_KP_Equal:     return ImGuiKey_KeypadEqual;
+  case GDK_KEY_KP_Multiply:  return ImGuiKey_KeypadMultiply;
+  case GDK_KEY_KP_Subtract:  return ImGuiKey_KeypadSubtract;
   case GDK_KEY_Menu:         return ImGuiKey_Menu;
   case GDK_KEY_apostrophe:   return ImGuiKey_Apostrophe;
   case GDK_KEY_comma:        return ImGuiKey_Comma;
@@ -343,6 +350,35 @@ static ImGuiKey translateGdkKey(const GdkEventKey *event)
   case GDK_KEY_Pause:        return ImGuiKey_Pause;
   case GDK_KEY_Back:         return ImGuiKey_AppBack;
   case GDK_KEY_Forward:      return ImGuiKey_AppForward;
+  }
+
+  return ImGuiKey_None;
+}
+
+static ImGuiKey keyFromGdkEvent(GdkEventKey *event)
+{
+  if(ImGuiKey namedKey {translateGdkKey(event)})
+    return namedKey;
+
+  if(!event->state) // no modifiers
+    return ImGuiKey_None;
+
+  // remove modifiers from event->keyval
+  GdkDisplay *display {gdk_window_get_display(event->window)};
+  GdkKeymap *keymap {gdk_keymap_get_for_display(display)};
+  if(!gdk_keymap_translate_keyboard_state(keymap, event->hardware_keycode,
+      {}, 0, &event->keyval, nullptr, nullptr, nullptr))
+    return ImGuiKey_None;
+
+  // ...then try again
+  if(ImGuiKey namedKey {translateGdkKey(event)})
+    return namedKey;
+
+  uint32_t codepoint {gdk_keyval_to_unicode(event->keyval)};
+  if(codepoint > 0 && codepoint <= 0xFF) {
+    if(codepoint >= 'a' && codepoint <= 'z')
+      codepoint -= 'a' - 'A';
+    return static_cast<ImGuiKey>(codepoint);
   }
 
   return ImGuiKey_None;
@@ -383,7 +419,7 @@ void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
     if(m_imeOpen && down)
       return;
 
-    if(ImGuiKey namedKey {translateGdkKey(gdkEvent)}) {
+    if(ImGuiKey namedKey {keyFromGdkEvent(gdkEvent)}) {
       m_ctx->keyInput(namedKey, down);
       return;
     }
@@ -391,6 +427,6 @@ void GDKWindow::keyEvent(WPARAM swellKey, LPARAM lParam, const bool down)
   else if(down)
     m_ctx->charInput(unmangleSwellChar(swellKey, lParam));
 
-  if(swellKey < 256)
+  if(swellKey <= 0xFF)
     m_ctx->keyInput(static_cast<ImGuiKey>(swellKey), down);
 }
