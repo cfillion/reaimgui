@@ -23,20 +23,44 @@ static_assert(__has_feature(objc_arc),
   "This file must be built with automatic reference counting enabled.");
 
 // Mode of operation:
-// 1. Apply default font name subtitution
+// 1. Apply generic font name substitution
 // 2. Find the font file for the family and style (no exact match on style)
 // 3.   -> Find the index of the font exactly matching the style in the file
 // 4.      -> If none found, search for a font with a similar style
 //            and tell the rasterizer which style(s) were missing.
 
-static const char *translateGenericFont(const char *family)
+static NSString *sysUIFontFamily()
 {
-  constexpr std::pair<const char *, const char *> genericMap[] {
-    {SysFont::SANS_SERIF, "Helvetica"     },
-    {SysFont::SERIF,      "Times"         },
-    {SysFont::MONOSPACE,  "Courier"       },
-    {SysFont::CURSIVE,    "Apple Chancery"},
-    {SysFont::FANTASY,    "Papyrus"       },
+  // [font fontName] returns ".AppleSystemUIFont" on macOS 10.14 which
+  // doesn't resolve when using matchingFontDescriptorWithMandatoryKeys.
+  //
+  // kCTFontFamilyNameAttribute gives the true name ".SF NS Text" except
+  // on 15.3 (+ likely others) where it behaves the same as [font fontName].
+  //
+  // The extra roundtrip to the font file is required to avoid this.
+
+  NSFont *font {[NSFont systemFontOfSize:9]};
+  NSFontDescriptor *desc
+    {[NSFontDescriptor fontDescriptorWithName:[font fontName]
+                                         size:[font pointSize]]};
+  NSURL *url {(__bridge_transfer NSURL *)CTFontDescriptorCopyAttribute
+    ((__bridge CTFontDescriptorRef)desc, kCTFontURLAttribute)};
+  NSArray *collection {(__bridge_transfer NSArray *)
+    CTFontManagerCreateFontDescriptorsFromURL((__bridge CFURLRef)url)};
+  if(!(desc = [collection firstObject]))
+    return @"Helvetica Neue";
+  return (__bridge_transfer NSString *)CTFontDescriptorCopyAttribute
+    ((__bridge CTFontDescriptorRef)desc, kCTFontFamilyNameAttribute);
+}
+
+static NSString *translateGenericFont(const char *family)
+{
+  static const std::pair<const char *, NSString *> genericMap[] {
+    {SysFont::SANS_SERIF, sysUIFontFamily()},
+    {SysFont::SERIF,      @"Times"         },
+    {SysFont::MONOSPACE,  @"Courier"       },
+    {SysFont::CURSIVE,    @"Apple Chancery"},
+    {SysFont::FANTASY,    @"Papyrus"       },
   };
 
   for(const auto &generic : genericMap) {
@@ -44,7 +68,7 @@ static const char *translateGenericFont(const char *family)
       return generic.second;
   }
 
-  return family;
+  return [NSString stringWithUTF8String:family];
 }
 
 static unsigned int styleToTraits(const int style)
@@ -112,7 +136,7 @@ static NSURL *findMatchingFile(NSDictionary *attrs)
 
 std::optional<FontSource> SysFont::resolve(const unsigned int codepoint) const
 {
-  const char *family = translateGenericFont(m_family.c_str());
+  NSString *family {translateGenericFont(m_family.c_str())};
 
   const auto traits {@{
     NSFontSymbolicTrait: [NSNumber numberWithInteger:styleToTraits(m_styles)]
@@ -124,7 +148,7 @@ std::optional<FontSource> SysFont::resolve(const unsigned int codepoint) const
     attrs[NSFontCharacterSetAttribute] = cs;
   }
   else
-    attrs[NSFontFamilyAttribute] = [NSString stringWithUTF8String:family];
+    attrs[NSFontFamilyAttribute] = family;
   attrs[NSFontTraitsAttribute] = traits;
 
   NSURL *url {findMatchingFile(attrs)};
@@ -139,7 +163,7 @@ std::optional<FontSource> SysFont::resolve(const unsigned int codepoint) const
     family = translateGenericFont(SysFont::SANS_SERIF);
     if(codepoint)
       [attrs removeObjectForKey:NSFontCharacterSetAttribute];
-    attrs[NSFontFamilyAttribute] = [NSString stringWithUTF8String:family];
+    attrs[NSFontFamilyAttribute] = family;
     if(!(url = findMatchingFile(attrs)))
       return std::nullopt;
   }
