@@ -20,6 +20,7 @@
 
 #include "resource.hpp"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
@@ -85,8 +86,10 @@ public:
   bool addFallback(ImFontAtlas *, ImFont *, unsigned int codepoint);
 
 private:
+  void initPlatform();
   std::optional<FontSource> resolve(unsigned int codepoint = 0) const;
 
+  std::shared_ptr<void> m_platform;
   std::string m_family;
   int m_styles;
 };
