@@ -78,6 +78,8 @@ SubresourceData Font::install(Context *ctx)
 SysFont::SysFont(const char *family, const int flags)
   : Font {}, m_family {family}, m_styles {flags}
 {
+  initPlatform();
+
   if(auto src {resolve()})
     m_src = *src;
   else

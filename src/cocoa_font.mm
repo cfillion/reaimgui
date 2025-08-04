@@ -134,6 +134,10 @@ static NSURL *findMatchingFile(NSDictionary *attrs)
     ((__bridge CTFontDescriptorRef)match, kCTFontURLAttribute);
 }
 
+void SysFont::initPlatform()
+{
+}
+
 std::optional<FontSource> SysFont::resolve(const unsigned int codepoint) const
 {
   NSString *family {translateGenericFont(m_family.c_str())};

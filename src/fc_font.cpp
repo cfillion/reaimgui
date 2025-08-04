@@ -120,9 +120,19 @@ FontPattern FontPattern::bestMatch(FcConfig *fc)
   return {FcFontMatch(fc, m_pattern, &result)};
 }
 
+void SysFont::initPlatform()
+{
+  static std::weak_ptr<void> g_shared;
+
+  if(g_shared.expired())
+    g_shared = m_platform = std::make_shared<FontConfig>();
+  else
+    m_platform = g_shared.lock();
+}
+
 std::optional<FontSource> SysFont::resolve(unsigned int codepoint) const
 {
-  static FontConfig fc;
+  auto &fc {*std::static_pointer_cast<FontConfig>(m_platform)};
 
   CharSet cs;
   if(codepoint)

@@ -246,62 +246,86 @@ static std::string getFilename(CComPtr<IDWriteFontFace> face)
   return narrow(path);
 }
 
+struct DWObjects {
+  FuncImport<decltype(DWriteCreateFactory)> _DWriteCreateFactory;
+  CComPtr<IDWriteFactory> factory;
+  CComPtr<IDWriteFontCollection> collection;
+  CComPtr<IDWriteFontFallback> fallback;
+
+  DWObjects();
+  operator bool() const { return _DWriteCreateFactory; }
+};
+
+DWObjects::DWObjects()
+  : _DWriteCreateFactory {L"Dwrite", "DWriteCreateFactory"}
+{
+  if(!_DWriteCreateFactory)
+    return;
+
+  if(FAILED(_DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,
+      __uuidof(IDWriteFactory), reinterpret_cast<IUnknown **>(&factory))))
+    throw reascript_error {"failed to initialize DirectWrite"};
+
+   if(FAILED(factory->GetSystemFontCollection(&collection)))
+     throw reascript_error {"failed to get the system font collection"};
+
+  if(CComQIPtr<IDWriteFactory2> factory2 {factory}) {
+    if(FAILED(factory2->GetSystemFontFallback(&fallback)))
+      throw reascript_error {"failed to get the system font fallback"};
+  }
+}
+
+void SysFont::initPlatform()
+{
+  static std::weak_ptr<void> g_shared;
+
+  if(g_shared.expired())
+    g_shared = m_platform = std::make_shared<DWObjects>();
+  else
+    m_platform = g_shared.lock();
+}
+
 std::optional<FontSource> SysFont::resolve(const unsigned int codepoint) const
 {
-  static FuncImport<decltype(DWriteCreateFactory)>
-    _DWriteCreateFactory {L"Dwrite", "DWriteCreateFactory"};
-
+  const auto &dwrite {*std::static_pointer_cast<DWObjects>(m_platform)};
   const std::wstring &family {translateGenericFont(m_family)};
 
   // Windows Vista without Platform Update
-  if(!_DWriteCreateFactory) {
+  if(!dwrite) {
     if(codepoint)
       return std::nullopt;
     return resolveGDI(family.c_str(), m_styles);
     //throw reascript_error {"DirectWrite is not installed on this system"};
   }
 
-  CComPtr<IDWriteFactory> factory;
-  if(FAILED(_DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,
-      __uuidof(IDWriteFactory), reinterpret_cast<IUnknown **>(&factory))))
-    throw reascript_error {"failed to initialize DirectWrite"};
-
-  CComPtr<IDWriteFontCollection> collection;
-   if(FAILED(factory->GetSystemFontCollection(&collection)))
-     throw reascript_error {"failed to get the system font collection"};
-
   CComPtr<IDWriteFont> match;
 
   // Windows 8.1: use the system fallback mechanism
-  if(CComQIPtr<IDWriteFactory2> factory2 {factory}) {
-    CComPtr<IDWriteFontFallback> fallback;
-    if(FAILED(factory2->GetSystemFontFallback(&fallback)))
-      throw reascript_error {"failed to get the system font fallback"};
-
+  if(dwrite.fallback) {
     CodepointSource source {codepoint};
     unsigned int mappedLen; float scale;
-    fallback->MapCharacters(&source, 0, 1, collection, family.c_str(),
-      getWeight(m_styles), getStyle(m_styles), DWRITE_FONT_STRETCH_NORMAL,
-      &mappedLen, &match, &scale);
+    dwrite.fallback->MapCharacters(&source, 0, 1, dwrite.collection,
+      family.c_str(), getWeight(m_styles), getStyle(m_styles),
+      DWRITE_FONT_STRETCH_NORMAL, &mappedLen, &match, &scale);
   }
 
   // find a font matching the requested family name
   // (skip if we already know it doesn't contain the requested codepoint)
   if(!match && !codepoint) {
     BOOL found {}; unsigned int i;
-    collection->FindFamilyName(family.c_str(), &i, &found);
+    dwrite.collection->FindFamilyName(family.c_str(), &i, &found);
 
     CComPtr<IDWriteFontFamily> family;
-    if(found && SUCCEEDED(collection->GetFontFamily(i, &family)))
+    if(found && SUCCEEDED(dwrite.collection->GetFontFamily(i, &family)))
       match = findMatch(family, m_styles, codepoint);
   }
 
   // find any font containing the requested glyph
   if(!match) {
-    const unsigned int families {collection->GetFontFamilyCount()};
+    const unsigned int families {dwrite.collection->GetFontFamilyCount()};
     for(unsigned int i {}; i < families; ++i) {
       CComPtr<IDWriteFontFamily> family;
-      if(SUCCEEDED(collection->GetFontFamily(i, &family)))
+      if(SUCCEEDED(dwrite.collection->GetFontFamily(i, &family)))
         match = findMatch(family, m_styles, codepoint);
       if(match)
         break;
