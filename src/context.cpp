@@ -166,7 +166,9 @@ Context::Context(const char *label, const int userConfigFlags)
   Renderer::install();
   Viewport::install();
 
-  style().FontSizeBase = 12.f; // 9pt
+  ImGuiStyle &style {m_imgui->Style};
+  style.FontSizeBase = 12.f; // 9pt
+  style.FramePadding.y = 2.f;
   io.Fonts->SetFontLoader(Font::loader());
   io.FontDefault = m_font->instance(this);
 
