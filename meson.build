@@ -26,6 +26,7 @@ project('reaimgui', 'cpp',
 
     'werror=true',
     'imgui:werror=false',
+    'freetype2:werror=false',
   ])
 
 fs = import('fs')
