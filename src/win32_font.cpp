@@ -22,7 +22,7 @@
 #include "win32_unicode.hpp"
 
 #include <atlbase.h>
-#include <dwrite_2.h>
+#include <dwrite_3.h>
 #include <imgui_internal.h>
 #include <strsafe.h>
 
@@ -222,12 +222,8 @@ static CComPtr<IDWriteFont> findMatch(CComPtr<IDWriteFontFamily> family,
   return font;
 }
 
-static std::string getFilename(CComPtr<IDWriteFontFace> face)
+static std::string getFilename(CComPtr<IDWriteFontFile> file)
 {
-  UINT32 filesCount {1}; // we don't support more than one file per font source
-  CComPtr<IDWriteFontFile> file;
-  face->GetFiles(&filesCount, &file);
-
   const void *refKey; UINT32 refKeySize;
   file->GetReferenceKey(&refKey, &refKeySize);
 
@@ -244,6 +240,61 @@ static std::string getFilename(CComPtr<IDWriteFontFace> face)
   localLoader->GetFilePathFromKey(refKey, refKeySize, path.data(), path.size() + 1);
 
   return narrow(path);
+}
+
+static bool operator==(const DWRITE_FONT_AXIS_VALUE &a, const DWRITE_FONT_AXIS_VALUE &b)
+{
+  return !memcmp(&a, &b, sizeof(DWRITE_FONT_AXIS_VALUE));
+}
+
+static unsigned short findVariation(CComPtr<IDWriteFactory> factory,
+  CComPtr<IDWriteFontFace> face, CComPtr<IDWriteFontFile> file)
+{
+  // Windows 10 Build 16299
+  CComQIPtr<IDWriteFactory5> factory5 {factory};
+  CComQIPtr<IDWriteFontFace5> face5 {face};
+  if(!factory5 || !face5 || !face5->HasVariations())
+    return 0;
+
+  const auto targetIndex {face->GetIndex()};
+  std::vector<DWRITE_FONT_AXIS_VALUE> targetValues {face5->GetFontAxisValueCount()};
+  if(FAILED(face5->GetFontAxisValues(targetValues.data(), targetValues.size())))
+    return 0;
+
+  // DirectWrite lacks an API to get the index of a variation's named instance
+  // so we iterate through all instances contained in the font file to find it
+
+  CComPtr<IDWriteFontSetBuilder1> builder;
+  if(FAILED(factory5->CreateFontSetBuilder(&builder)))
+    throw reascript_error {"failed to create font variation set builder"};
+  if(FAILED(builder->AddFontFile(file)))
+    throw reascript_error {"failed to read variations from font file"};
+  CComPtr<IDWriteFontSet> set;
+  if(FAILED(builder->CreateFontSet(&set)))
+    throw reascript_error {"failed to create font variation set"};
+  CComQIPtr<IDWriteFontSet1> set1 {set}; // same min OS version as face5
+
+  const auto count {std::min(set1->GetFontCount(), 0xFFFEU)}; // FT's limit
+  std::vector<DWRITE_FONT_AXIS_VALUE> refValues {targetValues.size()};
+  for(unsigned short i {}, varIndex {}; i < count; ++i) {
+    CComPtr<IDWriteFontFaceReference1> ref;
+    if(FAILED(set1->GetFontFaceReference(i, &ref)))
+      throw reascript_error {"failed to get font variation reference"};
+
+    if(ref->GetFontFaceIndex() != targetIndex)
+      continue;
+
+    ++varIndex; // index is 1-based, increment first
+
+    if(ref->GetFontAxisValueCount() != targetValues.size() ||
+        FAILED(ref->GetFontAxisValues(refValues.data(), refValues.size())))
+      continue;
+
+    if(refValues == targetValues)
+      return varIndex;
+  }
+
+  return 0;
 }
 
 struct DWObjects {
@@ -340,9 +391,14 @@ std::optional<FontSource> SysFont::resolve(const unsigned int codepoint) const
   if(FAILED(match->CreateFontFace(&face)))
     throw reascript_error {"failed to create the system font face"};
 
+  UINT32 filesCount {1}; // we don't support more than one file per font source
+  CComPtr<IDWriteFontFile> file;
+  face->GetFiles(&filesCount, &file);
+
   FontSource src;
-  src.m_data = getFilename(face);
-  src.m_index = face->GetIndex();
+  src.m_data = getFilename(file);
+  src.m_index = face->GetIndex() & 0xFFFF;
+  src.m_index |= findVariation(dwrite.factory, face, file) << 16;
   src.m_styles = m_styles;
   if(match->GetWeight() > DWRITE_FONT_WEIGHT_REGULAR
       && !(match->GetSimulations() & DWRITE_FONT_SIMULATIONS_BOLD))
