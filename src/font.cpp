@@ -46,12 +46,12 @@ Font::Font()
 {
 }
 
-Font::Font(const char *file, const int index, const int flags)
+Font::Font(const char *file, const unsigned int index, const int flags)
   : m_src {file, index, flags}, m_size {}
 {
 }
 
-Font::Font(std::vector<unsigned char> &&data, const int index, const int flags)
+Font::Font(std::vector<unsigned char> &&data, const unsigned int index, const int flags)
   : m_src {std::move(data), index, flags}, m_size {}
 {
 }
