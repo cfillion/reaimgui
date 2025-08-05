@@ -44,15 +44,16 @@ struct FontSource {
   bool operator!=(const FontSource &o) const { return !(*this == o); }
 
   std::variant<std::string, std::vector<unsigned char>> m_data;
-  int m_index, m_styles;
+  unsigned int m_index;
+  int m_styles;
 };
 
 class Font : public Resource {
 public:
   static const ImFontLoader *loader();
 
-  Font(const char *file, int index, int style = 0);
-  Font(std::vector<unsigned char> &&, int index, int style = 0);
+  Font(const char *file, unsigned int index, int style = 0);
+  Font(std::vector<unsigned char> &&, unsigned int index, int style = 0);
 
   bool attachable(const Context *) const override { return true; }
   SubresourceData install(Context *) override;

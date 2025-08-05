@@ -55,7 +55,7 @@ static NSNumber *styleToTraits(const int style)
   return [NSNumber numberWithInteger:traits];
 }
 
-static bool findExactMatch(NSArray *collection, const int style, int *index)
+static bool findExactMatch(NSArray *collection, const int style, unsigned int *index)
 {
   NSDictionary<NSFontDescriptorAttributeName, id> *attrs {@{
     NSFontTraitsAttribute: @{NSFontSymbolicTrait: styleToTraits(style)},
@@ -79,12 +79,12 @@ static bool findExactMatch(NSArray *collection, const int style, int *index)
   return false;
 }
 
-static std::pair<int, int> findClosestMatch(NSURL *url, const int style)
+static std::pair<unsigned int, int> findClosestMatch(NSURL *url, const int style)
 {
   NSArray *collection {(__bridge_transfer NSArray *)
     CTFontManagerCreateFontDescriptorsFromURL((__bridge CFURLRef)url)};
 
-  int index;
+  unsigned int index;
   if(findExactMatch(collection, style, &index))
     return {index, ReaImGuiFontFlags_None};
 

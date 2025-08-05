@@ -49,7 +49,8 @@ named instance index for the current face index (starting from 1).
 The font styles in 'flags' are simulated by the rasterizer.
 See also CreateFontFromMem.)")
 {
-  return new Font {file, API_GET(index), API_GET(flags)};
+  return new Font {file,
+    static_cast<unsigned int>(API_GET(index)), API_GET(flags)};
 }
 
 API_FUNC(0_10, Font*, CreateFontFromMem,
@@ -63,7 +64,8 @@ See CreateFontFromFile for the meaning of 'index' and 'flags'.)")
   std::vector<unsigned char> buffer;
   buffer.reserve(data_sz);
   std::copy(data, data + data_sz, std::back_inserter(buffer));
-  return new Font {std::move(buffer), API_GET(index), API_GET(flags)};
+  return new Font {std::move(buffer),
+    static_cast<unsigned int>(API_GET(index)), API_GET(flags)};
 }
 
 API_FUNC(0_4, Font*, GetFont, (Context*,ctx),
