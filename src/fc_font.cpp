@@ -51,6 +51,20 @@ private:
   FcPattern *m_pattern;
 };
 
+class CharSet {
+public:
+  CharSet() : m_cs {FcCharSetCreate()} {}
+  CharSet(const CharSet &) = delete;
+  ~CharSet() { FcCharSetDestroy(m_cs); }
+
+  operator FcCharSet *() { return m_cs; }
+
+  void add(FcChar32 c) { FcCharSetAddChar(m_cs, c); }
+
+private:
+  FcCharSet *m_cs;
+};
+
 template<>
 const char *FontPattern::get(const char *object, const int n) const
 {
@@ -91,6 +105,12 @@ bool FontPattern::add(const char *object, const int val)
   return FcPatternAddInteger(m_pattern, object, val);
 }
 
+template<>
+bool FontPattern::add(const char *object, CharSet *val)
+{
+  return FcPatternAddCharSet(m_pattern, object, *val);
+}
+
 FontPattern FontPattern::bestMatch(FcConfig *fc)
 {
   FcConfigSubstitute(fc, m_pattern, FcMatchPattern);
@@ -100,31 +120,47 @@ FontPattern FontPattern::bestMatch(FcConfig *fc)
   return {FcFontMatch(fc, m_pattern, &result)};
 }
 
-bool Font::resolve(const char *family, const int style)
+void SysFont::initPlatform()
 {
-  FontConfig fc;
+  static std::weak_ptr<void> g_shared;
+
+  if(g_shared.expired())
+    g_shared = m_platform = std::make_shared<FontConfig>();
+  else
+    m_platform = g_shared.lock();
+}
+
+std::optional<FontSource> SysFont::resolve(unsigned int codepoint) const
+{
+  auto &fc {*std::static_pointer_cast<FontConfig>(m_platform)};
+
+  CharSet cs;
+  if(codepoint)
+    cs.add(codepoint);
 
   FontPattern query;
-  query.add(FC_FAMILY, family);
+  query.add(FC_FAMILY, m_family.c_str());
   query.add(FC_WEIGHT,
-    style & ReaImGuiFontFlags_Bold ? FC_WEIGHT_BOLD : FC_WEIGHT_NORMAL);
+    m_styles & ReaImGuiFontFlags_Bold ? FC_WEIGHT_BOLD : FC_WEIGHT_NORMAL);
   query.add(FC_SLANT,
-    style & ReaImGuiFontFlags_Italic ? FC_SLANT_ITALIC : FC_SLANT_ROMAN);
+    m_styles & ReaImGuiFontFlags_Italic ? FC_SLANT_ITALIC : FC_SLANT_ROMAN);
+  query.add(FC_CHARSET, &cs);
 
   const FontPattern &font {query.bestMatch(fc)};
   if(!font)
-    return false;
+    return std::nullopt;
 
-  m_data = font.get<const char *>(FC_FILE);
-  m_index = font.get<int>(FC_INDEX);
+  FontSource src;
+  src.m_data = font.get<const char *>(FC_FILE);
+  src.m_index = font.get<int>(FC_INDEX);
 
   // FC_WEIGHT is bold if requested in the query even if the chosen font doesn't
   // support that style. FC_EMBOLDEN is true in those cases.
-  m_flags = style;
+  src.m_styles = m_styles;
   if(font.get<int>(FC_WEIGHT) > FC_WEIGHT_NORMAL && !font.get<bool>(FC_EMBOLDEN))
-    m_flags &= ~ReaImGuiFontFlags_Bold;
+    src.m_styles &= ~ReaImGuiFontFlags_Bold;
   if(font.get<int>(FC_SLANT) == FC_SLANT_ITALIC)
-    m_flags &= ~ReaImGuiFontFlags_Italic;
+    src.m_styles &= ~ReaImGuiFontFlags_Italic;
 
-  return true;
+  return src;
 }

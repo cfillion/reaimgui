@@ -21,6 +21,7 @@
 #include "configvar.hpp"
 #include "docker.hpp"
 #include "error.hpp"
+#include "font.hpp"
 #include "keymap.hpp"
 #include "platform.hpp"
 #include "renderer.hpp"
@@ -115,7 +116,8 @@ Context::Context(const char *label, const int userConfigFlags)
     m_iniFilename     {generateIniFilename(m_id)                         },
     m_imgui           {ImGui::CreateContext()                            },
     m_dockers         {std::make_unique<DockerList>()                    },
-    m_rendererFactory {std::make_unique<RendererFactory>()               }
+    m_rendererFactory {std::make_unique<RendererFactory>()               },
+    m_font            {new SysFont {SysFont::SANS_SERIF}                 }
 {
   if(!*label) // does not prohibit empty window titles
     throw reascript_error {"context label is required"};
@@ -163,6 +165,12 @@ Context::Context(const char *label, const int userConfigFlags)
   Platform::install();
   Renderer::install();
   Viewport::install();
+
+  ImGuiStyle &style {m_imgui->Style};
+  style.FontSizeBase = 12.f; // 9pt
+  style.FramePadding.y = 2.f;
+  io.Fonts->SetFontLoader(Font::loader());
+  io.FontDefault = m_font->instance(this);
 
   // prevent imgui from loading settings but not from saving them
   // (so that the saved state is reset to defaults)
@@ -243,16 +251,12 @@ void *Context::touch<void>(Resource *obj)
   return it->data;
 }
 
-Resource *Context::findSubresource(void *usageData)
-{
-  auto it {std::find(m_subresources.begin(), m_subresources.end(), usageData)};
-  if(it == m_subresources.end())
-    return nullptr;
-  return it->resource;
-}
-
 bool Context::heartbeat()
 {
+  m_font->keepAlive();
+  for(Resource *obj : m_attachments)
+    obj->keepAlive();
+
   if(m_imgui->WithinFrameScope && !endFrame(true))
     return false;
 
@@ -278,6 +282,7 @@ void Context::setCurrent()
 
 bool Context::beginFrame() try
 {
+  touch<void>(m_font);
   assert(!m_imgui->WithinFrameScope);
 
   Platform::updateMonitors(); // TODO only if changed
@@ -600,9 +605,6 @@ void Context::endDrag(const bool drop)
 
 void Context::updateSubresources()
 {
-  for(Resource *obj : m_attachments)
-    obj->keepAlive();
-
   for(auto it = m_subresources.begin(); it != m_subresources.end();) {
     if(it->isResourceValid() && ++it->unusedFrames <= SUBRESOURCE_TTL) {
       if(it->unusedFrames == 1)

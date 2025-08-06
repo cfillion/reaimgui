@@ -55,6 +55,11 @@ SHIM("0.10",
   (int, StyleVar_ImageBorderSize)
   (void, ImageWithBg, Context*, Image*, double, double,
     RO<double*>, RO<double*>, RO<double*>, RO<double*>, RO<int*>, RO<int*>)
+
+  (Font*, CreateFont, const char*, RO<int*>)
+  (Font*, CreateFontFromFile, const char*, RO<int*>, RO<int*>)
+  (Font*, CreateFontFromMem, const char*, S<int>, RO<int*>, RO<int*>)
+  (void, PushFont, Context*, Font*, double)
 );
 
 // dear imgui v1.91
@@ -168,14 +173,14 @@ enum { FONT_INDEX_MASK = 0xFF, FONT_STYLE_MASK = ~0xFF };
 SHIM_FUNC(0_9, Font*, CreateFont,
 (const char*,family_or_file) (int,size) (RO<int*>,flags,ReaImGuiFontFlags_None))
 {
-  const int index {API_GET(flags) & FONT_INDEX_MASK};
-  const int style {API_GET(flags) & FONT_STYLE_MASK};
+  int index {API_GET(flags) & FONT_INDEX_MASK};
+  int style {API_GET(flags) & FONT_STYLE_MASK};
 
   Font *font;
   if(strpbrk(family_or_file, "/\\"))
-    font = new Font {family_or_file, index, style};
+    font = api.CreateFontFromFile(family_or_file, &index, &style);
   else
-    font = new Font {family_or_file, style};
+    font = api.CreateFont(family_or_file, &style);
   font->setLegacySize(size);
   return font;
 }
@@ -183,28 +188,21 @@ SHIM_FUNC(0_9, Font*, CreateFont,
 SHIM_FUNC(0_9_3, Font*, CreateFontFromMem,
 (const char*,data) (int,data_sz) (int,size) (RO<int*>,flags,ReaImGuiFontFlags_None))
 {
-  std::vector<unsigned char> buffer;
-  buffer.reserve(data_sz);
-  std::copy(data, data + data_sz, std::back_inserter(buffer));
-  const int index {API_GET(flags) & FONT_INDEX_MASK};
-  const int style {API_GET(flags) & FONT_STYLE_MASK};
-  Font *font {new Font {std::move(buffer), index, style}};
+  int index {API_GET(flags) & FONT_INDEX_MASK};
+  int style {API_GET(flags) & FONT_STYLE_MASK};
+  Font *font {api.CreateFontFromMem(data, data_sz, &index, &style)};
   font->setLegacySize(size);
   return font;
 }
 
 SHIM_FUNC(0_4, void, PushFont, (Context*,ctx) (Font*,font))
 {
-  FRAME_GUARD;
-
-  ImFont *imfont;
-  if(font) {
+  if(font)
     assertValid(font);
-    imfont = font->instance(ctx);
+  else {
+    assertValid(ctx);
+    font = static_cast<Font *>(ctx->IO().FontDefault->Sources.front()->UserData);
   }
-  else
-    imfont = ImGui::GetDefaultFont();
 
-  // TODO: use api.GetDefaultFont once implemented (and api.PushFont)
-  ImGui::PushFont(imfont, imfont->LegacySize);
+  api.PushFont(ctx, font, font->legacySize());
 }
