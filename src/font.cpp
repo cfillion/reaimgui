@@ -25,9 +25,6 @@
 
 static void lookupFallbackFont(ImFontAtlas *atlas, ImFont *inst, const ImWchar c)
 {
-  if(c == '\t')
-    return;
-
   // imgui caches the result per baked font (per size per ctx)
   auto font {static_cast<Font *>(inst->Sources.front()->UserData)};
   if(SysFont *sysfont {dynamic_cast<SysFont *>(font)})
@@ -91,10 +88,20 @@ SysFont::SysFont(const char *family, const int flags)
 
 bool SysFont::addFallback(ImFontAtlas *atlas, ImFont *inst, unsigned int codepoint)
 {
+  // ImGui caches missing glyphs per baked size so, if none of the already added
+  // font sources contains the requested codepoint, it will query again over and
+  // over for every new size. Furthermore the resolver may return a font lacking
+  // the requested codepoint. We must not wastefully retry regardless of result.
+  if(m_resolved.contains(codepoint))
+    return false;
+  else
+    m_resolved.insert(codepoint);
+
   if(const auto src {resolve(codepoint)}) {
     if(*src != m_src)
       return src->install(atlas, this, inst) != nullptr;
   }
+
   return false;
 }
 

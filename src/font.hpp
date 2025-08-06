@@ -18,6 +18,7 @@
 #ifndef REAIMGUI_FONT_HPP
 #define REAIMGUI_FONT_HPP
 
+#include "flat_set.hpp"
 #include "resource.hpp"
 
 #include <memory>
@@ -90,6 +91,7 @@ private:
   std::optional<FontSource> resolve(unsigned int codepoint = 0) const;
 
   std::shared_ptr<void> m_platform;
+  FlatSet<unsigned int> m_resolved;
   std::string m_family;
   int m_styles;
 };
