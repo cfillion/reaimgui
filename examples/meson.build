@@ -54,4 +54,4 @@ custom_target(gfx2imgui,
     '-d', 'short_open_tag=on',
     '@INPUT@',
   ],
-  install: true, install_dir: scripts_dir)
+  install: true, install_tag: 'runtime', install_dir: scripts_dir)
