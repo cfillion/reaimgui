@@ -68,8 +68,11 @@ static void uninstall(Context *ctx, ImFont *font)
 
 SubresourceData Font::install(Context *ctx)
 {
-  if(ImFont *inst {m_src.install(ctx->IO().Fonts, this)})
+  if(ImFont *inst {m_src.install(ctx->IO().Fonts, this)}) {
+    // don't set ImFontConfig::SizePixels to use EM square sizing
+    inst->LegacySize = m_size;
     return {inst, &uninstall};
+  }
 
   // imgui doesn't report what went wrong
   throw reascript_error {"the font could not be loaded"};
@@ -109,16 +112,13 @@ ImFont *FontSource::install(ImFontAtlas *atlas, Font *parent, ImFont *inst) cons
   cfg.UserData = parent;
   cfg.MergeTarget = inst;
 
-  // sets the total pixel height (ascent-descent) instead of em square when >0
-  const auto size {parent->legacySize()};
-
   if(const std::string *path {std::get_if<std::string>(&m_data)})
-    return atlas->AddFontFromFileTTF(path->c_str(), size, &cfg);
+    return atlas->AddFontFromFileTTF(path->c_str(), 0.f, &cfg);
   else {
     cfg.FontDataOwnedByAtlas = false;
     auto &data {std::get<std::vector<unsigned char>>(m_data)};
     auto bytes {const_cast<unsigned char *>(data.data())};
-    return atlas->AddFontFromMemoryTTF(bytes, data.size(), size, &cfg);
+    return atlas->AddFontFromMemoryTTF(bytes, data.size(), 0.f, &cfg);
   }
 }
 
