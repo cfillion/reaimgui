@@ -88,6 +88,11 @@ SysFont::SysFont(const char *family, const int flags)
 
 bool SysFont::addFallback(ImFontAtlas *atlas, ImFont *inst, unsigned int codepoint)
 {
+  // ImGui always requests a tab from ImFontAtlasBuildSetupFontBakedBlanks which
+  // often isn't present causing an unnecessary second lookup every time.
+  if(codepoint == '\t')
+    return false;
+
   // ImGui caches missing glyphs per baked size so, if none of the already added
   // font sources contains the requested codepoint, it will query again over and
   // over for every new size. Furthermore the resolver may return a font lacking
