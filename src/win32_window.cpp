@@ -411,7 +411,7 @@ std::optional<LRESULT> Win32Window::handleMessage
     return 0;
   case WM_CHAR: {
     const auto CTRL {2};
-    if(wParam < 0 || wParam > 0xffff || HIBYTE(VkKeyScan(wParam)) & CTRL)
+    if(wParam < 0 || wParam > 0xffff || HIBYTE(VkKeyScan(wParam)) == CTRL)
       break;
 
     // https://learn.microsoft.com/en-us/windows/win32/inputdev/using-keyboard-input#processing-character-messages
