@@ -105,22 +105,20 @@ static std::pair<unsigned int, int> indexForMatch(unsigned int index,
 }
 
 static std::pair<unsigned int, int> findIndex(
-  const SysFontMatch target, const int style)
+  const SysFontMatch target, const int styles)
 {
   NSArray *collection {(__bridge_transfer NSArray *)
     CTFontManagerCreateFontDescriptorsFromURL((__bridge CFURLRef)target.url)};
   const auto count {std::min<unsigned long>([collection count], 0xFFFF)};
-  if(!count)
-    return {0, style};
 
   NSString *targetName {[target.desc objectForKey:NSFontNameAttribute]};
   for(unsigned short i {}; i < count; ++i) {
     NSFontDescriptor *desc {collection[i]};
     if([[desc objectForKey:NSFontNameAttribute] isEqualToString:targetName])
-      return indexForMatch(i, desc, style);
+      return indexForMatch(i, desc, styles);
   }
 
-  return indexForMatch(0, [collection firstObject], style);
+  return {0, styles};
 }
 
 static SysFontMatch findMatchingFile(NSDictionary *attrs)
