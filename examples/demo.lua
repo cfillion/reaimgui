@@ -588,11 +588,11 @@ function demo.ShowDemoWindow(open)
       local log_to_tty = ImGui.Button(ctx, 'Log To TTY'); ImGui.SameLine(ctx)
       local log_to_file = ImGui.Button(ctx, 'Log To File'); ImGui.SameLine(ctx)
       local log_to_clipboard = ImGui.Button(ctx, 'Log To Clipboard'); ImGui.SameLine(ctx)
-      ImGui.PushTabStop(ctx, false)
+      ImGui.PushItemFlag(ctx, ImGui.ItemFlags_NoTabStop, true)
       ImGui.SetNextItemWidth(ctx, 80.0)
       rv,config.logging.auto_open_depth =
         ImGui.SliderInt(ctx, 'Open Depth', config.logging.auto_open_depth, 0, 9)
-      ImGui.PopTabStop(ctx)
+      ImGui.PopItemFlag(ctx)
       ImGui.PopID(ctx)
 
       -- Start logging at the end of the function so that the buttons don't appear in the log
