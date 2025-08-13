@@ -136,14 +136,15 @@ before a framed item).)")
 }
 
 API_FUNC(0_1, double, GetTextLineHeight, (Context*,ctx),
-"Same as GetFontSize")
+R"(Total height of a line of text
+(typically higher than GetFontSize depending on the font).)")
 {
   FRAME_GUARD;
   return ImGui::GetTextLineHeight();
 }
 
 API_FUNC(0_1, double, GetTextLineHeightWithSpacing, (Context*,ctx),
-R"(GetFontSize + StyleVar_ItemSpacing.y
+R"(GetTextLineHeight + StyleVar_ItemSpacing.y
 (distance in pixels between 2 consecutive lines of text).)")
 {
   FRAME_GUARD;
@@ -151,14 +152,14 @@ R"(GetFontSize + StyleVar_ItemSpacing.y
 }
 
 API_FUNC(0_1, double, GetFrameHeight, (Context*,ctx),
-"GetFontSize + StyleVar_FramePadding.y * 2")
+"GetTextLineHeight + StyleVar_FramePadding.y * 2")
 {
   FRAME_GUARD;
   return ImGui::GetFrameHeight();
 }
 
 API_FUNC(0_1, double, GetFrameHeightWithSpacing, (Context*,ctx),
-R"(GetFontSize + StyleVar_FramePadding.y * 2 + StyleVar_ItemSpacing.y
+R"(GetTextLineHeight + StyleVar_FramePadding.y * 2 + StyleVar_ItemSpacing.y
 (distance in pixels between 2 consecutive lines of framed widgets).)")
 {
   FRAME_GUARD;

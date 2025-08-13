@@ -97,7 +97,7 @@ API_FUNC(0_4, void, PopFont, (Context*,ctx),
 
 API_FUNC(0_1, double, GetFontSize, (Context*,ctx),
 R"(Get current font size (= height in pixels) of current font with current scale
-applied.)")
+applied. See also GetTextLineHeight and GetFrameHeight.)")
 {
   FRAME_GUARD;
   return ImGui::GetFontSize(); // ctx->style().FontSizeBase?
