@@ -208,6 +208,9 @@ static CComPtr<IDWriteFont> findMatch(CComPtr<IDWriteFontFamily> family,
       getWeight(styles), DWRITE_FONT_STRETCH_UNDEFINED, getStyle(styles), &font)))
     return nullptr;
 
+  if(font->IsSymbolFont())
+    return nullptr;
+
   if(codepoint) {
     BOOL found;
     CComQIPtr<IDWriteFont2> font2 {font};
@@ -358,6 +361,8 @@ std::optional<FontSource> SysFont::resolve(const unsigned int codepoint) const
     dwrite.fallback->MapCharacters(&source, 0, 1, dwrite.collection,
       family.c_str(), getWeight(m_styles), getStyle(m_styles),
       DWRITE_FONT_STRETCH_NORMAL, &mappedLen, &match, &scale);
+    if(match && match->IsSymbolFont())
+      match.Release();
   }
 
   // find a font matching the requested family name
