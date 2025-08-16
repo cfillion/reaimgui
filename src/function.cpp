@@ -22,11 +22,6 @@
 
 #include <reaper_plugin_functions.h>
 
-// WDL_FastString is missing a copy constructor/assignment operator
-#ifdef HAS_DEPRECATED_COPY // GCC 12
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wdeprecated-copy"
-#endif
 // missing includes for eel_strings.h
 #include <cstring>
 #include <WDL/assocarray.h>
@@ -50,9 +45,6 @@ static void EEL_STRING_DEBUGOUT(const char *fmt, ...) noexcept
 #define EEL_STRING_MAXUSERSTRING_LENGTH_HINT (1<<16) // same as REAPER
 
 #include <eel2/eel_strings.h>
-#ifdef HAS_DEPRECATED_COPY
-#  pragma GCC diagnostic pop
-#endif
 
 void Function::setup()
 {
