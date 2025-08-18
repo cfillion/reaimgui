@@ -137,10 +137,15 @@ struct SharedTex {
 void OpenGLRenderer::Shared::processTexture(ImTextureData *tex)
 {
   switch(tex->Status) {
-  case ImTextureStatus_OK: {
+  case ImTextureStatus_OK:
+  case ImTextureStatus_WantUpdates: {
     if(tex->TexID >= m_textures.size())
       m_textures.resize(tex->TexID + 1);
     LocalTex &local {m_textures[tex->TexID]};
+    if(tex->Status == ImTextureStatus_WantUpdates) {
+      ++static_cast<SharedTex *>(tex->BackendUserData)->version;
+      tex->SetStatus(ImTextureStatus_OK);
+    }
     if(!local.id)
       createTexture(local, tex);
     else if(local.version != static_cast<SharedTex *>(tex->BackendUserData)->version)
@@ -160,12 +165,6 @@ void OpenGLRenderer::Shared::processTexture(ImTextureData *tex)
     tex->SetStatus(ImTextureStatus_OK);
     break;
   }
-  case ImTextureStatus_WantUpdates:
-    ++static_cast<SharedTex *>(tex->BackendUserData)->version;
-    IM_ASSERT(tex->TexID < m_textures.size());
-    updateTexture(m_textures[tex->TexID], tex);
-    tex->SetStatus(ImTextureStatus_OK);
-    break;
   case ImTextureStatus_WantDestroy:
     deleteTexture(tex);
     break;
