@@ -85,7 +85,7 @@ static std::pair<unsigned int, int> indexForMatch(unsigned int index,
 {
   NSDictionary<NSFontDescriptorVariationKey, id> *variation
     {[desc objectForKey:NSFontVariationAttribute]};
-  if([variation count] > 0)
+  if(variation && (index > 0 || [variation count] > 0))
     ++index, index <<= 16;
 
   // Getting the traits through NSFont becomes less expensive than via
