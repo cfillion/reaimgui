@@ -155,6 +155,9 @@ LRESULT CALLBACK Window::proc(HWND handle, const unsigned int msg,
   case WM_RBUTTONUP:
     self->mouseUp(ImGuiMouseButton_Right);
     return 0;
+  case WM_SETFOCUS:
+    self->updateModifiers();
+    break;
 #endif // __APPLE__
   case WM_NCHITTEST:
     // Using [NSWindow ignoresMouseEvents] for this on macOS,
