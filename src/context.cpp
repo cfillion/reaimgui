@@ -678,8 +678,8 @@ void Context::updateFocus()
   // (only required when polling updateFocus every frame, eg. on Linux)
   bool hasHiddenWindows {false};
 #ifdef FOCUS_POLLING
-  for(int i {}; i < m_imgui->Windows.Size; ++i) {
-    if(m_imgui->Windows[i]->Hidden) {
+  for(ImGuiWindow *window : m_imgui->Windows) {
+    if(window->Active && window->Hidden) {
       hasHiddenWindows = true;
       break;
     }
