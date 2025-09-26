@@ -85,7 +85,7 @@ static bool useBigFrame()
 void Win32Window::updateStyles()
 {
   m_style = WS_POPUP; // fix AttachWindowTopmostButton when a titlebar is shown
-  m_exStyle = WS_EX_ACCEPTFILES;
+  m_exStyle = WS_EX_ACCEPTFILES | WS_EX_LAYERED;
 
   if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration)) {
     m_style |= WS_OVERLAPPEDWINDOW & ~WS_MINIMIZEBOX;
@@ -99,6 +99,9 @@ void Win32Window::updateStyles()
 
   if(m_viewport->Flags & ImGuiViewportFlags_TopMost)
     m_exStyle |= WS_EX_TOPMOST;
+
+  if(m_viewport->Flags & ImGuiViewportFlags_NoInputs)
+    m_exStyle |= WS_EX_TRANSPARENT;
 }
 
 static BOOL CALLBACK reparentChildren(HWND hwnd, LPARAM data)
@@ -164,6 +167,7 @@ void Win32Window::create()
   const RECT &rect {scaledWindowRect(m_viewport->Pos, m_viewport->Size)};
   SetWindowPos(m_hwnd, nullptr,  rect.left, rect.top,
     rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOZORDER);
+  SetLayeredWindowAttributes(m_hwnd, 0, 0xFF, LWA_ALPHA);
 
   try {
     m_renderer = m_ctx->rendererFactory()->create(this);
@@ -270,16 +274,7 @@ void Win32Window::setTitle(const char *title)
 
 void Win32Window::setAlpha(const float alpha)
 {
-  // may conflict with updateStyles()/update(), but viewport flags are
-  // unlikely to change while alpha isn't 1
-
-  if(alpha == 1.0f) {
-    SetWindowLong(m_hwnd, GWL_EXSTYLE, m_exStyle);
-    return;
-  }
-
-  SetWindowLong(m_hwnd, GWL_EXSTYLE, m_exStyle | WS_EX_LAYERED);
-  SetLayeredWindowAttributes(m_hwnd, 0, 255 * alpha, LWA_ALPHA);
+  SetLayeredWindowAttributes(m_hwnd, 0, 0xFF * alpha, LWA_ALPHA);
 }
 
 void Win32Window::update()
