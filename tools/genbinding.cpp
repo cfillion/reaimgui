@@ -526,17 +526,12 @@ const API = struct {
     CommaSep cs {stream};
     for(const Argument &arg : func.args)
       cs << zigType(arg.type, arg.isOptional());
-    stream << ") callconv(.C) " << zigType(func.type) << ",\n";
+    stream << ") callconv(.c) " << zigType(func.type) << ",\n";
   }
 
   stream << "\n";
 
-  for(const Function &func : g_funcs) {
-    if((func.flags & API::Symbol::TargetNative) && func.isEnum())
-      stream << "  pub var " << func.name << ": c_int = undefined;\n";
-  }
-
-  stream << "};\n\nvar api: API = undefined;\npub usingnamespace API;\n\n";
+  stream << "};\n\nvar api: API = undefined;\n\n";
 
   for(const Function &func : g_funcs) {
     if(!(func.flags & API::Symbol::TargetNative) || func.isEnum())
@@ -569,8 +564,14 @@ const API = struct {
     stream << "});\n";
   }
 
+  for(const Function &func : g_funcs) {
+    if((func.flags & API::Symbol::TargetNative) && func.isEnum())
+      stream << "pub var " << func.name << ": c_int = undefined;\n";
+  }
+
+
   stream << R"(
-var getError: ?*fn() callconv(.C) ?[*:0]const u8 = undefined;
+var getError: ?*fn() callconv(.c) ?[*:0]const u8 = undefined;
 
 inline fn checkError() Error!void {
   @setRuntimeSafety(false);
@@ -579,15 +580,15 @@ inline fn checkError() Error!void {
     return error.ImGui;
 }
 
-inline fn getEnum(func: ?*fn() callconv(.C) c_int) c_int {
+inline fn getEnum(func: ?*fn() callconv(.c) c_int) c_int {
   return if(func) |f| f() else 0;
 }
 
-pub fn init(plugin_getapi: *fn(name: [*:0]const u8) callconv(.C) ?*anyopaque) !void {
+pub fn init(plugin_getapi: *fn(name: [*:0]const u8) callconv(.c) ?*anyopaque) !void {
   @setEvalBranchQuota(0x1000);
   @setRuntimeSafety(false);
 
-  const getFunc: ?*fn(v: [*:0]const u8, n: [*:0]const u8) callconv(.C) *anyopaque =
+  const getFunc: ?*fn(v: [*:0]const u8, n: [*:0]const u8) callconv(.c) *anyopaque =
     @ptrCast(plugin_getapi("ImGui__getapi"));
   getError = @ptrCast(plugin_getapi("ImGui__geterr"));
 
@@ -601,8 +602,10 @@ pub fn init(plugin_getapi: *fn(name: [*:0]const u8) callconv(.C) ?*anyopaque) !v
     try checkError();
   }
 
-  inline for(@typeInfo(API).@"struct".decls) |decl| {
-    @field(API, decl.name) = getEnum(@ptrCast(getFunc.?(api_version, decl.name)));
+  inline for(@typeInfo(@This()).@"struct".decls) |decl| {
+    if(@TypeOf(@field(@This(), decl.name)) != c_int)
+      continue;
+    @field(@This(), decl.name) = getEnum(@ptrCast(getFunc.?(api_version, decl.name)));
     try checkError();
   }
 }
@@ -617,7 +620,7 @@ fn returnType(comptime func: anytype) type {
 
 fn function(comptime func: anytype, min_argc: comptime_int,
     comptime arg_types: []const type)
-    fn(args: anytype) callconv(.Inline) returnType(func) {
+    fn(args: anytype) callconv(.@"inline") returnType(func) {
   return struct {
     inline fn wrapper(args: anytype) returnType(func) {
       var cast_args: std.meta.Tuple(arg_types) = undefined;

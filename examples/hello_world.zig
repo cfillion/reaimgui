@@ -51,9 +51,9 @@ const reaper = struct { // @import("reaper");
     return true;
   }
 
-  pub var plugin_register: *fn(name: [*:0]const u8, infostruct: *anyopaque) callconv(.C) c_int = undefined;
-  pub var plugin_getapi:   *fn(name: [*:0]const u8) callconv(.C) ?*anyopaque = undefined;
-  pub var ShowMessageBox:  *fn(body: [*:0]const u8, title: [*:0]const u8, flags: c_int) callconv(.C) void = undefined;
+  pub var plugin_register: *fn(name: [*:0]const u8, infostruct: *anyopaque) callconv(.c) c_int = undefined;
+  pub var plugin_getapi:   *fn(name: [*:0]const u8) callconv(.c) ?*anyopaque = undefined;
+  pub var ShowMessageBox:  *fn(body: [*:0]const u8, title: [*:0]const u8, flags: c_int) callconv(.c) void = undefined;
 };
 
 const plugin_name = "Hello, Zig!";
@@ -97,7 +97,7 @@ fn reset() void {
   ctx = null;
 }
 
-fn onTimer() callconv(.C) void {
+fn onTimer() callconv(.c) void {
   loop() catch {
     reset();
     reaper.ShowMessageBox(ImGui.last_error.?, plugin_name, 0);
@@ -105,7 +105,7 @@ fn onTimer() callconv(.C) void {
 }
 
 fn onCommand(sec: *reaper.KbdSectionInfo, command: c_int, val: c_int,
-  val2hw: c_int, relmode: c_int, hwnd: reaper.HWND) callconv(.C) c_char
+  val2hw: c_int, relmode: c_int, hwnd: reaper.HWND) callconv(.c) c_char
 {
   _ = .{ sec, val, val2hw, relmode, hwnd };
 
