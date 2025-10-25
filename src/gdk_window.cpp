@@ -110,6 +110,9 @@ void GDKWindow::show()
   Window::show();
   initIME();
   m_renderer = m_ctx->rendererFactory()->create(this);
+
+  // makes Hyprland disable the borders
+  gdk_window_set_type_hint(getOSWindow(), GDK_WINDOW_TYPE_HINT_SPLASHSCREEN);
 }
 
 void GDKWindow::setPosition(ImVec2 pos)
