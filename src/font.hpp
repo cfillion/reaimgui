@@ -84,14 +84,16 @@ public:
     *SERIF      {"serif"};
 
   SysFont(const char *family, int style = 0);
-  bool addFallback(ImFontAtlas *, ImFont *, unsigned int codepoint);
+  void addFallback(ImFontAtlas *, ImFont *, unsigned int codepoint);
 
 private:
   void initPlatform();
   std::optional<FontSource> resolve(unsigned int codepoint = 0) const;
+  bool installMissingFallbacks(ImFontAtlas *, ImFont *parent);
 
   std::shared_ptr<void> m_platform;
   FlatSet<unsigned int> m_resolved;
+  std::vector<FontSource> m_fallbacks;
   std::string m_family;
   int m_styles;
 };

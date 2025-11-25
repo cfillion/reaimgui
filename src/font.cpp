@@ -86,28 +86,37 @@ SysFont::SysFont(const char *family, const int flags)
     throw reascript_error {"cannot find a matching system font"};
 }
 
-bool SysFont::addFallback(ImFontAtlas *atlas, ImFont *inst, unsigned int codepoint)
+void SysFont::addFallback(ImFontAtlas *atlas, ImFont *inst, unsigned int codepoint)
 {
   // ImGui always requests a tab from ImFontAtlasBuildSetupFontBakedBlanks which
   // often isn't present causing an unnecessary second lookup every time.
   if(codepoint == '\t')
-    return false;
+    return;
+
+  installMissingFallbacks(atlas, inst);
 
   // ImGui caches missing glyphs per baked size so, if none of the already added
   // font sources contains the requested codepoint, it will query again over and
   // over for every new size. Furthermore the resolver may return a font lacking
   // the requested codepoint. We must not wastefully retry regardless of result.
   if(m_resolved.contains(codepoint))
-    return false;
+    return;
   else
     m_resolved.insert(codepoint);
 
-  if(const auto src {resolve(codepoint)}) {
-    if(*src != m_src)
-      return src->install(atlas, this, inst) != nullptr;
+  const auto src {resolve(codepoint)};
+  if(src && *src != m_src) {
+    m_fallbacks.push_back(*src);
+    src->install(atlas, this, inst);
   }
+}
 
-  return false;
+bool SysFont::installMissingFallbacks(ImFontAtlas *atlas, ImFont *parent)
+{
+  bool installed {};
+  for(size_t i {parent->Sources.Size - 1u}; i < m_fallbacks.size(); ++i)
+    installed |= !!m_fallbacks[i].install(atlas, this, parent);
+  return installed;
 }
 
 ImFont *FontSource::install(ImFontAtlas *atlas, Font *parent, ImFont *inst) const
