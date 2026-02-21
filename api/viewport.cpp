@@ -22,14 +22,13 @@
 API_SECTION("Viewport");
 
 API_FUNC(0_1, ViewportProxy*, GetMainViewport, (Context*,ctx),
-R"(Currently represents REAPER's main window (arrange view).
-WARNING: This may change or be removed in the future.)")
+"Returns the viewport associated to REAPER's main window (arrange view).")
 {
   return ViewportProxy::encode<ViewportProxy::Main>(ctx);
 }
 
 API_FUNC(0_7, ViewportProxy*, GetWindowViewport, (Context*,ctx),
-"Get viewport currently associated to the current window.")
+"Returns the viewport currently associated to the current window.")
 {
   return ViewportProxy::encode<ViewportProxy::Window>(ctx);
 }
