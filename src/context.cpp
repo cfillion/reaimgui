@@ -29,7 +29,9 @@
 #include "viewport.hpp"
 #include "window.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <cmath>
 #include <imgui/imgui_internal.h>
 #include <reaper_plugin_functions.h>
 #include <WDL/wdltypes.h>
@@ -362,6 +364,14 @@ void Context::updateFrameInfo()
     {static_cast<Viewport *>(mainViewport->PlatformUserData)};
   mainViewport->Pos = mainViewportInstance->getPosition();
   io.DisplaySize = mainViewport->Size = mainViewportInstance->getSize();
+
+  // Keep DisplayFramebufferScale at the highest monitor scale so that new
+  // secondary viewports (whose FramebufferScale is 0 until their native window
+  // is created) use the correct font rasterizer density on their first frame.
+  float maxFbScale {1.0f};
+  for(const ImGuiPlatformMonitor &monitor : ImGui::GetPlatformIO().Monitors)
+    maxFbScale = std::max(maxFbScale, ceilf(monitor.DpiScale));
+  io.DisplayFramebufferScale = {maxFbScale, maxFbScale};
 
   const auto now {decltype(m_lastFrame)::clock::now()};
   io.DeltaTime = std::chrono::duration<float> {now - m_lastFrame}.count();
