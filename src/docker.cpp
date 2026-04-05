@@ -25,7 +25,7 @@
 #include <cassert>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
-#include <reaper_plugin_functions.h>
+#include <reaper_plugin_secrets.h>
 
 Docker::Docker(const ReaDockID id)
   : m_id {id}
@@ -260,7 +260,7 @@ int CompatDockGetPosition(const int whichDock)
 static bool isDockerOrTransport(HWND window, const bool detectTransport)
 {
   static const char *localizedTransport
-    {LocalizeString("Transport", "DLG_188", 0)};
+    {__localizeFunc("Transport", "DLG_188", 0)};
 
   TCHAR titleBuf[32] {};
   GetWindowText(window, titleBuf, std::size(titleBuf) - 1);

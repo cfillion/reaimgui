@@ -10,6 +10,7 @@ src_sources = files([
   'image.cpp',
   'jpeg_image.cpp',
   'keymap.cpp',
+  'localize.cpp',
   'main.cpp',
   'menu.cpp',
   'opengl_renderer.cpp',

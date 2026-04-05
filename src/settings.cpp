@@ -20,6 +20,7 @@
 
 #include "action.hpp"
 #include "dialog.hpp"
+#include "localize.hpp"
 #include "renderer.hpp"
 #include "win32_unicode.hpp"
 #include "window.hpp"
@@ -28,9 +29,12 @@
 #include <optional>
 #include <reaper_plugin.h>
 #include <reaper_plugin_functions.h>
+#include <reaper_plugin_secrets.h>
 #include <variant>
 #include <WDL/wdltypes.h> // WDL_DLGRET
 #include <WDL/wingui/wndsize.h>
+
+#define L10N(str) __localizeFunc(str, "REAIMGUI_DLG_100", 0)
 
 template<typename T>
 struct Setting;
@@ -66,7 +70,8 @@ template<typename T>
 struct Setting {
   T *value;
   T defaultValue;
-  const TCHAR *key, *label, *help;
+  const TCHAR *key;
+  const char *label, *help;
   typename Control<T>::type control;
 
   void read(const TCHAR *file)  const;
@@ -92,72 +97,72 @@ struct SettingVariant : std::variant<Setting<Ts>...> {
 
 constexpr SettingVariant<bool, const RendererType *> SETTINGS[] {
   {&Settings::NoSavedSettings, false, TEXT("nosavedsettings"),
-    TEXT("Restore window position, size, dock state and table settings"),
-    TEXT("Disable to force ReaImGui scripts to start with "
-         "their default first-use state (safe mode)."),
+    "Restore window position, size, dock state and table settings",
+    "Disable to force ReaImGui scripts to start with "
+    "their default first-use state (safe mode).",
     Checkbox {IDC_SAVEDSETTINGS, Checkbox::Invert},
   },
   {&Settings::DockingEnable, true, TEXT("dockingenable"),
-    TEXT("Enable docking by default"),
-    TEXT("Drag the titlebar to dock windows into REAPER dockers or into other "
-         "windows of the same script instance."),
+    "Enable docking by default",
+    "Drag the titlebar to dock windows into REAPER dockers or into other "
+    "windows of the same script instance.",
     Checkbox {IDC_DOCKINGENABLE},
   },
   {&Settings::DockingNoSplit, false, TEXT("dockingnosplit"),
-    TEXT("Enable window splitting when docking"),
-    TEXT("Disable to limit docking to merging multiple windows together into "
-         "tab bars (simplified docking mode)."),
+    "Enable window splitting when docking",
+    "Disable to limit docking to merging multiple windows together into "
+    "tab bars (simplified docking mode).",
     Checkbox {IDC_DOCKSPLIT, Checkbox::Invert},
   },
   {&Settings::DockingWithShift, false, TEXT("dockingwithshift"),
-    TEXT("Dock only when holding Shift"),
-    TEXT("Press the Shift key to disable or enable docking when dragging "
-         "windows using the title bar. This option inverts the behavior."),
+    "Dock only when holding Shift",
+    "Press the Shift key to disable or enable docking when dragging "
+    "windows using the title bar. This option inverts the behavior.",
     Checkbox {IDC_DOCKWITHSHIFT},
   },
   {&Settings::DockingTransparentPayload, false, TEXT("dockingtransparentpayload"),
-    TEXT("Make windows transparent when docking"),
-    TEXT("Windows become semi-transparent when docking into another window. "
-         "Docking boxes are shown only in the target window."),
+    "Make windows transparent when docking",
+    "Windows become semi-transparent when docking into another window. "
+    "Docking boxes are shown only in the target window.",
     Checkbox {IDC_DOCKTRANSPARENT},
   },
   {&Settings::NavEnable, true, TEXT("navenable"),
-    TEXT("Enable keyboard navigation by default"),
-    TEXT("Navigate using the arrow keys. Space/Return/Escape to activate/")
-    TEXT("deactivate widgets or close popups. Alt to jump to the menu bar."),
+    "Enable keyboard navigation by default",
+    "Navigate using the arrow keys. Space/Return/Escape to activate/"
+    "deactivate widgets or close popups. Alt to jump to the menu bar.",
     Checkbox {IDC_NAVENABLE},
   },
   {&Settings::NavCaptureKbd, false, TEXT("navcapturekbd"),
-    TEXT("Always capture keyboard shortcuts from the global scope"),
-    TEXT("Receive all keyboard input even for action shortcuts from the global scope."),
+    "Always capture keyboard shortcuts from the global scope",
+    "Receive all keyboard input even for action shortcuts from the global scope.",
     Checkbox {IDC_NAVCAPTUREKBD},
   },
   {&Settings::NavCurAlways, false, TEXT("navcuralways"),
-    TEXT("Always show the navigation cursor"),
-    TEXT("By default the navigation cursor is shown only when using navigation ")
-    TEXT("and hidden when clicking using the mouse."),
+    "Always show the navigation cursor",
+    "By default the navigation cursor is shown only when using navigation "
+    "and hidden when clicking using the mouse.",
     Checkbox {IDC_NAVCURALWAYS},
   },
   {&Settings::NavMoveMouse, false, TEXT("navmovemouse"),
-    TEXT("Teleport the mouse cursor when navigating"),
-    TEXT("Move the mouse cursor when navigating to a different widget ")
-    TEXT("using Tab or the arrow keys."),
+    "Teleport the mouse cursor when navigating",
+    "Move the mouse cursor when navigating to a different widget "
+    "using Tab or the arrow keys.",
     Checkbox {IDC_NAVMOVEMOUSE},
   },
   {&Settings::Renderer, nullptr, TEXT("renderer") PLATFORM_SUFFIX,
-    TEXT("Graphics renderer (advanced):"),
-    TEXT("Select a different renderer if you encounter compatibility problems."),
+    "Graphics renderer (advanced):",
+    "Select a different renderer if you encounter compatibility problems.",
     Combobox {IDC_RENDERER, IDC_RENDERERTXT},
   },
   {&Settings::ForceSoftware, false, TEXT("forcecpu") PLATFORM_SUFFIX,
 #ifdef GDK_WORKAROUNDS
-    TEXT("Disable hardware blitting"),
-    TEXT("Enable this option force the use of software blitting. May improve "
-         "compatibility at the cost of potentially higher CPU usage."),
+    "Disable hardware blitting",
+    "Enable this option force the use of software blitting. May improve "
+    "compatibility at the cost of potentially higher CPU usage.",
 #else
-    TEXT("Disable hardware acceleration"),
-    TEXT("Enable this option force the use of software rendering. May improve "
-         "compatibility at the cost of potentially higher CPU usage."),
+    "Disable hardware acceleration",
+    "Enable this option force the use of software rendering. May improve "
+    "compatibility at the cost of potentially higher CPU usage.",
 #endif
    Checkbox {IDC_FORCESOFTWARE, Checkbox::NoAction}
   },
@@ -290,7 +295,7 @@ void Checkbox::setup(const Setting<bool> &setting) const
 
   const bool invert {(flags & Invert) != 0};
   new Action {
-    makeActionName(setting.key), narrow(setting.label),
+    makeActionName(setting.key), setting.label,
     [value = setting.value        ] { *value = !*value;       },
     [value = setting.value, invert] { return *value ^ invert; },
   };
@@ -300,7 +305,7 @@ static void updateHelp(HWND hwnd)
 {
   constexpr int IDC_PREFS_HELP {0x4eb}, IDT_PREFS_HELP_CLEAR {0x654};
 
-  static const TCHAR *shownText;
+  static const char *shownText;
 
   if(!IsWindowVisible(hwnd)) {
     shownText = nullptr;
@@ -320,7 +325,7 @@ static void updateHelp(HWND hwnd)
       if(shownText == setting.help)
         return true; // repeatedly setting the same text flickers on Windows
       shownText = setting.help;
-      SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, setting.help);
+      SetDlgItemText(GetParent(hwnd), IDC_PREFS_HELP, WIDEN(L10N(setting.help)));
       return true;
     }, setting))
       return;
@@ -369,8 +374,8 @@ static void updateRendererOptions(HWND hwnd)
 static void resetDefaults(HWND hwnd)
 {
   if(IDOK != MessageBox(hwnd,
-      TEXT("Are you sure you want to restore the default settings?"),
-      TEXT("ReaImGui settings"),
+      WIDEN(L10N("Are you sure you want to restore the default settings?")),
+      WIDEN(L10N("ReaImGui settings")),
       MB_OKCANCEL | MB_ICONWARNING))
     return;
 
@@ -414,7 +419,7 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
   case WM_INITDIALOG: {
     for(const auto &setting : SETTINGS) {
       std::visit([hwnd] (const auto &setting) {
-        setting.control.setLabel(hwnd, setting.label);
+        setting.control.setLabel(hwnd, WIDEN(L10N(setting.label)));
         setting.control.setValue(hwnd, *setting.value);
       }, setting);
     }
@@ -452,8 +457,8 @@ static WDL_DLGRET settingsProc(HWND hwnd, const unsigned int message,
 
 static HWND create(HWND parent)
 {
-  return CreateDialog(Window::s_instance, MAKEINTRESOURCE(IDD_SETTINGS),
-    parent, &settingsProc);
+  return CreateDialogL(
+    Window::s_instance, MAKEINTRESOURCE(IDD_SETTINGS), parent, &settingsProc);
 }
 
 static prefs_page_register_t g_page {

@@ -55,8 +55,9 @@ static bool loadAPI(void *(*getFunc)(const char *))
 {
   const ApiImport funcs[] {
     IMPORT(Splash_GetWnd), // v4.7, import first (used by fatalError)
-    {"__localizeFunc", &LocalizeString}, // LocalizeString added in v6.11
 
+    IMPORT(__localizeFunc),
+    IMPORT(__localizePrepareDialog),
     IMPORT(AttachWindowTopmostButton),
     IMPORT(DetachWindowTopmostButton),
     IMPORT(Dock_UpdateDockID),

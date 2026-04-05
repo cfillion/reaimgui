@@ -19,6 +19,7 @@
 
 #include "context.hpp"
 #include "dialog.hpp"
+#include "localize.hpp"
 #include "platform.hpp"
 #include "settings.hpp"
 #include "win32_unicode.hpp"
@@ -180,8 +181,8 @@ void ErrorReporter::report(const ErrorReport &&e)
 ErrorReporter::ErrorReporter()
   : m_current {static_cast<size_t>(-1)}
 {
-  m_window = CreateDialog(Window::s_instance,
-    MAKEINTRESOURCE(IDD_ERROR), GetMainHwnd(), errorProc);
+  m_window = CreateDialogL(
+    Window::s_instance, MAKEINTRESOURCE(IDD_ERROR), GetMainHwnd(), errorProc);
 }
 
 void ErrorReporter::setIndex(const size_t index)
