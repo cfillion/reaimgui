@@ -94,7 +94,7 @@ void Platform::updateMonitors()
     imguiMonitor.WorkPos.y  = workArea.y;
     imguiMonitor.WorkSize.x = workArea.width;
     imguiMonitor.WorkSize.y = workArea.height;
-    imguiMonitor.DpiScale   = gdk_monitor_get_scale_factor(monitor);
+    imguiMonitor.DpiScale   = GDKWindow::globalScaleFactor();
 
     scalePosition(&imguiMonitor.MainPos);
     scalePosition(&imguiMonitor.MainSize);
