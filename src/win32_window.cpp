@@ -85,7 +85,9 @@ static bool useBigFrame()
 void Win32Window::updateStyles()
 {
   m_style = WS_POPUP; // fix AttachWindowTopmostButton when a titlebar is shown
-  m_exStyle = WS_EX_ACCEPTFILES | WS_EX_LAYERED;
+  m_exStyle = WS_EX_ACCEPTFILES;
+  if(!isDocked())
+    m_exStyle |= WS_EX_LAYERED;
 
   if(!(m_viewport->Flags & ImGuiViewportFlags_NoDecoration)) {
     m_style |= WS_OVERLAPPEDWINDOW & ~WS_MINIMIZEBOX;
