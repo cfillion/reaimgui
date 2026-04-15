@@ -111,8 +111,9 @@ void GDKWindow::show()
   initIME();
   m_renderer = m_ctx->rendererFactory()->create(this);
 
-  // makes Hyprland disable the borders
-  if(!isDocked())
+  // makes Hyprland disable its borders
+  const char *wm = getenv("XDG_CURRENT_DESKTOP");
+  if(!isDocked() && wm && !strcmp(wm, "Hyprland"))
     gdk_window_set_type_hint(getOSWindow(), GDK_WINDOW_TYPE_HINT_SPLASHSCREEN);
 }
 
