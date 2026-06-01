@@ -1387,6 +1387,16 @@ static void luaLSBlock(std::ostream &stream, std::string_view markdown)
   }
 }
 
+static std::string_view luaName(const Argument &arg)
+{
+  // 'repeat' is a reserved Lua keyword and cannot be used as an identifier,
+  // so emit a valid name in the generated definitions instead.
+  const std::string_view name {arg.humanName()};
+  if(name == "repeat")
+    return "repeat_enable";
+  return name;
+}
+
 static void luaLSAnnotate(std::ostream &stream, const Function &func)
 {
   constexpr const char *separator {"\n---\n--- ---\n---\n"};
@@ -1443,7 +1453,7 @@ static void luaLSAnnotate(std::ostream &stream, const Function &func)
       continue;
     }
 
-    stream << "--- @param " << arg.humanName();
+    stream << "--- @param " << luaName(arg);
     if(arg.isOptional())
       stream << '?';
     stream << ' ' << luaType(arg.type);
@@ -1464,7 +1474,7 @@ static void luaLSAnnotate(std::ostream &stream, const Function &func)
   for(const Argument &arg : func.args) {
     if(!arg.isOutput() || arg.isBufSize())
       continue;
-    stream << "--- @return " << luaType(arg.type) << ' ' << arg.humanName() << '\n';
+    stream << "--- @return " << luaType(arg.type) << ' ' << luaName(arg) << '\n';
   }
 }
 
@@ -1523,7 +1533,7 @@ static void luaLSBinding(std::ostream &stream)
           cs << '_' << ++skipCount;
         continue;
       }
-      cs << arg.humanName();
+      cs << luaName(arg);
     }
     stream << ") end\n";
   }
