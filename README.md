@@ -1,3 +1,5 @@
+This repository now lives at https://codeberg.org/cfillion/reaimgui.
+
 # ReaImGui: ReaScript binding for Dear ImGui
 
 [![Build status](https://ci.appveyor.com/api/projects/status/9umkecgrs4sa8odf/branch/master?svg=true)](https://ci.appveyor.com/project/cfillion/reaimgui/branch/master)
